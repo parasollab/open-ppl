@@ -4,10 +4,15 @@
 
 #include "ConfigurationSpace/Cfg.h"
 
+#include "Geometry/Boundaries/CSpaceBoundingBox.h"
+
+#include "MPProblem/TaskHierarchy/Decomposition.h"
+#include "MPProblem/TaskHierarchy/SemanticTask.h"
 #include "MPProblem/MPTask.h"
 
 #include "TMPLibrary/ActionSpace/ActionSpace.h"
 #include "TMPLibrary/ActionSpace/MotionCondition.h"
+#include "TMPLibrary/InteractionStrategies/InteractionStrategyMethod.h"
 #include "TMPLibrary/Solution/Plan.h"
 
 /*------------------------------- Construction -------------------------------*/
@@ -21,6 +26,21 @@ OCMG(XMLNode& _node) : StateGraph(_node) {
   this->SetName("OCMG");
   m_roadmapStrategy = _node.Read("roadmapStrategy",true,"",
           "Strategy to use to build individual robot roadmaps.");
+
+  m_querySampler = _node.Read("querySampler",true,"",
+          "Sampler method to query goal configuration.");
+
+  m_maxQueryAttempts = _node.Read("maxQueryAttempts",false,
+          10,1,MAX_INT,"Max number of attempts to query goal configuration.");
+    
+  m_interactionAttempts = _node.Read("interactionAttempts",false,
+          10,1,MAX_INT,"Max number of attempts to sample an interaction.");
+
+  m_interactionSamples = _node.Read("interactionSamples",false,
+          1,1,MAX_INT,"Number of samples to take for each interaction.");
+
+  m_connector = _node.Read("connector",true,"",
+          "Connector to use to connect interactions to roadmaps.");
 }
 
 /*---------------------------- Initialization --------------------------------*/
@@ -39,12 +59,15 @@ Initialize() {
   m_solution = std::unique_ptr<MPSolution>(
         new MPSolution(coordinator->GetRobot()));
 
+
   // Build roadmaps for each robot
   for(auto& kv : coordinator->GetInitialRobotGroups()) {
     auto group = kv.first;
     for(auto robot : group->GetRobots()) {
-      if(robot->GetMultiBody()->IsPassive())
+      if(robot->GetMultiBody()->IsPassive()) {
+        ConstructObjectRoadmap(robot);
         continue;
+      }
 
       ConstructRobotRoadmap(robot);
     }
@@ -60,10 +83,72 @@ Initialize() {
 OCMG::GroupRoadmapType*
 OCMG::
 GetGroupRoadmap(RobotGroup* _group) {
-  return nullptr;
+  return m_solution->GetGroupRoadmap(_group);
 }
 
 /*-------------------------------- Helpers -----------------------------------*/
+
+void
+OCMG::
+ConstructObjectRoadmap(Robot* _object) {
+
+  //TODO::Currently only samples start and goal positions.
+  //      Update later to sample random points if desired.
+
+  auto plan = this->GetPlan();
+  auto stats = plan->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::ConstructObjectRoadmap");
+
+  // Initialize roadmap for object
+  auto problem = this->GetMPProblem();
+  auto group = problem->AddRobotGroup({_object},_object->GetLabel());
+  m_solution->AddRobotGroup(group);
+  m_groups.insert(group);
+  auto rm = m_solution->GetGroupRoadmap(group);
+
+  // Add vertex for robot start
+  auto startCfg = problem->GetInitialCfg(_object);
+  GroupCfg startGcfg(rm);
+  startGcfg.SetRobotCfg(_object,std::move(startCfg));
+  rm->AddVertex(startGcfg);
+
+  // Add vertex for each robot goal
+  auto coordinator = plan->GetCoordinator();
+  auto decomp = problem->GetDecompositions(coordinator->GetRobot())[0].get();
+  auto lib = this->GetMPLibrary();
+  auto sm = lib->GetSampler(m_querySampler);
+  lib->SetGroupTask(nullptr);
+
+  for(auto st : decomp->GetGroupMotionTasks()) {
+    auto gt = st->GetGroupMotionTask();
+    if(gt->GetRobotGroup() != group)
+      continue;
+
+    // Should only have a single task
+    for(auto iter = gt->begin(); iter != gt->end(); iter++) {
+
+      // Sample goal configuration
+      auto mt = *iter;
+      lib->SetTask(&mt);
+      auto boundary = iter->GetGoalConstraints()[0]->GetBoundary();
+
+      std::vector<Cfg> samples;
+      sm->Sample(1,m_maxQueryAttempts,boundary,std::back_inserter(samples));
+
+      if(samples.empty())
+        throw RunTimeException(WHERE) << "Unable to generate goal configuration for "
+                                      << _object->GetLabel() << ".";
+      
+      lib->SetTask(nullptr);
+
+      // Add to roadmap
+      GroupCfg gcfg(rm);
+      gcfg.SetRobotCfg(_object,std::move(samples[0]));
+      rm->AddVertex(gcfg);
+    }
+  }
+
+}
 
 void
 OCMG::
@@ -165,7 +250,7 @@ ConstructRobotRoadmap(Robot* _robot) {
     State state;
     state[group] = std::make_pair(nullptr,MAX_INT);
 
-    std::unordered_map<std::string,Robot*> roleMap;
+    RoleMap roleMap;
     f->AssignRoles(roleMap,state);
     auto formation = f->GenerateFormation(roleMap);
     formationMap[formation] = f;
@@ -181,6 +266,7 @@ ConstructRobotRoadmap(Robot* _robot) {
 
     // Configure formation in roadmap
     m_solution->AddRobotGroup(group);
+    m_groups.insert(group);
     auto rm = m_solution->GetGroupRoadmap(group);
     rm->SetAllFormationsInactive();
     if(formation)
@@ -191,7 +277,30 @@ ConstructRobotRoadmap(Robot* _robot) {
     for(auto robot : group->GetRobots()) {
       MPTask mt(robot);
       
-      // TODO:: Add path constraint
+      // Add path constraint
+      // Note, this is the hardcoding mentioned above instead of
+      // of properly incorporating path constraints.
+      if(!robot->GetMultiBody()->IsPassive()) {
+
+        std::vector<std::pair<double,double>> values;
+        for(size_t i = 0; i < robot->GetMultiBody()->DOF(); i++) {
+          if(i == 1) {
+            if(group->Size() == 1) {
+              values.push_back(std::make_pair(0,0));
+            }
+            else {
+              values.push_back(std::make_pair(.0001,.0001));
+            }
+          }
+          else {
+            values.push_back(std::make_pair(-1,1));
+          }
+        }
+
+        auto bbx = std::unique_ptr<CSpaceBoundingBox>(
+                     new CSpaceBoundingBox(robot->GetMultiBody()->DOF()));
+        bbx->ResetBoundary(values,0.);
+      }
 
       gt.AddTask(mt);
     }
@@ -249,12 +358,13 @@ CopyRoadmap(GroupRoadmapType* _rm, Robot* _passive, FormationCondition* _conditi
 
   auto group = problem->AddRobotGroup(robots,label);
   m_solution->AddRobotGroup(group);
+  m_groups.insert(group);
   auto rm = m_solution->GetGroupRoadmap(group);
 
   // Copy Formation
   State state;
   state[group] = std::make_pair(nullptr,MAX_INT);
-  std::unordered_map<std::string,Robot*> roleMap;
+  RoleMap roleMap;
   _condition->AssignRoles(roleMap,state);
   auto formation = _condition->GenerateFormation(roleMap);
 
@@ -320,15 +430,261 @@ CopyRoadmap(GroupRoadmapType* _rm, Robot* _passive, FormationCondition* _conditi
 void
 OCMG::
 SampleInteractions() {
+  auto plan = this->GetPlan();
+  auto stats = plan->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::SampleInteractions");
 
+  auto as = this->GetTMPLibrary()->GetActionSpace();
+
+  for(auto kv : as->GetActions()) {
+    auto interaction = dynamic_cast<Interaction*>(kv.second);
+
+    // Collect formation conditions
+    std::vector<FormationCondition*> conditions;
+    auto stages = interaction->GetStages();
+    for(auto c : interaction->GetStageConditions(stages.front())) {
+      auto f = dynamic_cast<FormationCondition*>(as->GetCondition(c));
+
+      if(f)
+        conditions.push_back(f);
+    }
+
+    // Collect all sets of matching groups to initiate interactions
+    std::vector<std::map<FormationCondition*,RobotGroup*>> matchingGroups;
+    matchingGroups.push_back({});
+    
+    for(auto f : conditions) {
+      std::vector<std::map<FormationCondition*,RobotGroup*>> newMatches;
+
+      for(auto group : m_groups) {
+
+        // Check for match
+        if(group->Size() != f->GetTypes().size())
+          continue;
+
+        bool match = true;
+
+        std::set<Robot*> used;
+        for(auto type : f->GetTypes()) {
+          match = false;
+
+          for(auto robot : group->GetRobots()) {
+            if(used.count(robot))
+              continue;
+
+            if(type != robot->GetCapability())
+              continue;
+
+            used.insert(robot);
+            match = true;
+          }
+
+          if(!match)
+            break;
+        }
+
+        if(!match)
+          continue;
+
+        // If match, add to existing matching group sets
+        for(auto map : matchingGroups) {
+
+          // Check that group has not already been used
+          bool conflict = false;
+          for(auto kv : map) {
+            for(auto r1 : kv.second->GetRobots()) {
+              for(auto r2 : group->GetRobots()) {
+                if(r1 == r2) {
+                  conflict = true;
+                  break;
+                }
+              }
+              if(conflict)
+                break;
+            }
+            if(conflict)
+              break;
+          }
+
+          if(conflict)
+            continue;
+
+          // Add to set of new matches
+          map[f] = group;
+          newMatches.push_back(map);
+        }
+      }
+
+      matchingGroups = newMatches;
+    }
+
+    // Sample interaction for each match
+    for(auto map : matchingGroups) {
+      State state;
+      for(auto kv : map) {
+        state[kv.second] = std::make_pair(nullptr,MAX_INT);
+      }
+
+      SampleInteraction(interaction,state);
+    }
+  }
 }
 
 bool
 OCMG::
 SampleInteraction(Interaction* _interaction, State _state) {
-  return false;
+
+  // Check if state has a solo passive robot that needs to be sampled from start/goal
+  RobotGroup* passive = nullptr;
+
+  for(auto kv : _state) {
+    auto group = kv.first;
+    bool isPassive = true;
+    for(auto robot : group->GetRobots()) {
+      if(!robot->GetMultiBody()->IsPassive()) {
+        isPassive = false;
+        break;
+      }
+    }
+
+    if(isPassive) {
+      passive = group;
+      break;
+    }
+  }
+
+  if(passive) {
+    return SampleInteractionWithPassive(_interaction, _state, passive);
+  }
+
+  bool success = false;
+  for(size_t i = 0; i < m_interactionSamples; i++) {
+    for(size_t j = 0; j < m_interactionAttempts; j++) {
+      if(RunInteractionStrategy(_interaction,_state)) {
+        success = true;
+        break;
+      }
+    }
+  }
+
+  return success;
 }
 
+bool
+OCMG::
+SampleInteractionWithPassive(Interaction* _interaction, State _state, RobotGroup* _passive) {
+
+  // Sample an interaction from each of the passive objects already discovered vertices
+  auto rm = m_solution->GetGroupRoadmap(_passive);
+  bool success = false;
+
+  auto pair = std::make_pair(rm,MAX_INT);
+
+  for(auto vit = rm->begin(); vit != rm->end(); vit++) {
+    auto vid = vit->descriptor();
+    pair.second = vid;
+
+    _state[_passive] = pair;
+
+    success |= RunInteractionStrategy(_interaction,_state);
+  }
+
+  return success;
+}
+
+bool
+OCMG::
+RunInteractionStrategy(Interaction* _interaction, State _start) {
+  auto is = this->GetInteractionStrategyMethod(
+              _interaction->GetInteractionStrategyLabel());
+
+  auto goalState = _start;
+
+  if(!is->operator()(_interaction,goalState))
+    return false;
+
+  // Connect start and goals to existing roadmaps, if fails - quit
+  auto lib = this->GetMPLibrary();
+  auto connector = lib->GetConnector(m_connector);
+
+
+  // Connect start
+  for(auto kv : _start) {
+
+    // Copy over group cfg to internal roadmap
+    auto group = kv.first;
+    auto oldRm = kv.second.first;
+    GroupCfg gcfg(oldRm);
+    // If the roadmap exists, pull start directly from it
+    if(oldRm) {
+      gcfg = oldRm->GetVertex(kv.second.second);
+    }
+    // Else, find first cfg for group from interaction paths
+    else {
+      oldRm = m_solution->GetGroupRoadmap(group);
+      gcfg = GroupCfg(oldRm);
+      auto stages = _interaction->GetStages();
+      for(size_t i = 1; i < stages.size(); i++) {
+        auto paths = _interaction->GetToStagePaths(stages[i]);
+        if(paths.empty())
+          continue;
+
+        for(auto robot : group->GetRobots()) {
+          for(const auto& path : paths) {
+            if(path->GetRobot() == robot) {
+              auto cfg = path->Cfgs().front();
+              gcfg.SetRobotCfg(robot,std::move(cfg));
+            }
+          }
+        }
+      }
+    }
+
+    auto rm = m_solution->GetGroupRoadmap(group);
+    rm->SetAllFormationsInactive();
+    for(auto f : gcfg.GetFormations()) {
+      rm->AddFormation(f);
+    }
+
+    GroupCfg newGcfg(rm);
+    for(auto robot : group->GetRobots()) {
+      auto cfg = gcfg.GetRobotCfg(robot);
+      newGcfg.SetRobotCfg(robot,std::move(cfg));
+    }
+
+    auto vid = rm->AddVertex(newGcfg);
+
+    // Attempt to connect to roadmap
+    connector->Connect(rm,vid);
+
+    bool passive = true;
+    for(auto robot : group->GetRobots()) {
+      if(robot->GetMultiBody()->IsPassive())
+        continue;
+
+      passive = false;
+      break;
+    }
+
+    if(passive)
+      continue;
+
+    if(rm->get_degree(vid) == 0) {
+      if(m_debug) {
+        std::cout << "Could not connect interaction to roadmap." << std::endl;
+      }
+
+      rm->DeleteVertex(vid);
+      return false;
+    }
+  }
+
+  // TODO::Save interaction paths
+  // TODO::All we care about for planning SMART is that there is a transition, 
+  //       don't necessarily need the path itself right now. 
+  
+  return true;
+}
 
 void
 OCMG::

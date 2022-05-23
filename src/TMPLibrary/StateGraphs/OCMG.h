@@ -26,6 +26,8 @@ class OCMG : public StateGraph {
 
     typedef Condition::State State;
 
+    typedef std::unordered_map<std::string,Robot*> RoleMap;
+
     ///@} 
     ///@name Construction
     ///@{
@@ -55,6 +57,8 @@ class OCMG : public StateGraph {
     ///@name Helpers
     ///@{
 
+    void ConstructObjectRoadmap(Robot* _object);
+
     void ConstructRobotRoadmap(Robot* _robot);
 
     void CopyRoadmap(GroupRoadmapType* _rm, Robot* _passive, FormationCondition* _condition);
@@ -62,6 +66,11 @@ class OCMG : public StateGraph {
     void SampleInteractions();
 
     bool SampleInteraction(Interaction* _interaction, State _state);
+
+    bool SampleInteractionWithPassive(Interaction* _interaction, State _state, 
+                                      RobotGroup* _passive);
+
+    bool RunInteractionStrategy(Interaction* _interaction, State _start);
 
     void BuildIndividualObjectModeGraph();
 
@@ -71,7 +80,19 @@ class OCMG : public StateGraph {
 
     std::string m_roadmapStrategy; ///< MPStrategy to build individual roadmaps with.
 
+    std::string m_querySampler;
+
+    size_t m_maxQueryAttempts;
+
+    size_t m_interactionAttempts;
+
+    size_t m_interactionSamples;
+
+    std::string m_connector;
+
     std::unique_ptr<MPSolution> m_solution;
+
+    std::set<RobotGroup*> m_groups;
 
     ///@}
 };
