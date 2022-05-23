@@ -15,6 +15,7 @@
 #include "TMPLibrary/TaskEvaluators/HCRQuery.h"
 #include "TMPLibrary/TaskEvaluators/SimpleMotionEvaluator.h"
 #include "TMPLibrary/TaskEvaluators/SimultaneousMultiArmEvaluator.h"
+#include "TMPLibrary/TaskEvaluators/SMART.h"
 #include "TMPLibrary/TaskEvaluators/SubmodeQuery.h"
 
 // TaskDecomposers to include
@@ -25,6 +26,7 @@
 #include "TMPLibrary/StateGraphs/CombinedRoadmap.h"
 #include "TMPLibrary/StateGraphs/ModeGraph.h"
 #include "TMPLibrary/StateGraphs/ObjectCentricModeGraph.h"
+#include "TMPLibrary/StateGraphs/OCMG.h"
 
 // InteractionStrategyMethods to include
 #include "TMPLibrary/InteractionStrategies/IndependentPaths.h"
@@ -61,6 +63,7 @@ struct TMPTraits {
     HCRQuery,
 		SimpleMotionEvaluator,
     SimultaneousMultiArmEvaluator,
+    SMART,
     SubmodeQuery
       > TaskEvaluatorMethodList;
 
@@ -75,7 +78,8 @@ struct TMPTraits {
 	typedef boost::mpl::list<
     CombinedRoadmap,
     ModeGraph,
-    ObjectCentricModeGraph
+    ObjectCentricModeGraph,
+    OCMG
 			> StateGraphList;
 
 	typedef boost::mpl::list<

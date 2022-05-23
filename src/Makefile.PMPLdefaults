@@ -518,12 +518,14 @@ TASK_SRCS := \
   TMPLibrary/StateGraphs/CombinedRoadmap.cpp \
   TMPLibrary/StateGraphs/ModeGraph.cpp \
   TMPLibrary/StateGraphs/ObjectCentricModeGraph.cpp \
+  TMPLibrary/StateGraphs/OCMG.cpp \
   TMPLibrary/StateGraphs/StateGraph.cpp \
   TMPLibrary/TaskAllocators/TaskAllocatorMethod.cpp \
   TMPLibrary/TaskDecomposers/TaskDecomposerMethod.cpp \
   TMPLibrary/TaskEvaluators/HCRQuery.cpp \
   TMPLibrary/TaskEvaluators/SimpleMotionEvaluator.cpp \
   TMPLibrary/TaskEvaluators/SimultaneousMultiArmEvaluator.cpp \
+  TMPLibrary/TaskEvaluators/SMART.cpp \
   TMPLibrary/TaskEvaluators/SubmodeQuery.cpp \
   TMPLibrary/TaskEvaluators/TaskEvaluatorMethod.cpp \
   TMPLibrary/TMPBaseObject.cpp \
