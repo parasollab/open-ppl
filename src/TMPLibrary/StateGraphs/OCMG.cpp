@@ -98,6 +98,36 @@ GetSavedInteractions() {
   return m_savedInteractions;
 }
 
+std::vector<RobotGroup*>
+OCMG::
+GetRobotGroups() {
+  std::vector<RobotGroup*> groups;
+  for(auto group : m_groups)
+    groups.push_back(group);
+
+  return groups;
+}
+
+std::vector<Robot*>
+OCMG::
+GetRobots() {
+  std::vector<Robot*> robots;
+  for(auto robot : m_robots)
+    robots.push_back(robot);
+
+  return robots;
+}
+
+std::vector<Robot*>
+OCMG::
+GetObjects() {
+  std::vector<Robot*> objects;
+  for(auto object : m_objects)
+    objects.push_back(object);
+
+  return objects;
+}
+
 /*-------------------------------- Helpers -----------------------------------*/
 
 void

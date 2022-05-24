@@ -73,6 +73,12 @@ class OCMG : public StateGraph {
 
     const SavedInteractions& GetSavedInteractions();
 
+    std::vector<RobotGroup*> GetRobotGroups();
+
+    std::vector<Robot*> GetRobots();
+
+    std::vector<Robot*> GetObjects();
+
     ///@}
 
   protected:
