@@ -35,6 +35,11 @@ class SMART : public TaskEvaluatorMethod {
     typedef std::pair<std::pair<size_t,size_t>,size_t>         CBSConstraint;
     typedef CBSNode<Robot,CBSConstraint,CBSSolution>           CBSNodeType;
 
+    struct HeuristicValues {
+      Mode nextMode;
+      double costToGo;
+    };
+
     ///@}
     ///@}
     ///@name Construction
@@ -60,11 +65,21 @@ class SMART : public TaskEvaluatorMethod {
 
     virtual bool Run(Plan* _plan = nullptr) override;
 
+    void ComputeGoalBias(size_t _modeID);
+
+    void CreateSMARTreeRoot();
+
+    size_t Select();
+
+    size_t Extend();
+
+    size_t Rewire();
+
     ///@}
     ///@name MAPF Heuristic Functions
     ///@{
 
-    Mode ComputeMAPFHeuristic(Mode mode);
+    HeuristicValues ComputeMAPFHeuristic(size_t _modeID);
 
     bool LowLevelPlanner(CBSNodeType& _node, Robot* _robot);
 
@@ -81,7 +96,15 @@ class SMART : public TaskEvaluatorMethod {
     ///@name Internal State
     ///@{
 
-    std::map<Mode,Mode> m_cachedHeuristics;
+    std::map<size_t,HeuristicValues> m_cachedHeuristics;
+
+    bool m_cachedMAPFGoals{false};
+
+    std::map<Robot*,size_t> m_MAPFGoals;
+
+    std::map<Robot*,size_t> m_MAPFStarts;
+
+    std::vector<Mode> m_modes;
 
     ///@}
 

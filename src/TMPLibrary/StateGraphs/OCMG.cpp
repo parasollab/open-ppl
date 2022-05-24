@@ -128,6 +128,12 @@ GetObjects() {
   return objects;
 }
 
+OCMG::TerrainVIDs
+OCMG::
+GetTerrainVIDs() {
+  return m_terrainVIDs;
+}
+
 /*-------------------------------- Helpers -----------------------------------*/
 
 void
@@ -830,6 +836,16 @@ BuildIndividualObjectModeGraph() {
       m_omg->AddEdge(vid1,vid2,edge);
       m_omg->AddEdge(vid2,vid1,edge);
     }
+  }
+
+  // Add self-edges
+  for(size_t i = 0; i < robotVIDs.size(); i++) {
+    auto vid = robotVIDs[i];
+    m_omg->AddEdge(vid,vid,1.);
+  }
+  for(size_t i = 0; i < m_terrainVIDs.size(); i++) {
+    auto vid = terrainVIDs[i];
+    m_omg->AddEdge(vid,vid,1.);
   }
 
   if(m_debug) {

@@ -29,6 +29,8 @@ class OCMG : public StateGraph {
 
     typedef std::map<Interaction*,std::vector<std::pair<State,State>>> SavedInteractions;
 
+    typedef std::map<const Terrain*,std::map<GroupRoadmapType*,std::set<size_t>>> TerrainVIDs;
+
     struct ModeInfo {
       Robot* robot;
       Formation* formation;
@@ -78,6 +80,8 @@ class OCMG : public StateGraph {
     std::vector<Robot*> GetRobots();
 
     std::vector<Robot*> GetObjects();
+
+    TerrainVIDs GetTerrainVIDs();
 
     ///@}
 
@@ -137,7 +141,7 @@ class OCMG : public StateGraph {
 
     SavedInteractions m_savedInteractions;
 
-    std::map<const Terrain*,std::map<GroupRoadmapType*,std::set<size_t>>> m_terrainVIDs;
+    TerrainVIDs m_terrainVIDs;
 
     std::unique_ptr<SingleObjectModeGraph> m_omg;
 
