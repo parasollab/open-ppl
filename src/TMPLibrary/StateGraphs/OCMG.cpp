@@ -86,6 +86,18 @@ GetGroupRoadmap(RobotGroup* _group) {
   return m_solution->GetGroupRoadmap(_group);
 }
 
+OCMG::SingleObjectModeGraph*
+OCMG::
+GetSingleObjectModeGraph() {
+  return m_omg.get();
+}
+
+const OCMG::SavedInteractions&
+OCMG::
+GetSavedInteractions() {
+  return m_savedInteractions;
+}
+
 /*-------------------------------- Helpers -----------------------------------*/
 
 void
@@ -104,6 +116,7 @@ ConstructObjectRoadmap(Robot* _object) {
   auto group = problem->AddRobotGroup({_object},_object->GetLabel());
   m_solution->AddRobotGroup(group);
   m_groups.insert(group);
+  m_objects.insert(_object);
   auto rm = m_solution->GetGroupRoadmap(group);
 
   // Add vertex for robot start
@@ -156,6 +169,7 @@ ConstructRobotRoadmap(Robot* _robot) {
   auto plan = this->GetPlan();
   auto stats = plan->GetStatClass();
   MethodTimer mt(stats,this->GetNameAndLabel() + "::ConstructRobotRoadmap");
+  m_robots.insert(_robot);
 
   // TODO::Track associated motion conditions - for now, we can safely assume
   //       the open and closed constraints without and with objects.
@@ -603,42 +617,76 @@ RunInteractionStrategy(Interaction* _interaction, State _start) {
   if(!is->operator()(_interaction,goalState))
     return false;
 
-  // Connect start and goals to existing roadmaps, if fails - quit
-  auto lib = this->GetMPLibrary();
-  auto connector = lib->GetConnector(m_connector);
-
-
-  // Connect start
+  // Ensure that start is completely grounded
   for(auto kv : _start) {
 
-    // Copy over group cfg to internal roadmap
     auto group = kv.first;
     auto oldRm = kv.second.first;
-    GroupCfg gcfg(oldRm);
-    // If the roadmap exists, pull start directly from it
-    if(oldRm) {
-      gcfg = oldRm->GetVertex(kv.second.second);
-    }
-    // Else, find first cfg for group from interaction paths
-    else {
-      oldRm = m_solution->GetGroupRoadmap(group);
-      gcfg = GroupCfg(oldRm);
-      auto stages = _interaction->GetStages();
-      for(size_t i = 1; i < stages.size(); i++) {
-        auto paths = _interaction->GetToStagePaths(stages[i]);
-        if(paths.empty())
-          continue;
+    // If the roadmap exists, move on
+    if(oldRm)
+      continue;
 
-        for(auto robot : group->GetRobots()) {
-          for(const auto& path : paths) {
-            if(path->GetRobot() == robot) {
-              auto cfg = path->Cfgs().front();
-              gcfg.SetRobotCfg(robot,std::move(cfg));
-            }
+    oldRm = m_solution->GetGroupRoadmap(group);
+    GroupCfg gcfg(oldRm);
+    gcfg = GroupCfg(oldRm);
+    auto stages = _interaction->GetStages();
+    for(size_t i = 1; i < stages.size(); i++) {
+      auto paths = _interaction->GetToStagePaths(stages[i]);
+      if(paths.empty())
+        continue;
+
+      for(auto robot : group->GetRobots()) {
+        for(const auto& path : paths) {
+          if(path->GetRobot() == robot) {
+            auto cfg = path->Cfgs().front();
+            gcfg.SetRobotCfg(robot,std::move(cfg));
           }
         }
       }
     }
+
+    auto vid = oldRm->AddVertex(gcfg);
+    _start[group] = std::make_pair(oldRm,vid);
+  }
+
+  // Connect start and goal
+  State copiedStart = CopyAndConnectState(_start);
+  if(copiedStart.empty())
+    return false;
+
+  State copiedGoal = CopyAndConnectState(goalState);
+  if(copiedGoal.empty())
+    return false;
+
+  // TODO::Save interaction paths
+  // TODO::All we care about for planning SMART is that there is a transition, 
+  //       don't necessarily need the path itself right now. 
+ 
+  auto& savedInteractions = m_savedInteractions[_interaction];
+  savedInteractions.emplace_back(copiedStart,copiedGoal);
+ 
+  return true;
+}
+
+OCMG::State
+OCMG::
+CopyAndConnectState(State _state) {
+  auto plan = this->GetPlan();
+  auto stats = plan->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::CopyAndConnectState");
+
+  // Connect start and goals to existing roadmaps, if fails - quit
+  auto lib = this->GetMPLibrary();
+  auto connector = lib->GetConnector(m_connector);
+
+  State copy;
+
+  for(auto kv : _state) {
+
+    // Copy over group cfg to internal roadmap
+    auto group = kv.first;
+    auto oldRm = kv.second.first;
+    auto gcfg = oldRm->GetVertex(kv.second.second);
 
     auto rm = m_solution->GetGroupRoadmap(group);
     rm->SetAllFormationsInactive();
@@ -653,6 +701,7 @@ RunInteractionStrategy(Interaction* _interaction, State _start) {
     }
 
     auto vid = rm->AddVertex(newGcfg);
+    copy[group] = std::make_pair(rm,vid);
 
     // Attempt to connect to roadmap
     connector->Connect(rm,vid);
@@ -675,21 +724,241 @@ RunInteractionStrategy(Interaction* _interaction, State _start) {
       }
 
       rm->DeleteVertex(vid);
-      return false;
+      return {};
     }
   }
 
-  // TODO::Save interaction paths
-  // TODO::All we care about for planning SMART is that there is a transition, 
-  //       don't necessarily need the path itself right now. 
-  
-  return true;
+  return copy;
 }
 
 void
 OCMG::
 BuildIndividualObjectModeGraph() {
+  auto plan = this->GetPlan();
+  auto stats = plan->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::BuildIndividualObjectModeGraph");
+
+  MapTerrainVIDs();
+
+  // Construct mode graph.
+  auto coordinator = plan->GetCoordinator();
+  m_omg = std::unique_ptr<SingleObjectModeGraph>(new SingleObjectModeGraph(coordinator->GetRobot()));
+  
+  // Add a vertex for every robot.
+  std::vector<size_t> robotVIDs;
+  for(auto robot : m_robots) {
+    ModeInfo info(robot,nullptr,nullptr);
+    auto vid = m_omg->AddVertex(info);
+    robotVIDs.push_back(vid);
+  }
+
+  // Add vertex for every terrain.
+  auto problem = this->GetMPProblem();
+  auto env = problem->GetEnvironment();
+
+  std::vector<size_t> terrainVIDs;
+  for(auto& kv : env->GetTerrains()) {
+    for(auto& terrain : kv.second) {
+      ModeInfo info(nullptr,nullptr,&terrain);
+      auto vid = m_omg->AddVertex(info);
+      terrainVIDs.push_back(vid);
+    }
+  }
+
+  // Add robot-robot edges
+  for(size_t i = 0; i < robotVIDs.size()-1; i++) {
+    auto vid1 = robotVIDs[i];
+    auto robot1 = m_omg->GetVertex(vid1).robot;
+    for(size_t j = i+1; j < robotVIDs.size(); j++) {
+      auto vid2 = robotVIDs[j];
+      auto robot2 = m_omg->GetVertex(vid2).robot;
+
+      if(!IsReachable(robot1,robot2))
+        continue;
+
+      // Add edge - using atomic edges as indicated in paper
+      double edge = 1.;
+      m_omg->AddEdge(vid1,vid2,edge);
+      m_omg->AddEdge(vid2,vid1,edge);
+    }
+  }
+
+  // Add robot-terrain edges
+  for(size_t i = 0; i < robotVIDs.size(); i++) {
+    auto vid1 = robotVIDs[i];
+    auto robot = m_omg->GetVertex(vid1).robot;
+  
+    for(size_t j = 0; j < m_terrainVIDs.size(); j++) {
+      auto vid2 = terrainVIDs[j];
+      auto terrain = m_omg->GetVertex(vid2).terrain;
+
+      if(!IsReachable(terrain,robot))
+        continue;
+
+      // Add edge - using atomic edges as indicated in paper
+      double edge = 1.;
+      m_omg->AddEdge(vid1,vid2,edge);
+      m_omg->AddEdge(vid2,vid1,edge);
+    }
+  }
+
+  if(m_debug) {
+    std::cout << std::endl << "Printing Single Object Mode Graph" << std::endl;
+    for(auto vit = m_omg->begin(); vit != m_omg->end(); vit++) {
+      auto vid = vit->descriptor();
+      auto vertex = vit->property();
+
+      std::cout << vid << " : ";
+      if(vertex.robot) {
+        std::cout << vertex.robot->GetLabel() << std::endl;
+      }
+      else {
+        for(auto& boundary : vertex.terrain->GetBoundaries()) {
+          std::cout << "[";
+          for(auto c : boundary->GetCenter()) {
+            std::cout << c << ",";
+          }
+          std::cout << "], ";
+        }
+        std::cout << std::endl;
+      }
+
+      for(auto eit = vit->begin(); eit != vit->end(); eit++) {
+        auto source = eit->source();
+        auto target = eit->target();
+
+        std::cout << "\t" << source << " -> " << target << std::endl;
+      }
+    } 
+  }
+}
+
+void
+OCMG::
+MapTerrainVIDs() {
+  // Map passive vids to terrains
+  auto problem = this->GetMPProblem();
+  auto env = problem->GetEnvironment();
+  
+  for(auto group : m_groups) {
+    bool passive = true;
+    for(auto robot : group->GetRobots()) {
+      if(robot->GetMultiBody()->IsPassive())
+        continue;
+
+      passive = false;
+      break;
+    }
+
+    if(!passive)
+      continue;
+
+    if(group->Size() > 1) 
+      throw RunTimeException(WHERE) << "Only expecting passive groups of size one.";
+
+    auto rm = m_solution->GetGroupRoadmap(group);
+
+    for(auto vit = rm->begin(); vit != rm->end(); vit++) {
+      auto vid = vit->descriptor();
+      auto gcfg = vit->property();
+      const size_t index = 0;
+      auto cfg = gcfg.GetRobotCfg(index);
+
+      for(auto& kv : env->GetTerrains()) {
+        if(kv.first != cfg.GetRobot()->GetCapability())
+          continue;
+
+        bool found = false;
+
+        for(auto& terrain : kv.second) {
+          if(terrain.InTerrain(cfg)) {
+            auto& map = m_terrainVIDs[&terrain];
+            auto& set = map[rm];
+            set.insert(vid);
+            found = true;
+            break;
+          }
+        }
+    
+        if(found)
+          break;
+      }
+    }
+  }
 
 }
 
+bool
+OCMG::
+IsReachable(const Terrain* _terrain, Robot* _robot) {
+
+  auto mb = _robot->GetMultiBody();
+  auto bbx = mb->GetBase()->GetWorldBoundingBox();
+
+  auto boundary = _terrain->GetBoundary() ? _terrain->GetBoundary()
+                                          : _terrain->GetBoundaries()[0].get();
+
+  auto center1 = bbx.GetCentroid();
+  auto center2 = boundary->GetCenter();
+
+  double distance = 0;
+  for(size_t i = 0; i < 3; i++) {
+    distance += std::pow((center1[i] - center2[i]),2);
+  }
+  distance = std::sqrt(distance);
+
+  // TODO::Compute accurately, cheating for ur5e because we know it's roughly one meter
+  auto radius = mb->GetBoundingSphereRadius();
+  radius = 1;
+
+  auto maxDistFromCenter = boundary->GetMaxDist()/2;
+
+  if(distance < radius - maxDistFromCenter)
+    return true;
+
+  return false;
+}
+
+bool
+OCMG::
+IsReachable(Robot* _robot1, Robot* _robot2) {
+
+  auto mb1 = _robot1->GetMultiBody();
+  auto mb2 = _robot2->GetMultiBody();
+
+  auto bbx1 = mb1->GetBase()->GetWorldBoundingBox();
+  auto bbx2 = mb2->GetBase()->GetWorldBoundingBox();
+
+  auto center1 = bbx1.GetCentroid();
+  auto center2 = bbx2.GetCentroid();
+
+  double distance = 0;
+  for(size_t i = 0; i < 3; i++) {
+    distance += std::pow(center1[i] - center2[i],2);
+  }
+  distance = std::sqrt(distance);
+
+  auto radius1 = mb1->GetBoundingSphereRadius();
+  auto radius2 = mb2->GetBoundingSphereRadius();
+
+  // TODO::Compute accurately, cheating for ur5e because we know it's roughly one meter
+  radius1 = .9;
+  radius2 = .9;
+
+  if(distance < radius1 + radius2)
+    return true;
+
+  return false;
+}
+
 /*----------------------------------------------------------------------------*/
+
+std::ostream& 
+operator<<(std::ostream& _os, const OCMG::ModeInfo) {
+  return _os;
+}
+
+std::istream&
+operator>>(std::istream& _is, const OCMG::ModeInfo) {
+  return _is;
+}

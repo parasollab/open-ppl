@@ -25,8 +25,27 @@ class OCMG : public StateGraph {
     typedef MPSolutionType<MPTraits<Cfg,DefaultWeight<Cfg>>>     MPSolution;
 
     typedef Condition::State State;
-
     typedef std::unordered_map<std::string,Robot*> RoleMap;
+
+    typedef std::map<Interaction*,std::vector<std::pair<State,State>>> SavedInteractions;
+
+    struct ModeInfo {
+      Robot* robot;
+      Formation* formation;
+      const Terrain* terrain;
+
+      ModeInfo(Robot* _robot = nullptr, Formation* _formation = nullptr, 
+                      const Terrain* _terrain = nullptr) :
+        robot(_robot), formation(_formation), terrain(_terrain) {}
+
+      bool operator==(const ModeInfo& _other) const {
+        return robot     == _other.robot 
+           and ((!formation and !_other.formation) or formation == _other.formation or *formation == *_other.formation)
+           and terrain   == _other.terrain;
+      }
+    };
+
+    typedef GenericStateGraph<ModeInfo,double> SingleObjectModeGraph;
 
     ///@} 
     ///@name Construction
@@ -50,6 +69,10 @@ class OCMG : public StateGraph {
 
     GroupRoadmapType* GetGroupRoadmap(RobotGroup* _group);
 
+    SingleObjectModeGraph* GetSingleObjectModeGraph();
+
+    const SavedInteractions& GetSavedInteractions();
+
     ///@}
 
   protected:
@@ -72,7 +95,15 @@ class OCMG : public StateGraph {
 
     bool RunInteractionStrategy(Interaction* _interaction, State _start);
 
+    State CopyAndConnectState(State _state);
+
     void BuildIndividualObjectModeGraph();
+
+    void MapTerrainVIDs();
+
+    bool IsReachable(const Terrain* _terrain, Robot* _robot);
+
+    bool IsReachable(Robot* _robot1, Robot* _robot2);
 
     ///@}
     ///@name Internal State
@@ -92,9 +123,22 @@ class OCMG : public StateGraph {
 
     std::unique_ptr<MPSolution> m_solution;
 
+    std::set<Robot*> m_robots;
+
+    std::set<Robot*> m_objects;
+
     std::set<RobotGroup*> m_groups;
+
+    SavedInteractions m_savedInteractions;
+
+    std::map<const Terrain*,std::map<GroupRoadmapType*,std::set<size_t>>> m_terrainVIDs;
+
+    std::unique_ptr<SingleObjectModeGraph> m_omg;
 
     ///@}
 };
+
+std::ostream& operator<<(std::ostream& _os, const OCMG::ModeInfo);
+std::istream& operator>>(std::istream& _is, const OCMG::ModeInfo);
 
 #endif
