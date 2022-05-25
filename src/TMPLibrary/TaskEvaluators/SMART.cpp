@@ -19,6 +19,9 @@ SMART() {
 SMART::
 SMART(XMLNode& _node) : TaskEvaluatorMethod(_node) {
   this->SetName("SMART");
+
+  m_maxIterations = _node.Read("maxIters",false,1000,1,MAX_INT,
+        "Maximum number of iterations to run through the algorithm.");
 }
 
 /*---------------------------- Initialization --------------------------------*/
@@ -38,13 +41,31 @@ Run(Plan* _plan) {
   // Initialize search trees
   CreateSMARTreeRoot(); 
 
+  for(size_t i = 0; i < m_maxIterations; i++) {
+    
+    auto modeID = SelectMode();
+
+    auto heuristics = ComputeMAPFHeuristic(modeID);
+
+    auto qNear = Select(modeID,heuristics.nextMode);
+
+    auto qNew = Extend(qNear,modeID,heuristics.nextMode);
+
+    auto qBest = Rewire(qNew,modeID);
+
+    if(qBest == MAX_INT)
+      continue;
+
+    bool foundGoal = CheckForModeSwitch(qNew);
+
+    if(foundGoal or CheckForGoal(qNew)) {
+      std::cout << "FOUND GOAL!!!" << std::endl;
+      // For now, quit at first solution
+      return true;
+    }
+  }
+
   return false;
-}
-
-void
-SMART::
-ComputeGoalBias(size_t _modeID) {
-
 }
 
 void
@@ -156,19 +177,25 @@ CreateSMARTreeRoot() {
 
 size_t
 SMART::
-Select() {
+SelectMode() {
+  return 0;
+}
+
+size_t
+SMART::
+Select(size_t _modeID, Mode _heuristic) {
   return MAX_INT;
 }
 
 size_t
 SMART::
-Extend() {
+Extend(size_t _qNear, size_t _modeID, Mode _heuristic) {
   return MAX_INT;
 }
 
 size_t
 SMART::
-Rewire() {
+Rewire(size_t _qNew, size_t _modeID) {
   return MAX_INT;
 }
 
@@ -177,6 +204,19 @@ SMART::
 ValidConnection(const Vertex& _source, const Vertex& _target) {
   return false;
 }
+
+bool 
+SMART::
+CheckForModeSwitch(size_t _qNew) {
+  return false;
+}
+
+bool
+SMART::
+CheckForGoal(size_t _qNew) {
+  return false;
+}
+
 /*--------------------------- Heuristic Functions ----------------------------*/
 
 SMART::HeuristicValues

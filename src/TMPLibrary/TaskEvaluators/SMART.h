@@ -100,17 +100,21 @@ class SMART : public TaskEvaluatorMethod {
 
     virtual bool Run(Plan* _plan = nullptr) override;
 
-    void ComputeGoalBias(size_t _modeID);
-
     void CreateSMARTreeRoot();
 
-    size_t Select();
+    size_t SelectMode();
 
-    size_t Extend();
+    size_t Select(size_t _modeID, Mode _heuristic);
 
-    size_t Rewire();
+    size_t Extend(size_t _qNear, size_t _modeID, Mode _heuristic);
+
+    size_t Rewire(size_t _qNew, size_t _modeID);
 
     bool ValidConnection(const Vertex& _source, const Vertex& _target);
+
+    bool CheckForModeSwitch(size_t _qNew);
+
+    bool CheckForGoal(size_t _qNew);
 
     ///@}
     ///@name MAPF Heuristic Functions
@@ -132,6 +136,8 @@ class SMART : public TaskEvaluatorMethod {
     ///@}
     ///@name Internal State
     ///@{
+
+    size_t m_maxIterations;
 
     std::map<size_t,HeuristicValues> m_cachedHeuristics;
 
