@@ -15,17 +15,52 @@ class SMART : public TaskEvaluatorMethod {
     ///@name Local Types
     ///@{
 
-    typedef GroupLocalPlan<Cfg>                                  GroupLocalPlanType;
-    typedef GroupRoadmap<GroupCfg,GroupLocalPlanType>            GroupRoadmapType;
-    
-    typedef size_t                                                       VID;
-    typedef std::vector<std::pair<GroupRoadmapType*,VID>>                Vertex;
-    typedef std::vector<std::pair<GroupRoadmapType*,std::pair<VID,VID>>> Edge;
-
-    typedef GenericStateGraph<Vertex,Edge> TensorProductRoadmap;
+    typedef GroupLocalPlan<Cfg>                       GroupLocalPlanType;
+    typedef GroupRoadmap<GroupCfg,GroupLocalPlanType> GroupRoadmapType;
+    typedef size_t                                    VID;
 
     // Robot* is the object, size_t is the vid in the single object mode graph
     typedef std::map<Robot*,size_t> Mode;
+
+    struct Vertex {
+      std::vector<std::pair<GroupRoadmapType*,VID>> cfgs;
+      size_t modeID;
+
+      bool operator==(const Vertex& _other) const {
+        return cfgs == _other.cfgs and modeID == _other.modeID;
+      }
+    };
+
+    struct Edge {
+      std::vector<std::pair<GroupRoadmapType*,std::pair<VID,VID>>> transitions;
+      double cost;
+
+      bool operator==(const Edge& _other) const {
+        return transitions == _other.transitions and cost == _other.cost;
+      }
+    };
+
+    typedef GenericStateGraph<Vertex,Edge> TensorProductRoadmap;
+
+    struct ActionExtendedState {
+      VID vid; ///< VID in tensor product roadmap
+      size_t ahid; ///< Action history id
+
+      bool operator==(const ActionExtendedState& _other) const {
+        return vid == _other.vid and ahid == _other.ahid;
+      }
+    };
+
+    struct ActionExtendedEdge {
+      double cost;
+      bool operator==(const ActionExtendedEdge& _other) const {
+        return cost == _other.cost;
+      }
+    };
+
+    typedef GenericStateGraph<ActionExtendedState,ActionExtendedEdge> ActionExtendedGraph;
+
+    typedef std::vector<size_t> ActionHistory;
 
     ///@name MAPF Heuristic Type
     ///@{
@@ -75,6 +110,8 @@ class SMART : public TaskEvaluatorMethod {
 
     size_t Rewire();
 
+    bool ValidConnection(const Vertex& _source, const Vertex& _target);
+
     ///@}
     ///@name MAPF Heuristic Functions
     ///@{
@@ -106,8 +143,25 @@ class SMART : public TaskEvaluatorMethod {
 
     std::vector<Mode> m_modes;
 
+    std::unique_ptr<TensorProductRoadmap> m_tensorProductRoadmap;
+
+    std::unique_ptr<ActionExtendedGraph> m_actionExtendedGraph;
+
+    std::vector<ActionHistory> m_actionHistories;
+
     ///@}
 
 };
 
+std::ostream& operator<<(std::ostream& _os, const SMART::Vertex);
+std::istream& operator>>(std::istream& _is, const SMART::Vertex);
+
+std::ostream& operator<<(std::ostream& _os, const SMART::Edge);
+std::istream& operator>>(std::istream& _is, const SMART::Edge);
+
+std::ostream& operator<<(std::ostream& _os, const SMART::ActionExtendedState);
+std::istream& operator>>(std::istream& _is, const SMART::ActionExtendedState);
+
+std::ostream& operator<<(std::ostream& _os, const SMART::ActionExtendedEdge);
+std::istream& operator>>(std::istream& _is, const SMART::ActionExtendedEdge);
 #endif

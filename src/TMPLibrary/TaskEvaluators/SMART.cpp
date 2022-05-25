@@ -35,11 +35,148 @@ bool
 SMART::
 Run(Plan* _plan) {
 
-  
+  // Initialize search trees
+  CreateSMARTreeRoot(); 
 
   return false;
 }
 
+void
+SMART::
+ComputeGoalBias(size_t _modeID) {
+
+}
+
+void
+SMART::
+CreateSMARTreeRoot() {
+  auto plan = this->GetPlan();
+  auto stats = plan->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::CreateSMARTreeRoots");
+  
+  auto coordinator = plan->GetCoordinator();
+  auto sg = static_cast<OCMG*>(this->GetStateGraph(m_sgLabel).get());
+  auto omg = sg->GetSingleObjectModeGraph();
+  auto problem = this->GetMPProblem();
+
+  // Initialize tree
+
+  m_tensorProductRoadmap = std::unique_ptr<TensorProductRoadmap>(
+      new TensorProductRoadmap(coordinator->GetRobot()));
+
+  m_actionExtendedGraph = std::unique_ptr<ActionExtendedGraph>(
+      new ActionExtendedGraph(coordinator->GetRobot())); 
+  
+
+  // Convert start state to root vertex and build initial mode
+  Vertex root;
+  Mode mode;
+  
+  for(auto& kv : coordinator->GetInitialRobotGroups()) {
+    auto group = kv.first;
+    auto rm = sg->GetGroupRoadmap(group);
+
+    // Get vid from rm of initial cfg
+    GroupCfg gcfg(rm);
+
+    for(auto robot : group->GetRobots()) {
+      auto cfg = problem->GetInitialCfg(robot);
+      gcfg.SetRobotCfg(robot,std::move(cfg));
+    }
+
+    auto vid = rm->GetVID(gcfg);
+    if(vid == MAX_INT) {
+      throw RunTimeException(WHERE) << "Roadmap missing robot initial cfg.";
+    }
+
+    root.cfgs.emplace_back(rm,vid);
+
+    // If group has a passive object, collect mode info
+    Robot* passive = nullptr;
+    Robot* active = nullptr;
+    for(auto robot : group->GetRobots()) {
+      if(robot->GetMultiBody()->IsPassive()) {
+        passive = robot;
+      }
+      else {
+        active = robot;
+      }
+    }
+
+    if(!passive)
+      continue;
+
+    OCMG::ModeInfo info;
+    if(active) {
+      info.robot = active;
+    }
+    else {
+      for(auto kv : sg->GetTerrainVIDs()) {
+        auto vids = kv.second[rm];
+        if(!vids.count(vid))
+          continue;
+
+        info.terrain = kv.first;
+        break;
+      }
+    }
+
+    auto omgVID = omg->GetVID(info);
+    if(omgVID >= MAX_INT) {
+      throw RunTimeException(WHERE) << "Failed to find object mode vertex.";
+    }
+
+    mode[passive] = omgVID;
+  }
+
+  // Save starting mode
+  m_modes.clear();
+  m_modes.push_back(mode);
+  root.modeID = 0;
+
+  if(m_debug) {
+    std::cout << "Starting mode: " << std::endl;;
+    for(auto kv : mode) {
+      std::cout << "\t" << kv.first->GetLabel() << " : " << kv.second << std::endl;
+    }
+  }
+
+  // Save root vertex in tree
+  auto rootVID = m_tensorProductRoadmap->AddVertex(root);
+ 
+  ActionHistory history = {root.modeID};
+  m_actionHistories.push_back(history);
+ 
+  ActionExtendedState aes;
+  aes.vid = rootVID;
+  aes.ahid = {0};
+
+  m_actionExtendedGraph->AddVertex(aes);
+}
+
+size_t
+SMART::
+Select() {
+  return MAX_INT;
+}
+
+size_t
+SMART::
+Extend() {
+  return MAX_INT;
+}
+
+size_t
+SMART::
+Rewire() {
+  return MAX_INT;
+}
+
+bool
+SMART::
+ValidConnection(const Vertex& _source, const Vertex& _target) {
+  return false;
+}
 /*--------------------------- Heuristic Functions ----------------------------*/
 
 SMART::HeuristicValues
@@ -442,3 +579,43 @@ SplitNodeFunction(CBSNodeType& _node,
   return newNodes;
 }
 /*----------------------------------------------------------------------------*/
+
+istream&
+operator>>(std::istream& _is, const SMART::Vertex) {
+  return _is;
+}
+
+ostream&
+operator<<(std::ostream& _os, const SMART::Vertex) {
+  return _os;
+}
+
+istream&
+operator>>(std::istream& _is, const SMART::Edge) {
+  return _is;
+}
+
+ostream&
+operator<<(std::ostream& _os, const SMART::Edge) {
+  return _os;
+}
+
+istream&
+operator>>(std::istream& _is, const SMART::ActionExtendedState) {
+  return _is;
+}
+
+ostream&
+operator<<(std::ostream& _os, const SMART::ActionExtendedState) {
+  return _os;
+}
+
+istream&
+operator>>(std::istream& _is, const SMART::ActionExtendedEdge) {
+  return _is;
+}
+
+ostream&
+operator<<(std::ostream& _os, const SMART::ActionExtendedEdge) {
+  return _os;
+}
