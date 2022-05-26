@@ -22,6 +22,16 @@ SMART(XMLNode& _node) : TaskEvaluatorMethod(_node) {
 
   m_maxIterations = _node.Read("maxIters",false,1000,1,MAX_INT,
         "Maximum number of iterations to run through the algorithm.");
+
+  m_heuristicProb = _node.Read("heuristicProb",false,m_heuristicProb,0.,1.,
+            "Probability of using heuristic in selecting direction to expand tree.");
+
+  m_goalBias = _node.Read("goalBias",false,m_goalBias,0.,1.,
+            "Probability of selecting mode towards goal.");
+
+  m_dmLabel = _node.Read("dmLabel",true,"",
+            "Distance metric to compute diastance between group cfgs.");
+
 }
 
 /*---------------------------- Initialization --------------------------------*/
@@ -43,18 +53,22 @@ Run(Plan* _plan) {
 
   for(size_t i = 0; i < m_maxIterations; i++) {
     
-    auto modeID = SelectMode();
+    auto pair = SelectMode();
+    auto modeID = pair.first;
+    auto historyID = pair.second;
 
     auto heuristics = ComputeMAPFHeuristic(modeID);
 
-    auto qNear = Select(modeID,heuristics.nextMode);
+    auto qNear = Select(modeID,historyID,heuristics.nextMode);
 
-    auto qNew = Extend(qNear,modeID,heuristics.nextMode);
-
-    auto qBest = Rewire(qNew,modeID);
-
-    if(qBest == MAX_INT)
+    auto qNew = Extend(qNear,modeID,historyID,heuristics.nextMode);
+    if(qNew >= MAX_INT)
       continue;
+
+    auto qBest = Rewire(qNew,modeID,historyID);
+
+    if(qBest >= MAX_INT)
+      qBest = qNear;
 
     bool foundGoal = CheckForModeSwitch(qNew);
 
@@ -106,7 +120,7 @@ CreateSMARTreeRoot() {
     }
 
     auto vid = rm->GetVID(gcfg);
-    if(vid == MAX_INT) {
+    if(vid >= MAX_INT) {
       throw RunTimeException(WHERE) << "Roadmap missing robot initial cfg.";
     }
 
@@ -154,6 +168,8 @@ CreateSMARTreeRoot() {
   m_modes.clear();
   m_modes.push_back(mode);
   root.modeID = 0;
+  
+  m_biasedModes.push_back(root.modeID);
 
   if(m_debug) {
     std::cout << "Starting mode: " << std::endl;;
@@ -167,35 +183,120 @@ CreateSMARTreeRoot() {
  
   ActionHistory history = {root.modeID};
   m_actionHistories.push_back(history);
+
+  m_modeHistories[root.modeID] = {0};
  
   ActionExtendedState aes;
   aes.vid = rootVID;
   aes.ahid = {0};
 
   m_actionExtendedGraph->AddVertex(aes);
+
+  m_historyVIDs[0].insert(rootVID);
 }
 
-size_t
+std::pair<size_t,size_t>
 SMART::
 SelectMode() {
-  return 0;
+
+  size_t modeID = MAX_INT;
+  size_t historyID = MAX_INT;
+
+  // With m_modeBias probability, return mode closest to goal
+  if(DRand() < m_goalBias) {
+    
+    size_t index = LRand() % m_biasedModes.size();
+    modeID = m_biasedModes[index];
+    historyID = m_modeHistories[modeID][0];
+
+  }
+  else {
+
+    modeID = LRand() % m_modes.size();
+    size_t index = LRand() % m_modeHistories[modeID].size();
+    historyID = m_modeHistories[modeID][index];
+
+  }
+
+  std::cout << "Selecting mode " << modeID << " with action history [";
+  for(auto id : m_actionHistories[historyID]) {
+    std::cout << id << ", ";
+  }
+  std::cout << "]" << std::endl;
+
+  return std::make_pair(modeID,historyID);
 }
 
 size_t
 SMART::
-Select(size_t _modeID, Mode _heuristic) {
-  return MAX_INT;
+Select(size_t _modeID, size_t _historyID, Mode _heuristic) {
+  auto plan = this->GetPlan();
+  auto stats = plan->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::SelectVertex");
+
+  // Check if bias is valid for this history
+  auto iter = m_historyVIDBias.find(_historyID);
+  if(iter != m_historyVIDBias.end())
+    return m_historyVIDBias.at(_historyID);
+
+  auto mode = m_modes[_modeID];
+
+  // Sample random direction
+  // Do not need to fix formations because we only care about active robots
+  auto random = GetRandomDirection(_historyID);
+
+  // Find history vid closest to the randomly sampled vertex 
+  auto dm = this->GetMPLibrary()->GetDistanceMetric(m_dmLabel);
+  auto candidates = m_historyVIDs[_historyID];
+ 
+  double minDistance = MAX_DBL;
+  VID closest = MAX_INT;
+
+  for(auto vid : candidates) {
+    auto vertex = m_tensorProductRoadmap->GetVertex(vid);
+
+    double distance = 0;
+    for(auto pair : vertex.cfgs) {
+
+      // Compute distance to random sample
+      auto rm = pair.first;
+      auto gcfg1 = rm->GetVertex(pair.second);
+      auto gcfg2 = random[rm];
+
+      for(auto robot : rm->GetGroup()->GetRobots()) {
+        if(robot->GetMultiBody()->IsPassive())
+          continue;
+
+        distance += dm->Distance(gcfg1.GetRobotCfg(robot),
+                                 gcfg2.GetRobotCfg(robot));
+      }
+
+    }
+
+    // If closer than previous best, update closest neighbor
+    if(distance < minDistance) {
+      minDistance = distance;
+      closest = vid;
+    }
+  }
+
+  return closest;
 }
 
 size_t
 SMART::
-Extend(size_t _qNear, size_t _modeID, Mode _heuristic) {
-  return MAX_INT;
+Extend(size_t _qNear, size_t _modeID, size_t _historyID, Mode _heuristic) {
+
+  size_t qNew = MAX_INT;
+
+
+  m_historyVIDBias[_historyID] = qNew;
+  return qNew;
 }
 
 size_t
 SMART::
-Rewire(size_t _qNew, size_t _modeID) {
+Rewire(size_t _qNew, size_t _modeID, size_t _historyID) {
   return MAX_INT;
 }
 
@@ -217,6 +318,32 @@ CheckForGoal(size_t _qNew) {
   return false;
 }
 
+std::map<SMART::GroupRoadmapType*,GroupCfg>
+SMART::
+GetRandomDirection(size_t _historyID) {
+  auto problem = this->GetMPProblem();
+  auto env = problem->GetEnvironment();
+
+  auto illustrative = m_tensorProductRoadmap->GetVertex(
+        *(m_historyVIDs[_historyID].begin()));
+
+  std::map<GroupRoadmapType*,GroupCfg> random;
+  
+  for(auto pair : illustrative.cfgs) {
+    auto rm = pair.first;
+
+    rm->SetAllFormationsInactive();
+    for(auto f : rm->GetVertex(pair.second).GetFormations()) {
+      rm->SetFormationActive(f);
+    }
+
+    GroupCfg gcfg(rm);
+    gcfg.GetRandomGroupCfg(env->GetBoundary());
+    random[rm] = gcfg;
+  }
+
+  return random;
+}
 /*--------------------------- Heuristic Functions ----------------------------*/
 
 SMART::HeuristicValues

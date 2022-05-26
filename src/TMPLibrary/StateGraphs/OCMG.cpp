@@ -321,6 +321,13 @@ ConstructRobotRoadmap(Robot* _robot) {
     rm->SetAllFormationsInactive();
     if(formation)
       rm->AddFormation(formation);
+    else {
+      // Add vertex for robot start
+      auto startCfg = problem->GetInitialCfg(_robot);
+      GroupCfg startGcfg(rm);
+      startGcfg.SetRobotCfg(_robot,std::move(startCfg));
+      rm->AddVertex(startGcfg);
+    }
 
     // Configure Group Task
     GroupTask gt(group);

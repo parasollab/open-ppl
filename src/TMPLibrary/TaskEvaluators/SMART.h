@@ -102,19 +102,21 @@ class SMART : public TaskEvaluatorMethod {
 
     void CreateSMARTreeRoot();
 
-    size_t SelectMode();
+    std::pair<size_t,size_t> SelectMode();
 
-    size_t Select(size_t _modeID, Mode _heuristic);
+    size_t Select(size_t _modeID, size_t _historyID, Mode _heuristic);
 
-    size_t Extend(size_t _qNear, size_t _modeID, Mode _heuristic);
+    size_t Extend(size_t _qNear, size_t _modeID, size_t _historyID, Mode _heuristic);
 
-    size_t Rewire(size_t _qNew, size_t _modeID);
+    size_t Rewire(size_t _qNew, size_t _modeID, size_t _historyID);
 
     bool ValidConnection(const Vertex& _source, const Vertex& _target);
 
     bool CheckForModeSwitch(size_t _qNew);
 
     bool CheckForGoal(size_t _qNew);
+
+    std::map<GroupRoadmapType*,GroupCfg> GetRandomDirection(size_t _historyID);
 
     ///@}
     ///@name MAPF Heuristic Functions
@@ -134,10 +136,20 @@ class SMART : public TaskEvaluatorMethod {
         CBSCostFunction<Robot,CBSConstraint,CBSSolution>& _cost);
 
     ///@}
-    ///@name Internal State
+    ///@name XML Parameters
     ///@{
 
     size_t m_maxIterations;
+
+    double m_heuristicProb{0.5};
+
+    double m_goalBias{0.5};
+
+    std::string m_dmLabel;
+
+    ///@}
+    ///@name Internal State
+    ///@{
 
     std::map<size_t,HeuristicValues> m_cachedHeuristics;
 
@@ -154,6 +166,17 @@ class SMART : public TaskEvaluatorMethod {
     std::unique_ptr<ActionExtendedGraph> m_actionExtendedGraph;
 
     std::vector<ActionHistory> m_actionHistories;
+
+    // Map from mode id to action history ids
+    std::map<size_t,std::vector<size_t>> m_modeHistories;
+
+    std::vector<size_t> m_biasedModes;
+
+    // Map of history ID to relevant tensor product roadmap vids
+    std::map<size_t,std::set<size_t>> m_historyVIDs;
+
+    // Map of history ID to vid that made progress towards mode goal
+    std::map<size_t,size_t> m_historyVIDBias;
 
     ///@}
 
