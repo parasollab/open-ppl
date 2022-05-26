@@ -83,6 +83,9 @@ class OCMG : public StateGraph {
 
     TerrainVIDs GetTerrainVIDs();
 
+    std::pair<State,State> GetSingleObjectModeGraphEdgeTransitions(
+                            size_t _source, size_t _target, Robot* _object);
+
     ///@}
 
   protected:
@@ -115,6 +118,8 @@ class OCMG : public StateGraph {
 
     bool IsReachable(Robot* _robot1, Robot* _robot2);
 
+    void SaveEdgeTransitions(size_t _source, size_t _target);
+
     ///@}
     ///@name Internal State
     ///@{
@@ -144,6 +149,9 @@ class OCMG : public StateGraph {
     TerrainVIDs m_terrainVIDs;
 
     std::unique_ptr<SingleObjectModeGraph> m_omg;
+
+    std::map<Robot*,std::map<std::pair<size_t,size_t>,
+            std::pair<State,State>>> m_omgEdgeTransitions;
 
     ///@}
 };

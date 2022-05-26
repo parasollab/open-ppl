@@ -134,6 +134,12 @@ GetTerrainVIDs() {
   return m_terrainVIDs;
 }
 
+std::pair<OCMG::State,OCMG::State> 
+OCMG::
+GetSingleObjectModeGraphEdgeTransitions(size_t _source, size_t _target, Robot* _object) {
+  return m_omgEdgeTransitions[_object][std::make_pair(_source,_target)];
+}
+
 /*-------------------------------- Helpers -----------------------------------*/
 
 void
@@ -819,6 +825,8 @@ BuildIndividualObjectModeGraph() {
       if(!IsReachable(robot1,robot2))
         continue;
 
+      SaveEdgeTransitions(vid1,vid2);
+
       // Add edge - using atomic edges as indicated in paper
       double edge = 1.;
       m_omg->AddEdge(vid1,vid2,edge);
@@ -837,6 +845,8 @@ BuildIndividualObjectModeGraph() {
 
       if(!IsReachable(terrain,robot))
         continue;
+
+      SaveEdgeTransitions(vid1,vid2);
 
       // Add edge - using atomic edges as indicated in paper
       double edge = 1.;
@@ -1002,6 +1012,182 @@ IsReachable(Robot* _robot1, Robot* _robot2) {
     return true;
 
   return false;
+}
+
+void
+OCMG::
+SaveEdgeTransitions(size_t _source, size_t _target) {
+  // TODO::Assuming reversible edges
+  
+  auto problem = this->GetMPProblem();
+  auto source = m_omg->GetVertex(_source);
+  auto target = m_omg->GetVertex(_target);
+
+  auto edgeKey = std::make_pair(_source,_target);
+  auto reverseKey = std::make_pair(_target,_source);
+
+  for(auto object : m_objects) {
+
+    // Build source groups
+    std::vector<GroupRoadmapType*> sourceGrms;
+
+    {
+      // Build objects starting state
+      std::vector<Robot*> robots = {object};
+      if(source.robot) {
+        robots.push_back(source.robot);
+      }
+      auto group = problem->AddRobotGroup(robots,"");
+      auto grm = m_solution->GetGroupRoadmap(group);
+      sourceGrms.push_back(grm);
+
+      // Build state of receiving robot
+      if(target.robot) {
+        robots = {target.robot};
+        group = problem->AddRobotGroup(robots,"");
+        grm = m_solution->GetGroupRoadmap(group);
+        sourceGrms.push_back(grm); 
+      }
+    }
+
+    // Build target groups
+    std::vector<GroupRoadmapType*> targetGrms;
+
+    {
+      // Build objects ending state
+      std::vector<Robot*> robots = {object};
+      if(target.robot) {
+        robots.push_back(target.robot);
+      }
+      auto group = problem->AddRobotGroup(robots,"");
+      auto grm = m_solution->GetGroupRoadmap(group);
+      targetGrms.push_back(grm);
+
+      // Build state of delivering robot
+      if(source.robot) {
+        robots = {source.robot};
+        group = problem->AddRobotGroup(robots,"");
+        grm = m_solution->GetGroupRoadmap(group);
+        targetGrms.push_back(grm); 
+      }
+    }
+
+    // Identify matching transitions
+    for(auto kv : m_savedInteractions) {
+      for(auto transition : kv.second) {
+        auto start = transition.first;
+        auto goal = transition.second;
+
+        bool startMatch = false;
+        // Check if source matches start
+        if(start.size() == sourceGrms.size()) {
+          startMatch = true;
+
+          for(auto grm : sourceGrms) {
+            if(start.find(grm->GetGroup()) == start.end()) {
+              startMatch = false;
+              break;
+            }
+          }
+        }
+
+        // If the groups match, and the object is stationary, check that terrain matches state
+        if(startMatch and source.terrain) {
+          auto group = sourceGrms[0]->GetGroup();
+          auto pair = start[group];
+          auto gcfg = pair.first->GetVertex(pair.second);
+          size_t index = 0;
+          auto cfg = gcfg.GetRobotCfg(index);
+          if(!source.terrain->InTerrain(cfg))
+            startMatch = false;
+        }
+        
+        // If not, check if target matches start
+        bool reverse = false;
+        if(!startMatch) {
+          if(start.size() == targetGrms.size()) {
+            reverse = true;
+
+            for(auto grm : targetGrms) {
+              if(start.find(grm->GetGroup()) == start.end()) {
+                reverse = false;
+                break;
+              }
+            }
+          }
+        }
+
+        // If the groups match, and the object is stationary, check that terrain matches state
+        if(reverse and target.terrain) {
+          auto group = targetGrms[0]->GetGroup();
+          auto pair = start[group];
+          auto gcfg = pair.first->GetVertex(pair.second);
+          size_t index = 0;
+          auto cfg = gcfg.GetRobotCfg(index);
+          if(!target.terrain->InTerrain(cfg))
+            startMatch = true;
+        }
+
+        if(!reverse and !startMatch)
+          continue;
+
+        auto goalGrms = startMatch ? targetGrms : sourceGrms;
+
+        // Check if goal grms match goal state 
+        bool goalMatch = false;
+        // Check if source matches start
+        if(goal.size() == goalGrms.size()) {
+          goalMatch = true;
+
+          for(auto grm : goalGrms) {
+            if(goal.find(grm->GetGroup()) == goal.end()) {
+              goalMatch = false;
+              break;
+            }
+          }
+        }
+
+        auto goalTerrain = startMatch ? target.terrain : source.terrain;
+        // If the groups match, and the object is stationary, check that terrain matches state
+        if(goalMatch and goalTerrain) {
+          auto group = goalGrms[0]->GetGroup();
+          auto pair = goal[group];
+          auto gcfg = pair.first->GetVertex(pair.second);
+          size_t index = 0;
+          auto cfg = gcfg.GetRobotCfg(index);
+          if(!goalTerrain->InTerrain(cfg))
+            goalMatch = false;
+        }
+
+        if(!goalMatch)
+          continue;
+
+        auto sourceState = startMatch ? start : goal;
+        auto targetState = startMatch ? goal : start;
+
+        if(m_debug) {
+          std::cout << "Saving interaction for " << object->GetLabel() 
+                    << " from " << _source << " to " << _target << std::endl;
+          std::cout << "Source State" << std::endl;
+          for(auto kv : sourceState) {
+            std::cout << kv.first->GetLabel() << " : " 
+                      << kv.second.first->GetVertex(kv.second.second).PrettyPrint() 
+                      << std::endl;
+          }
+          std::cout << "Target State" << std::endl;
+          for(auto kv : targetState) {
+            std::cout << kv.first->GetLabel() << " : " 
+                      << kv.second.first->GetVertex(kv.second.second).PrettyPrint() 
+                      << std::endl;
+          }
+        }
+
+        m_omgEdgeTransitions[object][edgeKey] = std::make_pair(sourceState,targetState);
+        m_omgEdgeTransitions[object][reverseKey] = std::make_pair(targetState,sourceState);
+      }
+    }
+
+  }
 }
 
 /*----------------------------------------------------------------------------*/

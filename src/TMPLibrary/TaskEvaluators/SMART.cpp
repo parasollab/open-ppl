@@ -53,15 +53,17 @@ Run(Plan* _plan) {
 
   for(size_t i = 0; i < m_maxIterations; i++) {
     
-    auto pair = SelectMode();
-    auto modeID = pair.first;
-    auto historyID = pair.second;
+    auto modePair = SelectMode();
+    auto modeID = modePair.first;
+    auto historyID = modePair.second;
 
     auto heuristics = ComputeMAPFHeuristic(modeID);
 
-    auto qNear = Select(modeID,historyID,heuristics.nextMode);
+    auto vertexPair = SelectVertex(modeID,historyID,heuristics.nextMode);
+    auto qNear = vertexPair.first;
+    auto direction = vertexPair.second;
 
-    auto qNew = Extend(qNear,modeID,historyID,heuristics.nextMode);
+    auto qNew = Extend(qNear,direction,modeID,historyID,heuristics.nextMode);
     if(qNew >= MAX_INT)
       continue;
 
@@ -227,23 +229,23 @@ SelectMode() {
   return std::make_pair(modeID,historyID);
 }
 
-size_t
+std::pair<size_t,SMART::Direction>
 SMART::
-Select(size_t _modeID, size_t _historyID, Mode _heuristic) {
+SelectVertex(size_t _modeID, size_t _historyID, Mode _heuristic) {
   auto plan = this->GetPlan();
   auto stats = plan->GetStatClass();
   MethodTimer mt(stats,this->GetNameAndLabel() + "::SelectVertex");
 
-  // Check if bias is valid for this history
-  auto iter = m_historyVIDBias.find(_historyID);
-  if(iter != m_historyVIDBias.end())
-    return m_historyVIDBias.at(_historyID);
-
-  auto mode = m_modes[_modeID];
-
   // Sample random direction
   // Do not need to fix formations because we only care about active robots
   auto random = GetRandomDirection(_historyID);
+
+  // Check if bias is valid for this history
+  auto iter = m_historyVIDBias.find(_historyID);
+  if(iter != m_historyVIDBias.end())
+    return std::make_pair(m_historyVIDBias.at(_historyID),random);
+
+  auto mode = m_modes[_modeID];
 
   // Find history vid closest to the randomly sampled vertex 
   auto dm = this->GetMPLibrary()->GetDistanceMetric(m_dmLabel);
@@ -280,14 +282,21 @@ Select(size_t _modeID, size_t _historyID, Mode _heuristic) {
     }
   }
 
-  return closest;
+  return std::make_pair(closest,random);
 }
 
 size_t
 SMART::
-Extend(size_t _qNear, size_t _modeID, size_t _historyID, Mode _heuristic) {
+Extend(size_t _qNear, Direction _direction, size_t _modeID, 
+       size_t _historyID, Mode _heuristic) {
 
   size_t qNew = MAX_INT;
+
+  // With m_heuristicProb probability, choose a heuristic direction
+  std::map<GroupRoadmapType*,GroupCfg> direction;
+  if(DRand() <= m_heuristicProb) {
+    _direction = GetHeuristicDirection(_modeID,_heuristic);
+  }
 
 
   m_historyVIDBias[_historyID] = qNew;
@@ -321,6 +330,10 @@ CheckForGoal(size_t _qNew) {
 std::map<SMART::GroupRoadmapType*,GroupCfg>
 SMART::
 GetRandomDirection(size_t _historyID) {
+  auto plan = this->GetPlan();
+  auto stats = plan->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::GetRandomDirection");
+
   auto problem = this->GetMPProblem();
   auto env = problem->GetEnvironment();
 
@@ -344,6 +357,81 @@ GetRandomDirection(size_t _historyID) {
 
   return random;
 }
+
+std::map<SMART::GroupRoadmapType*,GroupCfg>
+SMART::
+GetHeuristicDirection(size_t _modeID, Mode _heuristic) {
+  auto plan = this->GetPlan();
+  auto stats = plan->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::GetHeuristicDirection");
+
+  //auto problem = this->GetMPProblem();
+  auto sg = static_cast<OCMG*>(this->GetStateGraph(m_sgLabel).get());
+  //auto omg = sg->GetSingleObjectModeGraph();
+  auto mode = m_modes[_modeID];
+
+  std::map<GroupRoadmapType*,GroupCfg> direction;
+
+  for(auto kv : mode) {
+    auto object = kv.first;
+    auto source = kv.second;
+    auto target = _heuristic[object];
+    auto transition = sg->GetSingleObjectModeGraphEdgeTransitions(source,target,object);
+
+    auto goal = transition.second;
+    for(auto kv : goal) {
+      auto pair = kv.second;
+      auto grm = pair.first;
+      auto gcfg = grm->GetVertex(pair.second);
+      direction[grm] = gcfg;
+    }
+  }
+
+
+  return direction;
+  /*// Collect source groups
+  std::vector<GroupRoadmapType*> sourceGrms;
+  
+  for(auto kv : mode) {
+
+    // Collect relevant robots
+    auto object = kv.first;
+    auto info = omg->GetVertex(kv.second);
+
+    std::vector<Robot*> robots = {object};
+    if(info.robot)
+      robots.push_back(info.robot);
+
+    // Get group from problem
+    auto group = problem->AddRobotGroup(robots,"");
+
+    // Add roadmap to set
+    auto rm = sg->GetGroupRoadmap(group);
+    sourceGrms.push_back(rm);
+  }
+
+  // Collect target groups
+  std::vector<GroupRoadmapType*> targetGrms;
+  
+  for(auto kv : _heuristic) {
+
+    // Collect relevant robots
+    auto object = kv.first;
+    auto info = omg->GetVertex(kv.second);
+
+    std::vector<Robot*> robots = {object};
+    if(info.robot)
+      robots.push_back(info.robot);
+
+    // Get group from problem
+    auto group = problem->AddRobotGroup(robots,"");
+
+    // Add roadmap to set
+    auto rm = sg->GetGroupRoadmap(group);
+    sourceGrms.push_back(rm);
+  }*/
+}
+
 /*--------------------------- Heuristic Functions ----------------------------*/
 
 SMART::HeuristicValues

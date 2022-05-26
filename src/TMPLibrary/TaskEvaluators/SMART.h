@@ -22,6 +22,8 @@ class SMART : public TaskEvaluatorMethod {
     // Robot* is the object, size_t is the vid in the single object mode graph
     typedef std::map<Robot*,size_t> Mode;
 
+    typedef std::map<GroupRoadmapType*,GroupCfg> Direction;
+
     struct Vertex {
       std::vector<std::pair<GroupRoadmapType*,VID>> cfgs;
       size_t modeID;
@@ -104,9 +106,11 @@ class SMART : public TaskEvaluatorMethod {
 
     std::pair<size_t,size_t> SelectMode();
 
-    size_t Select(size_t _modeID, size_t _historyID, Mode _heuristic);
+    std::pair<size_t,Direction> SelectVertex(size_t _modeID, 
+                size_t _historyID, Mode _heuristic);
 
-    size_t Extend(size_t _qNear, size_t _modeID, size_t _historyID, Mode _heuristic);
+    size_t Extend(size_t _qNear, Direction _direction, size_t _modeID, 
+                  size_t _historyID, Mode _heuristic);
 
     size_t Rewire(size_t _qNew, size_t _modeID, size_t _historyID);
 
@@ -116,7 +120,9 @@ class SMART : public TaskEvaluatorMethod {
 
     bool CheckForGoal(size_t _qNew);
 
-    std::map<GroupRoadmapType*,GroupCfg> GetRandomDirection(size_t _historyID);
+    Direction GetRandomDirection(size_t _historyID);
+
+    Direction GetHeuristicDirection(size_t _modeID, Mode _heuristic);
 
     ///@}
     ///@name MAPF Heuristic Functions
