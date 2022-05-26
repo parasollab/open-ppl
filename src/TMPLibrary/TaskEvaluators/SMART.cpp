@@ -289,41 +289,227 @@ size_t
 SMART::
 Extend(size_t _qNear, Direction _direction, size_t _modeID, 
        size_t _historyID, Mode _heuristic) {
+  auto plan = this->GetPlan();
+  auto stats = plan->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::Extend");
 
   size_t qNew = MAX_INT;
+  m_historyVIDBias[_historyID] = qNew;
 
   // With m_heuristicProb probability, choose a heuristic direction
-  std::map<GroupRoadmapType*,GroupCfg> direction;
   if(DRand() <= m_heuristicProb) {
     _direction = GetHeuristicDirection(_modeID,_heuristic);
   }
 
+  // Compute angle between vectors
+  auto computeAngle = [stats,this](GroupCfg& _cfg1, GroupCfg& _cfg2) {
+    MethodTimer mt(stats,this->GetNameAndLabel() + "::Extend::ComputeAngle");
 
-  m_historyVIDBias[_historyID] = qNew;
+    if(_cfg1 == _cfg2)
+      return 0.;
+
+    double dot = 0;
+    for(size_t i = 0; i < _cfg1.GetNumRobots(); i++) {
+      auto cfg1 = _cfg1.GetRobotCfg(i);
+      auto cfg2 = _cfg2.GetRobotCfg(i);
+
+      if(cfg1.GetRobot()->GetMultiBody()->IsPassive())
+        continue;
+
+      for(size_t j = 0; j < cfg1.DOF(); j++) {
+        dot += cfg1[j] * cfg2[j];
+      }
+      // Assuming that there is only one active robot
+      double cos = dot / (cfg1.Magnitude() * cfg2.Magnitude());
+      double angle = acos(cos);
+      return abs(angle);
+    }
+
+    return 0.;
+    double cos = dot / (_cfg1.Magnitude() * _cfg2.Magnitude());
+    return abs(acos(cos));
+  };
+
+  auto vertex = m_tensorProductRoadmap->GetVertex(_qNear);
+  
+  Vertex neighbor;
+  neighbor.modeID = vertex.modeID;
+  // Find individual gcfg that minimizes angle for each robot
+  for(auto pair : vertex.cfgs) {
+    auto grm = pair.first;
+    auto vid = pair.second;
+    auto start = grm->GetVertex(vid);
+    
+    // Check if this is a passive group
+    auto group = grm->GetGroup();
+    bool passive = true;
+    for(auto robot : group->GetRobots()) {
+      if(!robot->GetMultiBody()->IsPassive()) {
+        passive = false;
+        break;
+      }
+    }
+
+    // Leave cfg stationary if it is
+    if(passive) { 
+      neighbor.cfgs.push_back(pair);
+      continue;
+    }
+
+    // Check if direction is given for group
+    // If not, given stationary cfg
+    if(_direction.find(grm) == _direction.end()) {
+      neighbor.cfgs.push_back(pair);
+      continue;
+    }
+
+    // Initialize minimum neighbor as staying put
+    auto d = _direction[grm];
+    auto vec1 = d - start;
+
+    GroupCfg empty(grm);
+    for(auto robot : group->GetRobots()) {
+      Cfg cfg(robot);
+      for(size_t i = 0; i < cfg.DOF(); i++) {
+        cfg[i] = 0.000001;
+      }
+      empty.SetRobotCfg(robot,std::move(cfg));
+    }
+    double minAngle = computeAngle(vec1,empty);
+    size_t newVID = vid;
+
+    // Check each of the neighbors in the roadmap
+    auto vit = grm->find_vertex(vid);
+    for(auto eit = vit->begin(); eit != vit->end(); eit++) {
+
+      // Grab neighbor
+      auto target = eit->target();
+      auto n = grm->GetVertex(target);
+      auto vec2 = n - start;
+
+      double angle = computeAngle(vec1,vec2);
+
+      // Check if this is a new min angle
+      if(angle >= minAngle)
+        continue;
+
+      // If yes, save
+      minAngle = angle;
+      newVID = target;
+    }
+
+    neighbor.cfgs.push_back(std::make_pair(grm,newVID));
+  }
+
+  // Check if there is a valid connection to the neighbor
+  if(!ValidConnection(vertex,neighbor))
+    return qNew;
+
+  // Add vertex to tensor product roadmap
+  qNew = m_tensorProductRoadmap->AddVertex(neighbor);
+
+  // Add edge to qNear
+  std::vector<std::pair<GroupRoadmapType*,std::pair<size_t,size_t>>> transitions;
+  size_t cost = 0;
+
+  for(auto pair1 : vertex.cfgs) {
+    auto grm = pair1.first;
+
+    for(auto pair2 : neighbor.cfgs) {
+      if(pair2.first == grm) {
+        
+        auto vids = std::make_pair(pair1.second,pair2.second);
+        transitions.emplace_back(grm,vids);
+
+        if(vids.first != vids.second)
+          cost = std::max(cost,grm->GetEdge(vids.first,vids.second).GetTimeSteps());
+
+        break;
+      }
+    }
+
+  }
+
+  Edge edge;
+  edge.transitions = transitions;
+  edge.cost = double(cost);
+
+  m_tensorProductRoadmap->AddEdge(_qNear,qNew,edge);
+
+  // Add to action extended graph
+  ActionExtendedState state;
+  state.vid = _qNear;
+  state.ahid = _historyID;
+
+  auto aeSource = m_actionExtendedGraph->GetVID(state);
+
+  state.vid = qNew;
+
+  auto aeTarget = m_actionExtendedGraph->AddVertex(state);
+  
+  ActionExtendedEdge aeEdge;
+  aeEdge.cost = double(cost);
+
+  m_actionExtendedGraph->AddEdge(aeSource,aeTarget,aeEdge);
+
+  m_historyVIDs[_historyID].insert(qNew);
+  m_historyVIDBias[_historyID] = aeTarget;
+
   return qNew;
 }
 
 size_t
 SMART::
 Rewire(size_t _qNew, size_t _modeID, size_t _historyID) {
+
+  // TODO:: Task 4
+
+  // Basic rewire logic
+
+  // Get all neighbors with cost less than current
+  // TODO::Add map in header to track cost to each action extended vertex
+
+  // In order of best cost from source, check if there is a valid connection in the tensor product roadmap
+
   return MAX_INT;
 }
 
 bool
 SMART::
 ValidConnection(const Vertex& _source, const Vertex& _target) {
-  return false;
+
+  // TODO:: Task 3
+
+  // Reconstruct local plans for each robot
+
+  // Check if they are in collision
+
+  return true;
 }
 
 bool 
 SMART::
 CheckForModeSwitch(size_t _qNew) {
+
+  // TODO:: Task 1
+
+  // Get mode
+
+  // For each object, check if it can transition to any of its neighbors
+
+  // Build full set of mode switches available
+
   return false;
 }
 
 bool
 SMART::
 CheckForGoal(size_t _qNew) {
+
+  // TODO:: Task 2
+  
+  // Check if the state satisfies the goal constraints in the decomposition
+
   return false;
 }
 
@@ -372,15 +558,15 @@ GetHeuristicDirection(size_t _modeID, Mode _heuristic) {
 
   std::map<GroupRoadmapType*,GroupCfg> direction;
 
-  for(auto kv : mode) {
-    auto object = kv.first;
-    auto source = kv.second;
+  for(auto kv1 : mode) {
+    auto object = kv1.first;
+    auto source = kv1.second;
     auto target = _heuristic[object];
     auto transition = sg->GetSingleObjectModeGraphEdgeTransitions(source,target,object);
 
-    auto goal = transition.second;
-    for(auto kv : goal) {
-      auto pair = kv.second;
+    auto goal = transition.first;
+    for(auto kv2 : goal) {
+      auto pair = kv2.second;
       auto grm = pair.first;
       auto gcfg = grm->GetVertex(pair.second);
       direction[grm] = gcfg;
