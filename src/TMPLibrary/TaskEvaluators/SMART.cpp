@@ -242,8 +242,10 @@ SelectVertex(size_t _modeID, size_t _historyID, Mode _heuristic) {
 
   // Check if bias is valid for this history
   auto iter = m_historyVIDBias.find(_historyID);
-  if(iter != m_historyVIDBias.end())
-    return std::make_pair(m_historyVIDBias.at(_historyID),random);
+  if(iter != m_historyVIDBias.end()) {
+    auto aeid = m_actionExtendedGraph->GetVertex(m_historyVIDBias.at(_historyID));
+    return std::make_pair(aeid.vid,random);
+  }
 
   auto mode = m_modes[_modeID];
 
@@ -462,6 +464,8 @@ size_t
 SMART::
 Rewire(size_t _qNew, size_t _modeID, size_t _historyID) {
 
+  // TODO::Get TPR vertex from AEG vertex
+
   // TODO:: Task 4
 
   // Basic rewire logic
@@ -490,14 +494,173 @@ ValidConnection(const Vertex& _source, const Vertex& _target) {
 bool 
 SMART::
 CheckForModeSwitch(size_t _qNew) {
+  auto plan = this->GetPlan();
+  auto stats = plan->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::GetRandomDirection");
 
-  // TODO:: Task 1
+  auto sg = static_cast<OCMG*>(this->GetStateGraph(m_sgLabel).get());
+  auto omg = sg->GetSingleObjectModeGraph();
 
   // Get mode
+  auto aes = m_actionExtendedGraph->GetVertex(_qNew);
+  auto vertex = m_tensorProductRoadmap->GetVertex(aes.vid);
+  auto modeID = vertex.modeID;
+  auto mode = m_modes[modeID];
 
   // For each object, check if it can transition to any of its neighbors
+  std::vector<std::vector<std::pair<Robot*,size_t>>> modeSwitches;
+
+  for(auto kv : mode) {
+    auto object = kv.first;
+    auto source = kv.second;
+
+    // Get vertex iterator
+    auto vit = omg->find_vertex(source);
+    if(vit == omg->end())
+      throw RunTimeException(WHERE) << "Failed to find single object mode in graph.";
+
+    // Iterator through outgoing edges and check if vertex matches
+    for(auto eit = vit->begin(); eit != vit->end(); eit++) {
+      auto target = eit->target();
+
+      auto transition = sg->GetSingleObjectModeGraphEdgeTransitions(source,target,object);
+      auto start = transition.first;
+
+      if(start.empty())
+        continue;
+
+      bool match = true;
+      for(auto kv : start) {
+
+        match = false;
+        for(auto pair : vertex.cfgs) {
+          auto grm = pair.first;
+          auto group = grm->GetGroup();
+          
+          // Check if this is the current group being checked
+          if(group != kv.first)
+            continue;
+
+          // Check if the cfg info matches
+          if(pair != kv.second)
+            continue;
+
+          match = true;
+          break;
+        }
+
+        if(!match)
+          break;
+      }
+
+      if(!match)
+        continue;
+
+      // Add transition to set of mode switches
+      auto copy = modeSwitches;
+      auto newSwitch = std::make_pair(object,target);
+      modeSwitches.push_back({newSwitch});
+
+      for(auto modeSwitch : copy) {
+        modeSwitch.push_back(newSwitch);
+        modeSwitches.push_back(modeSwitch);
+      }
+
+    }
+  }
 
   // Build full set of mode switches available
+  for(auto modeSwitch : modeSwitches) {
+    Vertex target;
+
+    // Build new mode
+    Mode newMode = mode;
+    for(auto pair : modeSwitch) {
+      newMode[pair.first] = pair.second;
+    }
+
+    // Get mode id for new mode
+    bool alreadyFound = false;
+    for(size_t i = 0; i < m_modes.size(); i++) {
+      if(m_modes[i] == newMode) {
+        alreadyFound = true;
+        target.modeID = i;
+      }
+    }
+
+    if(!alreadyFound) {
+      target.modeID = m_modes.size();
+      m_modes.push_back(newMode);
+    }
+
+    // Build cfgs of new vertex
+    for(auto pair : modeSwitch) {
+      auto object = pair.first;
+      auto targetID = pair.second;
+      auto sourceID = mode[object];
+
+      auto transition = sg->GetSingleObjectModeGraphEdgeTransitions(sourceID,targetID,object);
+      auto goal = transition.second;
+
+      for(auto kv : goal) {
+        target.cfgs.push_back(kv.second);
+      }
+    }
+
+    // Add vertex to tensor product roadmap
+    auto vid = m_tensorProductRoadmap->AddVertex(target);
+    
+    // Connect to source vertex
+    Edge edge;
+    edge.cost = 0.;
+    m_tensorProductRoadmap->AddEdge(aes.vid,vid,edge);
+
+    // Add transition to history
+    auto history = m_actionHistories[aes.ahid];
+    history.push_back(target.modeID);
+    m_actionHistories.push_back(history);
+
+    // Add vertex to action extended graph 
+    ActionExtendedState aeState;
+    aeState.vid = vid;
+    aeState.ahid = m_actionHistories.size() - 1;
+    auto aeVID = m_actionExtendedGraph->AddVertex(aeState);
+
+    // Connect to source vertex
+    ActionExtendedEdge aeEdge;
+    aeEdge.cost = 0.;
+
+    m_actionExtendedGraph->AddEdge(_qNew,aeVID,aeEdge);
+
+    // Log extra tracking info
+    m_historyVIDs[aeState.ahid].insert(vid);
+    m_historyVIDBias[aeState.ahid] = vid;
+    m_modeHistories[target.modeID].push_back(aeState.ahid);
+
+    if(CheckForGoal(aeVID))
+      return true;
+
+    // Get cost to go
+    auto costToGo = ComputeMAPFHeuristic(target.modeID).costToGo;
+
+    auto currentBest = ComputeMAPFHeuristic(m_biasedModes.front()).costToGo;
+    if(costToGo < currentBest) {
+      m_biasedModes = {target.modeID};
+    }
+    else if(currentBest == costToGo) {
+      // Check that mode is not already in the set
+      bool exists = false;
+      for(auto id : m_biasedModes) {
+        if(id = target.modeID) {
+          exists = true;
+          break;
+        }
+      }
+    
+      if(!exists)
+        m_biasedModes.push_back(target.modeID);
+    }
+  }
 
   return false;
 }
