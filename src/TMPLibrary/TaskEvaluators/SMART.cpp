@@ -571,7 +571,8 @@ Rewire(size_t _qNew, size_t _qNear, size_t _modeID, size_t _historyID) {
       break;
 
     // Otherwise, delete the old edge, and add this one
-    m_actionExtendedGraph->DeleteEdge(_qNear,_qNew);
+    if(m_actionExtendedGraph->IsEdge(_qNear,_qNew))
+      m_actionExtendedGraph->DeleteEdge(_qNear,_qNew);
 
     ActionExtendedEdge edge;
     edge.cost = m_distanceMap[_qNew] - m_distanceMap[cand];
@@ -595,8 +596,9 @@ Rewire(size_t _qNew, size_t _qNear, size_t _modeID, size_t _historyID) {
     if(!ValidConnection(vertex1,vertex2))
       continue;
 
-    // Delete parent of vid2
-    for(auto parent : m_actionExtendedGraph->GetPredecessors(cand)) {
+    // Delete parent of cand
+    auto parents = m_actionExtendedGraph->GetPredecessors(cand);
+    for(auto parent : parents) {
       if(m_actionExtendedGraph->IsEdge(parent,cand))
         m_actionExtendedGraph->DeleteEdge(parent,cand);
     }
