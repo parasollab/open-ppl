@@ -122,7 +122,7 @@ class SMART : public TaskEvaluatorMethod {
 
     Direction GetRandomDirection(size_t _historyID);
 
-    Direction GetHeuristicDirection(size_t _modeID, Mode _heuristic);
+    Direction GetHeuristicDirection(size_t _vid, size_t _modeID, Mode _heuristic);
 
     ///@}
     ///@name MAPF Heuristic Functions
@@ -152,6 +152,8 @@ class SMART : public TaskEvaluatorMethod {
     double m_goalBias{0.5};
 
     std::string m_dmLabel;
+
+    std::string m_cdLabel;
 
     ///@}
     ///@name Internal State

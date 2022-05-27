@@ -69,6 +69,8 @@ class OCMG : public StateGraph {
     ///@name Accessors
     ///@{
 
+    MPSolution* GetMPSolution();
+
     GroupRoadmapType* GetGroupRoadmap(RobotGroup* _group);
 
     SingleObjectModeGraph* GetSingleObjectModeGraph();
@@ -83,7 +85,7 @@ class OCMG : public StateGraph {
 
     TerrainVIDs GetTerrainVIDs();
 
-    std::pair<State,State> GetSingleObjectModeGraphEdgeTransitions(
+    std::vector<std::pair<State,State>> GetSingleObjectModeGraphEdgeTransitions(
                             size_t _source, size_t _target, Robot* _object);
 
     ///@}
@@ -151,7 +153,7 @@ class OCMG : public StateGraph {
     std::unique_ptr<SingleObjectModeGraph> m_omg;
 
     std::map<Robot*,std::map<std::pair<size_t,size_t>,
-            std::pair<State,State>>> m_omgEdgeTransitions;
+            std::vector<std::pair<State,State>>>> m_omgEdgeTransitions;
 
     ///@}
 };

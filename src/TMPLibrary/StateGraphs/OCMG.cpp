@@ -80,6 +80,12 @@ Initialize() {
 
 /*------------------------------- Accessors ----------------------------------*/
 
+OCMG::MPSolution*
+OCMG::
+GetMPSolution() {
+  return m_solution.get();
+}
+
 OCMG::GroupRoadmapType*
 OCMG::
 GetGroupRoadmap(RobotGroup* _group) {
@@ -134,7 +140,7 @@ GetTerrainVIDs() {
   return m_terrainVIDs;
 }
 
-std::pair<OCMG::State,OCMG::State> 
+std::vector<std::pair<OCMG::State,OCMG::State>>
 OCMG::
 GetSingleObjectModeGraphEdgeTransitions(size_t _source, size_t _target, Robot* _object) {
   return m_omgEdgeTransitions[_object][std::make_pair(_source,_target)];
@@ -675,14 +681,16 @@ RunInteractionStrategy(Interaction* _interaction, State _start) {
     if(oldRm)
       continue;
 
-    oldRm = m_solution->GetGroupRoadmap(group);
-    GroupCfg gcfg(oldRm);
-    gcfg = GroupCfg(oldRm);
+    GroupCfg gcfg(nullptr);
     auto stages = _interaction->GetStages();
     for(size_t i = 1; i < stages.size(); i++) {
       auto paths = _interaction->GetToStagePaths(stages[i]);
       if(paths.empty())
         continue;
+
+      oldRm = _interaction->GetToStageSolution(stages[i])->GetGroupRoadmap(group);
+        
+      gcfg = GroupCfg(oldRm);
 
       for(auto robot : group->GetRobots()) {
         for(const auto& path : paths) {
@@ -692,6 +700,8 @@ RunInteractionStrategy(Interaction* _interaction, State _start) {
           }
         }
       }
+
+      break;
     }
 
     auto vid = oldRm->AddVertex(gcfg);
@@ -774,6 +784,21 @@ CopyAndConnectState(State _state) {
 
       rm->DeleteVertex(vid);
       return {};
+    }
+  }
+
+  if(m_debug) {
+    std::cout << "Original state :" << std::endl;
+    for(auto kv : _state) {
+      auto group = kv.first;
+      auto pair = kv.second;
+      std::cout << group->GetLabel() << " : " << pair.first->GetVertex(pair.second) << std::endl;
+    }
+    std::cout << "Copied state. Now saved as :" << std::endl;
+    for(auto kv : copy) {
+      auto group = kv.first;
+      auto pair = kv.second;
+      std::cout << group->GetLabel() << " : " << pair.first->GetVertex(pair.second) << std::endl;
     }
   }
 
@@ -1182,8 +1207,10 @@ SaveEdgeTransitions(size_t _source, size_t _target) {
           }
         }
 
-        m_omgEdgeTransitions[object][edgeKey] = std::make_pair(sourceState,targetState);
-        m_omgEdgeTransitions[object][reverseKey] = std::make_pair(targetState,sourceState);
+        auto& forward = m_omgEdgeTransitions[object][edgeKey]; 
+        forward.emplace_back(sourceState,targetState);
+        auto& backward = m_omgEdgeTransitions[object][reverseKey];
+        backward.emplace_back(targetState,sourceState);
       }
     }
 

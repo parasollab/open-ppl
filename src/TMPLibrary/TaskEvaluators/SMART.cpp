@@ -2,12 +2,16 @@
 
 #include "Behaviors/Agents/Coordinator.h"
 
+#include "MPLibrary/ValidityCheckers/CollisionDetectionValidity.h"
+
 #include "MPProblem/TaskHierarchy/Decomposition.h"
 #include "MPProblem/TaskHierarchy/SemanticTask.h"
 #include "MPProblem/MPTask.h"
 
 #include "TMPLibrary/StateGraphs/OCMG.h"
 #include "TMPLibrary/Solution/Plan.h"
+
+#include "Traits/CfgTraits.h"
 
 /*------------------------------- Construction -------------------------------*/
 
@@ -30,8 +34,10 @@ SMART(XMLNode& _node) : TaskEvaluatorMethod(_node) {
             "Probability of selecting mode towards goal.");
 
   m_dmLabel = _node.Read("dmLabel",true,"",
-            "Distance metric to compute diastance between group cfgs.");
+            "Distance metric to compute distance between group cfgs.");
 
+  m_cdLabel = _node.Read("cdLabel",true,"",
+            "Collision detection method to check for interrobot collision.");
 }
 
 /*---------------------------- Initialization --------------------------------*/
@@ -200,6 +206,9 @@ CreateSMARTreeRoot() {
 std::pair<size_t,size_t>
 SMART::
 SelectMode() {
+  auto plan = this->GetPlan();
+  auto stats = plan->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::SelectMode");
 
   size_t modeID = MAX_INT;
   size_t historyID = MAX_INT;
@@ -242,7 +251,7 @@ SelectVertex(size_t _modeID, size_t _historyID, Mode _heuristic) {
 
   // Check if bias is valid for this history
   auto iter = m_historyVIDBias.find(_historyID);
-  if(iter != m_historyVIDBias.end()) {
+  if(iter != m_historyVIDBias.end() and iter->second != MAX_INT) {
     auto aeid = m_actionExtendedGraph->GetVertex(m_historyVIDBias.at(_historyID));
     return std::make_pair(aeid.vid,random);
   }
@@ -300,7 +309,7 @@ Extend(size_t _qNear, Direction _direction, size_t _modeID,
 
   // With m_heuristicProb probability, choose a heuristic direction
   if(DRand() <= m_heuristicProb) {
-    _direction = GetHeuristicDirection(_modeID,_heuristic);
+    _direction = GetHeuristicDirection(_qNear,_modeID,_heuristic);
   }
 
   // Compute angle between vectors
@@ -368,6 +377,12 @@ Extend(size_t _qNear, Direction _direction, size_t _modeID,
     // Initialize minimum neighbor as staying put
     auto d = _direction[grm];
     auto vec1 = d - start;
+
+    // If direction is to go to current vertex, stay put
+    if(d == start) {
+      neighbor.cfgs.push_back(pair);
+      continue;
+    }
 
     GroupCfg empty(grm);
     for(auto robot : group->GetRobots()) {
@@ -457,7 +472,7 @@ Extend(size_t _qNear, Direction _direction, size_t _modeID,
   m_historyVIDs[_historyID].insert(qNew);
   m_historyVIDBias[_historyID] = aeTarget;
 
-  return qNew;
+  return aeTarget;
 }
 
 size_t
@@ -481,12 +496,97 @@ Rewire(size_t _qNew, size_t _modeID, size_t _historyID) {
 bool
 SMART::
 ValidConnection(const Vertex& _source, const Vertex& _target) {
+  auto plan = this->GetPlan();
+  auto stats = plan->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::ValidConnection");
 
-  // TODO:: Task 3
+  if(_source == _target)
+    return false;
 
-  // Reconstruct local plans for each robot
+  if(_source.cfgs.size() != _target.cfgs.size())
+      throw RunTimeException(WHERE) << "Mismatched group roadmaps.";
+
+  // Collect edge vids for each robot group
+  std::map<GroupRoadmapType*,std::pair<size_t,size_t>> edges;
+
+  for(auto pair : _source.cfgs) {
+    auto grm = pair.first;
+    auto vid = pair.second;
+
+    edges[grm] = std::make_pair(vid,MAX_INT);
+  }
+
+  for(auto pair : _target.cfgs) {
+    auto grm = pair.first;
+    auto vid = pair.second;
+
+    if(edges.find(grm) == edges.end())
+      throw RunTimeException(WHERE) << "Mismatched group roadmaps.";
+
+    auto& edge = edges[grm];
+    edge.second = vid;
+  }
+
+  // Reconstruct local plans for each robot group
+  auto sg = static_cast<OCMG*>(this->GetStateGraph(m_sgLabel).get());
+  auto lib = this->GetMPLibrary();
+  lib->SetMPSolution(sg->GetMPSolution());
+  auto problem = this->GetMPProblem();
+  auto env = problem->GetEnvironment();
+
+  std::map<RobotGroup*,std::vector<GroupCfg>> localPlans;
+  size_t maxTimestep = 0;
+
+  for(auto kv : edges) {
+    auto grm = kv.first;
+    auto source = kv.second.first;
+    auto target = kv.second.second;
+    auto group = grm->GetGroup();
+
+    if(source == target) {
+      localPlans[group] = {grm->GetVertex(source)};
+      continue;
+    }
+
+    localPlans[group] = lib->ReconstructEdge(grm,source,target,
+                       env->GetPositionRes(),env->GetOrientationRes());
+
+    maxTimestep = std::max(maxTimestep,localPlans[group].size());
+  }
 
   // Check if they are in collision
+  auto cd = dynamic_cast<CollisionDetectionValidity<MPTraits<Cfg>>*>(lib->GetValidityChecker(m_cdLabel));
+
+  for(size_t t = 0; t < maxTimestep; t++) {
+    for(auto iter1 = localPlans.begin(); iter1 != localPlans.end(); iter1++) {
+      auto group1 = iter1->first;
+      const auto& path1 = iter1->second;
+      const size_t t1 = path1.size() > t ? t : path1.size() - 1;
+      const auto& gcfg1 = path1[t1];
+    
+      gcfg1.ConfigureRobot();
+
+      auto iter2 = iter1;
+      iter2++;
+      for(; iter2 != localPlans.end(); iter2++) {
+        auto group2 = iter2->first;
+        const auto& path2 = iter2->second;
+        const size_t t2 = path2.size() > t ? t : path2.size() - 1;
+        const auto& gcfg2 = path2[t2];
+
+        gcfg2.ConfigureRobot();
+
+        for(auto r1 : group1->GetRobots()) {
+          for(auto r2 : group2->GetRobots()) {
+            CDInfo cdInfo;
+            if(cd->IsMultiBodyCollision(cdInfo,
+                r1->GetMultiBody(),r2->GetMultiBody(),this->GetNameAndLabel()))
+              return false;
+          }
+        }
+      }
+    }
+  }
 
   return true;
 }
@@ -496,7 +596,7 @@ SMART::
 CheckForModeSwitch(size_t _qNew) {
   auto plan = this->GetPlan();
   auto stats = plan->GetStatClass();
-  MethodTimer mt(stats,this->GetNameAndLabel() + "::GetRandomDirection");
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::CheckForModeSwitch");
 
   auto sg = static_cast<OCMG*>(this->GetStateGraph(m_sgLabel).get());
   auto omg = sg->GetSingleObjectModeGraph();
@@ -509,6 +609,8 @@ CheckForModeSwitch(size_t _qNew) {
 
   // For each object, check if it can transition to any of its neighbors
   std::vector<std::vector<std::pair<Robot*,size_t>>> modeSwitches;
+
+  std::map<Robot*,std::pair<OCMG::State,OCMG::State>> matchedTransitions;
 
   for(auto kv : mode) {
     auto object = kv.first;
@@ -523,49 +625,56 @@ CheckForModeSwitch(size_t _qNew) {
     for(auto eit = vit->begin(); eit != vit->end(); eit++) {
       auto target = eit->target();
 
-      auto transition = sg->GetSingleObjectModeGraphEdgeTransitions(source,target,object);
-      auto start = transition.first;
+      auto transitions = sg->GetSingleObjectModeGraphEdgeTransitions(source,target,object);
+      bool match = false;
+      for(auto transition : transitions) {
+        auto start = transition.first;
 
-      if(start.empty())
-        continue;
+        if(start.empty())
+          continue;
 
-      bool match = true;
-      for(auto kv : start) {
+        match = true;
+        for(auto kv : start) {
 
-        match = false;
-        for(auto pair : vertex.cfgs) {
-          auto grm = pair.first;
-          auto group = grm->GetGroup();
-          
-          // Check if this is the current group being checked
-          if(group != kv.first)
-            continue;
+          match = false;
+          for(auto pair : vertex.cfgs) {
+            auto grm = pair.first;
+            auto group = grm->GetGroup();
 
-          // Check if the cfg info matches
-          if(pair != kv.second)
-            continue;
+            // Check if this is the current group being checked
+            if(group != kv.first)
+              continue;
 
-          match = true;
-          break;
+            // Check if the cfg info matches
+            if(pair != kv.second)
+              continue;
+
+            match = true;
+            break;
+          }
+
+          if(!match)
+            break;
         }
 
         if(!match)
+          continue;
+
+        // Add transition to set of mode switches
+        auto copy = modeSwitches;
+        auto newSwitch = std::make_pair(object,target);
+        modeSwitches.push_back({newSwitch});
+
+        for(auto modeSwitch : copy) {
+          modeSwitch.push_back(newSwitch);
+          modeSwitches.push_back(modeSwitch);
+        }
+
+        matchedTransitions[object] = transition;
+
+        if(match)
           break;
       }
-
-      if(!match)
-        continue;
-
-      // Add transition to set of mode switches
-      auto copy = modeSwitches;
-      auto newSwitch = std::make_pair(object,target);
-      modeSwitches.push_back({newSwitch});
-
-      for(auto modeSwitch : copy) {
-        modeSwitch.push_back(newSwitch);
-        modeSwitches.push_back(modeSwitch);
-      }
-
     }
   }
 
@@ -594,17 +703,43 @@ CheckForModeSwitch(size_t _qNew) {
     }
 
     // Build cfgs of new vertex
+    std::set<Robot*> used;
+
+    // Add transition cfgs
     for(auto pair : modeSwitch) {
       auto object = pair.first;
-      auto targetID = pair.second;
-      auto sourceID = mode[object];
+      //auto targetID = pair.second;
+      //auto sourceID = mode[object];
 
-      auto transition = sg->GetSingleObjectModeGraphEdgeTransitions(sourceID,targetID,object);
+      //auto transition = sg->GetSingleObjectModeGraphEdgeTransitions(sourceID,targetID,object);
+      auto transition = matchedTransitions[object];
       auto goal = transition.second;
 
       for(auto kv : goal) {
         target.cfgs.push_back(kv.second);
+
+        for(auto robot : kv.first->GetRobots()) {
+          used.insert(robot);
+        }
       }
+    }
+
+    // Copy in cfgs that did not transition
+    for(auto pair : vertex.cfgs) {
+      auto group = pair.first->GetGroup();
+      bool accountedFor = false;
+      for(auto robot : group->GetRobots()) {
+        if(used.count(robot)) {
+          accountedFor = true;
+          continue;
+        }
+        else if(accountedFor) {
+          throw RunTimeException(WHERE) << "Partial accounting of robot group in transition.";
+        }
+      }
+
+      if(!accountedFor)
+        target.cfgs.push_back(pair);
     }
 
     // Add vertex to tensor product roadmap
@@ -634,7 +769,7 @@ CheckForModeSwitch(size_t _qNew) {
 
     // Log extra tracking info
     m_historyVIDs[aeState.ahid].insert(vid);
-    m_historyVIDBias[aeState.ahid] = vid;
+    m_historyVIDBias[aeState.ahid] = aeVID;
     m_modeHistories[target.modeID].push_back(aeState.ahid);
 
     if(CheckForGoal(aeVID))
@@ -651,7 +786,7 @@ CheckForModeSwitch(size_t _qNew) {
       // Check that mode is not already in the set
       bool exists = false;
       for(auto id : m_biasedModes) {
-        if(id = target.modeID) {
+        if(id == target.modeID) {
           exists = true;
           break;
         }
@@ -668,12 +803,80 @@ CheckForModeSwitch(size_t _qNew) {
 bool
 SMART::
 CheckForGoal(size_t _qNew) {
+  auto plan = this->GetPlan();
+  auto stats = plan->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::CheckForGoal");
 
-  // TODO:: Task 2
+  auto coordinator = plan->GetCoordinator();
+  auto problem = this->GetMPProblem();
+  auto decomp = problem->GetDecompositions(coordinator->GetRobot())[0].get();
+
+  // Grab current cfgs
+  auto aeState = m_actionExtendedGraph->GetVertex(_qNew);
+  auto vertex = m_tensorProductRoadmap->GetVertex(aeState.vid);
+
+  std::map<Robot*,Cfg> currentCfgs;
+  for(auto pair : vertex.cfgs) {
+    auto grm = pair.first;
+    auto vid = pair.second;
+    auto gcfg = grm->GetVertex(vid);
+
+    for(auto robot : grm->GetGroup()->GetRobots()) {
+      auto cfg = gcfg.GetRobotCfg(robot);
+      currentCfgs[robot] = cfg;
+    }
+  }
+
+  // Check that each task is satisfied
+  std::set<SemanticTask*> satisfied;
+  for(auto st : decomp->GetGroupMotionTasks()) {
+
+    auto parent = st->GetParent();
+    std::vector<SemanticTask*> tasks; 
+
+    auto relation = parent->GetSubtaskRelation();
+
+    if(relation == SemanticTask::SubtaskRelation::XOR) {
+      if(satisfied.count(parent))
+        continue;
+
+      tasks = parent->GetSubtasks();
+    }
+    else {
+      tasks = {st};
+    }
+
+
+    bool isSatisfied = true;
+    for(auto task : tasks) {
+      auto gt = task->GetGroupMotionTask();
+
+      for(auto iter = gt->begin(); iter != gt->end(); iter++) {
+        auto constraint = iter->GetGoalConstraints()[0].get();
+
+        auto robot = constraint->GetRobot();
+        auto cfg = currentCfgs[robot];
+
+        if(constraint->Satisfied(cfg))
+          continue;
+
+        isSatisfied = false;
+        break;
+      }
+
+      if(isSatisfied)
+        break;
+    }
+
+    if(isSatisfied) {
+      satisfied.insert(parent);
+      continue;
+    }
+
+    return false;
+  }
   
-  // Check if the state satisfies the goal constraints in the decomposition
-
-  return false;
+  return true;
 }
 
 std::map<SMART::GroupRoadmapType*,GroupCfg>
@@ -709,7 +912,7 @@ GetRandomDirection(size_t _historyID) {
 
 std::map<SMART::GroupRoadmapType*,GroupCfg>
 SMART::
-GetHeuristicDirection(size_t _modeID, Mode _heuristic) {
+GetHeuristicDirection(size_t _vid, size_t _modeID, Mode _heuristic) {
   auto plan = this->GetPlan();
   auto stats = plan->GetStatClass();
   MethodTimer mt(stats,this->GetNameAndLabel() + "::GetHeuristicDirection");
@@ -719,20 +922,92 @@ GetHeuristicDirection(size_t _modeID, Mode _heuristic) {
   //auto omg = sg->GetSingleObjectModeGraph();
   auto mode = m_modes[_modeID];
 
+  auto vertex = m_tensorProductRoadmap->GetVertex(_vid);
+
   std::map<GroupRoadmapType*,GroupCfg> direction;
 
   for(auto kv1 : mode) {
     auto object = kv1.first;
     auto source = kv1.second;
     auto target = _heuristic[object];
-    auto transition = sg->GetSingleObjectModeGraphEdgeTransitions(source,target,object);
+    auto transitions = sg->GetSingleObjectModeGraphEdgeTransitions(source,target,object);
 
-    auto goal = transition.first;
-    for(auto kv2 : goal) {
-      auto pair = kv2.second;
-      auto grm = pair.first;
-      auto gcfg = grm->GetVertex(pair.second);
-      direction[grm] = gcfg;
+    for(auto transition : transitions) {
+      auto goal = transition.first;
+
+      // Find group containing object
+      RobotGroup* group = nullptr;
+      for(auto kv : goal) {
+        for(auto robot : kv.first->GetRobots()) {
+          if(robot == object) {
+            group = kv.first;
+            break;
+          }
+        }
+      }
+
+      // Check if formations match
+      bool formationMatch = true;
+      for(auto pair : vertex.cfgs) {
+        if(pair.first->GetGroup() != group)
+          continue;
+
+        auto gcfg1 = goal[group].first->GetVertex(goal[group].second);
+        auto gcfg2 = pair.first->GetVertex(pair.second);
+
+        auto form1 = gcfg1.GetFormations();
+        auto form2 = gcfg2.GetFormations();
+
+        if(form1.size() != form2.size()) {
+          formationMatch = false;
+          break;
+        }
+
+        for(auto f1 : form1) {
+          formationMatch = false;
+          for(auto f2 : form2) {
+
+            if(f1 == f2 or *f1 == *f2) {
+              formationMatch = true;
+              break;
+            }
+          }
+
+          if(!formationMatch)
+            break;
+        }
+
+        if(formationMatch == false)
+          break;
+
+        for(auto f2 : form2) {
+          formationMatch = false;
+          for(auto f1 : form1) {
+
+            if(f1 == f2 or *f1 == *f2) {
+              formationMatch = true;
+              break;
+            }
+          }
+
+          if(!formationMatch)
+            break;
+        }
+
+        break;
+      }
+
+      if(!formationMatch)
+        continue;
+
+      for(auto kv2 : goal) {
+        auto pair = kv2.second;
+        auto grm = pair.first;
+        auto gcfg = grm->GetVertex(pair.second);
+        direction[grm] = gcfg;
+      }
+
+      break;
     }
   }
 
