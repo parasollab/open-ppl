@@ -598,7 +598,7 @@ Rewire(size_t _qNew, size_t _qNear, size_t _modeID, size_t _historyID) {
     // Delete parent of vid2
     for(auto parent : m_actionExtendedGraph->GetPredecessors(cand)) {
       if(m_actionExtendedGraph->IsEdge(parent,cand))
-        m_actionExtendedGraph->DeleteEdge(parent,vid2);
+        m_actionExtendedGraph->DeleteEdge(parent,cand);
     }
 
     // Connect qNew to cand
