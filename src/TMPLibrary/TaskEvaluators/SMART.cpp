@@ -73,7 +73,7 @@ Run(Plan* _plan) {
     if(qNew >= MAX_INT)
       continue;
 
-    auto qBest = Rewire(qNew,modeID,historyID);
+    auto qBest = Rewire(qNew,qNear,modeID,historyID);
 
     if(qBest >= MAX_INT)
       qBest = qNear;
@@ -198,7 +198,7 @@ CreateSMARTreeRoot() {
   aes.vid = rootVID;
   aes.ahid = {0};
 
-  m_actionExtendedGraph->AddVertex(aes);
+  rootVID = m_actionExtendedGraph->AddVertex(aes);
 
   m_historyVIDs[0].insert(rootVID);
 }
@@ -252,8 +252,8 @@ SelectVertex(size_t _modeID, size_t _historyID, Mode _heuristic) {
   // Check if bias is valid for this history
   auto iter = m_historyVIDBias.find(_historyID);
   if(iter != m_historyVIDBias.end() and iter->second != MAX_INT) {
-    auto aeid = m_actionExtendedGraph->GetVertex(m_historyVIDBias.at(_historyID));
-    return std::make_pair(aeid.vid,random);
+    //auto aeid = m_actionExtendedGraph->GetVertex(m_historyVIDBias.at(_historyID));
+    return std::make_pair(m_historyVIDBias.at(_historyID),random);
   }
 
   auto mode = m_modes[_modeID];
@@ -266,7 +266,8 @@ SelectVertex(size_t _modeID, size_t _historyID, Mode _heuristic) {
   VID closest = MAX_INT;
 
   for(auto vid : candidates) {
-    auto vertex = m_tensorProductRoadmap->GetVertex(vid);
+    auto aeVertex = m_actionExtendedGraph->GetVertex(vid);
+    auto vertex = m_tensorProductRoadmap->GetVertex(aeVertex.vid);
 
     double distance = 0;
     for(auto pair : vertex.cfgs) {
@@ -307,9 +308,12 @@ Extend(size_t _qNear, Direction _direction, size_t _modeID,
   size_t qNew = MAX_INT;
   m_historyVIDBias[_historyID] = qNew;
 
+  auto aeState = m_actionExtendedGraph->GetVertex(_qNear);
+  auto qNear = aeState.vid;
+
   // With m_heuristicProb probability, choose a heuristic direction
   if(DRand() <= m_heuristicProb) {
-    _direction = GetHeuristicDirection(_qNear,_modeID,_heuristic);
+    _direction = GetHeuristicDirection(qNear,_modeID,_heuristic);
   }
 
   // Compute angle between vectors
@@ -341,7 +345,7 @@ Extend(size_t _qNear, Direction _direction, size_t _modeID,
     return abs(acos(cos));
   };
 
-  auto vertex = m_tensorProductRoadmap->GetVertex(_qNear);
+  auto vertex = m_tensorProductRoadmap->GetVertex(qNear);
   
   Vertex neighbor;
   neighbor.modeID = vertex.modeID;
@@ -451,7 +455,7 @@ Extend(size_t _qNear, Direction _direction, size_t _modeID,
   edge.transitions = transitions;
   edge.cost = double(cost);
 
-  m_tensorProductRoadmap->AddEdge(_qNear,qNew,edge);
+  m_tensorProductRoadmap->AddEdge(qNear,qNew,edge);
 
   // Add to action extended graph
   ActionExtendedState state;
@@ -469,28 +473,142 @@ Extend(size_t _qNear, Direction _direction, size_t _modeID,
 
   m_actionExtendedGraph->AddEdge(aeSource,aeTarget,aeEdge);
 
-  m_historyVIDs[_historyID].insert(qNew);
+  m_historyVIDs[_historyID].insert(aeTarget);
   m_historyVIDBias[_historyID] = aeTarget;
+
+  m_distanceMap[aeTarget] = m_distanceMap[aeSource] + aeEdge.cost;
 
   return aeTarget;
 }
 
 size_t
 SMART::
-Rewire(size_t _qNew, size_t _modeID, size_t _historyID) {
+Rewire(size_t _qNew, size_t _qNear, size_t _modeID, size_t _historyID) {
 
-  // TODO::Get TPR vertex from AEG vertex
-
-  // TODO:: Task 4
+  // Get TPR vertex from AEG vertex
+  auto aeState = m_actionExtendedGraph->GetVertex(_qNew);
+  auto vid1 = aeState.vid;
+  const double originalDistance = m_distanceMap[_qNew];
 
   // Basic rewire logic
 
+  auto candidates = m_historyVIDs[_historyID];
+  auto vertex1 = m_tensorProductRoadmap->GetVertex(vid1);
+
   // Get all neighbors with cost less than current
-  // TODO::Add map in header to track cost to each action extended vertex
+
+  auto dm = this->GetMPLibrary()->GetDistanceMetric(m_dmLabel);
+  std::vector<std::pair<double,size_t>> neighbors;
+  std::vector<std::pair<double,size_t>> backNeighbors;
+
+  for(auto candidate : candidates) {
+    auto aeState = m_actionExtendedGraph->GetVertex(candidate);
+    auto vid2 = aeState.vid;
+    auto vertex2 = m_tensorProductRoadmap->GetVertex(vid2);
+
+    // Check that there is an edge in the implicit tensor product roadmap
+    bool isEdge = true;
+    bool isBackEdge = true;
+    double distance = 0;
+    for(auto pair1 : vertex1.cfgs) {
+      auto grm = pair1.first;
+      auto target = pair1.second;
+
+      for(auto pair2 : vertex2.cfgs) {
+        if(pair2.first != grm)
+          continue;
+
+        auto source = pair2.second;
+
+        if(!grm->IsEdge(source,target)) {
+          isEdge = false;
+        }
+
+        if(!grm->IsEdge(target,source)) {
+          isBackEdge = false;
+        }
+
+        if(!isEdge and !isBackEdge)
+          break;
+
+        distance += dm->Distance(grm->GetVertex(source),grm->GetVertex(target));
+      }
+
+      if(!isEdge and !isBackEdge)
+        break;
+    }
+
+    if(isBackEdge) {
+      backNeighbors.emplace_back(distance,candidate);
+    }
+
+    distance += m_distanceMap[candidate];
+    if(isEdge and distance < originalDistance) {
+      neighbors.emplace_back(distance,candidate);
+    }
+  }
+
+  // Sort the neighbors by rewire distance
+  std::sort(neighbors.begin(), neighbors.end());
 
   // In order of best cost from source, check if there is a valid connection in the tensor product roadmap
+  size_t qBest = MAX_INT;
+  
+  for(auto pair : neighbors) {
+    auto cand = pair.second;
+    auto vid2 = m_actionExtendedGraph->GetVertex(cand).vid;
+    
+    // Check if it is connected
+    auto vertex2 = m_tensorProductRoadmap->GetVertex(vid2);
+    if(!ValidConnection(vertex2,vertex1))
+      continue;
 
-  return MAX_INT;
+    qBest = cand;
+    m_distanceMap[_qNew] = pair.first;
+
+    // Check if this was the original edge
+    if(cand == _qNear)
+      break;
+
+    // Otherwise, delete the old edge, and add this one
+    m_actionExtendedGraph->DeleteEdge(_qNear,_qNew);
+
+    ActionExtendedEdge edge;
+    edge.cost = m_distanceMap[_qNew] - m_distanceMap[cand];
+    
+    m_actionExtendedGraph->AddEdge(cand,_qNew,edge);
+    
+    break;
+  }
+
+  // Attempt to rewire the nighbors through qNew
+  for(auto pair : backNeighbors) {
+    auto cand = pair.second;
+    auto vid2 = m_actionExtendedGraph->GetVertex(cand).vid;
+    
+    // Check if rewire is useful
+    if(pair.second + m_distanceMap[_qNew] >= m_distanceMap[cand])
+      continue;
+
+    // Check if it is connected
+    auto vertex2 = m_tensorProductRoadmap->GetVertex(vid2);
+    if(!ValidConnection(vertex1,vertex2))
+      continue;
+
+    // Delete parent of vid2
+    for(auto parent : m_actionExtendedGraph->GetPredecessors(cand)) {
+      if(m_actionExtendedGraph->IsEdge(parent,cand))
+        m_actionExtendedGraph->DeleteEdge(parent,vid2);
+    }
+
+    // Connect qNew to cand
+    ActionExtendedEdge edge;
+    edge.cost = m_distanceMap[_qNew] + pair.first;
+
+    m_actionExtendedGraph->AddEdge(_qNew,cand,edge);
+  }
+
+  return qBest;
 }
 
 bool
@@ -768,9 +886,11 @@ CheckForModeSwitch(size_t _qNew) {
     m_actionExtendedGraph->AddEdge(_qNew,aeVID,aeEdge);
 
     // Log extra tracking info
-    m_historyVIDs[aeState.ahid].insert(vid);
+    m_historyVIDs[aeState.ahid].insert(aeVID);
     m_historyVIDBias[aeState.ahid] = aeVID;
     m_modeHistories[target.modeID].push_back(aeState.ahid);
+
+    m_distanceMap[aeVID] = m_distanceMap[_qNew] + aeEdge.cost;
 
     if(CheckForGoal(aeVID))
       return true;
@@ -889,8 +1009,8 @@ GetRandomDirection(size_t _historyID) {
   auto problem = this->GetMPProblem();
   auto env = problem->GetEnvironment();
 
-  auto illustrative = m_tensorProductRoadmap->GetVertex(
-        *(m_historyVIDs[_historyID].begin()));
+  auto aeState = m_actionExtendedGraph->GetVertex(*(m_historyVIDs[_historyID].begin()));
+  auto illustrative = m_tensorProductRoadmap->GetVertex(aeState.vid);
 
   std::map<GroupRoadmapType*,GroupCfg> random;
   

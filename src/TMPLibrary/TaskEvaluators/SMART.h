@@ -112,7 +112,7 @@ class SMART : public TaskEvaluatorMethod {
     size_t Extend(size_t _qNear, Direction _direction, size_t _modeID, 
                   size_t _historyID, Mode _heuristic);
 
-    size_t Rewire(size_t _qNew, size_t _modeID, size_t _historyID);
+    size_t Rewire(size_t _qNew, size_t _qNear, size_t _modeID, size_t _historyID);
 
     bool ValidConnection(const Vertex& _source, const Vertex& _target);
 
@@ -185,6 +185,8 @@ class SMART : public TaskEvaluatorMethod {
 
     // Map of history ID to vid that made progress towards mode goal
     std::map<size_t,size_t> m_historyVIDBias;
+
+    std::map<size_t,double> m_distanceMap;
 
     ///@}
 
