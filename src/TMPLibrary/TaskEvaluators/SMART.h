@@ -69,7 +69,7 @@ class SMART : public TaskEvaluatorMethod {
 
     typedef GenericStateGraph<std::pair<size_t,size_t>,double> HeuristicSearch;
     typedef std::vector<size_t>                                CBSSolution;
-    typedef std::pair<std::pair<size_t,size_t>,size_t>         CBSConstraint;
+    typedef std::pair<size_t,std::pair<size_t,size_t>>         CBSConstraint;
     typedef CBSNode<Robot,CBSConstraint,CBSSolution>           CBSNodeType;
 
     struct HeuristicValues {
@@ -187,6 +187,8 @@ class SMART : public TaskEvaluatorMethod {
     std::map<size_t,size_t> m_historyVIDBias;
 
     std::map<size_t,double> m_distanceMap;
+
+    size_t m_conflictCount{0};
 
     ///@}
 

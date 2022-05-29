@@ -218,6 +218,7 @@ ConstructRobotRoadmap(Robot* _robot) {
   auto stats = plan->GetStatClass();
   MethodTimer mt(stats,this->GetNameAndLabel() + "::ConstructRobotRoadmap");
   m_robots.insert(_robot);
+  auto coordinator = plan->GetCoordinator();
 
   // TODO::Track associated motion conditions - for now, we can safely assume
   //       the open and closed constraints without and with objects.
@@ -260,7 +261,6 @@ ConstructRobotRoadmap(Robot* _robot) {
   }
 
   // Convert to formations to plan for.
-  auto coordinator = plan->GetCoordinator();
   auto problem = this->GetMPProblem();
   std::set<std::pair<RobotGroup*,Formation*>> formations;
   std::map<Formation*,FormationCondition*> formationMap;
@@ -319,6 +319,17 @@ ConstructRobotRoadmap(Robot* _robot) {
     formations.insert(std::make_pair(group,formation));
   }
 
+  if(formations.empty())
+    return;
+
+  // Set all other robots to virtual
+  for(auto& kv : coordinator->GetInitialRobotGroups()) {
+    auto group = kv.first;
+    for(auto robot : group->GetRobots()) {
+      robot->SetVirtual(true);
+    }
+  }
+
   // Run roadmap strategy on all formations
   auto lib = this->GetMPLibrary();
 
@@ -374,9 +385,17 @@ ConstructRobotRoadmap(Robot* _robot) {
       gt.AddTask(mt);
     }
 
+    for(auto robot : group->GetRobots()) {
+      robot->SetVirtual(false);
+    }
+
     // Run MPSolution to generate roadmap
     lib->Solve(problem,&gt,m_solution.get(),m_roadmapStrategy, LRand(), 
             this->GetNameAndLabel());
+
+    for(auto robot : group->GetRobots()) {
+      robot->SetVirtual(true);
+    }
 
     // Copy to all other duplicate pairs of robot - object
     if(group->Size() == 1)
@@ -396,6 +415,14 @@ ConstructRobotRoadmap(Robot* _robot) {
 
         CopyRoadmap(rm,robot,formationMap[formation]);
       }
+    }
+  }
+
+  // Set all other robots to virtual
+  for(auto& kv : coordinator->GetInitialRobotGroups()) {
+    auto group = kv.first;
+    for(auto robot : group->GetRobots()) {
+      robot->SetVirtual(false);
     }
   }
 
@@ -1001,10 +1028,16 @@ IsReachable(const Terrain* _terrain, Robot* _robot) {
 
   auto maxDistFromCenter = boundary->GetMaxDist()/2;
 
+  bool canReach = false;
   if(distance < radius - maxDistFromCenter)
-    return true;
+    canReach = true;
 
-  return false;
+  if(m_debug) {
+    std::cout << _robot->GetLabel() << " can reach " << center2 
+              << ": " << canReach << std::endl;
+  }
+
+  return canReach;
 }
 
 bool
@@ -1030,13 +1063,19 @@ IsReachable(Robot* _robot1, Robot* _robot2) {
   auto radius2 = mb2->GetBoundingSphereRadius();
 
   // TODO::Compute accurately, cheating for ur5e because we know it's roughly one meter
-  radius1 = .9;
-  radius2 = .9;
+  radius1 = 1;
+  radius2 = 1;
 
+  bool canReach = false;
   if(distance < radius1 + radius2)
-    return true;
+    canReach = true;
 
-  return false;
+  if(m_debug) {
+    std::cout << _robot1->GetLabel() << " can reach " << _robot2->GetLabel() 
+              << ": " << canReach << std::endl;
+  }
+
+  return canReach;
 }
 
 void

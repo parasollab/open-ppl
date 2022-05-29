@@ -703,11 +703,15 @@ IsInInterRobotCollision(CDInfo& _cdInfo, Robot* const _robot,
     collision |= c;
 
     if(this->m_debug and c) {
+      CfgType cfg1(_robot);
+      cfg1.SetData(_robot->GetMultiBody()->GetCurrentDOFs());
       CfgType cfg2(otherRobot);
       cfg2.SetData(otherRobot->GetMultiBody()->GetCurrentDOFs());
 
       std::cout << "\tInter-robot collision detected:"
-                << "\n\t\tRobot: " << otherRobot->GetLabel()
+                << "\n\t\tRobot: " << _robot->GetLabel()
+                << "\n\t\tCfg: " << cfg1.PrettyPrint()
+                << "\n\t\tOther Robot: " << otherRobot->GetLabel()
                 << "\n\t\tCfg: " << cfg2.PrettyPrint()
                 << std::endl;
     }

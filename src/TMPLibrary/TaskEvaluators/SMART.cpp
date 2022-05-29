@@ -53,6 +53,9 @@ Initialize() {
 bool
 SMART::
 Run(Plan* _plan) {
+  auto plan = this->GetPlan();
+  auto stats = plan->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::Run");
 
   // Initialize search trees
   CreateSMARTreeRoot(); 
@@ -83,9 +86,18 @@ Run(Plan* _plan) {
     if(foundGoal or CheckForGoal(qNew)) {
       std::cout << "FOUND GOAL!!!" << std::endl;
       // For now, quit at first solution
+
+      stats->SetStat("Success",1);
+      stats->SetStat("Steps",i);
+      stats->SetStat("Conflicts",m_conflictCount);
+
       return true;
     }
   }
+
+  stats->SetStat("Success",0);
+  stats->SetStat("Steps",m_maxIterations);
+  stats->SetStat("Conflicts",m_conflictCount);
 
   return false;
 }
@@ -166,7 +178,8 @@ CreateSMARTreeRoot() {
 
     auto omgVID = omg->GetVID(info);
     if(omgVID >= MAX_INT) {
-      throw RunTimeException(WHERE) << "Failed to find object mode vertex.";
+      throw RunTimeException(WHERE) << "Failed to find object mode vertex for "
+                                    << passive->GetLabel();
     }
 
     mode[passive] = omgVID;
@@ -700,8 +713,10 @@ ValidConnection(const Vertex& _source, const Vertex& _target) {
           for(auto r2 : group2->GetRobots()) {
             CDInfo cdInfo;
             if(cd->IsMultiBodyCollision(cdInfo,
-                r1->GetMultiBody(),r2->GetMultiBody(),this->GetNameAndLabel()))
+                r1->GetMultiBody(),r2->GetMultiBody(),this->GetNameAndLabel())) {
+
               return false;
+            }
           }
         }
       }
@@ -1327,6 +1342,19 @@ LowLevelPlanner(CBSNodeType& _node, Robot* _robot) {
   auto start = m_MAPFStarts[_robot];
   size_t goal = m_MAPFGoals[_robot];
 
+  // Check that start does not violate a constraint and get min end time
+  size_t minEndTimestep = 0;
+  for(auto constraint : constraints) {
+
+    minEndTimestep = std::max(minEndTimestep,constraint.second.second);
+
+    if(start != constraint.first)
+      continue;
+
+    if(constraint.second.first <= 0)
+      return false;
+  }
+
   SSSPPathWeightFunction<OCMG::SingleObjectModeGraph> cost2goWeight(
     [](typename OCMG::SingleObjectModeGraph::adj_edge_iterator& _ei,
        const double _sourceDistance,
@@ -1343,10 +1371,15 @@ LowLevelPlanner(CBSNodeType& _node, Robot* _robot) {
   auto startVID = h->AddVertex(startVertex);
 
   SSSPTerminationCriterion<HeuristicSearch> termination(
-    [goal](typename HeuristicSearch::vertex_iterator& _vi,
+    [goal,minEndTimestep](typename HeuristicSearch::vertex_iterator& _vi,
            const SSSPOutput<HeuristicSearch>& _sssp) {
-      return goal == _vi->property().first ? SSSPTermination::EndSearch
-                                           : SSSPTermination::Continue;
+      
+      auto vertex = _vi->property();
+
+      if(goal == vertex.first and minEndTimestep <= vertex.second)
+        return SSSPTermination::EndSearch;
+
+      return SSSPTermination::Continue;
     }
   );
 
@@ -1355,16 +1388,27 @@ LowLevelPlanner(CBSNodeType& _node, Robot* _robot) {
        const double _sourceDistance,
        const double _targetDistance) {
      
-      auto source = h->GetVertex(_ei->source()).first;
+      //auto source = h->GetVertex(_ei->source()).first;
       auto target = h->GetVertex(_ei->target()).first;
 
-      auto timestep = h->GetVertex(_ei->source()).second;
+      //auto timestep = h->GetVertex(_ei->source()).second;
+      auto timestep = h->GetVertex(_ei->source()).second + 1;
 
-      auto edgeConstraint = std::make_pair(std::make_pair(source,target),timestep);
+      /*auto edgeConstraint = std::make_pair(std::make_pair(source,target),timestep);
       auto vertexConstraint = std::make_pair(std::make_pair(target,MAX_INT),timestep+1);
 
       if(constraints.count(edgeConstraint) or constraints.count(vertexConstraint))
         return std::numeric_limits<double>::infinity();
+      */
+
+      for(auto constraint : constraints) {
+        if(target != constraint.first)
+          continue;
+    
+        auto range = constraint.second;
+        if(timestep >= range.first and timestep <= range.second)
+          return std::numeric_limits<double>::infinity();
+      }
 
       return _sourceDistance + _ei->property();
     }
@@ -1415,7 +1459,7 @@ LowLevelPlanner(CBSNodeType& _node, Robot* _robot) {
 
   // Check that a path was found
   const size_t last = sssp.ordering.back();
-  if(h->GetVertex(last).first != goal) {
+  if(h->GetVertex(last).first != goal or h->GetVertex(last).second < minEndTimestep) {
     if(m_debug) {
       std::cout << "Failed to find a path for " << _robot->GetLabel() << std::endl;
     }
@@ -1460,21 +1504,61 @@ ValidationFunction(CBSNodeType& _node) {
       auto object1 = iter1->first;
       auto path1 = *(iter1->second);
       auto s1 = std::min(i,path1.size()-1);
-      auto t1 = std::min(i+1,path1.size()-1);
+      //auto t1 = std::min(i+1,path1.size()-1);
       auto source1 = path1[s1];
-      auto target1 = path1[t1];
+      //auto target1 = path1[t1];
 
-      auto iter2 = iter1;
-      iter2++;
-      for(;iter2 != _node.solutionMap.end(); iter2++) {
+      //auto iter2 = iter1;
+      //iter2++;
+      for(auto iter2 = _node.solutionMap.begin(); iter2 != _node.solutionMap.end(); iter2++) {
         auto object2 = iter2->first;
+
+        if(object1 == object2)
+          continue;
+
         auto path2 = *(iter2->second);
         auto s2 = std::min(i,path2.size()-1);
         auto t2 = std::min(i+1,path2.size()-1);
         auto source2 = path2[s2];
         auto target2 = path2[t2];
 
-        if(source1 == source2) {
+        auto p2 = s2 == t2 ? s2 : s2 == 0 ? 0 : s2 - 1;
+        auto parent2 = path2[p2];
+
+        size_t conflictTimestep = MAX_INT;
+
+        if(source1 == parent2) {
+          conflictTimestep = p2;
+        }
+        else if(source1 == source2) {
+          conflictTimestep = s2;
+        }
+        else if(source1 == target2) {
+          conflictTimestep = t2;
+        }
+        else {
+          continue;
+        }
+
+        std::vector<std::pair<Robot*,CBSConstraint>> constraints;
+
+        if(s1 != path1.size() - 1) {
+          auto constraint1 = std::make_pair(source1,std::make_pair(
+                              conflictTimestep > 0 ? conflictTimestep-1 : 0,
+                              conflictTimestep + 1));
+          constraints.emplace_back(object1,constraint1);
+        }
+
+        if(conflictTimestep != path2.size() - 1) {
+          auto constraint2 = std::make_pair(source1,std::make_pair(
+                              s1 > 0 ? s1-1 : 0,
+                              s1 + 1));
+          constraints.emplace_back(object2,constraint2);
+        }
+
+        return constraints;
+
+        /*if(source1 == source2) {
           //if(m_debug) {
           //  std::cout << "Found vertex conflict at timestep " << i
           //            << " between " << object1->GetLabel()
@@ -1507,7 +1591,7 @@ ValidationFunction(CBSNodeType& _node) {
           constraints.push_back(std::make_pair(object2,constraint2));
 
           return constraints;
-        }
+        }*/
       }
     }
   }
