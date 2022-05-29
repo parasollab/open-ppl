@@ -190,11 +190,11 @@ operator()() {
     MethodTimer mt(stats, id + "::Initialize");
     Initialize();
   }
-  stats->PrintClock(id + "::Initialize", std::cout);
+  //stats->PrintClock(id + "::Initialize", std::cout);
 
   // Run.
   Run();
-  stats->PrintClock(id + "::Run", std::cout);
+  //stats->PrintClock(id + "::Run", std::cout);
 
   delete mt;
 

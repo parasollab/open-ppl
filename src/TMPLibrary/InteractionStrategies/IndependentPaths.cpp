@@ -333,13 +333,8 @@ PlanMotions(std::vector<std::shared_ptr<GroupTask>> _tasks, MPSolution* _solutio
       
       // Call the MPLibrary solve function to expand the roadmap
       for(auto robot : task.get()->GetRobotGroup()->GetRobots()) {
-        // cout<<robot->GetLabel()<<endl;
-        //_solution->AddRobot(robot);
         robot->SetVirtual(false);
       }
-      cout<<"Solution: "<<_solution<<endl;
-      cout<<"Strategy: "<<m_mpStrategyLabel<<endl;
-      cout<<"Label: "<<_label<<endl;
       lib->SetTask(nullptr);
       lib->Solve(prob,task.get(),_solution,m_mpStrategyLabel, LRand(),_label);
     }

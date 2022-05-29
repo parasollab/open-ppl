@@ -72,12 +72,14 @@ PlanTasks() {
 
   while(bestNode.cost > lowerBound) {
 
-    std::cout << "Computing plans. Current upperbound: "
-              << bestNode.cost
-              << ". Current lowerbound: "
-              << lowerBound
-              << "."
-              << std::endl;
+    if(m_debug) {
+      std::cout << "Computing plans. Current upperbound: "
+                << bestNode.cost
+                << ". Current lowerbound: "
+                << lowerBound
+                << "."
+                << std::endl;
+    }
   
     lowerBound = FindTaskPlan(originalDecomp);
     taskSolutions.push_back(plan->GetDecomposition());
@@ -85,6 +87,14 @@ PlanTasks() {
     if(bestNode.cost > lowerBound) {
       stats->SetStat(this->GetNameAndLabel() + "::LowerBound",lowerBound);
       ComputeMotions(bestNode);
+
+      if(bestNode.cost < lowerBound)
+        throw RunTimeException(WHERE) << "Best cost ("
+                                      << bestNode.cost 
+                                      << ") violating lower bound ("
+                                      << lowerBound
+                                      << ").";
+  
     }
 
     // TODO::Store solution in solution set

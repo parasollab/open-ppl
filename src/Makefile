@@ -3,7 +3,7 @@
 # Set platform, debug mode, and address sanitizer if not already set.
 # Had to use this for building on machine at A&M
 platform ?= Ubuntu
-debug    ?= 1
+debug    ?= 0
 asan     ?= 0
 
 #! Important note about ASAN: you will also need to set these environment
