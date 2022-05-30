@@ -36,6 +36,10 @@ ModeGraph(XMLNode& _node) : StateGraph(_node) {
 
   m_queryStrategy = _node.Read("queryStrategy",true,"",
                       "MPStrategy label to query roadaps.");
+
+  m_queryStrategyStatic = _node.Read("queryStrategyStatic",false,m_queryStrategy,
+                      "MPStrategy label to query roadaps without sampling and connecting new start/goals.");
+
   m_expansionStrategy = _node.Read("expansionStrategy",true,"",
                       "MPStrategy label to query roadaps.");
   m_numUnactuatedSamples = _node.Read("numUnactuatedSamples",false,0,0,1000,
@@ -146,6 +150,7 @@ GenerateRepresentation(const State& _start) {
     ConnectTransitions();
 
     Transition fromOrigin;
+    fromOrigin.cost = -1;
     if(m_groundedHypergraph.GetHID(startVIDs,{originVID}) == MAX_INT)
       m_groundedHypergraph.AddHyperarc(startVIDs,{originVID},fromOrigin);
 
@@ -844,7 +849,7 @@ ModeGraph::
 ConnectTransitions() {
   auto plan = this->GetPlan();
   auto stats = plan->GetStatClass();
-  MethodTimer mt(stats,this->GetNameAndLabel() + "::ConnectTransitions");
+  MethodTimer* mt = new MethodTimer(stats,this->GetNameAndLabel() + "::ConnectTransitions");
 
   auto lib = this->GetMPLibrary();
   auto prob = this->GetMPProblem();
@@ -1006,6 +1011,16 @@ ConnectTransitions() {
       continue;
     robot->SetVirtual(false);
   }
+
+  delete mt;
+  // Strange behavior to avoid issues with roadmaps being improved after costs are saved
+  if(m_queryStrategy != m_queryStrategyStatic) {
+    auto stash = m_queryStrategy;
+    m_queryStrategy = m_queryStrategyStatic;
+    ConnectTransitions();
+    m_queryStrategy = stash;
+  }
+
 }
 
 void

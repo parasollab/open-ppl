@@ -688,7 +688,7 @@ HyperpathPathWeightFunction(
   hyperarcWeight = groundedHA.cost;
   //hyperarcWeight = std::min(1.,groundedHA.cost);
 
-  double tailWeight = 0;
+  double tailWeight = -1 * MAX_DBL;
 
   for(auto vid : _hyperarc.tail) {
     auto cost = _weightMap.at(vid);

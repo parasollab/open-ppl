@@ -193,6 +193,8 @@ class ModeGraph : public StateGraph {
 
     std::string m_queryStrategy;
 
+    std::string m_queryStrategyStatic;
+
     std::string m_expansionStrategy;
 
     size_t m_numUnactuatedSamples;

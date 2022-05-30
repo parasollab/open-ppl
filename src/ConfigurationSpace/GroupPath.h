@@ -393,12 +393,9 @@ operator=(const GroupPath& _p) {
     throw RunTimeException(WHERE) << "Can't assign path from another roadmap";
 
   m_vids         = _p.m_vids;
-  m_cfgs         = _p.m_cfgs;
-  m_cfgsCached   = _p.m_cfgsCached;
-  m_length       = _p.m_length;
-  m_lengthCached = _p.m_lengthCached;
-  m_timestepsCached = _p.m_timestepsCached;
   m_waitingTimesteps = _p.m_waitingTimesteps;
+
+  FlushCache();
 
   return *this;
 }

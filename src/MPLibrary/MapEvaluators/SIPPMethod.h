@@ -356,7 +356,14 @@ operator()() {
       SIPPVertex vertex;
       vertex.vid = start;
       
-      auto startIntervals = m_vertexIntervals[start];
+      std::vector<Range<double>> startIntervals;
+      if(!m_vertexIntervals.empty()) {
+        startIntervals = m_vertexIntervals[start];
+      }
+      else {
+        startIntervals.push_back(Range<double>(0,MAX_DBL)); 
+      }
+
       bool found = false;
       for(auto iv : startIntervals) {
         if(iv.Contains(m_startTime)) {
@@ -609,7 +616,14 @@ PathWeight(typename SIPPGraph::adj_edge_iterator& _ei,
   auto source = m_sippGraph->GetVertex(_ei->source());
   auto target = m_sippGraph->GetVertex(_ei->target());
 
-  const auto& intervals = m_edgeIntervals[source.vid][target.vid];
+  std::vector<Range<double>> intervals;
+  if(!m_edgeIntervals.empty()) {
+    intervals = m_edgeIntervals[source.vid][target.vid];
+  }
+  else {
+    intervals.push_back(Range<double>(0,MAX_DBL));
+  }
+
   //bool reachedFirstInterval = false;
   for(auto iter = intervals.begin(); iter != intervals.end(); iter++) {
     //if(!reachedFirstInterval and *iter != edge.interval) {
@@ -755,7 +769,13 @@ BuildNeighbors(typename SIPPGraph::vertex_descriptor _sippSource, size_t _rmTarg
   //const double maxEnd = vertex.interval.max + duration;
 
   // Find candidate intervals for target vertex
-  const auto& endIntervals = m_vertexIntervals[_rmTarget];
+  std::vector<Range<double>> endIntervals;
+  if(!m_vertexIntervals.empty()) { 
+    endIntervals = m_vertexIntervals[_rmTarget];
+  }
+  else {
+    endIntervals.push_back(Range<double>(0,MAX_DBL));
+  }
 
   for(auto& inter : endIntervals) {
 

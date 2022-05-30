@@ -1045,7 +1045,7 @@ CostFunction(Node& _node) {
         //endTimes[task] = timesteps; // - 1;
         endTimes[task] = timesteps - 1;
       else
-        endTimes[task] = 0;
+        endTimes[task] = startTimes[task];
     }
   }
 
@@ -1094,7 +1094,7 @@ CostFunction(Node& _node) {
         }
       }
       else {
-        endTimes[task] = 0;
+        endTimes[task] = startTimes[task];
       }
       cost = std::max(endTimes[task],cost);
     }
@@ -1381,7 +1381,7 @@ SaveSolution(const Node& _node) {
         }
       }
       else {
-        endTimes[task] = 0;
+        endTimes[task] = startTimes[task];
       }
 
       if(m_debug) {
