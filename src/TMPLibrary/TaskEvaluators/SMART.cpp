@@ -242,11 +242,13 @@ SelectMode() {
 
   }
 
-  std::cout << "Selecting mode " << modeID << " with action history [";
-  for(auto id : m_actionHistories[historyID]) {
-    std::cout << id << ", ";
+  if(m_debug) {
+    std::cout << "Selecting mode " << modeID << " with action history [";
+    for(auto id : m_actionHistories[historyID]) {
+      std::cout << id << ", ";
+    }
+    std::cout << "]" << std::endl;
   }
-  std::cout << "]" << std::endl;
 
   return std::make_pair(modeID,historyID);
 }

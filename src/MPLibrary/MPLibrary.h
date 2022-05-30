@@ -1126,9 +1126,9 @@ void
 MPLibraryType<MPTraits>::
 RunSolver(const Solver& _solver) {
   // Announce the method label and seed.
-  std::cout << "\n\nMPLibrary is solving with MPStrategyMethod labeled "
-            << _solver.label << " using seed " << _solver.seed << "."
-            << std::endl;
+  //std::cout << "\n\nMPLibrary is solving with MPStrategyMethod labeled "
+  //          << _solver.label << " using seed " << _solver.seed << "."
+  //          << std::endl;
 
   // Save the original prefix for output files (base name).
   const std::string originalBaseFilename = m_problem->GetBaseFilename();
