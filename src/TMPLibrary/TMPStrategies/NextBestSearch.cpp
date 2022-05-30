@@ -117,7 +117,9 @@ FindTaskPlan(Decomposition* _decomp) {
 
   auto te = this->GetTaskEvaluator(m_teLabel);
   if(te->operator()())
-    return plan->GetCost();
+    //return plan->GetCost();
+    // Strange off by one error somewhere
+    return plan->GetCost() - 1;
   else 
     return MAX_DBL;
 }
@@ -920,6 +922,7 @@ ValidationFunction(Node& _node) {
                   for(auto elem : intervals) {
                     if(elem == interval1) {
                       std::cout << "OH CRAP" << std::endl;
+                      throw RunTimeException(WHERE) << "OH CRAP" << std::endl;
                     }
                   }
 
@@ -947,6 +950,7 @@ ValidationFunction(Node& _node) {
                   for(auto elem : intervals) {
                     if(elem == interval1) {
                       std::cout << "OH CRAP" << std::endl;
+                      throw RunTimeException(WHERE) << "OH CRAP" << std::endl;
                     }
                   }
 
@@ -976,6 +980,7 @@ ValidationFunction(Node& _node) {
                   for(auto elem : intervals) {
                     if(elem == interval2) {
                       std::cout << "OH CRAP" << std::endl;
+                      throw RunTimeException(WHERE) << "OH CRAP" << std::endl;
                     }
                   }
 
@@ -1002,6 +1007,7 @@ ValidationFunction(Node& _node) {
                   for(auto elem : intervals) {
                     if(elem == interval2) {
                       std::cout << "OH CRAP" << std::endl;
+                      throw RunTimeException(WHERE) << "OH CRAP" << std::endl;
                     }
                   }
 

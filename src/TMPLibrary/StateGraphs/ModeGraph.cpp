@@ -2013,7 +2013,7 @@ CanReach(const State& _state) {
 
       if(!mb->IsPassive()) {
         // TODO::Compute proper radius - for now, we know UR5e is roughly 1 meter
-        radius = 1;
+        radius = .91;
       }
 
       spheres.emplace_back(center,radius);
