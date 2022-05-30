@@ -711,7 +711,10 @@ SIPPHeuristic(const  SIPPGraph* _g,
               typename SIPPGraph::vertex_descriptor _target) {
   SIPPVertex vertex = _g->GetVertex(_target);
 
-  return m_costToGoMap.at(vertex.vid);
+  if(m_costToGoMap.find(vertex.vid) != m_costToGoMap.end())
+    return m_costToGoMap.at(vertex.vid);
+
+  return std::numeric_limits<double>::infinity();
 }
 
 template <typename MPTraits>

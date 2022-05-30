@@ -255,13 +255,15 @@ GenerateGoals(const std::string& _samplerLabel) {
     std::vector<GroupCfgType> cfgs;
     // TODO Write this API
     sampler->Sample(1, attempts, boundaryMap, std::back_inserter(cfgs));
-    auto iter = boundaryMap.begin();
-    while(iter != boundaryMap.end()){
-      cout<<"Robot: "<<endl;
-      cout<<iter->first->GetLabel()<<endl;
-      cout<<"Boundary: "<<endl;
-      cout<<*(iter->second)<<endl;
-      ++iter;
+    if(this->m_debug) {
+      auto iter = boundaryMap.begin();
+      while(iter != boundaryMap.end()){
+        cout << "Robot: "
+             << iter->first->GetLabel() << endl
+             << "Boundary: " << endl
+             << *(iter->second) << endl;
+        ++iter;
+      }
     }
 
     //THIS SHOULD BE REMOVED, IT WAS ADDED TO DETERMINE IF AN ERROR WOULD CONTINUE TO OCCUR IF I SET VIRTUAL

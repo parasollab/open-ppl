@@ -175,7 +175,7 @@ operator()() {
   m_iterations = 0;
 
   // Print settings.
-  Print(std::cout);
+  //Print(std::cout);
 
   auto stats = this->GetStatClass();
   const std::string id = this->GetNameAndLabel();
