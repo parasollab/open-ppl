@@ -1,0 +1,134 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<MotionPlanning warnings="true" warningsAsErrors="true" print="false">
+
+  <!-- Here we specify input files, such as environment and query. -->
+  <Problem baseFilename="PRM-experiments">
+
+    <Environment filename="Env/Topo.xml" positionRes=".01"/>
+    <!--Environment filename="Env/Narrow.xml" positionRes=".01"/-->
+
+    <Robot label="member1" filename="Env/iCreate.xml" capability="plain" color="red">
+      <Agent type="child" waypointDm="euclidean"
+        waypointThreshold=".05" debug="true"/>
+    </Robot>
+
+    <Robot label="coordinator" virtual="true" filename="Env/iCreate.xml">
+      <Agent type="coordinator" dmLabel="euclidean" debug="true"> 
+        <Member label="member1"/>
+        <StepFunction type="defaultcoordinator" debug="true"/>
+      </Agent>
+    </Robot>
+
+    <Task label="start1" robot="member1">
+      <StartConstraints>
+        <CSpaceConstraint point="-17 -2 0"/>
+      </StartConstraints>
+    </Task>
+
+    <!--Decomposition tree defining possible satisfactory combinations of subtasks-->
+    <Decomposition label="main" taskLabel="query1" coordinator="coordinator">
+
+      <!--'Simple task' containing a traditional motion planning task-->
+      <SemanticTask label="query1" parent="top" decomposable="false" fixedAllocation="true">
+        <Task label="mp1" robot="member1">
+          <StartConstraints>
+            <CSpaceConstraint point="-17 -2 0 0 0 0"/>
+          </StartConstraints>
+
+          <GoalConstraints>
+            <CSpaceConstraint point="17 7 0 0 0 0"/>
+          </GoalConstraints>
+        </Task>
+      </SemanticTask>
+    </Decomposition>
+
+  </Problem>
+
+  <!-- Set available algorithms and parameters. -->
+  <Library>
+
+    <DistanceMetrics>
+      <Euclidean label="euclidean"/>
+    </DistanceMetrics>
+
+    <ValidityCheckers>
+      <CollisionDetection label="pqp_solid" method="PQP_SOLID" debug="false"/>
+      <AlwaysTrueValidity label="alwaysTrue"/>
+    </ValidityCheckers>
+
+    <NeighborhoodFinders>
+      <BruteForceNF label="BFNF" dmLabel="euclidean" unconnected="false" k="5"/>
+    </NeighborhoodFinders>
+
+    <Samplers>
+      <UniformRandomSampler label="UniformRandomFree" vcLabel="pqp_solid"/>
+    </Samplers>
+
+    <LocalPlanners>
+      <StraightLine label="sl" binaryEvaluation="true" vcLabel="pqp_solid"/>
+    </LocalPlanners>
+
+    <Extenders>
+    </Extenders>
+
+    <PathModifiers>
+    </PathModifiers>
+
+    <Connectors>
+      <NeighborhoodConnector label="Closest" nfLabel="BFNF" lpLabel="sl"
+        checkIfSameCC="false" debug="false"/>
+    </Connectors>
+
+    <Metrics>
+    </Metrics>
+
+    <MapEvaluators>
+      <QueryMethod label="PRMQuery" debug="false" graphSearchAlg="dijkstras"/>
+    </MapEvaluators>
+
+    <MPStrategies>
+
+      <!-- Basic PRM where num samples is based on Number -->
+      <BasicPRM label="BasicPRM1" debug="true">
+        <Sampler label="UniformRandomFree" number="25" attempts="10"/>
+        <Connector label="Closest"/>
+        <Evaluator label="PRMQuery"/>
+      </BasicPRM>
+
+    </MPStrategies>
+
+    <MPTools>
+    </MPTools>
+
+    <!-- MPProblem allows multiple solvers to be specified and executed. -->
+
+    <Solver mpStrategyLabel="BasicPRM1" seed="10923137"
+      baseFilename="PRM-experiments" vizmoDebug="true"/>
+
+  </Library>
+
+  <TMPLibrary>
+    <TMPStrategies>
+      <SimpleMotionMethod label="motion" teLabel="simple"/>
+    </TMPStrategies>
+
+    <PoIPlacementMethods>
+    </PoIPlacementMethods>
+
+    <TaskEvaluators>
+      <SimpleMotionEvaluator label="simple"/>
+    </TaskEvaluators>
+
+    <TaskDecomposers>
+    </TaskDecomposers>
+
+    <TaskAllocators>
+    </TaskAllocators>
+
+    <StateGraphs>
+    </StateGraphs>
+
+    <Solver tmpStrategyLabel="motion" baseFilename="editor-example"/>
+  </TMPLibrary>
+
+</MotionPlanning>

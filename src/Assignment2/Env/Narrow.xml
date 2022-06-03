@@ -1,0 +1,12 @@
+<Environment frictionCoefficient="0" gravity="0 0 0" positionRes="0.01" orientationRes="0.05">
+  <Boundary space="workspace" shape="box"limits="[-20:20 ; -10:10 ; -1:25 ]"/>
+  <MultiBody type="Passive">
+    <Base filename="ground.obj" comAdjustment="none" type="Fixed" color="0.8 0.8 0.8 1" transform="0 0 -0.6 0.0000000000000000 0.0000000000000000 0.0000000000000000"/>
+  </MultiBody>
+  <MultiBody type="Passive">
+    <Base filename="block1.obj" comAdjustment="none" type="Fixed" color="0 0 1 1" transform="0 -10 0 0.0000000000000000 0.0000000000000000 0.0000000000000000"/>
+  </MultiBody>
+  <MultiBody type="Passive">
+    <Base filename="block1.obj" comAdjustment="none" type="Fixed" color="0 0 1 1" transform="0 0.5 0 0.0000000000000000 0.0000000000000000 0.0000000000000000"/>
+  </MultiBody>
+</Environment>
