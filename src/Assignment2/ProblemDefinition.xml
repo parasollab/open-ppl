@@ -128,7 +128,7 @@
     <StateGraphs>
     </StateGraphs>
 
-    <Solver tmpStrategyLabel="motion" baseFilename="editor-example"/>
+    <Solver tmpStrategyLabel="motion" baseFilename="PRM-experiments"/>
   </TMPLibrary>
 
 </MotionPlanning>
