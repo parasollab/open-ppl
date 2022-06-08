@@ -12,6 +12,13 @@
         waypointThreshold=".05" debug="true"/>
     </Robot>
 
+    <Robot label="coordinator" virtual="true" filename="Env/iCreate.xml">
+      <Agent type="coordinator" dmLabel="euclidean" debug="true"> 
+        <Member label="member1"/>
+        <StepFunction type="defaultcoordinator" debug="true"/>
+      </Agent>
+    </Robot>
+
 
     <Task label="start1" robot="member1">
       <StartConstraints>
@@ -21,6 +28,22 @@
         <CSpaceConstraint point="17 7 0 0 0 0"/>
       </GoalConstraints>
     </Task>
+
+  <!--Decomposition tree defining possible satisfactory combinations of subtasks-->
+    <Decomposition label="main" taskLabel="query1" coordinator="coordinator">
+      <!--'Simple task' containing a traditional motion planning task-->
+      <SemanticTask label="query1" parent="top" decomposable="false" fixedAllocation="true">
+        <Task label="mp1" robot="member1">
+          <StartConstraints>
+            <CSpaceConstraint point="-17 -2 0 0 0 0"/>
+          </StartConstraints>
+
+          <GoalConstraints>
+            <CSpaceConstraint point="17 7 0 0 0 0"/>
+          </GoalConstraints>
+        </Task>
+      </SemanticTask>
+    </Decomposition>
 
   </Problem>
 
