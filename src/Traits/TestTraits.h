@@ -25,7 +25,9 @@
 #include "Testing/MPLibrary/ValidityCheckers/AlwaysTrueValidityTest.h"
 #include "Testing/MPLibrary/ValidityCheckers/CollisionDetection/BoundingSpheresCollisionDetectionTest.h"
 #include "Testing/MPLibrary/ValidityCheckers/CollisionDetection/InsideSpheresCollisionDetectionTest.h"
+
 //neighborhood finder includes
+#include "Testing/MPLibrary/NeighborhoodFinders/BruteForceNFTest.h"
 
 //sampler includes
 #include "Testing/MPLibrary/Samplers/UniformRandomSamplerTest.h"
@@ -101,6 +103,7 @@ struct MPTraits {
 
   //types of neighborhood finders available in our world
   typedef boost::mpl::list<
+      BruteForceNFTest<MPTraits>
       > NeighborhoodFinderMethodList;
 
   //types of samplers available in our world
