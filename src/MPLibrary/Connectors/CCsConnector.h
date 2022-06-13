@@ -13,7 +13,7 @@
 /// @ingroup Connectors
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
-class CCsConnector: public ConnectorMethod<MPTraits> {
+class CCsConnector: virtual public ConnectorMethod<MPTraits> {
 
   public:
 

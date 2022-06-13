@@ -17,13 +17,17 @@
 #include "ConfigurationSpace/Weight.h"
 
 //distance metric includes
+// #include "MPLibrary/DistanceMetrics/EuclideanDistance.h"
+// #include "MPLibrary/DistanceMetrics/MinkowskiDistance.h"
 
 //validity checker includes
 #include "MPLibrary/ValidityCheckers/CollisionDetectionValidity.h"
 #include "Testing/MPLibrary/ValidityCheckers/AlwaysTrueValidityTest.h"
 #include "Testing/MPLibrary/ValidityCheckers/CollisionDetection/BoundingSpheresCollisionDetectionTest.h"
 #include "Testing/MPLibrary/ValidityCheckers/CollisionDetection/InsideSpheresCollisionDetectionTest.h"
+
 //neighborhood finder includes
+#include "Testing/MPLibrary/NeighborhoodFinders/BruteForceNFTest.h"
 
 //sampler includes
 #include "Testing/MPLibrary/Samplers/UniformRandomSamplerTest.h"
@@ -37,9 +41,14 @@
 //path smoothing includes
 
 //connector includes
+#include "Testing/MPLibrary/Connectors/CCsConnectorTest.h"
+#include "Testing/MPLibrary/Connectors/NeighborhoodConnectorTest.h"
 #include "Testing/MPLibrary/Connectors/RewireConnectorTest.h"
 
 //metric includes
+#include "Testing/MPLibrary/Metrics/NumNodesMetricTest.h"
+#include "Testing/MPLibrary/Metrics/NumEdgesMetricTest.h"
+#include "Testing/MPLibrary/Metrics/TimeMetricTest.h"
 
 //map evaluator includes
 #include "Testing/MPLibrary/MapEvaluators/LazyQueryTest.h"
@@ -86,6 +95,8 @@ struct MPTraits {
 
   //types of distance metrics available in our world
   typedef boost::mpl::list<
+    // EuclideanDistance<MPTraits>,
+    // MinkowskiDistance<MPTraits>
       > DistanceMetricMethodList;
 
   //types of validity checkers available in our world
@@ -95,6 +106,7 @@ struct MPTraits {
 
   //types of neighborhood finders available in our world
   typedef boost::mpl::list<
+      BruteForceNFTest<MPTraits>
       > NeighborhoodFinderMethodList;
 
   //types of samplers available in our world
@@ -104,7 +116,7 @@ struct MPTraits {
 
   //types of local planners available in our world
   typedef boost::mpl::list<
-      StraightLineTest<MPTraits>
+    // StraightLine<MPTraits>
       > LocalPlannerMethodList;
 
   //types of extenders avaible in our world
@@ -119,11 +131,16 @@ struct MPTraits {
 
   //types of connectors available in our world
   typedef boost::mpl::list<
+      CCsConnectorTest<MPTraits>,
+      NeighborhoodConnectorTest<MPTraits>,
       RewireConnectorTest<MPTraits>
       > ConnectorMethodList;
 
   //types of metrics available in our world
   typedef boost::mpl::list<
+      NumNodesMetricTest<MPTraits>,
+      NumEdgesMetricTest<MPTraits>,
+      TimeMetricTest<MPTraits>
       > MetricMethodList;
 
 
