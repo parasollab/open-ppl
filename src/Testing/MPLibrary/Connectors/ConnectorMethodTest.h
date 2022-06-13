@@ -50,7 +50,7 @@ class ConnectorMethodTest : virtual public ConnectorMethod<MPTraits>,
     ///@{
     
     // Unfortunately, these are going to be specific to the 
-    // method, so you'll have to make your test from scratch.   
+    // method, so you'll have to make your test from scratch.
  
     ///@}
     ///@name Helper Functions
@@ -113,7 +113,8 @@ ConnectorMethodTest<MPTraits>::
 GetGroupCfg() {
   // @TODO: this code is broken.
   auto group = this->GetMPProblem()->GetRobotGroups()[0].get();
-  GroupCfgType gcfg(group);
+  auto groupRoadmap = this->GetMPLibrary()->GetGroupRoadmap(group);
+  GroupCfgType gcfg(groupRoadmap);
   return gcfg;
 }
 

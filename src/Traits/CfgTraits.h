@@ -42,6 +42,7 @@
 
 //connector includes
 #include "MPLibrary/Connectors/NeighborhoodConnector.h"
+#include "MPLibrary/Connectors/CCsConnector.h"
 #include "MPLibrary/Connectors/RewireConnector.h"
 
 //metric includes
@@ -143,6 +144,7 @@ struct MPTraits {
   //types of connectors available in our world
   typedef boost::mpl::list<
     NeighborhoodConnector<MPTraits>,
+    CCsConnector<MPTraits>,
     RewireConnector<MPTraits>
       > ConnectorMethodList;
 

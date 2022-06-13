@@ -160,9 +160,11 @@
     </PathModifiers>
 
     <Connectors>
-      <RewireConnector label="Rewire" nfLabel="Nearest4" lpLabel="slAlwaysTrue"/>
+      <CCsConnector label="CCs" debug="false"
+        nfLabel="BFNF" lpLabel="slAlwaysTrue" checkIfSameCC="false"/>
       <NeighborhoodConnector label="ClosestAlwaysTrue" nfLabel="BFNF"
-        lpLabel="slAlwaysTrue" checkIfSameCC="false"/>
+      lpLabel="slAlwaysTrue" checkIfSameCC="false"/>
+      <RewireConnector label="Rewire" nfLabel="Nearest4" lpLabel="slAlwaysTrue"/>
     </Connectors>
 
     <Metrics>
