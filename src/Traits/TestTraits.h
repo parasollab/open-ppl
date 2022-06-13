@@ -33,9 +33,10 @@
 #include "Testing/MPLibrary/Samplers/UniformRandomSamplerTest.h"
 
 //local planner includes
-// #include "MPLibrary/LocalPlanners/StraightLine.h"
+#include "Testing/MPLibrary/LocalPlanners/StraightLineTest.h"
 
 //extenders includes
+#include "Testing/MPLibrary/Extenders/BasicExtenderTest.h"
 
 //path smoothing includes
 
@@ -120,6 +121,7 @@ struct MPTraits {
 
   //types of extenders avaible in our world
   typedef boost::mpl::list<
+      BasicExtenderTest<MPTraits>
       > ExtenderMethodList;
 
   //types of path smoothing available in our world
