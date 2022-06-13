@@ -19,6 +19,8 @@
 #include "Testing/MPLibrary/ValidityCheckers/CollisionDetection/BoundingSpheresCollisionDetectionTest.h"
 #include "Testing/MPLibrary/ValidityCheckers/CollisionDetection/InsideSpheresCollisionDetectionTest.h"
 
+#include "Testing/MPLibrary/MPStrategies/MPStrategyMethodTest.h"
+#include "Testing/MPLibrary/MPStrategies/DynamicRegionRRTTest.h"
 
 
 template <typename MPTraits>
@@ -42,9 +44,9 @@ class MPLibraryTests : public MPLibraryType<MPTraits>, public TestBaseObject {
     typedef MethodSet<MPTraits, SamplerMethodTest<MPTraits>>        SamplerTestSet;
     typedef MethodSet<MPTraits, LocalPlannerMethodTest<MPTraits>>   LocalPlannerTestSet;
     typedef MethodSet<MPTraits, ExtenderMethodTest<MPTraits>>       ExtenderTestSet;
-    // typedef MethodSet<MPTraits, PathModifierMethodTest<MPTraits>>   PathModifierTestSet;
-    typedef MethodSet<MPTraits, ConnectorMethodTest<MPTraits>>     ConnectorTestSet;
-    typedef MethodSet<MPTraits, MetricMethodTest<MPTraits>>        MetricTestSet;
+    typedef MethodSet<MPTraits, PathModifierMethodTest<MPTraits>>   PathModifierTestSet;
+    typedef MethodSet<MPTraits, ConnectorMethodTest<MPTraits>>      ConnectorTestSet;
+    typedef MethodSet<MPTraits, MetricMethodTest<MPTraits>>         MetricTestSet;
     typedef MethodSet<MPTraits, MapEvaluatorMethodTest<MPTraits>>   MapEvaluatorTestSet;
 
     ///@}
@@ -74,12 +76,16 @@ class MPLibraryTests : public MPLibraryType<MPTraits>, public TestBaseObject {
 
     void InitializeCollisionDetectionMethodTests();
 
+    void InitializeMPStrategyMethodTests();
+
     template <typename MethodTypeList>
     void RunMethodSetTests(const MethodTypeList& _mtl,size_t& _passed,
                            size_t& failed, size_t& _total);
 
     void RunCollisionDetectionMethodTests(size_t& _passed, size_t& failed,
                                           size_t& _total);
+    
+    void RunMPStrategyMethodTests(size_t& _passed, size_t& failed, size_t& _total);
 
     ///@name XML Helpers
     ///@{
@@ -92,8 +98,10 @@ class MPLibraryTests : public MPLibraryType<MPTraits>, public TestBaseObject {
     ///@name Internal State
     ///@{
 
+    std::string m_xmlFile{""};
     bool verbose{true};
     std::map<std::string, CollisionDetectionMethodTest*> m_collisionDetectionTests;
+    std::map<std::string, MPStrategyMethodTest<MPTraits>*> m_mpStrategyTests;
 
     ///@}
     ///@name Method Sets
@@ -125,7 +133,8 @@ MPLibraryTests() {
 
 template <typename MPTraits>
 MPLibraryTests<MPTraits>::
-MPLibraryTests(const std::string& _xmlFile) : MPLibraryType<MPTraits>(_xmlFile) {
+MPLibraryTests(const std::string& _xmlFile) : MPLibraryType<MPTraits>(_xmlFile),
+    m_xmlFile(_xmlFile) {
   InitializeMethodSets();
   ReadXMLFile(_xmlFile);
 }
@@ -152,6 +161,9 @@ RunTest() {
   InitializeCollisionDetectionMethodTests();
   RunCollisionDetectionMethodTests(passed, failed, total);
 
+  // MPStrategy tests
+  InitializeMPStrategyMethodTests();
+  RunMPStrategyMethodTests(passed, failed, total);
 
   // Distance metric tests
   RunMethodSetTests(*this->m_distanceMetricTests,passed,failed,total);
@@ -243,6 +255,47 @@ void
 MPLibraryTests<MPTraits>::
 RunCollisionDetectionMethodTests(size_t& _passed, size_t& _failed, size_t& _total) {
   for (auto method : m_collisionDetectionTests) {
+    std::cout << "Running test for " << method.first << "..." << std::endl;
+
+    auto test = dynamic_cast<TestBaseObject*>(method.second);
+    auto result = test->RunTest();
+
+    _total++;
+
+    if(result.first) {
+      std::cout << "PASSED!" << std::endl;
+      _passed++;
+    }
+    else {
+      std::cout << "FAILED :(" << std::endl;
+      _failed++;
+    }
+
+    if(verbose) {
+      std::cout << result.second << std::endl;
+    }
+  }
+}
+
+
+template<typename MPTraits>
+void
+MPLibraryTests<MPTraits>::
+InitializeMPStrategyMethodTests() {
+  // TODO: add additional MPStrategy methods here
+  XMLNode drrrt(m_xmlFile, "DynamicRegionRRT");
+  DynamicRegionRRTTest<MPTraits>* dynamicRegionRRT = nullptr;
+  dynamicRegionRRT = new DynamicRegionRRTTest<MPTraits>(drrrt);
+  m_mpStrategyTests["DynamicRegionRRT"] = dynamicRegionRRT;
+
+}
+
+
+template <typename MPTraits>
+void
+MPLibraryTests<MPTraits>::
+RunMPStrategyMethodTests(size_t& _passed, size_t& _failed, size_t& _total) {
+  for (auto method : m_mpStrategyTests) {
     std::cout << "Running test for " << method.first << "..." << std::endl;
 
     auto test = dynamic_cast<TestBaseObject*>(method.second);
