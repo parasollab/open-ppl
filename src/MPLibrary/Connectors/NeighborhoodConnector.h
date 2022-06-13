@@ -19,7 +19,7 @@
 /// @ingroup Connectors
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
-class NeighborhoodConnector: public ConnectorMethod<MPTraits> {
+class NeighborhoodConnector: virtual public ConnectorMethod<MPTraits> {
 
   public:
 

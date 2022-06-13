@@ -40,6 +40,8 @@
 //path smoothing includes
 
 //connector includes
+#include "Testing/MPLibrary/Connectors/CCsConnectorTest.h"
+#include "Testing/MPLibrary/Connectors/NeighborhoodConnectorTest.h"
 #include "Testing/MPLibrary/Connectors/RewireConnectorTest.h"
 
 //metric includes
@@ -127,6 +129,8 @@ struct MPTraits {
 
   //types of connectors available in our world
   typedef boost::mpl::list<
+      CCsConnectorTest<MPTraits>,
+      NeighborhoodConnectorTest<MPTraits>,
       RewireConnectorTest<MPTraits>
       > ConnectorMethodList;
 
