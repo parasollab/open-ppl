@@ -17,6 +17,8 @@
 #include "ConfigurationSpace/Weight.h"
 
 //distance metric includes
+// #include "MPLibrary/DistanceMetrics/EuclideanDistance.h"
+// #include "MPLibrary/DistanceMetrics/MinkowskiDistance.h"
 
 //validity checker includes
 #include "MPLibrary/ValidityCheckers/CollisionDetectionValidity.h"
@@ -29,6 +31,7 @@
 #include "Testing/MPLibrary/Samplers/UniformRandomSamplerTest.h"
 
 //local planner includes
+// #include "MPLibrary/LocalPlanners/StraightLine.h"
 
 //extenders includes
 
@@ -38,6 +41,9 @@
 #include "Testing/MPLibrary/Connectors/RewireConnectorTest.h"
 
 //metric includes
+#include "Testing/MPLibrary/Metrics/NumNodesMetricTest.h"
+#include "Testing/MPLibrary/Metrics/NumEdgesMetricTest.h"
+#include "Testing/MPLibrary/Metrics/TimeMetricTest.h"
 
 //map evaluator includes
 #include "Testing/MPLibrary/MapEvaluators/LazyQueryTest.h"
@@ -84,6 +90,8 @@ struct MPTraits {
 
   //types of distance metrics available in our world
   typedef boost::mpl::list<
+    // EuclideanDistance<MPTraits>,
+    // MinkowskiDistance<MPTraits>
       > DistanceMetricMethodList;
 
   //types of validity checkers available in our world
@@ -102,6 +110,7 @@ struct MPTraits {
 
   //types of local planners available in our world
   typedef boost::mpl::list<
+    // StraightLine<MPTraits>
       > LocalPlannerMethodList;
 
   //types of extenders avaible in our world
@@ -120,6 +129,9 @@ struct MPTraits {
 
   //types of metrics available in our world
   typedef boost::mpl::list<
+      NumNodesMetricTest<MPTraits>,
+      NumEdgesMetricTest<MPTraits>,
+      TimeMetricTest<MPTraits>
       > MetricMethodList;
 
 

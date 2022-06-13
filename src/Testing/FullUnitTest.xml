@@ -166,6 +166,9 @@
     </Connectors>
 
     <Metrics>
+      <NumNodesMetric label="NumNodes"/>
+      <NumEdgesMetric label="NumEdges"/>
+      <TimeMetric label="TimeInSec"/>
     </Metrics>
 
     <MapEvaluators>
