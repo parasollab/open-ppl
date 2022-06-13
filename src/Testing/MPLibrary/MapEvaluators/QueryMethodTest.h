@@ -1,7 +1,7 @@
-#ifndef PPL_LAZY_QUERY_TEST_H_
-#define PPL_LAZY_QUERY_TEST_H_
+#ifndef PPL_QUERY_METHOD_TEST_H_
+#define PPL_QUERY_METHOD_TEST_H_
 
-#include "MPLibrary/MapEvaluators/LazyQuery.h"
+#include "MPLibrary/MapEvaluators/QueryMethod.h"
 #include "Testing/MPLibrary/MapEvaluators/MapEvaluatorMethodTest.h"
 #include "Utilities/MPUtils.h"
 #include "MPLibrary/MPSolution.h"
@@ -14,8 +14,8 @@ namespace mathtool {
 }
 
 template <typename MPTraits>
-class LazyQueryTest : virtual public LazyQuery<MPTraits>,
-                      public MapEvaluatorMethodTest<MPTraits> {
+class QueryMethodTest : virtual public QueryMethod<MPTraits>,
+                        public MapEvaluatorMethodTest<MPTraits> {
   public:
 
     ///@name Local Types
@@ -33,11 +33,11 @@ class LazyQueryTest : virtual public LazyQuery<MPTraits>,
     ///@name Construction
     ///@{
 
-    LazyQueryTest();
+    QueryMethodTest();
 
-    LazyQueryTest(XMLNode& _node);
+    QueryMethodTest(XMLNode& _node);
 
-    ~LazyQueryTest();
+    ~QueryMethodTest();
 
     ///@}
 
@@ -53,8 +53,7 @@ class LazyQueryTest : virtual public LazyQuery<MPTraits>,
     ///@name Helper Functions
     ///@{
 
-    /// Construct a roadmap to test that edges and nodes get
-    /// invalidated properly for a single robot
+    /// Construct a roadmap to test that edges and nodes
     void SingleSetup();
 
     ///@}
@@ -71,25 +70,23 @@ class LazyQueryTest : virtual public LazyQuery<MPTraits>,
 
 /*--------------------------- Construction ---------------------------*/
 template <typename MPTraits>
-LazyQueryTest<MPTraits>::
-LazyQueryTest() : QueryMethod<MPTraits>(), LazyQuery<MPTraits>() {
-}
+QueryMethodTest<MPTraits>::
+QueryMethodTest() : QueryMethod<MPTraits>() {}
 
 template <typename MPTraits>
-LazyQueryTest<MPTraits>::
-LazyQueryTest(XMLNode& _node) : MapEvaluatorMethod<MPTraits>(_node), 
-                                QueryMethod<MPTraits>(_node), 
-                                LazyQuery<MPTraits>(_node) {}
+QueryMethodTest<MPTraits>::
+QueryMethodTest(XMLNode& _node) : MapEvaluatorMethod<MPTraits>(_node), 
+                                  QueryMethod<MPTraits>(_node) {}
 
 template <typename MPTraits>
-LazyQueryTest<MPTraits>::
-~LazyQueryTest() {}
+QueryMethodTest<MPTraits>::
+~QueryMethodTest() {}
 
 /*----------------------Interface Test Functions ---------------------*/
 
 template <typename MPTraits>
-typename LazyQueryTest<MPTraits>::TestResult
-LazyQueryTest<MPTraits>::
+typename QueryMethodTest<MPTraits>::TestResult
+QueryMethodTest<MPTraits>::
 MainFunctionTest() {
 
   bool passed = true;
@@ -103,7 +100,14 @@ MainFunctionTest() {
 
   if(!singleResult) {
     passed = false;
-    message = message + "\n\tIndividual robot functionality testing failed ";
+    message = message + "\n\tQuery method failed to find a path.\n";
+  } 
+
+  double pathWeight = this->GetMPLibrary()->GetPath()->Length();
+
+  if (pathWeight != 3) {
+    passed = false;
+    message = message + "\n\tQuery method did not find the shortest path.\n";
   }
 
   // Clean up
@@ -123,8 +127,8 @@ MainFunctionTest() {
 
 template <typename MPTraits>
 void
-LazyQueryTest<MPTraits>::
-SingleSetup() {
+QueryMethodTest<MPTraits>::
+SingleSetup() {  
   // Get Robot
   auto robot = this->GetMPProblem()->GetRobots()[0].get();
 
@@ -144,34 +148,45 @@ SingleSetup() {
   p2.Read(p2Stream);
   auto goal = roadmap->AddVertex(p2);
 
-  // Vertex 1: Out of boundary vertex.
+  // Other vertices in the roadmap
   auto v1P = CfgType(robot);
-  std::istringstream v1Stream("0 0 -50 0 0 0 0");
+  std::istringstream v1Stream("0 20 0 0 0 0 0");
   v1P.Read(v1Stream);
   auto v1 = roadmap->AddVertex(v1P);
 
-  // Vertex 2: In boundary vertex.
   auto v2P = CfgType(robot);
-  std::istringstream v2Stream("0 20 0 0 0 0 0");
+  std::istringstream v2Stream("0 20 10 0 0 0 0");
   v2P.Read(v2Stream);
   auto v2 = roadmap->AddVertex(v2P);
 
+  auto v3P = CfgType(robot);
+  std::istringstream v3Stream("0 -20 10 0 0 0 0");
+  v3P.Read(v3Stream);
+  auto v3 = roadmap->AddVertex(v3P);
+
+  auto v4P = CfgType(robot);
+  std::istringstream v4Stream("0 -20 0 0 0 0 0");
+  v4P.Read(v4Stream);
+  auto v4 = roadmap->AddVertex(v4P);
+
+  auto v5P = CfgType(robot);
+  std::istringstream v5Stream("0 -20 -10 0 0 0 0");
+  v5P.Read(v5Stream);
+  auto v5 = roadmap->AddVertex(v5P);
+
   // Add edges to roadmap with respective weights
+  // The shortest path will be from start -> v1 -> goal
 
-  // Edge 1: Passes through object in enviornment
-  // Tests to ensure edges are invalidated properly
-  roadmap->AddEdge(start, goal, WeightType("a",3.0));
+  roadmap->AddEdge(start, v1, WeightType("a",2.0));
+  roadmap->AddEdge(v1, goal, WeightType("b",1.0));
 
-  // Edge 2 & 3: Passes through vertex out of environment
-  // boundary. Tests to ensure vertices are invalidated
-  // properly.
-  roadmap->AddEdge(start, v1, WeightType("b",1.0));
-  roadmap->AddEdge(v1, goal, WeightType("c",1.0));
+  roadmap->AddEdge(start, v4, WeightType("c", 2.0));
+  roadmap->AddEdge(v4, v5, WeightType("d", 1.0));
+  roadmap->AddEdge(v5, goal, WeightType("e", 4.0));
 
-  // Edge 4 & 5: Valid path to goal. Tests to ensure query
-  // method can find path after failing first to searches.
-  roadmap->AddEdge(start, v2, WeightType("d",4.0));
-  roadmap->AddEdge(v2, goal, WeightType("e",4.0));
+  roadmap->AddEdge(v1, v2, WeightType("f", 1.0));
+  roadmap->AddEdge(v2, v3, WeightType("g", 4.0));
+  roadmap->AddEdge(v3, v4, WeightType("h", 1.0));
 
   /// Task Construction
   auto task = this->GetMPLibrary()->GetTask();

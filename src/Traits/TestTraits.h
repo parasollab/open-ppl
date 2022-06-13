@@ -35,11 +35,13 @@
 //path smoothing includes
 
 //connector includes
+#include "Testing/MPLibrary/Connectors/RewireConnectorTest.h"
 
 //metric includes
 
 //map evaluator includes
 #include "Testing/MPLibrary/MapEvaluators/LazyQueryTest.h"
+#include "Testing/MPLibrary/MapEvaluators/QueryMethodTest.h"
 
 //mp strategies includes
 #include "MPLibrary/MPStrategies/ValidationStrategy.h"
@@ -114,6 +116,7 @@ struct MPTraits {
 
   //types of connectors available in our world
   typedef boost::mpl::list<
+      RewireConnectorTest<MPTraits>
       > ConnectorMethodList;
 
   //types of metrics available in our world
@@ -123,7 +126,8 @@ struct MPTraits {
 
   //types of map evaluators available in our world
   typedef boost::mpl::list<
-    LazyQueryTest<MPTraits>
+    LazyQueryTest<MPTraits>,
+    QueryMethodTest<MPTraits>
       > MapEvaluatorMethodList;
 
   //types of motion planning strategies available in our world
