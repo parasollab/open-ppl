@@ -47,6 +47,8 @@
 
 //metric includes
 #include "MPLibrary/Metrics/NumNodesMetric.h"
+#include "MPLibrary/Metrics/NumEdgesMetric.h"
+#include "MPLibrary/Metrics/TimeMetric.h"
 
 //map evaluator includes
 #include "MPLibrary/MapEvaluators/CBSQuery.h"
@@ -61,6 +63,7 @@
 #include "MPLibrary/MPStrategies/AdaptiveRRT.h"
 #include "MPLibrary/MPStrategies/BasicPRM.h"
 #include "MPLibrary/MPStrategies/BasicRRTStrategy.h"
+#include "MPLibrary/MPStrategies/DynamicRegionRRT.h"
 #include "MPLibrary/MPStrategies/GroupDecoupledStrategy.h"
 #include "MPLibrary/MPStrategies/GroupStrategyMethod.h"
 #include "MPLibrary/MPStrategies/TogglePRMStrategy.h"
@@ -147,7 +150,9 @@ struct MPTraits {
 
   //types of metrics available in our world
   typedef boost::mpl::list<
-    NumNodesMetric<MPTraits>
+    NumNodesMetric<MPTraits>,
+    NumEdgesMetric<MPTraits>,
+    TimeMetric<MPTraits>
       > MetricMethodList;
 
 
@@ -167,6 +172,7 @@ struct MPTraits {
     AdaptiveRRT<MPTraits>,
     BasicPRM<MPTraits>,
     BasicRRTStrategy<MPTraits>,
+    DynamicRegionRRT<MPTraits>,
     GroupDecoupledStrategy<MPTraits>,
     GroupStrategyMethod<MPTraits>,
     TogglePRMStrategy<MPTraits>,
