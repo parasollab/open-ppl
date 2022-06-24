@@ -49,7 +49,7 @@ class CompositeState {
     ///                    or null if it is not in a graph.
     /// @todo This object does not work at all without a group graph. We should
     ///       throw relevant exceptions if needed.
-    explicit CompositeState(GroupGraphType* const _groupGraph = nullptr);
+    explicit CompositeState(GroupGraphType* const _groupGraph = nullptr, const bool _init = false);
 
     ///@}
     ///@name Equality
@@ -89,6 +89,8 @@ class CompositeState {
     /// Get the group graph this composite state is with respect to.
     virtual GroupGraphType* GetGroupGraph() const noexcept;
 
+    virtual CompositeState<GraphType> SetGroupGraph(GroupGraphType* _newGraph) const;
+
     /// Get the VID for a particular robot.
     /// @param _index The index (within the group) of the robot.
     /// @return The VID of the robot's individual state, or INVALID_VID
@@ -117,6 +119,10 @@ class CompositeState {
     /// @param _vid The state descriptor.
     virtual void SetRobotCfg(const size_t _index, const VID _vid);
 
+    virtual void SetRobotCfg(Robot* const _robot, CfgType&& _cfg);
+
+    virtual void SetRobotCfg(const size_t _index, CfgType&& _cfg);
+
     /// Get the individual state (cfg) for a robot in the group.
     /// @param _robot The robot which the state refers to.
     /// @return The individual state for the indexed robot.
@@ -137,6 +143,9 @@ class CompositeState {
     /// @return The individual state for the indexed robot.
     virtual const CfgType& GetRobotCfg(const size_t _index) const;
 
+    /// Clear the Local Cfg information in the cfg (for after adding to roadmap)
+    void ClearLocalCfgs();
+
     ///@}
 
   protected:
@@ -148,6 +157,13 @@ class CompositeState {
     /// @param _robotIndex The (group) index to verify.
     virtual void VerifyIndex(const size_t _robotIndex) const noexcept;
 
+    /// Return whether the cfg for the robot is local to the group cfg, or if
+    /// it's in an individual roadmap already.
+    virtual bool IsLocalCfg(const size_t _robotIndex) const noexcept;
+
+    /// Initialize the set of local configurations if not already done.
+    virtual void InitializeLocalCfgs() noexcept;
+
     ///@}
     ///@name Internal State
     ///@{
@@ -155,6 +171,8 @@ class CompositeState {
     GroupGraphType* m_groupMap{nullptr};  ///< The group graph.
 
     VIDSet m_vids;   ///< The individual VIDs in this aggregate state.
+
+    std::vector<CfgType> m_localCfgs; ///< Individual cfgs not in a map.
 
     ///@}
 
@@ -167,7 +185,7 @@ std::ostream& operator<<(std::ostream&, const CompositeState<GraphType>&);
 
 template <typename GraphType>
 CompositeState<GraphType>::
-CompositeState(GroupGraphType* const _groupGraph) : m_groupMap(_groupGraph) {
+CompositeState(GroupGraphType* const _groupGraph, const bool _init) : m_groupMap(_groupGraph) {
 
   // If no group graph was given, this is a placeholder object. We can't do
   // anything with it since every meaningful operation requires a group graph.
@@ -176,6 +194,10 @@ CompositeState(GroupGraphType* const _groupGraph) : m_groupMap(_groupGraph) {
 
   // Set the VID list to all invalid.
   m_vids.resize(GetNumRobots(), INVALID_VID);
+
+  // Initialize local configurations if requested.
+  if(_init)
+    InitializeLocalCfgs();
 }
 
 
@@ -256,6 +278,26 @@ GetGroupGraph() const noexcept {
 }
 
 template <typename GraphType>
+CompositeState<GraphType>
+CompositeState<GraphType>::
+SetGroupGraph(GroupGraphType* const _newGraph) const {
+  // Check that groups are compatible.
+  if(this->m_groupMap->GetGroup() != _newGraph->GetGroup())
+    throw RunTimeException(WHERE) << "Trying to change graphs on incompatible "
+                                  << "groups!";
+
+  // Create new cfg using _roadmap and initializing all entries locally to 0.
+  CompositeState<GraphType> newCfg(_newGraph);
+
+  //TODO::this should never really be used, so ignoring this for now
+  // // Put all individual cfgs into group cfg so that all are local:
+  // for(size_t i = 0; i < this->GetNumRobots(); ++i)
+  //   newCfg.SetRobotCfg(i, CfgType(GetRobotCfg(i)));
+
+  return newCfg;
+}
+
+template <typename GraphType>
 typename CompositeState<GraphType>::VID
 CompositeState<GraphType>::
 GetVID(const size_t _index) const noexcept {
@@ -293,6 +335,37 @@ SetRobotCfg(const size_t _index, const VID _vid) {
 
 
 template <typename GraphType>
+void
+CompositeState<GraphType>::
+SetRobotCfg(Robot* const _robot, CfgType&& _cfg) {
+  const size_t index = m_groupMap->GetGroup()->GetGroupIndex(_robot);
+  SetRobotCfg(index, std::move(_cfg));
+}
+
+
+template <typename GraphType>
+void
+CompositeState<GraphType>::
+SetRobotCfg(const size_t _index, CfgType&& _cfg) {
+  this->VerifyIndex(_index);
+
+  // Allocate space for local cfgs if not already done.
+  InitializeLocalCfgs();
+
+  m_localCfgs[_index] = std::move(_cfg);
+  this->m_vids[_index] = INVALID_VID;
+}
+
+
+template <typename GraphType>
+void
+CompositeState<GraphType>::
+ClearLocalCfgs() {
+  m_localCfgs.clear();
+}
+
+
+template <typename GraphType>
 typename CompositeState<GraphType>::CfgType&
 CompositeState<GraphType>::
 GetRobotCfg(Robot* const _robot) {
@@ -310,9 +383,10 @@ GetRobotCfg(const size_t _index) {
   const VID vid = GetVID(_index);
   if(vid != INVALID_VID)
     return m_groupMap->GetRoadmap(_index)->GetVertex(vid);
-  else
-    throw RunTimeException(WHERE) << "Requested Cfg for robot " << _index
-                                  << ", but it is invalid.";
+  else {
+    InitializeLocalCfgs();
+    return m_localCfgs[_index];
+  }
 }
 
 
@@ -336,9 +410,15 @@ GetRobotCfg(const size_t _index) const {
   const VID vid = GetVID(_index);
   if(vid != INVALID_VID)
     return m_groupMap->GetRoadmap(_index)->GetVertex(vid);
-  else
-    throw RunTimeException(WHERE) << "Requested Cfg for robot " << _index
-                                  << ", but it is invalid.";
+  
+  try {
+    return m_localCfgs.at(_index);
+  }
+  catch(const std::out_of_range&) {
+    throw RunTimeException(WHERE) << "Requested configuration for robot "
+                                  << _index
+                                  << ", but no roadmap or local cfg exists.";
+  }
 }
 
 /*----------------------------------------------------------------------------*/
@@ -369,6 +449,34 @@ operator<<(std::ostream& _os, const CompositeState<GraphType>& _compositeState) 
     _os << _compositeState.GetRobotCfg(i);
 
   return _os;
+}
+
+/*----------------------------------------------------------------------------*/
+
+template <typename GraphType>
+bool
+CompositeState<GraphType>::
+IsLocalCfg(const size_t _robotIndex) const noexcept {
+  // Only true if there is local data (meaning INVALID_VID is present)
+  return m_vids[_robotIndex] == INVALID_VID;
+}
+
+
+template <typename GraphType>
+void
+CompositeState<GraphType>::
+InitializeLocalCfgs() noexcept {
+  // We will assume the local cfgs are initialized if the container size is
+  // correct.
+  const size_t numRobots = GetNumRobots();
+  if(m_localCfgs.size() == numRobots)
+    return;
+
+  m_localCfgs.clear();
+  m_localCfgs.resize(numRobots);
+
+  for(size_t i = 0; i < numRobots; ++i)
+    m_localCfgs[i] = CfgType();
 }
 
 /*----------------------------------------------------------------------------*/

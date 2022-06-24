@@ -29,8 +29,9 @@ class CompositeGraph : public GenericStateGraph<Vertex, Edge> {
     ///@name Local Types
     ///@{
 
-    typedef GenericStateGraph<Vertex, Edge>       BaseType;
-    typedef typename Vertex::IndividualGraph      IndividualGraph;
+    typedef GenericStateGraph<Vertex, Edge>      BaseType;
+    typedef CompositeGraph<Vertex, Edge>         CompositeGraphType;
+    typedef typename Vertex::IndividualGraph     IndividualGraph;
 
     typedef typename BaseType::EID               ED;
     typedef typename Vertex::IndividualGraph     IndividualRoadmap;
@@ -56,11 +57,7 @@ class CompositeGraph : public GenericStateGraph<Vertex, Edge> {
     ///@{
 
     /// Construct a group graph.
-    CompositeGraph(RobotGroup* const _g, std::vector<IndividualGraph*> _graphs = {});
-
-    /// Construct a group roadmap.
-    template <typename MPSolution>
-    CompositeGraph(RobotGroup* const _g, MPSolution* const _solution);
+    CompositeGraph(RobotGroup* const _g = nullptr, std::vector<IndividualGraph*> _graphs = {});
 
     ///@}
     ///@name Disabled Functions
@@ -126,7 +123,7 @@ class CompositeGraph : public GenericStateGraph<Vertex, Edge> {
     /// @param _source The source vertex.
     /// @param _target The target vertex.
     /// @param _w  The edge property.
-    virtual void AddEdge(const VID _source, const VID _target, const Edge& _w)
+    virtual ED AddEdge(const VID _source, const VID _target, const Edge& _w)
         noexcept override;
 
     /// Import the base-class version for this (required because we've
@@ -176,19 +173,6 @@ CompositeGraph(RobotGroup* const _g, std::vector<IndividualGraph*> _graphs) :
 
     if (m_roadmaps.size() != m_group->Size())
       m_roadmaps.reserve(m_group->Size());
-}
-
-template <typename Vertex, typename Edge>
-template <typename MPSolution>
-CompositeGraph<Vertex, Edge>::
-CompositeGraph(RobotGroup* const _g, MPSolution* const _solution) : 
-  GenericStateGraph<Vertex, Edge>(nullptr), m_group(_g) {
-
-  std::vector<IndividualGraph*> roadmaps;
-  for(Robot* const robot : *_g)
-    roadmaps.push_back(_solution->GetRoadmap(robot));
-  
-  m_roadmaps = roadmaps;
 }
 
 /*-------------------------------- Accessors ---------------------------------*/
@@ -275,7 +259,7 @@ PrettyPrint() const {
 /*-------------------------------- Modifiers ---------------------------------*/
 
 template <typename Vertex, typename Edge>
-void
+typename CompositeGraph<Vertex, Edge>::ED
 CompositeGraph<Vertex, Edge>::
 AddEdge(const VID _source, const VID _target, const Edge& _lp) noexcept {
   if(_source == _target)
@@ -288,9 +272,6 @@ AddEdge(const VID _source, const VID _target, const Edge& _lp) noexcept {
   // We need to adjust _lp, but we still want to override the base class
   // function, so make a local copy of the edge.
   Edge edge = _lp;
-
-  // Vector of local edges, which are NOT already in individual roadmaps.
-  std::vector<IndividualEdge>& localEdges = edge.GetLocalEdges();
 
   // Vector of edge descriptors, which are edges already in individual roadmaps
   std::vector<ED>& edgeDescriptors = edge.GetEdgeDescriptors();
@@ -345,26 +326,16 @@ AddEdge(const VID _source, const VID _target, const Edge& _lp) noexcept {
     }
     // If not, assert that the edge to be added does not already exist and then
     // add it.
-    else {
-      if(edgeExists)
-        std::cerr << "\nCompositeGraph::AddEdge: robot " << i
-                  << "'s individual edge (" << individualSourceVID << ", "
-                  << individualTargetVID << ") already exists, "
-                  << "not adding to its roadmap." << std::endl;
-
-      // NOTE: If you are getting a seg fault here, it's most likely due to not
-      //       calling GroupLPOutput::SetIndividualEdges() before calling this!
-      roadmap->AddEdge(individualSourceVID, individualTargetVID, localEdges[i]);
-      edgeDescriptors[i] = ED(individualSourceVID, individualTargetVID);
-    }
+    else 
+      throw RunTimeException(WHERE) << "Expected edge (" << individualSourceVID
+                                      << ", " << individualTargetVID << ") does "
+                                      << "not exist for robot "
+                                      << roadmap->GetRobot()->GetLabel() << ".";
   }
 
   if(numInactiveRobots >= GetNumRobots())
     throw RunTimeException(WHERE) << "No robots were moved in this edge!";
 
-  // Now all of the individual edges are in the local maps. Clear out the local
-  // copies in edge before we add it to the group map.
-  edge.ClearLocalEdges();
   const auto edgeDescriptor = this->add_edge(_source, _target, edge);
   const bool notNew = edgeDescriptor.id() == INVALID_EID;
 
@@ -385,6 +356,8 @@ AddEdge(const VID _source, const VID _target, const Edge& _lp) noexcept {
     this->m_predecessors[_target].insert(_source);
     ++m_timestamp;
   }
+
+  return edgeDescriptor;
 }
 
 
@@ -393,12 +366,10 @@ typename CompositeGraph<Vertex, Edge>::VID
 CompositeGraph<Vertex, Edge>::
 AddVertex(const Vertex& _v) noexcept {
   Vertex cfg; // Will be a copy of the const Vertex
-  // Check that the group map is correct, if not, try and change it.
-  if(_v.GetGroupRoadmap() != this) {
-    std::cerr << "CompositeGraph::AddVertex: Warning! Group roadmap "
-              << "doesn't match this, attempting to exchange the roadmap..."
-              << std::endl;
-    cfg = _v.SetGroupRoadmap(this);
+  // Check that the group map is correct.
+  if((CompositeGraphType*)_v.GetGroupGraph() != this) {
+    throw RunTimeException(WHERE) << "Composite Graph of vertex does not "
+                                  << "match this composite graph.";
   }
   else { // Roadmaps match, no change to attempt.
     cfg = _v;

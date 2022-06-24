@@ -148,7 +148,7 @@ class GenericStateGraph: public
     /// @param _vid The desired descriptor.
     /// @param _v The vertex property.
     /// @return A new VID of the added vertex, or the VID of the existing vertex.
-    //virtual VID AddVertex(const VID _vid, const Vertex& _v) noexcept;
+    virtual VID AddVertex(const VID _vid, const Vertex& _v) noexcept;
 
     /// Add a vertex to the graph without checking for uniqueness.
     /// @param _v The vertex to add.
@@ -163,15 +163,19 @@ class GenericStateGraph: public
     /// @param _source The source vertex.
     /// @param _target The target vertex.
     /// @param _w  The edge property.
-    virtual void AddEdge(const VID _source, const VID _target, const Edge& _w)
+    virtual EID AddEdge(const VID _source, const VID _target, const Edge& _w)
         noexcept;
 
     /// Add edges both ways between source and target vertices.
     /// @param _source The source vertex.
     /// @param _target The target vertex.
     /// @param _w  The edge properties (source to target first).
-    virtual void AddEdge(const VID _source, const VID _target,
+    virtual std::pair<EID, EID> AddEdge(const VID _source, const VID _target,
         const std::pair<Edge, Edge>& _w) noexcept;
+
+    virtual EID AddEdge(const EID _eid, const Edge& _w) noexcept;
+
+    virtual EID AddEdge(const VID _source, const VID _target) noexcept;
 
     /// Remove an edge from the graph if it exists.
     /// @param _source The source vertex.
@@ -273,6 +277,10 @@ class GenericStateGraph: public
     /// @param _vid The VID of the given vertex.
     /// @return The VIDs of each node u for which and edge (_vid, u) exists.
     std::vector<VID> GetChildren(const VID _vid) const noexcept;
+
+    size_t GetInDegree(const VID _vid) noexcept;
+
+    std::vector<EI> FindInboundEdges(const VID _vid);
 
     /// Retrieve an edge from the graph.
     /// @param _source The source node VID.
@@ -486,6 +494,7 @@ operator=(const GenericStateGraph& _r) {
   m_robot        = _r.m_robot;
   m_timestamp    = _r.m_timestamp;
   m_predecessors = _r.m_predecessors;
+  m_allVIDs      = _r.m_allVIDs;
 
   // If the other graph had a CC tracker, copy it and point at this roadmap.
   if(_r.m_ccTracker) {
@@ -513,6 +522,7 @@ operator=(GenericStateGraph&& _r) {
   m_robot        = _r.m_robot;
   m_timestamp    = _r.m_timestamp;
   m_predecessors = std::move(_r.m_predecessors);
+  m_allVIDs      = _r.m_allVIDs;
 
   // If the other graph had a CC tracker, move it and point at this roadmap.
   if(_r.m_ccTracker) {
@@ -598,6 +608,38 @@ AddVertex(const Vertex& _v) noexcept {
 template <typename Vertex, typename Edge>
 typename GenericStateGraph<Vertex, Edge>::VID
 GenericStateGraph<Vertex, Edge>::
+AddVertex(const VID _vid, const Vertex& _v) noexcept {
+  // Find the vertex and ensure it does not already exist.
+  CVI vi;
+  if(IsVertex(_v, vi)) {
+    //std::cerr << "\nGenericStateGraph::AddVertex: vertex " << vi->descriptor()
+    //          << " already in graph, not adding again."
+    //          << std::endl;
+    return vi->descriptor();
+  }
+
+  if(m_allVIDs.count(_vid) > 0) {
+    //std::cerr << "\nGenericStateGraph::AddVertex: vertex " << _vid
+    //          << " already in graph, not adding again."
+    //          << std::endl;
+    return _vid;
+  }
+
+  // The vertex does not exist. Add it now.
+  const VID vid = this->add_vertex(_vid, _v);
+  m_predecessors[vid];
+  m_allVIDs.insert(vid);
+  ++m_timestamp;
+
+  // Execute post-add hooks and update vizmo debug.
+  ExecuteAddVertexHooks(this->find_vertex(vid));
+
+  return vid;
+}
+
+template <typename Vertex, typename Edge>
+typename GenericStateGraph<Vertex, Edge>::VID
+GenericStateGraph<Vertex, Edge>::
 AddDuplicateVertex(const Vertex& _v) noexcept {
 
 	const VID vid = this->add_vertex(_v);
@@ -646,7 +688,7 @@ DeleteVertex(const VID _v) noexcept {
 
 
 template <class Vertex, class Edge>
-void
+typename GenericStateGraph<Vertex, Edge>::EID
 GenericStateGraph<Vertex, Edge>::
 AddEdge(const VID _source, const VID _target, const Edge& _w) noexcept {
   // Let the add_edge function handle checking for existance incase we are using
@@ -658,7 +700,7 @@ AddEdge(const VID _source, const VID _target, const Edge& _w) noexcept {
     std::cerr << "\nGenericStateGraph::AddEdge: edge (" << _source << ", "
               << _target << ") already exists, not adding."
               << std::endl;
-    return;
+    return edgeDescriptor;
   }
 
   // Add the source as a predecessor of target.
@@ -670,16 +712,79 @@ AddEdge(const VID _source, const VID _target, const Edge& _w) noexcept {
   EI ei;
   this->find_edge(edgeDescriptor, vi, ei);
   ExecuteAddEdgeHooks(ei);
+  return edgeDescriptor;
 }
 
 
 template <class Vertex, class Edge>
-void
+typename GenericStateGraph<Vertex, Edge>::EID
+GenericStateGraph<Vertex, Edge>::
+AddEdge(const VID _source, const VID _target) noexcept {
+  // Let the add_edge function handle checking for existance incase we are using
+  // a multigraph.
+  const auto edgeDescriptor = this->add_edge(_source, _target);
+  const bool notNew = edgeDescriptor.id() == INVALID_EID;
+
+  if(notNew) {
+    std::cerr << "\nGenericStateGraph::AddEdge: edge (" << _source << ", "
+              << _target << ") already exists, not adding."
+              << std::endl;
+    return edgeDescriptor;
+  }
+
+  // Add the source as a predecessor of target.
+  m_predecessors[_target].insert(_source);
+  ++m_timestamp;
+
+  // Execute post-add hooks.
+  VI vi;
+  EI ei;
+  this->find_edge(edgeDescriptor, vi, ei);
+  ExecuteAddEdgeHooks(ei);
+  return edgeDescriptor;
+}
+
+
+template <class Vertex, class Edge>
+std::pair<typename GenericStateGraph<Vertex, Edge>::EID, typename GenericStateGraph<Vertex, Edge>::EID>
 GenericStateGraph<Vertex, Edge>::
 AddEdge(const VID _source, const VID _target, const std::pair<Edge, Edge>& _w)
     noexcept {
-  AddEdge(_source, _target, _w.first);
-  AddEdge(_target, _source, _w.second);
+  EID e1 = AddEdge(_source, _target, _w.first);
+  EID e2 = AddEdge(_target, _source, _w.second);
+  return std::make_pair(e1, e2);
+}
+
+
+template <class Vertex, class Edge>
+typename GenericStateGraph<Vertex, Edge>::EID
+GenericStateGraph<Vertex, Edge>::
+AddEdge(const EID _eid, const Edge& _w) noexcept {
+  // Let the add_edge function handle checking for existance incase we are using
+  // a multigraph.
+  const auto edgeDescriptor = this->add_edge(_eid, _w);
+  const bool notNew = edgeDescriptor.id() == INVALID_EID;
+
+  auto source = _eid.source();
+  auto target = _eid.target();
+
+  if(notNew) {
+    std::cerr << "\nGenericStateGraph::AddEdge: edge (" << source << ", "
+              << target << ") already exists, not adding."
+              << std::endl;
+    return edgeDescriptor;
+  }
+
+  // Add the source as a predecessor of target.
+  m_predecessors[target].insert(source);
+  ++m_timestamp;
+
+  // Execute post-add hooks.
+  VI vi;
+  EI ei;
+  this->find_edge(edgeDescriptor, vi, ei);
+  ExecuteAddEdgeHooks(ei);
+  return edgeDescriptor;
 }
 
 
@@ -988,6 +1093,36 @@ GetChildren(const VID _vid) const noexcept {
   for(const auto& e : *vi)
     output.push_back(e.target());
   return output;
+}
+
+
+template <typename Vertex, typename Edge>
+size_t
+GenericStateGraph<Vertex, Edge>::
+GetInDegree(const VID _vid) noexcept {
+  auto predIter = m_predecessors.find(_vid);
+  VertexSet& preds = predIter->second;
+  return preds.size();
+}
+
+
+template <typename Vertex, typename Edge>
+std::vector<typename GenericStateGraph<Vertex, Edge>::EI>
+GenericStateGraph<Vertex, Edge>::
+FindInboundEdges(const VID _vid) {
+  std::vector<EI> inEdges;
+
+  auto predIter = m_predecessors.find(_vid);
+  VertexSet& predecessors = predIter->second;
+
+  for(const auto pred : predecessors) {
+    auto predIter = this->find_vertex(pred);
+    for(auto eit = predIter->begin(); eit != predIter->end(); ++eit)
+      if(eit->target() == _vid)
+        inEdges.push_back(eit);
+  }
+
+  return inEdges;
 }
 
 

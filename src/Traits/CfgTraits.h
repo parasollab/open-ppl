@@ -11,6 +11,7 @@
 #include "ConfigurationSpace/GroupCfg.h"
 #include "ConfigurationSpace/GroupLocalPlan.h"
 #include "ConfigurationSpace/GroupPath.h"
+#include "ConfigurationSpace/GroupRoadmap.h"
 #include "ConfigurationSpace/Path.h"
 #include "ConfigurationSpace/Weight.h"
 #include "ConfigurationSpace/GenericStateGraph.h"
@@ -28,6 +29,8 @@
 
 //neighborhood finder includes
 #include "MPLibrary/NeighborhoodFinders/BruteForceNF.h"
+#include "MPLibrary/NeighborhoodFinders/OptimalNF.h"
+#include "MPLibrary/NeighborhoodFinders/RadiusNF.h"
 
 //sampler includes
 #include "MPLibrary/Samplers/ObstacleBasedSampler.h"
@@ -38,6 +41,7 @@
 
 //extenders includes
 #include "MPLibrary/Extenders/BasicExtender.h"
+#include "MPLibrary/Extenders/DiscreteExtender.h"
 
 //path smoothing includes
 
@@ -53,6 +57,9 @@
 #include "MPLibrary/MapEvaluators/CBSQuery.h"
 #include "MPLibrary/MapEvaluators/ComposeEvaluator.h"
 #include "MPLibrary/MapEvaluators/ConditionalEvaluator.h"
+#include "MPLibrary/MapEvaluators/DRRT.h"
+#include "MPLibrary/MapEvaluators/GroupDecoupledQuery.h"
+#include "MPLibrary/MapEvaluators/GroupQuery.h"
 #include "MPLibrary/MapEvaluators/LazyQuery.h"
 #include "MPLibrary/MapEvaluators/SIPPMethod.h"
 #include "MPLibrary/MapEvaluators/QueryMethod.h"
@@ -62,7 +69,11 @@
 #include "MPLibrary/MPStrategies/AdaptiveRRT.h"
 #include "MPLibrary/MPStrategies/BasicPRM.h"
 #include "MPLibrary/MPStrategies/BasicRRTStrategy.h"
+#include "MPLibrary/MPStrategies/DynamicRegionRRT.h"
+#include "MPLibrary/MPStrategies/DynamicRegionsPRM.h"
 #include "MPLibrary/MPStrategies/GroupDecoupledStrategy.h"
+#include "MPLibrary/MPStrategies/GroupPRM.h"
+#include "MPLibrary/MPStrategies/GroupRRTStrategy.h"
 #include "MPLibrary/MPStrategies/GroupStrategyMethod.h"
 #include "MPLibrary/MPStrategies/TogglePRMStrategy.h"
 #include "MPLibrary/MPStrategies/ValidationStrategy.h"
@@ -97,7 +108,7 @@ struct MPTraits {
 
   typedef GroupCfg<RoadmapType>                          GroupCfgType;
   typedef GroupLocalPlan<RoadmapType>                    GroupWeightType;
-  typedef CompositeGraph<GroupCfgType, GroupWeightType>  GroupRoadmapType;
+  typedef GroupRoadmap<GroupCfgType, GroupWeightType>    GroupRoadmapType;
   typedef GroupPath<MPTraits>                            GroupPathType;
 
   //types of distance metrics available in our world
@@ -117,7 +128,9 @@ struct MPTraits {
 
   //types of neighborhood finders available in our world
   typedef boost::mpl::list<
-    BruteForceNF<MPTraits>
+    BruteForceNF<MPTraits>,
+    OptimalNF<MPTraits>,
+    RadiusNF<MPTraits>
       > NeighborhoodFinderMethodList;
 
   //types of samplers available in our world
@@ -133,7 +146,8 @@ struct MPTraits {
 
   //types of extenders avaible in our world
   typedef boost::mpl::list<
-    BasicExtender<MPTraits>
+    BasicExtender<MPTraits>,
+    DiscreteExtender<MPTraits>
       > ExtenderMethodList;
 
   //types of path smoothing available in our world
@@ -159,7 +173,10 @@ struct MPTraits {
     CBSQuery<MPTraits>,
     ComposeEvaluator<MPTraits>,
     ConditionalEvaluator<MPTraits>,
+    DRRT<MPTraits>,
     LazyQuery<MPTraits>,
+    GroupDecoupledQuery<MPTraits>,
+    GroupQuery<MPTraits>,
     QueryMethod<MPTraits>,
     SIPPMethod<MPTraits>,
     TimeEvaluator<MPTraits>
@@ -170,7 +187,11 @@ struct MPTraits {
     AdaptiveRRT<MPTraits>,
     BasicPRM<MPTraits>,
     BasicRRTStrategy<MPTraits>,
+    DynamicRegionRRT<MPTraits>,
+    DynamicRegionsPRM<MPTraits>,
     GroupDecoupledStrategy<MPTraits>,
+    GroupPRM<MPTraits>,
+    GroupRRTStrategy<MPTraits>,
     GroupStrategyMethod<MPTraits>,
     TogglePRMStrategy<MPTraits>,
     ValidationStrategy<MPTraits>

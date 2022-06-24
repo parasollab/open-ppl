@@ -97,8 +97,14 @@ class CompositeEdge {
     /// Get the composite state intermediates.
     const CompositePath& GetIntermediates() const noexcept;
 
+    const size_t GetNumIntermediates() noexcept;
+
     /// Set the composite state intermediates.
     void SetIntermediates(const CompositePath& _cfgs);
+
+    /// Write an edge to an output stream.
+    /// @param _os The output stream to write to.
+    virtual void Write(std::ostream& _os) const;
 
     ///@}
     ///@name Individual Local Plans
@@ -108,6 +114,14 @@ class CompositeEdge {
     /// @param _robot The robot which the edge refers to.
     /// @param _ed The edge descriptor.
     virtual void SetEdge(Robot* const _robot, const ED _ed);
+
+    /// Set the individual edge for a robot to a local copy of an edge.
+    /// @param _robot The robot which the edge refers to.
+    /// @param _edge The edge.
+    void SetEdge(const size_t _robot, IndividualEdge&& _edge);
+
+    /// overload for Robot pointer
+    void SetEdge(Robot* const _robot, IndividualEdge&& _edge);
 
     /// Get the individual edge for a robot.
     /// @param _robot The robot which the edge refers to.
@@ -125,11 +139,19 @@ class CompositeEdge {
     virtual IndividualEdge* GetEdge(const size_t _robotIndex);
     virtual const IndividualEdge* GetEdge(const size_t _robotIndex) const;
 
+    /// Get a vector of local edges in the plan.
+    std::vector<IndividualEdge>& GetLocalEdges() noexcept;
+
+    /// Clear all local edges in the plan.
+    void ClearLocalEdges() noexcept;
+
     /// Get a vector of local edges' descriptors.
     virtual std::vector<ED>& GetEdgeDescriptors() noexcept;
 
     /// Get the number of robots given in this group local plan.
     virtual size_t GetNumRobots() const noexcept;
+
+    virtual std::unordered_set<Robot*> GetActiveRobots();
 
     virtual void SetTimeSteps(size_t _timesteps);
 
@@ -175,6 +197,9 @@ class CompositeEdge {
 
     std::vector<ED> m_edges;           ///< Descriptors of the individual edges.
 
+    /// Note that any edges added to m_localEdges must be valid and complete.
+    std::vector<IndividualEdge> m_localEdges; ///< Edges which are not in a map.
+
     bool m_skipEdge{false}; ///< Flag to skip full recreation in GroupPath::FullCfgs.
 
     size_t m_timesteps;
@@ -209,6 +234,14 @@ const typename CompositeEdge<GraphType>::CompositePath&
 CompositeEdge<GraphType>::
 GetIntermediates() const noexcept {
   return m_intermediates;
+}
+
+
+template <typename GraphType>
+const size_t
+CompositeEdge<GraphType>::
+GetNumIntermediates() noexcept {
+  return m_intermediates.size();
 }
 
 
@@ -319,6 +352,33 @@ Clear() noexcept {
   m_weight = 0.;
 }
 
+// Writes to a standard output stream all of the data for the edge, including
+// control signals for nonholonomic robots.
+// This function is symmetric with Write().
+template <typename GraphType>
+void
+CompositeEdge<GraphType>::
+Write(std::ostream& _os) const {
+  /// @TODO Now that we read/write the control signals for nonholonomic, we
+  ///  should remove the writing of intermediates for conciseness.
+
+  //Write the data that's needed whether it's a holonomic robot or not:
+  _os << m_intermediates.size() << " ";
+  for(auto&  cfg : m_intermediates)
+    _os << cfg;
+  _os << std::scientific << std::setprecision(16) << m_weight;
+
+  // Clear scientific/precision options.
+  _os.unsetf(std::ios_base::floatfield);
+}
+
+template <typename GraphType>
+std::ostream&
+operator<<(std::ostream& _os, const CompositeEdge<GraphType>& _w) {
+  _w.Write(_os);
+  return _os;
+}
+
 /*-------------------------- Individual Local Plans --------------------------*/
 
 template <typename GraphType>
@@ -328,6 +388,27 @@ SetEdge(Robot* const _robot, const ED _ed) {
   const size_t index = m_groupMap->GetGroup()->GetGroupIndex(_robot);
 
   m_edges[index] = _ed;
+}
+
+
+template <typename GraphType>
+void
+CompositeEdge<GraphType>::
+SetEdge(Robot* const _robot, IndividualEdge&& _edge) {
+  const size_t index = m_groupMap->GetGroup()->GetGroupIndex(_robot);
+  SetEdge(index, std::move(_edge));
+}
+
+
+template <typename GraphType>
+void
+CompositeEdge<GraphType>::
+SetEdge(const size_t robotIndex, IndividualEdge&& _edge) {
+  // Allocate space for local edges if not already done.
+  m_localEdges.resize(m_groupMap->GetGroup()->Size());
+
+  m_localEdges[robotIndex] = std::move(_edge);
+  m_edges[robotIndex] = INVALID_ED;
 }
 
 
@@ -344,7 +425,7 @@ template <typename GraphType>
 const typename CompositeEdge<GraphType>::IndividualEdge*
 CompositeEdge<GraphType>::
 GetEdge(const size_t _robotIndex) const {
-  return GetEdge(this->m_groupMap->GetGroup()->GetRobot(_robotIndex));
+  return GetEdge(m_groupMap->GetGroup()->GetRobot(_robotIndex));
 }
 
 
@@ -367,10 +448,15 @@ GetEdge(Robot* const _robot) const {
     return &m_groupMap->GetRoadmap(index)->GetEdge(descriptor.source(),
                                                    descriptor.target());
 
-  throw RunTimeException(WHERE) << "Requested individual edge for robot "
-                                << index << " (" << _robot << "), which is"
-                                << " either stationary for this LP or not "
-                                << "in the group.";
+  try {
+    return &m_localEdges.at(index);
+  }
+  catch(const std::out_of_range&) {
+    throw RunTimeException(WHERE) << "Requested individual edge for robot "
+                                  << index << " (" << _robot << "), which is"
+                                  << " either stationary for this LP or not "
+                                  << "in the group.";
+  }
 }
 
 
@@ -383,10 +469,46 @@ GetEdgeDescriptors() noexcept {
 
 
 template <typename GraphType>
+std::vector<typename CompositeEdge<GraphType>::IndividualEdge>&
+CompositeEdge<GraphType>::
+GetLocalEdges() noexcept {
+  return m_localEdges;
+}
+
+
+template <typename GraphType>
+void
+CompositeEdge<GraphType>::
+ClearLocalEdges() noexcept {
+  m_localEdges.clear();
+}
+
+
+template <typename GraphType>
 size_t
 CompositeEdge<GraphType>::
 GetNumRobots() const noexcept {
   return m_groupMap->GetGroup()->Size();
+}
+
+template <typename GraphType>
+std::unordered_set<Robot*>
+CompositeEdge<GraphType>::
+GetActiveRobots() {
+  std::unordered_set<Robot*> actives;
+
+  for(size_t i = 0; i < m_edges.size(); ++i) {
+    auto roadmap = m_groupMap->GetRoadmap(i);
+
+    typename GraphType::CEI ei;
+    typename GraphType::CVI vi;
+    roadmap->find_edge(m_edges[i], vi, ei);
+
+    if(ei->source() != ei->target()) {
+      actives.insert(m_groupMap->GetGroup()->GetRobot(i));
+    }
+  }
+  return actives;
 }
     
 template <typename GraphType>
