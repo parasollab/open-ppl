@@ -47,11 +47,14 @@
 
 //connector includes
 #include "MPLibrary/Connectors/NeighborhoodConnector.h"
+#include "MPLibrary/Connectors/CCsConnector.h"
 #include "MPLibrary/Connectors/RewireConnector.h"
 #include "MPLibrary/Connectors/CCsConnector.h"
 
 //metric includes
 #include "MPLibrary/Metrics/NumNodesMetric.h"
+#include "MPLibrary/Metrics/NumEdgesMetric.h"
+#include "MPLibrary/Metrics/TimeMetric.h"
 
 //map evaluator includes
 #include "MPLibrary/MapEvaluators/CBSQuery.h"
@@ -70,7 +73,6 @@
 #include "MPLibrary/MPStrategies/BasicPRM.h"
 #include "MPLibrary/MPStrategies/BasicRRTStrategy.h"
 #include "MPLibrary/MPStrategies/DynamicRegionRRT.h"
-#include "MPLibrary/MPStrategies/DynamicRegionsPRM.h"
 #include "MPLibrary/MPStrategies/GroupDecoupledStrategy.h"
 #include "MPLibrary/MPStrategies/GroupPRM.h"
 #include "MPLibrary/MPStrategies/GroupRRTStrategy.h"
@@ -158,13 +160,15 @@ struct MPTraits {
   //types of connectors available in our world
   typedef boost::mpl::list<
     NeighborhoodConnector<MPTraits>,
-    RewireConnector<MPTraits>,
-    CCsConnector<MPTraits>
+    CCsConnector<MPTraits>,
+    RewireConnector<MPTraits>
       > ConnectorMethodList;
 
   //types of metrics available in our world
   typedef boost::mpl::list<
-    NumNodesMetric<MPTraits>
+    NumNodesMetric<MPTraits>,
+    NumEdgesMetric<MPTraits>,
+    TimeMetric<MPTraits>
       > MetricMethodList;
 
 
@@ -188,7 +192,6 @@ struct MPTraits {
     BasicPRM<MPTraits>,
     BasicRRTStrategy<MPTraits>,
     DynamicRegionRRT<MPTraits>,
-    DynamicRegionsPRM<MPTraits>,
     GroupDecoupledStrategy<MPTraits>,
     GroupPRM<MPTraits>,
     GroupRRTStrategy<MPTraits>,

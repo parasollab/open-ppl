@@ -88,11 +88,11 @@ RunTest() {
   bool passed = true;
   std::string message = "";
 
-  auto result = IndividualRobotExtend();
+  auto result = IndividualRobotExtendTests();
   passed = passed and result.first;
   message = message + result.second;
 
-  result = RobotGroupExtend();
+  result = RobotGroupExtendTests();
   passed = passed and result.first;
   message = message + result.second;
 
@@ -146,7 +146,8 @@ typename MPTraits::GroupCfgType
 ExtenderMethodTest<MPTraits>::
 GetGroupCfg() {
   auto group = this->GetMPProblem()->GetRobotGroups()[0].get();
-  GroupCfgType gcfg(group);
+  auto groupRoadmap = this->GetMPLibrary()->GetGroupRoadmap(group);
+  GroupCfgType gcfg(groupRoadmap);
   return gcfg;
 }
 

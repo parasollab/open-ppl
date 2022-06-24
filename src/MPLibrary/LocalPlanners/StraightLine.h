@@ -22,7 +22,7 @@
 /// @ingroup LocalPlanners
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
-class StraightLine : public LocalPlannerMethod<MPTraits> {
+class StraightLine : virtual public LocalPlannerMethod<MPTraits> {
 
   public:
 

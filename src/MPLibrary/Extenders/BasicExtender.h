@@ -14,7 +14,7 @@
 /// @ingroup Extenders
 ////////////////////////////////////////////////////////////////////////////////
 template <class MPTraits>
-class BasicExtender : public ExtenderMethod<MPTraits> {
+class BasicExtender : virtual public ExtenderMethod<MPTraits> {
 
   public:
 

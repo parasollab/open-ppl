@@ -1,5 +1,5 @@
-#ifndef PPL_BOUNDINGSPHERESCOLLISIONDETECTION_TEST_H_
-#define PPL_BOUNDINGSPHERESCOLLISIONDETECTION_TEST_H_
+#ifndef PPL_MPLIBRARY_TEST_H_
+#define PPL_MPLIBRARY_TEST_H_
 
 #include "MPLibrary/MPLibrary.h"
 #include "Testing/TestBaseObject.h"
@@ -10,7 +10,7 @@
 #include "Testing/MPLibrary/Samplers/SamplerMethodTest.h"
 #include "Testing/MPLibrary/LocalPlanners/LocalPlannerMethodTest.h"
 #include "Testing/MPLibrary/Extenders/ExtenderMethodTest.h"
-#include "Testing/MPLibrary/PathModifiers/PathModifierMethodTest.h"
+//#include "Testing/MPLibrary/PathModifiers/PathModifierMethodTest.h"
 #include "Testing/MPLibrary/Connectors/ConnectorMethodTest.h"
 #include "Testing/MPLibrary/Metrics/MetricMethodTest.h"
 #include "Testing/MPLibrary/MapEvaluators/MapEvaluatorMethodTest.h"
@@ -19,6 +19,8 @@
 #include "Testing/MPLibrary/ValidityCheckers/CollisionDetection/BoundingSpheresCollisionDetectionTest.h"
 #include "Testing/MPLibrary/ValidityCheckers/CollisionDetection/InsideSpheresCollisionDetectionTest.h"
 
+#include "Testing/MPLibrary/MPStrategies/MPStrategyMethodTest.h"
+#include "Testing/MPLibrary/MPStrategies/DynamicRegionRRTTest.h"
 
 
 template <typename MPTraits>
@@ -34,17 +36,17 @@ class MPLibraryTests : public MPLibraryType<MPTraits>, public TestBaseObject {
     ///@name Method Set Types
     ///@{
 
-    //typedef MethodSet<MPTraits, DistanceMetricMethodTest<MPTraits>> DistanceMetricTestSet;
+    typedef MethodSet<MPTraits, DistanceMetricMethodTest<MPTraits>> DistanceMetricTestSet;
     typedef MethodSet<MPTraits, ValidityCheckerMethodTest<MPTraits>>
-                                                                    ValidityCheckerTestSet;
+      ValidityCheckerTestSet;
     typedef MethodSet<MPTraits, NeighborhoodFinderMethodTest<MPTraits>>
-                                                                    NeighborhoodFinderTestSet;
+      NeighborhoodFinderTestSet;
     typedef MethodSet<MPTraits, SamplerMethodTest<MPTraits>>        SamplerTestSet;
-    //typedef MethodSet<MPTraits, LocalPlannerMethodTest<MPTraits>>   LocalPlannerTestSet;
+    typedef MethodSet<MPTraits, LocalPlannerMethodTest<MPTraits>>   LocalPlannerTestSet;
     typedef MethodSet<MPTraits, ExtenderMethodTest<MPTraits>>       ExtenderTestSet;
-    //typedef MethodSet<MPTraits, PathModifierMethodTest<MPTraits>>   PathModifierTestSet;
-    typedef MethodSet<MPTraits, ConnectorMethodTest<MPTraits>>     ConnectorTestSet;
-    typedef MethodSet<MPTraits, MetricMethodTest<MPTraits>>        MetricTestSet;
+    typedef MethodSet<MPTraits, PathModifierMethodTest<MPTraits>>   PathModifierTestSet;
+    typedef MethodSet<MPTraits, ConnectorMethodTest<MPTraits>>      ConnectorTestSet;
+    typedef MethodSet<MPTraits, MetricMethodTest<MPTraits>>         MetricTestSet;
     typedef MethodSet<MPTraits, MapEvaluatorMethodTest<MPTraits>>   MapEvaluatorTestSet;
 
     ///@}
@@ -74,12 +76,16 @@ class MPLibraryTests : public MPLibraryType<MPTraits>, public TestBaseObject {
 
     void InitializeCollisionDetectionMethodTests();
 
+    void InitializeMPStrategyMethodTests();
+
     template <typename MethodTypeList>
-    void RunMethodSetTests(const MethodTypeList& _mtl,size_t& _passed,
-                           size_t& failed, size_t& _total);
+      void RunMethodSetTests(const MethodTypeList& _mtl,size_t& _passed,
+          size_t& failed, size_t& _total);
 
     void RunCollisionDetectionMethodTests(size_t& _passed, size_t& failed,
-                                          size_t& _total);
+        size_t& _total);
+
+    void RunMPStrategyMethodTests(size_t& _passed, size_t& failed, size_t& _total);
 
     ///@name XML Helpers
     ///@{
@@ -92,8 +98,10 @@ class MPLibraryTests : public MPLibraryType<MPTraits>, public TestBaseObject {
     ///@name Internal State
     ///@{
 
+    std::string m_xmlFile{""};
     bool verbose{true};
     std::map<std::string, CollisionDetectionMethodTest*> m_collisionDetectionTests;
+    std::map<std::string, MPStrategyMethodTest<MPTraits>*> m_mpStrategyTests;
 
     ///@}
     ///@name Method Sets
@@ -101,13 +109,13 @@ class MPLibraryTests : public MPLibraryType<MPTraits>, public TestBaseObject {
     /// Method sets hold and offer access to the motion planning objects of the
     /// corresponding type.
 
-    DistanceMetricTestSet*     m_distanceMetricTests{nullptr};
+    // DistanceMetricTestSet*     m_distanceMetricTests{nullptr};
     ValidityCheckerTestSet*    m_validityCheckerTests{nullptr};
     NeighborhoodFinderTestSet* m_neighborhoodFinderTests{nullptr};
     SamplerTestSet*            m_samplerTests{nullptr};
-    LocalPlannerTestSet*       m_localPlannerTests{nullptr};
+    // LocalPlannerTestSet*       m_localPlannerTests{nullptr};
     ExtenderTestSet*           m_extenderTests{nullptr};
-    PathModifierTestSet*       m_pathModifierTests{nullptr};
+    // PathModifierTestSet*       m_pathModifierTests{nullptr};
     ConnectorTestSet*          m_connectorTests{nullptr};
     MetricTestSet*             m_metricTests{nullptr};
     MapEvaluatorTestSet*       m_mapEvaluatorTests{nullptr};
@@ -125,10 +133,11 @@ MPLibraryTests() {
 
 template <typename MPTraits>
 MPLibraryTests<MPTraits>::
-MPLibraryTests(const std::string& _xmlFile) : MPLibraryType<MPTraits>(_xmlFile) {
-  InitializeMethodSets();
-  ReadXMLFile(_xmlFile);
-}
+MPLibraryTests(const std::string& _xmlFile) : MPLibraryType<MPTraits>(_xmlFile),
+  m_xmlFile(_xmlFile) {
+    InitializeMethodSets();
+    ReadXMLFile(_xmlFile);
+  }
 
 template <typename MPTraits>
 MPLibraryTests<MPTraits>::
@@ -152,9 +161,12 @@ RunTest() {
   InitializeCollisionDetectionMethodTests();
   RunCollisionDetectionMethodTests(passed, failed, total);
 
+  // MPStrategy tests
+  InitializeMPStrategyMethodTests();
+  RunMPStrategyMethodTests(passed, failed, total);
 
   // Distance metric tests
-  RunMethodSetTests(*this->m_distanceMetricTests,passed,failed,total);
+  // RunMethodSetTests(*this->m_distanceMetricTests,passed,failed,total);
 
   // Validity checker tests
   RunMethodSetTests(*this->m_validityCheckerTests,passed,failed,total);
@@ -166,13 +178,13 @@ RunTest() {
   RunMethodSetTests(*this->m_samplerTests,passed,failed,total);
 
   // Local planner tests
-  RunMethodSetTests(*this->m_localPlannerTests,passed,failed,total);
+  // RunMethodSetTests(*this->m_localPlannerTests,passed,failed,total);
 
   // Extender tests
   RunMethodSetTests(*this->m_extenderTests,passed,failed,total);
 
   // Path modifier tests
-  RunMethodSetTests(*this->m_pathModifierTests,passed,failed,total);
+  // RunMethodSetTests(*this->m_pathModifierTests,passed,failed,total);
 
   // Connector tests
   RunMethodSetTests(*this->m_connectorTests,passed,failed,total);
@@ -186,10 +198,10 @@ RunTest() {
 
   bool success = (failed == 0);
   std::string message = "COMPLETED TESTS"
-                        "\nTotal: "  + std::to_string(total)  +
-                        "\nPassed: " + std::to_string(passed) +
-                        "\nFailed: " + std::to_string(failed) +
-                        "\n\n\n";
+    "\nTotal: "  + std::to_string(total)  +
+    "\nPassed: " + std::to_string(passed) +
+    "\nFailed: " + std::to_string(failed) +
+    "\n\n\n";
 
 
   return std::make_pair(success,message);
@@ -201,20 +213,20 @@ template <typename MPTraits>
 void
 MPLibraryTests<MPTraits>::
 InitializeMethodSets() {
-  m_distanceMetricTests = new DistanceMetricTestSet(this,
-      typename MPTraits::DistanceMetricMethodList(), "DistanceMetrics");
+  // m_distanceMetricTests = new DistanceMetricTestSet(this,
+  //     typename MPTraits::DistanceMetricMethodList(), "DistanceMetrics");
   m_validityCheckerTests = new ValidityCheckerTestSet(this,
       typename MPTraits::ValidityCheckerMethodList(), "ValidityCheckers");
   m_neighborhoodFinderTests = new NeighborhoodFinderTestSet(this,
       typename MPTraits::NeighborhoodFinderMethodList(), "NeighborhoodFinders");
   m_samplerTests = new SamplerTestSet(this,
       typename MPTraits::SamplerMethodList(), "Samplers");
-  m_localPlannerTests = new LocalPlannerTestSet(this,
-      typename MPTraits::LocalPlannerMethodList(), "LocalPlanners");
+  // m_localPlannerTests = new LocalPlannerTestSet(this,
+  //     typename MPTraits::LocalPlannerMethodList(), "LocalPlanners");
   m_extenderTests = new ExtenderTestSet(this,
       typename MPTraits::ExtenderMethodList(), "Extenders");
-  m_pathModifierTests = new PathModifierTestSet(this,
-      typename MPTraits::PathModifierMethodList(), "PathModifiers");
+  //m_pathModifierTests = new PathModifierTestSet(this,
+  //    typename MPTraits::PathModifierMethodList(), "PathModifiers");
   m_connectorTests = new ConnectorTestSet(this,
       typename MPTraits::ConnectorMethodList(), "Connectors");
   m_metricTests = new MetricTestSet(this,
@@ -266,12 +278,53 @@ RunCollisionDetectionMethodTests(size_t& _passed, size_t& _failed, size_t& _tota
 }
 
 
+template<typename MPTraits>
+void
+MPLibraryTests<MPTraits>::
+InitializeMPStrategyMethodTests() {
+  // TODO: add additional MPStrategy methods here
+  XMLNode drrrt(m_xmlFile, "DynamicRegionRRT");
+  DynamicRegionRRTTest<MPTraits>* dynamicRegionRRT = nullptr;
+  dynamicRegionRRT = new DynamicRegionRRTTest<MPTraits>(drrrt);
+  m_mpStrategyTests["DynamicRegionRRT"] = dynamicRegionRRT;
+
+}
+
+
+template <typename MPTraits>
+void
+MPLibraryTests<MPTraits>::
+RunMPStrategyMethodTests(size_t& _passed, size_t& _failed, size_t& _total) {
+  for (auto method : m_mpStrategyTests) {
+    std::cout << "Running test for " << method.first << "..." << std::endl;
+
+    auto test = dynamic_cast<TestBaseObject*>(method.second);
+    auto result = test->RunTest();
+
+    _total++;
+
+    if(result.first) {
+      std::cout << "PASSED!" << std::endl;
+      _passed++;
+    }
+    else {
+      std::cout << "FAILED :(" << std::endl;
+      _failed++;
+    }
+
+    if(verbose) {
+      std::cout << result.second << std::endl;
+    }
+  }
+}
+
+
 template <typename MPTraits>
 template <typename MethodTypeList>
 void
 MPLibraryTests<MPTraits>::
 RunMethodSetTests(const MethodTypeList& _mtl, size_t& _passed,
-                  size_t& _failed, size_t& _total) {
+    size_t& _failed, size_t& _total) {
 
   for(auto iter = _mtl.begin(); iter != _mtl.end(); iter++) {
 
@@ -315,7 +368,7 @@ ReadXMLFile(const std::string& _filename) {
   // Throw exception if we can't find it.
   if(!planningLibrary)
     throw ParseException(WHERE) << "Cannot find MPLibrary node in XML file '"
-                                << _filename << "'.";
+      << _filename << "'.";
 
   // Parse the library node to set algorithms and parameters.
   for(auto& child : *planningLibrary)
@@ -332,7 +385,7 @@ ParseChild(XMLNode& _node) {
     m_distanceMetricTests->ParseXML(_node);
     return true;
   }
-  if(_node.Name() == "ValidityCheckers") {
+  else if(_node.Name() == "ValidityCheckers") {
     m_validityCheckerTests->ParseXML(_node);
     return true;
   }
@@ -344,18 +397,18 @@ ParseChild(XMLNode& _node) {
     m_samplerTests->ParseXML(_node);
     return true;
   }
-  else if(_node.Name() == "LocalPlanners") {
-    m_localPlannerTests->ParseXML(_node);
-    return true;
-  }
+  // else if(_node.Name() == "LocalPlanners") {
+  //   m_localPlannerTests->ParseXML(_node);
+  //   return true;
+  // }
   else if(_node.Name() == "Extenders") {
     m_extenderTests->ParseXML(_node);
     return true;
   }
-  else if(_node.Name() == "PathModifiers") {
-    m_pathModifierTests->ParseXML(_node);
-    return true;
-  }
+  // else if(_node.Name() == "PathModifiers") {
+  //   m_pathModifierTests->ParseXML(_node);
+  //   return true;
+  // }
   else if(_node.Name() == "Connectors") {
     m_connectorTests->ParseXML(_node);
     return true;
