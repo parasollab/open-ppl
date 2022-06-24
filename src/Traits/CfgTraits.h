@@ -7,18 +7,16 @@
 #include "MPLibrary/MPTools/MPTools.h"
 
 #include "ConfigurationSpace/LocalObstacleMap.h"
-#include "ConfigurationSpace/CompositeGraph.h"
+#include "ConfigurationSpace/GenericStateGraph.h"
 #include "ConfigurationSpace/GroupCfg.h"
 #include "ConfigurationSpace/GroupLocalPlan.h"
 #include "ConfigurationSpace/GroupPath.h"
 #include "ConfigurationSpace/GroupRoadmap.h"
 #include "ConfigurationSpace/Path.h"
 #include "ConfigurationSpace/Weight.h"
-#include "ConfigurationSpace/GenericStateGraph.h"
 
 //distance metric includes
 #include "MPLibrary/DistanceMetrics/EuclideanDistance.h"
-#include "MPLibrary/DistanceMetrics/ManhattanDistance.h"
 #include "MPLibrary/DistanceMetrics/MinkowskiDistance.h"
 
 //validity checker includes
@@ -29,11 +27,8 @@
 
 //neighborhood finder includes
 #include "MPLibrary/NeighborhoodFinders/BruteForceNF.h"
-#include "MPLibrary/NeighborhoodFinders/OptimalNF.h"
-#include "MPLibrary/NeighborhoodFinders/RadiusNF.h"
 
 //sampler includes
-#include "MPLibrary/Samplers/ObstacleBasedSampler.h"
 #include "MPLibrary/Samplers/UniformRandomSampler.h"
 
 //local planner includes
@@ -41,41 +36,29 @@
 
 //extenders includes
 #include "MPLibrary/Extenders/BasicExtender.h"
-#include "MPLibrary/Extenders/DiscreteExtender.h"
 
 //path smoothing includes
 
 //connector includes
 #include "MPLibrary/Connectors/NeighborhoodConnector.h"
-#include "MPLibrary/Connectors/CCsConnector.h"
-#include "MPLibrary/Connectors/RewireConnector.h"
-#include "MPLibrary/Connectors/CCsConnector.h"
 
 //metric includes
 #include "MPLibrary/Metrics/NumNodesMetric.h"
-#include "MPLibrary/Metrics/NumEdgesMetric.h"
-#include "MPLibrary/Metrics/TimeMetric.h"
 
 //map evaluator includes
 #include "MPLibrary/MapEvaluators/CBSQuery.h"
 #include "MPLibrary/MapEvaluators/ComposeEvaluator.h"
 #include "MPLibrary/MapEvaluators/ConditionalEvaluator.h"
-#include "MPLibrary/MapEvaluators/DRRT.h"
-#include "MPLibrary/MapEvaluators/GroupDecoupledQuery.h"
-#include "MPLibrary/MapEvaluators/GroupQuery.h"
 #include "MPLibrary/MapEvaluators/LazyQuery.h"
-#include "MPLibrary/MapEvaluators/SIPPMethod.h"
 #include "MPLibrary/MapEvaluators/QueryMethod.h"
+#include "MPLibrary/MapEvaluators/SIPPMethod.h"
 #include "MPLibrary/MapEvaluators/TimeEvaluator.h"
 
 //mp strategies includes
 #include "MPLibrary/MPStrategies/AdaptiveRRT.h"
 #include "MPLibrary/MPStrategies/BasicPRM.h"
 #include "MPLibrary/MPStrategies/BasicRRTStrategy.h"
-#include "MPLibrary/MPStrategies/DynamicRegionRRT.h"
 #include "MPLibrary/MPStrategies/GroupDecoupledStrategy.h"
-#include "MPLibrary/MPStrategies/GroupPRM.h"
-#include "MPLibrary/MPStrategies/GroupRRTStrategy.h"
 #include "MPLibrary/MPStrategies/GroupStrategyMethod.h"
 #include "MPLibrary/MPStrategies/TogglePRMStrategy.h"
 #include "MPLibrary/MPStrategies/ValidationStrategy.h"
@@ -99,7 +82,6 @@ struct MPTraits {
 
   typedef C                               CfgType;
   typedef W                               WeightType;
-
   typedef GenericStateGraph<C, W>         RoadmapType;
   typedef PathType<MPTraits>              Path;
   typedef MPLibraryType<MPTraits>         MPLibrary;
@@ -116,7 +98,6 @@ struct MPTraits {
   //types of distance metrics available in our world
   typedef boost::mpl::list<
     EuclideanDistance<MPTraits>,
-    ManhattanDistance<MPTraits>,
     MinkowskiDistance<MPTraits>
       > DistanceMetricMethodList;
 
@@ -130,14 +111,11 @@ struct MPTraits {
 
   //types of neighborhood finders available in our world
   typedef boost::mpl::list<
-    BruteForceNF<MPTraits>,
-    OptimalNF<MPTraits>,
-    RadiusNF<MPTraits>
+    BruteForceNF<MPTraits>
       > NeighborhoodFinderMethodList;
 
   //types of samplers available in our world
   typedef boost::mpl::list<
-    ObstacleBasedSampler<MPTraits>,
     UniformRandomSampler<MPTraits>
       > SamplerMethodList;
 
@@ -148,8 +126,7 @@ struct MPTraits {
 
   //types of extenders avaible in our world
   typedef boost::mpl::list<
-    BasicExtender<MPTraits>,
-    DiscreteExtender<MPTraits>
+    BasicExtender<MPTraits>
       > ExtenderMethodList;
 
   //types of path smoothing available in our world
@@ -159,16 +136,12 @@ struct MPTraits {
 
   //types of connectors available in our world
   typedef boost::mpl::list<
-    NeighborhoodConnector<MPTraits>,
-    CCsConnector<MPTraits>,
-    RewireConnector<MPTraits>
+    NeighborhoodConnector<MPTraits>
       > ConnectorMethodList;
 
   //types of metrics available in our world
   typedef boost::mpl::list<
-    NumNodesMetric<MPTraits>,
-    NumEdgesMetric<MPTraits>,
-    TimeMetric<MPTraits>
+    NumNodesMetric<MPTraits>
       > MetricMethodList;
 
 
@@ -177,10 +150,7 @@ struct MPTraits {
     CBSQuery<MPTraits>,
     ComposeEvaluator<MPTraits>,
     ConditionalEvaluator<MPTraits>,
-    DRRT<MPTraits>,
     LazyQuery<MPTraits>,
-    GroupDecoupledQuery<MPTraits>,
-    GroupQuery<MPTraits>,
     QueryMethod<MPTraits>,
     SIPPMethod<MPTraits>,
     TimeEvaluator<MPTraits>
@@ -191,10 +161,7 @@ struct MPTraits {
     AdaptiveRRT<MPTraits>,
     BasicPRM<MPTraits>,
     BasicRRTStrategy<MPTraits>,
-    DynamicRegionRRT<MPTraits>,
     GroupDecoupledStrategy<MPTraits>,
-    GroupPRM<MPTraits>,
-    GroupRRTStrategy<MPTraits>,
     GroupStrategyMethod<MPTraits>,
     TogglePRMStrategy<MPTraits>,
     ValidationStrategy<MPTraits>
