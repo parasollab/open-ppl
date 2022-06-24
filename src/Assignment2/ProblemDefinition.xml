@@ -61,10 +61,12 @@
 
     <NeighborhoodFinders>
       <BruteForceNF label="BFNF" dmLabel="euclidean" unconnected="false" k="5"/>
+      <BruteForceNF label="Nearest" dmLabel="euclidean" unconnected="false" k="1"/>
     </NeighborhoodFinders>
 
     <Samplers>
       <UniformRandomSampler label="UniformRandomFree" vcLabel="pqp_solid"/>
+      <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
     </Samplers>
 
     <LocalPlanners>
@@ -72,6 +74,8 @@
     </LocalPlanners>
 
     <Extenders>
+      <BasicExtender label="BERO" debug="false" dmLabel="euclidean"
+        vcLabel="pqp_solid" maxDist="4." minDist=".01"/>
     </Extenders>
 
     <PathModifiers>
@@ -87,17 +91,27 @@
 
     <MapEvaluators>
       <QueryMethod label="PRMQuery" debug="false" graphSearchAlg="dijkstras"/>
+      <QueryMethod label="Query" debug="false"
+        graphSearchAlg="dijkstras" safeIntervalToolLabel="SI"/>
     </MapEvaluators>
 
     <MPStrategies>
 
       <!-- Basic PRM where num samples is based on Number -->
-      <BasicPRM label="BasicPRM1" debug="true">
+      <BasicPRM label="BasicPRM" debug="true">
         <Sampler label="UniformRandomFree" number="25" attempts="10"/>
         <Connector label="Closest"/>
         <Evaluator label="PRMQuery"/>
       </BasicPRM>
 
+      <!-- Basic RRT -->
+      <BasicRRTStrategy label="RRT" debug="true"
+        querySampler="UniformRandomFree" samplerLabel="UniformRandom"
+        nfLabel="Nearest" extenderLabel="BERO"
+        growGoals="false" growthFocus="0.01" m="1"
+        goalDmLabel="euclidean" goalThreshold="5">
+        <Evaluator label="Query"/>
+      </BasicRRTStrategy>
     </MPStrategies>
 
     <MPTools>
@@ -105,7 +119,7 @@
 
     <!-- MPProblem allows multiple solvers to be specified and executed. -->
 
-    <Solver mpStrategyLabel="BasicPRM1" seed="10923137"
+    <Solver mpStrategyLabel="BasicPRM" seed="10923137"
       baseFilename="PRM-experiments" vizmoDebug="true"/>
 
   </Library>
