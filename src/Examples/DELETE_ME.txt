@@ -1,2 +1,0 @@
-this is a placeholder garbage file for git.
-please delete me after the examples directory has been populated with at least one file.
