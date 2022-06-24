@@ -45,11 +45,13 @@ class CompositeState {
     ///@{
 
     /// Construct a composite state.
-    /// @param _groupGraph The composite graph to which this state belongs,
-    ///                    or null if it is not in a graph.
-    /// @todo This object does not work at all without a group graph. We should
-    ///       throw relevant exceptions if needed.
-    explicit CompositeState(GroupGraphType* const _groupGraph = nullptr, const bool _init = false);
+    /// @param _groupGraph The composite graph to which this state belongs.
+    explicit CompositeState(GroupGraphType* const _groupGraph = nullptr);
+
+    /// Construct a composite state.
+    /// @param _group The robot group to which this state belongs if it is not
+    ///               in a graph.
+    explicit CompositeState(RobotGroup* const _group);
 
     ///@}
     ///@name Equality
@@ -170,6 +172,8 @@ class CompositeState {
 
     GroupGraphType* m_groupMap{nullptr};  ///< The group graph.
 
+    RobotGroup* m_group{nullptr}; ///< The robot group for this state.
+
     VIDSet m_vids;   ///< The individual VIDs in this aggregate state.
 
     std::vector<CfgType> m_localCfgs; ///< Individual cfgs not in a map.
@@ -185,19 +189,31 @@ std::ostream& operator<<(std::ostream&, const CompositeState<GraphType>&);
 
 template <typename GraphType>
 CompositeState<GraphType>::
-CompositeState(GroupGraphType* const _groupGraph, const bool _init) : m_groupMap(_groupGraph) {
+CompositeState(GroupGraphType* const _groupGraph) : m_groupMap(_groupGraph) {
 
   // If no group graph was given, this is a placeholder object. We can't do
-  // anything with it since every meaningful operation requires a group graph.
+  // anything with it since every meaningful operation requires a group or graph.
   if(!m_groupMap)
     return;
+
+  m_group = m_groupMap->GetGroup();
 
   // Set the VID list to all invalid.
   m_vids.resize(GetNumRobots(), INVALID_VID);
 
-  // Initialize local configurations if requested.
-  if(_init)
-    InitializeLocalCfgs();
+  // Initialize local configurations.
+  InitializeLocalCfgs();
+}
+
+
+template <typename GraphType>
+CompositeState<GraphType>::
+CompositeState(RobotGroup* const _group) : m_group(_group) {
+  // Set the VID list to all invalid.
+  m_vids.resize(GetNumRobots(), INVALID_VID);
+
+  // Initialize local configurations.
+  InitializeLocalCfgs();
 }
 
 
@@ -207,6 +223,10 @@ template <typename GraphType>
 bool
 CompositeState<GraphType>::
 operator==(const CompositeState<GraphType>& _other) const noexcept {
+  // If _other is for another group, these are not the same.
+  if(m_group != _other.m_group)
+    return false;
+
   // If _other is from another graph, these are not the same.
   if(m_groupMap != _other.m_groupMap)
     return false;
@@ -241,7 +261,7 @@ template <typename GraphType>
 size_t
 CompositeState<GraphType>::
 GetNumRobots() const noexcept {
-  return m_groupMap ? m_groupMap->GetGroup()->Size() : 0;
+  return m_group ? m_group->Size() : 0;
 }
 
 
@@ -249,7 +269,7 @@ template <typename GraphType>
 const std::vector<Robot*>&
 CompositeState<GraphType>::
 GetRobots() const noexcept {
-  return m_groupMap->GetGroup()->GetRobots();
+  return m_group->GetRobots();
 }
 
 
@@ -259,7 +279,7 @@ CompositeState<GraphType>::
 GetRobot(const size_t _index) const {
   VerifyIndex(_index);
 
-  Robot* const robot = m_groupMap->GetGroup()->GetRobot(_index);
+  Robot* const robot = m_group->GetRobot(_index);
 
   /// @todo Remove this after we are very sure things are working.
   if(!robot)
@@ -278,21 +298,17 @@ GetGroupGraph() const noexcept {
 }
 
 template <typename GraphType>
-CompositeState<GraphType>
+void
 CompositeState<GraphType>::
 SetGroupGraph(GroupGraphType* const _newGraph) const {
   // Check that groups are compatible.
-  if(this->m_groupMap->GetGroup() != _newGraph->GetGroup())
+  if(m_group != _newGraph->GetGroup())
     throw RunTimeException(WHERE) << "Trying to change graphs on incompatible "
                                   << "groups!";
 
-  // Create new cfg using _roadmap and initializing all entries locally to 0.
-  CompositeState<GraphType> newCfg(_newGraph);
-
-  //TODO::this should never really be used, so ignoring this for now
-  // // Put all individual cfgs into group cfg so that all are local:
-  // for(size_t i = 0; i < this->GetNumRobots(); ++i)
-  //   newCfg.SetRobotCfg(i, CfgType(GetRobotCfg(i)));
+  // Set the group graph and set all vids to invalid.
+  m_groupMap = _newGraph;
+  m_vids.resize(GetNumRobots(), INVALID_VID);
 
   return newCfg;
 }
@@ -319,6 +335,9 @@ template <typename GraphType>
 void
 CompositeState<GraphType>::
 SetRobotCfg(Robot* const _robot, const VID _vid) {
+  if(!m_groupMap)
+    throw RunTimeException(WHERE) >> "Can't set a VID without a composite graph.";
+
   const size_t index = m_groupMap->GetGroup()->GetGroupIndex(_robot);
   SetRobotCfg(index, _vid);
 }
@@ -328,8 +347,10 @@ template <typename GraphType>
 void
 CompositeState<GraphType>::
 SetRobotCfg(const size_t _index, const VID _vid) {
-  VerifyIndex(_index);
+  if(!m_groupMap)
+    throw RunTimeException(WHERE) >> "Can't set a VID without a composite graph.";
 
+  VerifyIndex(_index);
   m_vids[_index] = _vid;
 }
 
@@ -338,7 +359,7 @@ template <typename GraphType>
 void
 CompositeState<GraphType>::
 SetRobotCfg(Robot* const _robot, CfgType&& _cfg) {
-  const size_t index = m_groupMap->GetGroup()->GetGroupIndex(_robot);
+  const size_t index = m_group->GetGroupIndex(_robot);
   SetRobotCfg(index, std::move(_cfg));
 }
 
@@ -347,13 +368,10 @@ template <typename GraphType>
 void
 CompositeState<GraphType>::
 SetRobotCfg(const size_t _index, CfgType&& _cfg) {
-  this->VerifyIndex(_index);
-
-  // Allocate space for local cfgs if not already done.
-  InitializeLocalCfgs();
+  VerifyIndex(_index);
 
   m_localCfgs[_index] = std::move(_cfg);
-  this->m_vids[_index] = INVALID_VID;
+  m_vids[_index] = INVALID_VID;
 }
 
 
@@ -369,7 +387,7 @@ template <typename GraphType>
 typename CompositeState<GraphType>::CfgType&
 CompositeState<GraphType>::
 GetRobotCfg(Robot* const _robot) {
-  const size_t index = m_groupMap->GetGroup()->GetGroupIndex(_robot);
+  const size_t index = m_group->GetGroupIndex(_robot);
   return GetRobotCfg(index);
 }
 
@@ -394,7 +412,7 @@ template <typename GraphType>
 const typename CompositeState<GraphType>::CfgType&
 CompositeState<GraphType>::
 GetRobotCfg(Robot* const _robot) const {
-  const size_t index = m_groupMap->GetGroup()->GetGroupIndex(_robot);
+  const size_t index = m_group->GetGroupIndex(_robot);
   return GetRobotCfg(index);
 }
 

@@ -19,15 +19,6 @@ template <typename GraphType> class GroupCfg;
 ////////////////////////////////////////////////////////////////////////////////
 /// A local plan for multiple robots. Each robot will be executing this motion
 /// simultaneously, and the total time is the same for each robot.
-///
-/// @todo Remove the 'active robots'. All robots are always active in a group
-///       edge. We do need to retain formation data for reconstructing edges.
-/// @todo Remove the 'skip edge' stuff. There is no such thing as a skipped
-///       edge: the disassembly code needs to be adjusted to only use the edges
-///       they want.
-/// @todo Rework so that we only need a robot group to construct this, in which
-///       case it will have all local edges. It should only get tied to a
-///       roadmap with SetGroupRoadmap after it has been added to one.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename GraphType>
 class GroupLocalPlan : public CompositeEdge<GraphType> {
@@ -49,16 +40,31 @@ class GroupLocalPlan : public CompositeEdge<GraphType> {
     typedef typename BaseType::CompositePath           CompositePath;
     typedef stapl::edge_descriptor_impl<size_t>        ED;
 
+    /// A formation represents a group of robots which are maintaining their
+    /// configurations relative to a leader, such as maintaining a square or
+    /// V-shape while moving. The values are robot indexes (within the group,
+    /// not problem) with the first index denoting the leader robot.
+    typedef std::vector<size_t> Formation;
+
     ///@}
     ///@name Construction
     ///@{
 
     /// Constructs a GroupLocalPlan.
-    /// @param _g The group roadmap in which this edge exists. Defaults to nullptr.
+    /// @param _g The group roadmap in which this edge exists.
     /// @param _lpLabel The string label to assign to this plan. Defaults to empty string.
     /// @param _w The weight of the plan. Defaults to 0.0.
     /// @param _path The path to be given by the plan. Defaults to GroupCfgPath().
     GroupLocalPlan(GroupRoadmapType* const& _g = nullptr,
+        const std::string& _lpLabel = "",
+        const double _w = 0.0, const GroupCfgPath& _path = GroupCfgPath());
+
+    /// Constructs a GroupLocalPlan.
+    /// @param _g The robot group for which this edge exists.
+    /// @param _lpLabel The string label to assign to this plan. Defaults to empty string.
+    /// @param _w The weight of the plan. Defaults to 0.0.
+    /// @param _path The path to be given by the plan. Defaults to GroupCfgPath().
+    GroupLocalPlan(RobotGroup* const& _g,
         const std::string& _lpLabel = "",
         const double _w = 0.0, const GroupCfgPath& _path = GroupCfgPath());
 
@@ -68,12 +74,13 @@ class GroupLocalPlan : public CompositeEdge<GraphType> {
     ///@name Misc. Interface Functions
     ///@{
 
-    /// Set the list of active robots to the vector of robot indices given.
-    /// @param The vector of robo indices given.
-    void SetActiveRobots(const std::vector<size_t>& _indices);
-    /// Get the vector of active robots indices.
-    /// @return The vector of active robot indices.
-    const std::vector<size_t>& GetActiveRobots() const noexcept;
+    /// Set the formation of the robots. The first index is the leader.
+    /// @param _indices The vector of robot indices given.
+    void SetFormation(const Formation& _indices);
+
+    /// Get the formation of the robots. The first index is the leader.
+    /// @return The vector of formation robot indices.
+    const Formation& GetFormation() const noexcept;
     
     /// Reset the states of this object.
     void Clear() noexcept;
@@ -114,7 +121,7 @@ class GroupLocalPlan : public CompositeEdge<GraphType> {
 
     // The ordered formation for this local plan with respect to the robots
     // in m_groupMap. The first robot in the list is assumed to be the leader.
-    std::vector<size_t> m_activeRobots;
+    std::vector<size_t> m_formation;
 
     GroupCfgPath m_cfgIntermediates;
 
@@ -131,21 +138,28 @@ GroupLocalPlan(GroupRoadmapType* const & _g, const std::string& _lpLabel,
     : CompositeEdge<GraphType>((GroupGraphType*)_g, _w, (CompositePath&)_intermediates), 
     m_lpLabel(_lpLabel) {}
 
+template <typename GraphType>
+GroupLocalPlan<GraphType>::
+GroupLocalPlan(RobotGroup* const & _g, const std::string& _lpLabel,
+    const double _w, const GroupCfgPath& _intermediates)
+    : CompositeEdge<GraphType>(_g, _w, (CompositePath&)_intermediates), 
+    m_lpLabel(_lpLabel) {}
+
 /*------------------------- Misc Interface Functions -------------------------*/
 
 template <typename GraphType>
 void
 GroupLocalPlan<GraphType>::
-SetActiveRobots(const std::vector<size_t>& _indices) {
-  m_activeRobots = _indices;
+SetFormation(const Formation& _indices) {
+  m_formation = _indices;
 }
 
 
 template <typename GraphType>
-const std::vector<size_t>&
+const typename GroupLocalPlan<GraphType>::Formation&
 GroupLocalPlan<GraphType>::
-GetActiveRobots() const noexcept {
-  return m_activeRobots;
+GetFormation() const noexcept {
+  return m_formation;
 }
 
 
@@ -157,6 +171,7 @@ Clear() noexcept {
   m_lpLabel.clear();
   this->m_weight = 0.;
   m_cfgIntermediates.clear();
+  m_formation.clear();
 }
 
 
@@ -164,7 +179,6 @@ template <typename GraphType>
 typename GroupLocalPlan<GraphType>::GroupCfgPath&
 GroupLocalPlan<GraphType>::
 GetIntermediates() noexcept {
-  //return (GroupCfgPath&)this->m_intermediates;
   return m_cfgIntermediates;
 }
 
@@ -173,7 +187,6 @@ template <typename GraphType>
 const typename GroupLocalPlan<GraphType>::GroupCfgPath&
 GroupLocalPlan<GraphType>::
 GetIntermediates() const noexcept {
-  //return (GroupCfgPath&)this->m_intermediates;
   return m_cfgIntermediates;
 }
 
@@ -182,7 +195,6 @@ template <typename GraphType>
 void
 GroupLocalPlan<GraphType>::
 SetIntermediates(const GroupCfgPath& _cfgs) {
-  //this->SetIntermediates((CompositePath&)_cfgs);
   m_cfgIntermediates = _cfgs;
 }
 
@@ -208,8 +220,12 @@ template <typename GraphType>
 GroupLocalPlan<GraphType>
 GroupLocalPlan<GraphType>::
 operator+(const GroupLocalPlan& _other) const {
-  return GroupLocalPlan((GroupRoadmapType*)this->m_groupMap, m_lpLabel,
-                        this->m_weight + _other.m_weight);
+  if(!this->m_groupMap)
+    return GroupLocalPlan(this->m_group, m_lpLabel,
+                          this->m_weight + _other.m_weight);
+  else
+    return GroupLocalPlan((GroupRoadmapType*)this->m_groupMap, m_lpLabel,
+                          this->m_weight + _other.m_weight);
 }
 
 /*------------------------------ Input/Output --------------------------------*/
@@ -220,7 +236,7 @@ operator<<(std::ostream& _os, const GroupLocalPlan<GraphType>& _groupLP) {
   //For the group edges, the only caveat is that the intermediates need to line up.
   // Each individual edge within a GroupLocalPlan should have the same number of
   // intermediates (for now) so that we can do this easily. Then for a
-  // GroupLocalPlan with n individual edges for i robots, you would print all i
+  // GroupLocalPlan with individual edges for i robots, you would print all i
   // of the nth intermediates, then the (n+1)th, etc.
 
   // Make a vector of edges corresponding to each robot's edge to prevent from
@@ -232,11 +248,11 @@ operator<<(std::ostream& _os, const GroupLocalPlan<GraphType>& _groupLP) {
   std::vector< std::vector<CfgType> > edgeIntermediates;
   const size_t numRobots = _groupLP.GetNumRobots();
   size_t numIntermediates = 0;
-  const std::vector<size_t>& activeRobots = _groupLP.GetActiveRobots();
+  const std::vector<size_t>& formation = _groupLP.GetFormation();
   for(size_t i = 0; i < numRobots; ++i) {
     // Check if the robot is inactive, if so, just duplicate the start cfg:
-    if(std::find(activeRobots.begin(), activeRobots.end(), i) ==
-                                                           activeRobots.end()) {
+    if(std::find(formation.begin(), formation.end(), i) ==
+                                                           formation.end()) {
       // Get the cfg that the robot is stationary at. Will be resized later to
       // account for correct number of intermediates.
       edgeIntermediates.push_back({_groupLP.GetRobotStartCfg(i)});

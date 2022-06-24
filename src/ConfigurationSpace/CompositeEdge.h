@@ -19,9 +19,6 @@ template <typename GraphType> class CompositeState;
 /// A composite edge for multiple robots, which is composed of an individual
 /// edge for each robot. 'GraphType' refers to the individual robot graph type.
 ///
-/// @todo Remove the 'skip edge' stuff. There is no such thing as a skipped
-///       edge: the disassembly code needs to be adjusted to only use the edges
-///       they want.
 /// @todo Rework so that we only need a robot group to construct this, in which
 ///       case it will have all local edges. It should only get tied to a
 ///       roadmap with SetGroupRoadmap after it has been added to one.
@@ -49,10 +46,17 @@ class CompositeEdge {
     ///@{
 
     /// Constructs a CompositeEdge.
-    /// @param _g The group roadmap in which this edge exists. Defaults to nullptr.
+    /// @param _g The group roadmap in which this edge exists.
     /// @param _w The weight of the plan. Defaults to 0.0.
     /// @param _intermediates The intermediates along the edge. Defaults to CompositePath().
     CompositeEdge(GroupGraphType* const & _g = nullptr, const double _w = 0.0, 
+      const CompositePath& _intermediates = CompositePath());
+
+    /// Constructs a CompositeEdge.
+    /// @param _g The robot group to which this edge exists.
+    /// @param _w The weight of the plan. Defaults to 0.0.
+    /// @param _intermediates The intermediates along the edge. Defaults to CompositePath().
+    CompositeEdge(RobotGroup* const & _g, const double _w = 0.0, 
       const CompositePath& _intermediates = CompositePath());
 
     ///@}
@@ -85,9 +89,7 @@ class CompositeEdge {
     ///@name Misc. Interface Functions
     ///@{
 
-    // There is no current use case where these should ever get reset to false.
-    virtual void SetSkipEdge() noexcept;
-    virtual bool SkipEdge() const noexcept;
+    void SetCompositeGraph(GroupGraphType* const & _g);
     
     /// Reset the states of this object.
     virtual void Clear() noexcept;
@@ -190,6 +192,8 @@ class CompositeEdge {
 
     GroupGraphType* m_groupMap{nullptr};  ///< The composite graph that this edge is in.
 
+    RobotGroup* m_group{nullptr}; ///< The robot group that this edge belongs to.
+
     /// The edge weight.
     double m_weight{std::numeric_limits<double>::infinity()};
 
@@ -199,8 +203,6 @@ class CompositeEdge {
 
     /// Note that any edges added to m_localEdges must be valid and complete.
     std::vector<IndividualEdge> m_localEdges; ///< Edges which are not in a map.
-
-    bool m_skipEdge{false}; ///< Flag to skip full recreation in GroupPath::FullCfgs.
 
     size_t m_timesteps;
 
@@ -214,12 +216,42 @@ template <typename GraphType>
 CompositeEdge<GraphType>::
 CompositeEdge(GroupGraphType* const & _g, const double _w, 
     const CompositePath& _intermediates)
-    : m_groupMap(_g), m_weight(_w), m_intermediates(_intermediates) {
-  if(m_groupMap)
+    : m_groupMap(_g), m_group(_g->GetGroup()), 
+      m_weight(_w), m_intermediates(_intermediates) {
+
+  if(m_groupMap) {
     m_edges.resize(m_groupMap->GetGroup()->Size(), INVALID_ED);
+    m_localEdges.resize(m_groupMap->GetGroup()->Size());
+  }
+}
+
+template <typename GraphType>
+CompositeEdge<GraphType>::
+CompositeEdge(RobotGroup* const & _g, const double _w, 
+    const CompositePath& _intermediates)
+    : m_group(_g), m_weight(_w), m_intermediates(_intermediates) {
+
+  // Allocate space for local edges and set all edge descriptors to invalid.
+  m_localEdges.resize(m_group->Size());
+  m_edges.resize(m_group->Size(), INVALID_ED);
 }
 
 /*------------------------- Misc Interface Functions -------------------------*/
+
+template <typename GraphType>
+void
+CompositeEdge<GraphType>::
+SetCompositeGraph(GroupGraphType* const & _g) {
+  // The new composite graph must have the same group.
+  if(_g->GetGroup() != m_group)
+    throw RunTimeException(WHERE) << "The new composite graph must have the "
+                                  << "same robot group.";
+
+  // Clear the edge descriptors since they do not correspond to the new graph.
+  m_edges.resize(m_group->Size(), INVALID_ED);
+
+  m_groupMap = _g;
+}
 
 template <typename GraphType>
 typename CompositeEdge<GraphType>::CompositePath&
@@ -258,6 +290,11 @@ template <typename GraphType>
 bool
 CompositeEdge<GraphType>::
 operator==(const CompositeEdge& _other) const noexcept {
+
+  // Check that both edges correspond to the same group.
+  // If not, return false.
+  if(m_group != _other.m_group)
+    return false;
    
   // Check that both edges have a group map
   // If neither do, return true
@@ -266,10 +303,6 @@ operator==(const CompositeEdge& _other) const noexcept {
 
   // If only one does, return false
   if(!m_groupMap or !_other.m_groupMap)
-    return false;
- 
-  // Ensure the edges belong to the same group.
-  if(m_groupMap->GetGroup() != _other.m_groupMap->GetGroup())
     return false;
 
   // Ensure the edges are equal.
@@ -331,22 +364,6 @@ SetWeight(const EdgeWeight _w) noexcept {
 template <typename GraphType>
 void
 CompositeEdge<GraphType>::
-SetSkipEdge() noexcept {
-  m_skipEdge = true;
-}
-
-
-template <typename GraphType>
-bool
-CompositeEdge<GraphType>::
-SkipEdge() const noexcept {
-  return m_skipEdge;
-}
-
-
-template <typename GraphType>
-void
-CompositeEdge<GraphType>::
 Clear() noexcept {
   // Reset the initial state variables of this object:
   m_weight = 0.;
@@ -385,8 +402,12 @@ template <typename GraphType>
 void
 CompositeEdge<GraphType>::
 SetEdge(Robot* const _robot, const ED _ed) {
-  const size_t index = m_groupMap->GetGroup()->GetGroupIndex(_robot);
+  // Make sure that the composite graph has been set
+  if(!m_groupMap)
+    throw RunTimeException(WHERE) << "Can't set an edge descriptor without a "
+                                  << "composite graph.";
 
+  const size_t index = m_groupMap->GetGroup()->GetGroupIndex(_robot);
   m_edges[index] = _ed;
 }
 
@@ -395,7 +416,7 @@ template <typename GraphType>
 void
 CompositeEdge<GraphType>::
 SetEdge(Robot* const _robot, IndividualEdge&& _edge) {
-  const size_t index = m_groupMap->GetGroup()->GetGroupIndex(_robot);
+  const size_t index = m_group->GetGroupIndex(_robot);
   SetEdge(index, std::move(_edge));
 }
 
@@ -404,9 +425,6 @@ template <typename GraphType>
 void
 CompositeEdge<GraphType>::
 SetEdge(const size_t robotIndex, IndividualEdge&& _edge) {
-  // Allocate space for local edges if not already done.
-  m_localEdges.resize(m_groupMap->GetGroup()->Size());
-
   m_localEdges[robotIndex] = std::move(_edge);
   m_edges[robotIndex] = INVALID_ED;
 }
@@ -416,8 +434,7 @@ template <typename GraphType>
 typename CompositeEdge<GraphType>::IndividualEdge*
 CompositeEdge<GraphType>::
 GetEdge(const size_t _robotIndex) {
-  return const_cast<IndividualEdge*>(GetEdge(
-                          this->m_groupMap->GetGroup()->GetRobot(_robotIndex)));
+  return const_cast<IndividualEdge*>(GetEdge(m_group->GetRobot(_robotIndex)));
 }
 
 
@@ -425,7 +442,7 @@ template <typename GraphType>
 const typename CompositeEdge<GraphType>::IndividualEdge*
 CompositeEdge<GraphType>::
 GetEdge(const size_t _robotIndex) const {
-  return GetEdge(m_groupMap->GetGroup()->GetRobot(_robotIndex));
+  return GetEdge(m_group->GetRobot(_robotIndex));
 }
 
 
@@ -441,7 +458,7 @@ template <typename GraphType>
 const typename CompositeEdge<GraphType>::IndividualEdge*
 CompositeEdge<GraphType>::
 GetEdge(Robot* const _robot) const {
-  const size_t index = m_groupMap->GetGroup()->GetGroupIndex(_robot);
+  const size_t index = m_group->GetGroupIndex(_robot);
 
   const ED& descriptor = m_edges.at(index);
   if(descriptor != INVALID_ED)
@@ -488,16 +505,20 @@ template <typename GraphType>
 size_t
 CompositeEdge<GraphType>::
 GetNumRobots() const noexcept {
-  return m_groupMap->GetGroup()->Size();
+  return m_group->Size();
 }
 
 template <typename GraphType>
 std::unordered_set<Robot*>
 CompositeEdge<GraphType>::
 GetActiveRobots() {
+  /// @todo update this to work for local edges as well
   std::unordered_set<Robot*> actives;
 
   for(size_t i = 0; i < m_edges.size(); ++i) {
+    if(m_edges[i] == INVALID_ED)
+      continue;
+
     auto roadmap = m_groupMap->GetRoadmap(i);
 
     typename GraphType::CEI ei;
@@ -505,7 +526,7 @@ GetActiveRobots() {
     roadmap->find_edge(m_edges[i], vi, ei);
 
     if(ei->source() != ei->target()) {
-      actives.insert(m_groupMap->GetGroup()->GetRobot(i));
+      actives.insert(m_group->GetRobot(i));
     }
   }
   return actives;
@@ -531,7 +552,10 @@ template <typename GraphType>
 CompositeEdge<GraphType>
 CompositeEdge<GraphType>::
 operator+(const CompositeEdge& _other) const {
-  return CompositeEdge(m_groupMap, m_weight + _other.m_weight);
+  if(!m_groupMap)
+    return CompositeEdge(m_group, m_weight + _other.m_weight);
+  else
+    return CompositeEdge(m_groupMap, m_weight + _other.m_weight);
 }
 
 

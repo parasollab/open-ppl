@@ -323,7 +323,7 @@ IsConnected(const GroupCfgType& _c1, const GroupCfgType& _c2, GroupCfgType& _col
   _lpOutput->m_edge.first.SetWeight(distance);
   _lpOutput->m_edge.second.SetWeight(distance);
   _lpOutput->SetIndividualEdges(_robotIndexes);
-  _lpOutput->SetActiveRobots(_robotIndexes);
+  _lpOutput->SetFormation(_robotIndexes);
 
   if(connected)
     _lpOutput->AddIntermediatesToWeights(this->m_saveIntermediates);

@@ -193,7 +193,7 @@ Extend(const GroupCfgType& _start, const GroupCfgType& _end, GroupCfgType& _new,
   Environment* env = this->GetEnvironment();
 
   _lp.SetLPLabel(this->GetLabel());
-  _lp.SetActiveRobots(_robotIndexes);
+  _lp.SetFormation(_robotIndexes);
 
   return Expand(_start, _end, _new, this->m_maxDist, _lp,
       env->GetPositionRes(), env->GetOrientationRes(), _robotIndexes);
@@ -209,7 +209,7 @@ Extend(const GroupCfgType& _start, const GroupCfgType& _end, GroupCfgType& _new,
   Environment* env = this->GetEnvironment();
 
   _lp.SetLPLabel(this->GetLabel());
-  _lp.SetActiveRobots(_robotIndexes);
+  _lp.SetFormation(_robotIndexes);
 
   _cdInfo.ResetVars(_cdInfo.m_retAllInfo);
 
