@@ -15,7 +15,7 @@
 /// @ingroup NeighborhoodFinders
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
-class BruteForceNF : public NeighborhoodFinderMethod<MPTraits> {
+class BruteForceNF : virtual public NeighborhoodFinderMethod<MPTraits> {
 
   public:
 

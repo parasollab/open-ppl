@@ -1,5 +1,5 @@
-#ifndef PPL_LAZY_QUERY_H_
-#define PPL_LAZY_QUERY_H_
+#ifndef PPL_LAZY_QUERY_TEST_H_
+#define PPL_LAZY_QUERY_TEST_H_
 
 #include "MPLibrary/MapEvaluators/LazyQuery.h"
 #include "Testing/MPLibrary/MapEvaluators/MapEvaluatorMethodTest.h"
@@ -77,8 +77,9 @@ LazyQueryTest() : QueryMethod<MPTraits>(), LazyQuery<MPTraits>() {
 
 template <typename MPTraits>
 LazyQueryTest<MPTraits>::
-LazyQueryTest(XMLNode& _node) : MapEvaluatorMethod<MPTraits>(_node), QueryMethod<MPTraits>(_node), LazyQuery<MPTraits>(_node) {
-}
+LazyQueryTest(XMLNode& _node) : MapEvaluatorMethod<MPTraits>(_node), 
+                                QueryMethod<MPTraits>(_node), 
+                                LazyQuery<MPTraits>(_node) {}
 
 template <typename MPTraits>
 LazyQueryTest<MPTraits>::
@@ -105,9 +106,14 @@ MainFunctionTest() {
     message = message + "\n\tIndividual robot functionality testing failed ";
   }
 
-  if(!passed) {
+  // Clean up
+  auto task = this->GetMPLibrary()->GetTask();
+  task->ClearGoalConstraints();
+
+  if (passed) {
+    message = "MainFunctionTest::PASSED!\n";
+  } else {
     message = "MainFunctionTest::FAILED :(\n" + message;
-    return std::make_pair(passed, message);
   }
 
   return std::make_pair(passed, message);
@@ -120,7 +126,7 @@ void
 LazyQueryTest<MPTraits>::
 SingleSetup() {
   // Get Robot
-  auto robot = MapEvaluatorMethodTest<MPTraits>::GetMPProblem()->GetRobots()[0].get();
+  auto robot = this->GetMPProblem()->GetRobots()[0].get();
 
   /// Roadmap Construction
   RoadmapType* roadmap = new RoadmapType(robot);

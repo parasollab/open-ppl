@@ -2,58 +2,66 @@
 
 Sampler Statistics                                            Attempts Successes
 
-  UniformRandomSampler::UniformRandomFree                          112        96
-  All Samplers                                                     112        96
-  Success Rate: 85.7%
+  UniformRandomSampler::UniformRandomFree                          332       288
+  All Samplers                                                     332       288
+  Success Rate: 86.7%
 
 
 Local Planner Statistics                        Attempts Connections    CD Calls
 
-  StraightLine::sl                                   507         300       18882
+  StraightLine::sl                                  3029        2682       56173
 
 
 Collision Detection Calls                                                  Count
 
-  StraightLine::sl::IsConnectedSLSequential                                18882
-  UniformRandomSampler::UniformRandomFree::Sampler                           112
-  All Collision Detectors                                                  18994
+  StraightLine::sl::IsConnectedSLSequential                                56173
+  UniformRandomSampler::UniformRandomFree::Sampler                           332
+  All Collision Detectors                                                  56505
 
 
 Other Statistics                                                           Value
 
-  Graph Search                                                                20
-  GroupDecoupledQuery::AvgVertices                                            12
-  GroupDecoupledQuery::TotalCost                                            92.7
+  Graph Search                                                                56
+  GroupDecoupledQuery::AvgVertices                                            32
+  GroupDecoupledQuery::TotalCost                                            87.7
   QueryMethod::IndividualQuery::FoundPath                                      1
+  QueryMethod::SIPP::FoundPath                                                 1
+  SIPPMethod::SIPP::FoundPath                                                  0
 
 
 Averages                                                         Value     Count
 
-  NeighborhoodConnector::Closest::CacheHitRatio                      0       496
+  NeighborhoodConnector::Closest::CacheHitRatio                0.00425      1648
 
 
 Clock Name                                                        Time (Seconds)
 
-  BasicPRM::IndividualPRM::Connect                                          1.33
-  BasicPRM::IndividualPRM::EvaluateMap                                     0.002
-  BasicPRM::IndividualPRM::GenerateGoals                                0.000165
-  BasicPRM::IndividualPRM::GenerateStart                                 6.4e-05
-  BasicPRM::IndividualPRM::InitAndRun                                       1.34
-  BasicPRM::IndividualPRM::Initialize                                     0.0583
-  BasicPRM::IndividualPRM::Run                                              1.27
-  BasicPRM::IndividualPRM::Sample                                        0.00346
-  BruteForceNF::BFNF::FindNeighbors                                        0.007
-  CBSQuery::CBSQuery                                                       0.131
-  CBSQuery::CBSQuerySolveIndividualTask                                   0.0163
-  CCTracker::AddEdge                                                       0.001
+  BasicPRM::IndividualPRM::Connect                                          5.11
+  BasicPRM::IndividualPRM::EvaluateMap                                     0.012
+  BasicPRM::IndividualPRM::GenerateGoals                                       0
+  BasicPRM::IndividualPRM::GenerateStart                                   0.008
+  BasicPRM::IndividualPRM::InitAndRun                                       5.15
+  BasicPRM::IndividualPRM::Initialize                                      0.301
+  BasicPRM::IndividualPRM::Run                                              4.85
+  BasicPRM::IndividualPRM::Sample                                          0.016
+  BruteForceNF::BFNF::FindNeighbors                                        0.036
+  CBSQuery::CBSQuery                                                        20.8
+  CBSQuery::CBSQuery::ComputeIntervals                                      20.1
+  CBSQuery::CBSQuery::EdgeIntervals                                         20.1
+  CBSQuery::CBSQuerySolveIndividualTask                                     20.5
+  CCTracker::AddEdge                                                       0.004
   CCTracker::AddVertex                                                         0
-  ComposeEvaluator::BoundedIndividualQuery                                 0.002
-  GroupDecoupledStrategy::CBSPRM::EvaluateMap                              0.131
-  GroupDecoupledStrategy::CBSPRM::InitAndRun                                1.47
+  ComposeEvaluator::BoundedIndividualQuery                                 0.012
+  GroupDecoupledStrategy::CBSPRM::EvaluateMap                               20.8
+  GroupDecoupledStrategy::CBSPRM::InitAndRun                                  26
   GroupDecoupledStrategy::CBSPRM::Initialize                                   0
-  GroupDecoupledStrategy::CBSPRM::Run                                       1.47
-  MPLibrary::Initialize                                                  0.00024
-  NeighborhoodConnector::Closest::Connect                                   1.33
-  QueryMethod::GeneratePath                                               0.0144
-  StraightLine::sl::IsConnected                                             1.34
-  UniformRandomSampler::UniformRandomFree::Sample                        0.00272
+  GroupDecoupledStrategy::CBSPRM::Run                                         26
+  MPLibrary::Initialize                                                        0
+  NeighborhoodConnector::Closest::Connect                                   5.11
+  QueryMethod::GeneratePath                                                0.012
+  SIPPMethod::GeneratePath                                                 0.427
+  SIPPMethod::SIPP::ComputeIntervals                                       0.341
+  SIPPMethod::SIPP::RetrieveIntervals                                          0
+  SafeIntervalTool::ComputeSafeIntervals                                    19.5
+  StraightLine::sl::IsConnected                                             5.72
+  UniformRandomSampler::UniformRandomFree::Sample                          0.016
