@@ -4,21 +4,21 @@
     <Base filename="ground.obj" comAdjustment="none" type="Fixed" color="0.8 0.8 0.8 1" transform="0 0 -0.6 0.0000000000000000 0.0000000000000000 0.0000000000000000"/>
   </MultiBody>
   <MultiBody type="Passive">
-    <Base filename="block1.obj" comAdjustment="none" type="Fixed" color="0 0 1 1" transform="6 -3 0 0.0000000000000000 0.0000000000000000 0.0000000000000000"/>
+    <Base filename="block1.obj" comAdjustment="none" type="Fixed" color="0 0 1 1" transform="8.25 1.75 0 0.0000000000000000 0.0000000000000000 0.0000000000000000"/>
   </MultiBody>
   <MultiBody type="Passive">
-    <Base filename="block2.obj" comAdjustment="none" type="Fixed" color="0 0 1 1" transform="-20 0 0 0.0000000000000000 0.0000000000000000 0.0000000000000000"/>
+    <Base filename="block2.obj" comAdjustment="none" type="Fixed" color="0 0 1 1" transform="-15 2.5 0 0.0000000000000000 0.0000000000000000 0.0000000000000000"/>
   </MultiBody>
   <MultiBody type="Passive">
-    <Base filename="block3.obj" comAdjustment="none" type="Fixed" color="0 0 1 1" transform="-11 -5 0 0.0000000000000000 0.0000000000000000 0.0000000000000000"/>
+    <Base filename="block3.obj" comAdjustment="none" type="Fixed" color="0 0 1 1" transform="-10.5 -2.5 0 0.0000000000000000 0.0000000000000000 0.0000000000000000"/>
   </MultiBody>
   <MultiBody type="Passive">
-    <Base filename="block4.obj" comAdjustment="none" type="Fixed" color="0 0 1 1" transform="0 -5 0 0.0000000000000000 0.0000000000000000 0.0000000000000000"/>
+    <Base filename="block4.obj" comAdjustment="none" type="Fixed" color="0 0 1 1" transform="-1 -4 0 0.0000000000000000 0.0000000000000000 0.0000000000000000"/>
   </MultiBody>
   <MultiBody type="Passive">
-    <Base filename="block4.obj" comAdjustment="none" type="Fixed" color="0 0 1 1" transform="-5 5 0 0.0000000000000000 0.0000000000000000 0.0000000000000000"/>
+    <Base filename="block4.obj" comAdjustment="none" type="Fixed" color="0 0 1 1" transform="-4 4 0 0.0000000000000000 0.0000000000000000 0.0000000000000000"/>
   </MultiBody>
   <MultiBody type="Passive">
-    <Base filename="block4.obj" comAdjustment="none" type="Fixed" color="0 0 1 1" transform="15 -3 0 0.0000000000000000 0.0000000000000000 0.0000000000000000"/>
+    <Base filename="block4.obj" comAdjustment="none" type="Fixed" color="0 0 1 1" transform="16 -2 0 0.0000000000000000 0.0000000000000000 0.0000000000000000"/>
   </MultiBody>
 </Environment>
