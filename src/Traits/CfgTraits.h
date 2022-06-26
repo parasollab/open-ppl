@@ -17,6 +17,7 @@
 
 //distance metric includes
 #include "MPLibrary/DistanceMetrics/EuclideanDistance.h"
+#include "MPLibrary/DistanceMetrics/ManhattanDistance.h"
 #include "MPLibrary/DistanceMetrics/MinkowskiDistance.h"
 
 //validity checker includes
@@ -55,6 +56,7 @@
 #include "MPLibrary/MapEvaluators/ComposeEvaluator.h"
 #include "MPLibrary/MapEvaluators/ConditionalEvaluator.h"
 #include "MPLibrary/MapEvaluators/LazyQuery.h"
+#include "MPLibrary/MapEvaluators/PrintMapEvaluation.h"
 #include "MPLibrary/MapEvaluators/QueryMethod.h"
 #include "MPLibrary/MapEvaluators/SIPPMethod.h"
 #include "MPLibrary/MapEvaluators/TimeEvaluator.h"
@@ -104,6 +106,7 @@ struct MPTraits {
   //types of distance metrics available in our world
   typedef boost::mpl::list<
     EuclideanDistance<MPTraits>,
+    ManhattanDistance<MPTraits>,
     MinkowskiDistance<MPTraits>
       > DistanceMetricMethodList;
 
@@ -162,6 +165,7 @@ struct MPTraits {
     ComposeEvaluator<MPTraits>,
     ConditionalEvaluator<MPTraits>,
     LazyQuery<MPTraits>,
+    PrintMapEvaluation<MPTraits>,
     QueryMethod<MPTraits>,
     SIPPMethod<MPTraits>,
     TimeEvaluator<MPTraits>
