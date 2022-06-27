@@ -230,16 +230,13 @@ template <typename Vertex, typename Edge>
 typename GroupRoadmap<Vertex, Edge>::VID
 GroupRoadmap<Vertex, Edge>::
 AddVertex(const Vertex& _v) noexcept {
-  Vertex cfg; // Will be a copy of the const Vertex
+  Vertex cfg = _v; // Will be a copy of the const Vertex
   // Check that the group map is correct, if not, try and change it.
   if((GroupRoadmapType*)_v.GetGroupRoadmap() != this) {
     std::cerr << "GroupRoadmap::AddVertex: Warning! Group roadmap "
               << "doesn't match this, attempting to exchange the roadmap..."
               << std::endl;
-    cfg = _v.SetGroupGraph(this);
-  }
-  else { // Roadmaps match, no change to attempt.
-    cfg = _v;
+    cfg.SetGroupRoadmap(this);
   }
 
   // Find the vertex and ensure it does not already exist.

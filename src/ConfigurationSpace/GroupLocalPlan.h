@@ -74,6 +74,8 @@ class GroupLocalPlan : public CompositeEdge<GraphType> {
     ///@name Misc. Interface Functions
     ///@{
 
+    void SetGroupRoadmap(GroupRoadmapType* const& _g);
+
     /// Set the formation of the robots. The first index is the leader.
     /// @param _indices The vector of robot indices given.
     void SetFormation(const Formation& _indices);
@@ -85,14 +87,10 @@ class GroupLocalPlan : public CompositeEdge<GraphType> {
     /// Reset the states of this object.
     void Clear() noexcept;
 
-    //using CompositeEdge<GraphType>::GetIntermediates;
-
     /// Get the group configuration intermediates.
     GroupCfgPath& GetIntermediates() noexcept;
     /// Get the group configuration intermediates.
     const GroupCfgPath& GetIntermediates() const noexcept;
-
-    //using CompositeEdge<GraphType>::SetIntermediates;
 
     /// Set the group configuration intermediates.
     void SetIntermediates(const GroupCfgPath& _cfgs);
@@ -146,6 +144,22 @@ GroupLocalPlan(RobotGroup* const & _g, const std::string& _lpLabel,
     m_lpLabel(_lpLabel) {}
 
 /*------------------------- Misc Interface Functions -------------------------*/
+
+template <typename GraphType>
+void
+GroupLocalPlan<GraphType>::
+SetGroupRoadmap(GroupRoadmapType* const& _g) {
+  // The new composite graph must have the same group.
+  if(_g->GetGroup() != this->m_group)
+    throw RunTimeException(WHERE) << "The new group roadmap must have the "
+                                  << "same robot group.";
+
+  this->m_groupMap = (GroupGraphType*)_g;
+
+  // Put all individual edges into the group local plan so that all are local:
+  for(size_t i = 0; i < this->GetNumRobots(); ++i)
+    this->SetEdge(i, IndividualEdge(this->GetEdge(i)));
+}
 
 template <typename GraphType>
 void

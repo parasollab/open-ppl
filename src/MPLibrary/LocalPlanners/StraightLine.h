@@ -232,7 +232,7 @@ IsConnected(const GroupCfgType& _c1, const GroupCfgType& _c2, GroupCfgType& _col
   // Determine whether multiple robots are moving and whether this is a
   // formation rotation (rotation about some leader robot).
   const bool multipleParts = _robotIndexes.size() > 1;
-  const bool isRotational = _c1.OriDOF() > 0;
+  const bool isRotational = _c1.GetRobot(0)->GetMultiBody()->OrientationDOF() > 0;
   const bool formationRotation = multipleParts && isRotational;
   const size_t leaderRobotIndex = _robotIndexes.empty() ? size_t(-1)
                                                         : _robotIndexes[0];
@@ -249,7 +249,7 @@ IsConnected(const GroupCfgType& _c1, const GroupCfgType& _c2, GroupCfgType& _col
   if(multipleParts) {
     // Remove the rotational bits, as increment should only do the translation
     // and then RotateFormationAboutLeader() will handle all rotations:
-    increment = GroupCfgType(groupMap, true);
+    increment = GroupCfgType(groupMap);
 
     // Overwrite all positional dofs from the leader's cfg for all active robots
     increment.OverwriteDofsForRobots(

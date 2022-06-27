@@ -346,7 +346,7 @@ Expand(const GroupCfgType& _start, const GroupCfgType& _end,
   /// Set these to true to have single parts treated (less efficiently) as
   /// multiple parts, which should now be identical.
   const bool multipleParts = _robotIndexes.size() > 1;
-  const bool isRotational = _start.OriDOF() > 0;
+  const bool isRotational = _start.GetRobot(0)->GetMultiBody()->OrientationDOF() > 0;
   const bool subassemblyRotation = multipleParts && isRotational;
 
   GroupCfgType oneStep = _start; // The placeholder for computing steps of angles.
@@ -364,7 +364,7 @@ Expand(const GroupCfgType& _start, const GroupCfgType& _end,
   if(subassemblyRotation) {
     // Remove the rotational bits, as incr should only do the translation
     // and then RotateFormationAboutLeader() will handle all rotations.
-    incr = GroupCfgType(_start.GetGroupRoadmap(), true); // Ensure zeroed out.
+    incr = GroupCfgType(_start.GetGroupRoadmap()); // Ensure zeroed out.
     incr.OverwriteDofsForRobots(
             incrUntouched.GetRobotCfg(leaderRobotIndex).GetLinearPosition(),
             _robotIndexes);

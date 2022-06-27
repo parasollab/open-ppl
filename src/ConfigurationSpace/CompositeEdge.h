@@ -18,10 +18,6 @@ template <typename GraphType> class CompositeState;
 ////////////////////////////////////////////////////////////////////////////////
 /// A composite edge for multiple robots, which is composed of an individual
 /// edge for each robot. 'GraphType' refers to the individual robot graph type.
-///
-/// @todo Rework so that we only need a robot group to construct this, in which
-///       case it will have all local edges. It should only get tied to a
-///       roadmap with SetGroupRoadmap after it has been added to one.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename GraphType>
 class CompositeEdge {
@@ -89,7 +85,7 @@ class CompositeEdge {
     ///@name Misc. Interface Functions
     ///@{
 
-    void SetCompositeGraph(GroupGraphType* const & _g);
+    void SetGroupGraph(GroupGraphType* const& _g);
     
     /// Reset the states of this object.
     virtual void Clear() noexcept;
@@ -241,7 +237,7 @@ CompositeEdge(RobotGroup* const & _g, const double _w,
 template <typename GraphType>
 void
 CompositeEdge<GraphType>::
-SetCompositeGraph(GroupGraphType* const & _g) {
+SetGroupGraph(GroupGraphType* const & _g) {
   // The new composite graph must have the same group.
   if(_g->GetGroup() != m_group)
     throw RunTimeException(WHERE) << "The new composite graph must have the "

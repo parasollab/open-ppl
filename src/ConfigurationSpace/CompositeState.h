@@ -91,7 +91,7 @@ class CompositeState {
     /// Get the group graph this composite state is with respect to.
     virtual GroupGraphType* GetGroupGraph() const noexcept;
 
-    virtual CompositeState<GraphType> SetGroupGraph(GroupGraphType* _newGraph) const;
+    virtual void SetGroupGraph(GroupGraphType* _newGraph);
 
     /// Get the VID for a particular robot.
     /// @param _index The index (within the group) of the robot.
@@ -300,7 +300,7 @@ GetGroupGraph() const noexcept {
 template <typename GraphType>
 void
 CompositeState<GraphType>::
-SetGroupGraph(GroupGraphType* const _newGraph) const {
+SetGroupGraph(GroupGraphType* const _newGraph) {
   // Check that groups are compatible.
   if(m_group != _newGraph->GetGroup())
     throw RunTimeException(WHERE) << "Trying to change graphs on incompatible "
@@ -309,8 +309,6 @@ SetGroupGraph(GroupGraphType* const _newGraph) const {
   // Set the group graph and set all vids to invalid.
   m_groupMap = _newGraph;
   m_vids.resize(GetNumRobots(), INVALID_VID);
-
-  return newCfg;
 }
 
 template <typename GraphType>
@@ -336,7 +334,7 @@ void
 CompositeState<GraphType>::
 SetRobotCfg(Robot* const _robot, const VID _vid) {
   if(!m_groupMap)
-    throw RunTimeException(WHERE) >> "Can't set a VID without a composite graph.";
+    throw RunTimeException(WHERE) << "Can't set a VID without a composite graph.";
 
   const size_t index = m_groupMap->GetGroup()->GetGroupIndex(_robot);
   SetRobotCfg(index, _vid);
@@ -348,7 +346,7 @@ void
 CompositeState<GraphType>::
 SetRobotCfg(const size_t _index, const VID _vid) {
   if(!m_groupMap)
-    throw RunTimeException(WHERE) >> "Can't set a VID without a composite graph.";
+    throw RunTimeException(WHERE) << "Can't set a VID without a composite graph.";
 
   VerifyIndex(_index);
   m_vids[_index] = _vid;

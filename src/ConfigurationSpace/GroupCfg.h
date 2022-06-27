@@ -34,14 +34,6 @@ class RobotGroup;
 /// adding the individual cfg to the individual roadmap.
 /// 
 /// 'GraphType' represents the individual roadmap type for a single robot.
-///
-/// @note Do not use 'SetRobotCfg' on a roadmap configuration with a non-VID:
-///       The 'set' configuration will be lost since it is not in the individual
-///       roadmap.
-///
-/// @todo Rework so that we only need a robot group to construct this, in which
-///       case it will have all local cfgs. It should only get tied to a roadmap
-///       with SetGroupRoadmap after it has been added to one.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename GraphType>
 class GroupCfg final : public CompositeState<GraphType> {
@@ -72,11 +64,11 @@ class GroupCfg final : public CompositeState<GraphType> {
     /// Construct a group configuration.
     /// @param _groupMap The group roadmap to which this configuration belongs,
     ///                  or null if it is not in a map.
-    /// @param _init Default-initialize local configurations?
-    /// @todo This object does not work at all without a group map. We should
-    ///       throw relevant exceptions if needed.
-    explicit GroupCfg(GroupRoadmapType* const& _groupMap = nullptr,
-         const bool _init = false);
+    explicit GroupCfg(GroupRoadmapType* const& _groupMap = nullptr);
+
+    /// Construct a group configuration.
+    /// @param _group The group to which this configuration belongs.
+    explicit GroupCfg(RobotGroup* const& _group);
 
     ///@}
     ///@name Equality
@@ -134,58 +126,14 @@ class GroupCfg final : public CompositeState<GraphType> {
 
     /// Change the roadmap that this group is using/in reference to. Also
     /// performs compatibility/verification tests to see if it's possible.
-    /// Note: Does NOT add this new cfg to any roadmap, but makes all cfg info
+    /// @note Does NOT add this new cfg to any roadmap, but makes all cfg info
     ///       local (everything will be in m_localCfgs) so that there are no
     ///       issues when adding to the roadmap later.
-    /// @todo Fix this, it looks like it was meant to be a copy-constructor with
-    ///       a different roadmap. We will still need a roadmap setter in case
-    ///       the roadmap moves.
-    GroupCfg SetGroupGraph(GroupRoadmapType* const _newRoadmap) const;
- 
-    ///@}
-    ///@name Individual Configurations
-    ///@{
-    /// These functions manage the individual configurations that comprise this
-    /// group configuration.
-
-    // using CompositeState<GraphType>::SetRobotCfg;
-
-    /// Set the individual cfg for a robot to a local copy of an cfg.
-    /// @param _robot The robot which the cfg refers to.
-    /// @param _cfg The cfg.
-    // void SetRobotCfg(Robot* const _robot, IndividualCfg&& _cfg);
-
-    /// Set the individual cfg for a robot to a local copy of an cfg.
-    /// @param _index The robot's group index which the cfg refers to.
-    /// @param _cfg The cfg.
-    // void SetRobotCfg(const size_t _index, IndividualCfg&& _cfg);
-
-    // using CompositeState<GraphType>::GetRobotCfg;
-
-    /// Get the individual Cfg for a robot in the group.
-    /// @param _index The index of the robot.
-    /// @return The individual configuration for the indexed robot.
-    // IndividualCfg& GetRobotCfg(const size_t _index) override;
-
-    /// Get the individual Cfg for a robot in the group.
-    /// @param _index The index of the robot.
-    /// @return The individual configuration for the indexed robot.
-    // const IndividualCfg& GetRobotCfg(const size_t _index) const override;
-
-    /// Clear the Local Cfg information in the cfg (for after adding to roadmap)
-    // void ClearLocalCfgs();
+    void SetGroupRoadmap(GroupRoadmapType* const _newRoadmap);
 
     ///@}
     ///@name DOF Accessors
     ///@{
-    /// @todo These should not return any single-robot values, which can always
-    ///       be obtained by accessing the relevant robot.
-
-    /// We assume homogeneous robots right now, so the default argument
-    /// finds the values for the first one.
-    size_t PosDOF(const size_t _index = 0) const;
-    size_t OriDOF(const size_t _index = 0) const;
-    size_t DOF(const size_t _index = 0) const;
 
     /// Check if there is a nonholonomic robot in the group.
     bool IsNonholonomic() const noexcept;
@@ -392,18 +340,12 @@ class GroupCfg final : public CompositeState<GraphType> {
 
 template <typename GraphType>
 GroupCfg<GraphType>::
-GroupCfg(GroupRoadmapType* const& _groupMap, const bool _init) 
-     : CompositeState<GraphType>((GroupGraphType*)_groupMap, _init) {
+GroupCfg(GroupRoadmapType* const& _groupMap) 
+     : CompositeState<GraphType>((GroupGraphType*)_groupMap) {}
 
-  // If no group map was given, this is a placeholder object. We can't do
-  // anything with it since every meaningful operation requires a group map.
-  // if(!this->m_groupMap)
-  //   return;
-
-  // Initialize local configurations if requested.
-  // if(_init)
-  //   InitializeLocalCfgs();
-}
+template <typename GraphType>
+GroupCfg<GraphType>::
+GroupCfg(RobotGroup* const& _group) : CompositeState<GraphType>(_group) {}
 
 /*--------------------------------- Equality ---------------------------------*/
 
@@ -411,6 +353,10 @@ template <typename GraphType>
 bool
 GroupCfg<GraphType>::
 operator==(const GroupCfg& _other) const noexcept {
+  // If _other is for another group, these are not the same.
+  if(this->m_group != _other.m_group)
+    return false;
+
   // If _other is from another map, these are not the same.
   if(this->m_groupMap != _other.m_groupMap)
     return false;
@@ -485,9 +431,8 @@ GroupCfg<GraphType>::
 operator+=(const GroupCfg& _other) {
   // We must require the exact same group, which indicates everything
   // lines up between the two cfgs (namely the exact robots/order of the group).
-  if(this->m_groupMap->GetGroup() != _other.m_groupMap->GetGroup())
-    throw RunTimeException(WHERE, "Cannot add GroupCfgs with different group "
-                                  "roadmaps!");
+  if(this->m_group != _other.m_group)
+    throw RunTimeException(WHERE, "Cannot add GroupCfgs with different groups!");
 
   // We will be using the local cfgs, as we don't want to require any cfgs that
   // use this operator to have to add cfgs to roadmaps.
@@ -502,11 +447,10 @@ template <typename GraphType>
 GroupCfg<GraphType>&
 GroupCfg<GraphType>::
 operator-=(const GroupCfg& _other) {
-  // We must require the exact same group roadmap, which indicates everything
+  // We must require the exact same group, which indicates everything
   // lines up between the two cfgs (namely the exact robots/order of the group).
-  if(this->m_groupMap != _other.m_groupMap)
-    throw RunTimeException(WHERE, "Cannot add GroupCfgs with different group "
-                                  "roadmaps!");
+  if(this->m_group != _other.m_group)
+    throw RunTimeException(WHERE, "Cannot subtract GroupCfgs with different groups!");
 
   // We will be using the local cfgs, as we don't want to require any cfgs that
   // use this operator to have to add cfgs to roadmaps.
@@ -540,120 +484,23 @@ GetGroupRoadmap() const noexcept {
 
 
 template <typename GraphType>
-GroupCfg<GraphType>
+void
 GroupCfg<GraphType>::
-SetGroupGraph(GroupRoadmapType* const _newRoadmap) const {
+SetGroupRoadmap(GroupRoadmapType* const _newRoadmap) {
   // Check that groups are compatible.
-  if(this->m_groupMap->GetGroup() != _newRoadmap->GetGroup())
+  if(this->m_group != _newRoadmap->GetGroup())
     throw RunTimeException(WHERE) << "Trying to change roadmaps on incompatible "
                                   << "groups!";
 
-  // Create new cfg using _roadmap and initializing all entries locally to 0.
-  GroupCfg<GraphType> newCfg(_newRoadmap);
+  // Set the group graph of the composite state.
+  this->m_groupMap = (GroupGraphType*) _newRoadmap;
 
-  // Put all individual cfgs into group cfg so that all are local:
+  // Put all individual cfgs into the group cfg so that all are local:
   for(size_t i = 0; i < this->GetNumRobots(); ++i)
-    newCfg.SetRobotCfg(i, IndividualCfg(this->GetRobotCfg(i)));
-
-  return newCfg;
+    this->SetRobotCfg(i, IndividualCfg(this->GetRobotCfg(i)));
 }
-
-/*------------------------ Individual Configurations -------------------------*/
-
-// template <typename GraphType>
-// void
-// GroupCfg<GraphType>::
-// SetRobotCfg(Robot* const _robot, IndividualCfg&& _cfg) {
-//   const size_t index = this->m_groupMap->GetGroup()->GetGroupIndex(_robot);
-//   SetRobotCfg(index, std::move(_cfg));
-// }
-
-
-// template <typename GraphType>
-// void
-// GroupCfg<GraphType>::
-// SetRobotCfg(const size_t _index, IndividualCfg&& _cfg) {
-//   this->VerifyIndex(_index);
-
-//   // Allocate space for local cfgs if not already done.
-//   InitializeLocalCfgs();
-
-//   m_localCfgs[_index] = std::move(_cfg);
-//   this->m_vids[_index] = INVALID_VID;
-// }
-
-
-// template <typename GraphType>
-// void
-// GroupCfg<GraphType>::
-// ClearLocalCfgs() {
-//   m_localCfgs.clear();
-// }
-
-
-// template <typename GraphType>
-// typename GroupCfg<GraphType>::IndividualCfg&
-// GroupCfg<GraphType>::
-// GetRobotCfg(const size_t _index) {
-//   this->VerifyIndex(_index);
-
-//   const VID vid = this->GetVID(_index);
-//   if(vid != INVALID_VID)
-//     return this->m_groupMap->GetRoadmap(_index)->GetVertex(vid);
-//   else {
-//     InitializeLocalCfgs();
-//     return m_localCfgs[_index];
-//   }
-// }
-
-
-// template <typename GraphType>
-// const typename GroupCfg<GraphType>::IndividualCfg&
-// GroupCfg<GraphType>::
-// GetRobotCfg(const size_t _index) const {
-//   this->VerifyIndex(_index);
-
-//   // If we have a valid VID for this robot, fetch its configuration from its
-//   // individual roadmap.
-//   const VID vid = this->GetVID(_index);
-//   if(vid != INVALID_VID)
-//     return this->m_groupMap->GetRoadmap(_index)->GetVertex(vid);
-
-//   try {
-//     return m_localCfgs.at(_index);
-//   }
-//   catch(const std::out_of_range&) {
-//     throw RunTimeException(WHERE) << "Requested configuration for robot "
-//                                   << _index
-//                                   << ", but no roadmap or local cfg exists.";
-//   }
-// }
 
 /*------------------------------ DOF Accessors -------------------------------*/
-
-template <typename GraphType>
-size_t
-GroupCfg<GraphType>::
-PosDOF(const size_t _index) const {
-  return this->GetRobot(_index)->GetMultiBody()->PosDOF();
-}
-
-
-template <typename GraphType>
-size_t
-GroupCfg<GraphType>::
-OriDOF(const size_t _index) const {
-  return this->GetRobot(_index)->GetMultiBody()->OrientationDOF();
-}
-
-
-template <typename GraphType>
-size_t
-GroupCfg<GraphType>::
-DOF(const size_t _index) const {
-  return this->GetRobot(_index)->GetMultiBody()->DOF();
-}
-
 
 template <typename GraphType>
 bool
@@ -807,7 +654,6 @@ ApplyTransformationForRobots(const Formation& _robotList,
     // Extract the transformation. Note: This is assuming 6 DOFs!
     const std::vector<double>& transformed = newTransformation.GetCfg();
 
-//    OverwriteDofsForRobots(transformed, _robotList);
     OverwriteDofsForRobots(transformed, {robotIndex});
   }
 }
@@ -929,7 +775,7 @@ SetData(const std::vector<double>& _dofs) {
 
   size_t compositeIndex = 0;
   for(size_t i = 0; i < this->GetNumRobots(); ++i) {
-    const size_t robotDof = DOF(i);
+    const size_t robotDof = this->GetRobot(i)->GetMultiBody()->DOF();
     IndividualCfg& robotCfg = this->GetRobotCfg(i);
 
     for(size_t i = 0; i < robotDof; ++i, ++compositeIndex)
@@ -945,9 +791,9 @@ FindIncrement(const GroupCfg& _start, const GroupCfg& _goal, const int _nTicks) 
   // Need positive number of ticks.
   if(_nTicks <= 0)
     throw RunTimeException(WHERE) << "Divide by 0";
-  if(_start.m_groupMap != _goal.m_groupMap)
-    throw RunTimeException(WHERE) << "Cannot use two different groups (or group "
-                                  << "roadmaps) with this operation currently!";
+  if(_start.m_group != _goal.m_group)
+    throw RunTimeException(WHERE) << "Cannot use two different groups "
+                                  << "with this operation currently!";
 
   // For each robot in the group, find the increment for the individual cfg
   // given the number of ticks found.
@@ -998,7 +844,7 @@ void
 GroupCfg<GraphType>::
 GetRandomGroupCfg(const Boundary* const _b) {
   std::set<Robot*> found;
-  auto group = this->m_groupMap->GetGroup();
+  auto group = this->m_group;
 
   for(size_t i = 0; i < this->GetNumRobots(); i++) {
     this->m_vids[i] = INVALID_VID;
