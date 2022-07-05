@@ -79,6 +79,9 @@ class GroupCfg final : public CompositeState<GraphType> {
     /// @return True if equal, false otherwise.
     bool operator==(const GroupCfg& _other) const noexcept;
 
+    /// Check if the current group cfg is less than the given group cfg.
+    /// @param _other The given group configuration.
+    /// @return True if less than, false otherwise.
     bool operator<(const GroupCfg& _other) const noexcept;
 
     ///@}
@@ -318,21 +321,8 @@ class GroupCfg final : public CompositeState<GraphType> {
     ///@name Helpers
     ///@{
 
-    /// Return whether the cfg for the robot is local to the group cfg, or if
-    /// it's in an individual roadmap already.
-    // bool IsLocalCfg(const size_t _robotIndex) const noexcept;
-
     /// Initialize the set of local configurations if not already done.
     virtual void InitializeLocalCfgs() noexcept override;
-
-    ///@}
-    ///@name Internal State
-    ///@{
-
-    // std::vector<IndividualCfg> m_localCfgs; ///< Individual cfgs not in a map.
-
-    /// The function to use for normalizing orientation DOFs.
-    mutable double (*m_normalizer)(const double&){Normalize};
 
     ///@}
 
@@ -908,15 +898,6 @@ PrettyPrint(const size_t _precision) const {
 }
 
 /*----------------------------------------------------------------------------*/
-
-// template <typename GraphType>
-// bool
-// GroupCfg<GraphType>::
-// IsLocalCfg(const size_t _robotIndex) const noexcept {
-//   // Only true if there is local data (meaning INVALID_VID is present)
-//   return this->m_vids[_robotIndex] == INVALID_VID;
-// }
-
 
 template <typename GraphType>
 void

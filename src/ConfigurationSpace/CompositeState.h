@@ -20,8 +20,7 @@ template <typename GraphType> class CompositeEdge;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// An aggregate state which represents a state for each robot in a robot
-/// group.
-/// 'GraphType' represents the individual graph type for a single robot.
+/// group. 'GraphType' represents the individual graph type for a single robot.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename GraphType>
 class CompositeState {
@@ -72,7 +71,7 @@ class CompositeState {
     ///@{
     /// Access the robots within this composite state.
 
-    /// Get the number of robots.
+    /// Get the number of robots in this composite state.
     virtual size_t GetNumRobots() const noexcept;
 
     /// Get the full vector of robot pointers.
@@ -91,6 +90,7 @@ class CompositeState {
     /// Get the group graph this composite state is with respect to.
     virtual GroupGraphType* GetGroupGraph() const noexcept;
 
+    /// Set the composite graph that this composite state exists within.
     virtual void SetGroupGraph(GroupGraphType* _newGraph);
 
     /// Get the VID for a particular robot.
@@ -121,8 +121,14 @@ class CompositeState {
     /// @param _vid The state descriptor.
     virtual void SetRobotCfg(const size_t _index, const VID _vid);
 
+    /// Set the individual state (cfg) for a robot to a graph copy of a state.
+    /// @param _robot The robot which the state refers to.
+    /// @param _vid The state descriptor.
     virtual void SetRobotCfg(Robot* const _robot, CfgType&& _cfg);
 
+    /// Set the individual state (cfg) for a robot to a graph copy of a state.
+    /// @param _index The robot's group index which the state refers to.
+    /// @param _vid The state descriptor.
     virtual void SetRobotCfg(const size_t _index, CfgType&& _cfg);
 
     /// Get the individual state (cfg) for a robot in the group.
@@ -145,7 +151,7 @@ class CompositeState {
     /// @return The individual state for the indexed robot.
     virtual const CfgType& GetRobotCfg(const size_t _index) const;
 
-    /// Clear the Local Cfg information in the cfg (for after adding to roadmap)
+    /// Clear the Local Cfg information.
     void ClearLocalCfgs();
 
     ///@}
@@ -176,7 +182,7 @@ class CompositeState {
 
     VIDSet m_vids;   ///< The individual VIDs in this aggregate state.
 
-    std::vector<CfgType> m_localCfgs; ///< Individual cfgs not in a map.
+    std::vector<CfgType> m_localCfgs; ///< Individual states not in a map.
 
     ///@}
 
@@ -191,11 +197,11 @@ template <typename GraphType>
 CompositeState<GraphType>::
 CompositeState(GroupGraphType* const _groupGraph) : m_groupMap(_groupGraph) {
 
-  // If no group graph was given, this is a placeholder object. We can't do
-  // anything with it since every meaningful operation requires a group or graph.
+  // If no group graph was given, this is a placeholder object.
   if(!m_groupMap)
     return;
 
+  // Set the group to the one given in the composite graph.
   m_group = m_groupMap->GetGroup();
 
   // Set the VID list to all invalid.
@@ -398,7 +404,7 @@ GetRobotCfg(const size_t _index) {
 
   const VID vid = GetVID(_index);
   if(vid != INVALID_VID)
-    return m_groupMap->GetRoadmap(_index)->GetVertex(vid);
+    return m_groupMap->GetIndividualGraph(_index)->GetVertex(vid);
   else {
     InitializeLocalCfgs();
     return m_localCfgs[_index];
@@ -425,7 +431,7 @@ GetRobotCfg(const size_t _index) const {
   // individual graph.
   const VID vid = GetVID(_index);
   if(vid != INVALID_VID)
-    return m_groupMap->GetRoadmap(_index)->GetVertex(vid);
+    return m_groupMap->GetIndividualGraph(_index)->GetVertex(vid);
   
   try {
     return m_localCfgs.at(_index);

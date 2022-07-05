@@ -34,8 +34,7 @@ class CompositeGraph : public GenericStateGraph<Vertex, Edge> {
     typedef typename Vertex::IndividualGraph     IndividualGraph;
 
     typedef typename BaseType::EID               ED;
-    typedef typename Vertex::IndividualGraph     IndividualRoadmap;
-    typedef typename IndividualRoadmap::EdgeType IndividualEdge;
+    typedef typename IndividualGraph::EdgeType IndividualEdge;
 
     typedef typename BaseType::adj_edge_iterator adj_edge_iterator;
     typedef typename BaseType::edge_descriptor   edge_descriptor;
@@ -56,14 +55,14 @@ class CompositeGraph : public GenericStateGraph<Vertex, Edge> {
     ///@name Construction
     ///@{
 
-    /// Construct a group graph.
+    /// Construct a composite graph.
     CompositeGraph(RobotGroup* const _g = nullptr, std::vector<IndividualGraph*> _graphs = {});
 
     ///@}
     ///@name Disabled Functions
     ///@{
-    /// Move and copy are disabled because the group cfgs and edges need to know
-    /// their group graph pointer. To implement these, we'll need to update
+    /// Move and copy are disabled because the composite states and edges need 
+    /// to know their group graph pointer. To implement these, we'll need to update
     /// the pointer on every component.
 
     CompositeGraph(const CompositeGraph&) = delete;
@@ -81,8 +80,11 @@ class CompositeGraph : public GenericStateGraph<Vertex, Edge> {
 
     /// Get the individual graph for a robot in the group.
     /// @param _index The index of the desired robot.
-    virtual IndividualGraph* GetRoadmap(const size_t _index);
-    virtual const IndividualGraph* GetRoadmap(const size_t _index) const;
+    virtual IndividualGraph* GetIndividualGraph(const size_t _index);
+
+    /// Get the individual graph for a robot in the group.
+    /// @param _index The index of the desired robot.
+    virtual const IndividualGraph* GetIndividualGraph(const size_t _index) const;
 
     /// Get the number of robots for the group this graph is for.
     virtual size_t GetNumRobots() const noexcept;
@@ -103,6 +105,8 @@ class CompositeGraph : public GenericStateGraph<Vertex, Edge> {
     virtual void WriteCompositeGraph(const std::string& _filename,
                             Environment* const _env) const;
 
+    /// Print the size of this composite graph and the individual graphs for
+    /// terminal debugging.
     std::string PrettyPrint() const;
 
     ///@}
@@ -156,7 +160,7 @@ class CompositeGraph : public GenericStateGraph<Vertex, Edge> {
 
     RobotGroup* const m_group; ///< The robot group.
 
-    std::vector<IndividualGraph*> m_roadmaps; ///< The individual graphs.
+    std::vector<IndividualGraph*> m_graphs; ///< The individual graphs.
 
     using BaseType::m_timestamp;
 
@@ -169,10 +173,10 @@ class CompositeGraph : public GenericStateGraph<Vertex, Edge> {
 template <typename Vertex, typename Edge>
 CompositeGraph<Vertex, Edge>::
 CompositeGraph(RobotGroup* const _g, std::vector<IndividualGraph*> _graphs) :
-  GenericStateGraph<Vertex, Edge>(nullptr), m_group(_g), m_roadmaps(_graphs) {
+  GenericStateGraph<Vertex, Edge>(nullptr), m_group(_g), m_graphs(_graphs) {
 
-    if (m_roadmaps.size() != m_group->Size())
-      m_roadmaps.reserve(m_group->Size());
+    if (m_graphs.size() != m_group->Size())
+      m_graphs.reserve(m_group->Size());
 }
 
 /*-------------------------------- Accessors ---------------------------------*/
@@ -190,8 +194,8 @@ template <typename Vertex, typename Edge>
 inline
 typename CompositeGraph<Vertex, Edge>::IndividualGraph*
 CompositeGraph<Vertex, Edge>::
-GetRoadmap(const size_t _index) {
-  return m_roadmaps[_index];
+GetIndividualGraph(const size_t _index) {
+  return m_graphs[_index];
 }
 
 
@@ -199,8 +203,8 @@ template <typename Vertex, typename Edge>
 inline
 const typename CompositeGraph<Vertex, Edge>::IndividualGraph*
 CompositeGraph<Vertex, Edge>::
-GetRoadmap(const size_t _index) const {
-  return m_roadmaps[_index];
+GetIndividualGraph(const size_t _index) const {
+  return m_graphs[_index];
 }
 
 
@@ -249,7 +253,7 @@ PrettyPrint() const {
   out << "Number of group vertices: " << this->get_num_vertices() << std::endl;
   out << "Vertices in each individual graph:" << std::endl << "| ";
   for(size_t i = 0; i < GetNumRobots(); ++i) {
-    out << "(Robot " << i << ") " << GetRoadmap(i)->get_num_vertices() << " | ";
+    out << "(Robot " << i << ") " << GetIndividualGraph(i)->get_num_vertices() << " | ";
   }
   out << std::endl;
 
@@ -273,7 +277,7 @@ AddEdge(const VID _source, const VID _target, const Edge& _lp) noexcept {
   // function, so make a local copy of the edge.
   Edge edge = _lp;
 
-  // Vector of edge descriptors, which are edges already in individual roadmaps
+  // Vector of edge descriptors, which are edges already in individual graphs
   std::vector<ED>& edgeDescriptors = edge.GetEdgeDescriptors();
 
   const Vertex& sourceCfg = this->GetVertex(_source),
@@ -281,9 +285,9 @@ AddEdge(const VID _source, const VID _target, const Edge& _lp) noexcept {
 
   size_t numInactiveRobots = 0;
 
-  // First, make sure all the local edges are in the individual roadmaps.
+  // First, make sure all the local edges are in the individual graphs.
   for(size_t i = 0; i < edgeDescriptors.size(); ++i) {
-    auto roadmap = m_roadmaps[i];
+    auto graph = m_graphs[i];
 
     const VID individualSourceVID = sourceCfg.GetVID(i),
               individualTargetVID = targetCfg.GetVID(i);
@@ -297,21 +301,21 @@ AddEdge(const VID _source, const VID _target, const Edge& _lp) noexcept {
 
     // Assert that the individual vertices exist.
     const bool verticesExist =
-        roadmap->find_vertex(individualSourceVID) != roadmap->end() and
-        roadmap->find_vertex(individualTargetVID) != roadmap->end();
+        graph->find_vertex(individualSourceVID) != graph->end() and
+        graph->find_vertex(individualTargetVID) != graph->end();
     if(!verticesExist)
       throw RunTimeException(WHERE, "Cannot add edge for non-existent vertices.");
 
     // If we received a valid edge descriptor, it must agree with the individual
     // VIDs, and the individual edge must exist.
-    const bool edgeExists = roadmap->IsEdge(individualSourceVID,
+    const bool edgeExists = graph->IsEdge(individualSourceVID,
                                             individualTargetVID);
     if(edgeDescriptors[i] != INVALID_ED) {
       if(!edgeExists)
         throw RunTimeException(WHERE) << "Expected edge (" << individualSourceVID
                                       << ", " << individualTargetVID << ") does "
                                       << "not exist for robot "
-                                      << roadmap->GetRobot()->GetLabel() << ".";
+                                      << graph->GetRobot()->GetLabel() << ".";
 
       const bool consistent = edgeDescriptors[i].source() == individualSourceVID
                           and edgeDescriptors[i].target() == individualTargetVID;
@@ -330,7 +334,7 @@ AddEdge(const VID _source, const VID _target, const Edge& _lp) noexcept {
       throw RunTimeException(WHERE) << "Expected edge (" << individualSourceVID
                                       << ", " << individualTargetVID << ") does "
                                       << "not exist for robot "
-                                      << roadmap->GetRobot()->GetLabel() << ".";
+                                      << graph->GetRobot()->GetLabel() << ".";
   }
 
   if(numInactiveRobots >= GetNumRobots())
@@ -371,7 +375,7 @@ AddVertex(const Vertex& _v) noexcept {
     throw RunTimeException(WHERE) << "Composite Graph of vertex does not "
                                   << "match this composite graph.";
   }
-  else { // Roadmaps match, no change to attempt.
+  else { // Graphs match, no change to attempt.
     cfg = _v;
   }
 
@@ -384,17 +388,17 @@ AddVertex(const Vertex& _v) noexcept {
     return vi->descriptor();
   }
 
-  // Add each vid to individual roadmaps if not already present.
+  // Add each vid to individual graphs if not already present.
   for(size_t i = 0; i < m_group->Size(); ++i) {
-    auto roadmap = GetRoadmap(i);
-    auto robot   = roadmap->GetRobot();
+    auto graph = GetIndividualGraph(i);
+    auto robot   = graph->GetRobot();
     const VID individualVID = cfg.GetVID(i);
 
     // If the vid is invalid, we must add the local cfg.
     if(individualVID == INVALID_VID)
-      cfg.SetRobotCfg(robot, roadmap->AddVertex(cfg.GetRobotCfg(i)));
+      cfg.SetRobotCfg(robot, graph->AddVertex(cfg.GetRobotCfg(i)));
     // If the vid was valid, make sure it exists.
-    else if(roadmap->find_vertex(individualVID) == roadmap->end())
+    else if(graph->find_vertex(individualVID) == graph->end())
       throw RunTimeException(WHERE) << "Individual vertex " << individualVID
                                     << " does not exist!";
   }
@@ -485,7 +489,7 @@ DeleteEdge(EI _iterator) noexcept {
   auto& edge = _iterator->property();
   auto& descriptors = edge.GetEdgeDescriptors();
   for(size_t i = 0; i < m_group->Size(); ++i)
-    GetRoadmap(i)->DeleteEdge(descriptors[i].source(), descriptors[i].target());
+    GetIndividualGraph(i)->DeleteEdge(descriptors[i].source(), descriptors[i].target());
 
   // Delete the group edge.
   this->delete_edge(_iterator->descriptor());
@@ -506,7 +510,7 @@ CompositeGraph<Vertex, Edge>::
 ClearHooks() noexcept {
   BaseType::ClearHooks();
 
-  for(IndividualGraph* const map : m_roadmaps)
+  for(IndividualGraph* const map : m_graphs)
     map->ClearHooks();
 }
 

@@ -74,6 +74,8 @@ class GroupLocalPlan : public CompositeEdge<GraphType> {
     ///@name Misc. Interface Functions
     ///@{
 
+    /// Set the group roadmap to which this plan belongs.
+    /// @param _g The given group roadmap.
     void SetGroupRoadmap(GroupRoadmapType* const& _g);
 
     /// Set the formation of the robots. The first index is the leader.
@@ -89,6 +91,7 @@ class GroupLocalPlan : public CompositeEdge<GraphType> {
 
     /// Get the group configuration intermediates.
     GroupCfgPath& GetIntermediates() noexcept;
+
     /// Get the group configuration intermediates.
     const GroupCfgPath& GetIntermediates() const noexcept;
 
@@ -97,15 +100,17 @@ class GroupLocalPlan : public CompositeEdge<GraphType> {
 
     /// Get the string label of this current local plan.
     const std::string& GetLPLabel() const noexcept;
+
     /// Set the string label of this current local plan.
-    /// @param The desired string label.
+    /// @param _label The desired string label.
     void SetLPLabel(const std::string _label) noexcept;
 
     ///@}
     ///@name Stapl graph interface
     ///@{
 
-    /// This only adds weights, it doesn't take intermediates into account.
+    /// Add two group local plans. This only adds weights, it doesn't take 
+    /// intermediates into account.
     virtual GroupLocalPlan operator+(const GroupLocalPlan& _other) const;
 
     ///@}
@@ -117,10 +122,11 @@ class GroupLocalPlan : public CompositeEdge<GraphType> {
 
     std::string m_lpLabel;   ///< Label of local planner that built this edge.
 
-    // The ordered formation for this local plan with respect to the robots
-    // in m_groupMap. The first robot in the list is assumed to be the leader.
+    /// The ordered formation for this local plan with respect to the robots
+    /// in m_group. The first robot in the list is assumed to be the leader.
     std::vector<size_t> m_formation;
 
+    /// The group cfg intermediates along this group local plan.
     GroupCfgPath m_cfgIntermediates;
 
     ///@}
@@ -247,7 +253,7 @@ operator+(const GroupLocalPlan& _other) const {
 template<typename GraphType>
 std::ostream&
 operator<<(std::ostream& _os, const GroupLocalPlan<GraphType>& _groupLP) {
-  //For the group edges, the only caveat is that the intermediates need to line up.
+  // For the group edges, the only caveat is that the intermediates need to line up.
   // Each individual edge within a GroupLocalPlan should have the same number of
   // intermediates (for now) so that we can do this easily. Then for a
   // GroupLocalPlan with individual edges for i robots, you would print all i

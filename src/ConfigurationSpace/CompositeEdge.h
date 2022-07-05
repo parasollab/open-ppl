@@ -59,32 +59,35 @@ class CompositeEdge {
     ///@name Ordering and Equality
     ///@{
 
-    /// Check if the given plan is equal to the current.
-    /// @param _w The given plan.
+    /// Check if the given edge is equal to the current.
+    /// @param _w The given edge.
     virtual bool operator==(const CompositeEdge& _w) const noexcept;
 
-    /// Check if the given plan is unequal to the current.
-    /// @param _w The given plan.
+    /// Check if the given edge is unequal to the current.
+    /// @param _w The given edge.
     virtual bool operator!=(const CompositeEdge& _w) const noexcept;
 
-    /// Check if the given plan is less than the current.
-    /// @param _other The given plan.
+    /// Check if the given edge is less than the current.
+    /// @param _other The given edge.
     virtual bool operator<(const CompositeEdge& _other) const noexcept;
 
     ///@}
     ///@name Graph Edge Weight
     ///@{
-    /// Get/set the numeric weight for this edge as used when querying a
-    /// roadmap.
 
+    /// Get the numeric weight for this edge.
     virtual EdgeWeight GetWeight() const noexcept;
 
+    /// Set the numeric weight for this edge.
+    /// @param _w The numeric weight.
     virtual void SetWeight(const EdgeWeight _w) noexcept;
 
     ///@}
     ///@name Misc. Interface Functions
     ///@{
 
+    /// Set the composite graph that this composite edge lies within.
+    /// @param _g The composite graph to associate the edge with.
     void SetGroupGraph(GroupGraphType* const& _g);
     
     /// Reset the states of this object.
@@ -92,9 +95,11 @@ class CompositeEdge {
 
     /// Get the composite state intermediates.
     CompositePath& GetIntermediates() noexcept;
+
     /// Get the composite state intermediates.
     const CompositePath& GetIntermediates() const noexcept;
 
+    /// Get the number of composite intermediates along this edge.
     const size_t GetNumIntermediates() noexcept;
 
     /// Set the composite state intermediates.
@@ -118,7 +123,9 @@ class CompositeEdge {
     /// @param _edge The edge.
     void SetEdge(const size_t _robot, IndividualEdge&& _edge);
 
-    /// overload for Robot pointer
+    /// Set the individual edge for a robot to a local copy of an edge.
+    /// @param _robot The robot which the edge refers to.
+    /// @param _edge The edge.
     void SetEdge(Robot* const _robot, IndividualEdge&& _edge);
 
     /// Get the individual edge for a robot.
@@ -133,8 +140,16 @@ class CompositeEdge {
     ///         yet been set.
     virtual const IndividualEdge* GetEdge(Robot* const _robot) const;
 
-    ///Overloads for using index instead of robot pointer.
+    /// Get the individual edge for a robot.
+    /// @param _robotIndex The group index of the robot which the edge refers to.
+    /// @return A pointer to the edge for _robot. It will be null if it has not
+    ///         yet been set.
     virtual IndividualEdge* GetEdge(const size_t _robotIndex);
+
+    /// Get the individual edge for a robot.
+    /// @param _robotIndex The group index of the robot which the edge refers to.
+    /// @return A pointer to the edge for _robot. It will be null if it has not
+    ///         yet been set.
     virtual const IndividualEdge* GetEdge(const size_t _robotIndex) const;
 
     /// Get a vector of local edges in the plan.
@@ -143,23 +158,29 @@ class CompositeEdge {
     /// Clear all local edges in the plan.
     void ClearLocalEdges() noexcept;
 
-    /// Get a vector of local edges' descriptors.
+    /// Get a vector of individual edge descriptors. An edge descriptor will
+    /// be invalid if an individual edge is local.
     virtual std::vector<ED>& GetEdgeDescriptors() noexcept;
 
     /// Get the number of robots given in this group local plan.
     virtual size_t GetNumRobots() const noexcept;
 
+    /// Get a vector of the robots who move along this composite edge
+    /// (i.e. the individual source vertex differs from the target vertex).
     virtual std::unordered_set<Robot*> GetActiveRobots();
 
+    /// Set the number of timesteps along this composite edge.
     virtual void SetTimeSteps(size_t _timesteps);
 
+    /// Get the number of timesteps along this composite edge.
     virtual size_t GetTimeSteps() const;
 
     ///@}
     ///@name Stapl graph interface
     ///@{
 
-    /// This only adds weights, it doesn't take intermediates into account.
+    /// Add two composite edges. This only adds weights, it doesn't take 
+    /// intermediates into account.
     virtual CompositeEdge operator+(const CompositeEdge& _other) const ;
 
     /// Get the weight of the plan.
@@ -186,21 +207,21 @@ class CompositeEdge {
     ///@name Internal State
     ///@{
 
-    GroupGraphType* m_groupMap{nullptr};  ///< The composite graph that this edge is in.
+    GroupGraphType* m_groupMap{nullptr}; ///< The composite graph that this edge is in.
 
     RobotGroup* m_group{nullptr}; ///< The robot group that this edge belongs to.
 
     /// The edge weight.
     double m_weight{std::numeric_limits<double>::infinity()};
 
-    CompositePath m_intermediates; ///< Group cfg intermediates.
+    CompositePath m_intermediates; ///< Composite state intermediates.
 
-    std::vector<ED> m_edges;           ///< Descriptors of the individual edges.
+    std::vector<ED> m_edges; ///< Descriptors of the individual edges.
 
     /// Note that any edges added to m_localEdges must be valid and complete.
     std::vector<IndividualEdge> m_localEdges; ///< Edges which are not in a map.
 
-    size_t m_timesteps;
+    size_t m_timesteps; ///< The number of timesteps along this edge.
 
     ///@}
 
@@ -303,7 +324,6 @@ operator==(const CompositeEdge& _other) const noexcept {
 
   // Ensure the edges are equal.
   for(size_t i = 0; i < m_groupMap->GetGroup()->Size(); ++i) {
-  // for(const size_t i : m_groupMap->GetGroup()->Size()) {
     // If both descriptors are valid and equal, these edges are equal.
     const auto& ed1 = m_edges[i],
               & ed2 = _other.m_edges[i];
@@ -372,12 +392,9 @@ template <typename GraphType>
 void
 CompositeEdge<GraphType>::
 Write(std::ostream& _os) const {
-  /// @TODO Now that we read/write the control signals for nonholonomic, we
-  ///  should remove the writing of intermediates for conciseness.
-
-  //Write the data that's needed whether it's a holonomic robot or not:
+  // Write the intermediates of the composite edge.
   _os << m_intermediates.size() << " ";
-  for(auto&  cfg : m_intermediates)
+  for(auto& cfg : m_intermediates)
     _os << cfg;
   _os << std::scientific << std::setprecision(16) << m_weight;
 
@@ -458,7 +475,7 @@ GetEdge(Robot* const _robot) const {
 
   const ED& descriptor = m_edges.at(index);
   if(descriptor != INVALID_ED)
-    return &m_groupMap->GetRoadmap(index)->GetEdge(descriptor.source(),
+    return &m_groupMap->GetIndividualGraph(index)->GetEdge(descriptor.source(),
                                                    descriptor.target());
 
   try {
@@ -467,8 +484,8 @@ GetEdge(Robot* const _robot) const {
   catch(const std::out_of_range&) {
     throw RunTimeException(WHERE) << "Requested individual edge for robot "
                                   << index << " (" << _robot << "), which is"
-                                  << " either stationary for this LP or not "
-                                  << "in the group.";
+                                  << " either stationary for this composite edge"
+                                  << "or not in the group.";
   }
 }
 
@@ -508,14 +525,14 @@ template <typename GraphType>
 std::unordered_set<Robot*>
 CompositeEdge<GraphType>::
 GetActiveRobots() {
-  /// @todo update this to work for local edges as well
+  // Note: this only works for non-local edges
   std::unordered_set<Robot*> actives;
 
   for(size_t i = 0; i < m_edges.size(); ++i) {
     if(m_edges[i] == INVALID_ED)
       continue;
 
-    auto roadmap = m_groupMap->GetRoadmap(i);
+    auto roadmap = m_groupMap->GetIndividualGraph(i);
 
     typename GraphType::CEI ei;
     typename GraphType::CVI vi;

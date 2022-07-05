@@ -105,7 +105,7 @@ GroupRoadmap(RobotGroup* const _g, MPSolution* const _solution) :
   for(Robot* const robot : *_g)
     roadmaps.push_back(_solution->GetRoadmap(robot));
   
-  this->m_roadmaps = roadmaps;
+  this->m_graphs = roadmaps;
 }
 
 /*-------------------------------- Modifiers ---------------------------------*/
@@ -138,7 +138,7 @@ AddEdge(const VID _source, const VID _target, const Edge& _lp) noexcept {
 
   // First, make sure all the local edges are in the individual roadmaps.
   for(size_t i = 0; i < edgeDescriptors.size(); ++i) {
-    auto roadmap = this->m_roadmaps[i];
+    auto roadmap = this->m_graphs[i];
 
     const VID individualSourceVID = sourceCfg.GetVID(i),
               individualTargetVID = targetCfg.GetVID(i);
@@ -250,7 +250,7 @@ AddVertex(const Vertex& _v) noexcept {
 
   // Add each vid to individual roadmaps if not already present.
   for(size_t i = 0; i < this->m_group->Size(); ++i) {
-    auto roadmap = this->GetRoadmap(i);
+    auto roadmap = this->GetIndividualGraph(i);
     auto robot   = roadmap->GetRobot();
     VID individualVID = cfg.GetVID(i);
 
