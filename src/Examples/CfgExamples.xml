@@ -96,10 +96,10 @@
     <Samplers>
       <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
       <UniformRandomSampler label="UniformRandomFree" vcLabel="pqp_solid"/>
-      <!-- <ObstacleBasedSampler label="OBPRM" vcLabel="rapid" useBBX="false"
+      <ObstacleBasedSampler label="OBPRM" vcLabel="rapid" useBBX="false"
         pointSelection="cspace" dmLabel="euclidean" stepSize="0.0"
-        nShellsColl="0" nShellsFree="1" debug="false"/>
-      <GaussianSampler label="Gauss" vcLabel="rapid" d="0.2" dmLabel="euclidean"
+        nShellsColl="0" nShellsFree="10" debug="false"/>
+      <!--<GaussianSampler label="Gauss" vcLabel="rapid" d="0.2" dmLabel="euclidean"
         useBBX="false"/>
       <BridgeTestSampler label="Bridge" vcLabel="rapid" d="0.2"
         dmLabel="euclidean" useBBX="true"/>
@@ -330,9 +330,9 @@
 
       <!-- Basic PRM where num samples is based on Number -->
       <BasicPRM label="BasicPRM1" debug="true" querySampler="UniformRandomFree">
-        <Sampler label="UniformRandomFree" number="10" attempts="1"/>
+        <!--Sampler label="UniformRandomFree" number="10" attempts="1"/-->
         <!--Sampler Method="Gauss" number="10" attempts="10"/-->
-        <!--Sampler Method="OBPRM" number="10" attempts="10"/-->
+        <Sampler label="OBPRM" number="10" attempts="10"/>
         <!--Sampler label="MAPRM" number="10" attempts="10"/-->
         <Connector label="Closest"/>
         <!--Connector label="ConnectCCs"/-->
