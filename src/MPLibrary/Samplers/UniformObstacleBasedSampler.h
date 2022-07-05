@@ -5,9 +5,14 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 /// This sampler generates obstacle-based configurations that uniformly cover
-/// the contact surface.
+/// the contact surface. It first generates a set of uniformly distributed fixed length
+/// segments, and then tests intermediate points on the segments in order to find 
+/// valid configurations adjacent to invalid configurations. Those are retained as
+/// roadmap nodes.
 ///
-/// @TODO Add paper reference.
+/// Reference: https://bit.ly/3P1f8dq
+///   Hsin-Yi Yeh and Shawna Thomas and David Eppstein and Nancy M. Amato. 
+///   "UOBPRM: A uniformly distributed obstacle-based PRM". TRO 2012.
 ///
 /// @ingroup Samplers
 ////////////////////////////////////////////////////////////////////////////////
@@ -16,7 +21,7 @@ class UniformObstacleBasedSampler : public SamplerMethod<MPTraits> {
 
   public:
 
-    ///@name Local Types
+    ///@name Motion Planning Types
     ///@{
 
     typedef typename MPTraits::CfgType CfgType;
@@ -25,12 +30,12 @@ class UniformObstacleBasedSampler : public SamplerMethod<MPTraits> {
     ///@name Construction
     ///@{
 
-    UniformObstacleBasedSampler(string _vcLabel = "", string _dmLabel = "",
-        double _margin = 0, bool _useBoundary = false);
-
     UniformObstacleBasedSampler(XMLNode& _node);
 
     virtual ~UniformObstacleBasedSampler() = default;
+
+    UniformObstacleBasedSampler(string _vcLabel = "", string _dmLabel = "",
+    double _margin = 0, bool _useBoundary = false);
 
     ///@}
     ///@name MPBaseObject Overrides
@@ -42,8 +47,15 @@ class UniformObstacleBasedSampler : public SamplerMethod<MPTraits> {
     ///@name Sampler Interface
     ///@{
 
+    /// Takes the input configuration and applies the sampler rule to
+    /// generate output configurations on the contact surface.
+    /// @param _cfg The input configuration.
+    /// @param _boundary The sampling boundary.
+    /// @param _result The resulting output configurations. 
+    /// @param _invalid The (optional) return for failed attempts. 
+    /// @return true if a valid configuration was generated, false otherwise.
     virtual bool Sampler(CfgType& _cfg, const Boundary* const _boundary,
-        vector<CfgType>& _result, vector<CfgType>& _collision) override;
+        vector<CfgType>& _result, vector<CfgType>& _invalid) override;
 
     ///@}
 
@@ -52,9 +64,9 @@ class UniformObstacleBasedSampler : public SamplerMethod<MPTraits> {
     ///@name Internal State
     ///@{
 
-    double m_margin;
-    bool m_useBoundary;
-    string m_vcLabel, m_dmLabel;
+    double m_margin; //The length of line segments 
+    bool m_useBoundary; //Use bounding box as obstacle 
+    string m_vcLabel, m_dmLabel; //Validity checker label, distance metric label
 
     ///@}
 };
@@ -77,11 +89,11 @@ UniformObstacleBasedSampler(XMLNode& _node) : SamplerMethod<MPTraits>(_node) {
   this->SetName("UniformObstacleBasedSampler");
 
   m_margin = _node.Read("d", true, 0.0, 0.0, MAX_DBL,
-      "set the bounding box whose margin is d away from obstacles");
+      "Set the length of line segments d away from obstacles"); 
   m_useBoundary = _node.Read("useBBX", true, false,
       "Use bounding box as obstacle");
-  m_vcLabel = _node.Read("vcLabel", true, "", "Validity Test Method");
-  m_dmLabel =_node.Read("dmLabel", true, "default", "Distance Metric Method");
+  m_vcLabel = _node.Read("vcLabel", true, "", "Validity checker label");
+  m_dmLabel =_node.Read("dmLabel", true, "default", "Distance metric label");
 }
 
 /*-------------------------- MPBaseObject Overrides --------------------------*/
@@ -103,21 +115,27 @@ template <typename MPTraits>
 bool
 UniformObstacleBasedSampler<MPTraits>::
 Sampler(CfgType& _cfg, const Boundary* const _boundary,
-    vector<CfgType>& _result, vector<CfgType>& _collision) {
+    vector<CfgType>& _result, vector<CfgType>& _invalid) {
+
   Environment* env = this->GetEnvironment();
   string callee(this->GetNameAndLabel() + "::SampleImpl()");
+
+  //Check validity 
   auto vc = this->GetValidityChecker(m_vcLabel);
   auto dm = this->GetDistanceMetric(m_dmLabel);
   auto robot = this->GetTask()->GetRobot();
 
   bool generated = false;
   int attempts = 0;
+
+
   bool cfg1Free;
   double margin = m_margin != 0.
                 ? m_margin
                 : _cfg.GetMultiBody()->GetBase()->GetPolyhedron().GetMaxRadius();
 
   attempts++;
+
   //Generate first cfg
   CfgType& cfg1 = _cfg;
 
@@ -126,34 +144,30 @@ Sampler(CfgType& _cfg, const Boundary* const _boundary,
   CfgType cfg2(robot);
   CfgType incr(robot);
 
-  incr.GetRandomRay(margin, dm);
-  cfg2 = cfg1 + incr;
+  //Generate a random direction ray using margin and distance metric method.
+  incr.GetRandomRay(margin, dm);  
 
-  //TODO: Check GetRandomRay actually scales the correct distance.
-  //scale the distance between c1 and c2
-  /*Vector3d c1, c2, dir;
-  for(size_t i = 0; i < CfgType::PosDOF(); ++i) {
-    c1[i] = cfg1[i];
-    c2[i] = cfg2[i];
-  }
-  dir = c2 - c1;
-  double dist = dir.norm();
-  double r = margin/dist;
-  cfg2 = cfg1 + incr*r;*/
+  //Extend segment cfg1 with distance incr.
+  cfg2 = cfg1 + incr;
 
   CfgType inter(robot);
   CfgType tick = cfg1;
   int nTicks;
+
   double positionRes = env->GetPositionRes();
   double orientationRes = env->GetOrientationRes();
+
   bool tempFree = cfg1Free;
   bool tickFree;
   CfgType temp = cfg1;
 
   inter.FindIncrement(cfg1, cfg2, &nTicks, positionRes, orientationRes);
+
+  //Generate nTicks intermediate points along ray
   for(int i = 1; i < nTicks; i++) {
     tick += inter;
     tickFree = vc->IsValid(tick, callee);
+
     if(m_useBoundary)
       tickFree = tickFree && tick.InBounds(_boundary);
 
@@ -163,6 +177,8 @@ Sampler(CfgType& _cfg, const Boundary* const _boundary,
     }
     else {	//tempFree != tickFree
       generated = true;
+
+      //Store the vector created to _result 
       if(tempFree and temp.InBounds(_boundary)) {
         _result.push_back(temp);
         tempFree = tickFree;
