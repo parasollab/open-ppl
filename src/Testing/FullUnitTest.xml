@@ -141,6 +141,7 @@
 
     <Samplers>
       <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
+      <UniformObstacleBasedSampler label="UniformObstacleBased" vcLabel="alwaysTrue"/>
     </Samplers>
 
     <LocalPlanners>
@@ -210,6 +211,12 @@
         <Connector label="ClosestAlwaysTrue" />
         <Evaluator label="LazyQuery"/>
       </BasicPRM>
+
+      <BasicPRM label="UOBPRM" debug="true">
+        <Sampler label="UniformObstacleBased" number="1" attempts="1"/>
+        <Connector label="ClosestAlwaysTrue" />
+        <Evaluator label="LazyQuery"/>
+      </BasicPRM>
     </MPStrategies>
 
     <MPTools>
@@ -221,7 +228,7 @@
     <!-- <Solver mpStrategyLabel="RRT" seed="12345678"
       baseFilename="example" vizmoDebug="true"/> -->
 
-    <Solver mpStrategyLabel="LazyPRM" seed="12345678"
+    <Solver mpStrategyLabel="UOBPRM" seed="12345678"
       baseFilename="example" vizmoDebug="true"/>
 
 
