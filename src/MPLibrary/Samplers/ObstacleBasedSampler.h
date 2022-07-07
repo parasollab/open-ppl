@@ -4,12 +4,15 @@
 #include "SamplerMethod.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-/// @ingroup Samplers
-/// @brief Obstacle-based sampling
-///
 /// OBPRM samples by pushing random configurations along a random ray until they
 /// change validity, keeping the best free configuration.
+///
+/// @todo Implement GetCenterOfMass function in the ChooseCenterOfMass class
+///
+/// @ingroup Samplers
+/// @brief Obstacle-based sampling
 ////////////////////////////////////////////////////////////////////////////////
+
 template <class MPTraits>
 class ObstacleBasedSampler : virtual public SamplerMethod<MPTraits> {
 
@@ -17,11 +20,13 @@ class ObstacleBasedSampler : virtual public SamplerMethod<MPTraits> {
 
     ///@name Motion Planning Types
     ///@{
-    typedef typename MPTraits::CfgType CfgType;
-    ///@}
 
+    typedef typename MPTraits::CfgType CfgType;
+
+    ///@}
     ///@name Construction
     ///@{
+
     ObstacleBasedSampler(string _vcLabel = "", string _dmLabel = "",
         int _free = 1, int _coll = 0, double _step = 0,
         bool _useBBX = true, string _pointSelection = "cspace");
@@ -29,70 +34,106 @@ class ObstacleBasedSampler : virtual public SamplerMethod<MPTraits> {
     ObstacleBasedSampler(XMLNode& _node);
 
     virtual ~ObstacleBasedSampler() = default;
+
     ///@}
+    ///@name MPBaseObject Overrides
+    ///@{
 
+    virtual void Print(ostream& _os) const override;
 
-
-    void ParseXML(XMLNode& _node);
-
-    virtual void Print(ostream& _os) const;
+    ///@}
 
   protected:
 
+    // ///@name XML Parser
+    // ///@{
 
-    // Generates and adds shells to their containers
+    // void ParseXML(XMLNode& _node);
+
+    // ///@}
+    ///@name Helpers
+    ///@{
+    
+    /// Main Sampler
+    /// @param _cfg Configuration Type
+    /// @param _boundary Boundary of the environment
+    /// @param _result A vector taht stores Free Configuration Space
+    /// @param _collision A vector that stores Collision Configuration Space
+    /// @return Success or Failure of sampling
+    virtual bool Sampler(CfgType& _cfg, const Boundary* const _boundary,
+        vector<CfgType>& _result, vector<CfgType>& _collision);
+
+    /// Generates and adds shells to their containers
+    /// @param _boundary Boundary of the environment
+    /// @param _cFree The configuration in the Free Configuration Space
+    /// @param _cColl The configuration in the Collision Configuration Space
+    /// @param _incr The amount of increments in the specified direction.
+    /// @param _result A vector taht stores Free Configuration Space
+    /// @param _collision A vector that stores Collision Configuration Space
     void GenerateShells(const Boundary* const _boundary,
         CfgType& _cFree, CfgType& _cColl, CfgType& _incr,
         vector<CfgType>& _result, vector<CfgType>& _collision);
 
-  
-    virtual bool Sampler(CfgType& _cfg, const Boundary* const _boundary,
-        vector<CfgType>& _result, vector<CfgType>& _collision);
-
-    ////////////////////////////////////////////////////////////////
-    // The following was added after unification with WOBPRM code //
-    ////////////////////////////////////////////////////////////////
-
-    // Returns a CfgType at the center of mass of the MultiBody
+    /// Returns a CfgType at the center of mass of the MultiBody
+    /// @param _mBody Multibody of the obstacle
+    /// @return Configuration corresponding to the center of mass of the Multibody
     CfgType ChooseCenterOfMass(MultiBody* _mBody);
 
     // Returns a CfgType at a random vertex of the MultiBody
-    CfgType ChooseRandomVertex(MultiBody* _mBody, bool _isFreeBody);
+    /// @param _mBody Multibody of the obstacle
+    /// @return Configuration chosen from the Random Vertex method
+    CfgType ChooseRandomVertex(MultiBody* _mBody);
 
-    // Returns a point inside the triangle determined by the vectors
+    /// Returns a point inside the triangle determined by the vectors
+    /// @param _p The first 3d point of a triangle
+    /// @param _q The second 3d point of a triangle
+    /// @param _r The Third 3d point of a triangle
+    /// @return Configuration chosen from the Point On Triangle method
     Vector3d ChoosePointOnTriangle(Vector3d _p, Vector3d _q, Vector3d _r);
 
-    // Chooses a random point on a random triangle (weighted by area) in the
-    // MultiBody
-    CfgType ChooseRandomWeightedTriangle(MultiBody* _mBody,
-        bool _isFreeBody);
+    /// Chooses a random point on a random triangle (weighted by area) in the MultiBody
+    /// @param _mBody Multibody of the obstacle
+    /// @return Configuration chosen from the Random Weighted Triangle method
+    CfgType ChooseRandomWeightedTriangle(MultiBody* _mBody);
 
-    // Chooses a random point in a random triangle in the MultiBody
-    CfgType ChooseRandomTriangle(MultiBody* _mBody, bool _isFreeBody);
+    /// Chooses a random point in a random triangle in the MultiBody
+    /// @param _mBody Multibody of the obstacle
+    /// @return Configuration chosen from the Random Triangle method
+    CfgType ChooseRandomTriangle(MultiBody* _mBody);
 
-    // Chooses a random extreme vertex of the MultiBody
-    CfgType ChooseExtremeVertex(MultiBody* _mBody, bool _isFreeBody);
+    /// Chooses a random extreme vertex of the MultiBody
+    /// @param _mBody Multibody of the obstacle
+    /// @return Configuration chosen from the Extreme Vertex method
+    CfgType ChooseExtremeVertex(MultiBody* _mBody);
 
-    // Checks m_pointSelection and returns an appropriate CfgType
+    /// Checks m_pointSelection and returns an appropriate CfgType
+    /// @param _cfg Configuration of the sample
+    /// @return Configuration of the sample
     virtual CfgType ChooseASample(CfgType& _cfg);
+
+    /// Returns a CfgType with the coordinates specified in the vector and no rotation
+    /// @param _v Multibody of the obstacle
+    /// @return Configuration Type of the sample
+    CfgType GetCfgWithParams(const Vector3d& _v);
+
+    ///@}
 
   private:
 
-    // Returns a CfgType with the coordinates specified in the vector and no
-    // rotation
-    CfgType GetCfgWithParams(const Vector3d& _v);
-
-    ///@name Internal State
+    ///@name Internal States
     ///@{
-    string m_vcLabel, m_dmLabel; // Validity checker method, distance metric method
-    int m_nShellsFree, m_nShellsColl; // Number of free and collision shells
-    double m_stepSize; // Step size along the random ray
-    bool m_useBBX; // Is the bounding box an obstacle?
-    string m_pointSelection; // Needed for the WOBPRM
+    
+    string m_vcLabel, m_dmLabel; ///< Validity checker method, distance metric method
+    int m_nShellsFree, m_nShellsColl; ///< Number of free and collision shells
+    double m_stepSize; ///< Step size along the random ray
+    bool m_useBBX; ///< Is the bounding box an obstacle?
+    string m_pointSelection; ///< Needed for the WOBPRM
+
     ///@}
 };
 
-// Construction
+/*------------------------------ Construction --------------------------------*/
+
 template <typename MPTraits>
 ObstacleBasedSampler<MPTraits>::
 ObstacleBasedSampler(string _vcLabel, string _dmLabel,
@@ -135,7 +176,8 @@ ObstacleBasedSampler(XMLNode& _node) : SamplerMethod<MPTraits>(_node) {
         " and 'all'.");
 }
 
-// MPBaseObject Overrides 
+/*-------------------------- MPBaseObject Overrides --------------------------*/
+
 template <typename MPTraits>
 void
 ObstacleBasedSampler<MPTraits>::
@@ -150,44 +192,9 @@ Print(ostream& _os) const {
   _os << "\tpointSelectionStrategy = " << m_pointSelection << endl;
 }
 
-// Generate Shells for both free and collision C spaces
-template <typename MPTraits>
-void
-ObstacleBasedSampler<MPTraits>::
-GenerateShells(const Boundary* const _boundary,
-    CfgType& _cFree, CfgType& _cColl, CfgType& _incr,
-    vector<CfgType>& _result, vector<CfgType>& _collision) {
+/*-------------------------- Helpers --------------------------*/
 
-  string callee = this->GetNameAndLabel() + "::GenerateShells()";
-
-  // Call a validity checker
-  auto vc = this->GetValidityChecker(m_vcLabel);
-  if(this->m_debug)
-    cout << "nShellsColl = " << m_nShellsColl << endl;
-
-  // Add "free" shells
-  for(int i = 0; i < m_nShellsFree; i++) {
-    // If the shell is valid (If it is in the free C space)
-    if(_cFree.InBounds(_boundary) and vc->IsValid(_cFree, callee))
-      _result.push_back(_cFree);  
-    // Get next shell
-    _cFree += _incr;
-  }
-
-  // Reverse direction of _incr
-  _incr = -_incr;
-
-  // Add "collision" shells
-  for(int i = 0; i < m_nShellsColl; i++) {
-    // If the shell is valid (If it is in the collision C space)
-    if(_cColl.InBounds(_boundary) and !vc->IsValid(_cColl, callee))
-      _collision.push_back(_cColl);
-    // Get next shell
-    _cColl += _incr;
-  }
-}
-
-// Main function of the OBPRM
+// Sampling Rules
 template <typename MPTraits>
 bool
 ObstacleBasedSampler<MPTraits>::
@@ -275,11 +282,44 @@ Sampler(CfgType& _cfg, const Boundary* const _boundary,
   return false;
 }
 
-////////////////////////////////////////////////////////////////
-// The following was added after unification with WOBPRM code //
-// ////////////////////////////////////////////////////////////////
+// Shell Generator
+template <typename MPTraits>
+void
+ObstacleBasedSampler<MPTraits>::
+GenerateShells(const Boundary* const _boundary,
+    CfgType& _cFree, CfgType& _cColl, CfgType& _incr,
+    vector<CfgType>& _result, vector<CfgType>& _collision) {
 
-// Returns a CfgType at the center of mass of the MultiBody
+  string callee = this->GetNameAndLabel() + "::GenerateShells()";
+
+  // Call a validity checker
+  auto vc = this->GetValidityChecker(m_vcLabel);
+  if(this->m_debug)
+    cout << "nShellsColl = " << m_nShellsColl << endl;
+
+  // Add "free" shells
+  for(int i = 0; i < m_nShellsFree; i++) {
+    // If the shell is valid (If it is in the free C space)
+    if(_cFree.InBounds(_boundary) and vc->IsValid(_cFree, callee))
+      _result.push_back(_cFree);  
+    // Get next shell
+    _cFree += _incr;
+  }
+
+  // Reverse direction of _incr
+  _incr = -_incr;
+
+  // Add "collision" shells
+  for(int i = 0; i < m_nShellsColl; i++) {
+    // If the shell is valid (If it is in the collision C space)
+    if(_cColl.InBounds(_boundary) and !vc->IsValid(_cColl, callee))
+      _collision.push_back(_cColl);
+    // Get next shell
+    _cColl += _incr;
+  }
+}
+
+// Returns a CfgType of the center of mass
 template <typename MPTraits>
 typename ObstacleBasedSampler<MPTraits>::CfgType
 ObstacleBasedSampler<MPTraits>::
@@ -291,7 +331,7 @@ ChooseCenterOfMass(MultiBody* _mBody) {
 template <typename MPTraits>
 typename ObstacleBasedSampler<MPTraits>::CfgType
 ObstacleBasedSampler<MPTraits>::
-ChooseRandomVertex(MultiBody* _mBody, bool _isFreeBody) {
+ChooseRandomVertex(MultiBody* _mBody) {
   size_t body = LRand() % _mBody->GetNumBodies();
   const GMSPolyhedron& polyhedron = _mBody->GetBody(body)->GetWorldPolyhedron();
   Vector3d x = polyhedron.GetVertexList()[(int)(DRand()*polyhedron.GetVertexList().size())];
@@ -319,7 +359,7 @@ ChoosePointOnTriangle(Vector3d _p, Vector3d _q, Vector3d _r) {
 template <typename MPTraits>
 typename ObstacleBasedSampler<MPTraits>::CfgType
 ObstacleBasedSampler<MPTraits>::
-ChooseRandomWeightedTriangle(MultiBody* _mBody, bool _isFreeBody) {
+ChooseRandomWeightedTriangle(MultiBody* _mBody) {
   size_t body = LRand() % _mBody->GetNumBodies();
   const GMSPolyhedron& polyhedron = _mBody->GetBody(body)->GetWorldPolyhedron();
   // A random fraction of the area
@@ -345,7 +385,7 @@ ChooseRandomWeightedTriangle(MultiBody* _mBody, bool _isFreeBody) {
 template <typename MPTraits>
 typename ObstacleBasedSampler<MPTraits>::CfgType
 ObstacleBasedSampler<MPTraits>::
-ChooseRandomTriangle(MultiBody* _mBody, bool _isFreeBody) {
+ChooseRandomTriangle(MultiBody* _mBody) {
   size_t body = LRand() % _mBody->GetNumBodies();
   const GMSPolyhedron& polyhedron = _mBody->GetBody(body)->GetWorldPolyhedron();
 
@@ -363,7 +403,7 @@ ChooseRandomTriangle(MultiBody* _mBody, bool _isFreeBody) {
 template <typename MPTraits>
 typename ObstacleBasedSampler<MPTraits>::CfgType
 ObstacleBasedSampler<MPTraits>::
-ChooseExtremeVertex(MultiBody* _mBody, bool _isFreeBody) {
+ChooseExtremeVertex(MultiBody* _mBody) {
   size_t body = LRand() % _mBody->GetNumBodies();
   const GMSPolyhedron& polyhedron = _mBody->GetBody(body)->GetWorldPolyhedron();
   int xyz = LRand() % 3; // 0: x, 1: y, 2: z
@@ -379,7 +419,7 @@ ChooseExtremeVertex(MultiBody* _mBody, bool _isFreeBody) {
   return GetCfgWithParams(polyhedron.GetVertexList()[x]);
 }
 
-// Checks m_pointSelection and returns an appropriate CfgType
+// Returns the CfgType according to the sampling type
 template <typename MPTraits>
 typename ObstacleBasedSampler<MPTraits>::CfgType
 ObstacleBasedSampler<MPTraits>::
@@ -391,49 +431,46 @@ ChooseASample(CfgType& _cfg) {
   // cspace is for Configuration space (This is for unifying OBPRM and WOBPRM)
   if(m_pointSelection == "cspace")
     return _cfg;
-  // TODO: GetCenterOfMass is not defined yet
   else if(m_pointSelection == "cM")
     return ChooseCenterOfMass(mBody);
   else if(m_pointSelection == "rV")
-    return ChooseRandomVertex(mBody, false);
+    return ChooseRandomVertex(mBody);
   else if(m_pointSelection == "rT")
-    return ChooseRandomTriangle(mBody, false);
+    return ChooseRandomTriangle(mBody);
   else if(m_pointSelection == "wT")
-    return ChooseRandomWeightedTriangle(mBody, false);
+    return ChooseRandomWeightedTriangle(mBody);
   else if(m_pointSelection == "eV")
-    return ChooseExtremeVertex(mBody, false);
-  // TODO: GetCenterOfMass is not defined yet
+    return ChooseExtremeVertex(mBody);
   else if(m_pointSelection == "cM_rV") {
     if(LRand() % 2)
       return ChooseCenterOfMass(mBody);
     else
-      return ChooseRandomVertex(mBody, false);
+      return ChooseRandomVertex(mBody);
   }
   else if(m_pointSelection == "rV_rT") {
     if(LRand() % 2)
-      return ChooseRandomVertex(mBody, false);
+      return ChooseRandomVertex(mBody);
     else
-      return ChooseRandomTriangle(mBody, false);
+      return ChooseRandomTriangle(mBody);
   }
   else if(m_pointSelection == "rV_wT") {
     if(LRand() % 2)
-      return ChooseRandomVertex(mBody, false);
+      return ChooseRandomVertex(mBody);
     else
-      return ChooseRandomWeightedTriangle(mBody, false);
+      return ChooseRandomWeightedTriangle(mBody);
   }
-  // TODO: GetCenterOfMass is not defined yet
   else if(m_pointSelection == "all") {
     switch(LRand() % 5) {
       case 0:
         return ChooseCenterOfMass(mBody);
       case 1:
-        return ChooseRandomVertex(mBody, false);
+        return ChooseRandomVertex(mBody);
       case 2:
-        return ChooseRandomTriangle(mBody, false);
+        return ChooseRandomTriangle(mBody);
       case 3:
-        return ChooseRandomWeightedTriangle(mBody, false);
+        return ChooseRandomWeightedTriangle(mBody);
       default:
-        return ChooseExtremeVertex(mBody, false);
+        return ChooseExtremeVertex(mBody);
     }
   }
   else {
@@ -441,7 +478,6 @@ ChooseASample(CfgType& _cfg) {
   }
 }
 
-// Returns a CfgType with the coordinates specified in the vector and no rotation
 template <typename MPTraits>
 typename ObstacleBasedSampler<MPTraits>::CfgType
 ObstacleBasedSampler<MPTraits>::
