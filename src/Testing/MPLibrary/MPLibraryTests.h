@@ -44,7 +44,7 @@ class MPLibraryTests : public MPLibraryType<MPTraits>, public TestBaseObject {
     typedef MethodSet<MPTraits, SamplerMethodTest<MPTraits>>        SamplerTestSet;
     typedef MethodSet<MPTraits, LocalPlannerMethodTest<MPTraits>>   LocalPlannerTestSet;
     typedef MethodSet<MPTraits, ExtenderMethodTest<MPTraits>>       ExtenderTestSet;
-    typedef MethodSet<MPTraits, PathModifierMethodTest<MPTraits>>   PathModifierTestSet;
+    //typedef MethodSet<MPTraits, PathModifierMethodTest<MPTraits>>   PathModifierTestSet; //Todo: PathModifierMethodTest not delcared in this scope, argument 2 is invalid
     typedef MethodSet<MPTraits, ConnectorMethodTest<MPTraits>>      ConnectorTestSet;
     typedef MethodSet<MPTraits, MetricMethodTest<MPTraits>>         MetricTestSet;
     typedef MethodSet<MPTraits, MapEvaluatorMethodTest<MPTraits>>   MapEvaluatorTestSet;
@@ -109,7 +109,7 @@ class MPLibraryTests : public MPLibraryType<MPTraits>, public TestBaseObject {
     /// Method sets hold and offer access to the motion planning objects of the
     /// corresponding type.
 
-    // DistanceMetricTestSet*     m_distanceMetricTests{nullptr};
+    DistanceMetricTestSet*     m_distanceMetricTests{nullptr};
     ValidityCheckerTestSet*    m_validityCheckerTests{nullptr};
     NeighborhoodFinderTestSet* m_neighborhoodFinderTests{nullptr};
     SamplerTestSet*            m_samplerTests{nullptr};
@@ -122,7 +122,6 @@ class MPLibraryTests : public MPLibraryType<MPTraits>, public TestBaseObject {
 
     ///@}
 };
-
 /*--------------------------- Construction ---------------------------*/
 
 template <typename MPTraits>
@@ -166,7 +165,7 @@ RunTest() {
   RunMPStrategyMethodTests(passed, failed, total);
 
   // Distance metric tests
-  // RunMethodSetTests(*this->m_distanceMetricTests,passed,failed,total);
+  RunMethodSetTests(*this->m_distanceMetricTests,passed,failed,total);
 
   // Validity checker tests
   RunMethodSetTests(*this->m_validityCheckerTests,passed,failed,total);
@@ -213,8 +212,8 @@ template <typename MPTraits>
 void
 MPLibraryTests<MPTraits>::
 InitializeMethodSets() {
-  // m_distanceMetricTests = new DistanceMetricTestSet(this,
-  //     typename MPTraits::DistanceMetricMethodList(), "DistanceMetrics");
+  m_distanceMetricTests = new DistanceMetricTestSet(this,
+     typename MPTraits::DistanceMetricMethodList(), "DistanceMetrics");
   m_validityCheckerTests = new ValidityCheckerTestSet(this,
       typename MPTraits::ValidityCheckerMethodList(), "ValidityCheckers");
   m_neighborhoodFinderTests = new NeighborhoodFinderTestSet(this,
@@ -382,8 +381,8 @@ bool
 MPLibraryTests<MPTraits>::
 ParseChild(XMLNode& _node) {
   if(_node.Name() == "DistanceMetrics") {
-    m_distanceMetricTests->ParseXML(_node);
-    return true;
+    m_distanceMetricTests->ParseXML(_node); //Todo: m_distanceMetricTests not declared in this scope
+    return true; //Todo: above line gets segmentation fault
   }
   else if(_node.Name() == "ValidityCheckers") {
     m_validityCheckerTests->ParseXML(_node);
