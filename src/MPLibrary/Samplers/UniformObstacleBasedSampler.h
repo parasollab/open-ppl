@@ -17,7 +17,7 @@
 /// @ingroup Samplers
 ////////////////////////////////////////////////////////////////////////////////
 template<typename MPTraits>
-class UniformObstacleBasedSampler : public SamplerMethod<MPTraits> {
+class UniformObstacleBasedSampler : virtual public SamplerMethod<MPTraits> {
 
   public:
 
