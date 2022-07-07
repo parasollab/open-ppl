@@ -1,0 +1,49 @@
+Roadmap Statistics:
+
+  Number of Nodes: 100
+  Number of Edges: 778
+
+  There are 1 connected components:
+    CC[0]: 100 (vid 0)
+
+
+Sampler Statistics                                            Attempts Successes
+
+  UniformObstacleBasedSampler::UniformOBSampler                    100       100
+  All Samplers                                                     100       100
+  Success Rate: 100%
+
+
+Local Planner Statistics                        Attempts Connections    CD Calls
+
+  StraightLine::sl                                   677         389      328886
+
+
+Collision Detection Calls                                                  Count
+
+  StraightLine::sl::IsConnectedSLBinary                                   328886
+  UniformObstacleBasedSampler::UniformOBSampler::SampleImpl()             198367
+  All Collision Detectors                                                 527253
+
+
+Averages                                                         Value     Count
+
+  CCsConnector::CCs::CacheHitRatio                                   0       677
+
+
+Clock Name                                                        Time (Seconds)
+
+  BasicPRM::UOBPRM::Connect                                                 9.81
+  BasicPRM::UOBPRM::EvaluateMap                                             3.05
+  BasicPRM::UOBPRM::InitAndRun                                              25.6
+  BasicPRM::UOBPRM::Initialize                                                 0
+  BasicPRM::UOBPRM::Run                                                     25.6
+  BasicPRM::UOBPRM::Sample                                                  8.08
+  BruteForceNF::BFNF::FindNeighbors                                       0.0215
+  CCTracker::AddEdge                                                      0.0138
+  CCTracker::AddVertex                                                   0.00214
+  CCsConnector::CCs::Connect                                                9.81
+  ConditionalEvaluator::NodesEval                                          0.114
+  MPLibrary::Initialize                                                        0
+  StraightLine::sl::IsConnected                                             9.36
+  UniformObstacleBasedSampler::UniformOBSampler::Sample                      3.4
