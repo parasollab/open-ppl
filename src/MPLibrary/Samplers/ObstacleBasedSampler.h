@@ -10,8 +10,8 @@
 /// OBPRM samples by pushing random configurations along a random ray until they
 /// change validity, keeping the best free configuration.
 ////////////////////////////////////////////////////////////////////////////////
-template <typename MPTraits>
-class ObstacleBasedSampler : public SamplerMethod<MPTraits> {
+template <class MPTraits>
+class ObstacleBasedSampler : virtual public SamplerMethod<MPTraits> {
 
   public:
 
@@ -27,18 +27,25 @@ class ObstacleBasedSampler : public SamplerMethod<MPTraits> {
         bool _useBBX = true, string _pointSelection = "cspace");
 
     ObstacleBasedSampler(XMLNode& _node);
+
+    virtual ~ObstacleBasedSampler() = default;
     ///@}
+
 
 
     void ParseXML(XMLNode& _node);
 
     virtual void Print(ostream& _os) const;
 
+  protected:
+
+
     // Generates and adds shells to their containers
     void GenerateShells(const Boundary* const _boundary,
         CfgType& _cFree, CfgType& _cColl, CfgType& _incr,
         vector<CfgType>& _result, vector<CfgType>& _collision);
 
+  
     virtual bool Sampler(CfgType& _cfg, const Boundary* const _boundary,
         vector<CfgType>& _result, vector<CfgType>& _collision);
 
