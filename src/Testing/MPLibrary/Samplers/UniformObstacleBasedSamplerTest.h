@@ -5,7 +5,7 @@
 #include "Testing/MPLibrary/Samplers/SamplerMethodTest.h"
 
 template <class MPTraits>
-class UniformObstacleBasedSamplerTest : virtual public ObstacleBasedSampler<MPTraits>,
+class UniformObstacleBasedSamplerTest : virtual public UniformObstacleBasedSampler<MPTraits>,
                                  public SamplerMethodTest<MPTraits> {
   public:
 
