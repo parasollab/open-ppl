@@ -5,7 +5,7 @@
 #include "Testing/MPLibrary/Samplers/SamplerMethodTest.h"
 
 template <class MPTraits>
-class ObstacleBasedSamplerTest : virtual public ObstacleBasedSampler<MPTraits>,
+class ObstacleBasedSamplerTest : virtual public ObstacleBasedSampler<MPTraits>, 
                                  public SamplerMethodTest<MPTraits> {
   public:
 
@@ -26,7 +26,7 @@ class ObstacleBasedSamplerTest : virtual public ObstacleBasedSampler<MPTraits>,
 
     ///@}
 
-  private:
+  private: 
 
     ///@name Interface Test Functions
     ///@{
@@ -76,27 +76,28 @@ TestIndividualCfgSample() {
   std::vector<Cfg> invalids;
 
   this->IndividualCfgSample(boundary, valids, invalids);
-
-  // Make sure that all valids are inside the boundary
-  // and all invalids are outside the boundary.
-
+  auto vc = this->GetValidityChecker("rapid");
+  string callee = this->GetNameAndLabel() + "::Sampler()";
+  // Make sure that all valids are inside free space and boundary 
+  // and all invalids are inside the obstacle c space.
+  
   for(auto cfg : valids) {
-    if(boundary->InBoundary(cfg))
+    if(vc->IsValid(cfg, callee))   
       continue;
 
     passed = false;
     message = message + "\n\tA configuration was incorrectly labeled "
-              "valid for the given boundary.\n";
+              "valid for the given boundary. Part 1\n";
     break;
   }
 
   for(auto cfg : invalids) {
-    if(!boundary->InBoundary(cfg))
+    if(!vc->IsValid(cfg, callee))
       continue;
 
     passed = false;
     message = message + "\n\tA configuration was incorrectly labeled "
-              "invalid for the given boundary.\n";
+              "invalid for the given boundary. Part 2\n";
     break;
   }
 
@@ -156,7 +157,7 @@ TestGroupCfgSampleSingleBoundary() {
 
   bool passed = true;
   std::string message = "";
-
+  
   //TODO::Setup test of this function.
   //this->GroupCfgSampleSingleBoundary();
 
@@ -176,7 +177,7 @@ TestGroupCfgSampleIndividualBoundaries() {
 
   bool passed = true;
   std::string message = "";
-
+  
   //TODO::Setup test of this function.
   //this->GroupCfgSampleIndividualBoundaries();
 
