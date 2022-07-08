@@ -10,7 +10,7 @@
 #include "Testing/MPLibrary/Samplers/SamplerMethodTest.h"
 #include "Testing/MPLibrary/LocalPlanners/LocalPlannerMethodTest.h"
 #include "Testing/MPLibrary/Extenders/ExtenderMethodTest.h"
-//#include "Testing/MPLibrary/PathModifiers/PathModifierMethodTest.h"
+#include "Testing/MPLibrary/PathModifiers/PathModifierMethodTest.h"
 #include "Testing/MPLibrary/Connectors/ConnectorMethodTest.h"
 #include "Testing/MPLibrary/Metrics/MetricMethodTest.h"
 #include "Testing/MPLibrary/MapEvaluators/MapEvaluatorMethodTest.h"
@@ -109,7 +109,7 @@ class MPLibraryTests : public MPLibraryType<MPTraits>, public TestBaseObject {
     /// Method sets hold and offer access to the motion planning objects of the
     /// corresponding type.
 
-    // DistanceMetricTestSet*     m_distanceMetricTests{nullptr};
+    DistanceMetricTestSet*     m_distanceMetricTests{nullptr};
     ValidityCheckerTestSet*    m_validityCheckerTests{nullptr};
     NeighborhoodFinderTestSet* m_neighborhoodFinderTests{nullptr};
     SamplerTestSet*            m_samplerTests{nullptr};
@@ -166,7 +166,7 @@ RunTest() {
   RunMPStrategyMethodTests(passed, failed, total);
 
   // Distance metric tests
-  // RunMethodSetTests(*this->m_distanceMetricTests,passed,failed,total);
+  RunMethodSetTests(*this->m_distanceMetricTests,passed,failed,total);
 
   // Validity checker tests
   RunMethodSetTests(*this->m_validityCheckerTests,passed,failed,total);
@@ -213,8 +213,8 @@ template <typename MPTraits>
 void
 MPLibraryTests<MPTraits>::
 InitializeMethodSets() {
-  // m_distanceMetricTests = new DistanceMetricTestSet(this,
-  //     typename MPTraits::DistanceMetricMethodList(), "DistanceMetrics");
+  m_distanceMetricTests = new DistanceMetricTestSet(this,
+      typename MPTraits::DistanceMetricMethodList(), "DistanceMetrics");
   m_validityCheckerTests = new ValidityCheckerTestSet(this,
       typename MPTraits::ValidityCheckerMethodList(), "ValidityCheckers");
   m_neighborhoodFinderTests = new NeighborhoodFinderTestSet(this,
