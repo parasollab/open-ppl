@@ -8,7 +8,7 @@
 /// @ingroup Metrics
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
-class NumNodesMetric : public MetricMethod<MPTraits> {
+class NumNodesMetric : virtual public MetricMethod<MPTraits> {
 
   public:
 

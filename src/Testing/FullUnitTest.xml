@@ -137,8 +137,8 @@
 
     <NeighborhoodFinders>
       <!-- Test not yet added -->
-      <!--BruteForceNF label="Nearest" dmLabel="minkowski" unconnected="false"
-        k="1"/-->
+      <BruteForceNF label="Nearest" dmLabel="euclidean" unconnected="false" k="1"/>
+      <BruteForceNF label="Nearest4" dmLabel="euclidean" unconnected="true" k="4"/>
       <BruteForceNF label="BFNF" dmLabel="euclidean" unconnected="false" k="10"/>
     </NeighborhoodFinders>
 
@@ -147,31 +147,35 @@
     </Samplers>
 
     <LocalPlanners>
-      <!-- Test not yet added -->
       <StraightLine label="slAlwaysTrue" binaryEvaluation="true"
-          vcLabel="alwaysTrue"/>
+            vcLabel="alwaysTrue"/>
       <StraightLine label="sl" binaryEvaluation="true" vcLabel="rapid"/>
     </LocalPlanners>
 
     <Extenders>
-      <!-- Test not yet added -->
-      <!--BasicExtender label="BERO" debug="false" dmLabel="minkowski"
-        vcLabel="alwaysTrue" maxDist="4." minDist=".01"/-->
+      <BasicExtender label="BERO" debug="false" dmLabel="euclidean"
+        vcLabel="alwaysTrue" maxDist="4." minDist=".01"/>
     </Extenders>
 
     <PathModifiers>
     </PathModifiers>
 
     <Connectors>
+      <CCsConnector label="CCs" debug="false"
+        nfLabel="BFNF" lpLabel="slAlwaysTrue" checkIfSameCC="false"/>
       <NeighborhoodConnector label="ClosestAlwaysTrue" nfLabel="BFNF"
-        lpLabel="slAlwaysTrue" checkIfSameCC="false"/>
+      lpLabel="slAlwaysTrue" checkIfSameCC="false"/>
+      <RewireConnector label="Rewire" nfLabel="Nearest4" lpLabel="slAlwaysTrue"/>
     </Connectors>
 
     <Metrics>
+      <NumNodesMetric label="NumNodes"/>
+      <NumEdgesMetric label="NumEdges"/>
+      <TimeMetric label="TimeInSec"/>
     </Metrics>
 
     <MapEvaluators>
-      <LazyQuery label="LazyQuery" debug="true"
+      <LazyQuery label="LazyQuery" debug="false"
         vcLabel="pqp_solid" lpLabel="sl" enhanceDmLabel="euclidean"
         numEnhance="10" d="0.5" deleteInvalid="true">
         <NodeConnectionMethod label="ClosestAlwaysTrue"/>
@@ -179,6 +183,9 @@
         <Resolution mult="16"/>
         <Resolution mult="1"/>
       </LazyQuery>
+
+      <QueryMethod label="Query" debug="false"
+        graphSearchAlg="dijkstras" safeIntervalToolLabel="SI"/>
     </MapEvaluators>
 
     <MPStrategies>
@@ -192,6 +199,15 @@
         <!--Evaluator label="Query"/-->
       <!--/BasicRRTStrategy-->
       <!-- LazyPRM-->
+
+      <DynamicRegionRRT label="DRRRT" debug="true" querySampler="UniformRandomFree"
+          samplerLabel="UniformRandom" nfLabel="Nearest" extenderLabel="BERO" 
+          growGoals="true" connectorLabel="Closest" explore=".2" regionFactor="2.5"
+          penetration="1" velocityBiasing="false" velocityAlignment=".4"
+          decompositionLabel="fine" skeletonType="ma">
+          <Evaluator label="BoundedQuery" />
+      </DynamicRegionRRT>
+
       <BasicPRM label="LazyPRM" debug="true">
         <Sampler label="UniformRandom" number="1" attempts="1"/>
         <Connector label="ClosestAlwaysTrue" />
@@ -200,6 +216,7 @@
     </MPStrategies>
 
     <MPTools>
+      <SafeIntervalTool label="SI" vcLabel="pqp_solid"/>
     </MPTools>
 
     <!-- MPProblem allows multiple solvers to be specified and executed. -->

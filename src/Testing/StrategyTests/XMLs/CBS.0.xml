@@ -210,9 +210,10 @@
         <Evaluator label="TimeEval"/>
         <Evaluator label="IndividualQuery"/>
       </ComposeEvaluator>
+      <SIPPMethod label="SIPP" safeIntervalToolLabel="SI"/>
 
-      <CBSQuery label="CBSQuery" queryLabel="IndividualQuery"
-        debug="true" vcLabel="pqp_solid"/>
+      <CBSQuery label="CBSQuery" queryLabel="SIPP"
+        debug="false" vcLabel="pqp_solid" safeIntervalToolLabel="SI"/>
     </MapEvaluators>
 
     <MPStrategies>
@@ -250,7 +251,7 @@
     </MPStrategies>
 
     <MPTools>
-      <SafeIntervalTool label="SI" vcLabel="pqp_solid" debug="true"/>
+      <SafeIntervalTool label="SI" vcLabel="pqp_solid" debug="false"/>
     </MPTools>
 
     <!-- The seed can be changed to generate different roadmaps and paths -->

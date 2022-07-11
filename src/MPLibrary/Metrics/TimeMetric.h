@@ -10,7 +10,7 @@
 /// @ingroup Metrics
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
-class TimeMetric : public MetricMethod<MPTraits> {
+class TimeMetric : virtual public MetricMethod<MPTraits> {
 
   public:
 

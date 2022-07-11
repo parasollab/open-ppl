@@ -9,6 +9,7 @@
 #include "Behaviors/Agents/Coordinator.h"
 #include "Testing/MPLibrary/MPLibraryTests.h"
 #include "Testing/TMPLibrary/TMPLibraryTests.h"
+#include "Testing/Behaviors/BehaviorsTests.h"
 #include "TMPLibrary/Solution/Plan.h"
 #include "Testing/MPProblem/MPProblemTests.h"
 #include "MPProblem/MPTask.h"
@@ -34,6 +35,9 @@ main(int _argc, char** _argv) {
 
   // Parse the Problem node into an MPProblem object.
   MPProblemTests* problem = new MPProblemTests(xmlFile);
+
+  // Create an object to test the Behaviors
+  BehaviorsTests* behaviors = new BehaviorsTests(problem, xmlFile);
 
   // Parse the Library node into an TMPLibrary object.
   TMPLibraryTests* ppl = new TMPLibraryTests(xmlFile);
@@ -131,14 +135,16 @@ main(int _argc, char** _argv) {
 			//ppl->Solve(problem, decomp.get(), plan, c, team);
 		}
 	}
-
-
+  
   
   auto mpResults = mpl->RunTest();
   std::cout << "PASSED: " << mpResults.first << std::endl << mpResults.second;
   
+  auto behavResults = behaviors->RunTest();
+  std::cout << "PASSED: " << behavResults.first << std::endl << behavResults.second;
  
   // Release resources.
+  delete behaviors;
   delete problem;
   delete ppl;
   delete mpl;
