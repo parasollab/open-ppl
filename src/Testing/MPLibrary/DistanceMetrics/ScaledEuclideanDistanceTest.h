@@ -215,6 +215,7 @@ template <typename MPTraits>
 double
 ScaledEuclideanDistanceTest<MPTraits>::
 TrueIndividualCfgDistance() {
+  CfgType cfg2 = this->GetIndividualCfg();
   // Scaled euclidean distance should be (m_scale * 5^3 * PosDOF + (1 - m_scale) * 0.5^3 * OriDOF)^(1 / 3)
   double trueDist;
   trueDist = this->m_scale * std::pow(5, 3.0) * cfg2.PosDOF();

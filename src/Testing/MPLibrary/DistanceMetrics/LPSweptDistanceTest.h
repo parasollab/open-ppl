@@ -226,6 +226,8 @@ TrueIndividualCfgDistance() {
   // For the straight line local planner, this value is 8.9778381120884.
   if (this->m_lpLabel == "sl")
     return 8.9778381120884;
+  else 
+    throw RunTimeException(WHERE, "Invalid lpLabel for CfgDistance");
   // As more local planners are added, their ground truth values will be
   // included below
 }
