@@ -371,6 +371,12 @@ class GroupCfg final {
     /// @overload
     bool InBounds(const Environment* const _env) const noexcept;
 
+    /// Generate a random configuration for group robotswith a set length.
+    /// @param _length The desired length.
+    /// @param _dm The distance metric for checking length.
+    /// @param _norm Normalize the orientation DOFs?
+    template<typename DistanceMetricPointer>
+    void GetRandomRay(const double _length, DistanceMetricPointer _dm, const bool _norm = true);
     /// Normalize Orientation DOFs for a Group Cfg
     virtual void NormalizeOrientation(const Formation& _robots = Formation())
         noexcept;
@@ -411,6 +417,25 @@ class GroupCfg final {
     ///@}
 
 };
+
+template <class DistanceMetricPointer>
+void
+GroupCfg::
+GetRandomRay(const double _length, DistanceMetricPointer _dm, const bool _norm) {
+  // Randomly sample DOFs.
+
+    for(size_t j = 0; j < GetNumRobots(); ++j) {
+        for(size_t i = 0; i < GetRobotCfg(j).DOF(); ++i)
+            GetRobotCfg(j)[i] = 2. * DRand() - 1.;
+    }
+  // Scale to appropriate length. 
+  _dm->ScaleCfg(_length, *this);
+
+  // Normalize if requested.
+  if(_norm)
+    NormalizeOrientation();
+}
+
 
 std::ostream& operator<<(std::ostream&, const GroupCfg&);
 
