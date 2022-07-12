@@ -26,6 +26,8 @@ class UniformObstacleBasedSampler : virtual public SamplerMethod<MPTraits> {
 
     typedef typename MPTraits::CfgType CfgType;
 
+    typedef typename MPTraits::GroupCfgType GroupCfgType;
+
     ///@}
     ///@name Construction
     ///@{
@@ -56,6 +58,9 @@ class UniformObstacleBasedSampler : virtual public SamplerMethod<MPTraits> {
     /// @return true if a valid configuration was generated, false otherwise.
     virtual bool Sampler(CfgType& _cfg, const Boundary* const _boundary,
         vector<CfgType>& _result, vector<CfgType>& _invalid) override;
+
+    virtual bool Sampler(GroupCfgType& _cfg, const Boundary* const _boundary,
+    vector<GroupCfgType>& _result, vector<GroupCfgType>& _invalid) override;
 
     ///@}
 
@@ -193,6 +198,94 @@ Sampler(CfgType& _cfg, const Boundary* const _boundary,
   }
   return generated;
 }
+
+/*----------------------------Group Sampler ---------------------*/
+
+template <typename MPTraits>
+bool
+UniformObstacleBasedSampler<MPTraits>::
+Sampler(GroupCfgType& _cfg, const Boundary* const _boundary,
+    vector<GroupCfgType>& _result, vector<GroupCfgType>& _invalid) {
+
+  Environment* env = this->GetEnvironment();
+  string callee(this->GetNameAndLabel() + "::SampleImpl()");
+
+  //Check validity 
+  auto vc = this->GetValidityChecker(m_vcLabel);
+  auto dm = this->GetDistanceMetric(m_dmLabel);
+  auto groupRoadmap = this->GetGroupRoadmap();
+
+  bool generated = false;
+  int attempts = 0;
+
+  bool cfg1Free;
+
+  if (m_margin == 0) {
+    throw RunTimeException(WHERE, "margin must not be equal to zero");
+  }
+
+  attempts++;
+
+  //Generate first cfg
+  GroupCfgType& cfg1 = _cfg;
+
+  cfg1Free = vc->IsValid(cfg1, callee);
+
+  GroupCfgType cfg2(groupRoadmap, false);
+  GroupCfgType incr(groupRoadmap, false);
+
+  //Generate a random direction ray using margin and distance metric method.
+  //increment direction to group robots
+  incr.GetRandomRay(m_margin, dm);
+
+  //Extend segment cfg1 with distance incr.
+  cfg2 = cfg1 + incr;
+
+  GroupCfgType inter(groupRoadmap, false);
+  GroupCfgType tick = cfg1;
+  int nTicks;
+
+  double positionRes = env->GetPositionRes();
+  double orientationRes = env->GetOrientationRes();
+
+  bool tempFree = cfg1Free;
+  bool tickFree;
+  GroupCfgType temp = cfg1;
+
+  inter.FindIncrement(cfg1, cfg2, &nTicks, positionRes, orientationRes);
+
+  //Generate nTicks intermediate points along ray
+  for(int i = 1; i < nTicks; i++) {
+    tick += inter;
+    tickFree = vc->IsValid(tick, callee);
+
+    if(m_useBoundary)
+      tickFree = tickFree && tick.InBounds(_boundary);
+
+    if(tempFree == tickFree) {
+      tempFree = tickFree;
+      temp = tick;
+    }
+    else {	//tempFree != tickFree
+      generated = true;
+
+      //Store the vector created to _result 
+      if(tempFree and temp.InBounds(_boundary)) {
+        _result.push_back(temp);
+        tempFree = tickFree;
+        temp = tick;
+      }
+      else if(tickFree and tick.InBounds(_boundary)) { //tickFree
+        _result.push_back(tick);
+        tempFree = tickFree;
+        temp = tick;
+      }
+    }
+  }
+  return generated;
+}
+
+
 
 /*----------------------------------------------------------------------------*/
 
