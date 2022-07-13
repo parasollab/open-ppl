@@ -426,7 +426,7 @@ GetRandomRay(const double _length, DistanceMetricPointer _dm, const bool _norm) 
 
     for(size_t j = 0; j < GetNumRobots(); ++j) {
         for(size_t i = 0; i < GetRobotCfg(j).DOF(); ++i)
-            GetRobotCfg(j)[i] = 2. * DRand() - 1.;
+            GetRobotCfg(j)[i] = GRand();
     }
   // Scale to appropriate length. 
   _dm->ScaleCfg(_length, *this);
