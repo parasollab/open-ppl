@@ -76,12 +76,27 @@ TestIndividualCfgSample() {
   std::vector<Cfg> invalids;
 
   this->IndividualCfgSample(boundary, valids, invalids);
-  auto vc = this->GetValidityChecker("rapid");
+  auto vc = this->GetValidityChecker(m_vcLabel);
+  auto dm = this->GetDistanceMetric(m_dmLabel);
   string callee = this->GetNameAndLabel() + "::Sampler()";
   // Make sure that all valids are inside free space and boundary 
   // and all invalids are inside the obstacle c space.
   
   for(auto cfg : valids) {
+    CfgType r = cfg;
+    r.GetRandomRay(m_stepSize, dm)
+
+    while(c2BBox && (c1Free == c2Free)) {
+      // Copy new data to old state
+      c1 = c2;
+      c1BBox = c2BBox;
+      c1Free = c2Free;
+      // Update new state
+      c2 += r;
+      c2BBox = c2.InBounds(_boundary);
+      c2Free = vc->IsValid(c2, callee);
+    }
+
     if(vc->IsValid(cfg, callee))   
       continue;
 
