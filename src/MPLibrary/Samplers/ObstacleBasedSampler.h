@@ -324,7 +324,11 @@ template <typename MPTraits>
 typename ObstacleBasedSampler<MPTraits>::CfgType
 ObstacleBasedSampler<MPTraits>::
 ChooseCenterOfMass(MultiBody* _mBody) {
-  return GetCfgWithParams(_mBody->GetCenterOfMass());
+  // return GetCfgWithParams(_mBody->poly());
+  size_t body = LRand() % _mBody->GetNumBodies();
+  const GMSPolyhedron& polyhedron = _mBody->GetBody(body)->GetWorldPolyhedron();
+  Vector3d x = polyhedron.GetCentroid();
+  return GetCfgWithParams(x);
 }
 
 // Returns a CfgType at a random vertex of the MultiBody
