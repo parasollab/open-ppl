@@ -6,6 +6,7 @@
 #include "Testing/MPLibrary/Samplers/SamplerMethodTest.h"
 
 #include "MPLibrary/ValidityCheckers/CollisionDetection/CDInfo.h"
+#include "Utilities/MetricUtils.h"
 
 
 template <class MPTraits>
@@ -137,10 +138,19 @@ TestIndividualCfgSample() {
   // FindApproximateWitness
   std::vector<CDInfo> cdInfo_vec;
   std::vector<double> minDistInfo_vec;
+
+  std::cout << "Call ClearanceUtility" << std::endl;
+  ClearanceUtility<MPTraits>* cu = new ClearanceUtility<MPTraits>("pqp_solid", "euclidean",
+                                false, false, 10, 10, true, true, false, 0.1, 5);
+  std::cout << "Initialize ClearanceUtility" << std::endl;
+  cu->Initialize();
+
   for (auto cfg : valids){
     CDInfo _cdInfo;
     bool valid = false;
-    valid = GetNearestVertexWitness(cfg, _cdInfo, boundary);
+    //valid = ClearanceUtility<MPTraits>::GetNearestVertexWitness(cfg, _cdInfo, boundary);
+    // valid = cu->GetNearestVertexWitness(cfg, _cdInfo, boundary);
+    valid = cu->ApproxCollisionInfo(cfg, cfg, boundary, _cdInfo);
     cdInfo_vec.push_back(_cdInfo);
     minDistInfo_vec.push_back(_cdInfo.m_minDist);
 
@@ -150,8 +160,8 @@ TestIndividualCfgSample() {
     }
   }
 
-  for (unsigned int i = 0; i < minDistInfo_vec.size(); i++)
-    std::cout << minDistInfo_vec[i] << std::endl;
+  // for (unsigned int i = 0; i < minDistInfo_vec.size(); i++)
+  //   std::cout << minDistInfo_vec[i] << std::endl;
 
   
   if(passed) {
