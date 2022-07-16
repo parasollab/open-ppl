@@ -18,6 +18,7 @@ class ObstacleBasedSamplerTest : virtual public ObstacleBasedSampler<MPTraits>,
     ///@{
     typedef typename MPTraits::CfgType        CfgType;
     typedef TestBaseObject::TestResult        TestResult;
+    typedef typename MPTraits::MPLibrary      MPLibrary;
 
     ///@}
     ///@name Construction
@@ -48,6 +49,8 @@ class ObstacleBasedSamplerTest : virtual public ObstacleBasedSampler<MPTraits>,
 
     virtual TestResult TestGroupFilter() override;
 
+    MedialAxisUtility<MPTraits> m_medialAxisUtility;
+
     // double m_rayTickResolution{0.1};
     // bool m_positionalDofsOnly{true};
     // int m_maxRayIterations{10};
@@ -62,12 +65,18 @@ class ObstacleBasedSamplerTest : virtual public ObstacleBasedSampler<MPTraits>,
 
 template <typename MPTraits>
 ObstacleBasedSamplerTest<MPTraits>::
-ObstacleBasedSamplerTest() : ObstacleBasedSampler<MPTraits>() {}
+ObstacleBasedSamplerTest() : ObstacleBasedSampler<MPTraits>() {
+  m_medialAxisUtility = MedialAxisUtility<MPTraits>("pqp_solid", "euclidean",
+                                false, false, 500, 500, true, true, true, 0.1, 5);
+}
 
 template <typename MPTraits>
 ObstacleBasedSamplerTest<MPTraits>::
 ObstacleBasedSamplerTest(XMLNode& _node) : SamplerMethod<MPTraits>(_node),
-                                           ObstacleBasedSampler<MPTraits>(_node) {}
+                                           ObstacleBasedSampler<MPTraits>(_node) {
+  m_medialAxisUtility = MedialAxisUtility<MPTraits>("pqp_solid", "euclidean",
+                                false, false, 500, 500, true, true, true, 0.1, 5);
+}
 
 template <typename MPTraits>
 ObstacleBasedSamplerTest<MPTraits>::
@@ -86,84 +95,78 @@ TestIndividualCfgSample() {
   Boundary* boundary = nullptr;
   std::vector<Cfg> valids;
   std::vector<Cfg> invalids;
-  // std::vector<double> min_distance_vec;
 
   this->IndividualCfgSample(boundary, valids, invalids);
-  // auto vc = this->GetValidityChecker(m_vcLabel);
-  // auto dm = this->GetDistanceMetric(m_dmLabel);
   string callee = this->GetNameAndLabel() + "::Sampler()";
+  auto vc = this->GetValidityChecker("rapid");
+
   // Make sure that all valids are inside free space and boundary 
   // and all invalids are inside the obstacle c space.
+  for(auto cfg : valids) {
+    if(vc->IsValid(cfg, callee))   
+      continue;
+    passed = false;
+    message = message + "\n\tA configuration was incorrectly labeled "
+              "valid for the given boundary. Part 1\n";
+    break;
+  }
 
-  // for(auto cfg : valids) {
-  //   if(vc->IsValid(cfg, callee))   
-  //     continue;
-  //   passed = false;
-  //   message = message + "\n\tA configuration was incorrectly labeled "
-  //             "valid for the given boundary. Part 1\n";
-  //   break;
-  // }
-
-  // for(auto cfg : invalids) {
-  //   if(!vc->IsValid(cfg, callee))
-  //     continue;
-  //   passed = false;
-  //   message = message + "\n\tA configuration was incorrectly labeled "
-  //             "invalid for the given boundary. Part 2\n";
-  //   break;
-  // }
-
-  // std::vector<Ray<CfgType>> rays;
-  // int numRays = 10;
-  // for (auto cfg : valids) {
-  //   CfgType cfg2;
-  //   rays.revers(numRays);
-  //   MakeRays(cfg, numRays, rays);
-
-  //   bool initValidity = vcm->IsValid(cfg,callee);
-  //   bool validNearestPoint = false;
-  //   do {
-  //     validNearestPoint = FindApproximateWitness(rays, cfg);
-  //   } while (!validNearestPoint)
-
-  //   if (dm->Distance(cfg, cfg2) < 10){
-  //     continue;
-  //   }
-  //   passed = false;
-  //   message = message + "\n\tA configuration was incorrectly labeled "
-  //             "valid for the given boundary. Part 1\n";
-  //   break;
-  // }
+  for(auto cfg : invalids) {
+    if(!vc->IsValid(cfg, callee))
+      continue;
+    passed = false;
+    message = message + "\n\tA configuration was incorrectly labeled "
+              "invalid for the given boundary. Part 2\n";
+    break;
+  }
 
   // FindApproximateWitness
   std::vector<CDInfo> cdInfo_vec;
   std::vector<double> minDistInfo_vec;
+  MPLibrary* mpl = this->GetMPLibrary();
+  
+  // Initialize MedialAxisUtility
+  if(!m_medialAxisUtility.IsInitialized()) {
+    // Set MPLibrary pointer
+    m_medialAxisUtility.SetMPLibrary(mpl);
+    // Initialize
+    m_medialAxisUtility.Initialize();
+  }
 
-  std::cout << "Call ClearanceUtility" << std::endl;
-  ClearanceUtility<MPTraits>* cu = new ClearanceUtility<MPTraits>("pqp_solid", "euclidean",
-                                false, false, 10, 10, true, true, false, 0.1, 5);
-  std::cout << "Initialize ClearanceUtility" << std::endl;
-  cu->Initialize();
-
+  // Iterate through cfgs
   for (auto cfg : valids){
     CDInfo _cdInfo;
+    CfgType _cfgClr;
     bool valid = false;
-    //valid = ClearanceUtility<MPTraits>::GetNearestVertexWitness(cfg, _cdInfo, boundary);
-    // valid = cu->GetNearestVertexWitness(cfg, _cdInfo, boundary);
-    valid = cu->ApproxCollisionInfo(cfg, cfg, boundary, _cdInfo);
+
+    // Find a nearest obstacle cfg
+    valid = m_medialAxisUtility.ApproxCollisionInfo(cfg, _cfgClr, boundary, _cdInfo);
+
+    // Cannot find a valid obstacle cfg    
+    if (!valid) {
+      passed = false;
+      message = "Cannot find the closest obstacle from given cfg\n";
+      break;
+    }
+
+    // Store cdInfo and minimum distance
     cdInfo_vec.push_back(_cdInfo);
     minDistInfo_vec.push_back(_cdInfo.m_minDist);
 
-    if (!valid){
-      message = "Cannot find nearest obstacle";
+    // Average out the distances
+    double avgDist = std::accumulate(minDistInfo_vec.begin(), minDistInfo_vec.end(), 0.0) / minDistInfo_vec.size();
+    // Set a criteria for pass
+    double c = 15*min(this->GetEnvironment()->GetPositionRes(), this->GetEnvironment()->GetOrientationRes());
+    std::cout << "(average distance)" << avgDist << " | (threshold)" << c << std::endl;
+
+    // Compare them 
+    if (avgDist > c) {
       passed = false;
+      message = "Average minimum distance from cfgs to obstacles are too large: ";
+      break;
     }
   }
 
-  // for (unsigned int i = 0; i < minDistInfo_vec.size(); i++)
-  //   std::cout << minDistInfo_vec[i] << std::endl;
-
-  
   if(passed) {
     message = "IndividualCfgSample::PASSED!\n";
   }

@@ -297,8 +297,8 @@ class ClearanceUtility : virtual public MPBaseObject<MPTraits> {
     //These are just for getting rayTickResolution and orientationResolution.
     // They get multiplied into their respective values from the environment,
     // and should only really be used there. See Initialize() for more info.
-    double m_orientationResFactor{0.}; ///< The orientation resolution factor
-    double m_positionalResFactor{0.}; ///< The position resoluiton factor
+    double m_orientationResFactor{1.}; ///< The orientation resolution factor
+    double m_positionalResFactor{1.}; ///< The position resoluiton factor
     double m_maSearchResolutionFactor{1}; ///< The search resolution factor
 
     /// A boolean to determine whether initialize has been called on the
@@ -441,11 +441,11 @@ Initialize() {
   if(m_maxRayMagnitude == DBL_MAX) {
     m_maxRayMagnitude = this->GetEnvironment()->GetBoundary()->GetMaxDist();
   }
-
+  
   //Note that calling initialize on a MedialAxisUtility object will call this.
+
   m_rayTickResolution =
         m_positionalResFactor*this->GetEnvironment()->GetPositionRes();
-
   m_orientationResolution =
         m_orientationResFactor*this->GetEnvironment()->GetOrientationRes();
 
@@ -691,7 +691,7 @@ ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg, const Boundary* const _b,
   // Compute initial validity state
   const bool initValidity = vcm->IsValid(_cfg, _cdInfo, callee);
   if(this->m_debug) {
-    std::cout << "initial cfg = " << std::endl << _cfg << std::endl;
+    std::cout << "initial cfg = " << _cfg << std::endl;
     std::cout << "\tinitValidity = " << initValidity << std::endl;
   }
 
@@ -923,7 +923,7 @@ MakeRays(const CfgType& _sampledCfg, const std::size_t& _numRays,
 
   for(size_t i = 0; i < _numRays; ++i) {
     CfgType tmpDirection(this->GetTask()->GetRobot());
-
+    // std::cout << "temp Direction 1: " << tmpDirection << std::endl;
     ///@TODO expand to 3D, and then to N dimensions for uniform distribution:
     /// there are only approximate algorithms to do this "fib lattices"
     if(_sampledCfg.DOF() == 2) {
@@ -937,6 +937,7 @@ MakeRays(const CfgType& _sampledCfg, const std::size_t& _numRays,
       //The non-uniform way to get each ray:
       tmpDirection.GetRandomRay(m_rayTickResolution, dm, false);
     }
+    // std::cout << "temp Direction 2: " << tmpDirection << std::endl;
 
     if(this->m_debug)
       cout << "DEBUG:: tmpDirection " << i << " is " << tmpDirection << endl;
@@ -954,6 +955,7 @@ MakeRays(const CfgType& _sampledCfg, const std::size_t& _numRays,
       }
       tmpDirection *= m_rayTickResolution / sqrt(factor);
     }
+    
     if(this->m_debug) {
       cout << "DEBUG:: tmpDirection " << i << " is " << tmpDirection << endl;
       cout << "DEBUG:: \tdistance(_sampledCfg, _sampledCfg+tmpDirection) = "
@@ -963,7 +965,7 @@ MakeRays(const CfgType& _sampledCfg, const std::size_t& _numRays,
     _rays.push_back(Ray<CfgType>(tmpDirection, _sampledCfg));
   }// end for (_numRays)
 
-  if(this->m_debug) {
+  if (this->m_debug) {
     cout << "DEBUG:: rays initialized\n";
     cout << "DEBUG:: \ttick are:\n\t\t";
     for(auto&  ray : _rays)
