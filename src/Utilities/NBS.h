@@ -6,7 +6,6 @@
 #include <unordered_set>
 #include <unordered_map>
 #include <vector>
-// #include "Utilities/CBS.h"
 
 
 template <typename TaskType, typename SolutionType, typename PlanType>
@@ -42,18 +41,23 @@ NBS(
   double upperBound = MAX_DBL;
   
   while(true) {
-		RelaxedPlanner(original_decomp);		
-		lowerBound = RelaxedCost();
+		// Compute relaxed plan
+    RelaxedPlanner(original_decomp);		
+		
+    // Compute lower bound
+    lowerBound = RelaxedCost();
 
+    // break condition
 		if (upperBound < lowerBound)
 			break;
 
+    // Compute constrained plan
+    // The old and new solutions are compared inside of this function
 		ConstrainedPlan(bestNode);
+
+    // Update upper bound
 		upperBound = ConstrainedCost(bestNode);
   }
 }
-
-
-
 
 #endif
