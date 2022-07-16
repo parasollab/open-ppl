@@ -166,7 +166,7 @@ TestIndividualCfgSample() {
       break;
     }
   }
-
+  
   if(passed) {
     message = "IndividualCfgSample::PASSED!\n";
   }
