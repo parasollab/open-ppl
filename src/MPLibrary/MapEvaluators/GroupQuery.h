@@ -6,7 +6,6 @@
 #include "Utilities/MetricUtils.h"
 #include "Utilities/SSSP.h"
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Evaluates the current group roadmap to determine whether a (group) path
 /// exists which satisfies the current group task.
