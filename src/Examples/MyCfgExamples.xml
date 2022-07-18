@@ -16,18 +16,46 @@
         waypointThreshold=".05"/>
     </Robot>
 
-    <Task label="query" robot="boxy">
+
+      <Robot label="boxy2" filename="3D/boxy.robot">
+      <!--
+      <Agent type="planning"/>
+      -->
+      <Agent type="pathfollowing" waypointDm="euclideanPosition"
+        waypointThreshold=".05"/>
+    </Robot>
+
+ <RobotGroup label="robotGroup" robotLabels="
+		  boxy boxy2" />
+
+    <GroupTask label="groupQuery" group="robotGroup">
+      <Task label="query-0" robot="boxy">
+        <StartConstraints>
+          <CSpaceConstraint point="0 5.0 0 0 0 0" />
+        </StartConstraints>
+        <GoalConstraints>
+          <CSpaceConstraint point="0 -5.0 0 0 0 0" />
+        </GoalConstraints>
+      </Task>
+      <Task label="query-1" robot="boxy2">
+        <StartConstraints>
+          <CSpaceConstraint point="2.0 0 0 0 0 0" />
+        </StartConstraints>
+        <GoalConstraints>
+          <CSpaceConstraint point="-2.0 0 0 0 0 0" />
+        </GoalConstraints>
+      </Task>
+    </GroupTask>
+
+    <!-- <Task label="query" robot="boxy">
       <StartConstraints>
-        <!-- WARNING Support for multiple constraints is not yet implemented! -->
         <CSpaceConstraint point="-4 2"/>
       </StartConstraints>
 
       <GoalConstraints>
-        <!-- Here multiple constraints indicates a compound goal. Each constraint
-             represents a single intermediate goal. -->
         <CSpaceConstraint point="4 -2"/>
       </GoalConstraints>
-    </Task>
+    </Task> -->
 
   </Problem>
 
@@ -254,6 +282,8 @@
 
     <MapEvaluators>
       <!-- <TrueEvaluation label="TrueEvaluator" /> -->
+      <GroupQuery label = "CompositeQuery"/>
+
       <QueryMethod label="Query" debug="false"
         graphSearchAlg="dijkstras" safeIntervalToolLabel="SI"/>
       <!-- <LazyQuery label="LazyQuery" debug="true"
@@ -277,6 +307,11 @@
       <PrintMapEvaluation label="PrintMap" base_name="Basic"/> -->
       <ConditionalEvaluator label="NodesEval" metric_method="NumNodes"
         value="100" operator=">="/>
+
+      <SIPPMethod label = "SIPP" safeIntervalToolLabel = "SI" />
+
+      <CBSQuery label = "CBSQuery" queryLabel = "SIPP" debug = "false" vcLabel = "pqp_solid" safeIntervalToolLabel = "SI"/>
+
       <!-- <ConditionalEvaluator label="EdgesEval" metric_method="NumEdges"
         value="1000" operator=">"/>
       <ConditionalEvaluator label="FreqNodeEval" metric_method="NumNodes"
@@ -329,6 +364,14 @@
 
     <MPStrategies>
 
+    <GroupPRM label="CompositePRM" querySampler="UniformRandomFree" debug="true">
+      <Sampler label="UOBPRM" number="10" attempts="1"/>
+      <Connector label="Closest"/>
+      <Evaluator label = "CompositeQuery"/>
+    </GroupPRM>
+
+
+
       <!-- Basic PRM where num samples is based on Number -->
       <BasicPRM label="BasicPRM1" debug="true" querySampler="UniformRandomFree">
         <Sampler label="UOBPRM" number="10" attempts="1"/>
@@ -347,6 +390,10 @@
         <Connector label="Closest"/>
         <Evaluator label="NodesEval"/>
       </BasicPRM>
+
+      <GroupDecoupledStrategy label = "CBS-PRM" strategyLabel = "BasicPRM1">
+        <Evaluator label = "NodesEval"/>
+      </GroupDecoupledStrategy>
 
       <!-- LazyPRM -->
       <!-- <BasicPRM label="LazyPRM" debug="true">
@@ -553,7 +600,7 @@
 
     <!-- MPProblem allows multiple solvers to be specified and executed. -->
 
-    <Solver mpStrategyLabel="BasicPRM1" seed="12345678"
+    <Solver mpStrategyLabel="CompositePRM" seed="12345678"
       baseFilename="example" vizmoDebug="true"/>
 
   </Library>
@@ -571,3 +618,6 @@
   </TMPLibrary>
 
 </MotionPlanning>
+
+
+
