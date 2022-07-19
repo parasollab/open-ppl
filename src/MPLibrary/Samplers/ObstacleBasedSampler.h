@@ -22,6 +22,7 @@ class ObstacleBasedSampler : virtual public SamplerMethod<MPTraits> {
     ///@{
 
     typedef typename MPTraits::CfgType CfgType;
+    typedef typename MPTraits::GroupCfgType GroupCfgType;
 
     ///@}
     ///@name Construction
@@ -62,6 +63,10 @@ class ObstacleBasedSampler : virtual public SamplerMethod<MPTraits> {
     /// @return Success or Failure of sampling
     virtual bool Sampler(CfgType& _cfg, const Boundary* const _boundary,
         vector<CfgType>& _result, vector<CfgType>& _collision);
+
+    virtual bool Sampler(GroupCfgType& _cfg, const Boundary* const _boundary,
+        vector<GroupCfgType>& _result, vector<GroupCfgType>& _invalid);
+
 
     /// Generates and adds shells to their containers
     /// @param _boundary Boundary of the environment
@@ -195,6 +200,14 @@ Print(ostream& _os) const {
 /*-------------------------- Helpers --------------------------*/
 
 // Sampling Rules
+template <typename MPTraits>
+bool
+ObstacleBasedSampler<MPTraits>::
+Sampler(GroupCfgType& _cfg, const Boundary* const _boundary,
+    vector<GroupCfgType>& _result, vector<GroupCfgType>& _collision) {
+  return true;
+}
+
 template <typename MPTraits>
 bool
 ObstacleBasedSampler<MPTraits>::
