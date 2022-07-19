@@ -491,6 +491,7 @@ class Cfg {
 
 };
 
+
 /*--------------------------- Generation Methods -----------------------------*/
 
 template <class DistanceMetricPointer>
@@ -499,7 +500,7 @@ Cfg::
 GetRandomRay(const double _length, DistanceMetricPointer _dm, const bool _norm) {
   // Randomly sample DOFs.
   for(size_t i = 0; i < DOF(); ++i)
-    m_dofs[i] = 2. * DRand() - 1.;
+    m_dofs[i] = GRand();
 
   // Scale to appropriate length.
   _dm->ScaleCfg(_length, *this);
@@ -515,3 +516,4 @@ std::ostream& operator<<(std::ostream& _os, const Cfg& _cfg);
 std::istream& operator>>(std::istream& _is, Cfg& _cfg);
 
 #endif
+
