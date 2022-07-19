@@ -233,7 +233,12 @@ template <typename MPTraits>
 void
 DistanceMetricMethod<MPTraits>::
 ScaleCfg(double _length, GroupCfgType& _c, const GroupCfgType& _o) {
-  throw NotImplementedException(WHERE) << "Not yet implemented.";
+  // throw NotImplementedException(WHERE) << "Not yet implemented.";
+
+   for(size_t j = 0; j < _c.GetNumRobots(); ++j) {
+      ScaleCfg(_length, _c.GetRobotCfg(j));
+   }
+
 }
 
 
