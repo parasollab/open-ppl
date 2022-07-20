@@ -1650,6 +1650,13 @@ SaveInteractionPaths(Interaction* _interaction, State& _start, State& _end,
         
           newEdge.SetWeight(oldEdge.GetWeight());
           newEdge.SetTimeSteps(oldEdge.GetTimeSteps());
+          // Copy intermediates
+          std::vector<GroupCfg> intermediates;
+          for(auto cfg : oldEdge.GetIntermediates()) {
+            auto newCfg = cfg.SetGroupRoadmap(localGrm);
+            intermediates.push_back(newCfg);
+          }
+          newEdge.SetIntermediates(intermediates);
 
           localGrm->AddEdge(source,target,newEdge);
         }

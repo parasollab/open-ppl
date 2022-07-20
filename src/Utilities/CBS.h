@@ -213,7 +213,8 @@ CBS(
     }
   }
 
-  return CBSNodeType();
+  auto empty = CBSNodeType();
+  empty.cost = std::numeric_limits<double>::infinity();
 }
 
 

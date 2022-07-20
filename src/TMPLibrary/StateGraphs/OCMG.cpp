@@ -530,6 +530,15 @@ SampleInteractions() {
   auto stats = plan->GetStatClass();
   MethodTimer mt(stats,this->GetNameAndLabel() + "::SampleInteractions");
 
+  // Set all robots to virtual
+  auto coordinator = plan->GetCoordinator();
+  for(auto& kv : coordinator->GetInitialRobotGroups()) {
+    auto group = kv.first;
+    for(auto robot : group->GetRobots()) {
+      robot->SetVirtual(false);
+    }
+  }
+
   auto as = this->GetTMPLibrary()->GetActionSpace();
 
   for(auto kv : as->GetActions()) {
@@ -624,11 +633,27 @@ SampleInteractions() {
       SampleInteraction(interaction,state);
     }
   }
+
+  // Set all robots back to non-virtual
+  for(auto& kv : coordinator->GetInitialRobotGroups()) {
+    auto group = kv.first;
+    for(auto robot : group->GetRobots()) {
+      robot->SetVirtual(false);
+    }
+  }
 }
 
 bool
 OCMG::
 SampleInteraction(Interaction* _interaction, State _state) {
+
+  // Set all relevant robots to non-virtual
+  for(auto& kv : _state) {
+    auto group = kv.first;
+    for(auto robot : group->GetRobots()) {
+      robot->SetVirtual(false);
+    }
+  }
 
   // Check if state has a solo passive robot that needs to be sampled from start/goal
   RobotGroup* passive = nullptr;
@@ -660,6 +685,14 @@ SampleInteraction(Interaction* _interaction, State _state) {
         success = true;
         break;
       }
+    }
+  }
+
+  // Set all relevant robots back to virtual
+  for(auto& kv : _state) {
+    auto group = kv.first;
+    for(auto robot : group->GetRobots()) {
+      robot->SetVirtual(true);
     }
   }
 
@@ -1024,7 +1057,7 @@ IsReachable(const Terrain* _terrain, Robot* _robot) {
 
   // TODO::Compute accurately, cheating for ur5e because we know it's roughly one meter
   auto radius = mb->GetBoundingSphereRadius();
-  radius = 1;
+  radius = 1.02;
 
   auto maxDistFromCenter = boundary->GetMaxDist()/2;
 

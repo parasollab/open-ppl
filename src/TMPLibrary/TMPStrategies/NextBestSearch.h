@@ -129,6 +129,8 @@ class NextBestSearch : public TMPStrategyMethod {
     std::vector<std::map<SemanticTask*,UnsafeVertexIntervals>> m_unsafeVertexIntervalMap;
     std::vector<std::map<SemanticTask*,UnsafeEdgeIntervals>> m_unsafeEdgeIntervalMap;
 
+    double m_upperBound;
+
     ///@}
 
 };

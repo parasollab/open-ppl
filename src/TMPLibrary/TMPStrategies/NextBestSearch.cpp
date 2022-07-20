@@ -65,6 +65,7 @@ PlanTasks() {
   // Initialize bounds
   Node bestNode;
   bestNode.cost = MAX_DBL;
+  m_upperBound = bestNode.cost;
   double lowerBound = 0;
 
   // Store set of solutions
@@ -175,8 +176,10 @@ ComputeMotions(Node& _bestNode) {
   Node solution = CBS(tasks,validation,splitNode,lowLevel,cost,initial);
 
   // Check if new cost is better than input best cost
-  if(solution.cost < _bestNode.cost)
+  if(solution.cost < _bestNode.cost) {
     _bestNode = solution;
+    m_upperBound = _bestNode.cost;
+  }
 }
 
 void
@@ -248,6 +251,8 @@ ComputeIntervals(SemanticTask* _task, const Node& _node) {
 std::vector<Range<double>>
 NextBestSearch::
 ConstructSafeIntervals(std::vector<Range<double>> _unsafeIntervals) {
+  const double timeRes = this->GetMPProblem()->GetEnvironment()->GetTimeRes();
+  const double buffer = 2*timeRes;
 
   // Return infinite interval if there are no unsafe intervals
   if(_unsafeIntervals.empty())
@@ -264,8 +269,8 @@ ConstructSafeIntervals(std::vector<Range<double>> _unsafeIntervals) {
 
     const auto& interval1 = _unsafeIntervals[i];
 
-    double min = interval1.min;
-    double max = interval1.max;
+    double min = interval1.min - buffer;
+    double max = interval1.max + buffer;
 
     for(size_t j = i+1; j < _unsafeIntervals.size(); j++) {
       if(merged.count(j))
@@ -274,12 +279,12 @@ ConstructSafeIntervals(std::vector<Range<double>> _unsafeIntervals) {
       const auto& interval2 = _unsafeIntervals[j];
       
       // Check if there is no overlap
-      if(interval2.min > max or interval2.max < min)
+      if(interval2.min - max > buffer or min - interval2.max > buffer)
         continue;
 
       // If there is, merge the intervals
-      min = std::min(min,interval2.min);
-      max = std::max(max,interval2.max);
+      min = std::min(min,interval2.min-buffer);
+      max = std::max(max,interval2.max+buffer);
 
       merged.insert(j);
     }
@@ -299,16 +304,16 @@ ConstructSafeIntervals(std::vector<Range<double>> _unsafeIntervals) {
   // Construct set of intervals
   std::vector<Range<double>> intervals;
 
-  const double timeRes = this->GetMPProblem()->GetEnvironment()->GetTimeRes();
+  //const double timeRes = this->GetMPProblem()->GetEnvironment()->GetTimeRes();
   double min = 0;
   double max = std::numeric_limits<double>::infinity();
 
   auto iter = unsafeIntervals.begin();
   while(iter != unsafeIntervals.end()) {
-    max = iter->min - 2*timeRes;
+    max = iter->min;// - 2*timeRes;
     if(min < max)
       intervals.emplace_back(min,max);
-    min = iter->max + 2*timeRes;
+    min = iter->max;// + 2*timeRes;
     iter++;
   }
 
@@ -785,6 +790,15 @@ ValidationFunction(Node& _node) {
                   << std::endl;
                   
                 std::cout << "Task starts: " << startTimes[t1] << " " << startTimes[t2] << std::endl;
+
+                std::cout << "Task 1:" << std::endl;
+                auto p1 = _node.solutionMap[t1];
+                std::cout << p1->VIDs() << std::endl;
+                std::cout << p1->GetWaitTimes() << std::endl << std::endl;
+                std::cout << "Task 2:" << std::endl;
+                auto p2 = _node.solutionMap[t2];
+                std::cout << p2->VIDs() << std::endl;
+                std::cout << p2->GetWaitTimes() << std::endl << std::endl;
               }
 
               auto endT = t;
@@ -920,9 +934,10 @@ ValidationFunction(Node& _node) {
 
                   // Debug - remove when working
                   for(auto elem : intervals) {
-                    if(elem == interval1) {
+                    //if(elem == interval1) {
+                    if(std::abs(elem.min - interval1.min) < .00001 or std::abs(elem.max - interval1.max) < .00001) {
                       std::cout << "OH CRAP" << std::endl;
-                      throw RunTimeException(WHERE) << "OH CRAP" << std::endl;
+                      //throw RunTimeException(WHERE) << "OH CRAP" << std::endl;
                     }
                   }
 
@@ -948,9 +963,10 @@ ValidationFunction(Node& _node) {
                   
                   // Debug - remove when working
                   for(auto elem : intervals) {
-                    if(elem == interval1) {
+                    //if(elem == interval1) {
+                    if(std::abs(elem.min - interval1.min) < .00001 or std::abs(elem.max - interval1.max) < .00001) {
                       std::cout << "OH CRAP" << std::endl;
-                      throw RunTimeException(WHERE) << "OH CRAP" << std::endl;
+                      //throw RunTimeException(WHERE) << "OH CRAP" << std::endl;
                     }
                   }
 
@@ -978,9 +994,10 @@ ValidationFunction(Node& _node) {
 
                   // Debug - remove when working
                   for(auto elem : intervals) {
-                    if(elem == interval2) {
+                    //if(elem == interval2) {
+                    if(std::abs(elem.min - interval2.min) < .00001 or std::abs(elem.max - interval2.max) < .00001) {
                       std::cout << "OH CRAP" << std::endl;
-                      throw RunTimeException(WHERE) << "OH CRAP" << std::endl;
+                      //throw RunTimeException(WHERE) << "OH CRAP" << std::endl;
                     }
                   }
 
@@ -1005,9 +1022,10 @@ ValidationFunction(Node& _node) {
 
                   // Debug - remove when working
                   for(auto elem : intervals) {
-                    if(elem == interval2) {
+                    //if(elem == interval2) {
+                    if(std::abs(elem.min - interval2.min) < .00001 or std::abs(elem.max - interval2.max) < .00001) {
                       std::cout << "OH CRAP" << std::endl;
-                      throw RunTimeException(WHERE) << "OH CRAP" << std::endl;
+                      //throw RunTimeException(WHERE) << "OH CRAP" << std::endl;
                     }
                   }
 
@@ -1139,6 +1157,10 @@ SplitNodeFunction(Node& _node,
     // Update the cost and add to set of new nodes
     double cost = _cost(child);
     child.cost = cost;
+
+    if(child.cost > m_upperBound)
+      continue;
+
     newNodes.push_back(child);
   }
 

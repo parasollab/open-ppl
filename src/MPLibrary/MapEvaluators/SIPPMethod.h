@@ -561,6 +561,11 @@ PerformSubQuery(const size_t _start, const std::vector<size_t> _goals) {
   auto path = pair.first;
   auto waitTimesteps = pair.second;
 
+  if(this->m_debug) {
+    std::cout << "Found path with vids and wait times:" << std::endl;
+    std::cout << path << std::endl << waitTimesteps << std::endl;
+  }
+
   // Check if path is empty
   if(path.empty())
     return false;
@@ -593,6 +598,7 @@ double
 SIPPMethod<MPTraits>::
 PathWeight(typename SIPPGraph::adj_edge_iterator& _ei,
     const double _sourceDistance, const double _targetDistance) {
+    const double timeRes = this->GetEnvironment()->GetTimeRes();
 
   // Vertify that path constraints are satisfied
   /*
@@ -650,7 +656,6 @@ PathWeight(typename SIPPGraph::adj_edge_iterator& _ei,
     }
 
     // Check target interval for overlap
-    const double timeRes = this->GetEnvironment()->GetTimeRes();
     const double duration = timeRes * (this->GetGroupTask()  
           ? double(this->GetGroupRoadmap()->GetEdge(source.vid,target.vid).GetTimeSteps())
           : double(this->GetRoadmap()->GetEdge(source.vid,target.vid).GetTimeSteps()));
