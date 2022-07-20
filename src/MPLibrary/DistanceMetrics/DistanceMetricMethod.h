@@ -233,12 +233,44 @@ template <typename MPTraits>
 void
 DistanceMetricMethod<MPTraits>::
 ScaleCfg(double _length, GroupCfgType& _c, const GroupCfgType& _o) {
-  // throw NotImplementedException(WHERE) << "Not yet implemented.";
+    
+  _length = fabs(_length); //a distance must be positive
+  GroupCfgType origin = _o;
+  GroupCfgType outsideCfg = _c;
 
-   for(size_t j = 0; j < _c.GetNumRobots(); ++j) {
-      ScaleCfg(_length, _c.GetRobotCfg(j));
-   }
+  // first find an outsite configuration with sufficient size
+  while(Distance(origin, outsideCfg) < 2 * _length) {
+  for(size_t j = 0; j < _c.GetNumRobots(); ++j) {
+    for(size_t i = 0; i < _c.GetRobotCfg(j).DOF(); ++i) {
+      for(size_t k = 0; k < outsideCfg.DOF(); ++k)
+        outsideCfg.GetRobotCfg(j)[k] *= 2.0; 
+    }
+  }
+  }
 
+  // now, using binary search find a configuration with the approximate length
+  GroupCfgType aboveCfg = outsideCfg;
+  GroupCfgType belowCfg = origin;
+  GroupCfgType currentCfg = _c;
+
+  while (1) {
+    for(size_t j = 0; j < _c.GetNumRobots(); ++j) {
+        //for(size_t k = 0; k < _c.GetRobotCfg(j).DOF(); ++k) {
+            for(size_t i=0; i<currentCfg.DOF(); ++i)
+                currentCfg.GetRobotCfg(j)[i] = (aboveCfg.GetRobotCfg(j)[i] + belowCfg.GetRobotCfg(j)[i]) / 2.0;
+        //}
+    }
+    double magnitude = Distance(origin, currentCfg);
+    if((magnitude >= _length*0.9) && (magnitude <= _length*1.1))
+      break;
+    if(magnitude >_length)
+      aboveCfg = currentCfg;
+    else
+      belowCfg = currentCfg;
+  }
+
+  _c = currentCfg;
+   
 }
 
 
