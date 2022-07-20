@@ -67,7 +67,7 @@ class GroupCfg final {
     /// @todo This object does not work at all without a group map. We should
     ///       throw relevant exceptions if needed.
     explicit GroupCfg(GroupRoadmapType* const _groupMap = nullptr,
-        const bool _init = false);
+      const bool _init = false);
 
     ///@}
     ///@name Equality
@@ -249,7 +249,7 @@ class GroupCfg final {
     /// @return True if each individual configuration in this is within a
     ///         resolution distance of _cfg.
     bool WithinResolution(const GroupCfg& _cfg, const double _posRes,
-        const double _oriRes) const;
+      const double _oriRes) const;
 
     ///@}
     ///@name DOF Modifiers
@@ -269,8 +269,8 @@ class GroupCfg final {
     /// @param _rotation The change in orientation that should be applied to _cfg.
     /// @param _debug A flag to print to cout (no access to an m_debug flag here).
     void RotateFormationAboutLeader(const Formation& _robotList,
-                                    const mathtool::Orientation& _rotation,
-                                    const bool _debug = false);
+                    const mathtool::Orientation& _rotation,
+                    const bool _debug = false);
 
     /// Given this GroupCfg as the starting configuration, this function applies
     /// a transformation uniformly over all robots listed.
@@ -284,9 +284,9 @@ class GroupCfg final {
     ///        applying _transform. If default, it will be a simple transform
     ///        application. See RotateFormationAboutLeader for usage example.
     void ApplyTransformationForRobots(const Formation& _robotList,
-                             const mathtool::Transformation& _transform,
-                             const mathtool::Transformation& _relativeTransform
-                                                  = mathtool::Transformation());
+                const mathtool::Transformation& _transform,
+                const mathtool::Transformation& _relativeTransform
+                            = mathtool::Transformation());
 
 
     /// Given this configuration, add in the same DOF values to each body given.
@@ -296,7 +296,7 @@ class GroupCfg final {
     ///              body has #dofs = _dofs.size().
     /// @param _robots This list of bodies to update. Order doesn't matter.
     void AddDofsForRobots(const std::vector<double>& _dofs,
-                          const Formation& _robots);
+                const Formation& _robots);
 
 
     /// This function adds all positional dofs in _dofs. It will handle 1-3 dofs
@@ -306,7 +306,7 @@ class GroupCfg final {
     /// @param _dofs The positional values to add in to each body.
     /// @param _robots This list of bodies to update. Order doesn't matter.
     void AddDofsForRobots(const mathtool::Vector3d& _dofs,
-                          const Formation& _robots);
+                const Formation& _robots);
 
     /// Given new DOF values, overwrite the existing values for each individual
     /// cfg in this group cfg that is listed in _robots. Note that _dofs needs
@@ -314,7 +314,7 @@ class GroupCfg final {
     /// @param _fromCfg The configuration to take values from.
     /// @param _robots This list of bodies to update. Order doesn't matter.
     void OverwriteDofsForRobots(const std::vector<double>& _dofs,
-                                const Formation& _robots);
+                  const Formation& _robots);
 
 
     /// Given new DOF values, overwrite the existing values for each individual
@@ -323,7 +323,7 @@ class GroupCfg final {
     /// @param _fromCfg The configuration to take values from.
     /// @param _robots This list of bodies to update. Order doesn't matter.
     void OverwriteDofsForRobots(const mathtool::Vector3d& _dofs,
-                                const Formation& _robots);
+                  const Formation& _robots);
 
 
     /// Given this and another configuration, copy the DOF values from the other
@@ -331,11 +331,11 @@ class GroupCfg final {
     /// @param _fromCfg The configuration to take values from.
     /// @param _robots This list of bodies to update. Order doesn't matter.
     void OverwriteDofsForRobots(const GroupCfg& _fromCfg,
-                                const Formation& _robots);
+                  const Formation& _robots);
 
     /// @overload to handle robot pointers.
     void OverwriteDofsForRobots(const GroupCfg& _fromCfg,
-                                const std::vector<Robot*>& _robots);
+                  const std::vector<Robot*>& _robots);
 
 
     /// Overwrites all data in this cfg, assumes the length of _dofs is the same
@@ -349,7 +349,7 @@ class GroupCfg final {
     /// @param _goal The goal configuration.
     /// @param _nTicks The number of steps to take (NOT computed by this method)
     void FindIncrement(const GroupCfg& _start, const GroupCfg& _goal,
-        const int _nTicks);
+      const int _nTicks);
 
     /// Find the c-space increment and number of steps needed to move from a
     /// start to a goal, taking steps no larger than the designated resolutions.
@@ -359,8 +359,8 @@ class GroupCfg final {
     /// @param _positionRes The position resolution to use.
     /// @param _orientationRes The orientation resolution to use.
     void FindIncrement(const GroupCfg& _start, const GroupCfg& _goal,
-        int* const _nTicks, const double _positionRes,
-        const double _orientationRes);
+      int* const _nTicks, const double _positionRes,
+      const double _orientationRes);
 
     /// Test if a group configuration lies within a boundary and also within the
     /// robot's c-space limits.
@@ -371,9 +371,17 @@ class GroupCfg final {
     /// @overload
     bool InBounds(const Environment* const _env) const noexcept;
 
+
+    /// Generate a random configuration for group robotswith a set length.
+    /// @param _length The desired length.
+    /// @param _dm The distance metric for checking length.
+    /// @param _norm Normalize the orientation DOFs?
+    template<typename DistanceMetricPointer>
+    void GetRandomRay(const double _length, DistanceMetricPointer _dm, const bool _norm = true);
+
     /// Normalize Orientation DOFs for a Group Cfg
     virtual void NormalizeOrientation(const Formation& _robots = Formation())
-        noexcept;
+      noexcept;
 
     ///@}
     ///@name Output Utilities
@@ -381,7 +389,7 @@ class GroupCfg final {
 
     std::string PrettyPrint(const size_t _precision = 4) const;
 
-    ///@}
+	///@}
 
   private:
 
@@ -411,6 +419,27 @@ class GroupCfg final {
     ///@}
 
 };
+
+template <class DistanceMetricPointer>
+void
+GroupCfg::
+GetRandomRay(const double _length, DistanceMetricPointer _dm, const bool _norm) {
+  // Randomly sample DOFs.
+
+	for(size_t j = 0; j < GetNumRobots(); ++j) {
+		for(size_t i = 0; i < GetRobotCfg(j).DOF(); ++i)
+			// GetRobotCfg(j)[i] = 2. * DRand() - 1.;
+			GetRobotCfg(j)[i] = GRand();
+	}
+  // Scale to appropriate length. 
+  _dm->ScaleCfg(_length, *this);
+
+  // Normalize if requested.
+  if(_norm)
+	NormalizeOrientation();
+}
+
+
 
 std::ostream& operator<<(std::ostream&, const GroupCfg&);
 

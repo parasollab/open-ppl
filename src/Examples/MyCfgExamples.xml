@@ -367,7 +367,7 @@
       <GroupPRM label="CompositePRM" querySampler="UniformRandomFree" debug="true">
         <Sampler label="OBPRM" number="10" attempts="1"/>
         <Connector label="Closest"/>
-        <Evaluator label = "CompositeQuery"/>
+        <Evaluator label = "NodesEval"/>
       </GroupPRM>
 
 
