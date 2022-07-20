@@ -6,58 +6,54 @@
 #include <unordered_set>
 #include <unordered_map>
 #include <vector>
+// #include "Utilities/CBS.h"
 
 
-template <typename TaskType, typename SolutionType, typename PlanType>
+template <typename TaskType, typename PlanType>
 using RelaxedPlanFunction =
-  std::function<void(TaskType* _decomp)>;
+	std::function<PlanType*(TaskType* _decomp)>;
 
-template <typename TaskType, typename SolutionType, typename PlanType>
+template <typename PlanType>
 using RelaxedCostFunction =
-  std::function<double()>;
+	std::function<double(PlanType* _plan)>;
 
-template <typename TaskType, typename SolutionType, typename PlanType>
+template <typename SolutionType>
 using ConstrainedPlanFunction =
-  std::function<void(SolutionType& _node)>;
+	std::function<SolutionType(SolutionType& _node)>;
 
-template <typename TaskType, typename SolutionType, typename PlanType>
+template <typename SolutionType>
 using ConstrainedCostFunction =
-  std::function<double(SolutionType& _node)>;
+	std::function<double(SolutionType& _node)>;
 
 
 template <typename TaskType, typename SolutionType, typename PlanType>
 void
 NBS(
-  PlanType& original_decomp,
-  SolutionType& bestNode,
-  RelaxedPlanFunction<TaskType,SolutionType,PlanType>& RelaxedPlanner,
-  RelaxedCostFunction<TaskType,SolutionType,PlanType>& RelaxedCost,
-  ConstrainedPlanFunction<TaskType,SolutionType,PlanType>& ConstrainedPlan,
-  ConstrainedCostFunction<TaskType,SolutionType,PlanType>& ConstrainedCost)
+	TaskType*& _task,
+	SolutionType& _solution,
+	RelaxedPlanFunction<TaskType, PlanType>& _relaxedPlanner,
+	RelaxedCostFunction<PlanType>& _relaxedCost,
+	ConstrainedPlanFunction<SolutionType>& _constrainedPlan,
+	ConstrainedCostFunction<SolutionType>& _constrainedCost)
 {
 
-  // Initialize bounds
-  double lowerBound = 0;
-  double upperBound = MAX_DBL;
-  
-  while(true) {
-		// Compute relaxed plan
-    RelaxedPlanner(original_decomp);		
-		
-    // Compute lower bound
-    lowerBound = RelaxedCost();
+	// Initialize bounds
+	double lowerBound = 0;
+	double upperBound = MAX_DBL;
+	
+	while(true) {
+		auto relaxedPlan = _relaxedPlanner(_task);		
+		lowerBound = _relaxedCost(relaxedPlan);
 
-    // break condition
 		if (upperBound < lowerBound)
 			break;
 
-    // Compute constrained plan
-    // The old and new solutions are compared inside of this function
-		ConstrainedPlan(bestNode);
+		auto solution = _constrainedPlan(_solution);
 
-    // Update upper bound
-		upperBound = ConstrainedCost(bestNode);
-  }
+		if(solution.cost < _solution.cost)
+			_solution = solution;
+			upperBound = _constrainedCost(_solution);
+	}
 }
 
 #endif
