@@ -59,6 +59,7 @@
 #include "MPLibrary/MapEvaluators/QueryMethod.h"
 #include "MPLibrary/MapEvaluators/SIPPMethod.h"
 #include "MPLibrary/MapEvaluators/TimeEvaluator.h"
+#include "MPLibrary/MapEvaluators/GroupQuery.h"
 
 //mp strategies includes
 #include "MPLibrary/MPStrategies/AdaptiveRRT.h"
@@ -69,6 +70,7 @@
 #include "MPLibrary/MPStrategies/GroupStrategyMethod.h"
 #include "MPLibrary/MPStrategies/TogglePRMStrategy.h"
 #include "MPLibrary/MPStrategies/ValidationStrategy.h"
+#include "MPLibrary/MPStrategies/GroupPRM.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup MotionPlanningUniverse
@@ -166,7 +168,8 @@ struct MPTraits {
     LazyQuery<MPTraits>,
     QueryMethod<MPTraits>,
     SIPPMethod<MPTraits>,
-    TimeEvaluator<MPTraits>
+    TimeEvaluator<MPTraits>,
+    GroupQuery`<MPTraits>
       > MapEvaluatorMethodList;
 
   //types of motion planning strategies available in our world
@@ -178,7 +181,8 @@ struct MPTraits {
     GroupDecoupledStrategy<MPTraits>,
     GroupStrategyMethod<MPTraits>,
     TogglePRMStrategy<MPTraits>,
-    ValidationStrategy<MPTraits>
+    ValidationStrategy<MPTraits>,
+    GroupPRM<MPTraits>
       > MPStrategyMethodList;
 
 
