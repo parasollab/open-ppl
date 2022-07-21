@@ -1,14 +1,6 @@
 #ifndef PPL_NBS_H_
 #define PPL_NBS_H_
 
-#include <functional>
-#include <queue>
-#include <unordered_set>
-#include <unordered_map>
-#include <vector>
-// #include "Utilities/CBS.h"
-
-
 template <typename TaskType, typename PlanType>
 using RelaxedPlanFunction =
 	std::function<PlanType*(TaskType* _task)>;
