@@ -131,6 +131,8 @@ class NextBestSearch : public TMPStrategyMethod {
 
     double m_upperBound;
 
+    std::string m_motionEvaluator;
+
     ///@}
 
 };

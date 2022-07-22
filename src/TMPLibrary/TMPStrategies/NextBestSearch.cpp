@@ -36,6 +36,9 @@ NextBestSearch(XMLNode& _node) : TMPStrategyMethod(_node) {
 
   m_savePaths =_node.Read("savePaths",false,m_savePaths,
         "Flag to indicate if full paths should be output in files for reuse.");
+
+  m_motionEvaluator = _node.Read("motionEvaluator",true,"",
+              "Evaluator label for motion planning.");
 }
 
 NextBestSearch::
@@ -62,20 +65,22 @@ PlanTasks() {
   auto te = this->GetTaskEvaluator(m_teLabel);
   te->Initialize();
 
+  auto me = this->GetTaskEvaluator(m_motionEvaluator);
+  me->Initialize();
+
   // Initialize bounds
-  Node bestNode;
-  bestNode.cost = MAX_DBL;
-  m_upperBound = bestNode.cost;
+  //Node bestNode;
+  m_upperBound = MAX_DBL;
   double lowerBound = 0;
 
   // Store set of solutions
   std::vector<Decomposition*> taskSolutions;
 
-  while(bestNode.cost > lowerBound) {
+  while(m_upperBound > lowerBound) {
 
     if(m_debug) {
       std::cout << "Computing plans. Current upperbound: "
-                << bestNode.cost
+                << m_upperBound
                 << ". Current lowerbound: "
                 << lowerBound
                 << "."
@@ -85,13 +90,12 @@ PlanTasks() {
     lowerBound = FindTaskPlan(originalDecomp);
     taskSolutions.push_back(plan->GetDecomposition());
 
-    if(bestNode.cost > lowerBound) {
+    if(m_upperBound > lowerBound) {
       stats->SetStat(this->GetNameAndLabel() + "::LowerBound",lowerBound);
-      ComputeMotions(bestNode);
-
-      if(bestNode.cost < lowerBound)
+      //ComputeMotions(bestNode);
+      if(me->operator()(plan) and plan->GetCost() < lowerBound)
         throw RunTimeException(WHERE) << "Best cost ("
-                                      << bestNode.cost 
+                                      << m_upperBound 
                                       << ") violating lower bound ("
                                       << lowerBound
                                       << ").";
@@ -101,10 +105,10 @@ PlanTasks() {
     // TODO::Store solution in solution set
   }
 
-  stats->SetStat(this->GetNameAndLabel() + "::BestCost",bestNode.cost);
+  stats->SetStat(this->GetNameAndLabel() + "::BestCost",m_upperBound);
   // Save plan in proper format
-  if(m_savePaths)
-    SaveSolution(bestNode);
+  //if(m_savePaths)
+  //  SaveSolution(bestNode);
 }
     
 double
@@ -259,40 +263,53 @@ ConstructSafeIntervals(std::vector<Range<double>> _unsafeIntervals) {
     return {Range<double>(0,std::numeric_limits<double>::infinity())};
 
   // Merge unsafe intervals
-  std::set<size_t> merged;
-  std::vector<Range<double>> unsafeIntervals;
+  std::vector<Range<double>> unsafeIntervals = _unsafeIntervals;
 
-  const size_t size = _unsafeIntervals.size();
-  for(size_t i = 0; i < size; i++) {
-    if(merged.count(i))
-      continue;
+  bool change = true;
+  bool firstTime = true;
+  while(change) {
 
-    const auto& interval1 = _unsafeIntervals[i];
+    change = false;
+    std::set<size_t> merged;
 
-    double min = interval1.min - buffer;
-    double max = interval1.max + buffer;
+    std::vector<Range<double>> copyIntervals = unsafeIntervals;
+    const size_t size = copyIntervals.size();
 
-    for(size_t j = i+1; j < _unsafeIntervals.size(); j++) {
-      if(merged.count(j))
+    unsafeIntervals.clear();
+
+    for(size_t i = 0; i < size; i++) {
+      if(merged.count(i))
         continue;
 
-      const auto& interval2 = _unsafeIntervals[j];
+      const auto& interval1 = copyIntervals[i];
+  
+      double min = std::max(0.,interval1.min - (firstTime ? buffer : 0));
+      double max = interval1.max + (firstTime ? buffer : 0);
+
+      for(size_t j = i+1; j < copyIntervals.size(); j++) {
+        if(merged.count(j))
+          continue;
+
+        const auto& interval2 = copyIntervals[j];
       
-      // Check if there is no overlap
-      if(interval2.min - max > buffer or min - interval2.max > buffer)
-        continue;
+        // Check if there is no overlap
+        if(interval2.min - max > buffer or min - interval2.max > buffer)
+          continue;
 
-      // If there is, merge the intervals
-      min = std::min(min,interval2.min-buffer);
-      max = std::max(max,interval2.max+buffer);
-
-      merged.insert(j);
+        // If there is, merge the intervals
+        min = std::min(min,interval2.min-buffer);
+        max = std::max(max,interval2.max+buffer);
+  
+        merged.insert(j);
+      }
+  
+      Range<double> interval(min,max);
+      unsafeIntervals.push_back(interval);
     }
 
-    Range<double> interval(min,max);
-    unsafeIntervals.push_back(interval);
+    change = copyIntervals.size() != unsafeIntervals.size();
+    firstTime = false;
   }
-
   struct less_than {
     inline bool operator()(const Range<double>& _r1, const Range<double>& _r2) {
       return _r1.min < _r2.min;
@@ -300,6 +317,13 @@ ConstructSafeIntervals(std::vector<Range<double>> _unsafeIntervals) {
   };
 
   std::sort(unsafeIntervals.begin(), unsafeIntervals.end(),less_than());
+
+  for(size_t i = 0; i < unsafeIntervals.size() - 1; i++) {
+    if(unsafeIntervals[i].max > unsafeIntervals[i+1].max 
+      or unsafeIntervals[i].max > unsafeIntervals[i+1].min)
+      throw RunTimeException(WHERE) << "THIS IS VERY VERY BAD AND WILL RESULT IN AN INFINITE LOOP WITH NO ANSWERS.";
+      
+  }
 
   // Construct set of intervals
   std::vector<Range<double>> intervals;
@@ -310,10 +334,10 @@ ConstructSafeIntervals(std::vector<Range<double>> _unsafeIntervals) {
 
   auto iter = unsafeIntervals.begin();
   while(iter != unsafeIntervals.end()) {
-    max = iter->min;// - 2*timeRes;
+    max = iter->min - timeRes;
     if(min < max)
       intervals.emplace_back(min,max);
-    min = iter->max;// + 2*timeRes;
+    min = iter->max + timeRes;
     iter++;
   }
 

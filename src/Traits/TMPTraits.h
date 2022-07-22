@@ -13,6 +13,7 @@
 
 // TaskEvaluators to include
 #include "TMPLibrary/TaskEvaluators/HCRQuery.h"
+#include "TMPLibrary/TaskEvaluators/ScheduledCBS.h"
 #include "TMPLibrary/TaskEvaluators/SimpleMotionEvaluator.h"
 #include "TMPLibrary/TaskEvaluators/SimultaneousMultiArmEvaluator.h"
 #include "TMPLibrary/TaskEvaluators/SMART.h"

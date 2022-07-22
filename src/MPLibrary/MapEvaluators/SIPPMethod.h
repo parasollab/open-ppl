@@ -599,6 +599,7 @@ SIPPMethod<MPTraits>::
 PathWeight(typename SIPPGraph::adj_edge_iterator& _ei,
     const double _sourceDistance, const double _targetDistance) {
     const double timeRes = this->GetEnvironment()->GetTimeRes();
+    const double buffer = timeRes * 2;
 
   // Vertify that path constraints are satisfied
   /*
@@ -640,17 +641,19 @@ PathWeight(typename SIPPGraph::adj_edge_iterator& _ei,
     auto interval = *iter;
 
     // Check if transition is valid w.r.t. intervals
-    const double minWaitTime = std::max(0.0,interval.min - _sourceDistance);
+    double minWaitTime = std::max(0.0,interval.min - _sourceDistance);
+    if(minWaitTime > 0)
+      minWaitTime += buffer;
     const double minStartTime = _sourceDistance + minWaitTime;
 
     // Check source interval for min start time
-    if(!source.interval.Contains(minStartTime)) {
+    if(!source.interval.Contains(std::max(minStartTime-buffer,m_startTime)) or !source.interval.Contains(minStartTime+buffer)) {
       continue;
       //return std::numeric_limits<double>::infinity();
     }
 
     // Check edge interval for min start time
-    if(!interval.Contains(minStartTime)) {
+    if(!interval.Contains(std::max(minStartTime-buffer,m_startTime)) or !interval.Contains(minStartTime+buffer)) {
       continue;
       //return std::numeric_limits<double>::infinity();
     }
@@ -662,28 +665,33 @@ PathWeight(typename SIPPGraph::adj_edge_iterator& _ei,
     const double minEndTime = minStartTime + duration;
 
     double waitTime = minWaitTime;
-    if(!target.interval.Contains(minEndTime)) {
+    if(!target.interval.Contains(std::max(minEndTime-buffer,m_startTime)) or !target.interval.Contains(minEndTime+buffer)) {
       // Check that min end time is not greater than the interval range
-      if(target.interval.max < minEndTime) {
+      if(target.interval.max < minEndTime+buffer) {
         continue;
         //return std::numeric_limits<double>::infinity();
       }
 
       waitTime = target.interval.min - minEndTime;
+      if(waitTime > 0)
+        waitTime += buffer;
 
       const double startTime = minStartTime + waitTime;
 
       // Check source interval for start time
-      if(!source.interval.Contains(startTime)) {
+      if(!source.interval.Contains(std::max(startTime-buffer,m_startTime)) or !source.interval.Contains(startTime+buffer)) {
         continue;
         //return std::numeric_limits<double>::infinity();
       }
 
       // Check edge interval for start time
-      if(!interval.Contains(startTime)) {
+      if(!interval.Contains(std::max(startTime-buffer,m_startTime)) or !interval.Contains(startTime+buffer)) {
         continue;
         //return std::numeric_limits<double>::infinity();
       }
+
+      if(!target.interval.Contains(std::max(startTime+duration-buffer,m_startTime)) or !target.interval.Contains(startTime+duration+buffer))
+        continue;
 
       waitTime = startTime - _sourceDistance;
     }
@@ -951,7 +959,7 @@ template <typename MPTraits>
 bool
 SIPPMethod<MPTraits>::
 SatisfyConstraints(Range<double> _interval) {
-  return _interval.Contains(m_minEndTime);
+  return _interval.max >= m_minEndTime;
 }
 
 template <typename MPTraits>
