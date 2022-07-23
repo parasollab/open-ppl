@@ -82,6 +82,14 @@ struct Range final {
     return min == _other.min && max == _other.max;
   }
 
+  /// This only for placing in sets
+  bool operator<(const Range<T>& _other) const {
+    if(min != _other.min)
+      return min < _other.min;
+
+    return max < _other.max;
+  }
+
   ///@}
   ///@name Modifiers
   ///@{
@@ -155,8 +163,11 @@ inline
 bool
 Range<T>::
 Contains(const U& _val, const double _tolerance) const noexcept {
-  return (min - std::abs(min) * _tolerance) <= _val
-     and _val <= (max + std::abs(max) * _tolerance);
+  //return (min - std::abs(min) * _tolerance) <= _val
+  //   and _val <= (max + std::abs(max) * _tolerance);
+
+  return min <= _val and _val <= max;
+
 }
 
 

@@ -36,7 +36,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 struct SIPPVertex {
   size_t vid;
-  Range<double> interval;
+  Range<size_t> interval;
 
   bool operator==(const SIPPVertex& _other) const {
     return vid      == _other.vid &&
@@ -65,11 +65,10 @@ class SIPPMethod : public MapEvaluatorMethod<MPTraits> {
     typedef typename MPTraits::GroupCfgType     GroupCfgType;
     typedef typename MPTraits::GroupWeightType  GroupWeightType;
 
-    typedef std::unordered_map<size_t,
-                std::unordered_map<size_t,
-                    std::vector<Range<double>>>> EdgeIntervalMap;
+    typedef std::map<std::pair<size_t,size_t>,
+                    std::vector<Range<size_t>>> EdgeIntervalMap;
 
-    typedef std::unordered_map<size_t,std::vector<Range<double>>> VertexIntervalMap;
+    typedef std::map<size_t,std::vector<Range<size_t>>> VertexIntervalMap;
 
     typedef GenericStateGraph<SIPPVertex, SIPPEdge> SIPPGraph;
 
@@ -111,10 +110,10 @@ class SIPPMethod : public MapEvaluatorMethod<MPTraits> {
     void SetDMLabel(const std::string& _dmLabel);
 
     /// Set the start time of the query
-    void SetStartTime(double _start);
+    void SetStartTime(size_t _start);
 
     /// Set the end time of the query
-    void SetMinEndTime(double _end);
+    void SetMinEndTime(size_t _end);
 
     /// Set the edge intervals to use to generate a path
     void SetEdgeIntervals(EdgeIntervalMap _edgeIntervals);
@@ -122,11 +121,8 @@ class SIPPMethod : public MapEvaluatorMethod<MPTraits> {
     /// Set the edge intervals to use to generate a path
     void SetVertexIntervals(VertexIntervalMap _vertexIntervals);
 
-    /// Set the minimum end time of a path
-    virtual void SetMinEndtime(double _minEndtime) override;
-
     /// Check if the path satisfies all constraints
-    bool SatisfyConstraints(Range<double> _interval);
+    bool SatisfyConstraints(Range<size_t> _interval);
 
     ///@}
 
@@ -208,8 +204,8 @@ class SIPPMethod : public MapEvaluatorMethod<MPTraits> {
 
     std::unordered_map<size_t,std::unordered_map<size_t,size_t>> m_waitTimesteps;
 
-    double m_startTime{0};
-    double m_minEndTime{0};
+    size_t m_startTime{0};
+    size_t m_minEndTime{0};
 
     bool m_initialized{false};
     bool m_invervalsSet{false};
@@ -356,12 +352,12 @@ operator()() {
       SIPPVertex vertex;
       vertex.vid = start;
       
-      std::vector<Range<double>> startIntervals;
+      std::vector<Range<size_t>> startIntervals;
       if(!m_vertexIntervals.empty()) {
         startIntervals = m_vertexIntervals[start];
       }
       else {
-        startIntervals.push_back(Range<double>(0,MAX_DBL)); 
+        startIntervals.push_back(Range<size_t>(0,MAX_INT)); 
       }
 
       bool found = false;
@@ -494,8 +490,9 @@ GeneratePath(const size_t _start, const std::vector<size_t> _goals) {
     waitTimesteps.push_back(0);
   }
   else {
-    const double timeRes = this->GetEnvironment()->GetTimeRes();
-    waitTimesteps.push_back(std::ceil((m_minEndTime - output.distance[current])/timeRes));
+    //const double timeRes = this->GetEnvironment()->GetTimeRes();
+    //waitTimesteps.push_back(std::ceil((m_minEndTime - output.distance[current])/timeRes));
+    waitTimesteps.push_back(std::ceil((m_minEndTime - output.distance[current])));
   }
   auto previous = current;
 
@@ -525,14 +522,14 @@ SetDMLabel(const std::string& _dmLabel) {
 template <typename MPTraits>
 void
 SIPPMethod<MPTraits>::
-SetStartTime(double _start) {
+SetStartTime(size_t _start) {
   m_startTime = _start;
 }
 
 template <typename MPTraits>
 void
 SIPPMethod<MPTraits>::
-SetMinEndTime(double _end) {
+SetMinEndTime(size_t _end) {
   m_minEndTime = _end;
 }
 
@@ -598,37 +595,21 @@ double
 SIPPMethod<MPTraits>::
 PathWeight(typename SIPPGraph::adj_edge_iterator& _ei,
     const double _sourceDistance, const double _targetDistance) {
-    const double timeRes = this->GetEnvironment()->GetTimeRes();
-    const double buffer = timeRes * 2;
+  //const double timeRes = this->GetEnvironment()->GetTimeRes();
+  const size_t buffer = 2;
+  const size_t zero = 0;
 
-  // Vertify that path constraints are satisfied
-  /*
-  auto gt = this->GetGroupTask();
-  for(auto task = gt->begin(); task != gt->end(); task++) {
-    auto& pathConstraints = task->GetPathConstraints();
-    if(pathConstraints.empty())
-      continue;
+  size_t sourceDistance = size_t(_sourceDistance);
 
-    auto grm = this->GetGroupRoadmap(gt->GetRobotGroup());
-    auto target = grm->GetVertex(_ei->target()).GetRobotCfg(task->GetRobot());
-
-    for(auto& c : pathConstraints) {
-      if(!c->Satisfied(target))
-        return std::numeric_limits<double>::infinity();
-    }
-  }
-  */
-
-  //auto edge = _ei->property();
   auto source = m_sippGraph->GetVertex(_ei->source());
   auto target = m_sippGraph->GetVertex(_ei->target());
 
-  std::vector<Range<double>> intervals;
+  std::vector<Range<size_t>> intervals;
   if(!m_edgeIntervals.empty()) {
-    intervals = m_edgeIntervals[source.vid][target.vid];
+    intervals = m_edgeIntervals[std::make_pair(source.vid,target.vid)];
   }
   else {
-    intervals.push_back(Range<double>(0,MAX_DBL));
+    intervals.push_back(Range<size_t>(zero,MAX_INT));
   }
 
   //bool reachedFirstInterval = false;
@@ -641,66 +622,67 @@ PathWeight(typename SIPPGraph::adj_edge_iterator& _ei,
     auto interval = *iter;
 
     // Check if transition is valid w.r.t. intervals
-    double minWaitTime = std::max(0.0,interval.min - _sourceDistance);
+    size_t minWaitTime = std::max(zero,std::min(interval.min - sourceDistance,interval.min));
     if(minWaitTime > 0)
       minWaitTime += buffer;
-    const double minStartTime = _sourceDistance + minWaitTime;
+    const size_t minStartTime = sourceDistance + minWaitTime;
 
     // Check source interval for min start time
-    if(!source.interval.Contains(std::max(minStartTime-buffer,m_startTime)) or !source.interval.Contains(minStartTime+buffer)) {
+    if(!source.interval.Contains(std::max(std::min(minStartTime-buffer,minStartTime),m_startTime)) 
+    or !source.interval.Contains(std::max(minStartTime,minStartTime+buffer))) {
       continue;
-      //return std::numeric_limits<double>::infinity();
     }
 
     // Check edge interval for min start time
-    if(!interval.Contains(std::max(minStartTime-buffer,m_startTime)) or !interval.Contains(minStartTime+buffer)) {
+    if(!interval.Contains(std::max(std::min(minStartTime-buffer,minStartTime),m_startTime)) 
+    or !interval.Contains(std::max(minStartTime,minStartTime+buffer))) {
       continue;
-      //return std::numeric_limits<double>::infinity();
     }
 
     // Check target interval for overlap
-    const double duration = timeRes * (this->GetGroupTask()  
-          ? double(this->GetGroupRoadmap()->GetEdge(source.vid,target.vid).GetTimeSteps())
-          : double(this->GetRoadmap()->GetEdge(source.vid,target.vid).GetTimeSteps()));
-    const double minEndTime = minStartTime + duration;
+    const size_t duration = this->GetGroupTask()  
+          ? this->GetGroupRoadmap()->GetEdge(source.vid,target.vid).GetTimeSteps()
+          : this->GetRoadmap()->GetEdge(source.vid,target.vid).GetTimeSteps();
+    const size_t minEndTime = minStartTime + duration;
 
-    double waitTime = minWaitTime;
-    if(!target.interval.Contains(std::max(minEndTime-buffer,m_startTime)) or !target.interval.Contains(minEndTime+buffer)) {
+    size_t waitTime = minWaitTime;
+    if(!target.interval.Contains(std::max(std::min(minEndTime-buffer,minEndTime),m_startTime)) 
+    or !target.interval.Contains(std::max(minEndTime+buffer,minEndTime))) {
       // Check that min end time is not greater than the interval range
-      if(target.interval.max < minEndTime+buffer) {
+      if(target.interval.max < std::max(minEndTime+buffer,minEndTime)) {
         continue;
-        //return std::numeric_limits<double>::infinity();
       }
 
       waitTime = target.interval.min - minEndTime;
       if(waitTime > 0)
         waitTime += buffer;
 
-      const double startTime = minStartTime + waitTime;
+      const size_t startTime = minStartTime + waitTime;
 
       // Check source interval for start time
-      if(!source.interval.Contains(std::max(startTime-buffer,m_startTime)) or !source.interval.Contains(startTime+buffer)) {
+      if(!source.interval.Contains(std::max(std::min(startTime-buffer,startTime),m_startTime)) 
+      or !source.interval.Contains(std::max(startTime+buffer,startTime))) {
         continue;
-        //return std::numeric_limits<double>::infinity();
       }
 
       // Check edge interval for start time
-      if(!interval.Contains(std::max(startTime-buffer,m_startTime)) or !interval.Contains(startTime+buffer)) {
+      if(!interval.Contains(std::max(std::min(startTime-buffer,startTime),m_startTime)) 
+      or !interval.Contains(std::max(startTime+buffer,startTime))) {
         continue;
-        //return std::numeric_limits<double>::infinity();
       }
 
-      if(!target.interval.Contains(std::max(startTime+duration-buffer,m_startTime)) or !target.interval.Contains(startTime+duration+buffer))
+      if(!target.interval.Contains(std::max(std::min(startTime+duration-buffer,startTime+duration),m_startTime)) 
+      or !target.interval.Contains(std::max(startTime+duration+buffer,startTime+duration)))
         continue;
 
-      waitTime = startTime - _sourceDistance;
+      waitTime = startTime - sourceDistance;
     }
-    m_waitTimesteps[_ei->source()][_ei->target()] = size_t(std::ceil(waitTime/timeRes));
+    m_waitTimesteps[_ei->source()][_ei->target()] = waitTime; //size_t(std::ceil(waitTime/timeRes));
 
     double edgeCost;
 
     if(m_minTime) {
-      edgeCost = waitTime + duration;
+      edgeCost = double(waitTime + duration);
     }
     else {
       throw RunTimeException(WHERE) << "Arbitrary distance metric based eval not supported.";
@@ -710,7 +692,7 @@ PathWeight(typename SIPPGraph::adj_edge_iterator& _ei,
                                       : this->GetRoadmap()->GetEdge(source,target).GetWeight();
     }
 
-    return  _sourceDistance + edgeCost;
+    return  sourceDistance + edgeCost;
   }
 
   return std::numeric_limits<double>::infinity();
@@ -776,21 +758,16 @@ SIPPMethod<MPTraits>::
 BuildNeighbors(typename SIPPGraph::vertex_descriptor _sippSource, size_t _rmTarget,
                AbstractRoadmap* _rm) {
 
-  //const double timeRes = this->GetEnvironment()->GetTimeRes();
   const auto vertex = m_sippGraph->GetVertex(_sippSource);
   const size_t rmSource = vertex.vid;
-  //auto edge = _rm->GetEdge(rmSource,_rmTarget);
-  //const double duration = double(edge.GetTimeSteps()) * timeRes;
-  //const double minEnd = vertex.interval.min + duration;
-  //const double maxEnd = vertex.interval.max + duration;
 
   // Find candidate intervals for target vertex
-  std::vector<Range<double>> endIntervals;
+  std::vector<Range<size_t>> endIntervals;
   if(!m_vertexIntervals.empty()) { 
     endIntervals = m_vertexIntervals[_rmTarget];
   }
   else {
-    endIntervals.push_back(Range<double>(0,MAX_DBL));
+    endIntervals.push_back(Range<size_t>(0,MAX_INT));
   }
 
   for(auto& inter : endIntervals) {
@@ -805,92 +782,16 @@ BuildNeighbors(typename SIPPGraph::vertex_descriptor _sippSource, size_t _rmTarg
     SIPPEdge newEdge;
     newEdge.source = rmSource;
     newEdge.target = _rmTarget;
-    //newEdge.interval = *edgeIter;
 
     m_sippGraph->AddEdge(_sippSource,targetVID,newEdge);
   }
 
-  /*
-  auto frontIter = endIntervals.end();
-  auto endIter = endIntervals.end();
-  
-  for(auto iter = endIntervals.begin(); iter != endIntervals.end(); iter++) {
-    // Check if interval contains earliest edge end time
-    if(iter->Contains(minEnd))
-      frontIter = iter;
-    // Check if this is first interval after minEnd
-    else if(frontIter == endIntervals.end() and iter->min > minEnd)
-      frontIter = iter;
- 
-    // Check if internal contains latest edge end time
-    if(iter->Contains(maxEnd)) {
-      endIter = iter;
-      break;
-    }
-  }
-
-  // Check that there is at least one candidate interval
-  if(frontIter == endIntervals.end())
-    return;
-
-  // Find valid transitions
-  const auto& edgeIntervals = m_edgeIntervals[rmSource][_rmTarget];
-
-  // Set the iterator such that it starts after the source interval starts
-  auto iter = edgeIntervals.begin();
-  while(true) {
-    if(iter->max < vertex.interval.min) {
-      iter++;
-      continue;
-    }
-    break;
-  }
-
-  //if(endIter == frontIter)
-  if(endIter != endIntervals.end())
-    endIter++;
-  for(auto vi = frontIter; vi != endIter; vi++) {
-
-    // Set the edge iterator such that it ends after the target vertex interval starts
-    auto edgeIter = iter;
-    while(true) {
-      if(edgeIter->max + duration < vi->min) {
-        edgeIter++;
-        continue;
-      }
-      break;
-    }
-
-    // Check if edge interval no longer overlaps with start interval
-    if(edgeIter->min > vertex.interval.max)
-      continue;
-
-    // Add new sipp vertex and edge to graph
-    SIPPVertex targetVertex;
-    targetVertex.vid = _rmTarget;
-    targetVertex.interval = *vi;
-
-    auto targetVID = m_sippGraph->AddVertex(targetVertex);
-    
-    SIPPEdge newEdge;
-    newEdge.source = rmSource;
-    newEdge.target = _rmTarget;
-    newEdge.interval = *edgeIter;
-
-    m_sippGraph->AddEdge(_sippSource,targetVID,newEdge);
-  }
-  */
 }
 
 template<typename MPTraits>
 void
 SIPPMethod<MPTraits>::
 InitializeCostToGo(const vector<size_t> _goals) {
-
-  /*if(_goal == std::numeric_limits<size_t>::max()) {
-    throw RunTimeException(WHERE) << "Goal does not exist in current \
-            roadmap" << std::endl;
-  }*/
 
   std::vector<size_t> starts = _goals;
 
@@ -908,9 +809,9 @@ InitializeCostToGo(const vector<size_t> _goals) {
         const double _sourceDistance,
         const double _targetDistance) {
 
-     const double timeRes = this->GetEnvironment()->GetTimeRes();
-     return _sourceDistance + (double(_ei->property().GetTimeSteps()) * timeRes);
+     return _sourceDistance + double(_ei->property().GetTimeSteps());
     };
+
     auto output = DijkstraSSSP(this->GetGroupRoadmap(), starts, weight, termination);
     m_costToGoMap = output.distance;
   }
@@ -929,6 +830,7 @@ InitializeCostToGo(const vector<size_t> _goals) {
         const double _targetDistance) {
      return _sourceDistance + _ei->property().GetTimeSteps();
     };
+
     auto output = DijkstraSSSP(this->GetRoadmap(), starts, weight, termination);
     m_costToGoMap = output.distance;
   }
@@ -949,16 +851,9 @@ SetVertexIntervals(VertexIntervalMap _vertexIntervals) {
 }
 
 template <typename MPTraits>
-void
-SIPPMethod<MPTraits>::
-SetMinEndtime(double _minEndTime){
-  m_minEndTime = _minEndTime;
-}
-
-template <typename MPTraits>
 bool
 SIPPMethod<MPTraits>::
-SatisfyConstraints(Range<double> _interval) {
+SatisfyConstraints(Range<size_t> _interval) {
   return _interval.max >= m_minEndTime;
 }
 

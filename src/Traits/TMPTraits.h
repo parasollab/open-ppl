@@ -62,6 +62,7 @@ struct TMPTraits {
   //types of task evaluators available in our world
   typedef boost::mpl::list<
     HCRQuery,
+    ScheduledCBS,
 		SimpleMotionEvaluator,
     SimultaneousMultiArmEvaluator,
     SMART,

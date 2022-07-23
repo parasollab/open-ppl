@@ -8,6 +8,7 @@
 #include "TMPLibrary/Solution/TaskSolution.h"
 #include "TMPLibrary/StateGraphs/ModeGraph.h"
 #include "TMPLibrary/TaskEvaluators/TaskEvaluatorMethod.h"
+#include "TMPLibrary/TaskEvaluators/ScheduledCBS.h"
 
 #include <algorithm>
 
@@ -65,7 +66,7 @@ PlanTasks() {
   auto te = this->GetTaskEvaluator(m_teLabel);
   te->Initialize();
 
-  auto me = this->GetTaskEvaluator(m_motionEvaluator);
+  auto me = dynamic_cast<ScheduledCBS*>(this->GetTaskEvaluator(m_motionEvaluator).get());
   me->Initialize();
 
   // Initialize bounds
@@ -93,19 +94,26 @@ PlanTasks() {
     if(m_upperBound > lowerBound) {
       stats->SetStat(this->GetNameAndLabel() + "::LowerBound",lowerBound);
       //ComputeMotions(bestNode);
-      if(me->operator()(plan) and plan->GetCost() < lowerBound)
-        throw RunTimeException(WHERE) << "Best cost ("
-                                      << m_upperBound 
-                                      << ") violating lower bound ("
-                                      << lowerBound
-                                      << ").";
-  
+      if(me->operator()(plan)) {
+        if(plan->GetCost() < lowerBound) {
+          throw RunTimeException(WHERE) << "Best cost ("
+                                        << plan->GetCost() 
+                                        << ") violating lower bound ("
+                                        << lowerBound
+                                        << ").";
+        }
+        else if(plan->GetCost() < m_upperBound) {
+          m_upperBound = plan->GetCost();
+          me->SetUpperBound(m_upperBound);
+        }
+      }
     }
 
     // TODO::Store solution in solution set
   }
 
   stats->SetStat(this->GetNameAndLabel() + "::BestCost",m_upperBound);
+  stats->SetStat("Success",m_upperBound < MAX_DBL ? 1:0);
   // Save plan in proper format
   //if(m_savePaths)
   //  SaveSolution(bestNode);
@@ -610,8 +618,8 @@ QueryPath(SemanticTask* _task, const double _startTime, const Node& _node) {
   q->SetMinEndTime(double(lastTimestep) * timeRes);
   q->SetStartTime(_startTime);
 
-  q->SetEdgeIntervals(m_edgeIntervals);
-  q->SetVertexIntervals(m_vertexIntervals);
+  //q->SetEdgeIntervals(m_edgeIntervals);
+  //q->SetVertexIntervals(m_vertexIntervals);
 
   // Solve task
   lib->Solve(problem,_task->GetGroupMotionTask().get(),solution,m_queryStrategy,

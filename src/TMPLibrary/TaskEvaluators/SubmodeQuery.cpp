@@ -193,7 +193,7 @@ ConvertToPlan(Plan* _plan) {
       auto groundedHA = gh.GetHyperarcType(h);
       auto hyperarcWeight = groundedHA.cost;
 
-      std::cout << h << ":" << hyperarcWeight << std::endl;
+      std::cout << hid << ":" << h << " : " << hyperarcWeight << std::endl;
     }
   }
 
@@ -686,6 +686,7 @@ HyperpathPathWeightFunction(
   
   //TODO::DECIDE IF WE WANT THIS
   hyperarcWeight = groundedHA.cost;
+  //hyperarcWeight = std::max(0.,groundedHA.cost-1);
   //hyperarcWeight = std::min(1.,groundedHA.cost);
 
   double tailWeight = -1 * MAX_DBL;
