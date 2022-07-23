@@ -8,15 +8,17 @@
     <Environment filename="3D/3d.env"
       frictionCoefficient="0" gravity="0 0 0"/>
 
-    <Robot label="boxy" filename="3D/boxy.robot">
-      <!--
-      <Agent type="planning"/>
-      -->
+    <Robot label="boxy1" filename="3D/boxy.robot">
       <Agent type="pathfollowing" waypointDm="euclideanPosition"
         waypointThreshold=".05"/>
     </Robot>
 
-    <Task label="query" robot="boxy">
+    <Robot label="boxy2" filename="3D/boxy.robot">
+      <Agent type="pathfollowing" waypointDm="euclideanPosition"
+        waypointThreshold=".05"/>
+    </Robot>
+
+    <Task label="query" robot="boxy1">
       <StartConstraints>
         <!-- WARNING Support for multiple constraints is not yet implemented! -->
         <CSpaceConstraint point="0 0 0 0 0 0"/>
@@ -28,6 +30,62 @@
         <CSpaceConstraint point="20 5 10 0.2 0.8 0.5"/>
       </GoalConstraints>
     </Task>
+
+    <!-- Multiple queries can be solved in sequence -->
+
+    <!--
+    <Task label="query1" robot="boxy1">
+      <StartConstraints>
+        <CSpaceConstraint point="0 0 0 0 0 0"/>
+      </StartConstraints>
+      <GoalConstraints>
+        <CSpaceConstraint point="20 5 10 0.2 0.8 0.5"/>
+      </GoalConstraints>
+    </Task>
+
+    <Task label="query2" robot="boxy1">
+      <StartConstraints>
+        <CSpaceConstraint point="20 5 10 0.2 0.8 0.5"/>
+      </StartConstraints>
+      <GoalConstraints>
+        <CSpaceConstraint point="0 0 0 0 0 0"/>
+      </GoalConstraints>
+    </Task>
+
+    <Task label="query3" robot="boxy1">
+      <StartConstraints>
+        <CSpaceConstraint point="0 0 0 0 0 0"/>
+      </StartConstraints>
+      <GoalConstraints>
+        <CSpaceConstraint point="20 5 10 0.8 0.5 0.2"/>
+      </GoalConstraints>
+    </Task>
+    -->
+
+    <!-- Group task defines start and goal constraints for multiple robots -->
+
+    <!--
+    <RobotGroup label="2-robotGroup" robotLabels="boxy1 boxy2"/>
+
+    <GroupTask label="2-groupQuery" group="2-robotGroup">
+      <Task label="query1" robot="boxy1">
+        <StartConstraints>
+          <CSpaceConstraint point="0 0 0 0 0 0"/>
+        </StartConstraints>
+        <GoalConstraints>
+          <CSpaceConstraint point="20 5 10 0.2 0.8 0.5"/>
+        </GoalConstraints>
+      </Task>
+      <Task label="query2" robot="boxy2">
+        <StartConstraints>
+          <CSpaceConstraint point="20 5 10 0.2 0.8 0.5"/>
+        </StartConstraints>
+        <GoalConstraints>
+          <CSpaceConstraint point="0 0 0 0 0 0"/>
+        </GoalConstraints>
+      </Task>
+    </GroupTask>
+    -->
 
   </Problem>
 
@@ -81,9 +139,9 @@
     </PathModifiers>
 
     <Connectors>
-      <CCsConnector label="ConnectCCs" debug="true"
+      <CCsConnector label="ConnectCCs" debug="false"
         nfLabel="BFNF" lpLabel="sl"/>
-      <NeighborhoodConnector label="Closest" debug="true"
+      <NeighborhoodConnector label="Closest" debug="false"
         nfLabel="BFNF" lpLabel="sl" checkIfSameCC="false"/>
       <NeighborhoodConnector label="ToggleConnect" nfLabel="BFNF" lpLabel="sl"
         maxFailures="1" checkIfSameCC="false"/>
@@ -102,7 +160,7 @@
     <MapEvaluators>
       <QueryMethod label="Query" debug="false"
         graphSearchAlg="dijkstras" safeIntervalToolLabel="SI"/>
-      <LazyQuery label="LazyQuery" debug="true"
+      <LazyQuery label="LazyQuery" debug="false"
         vcLabel="pqp_solid" lpLabel="sl" enhanceDmLabel="euclidean"
         numEnhance="10" d="0.5" deleteInvalid="true">
         <NodeConnectionMethod label="ClosestAlwaysTrue"/>
@@ -131,12 +189,21 @@
     <MPStrategies>
 
       <!-- Basic PRM where num samples is based on Number -->
-      <BasicPRM label="PRM-build" debug="true" querySampler="UniformRandomFree">
+      <BasicPRM label="PRM-build" debug="false" querySampler="UniformRandomFree">
         <Sampler label="UniformRandomFree" number="10" attempts="1"/>
         <!--Sampler Method="OBPRM" number="10" attempts="10"/-->
         <Connector label="Closest"/>
         <!--Connector label="ConnectCCs"/-->
         <Evaluator label="NodesEval"/>
+      </BasicPRM>
+
+      <!-- Basic PRM where num samples is based on Number -->
+      <BasicPRM label="PRM-query" debug="false" querySampler="UniformRandomFree">
+        <Sampler label="UniformRandomFree" number="10" attempts="1"/>
+        <!--Sampler Method="OBPRM" number="10" attempts="10"/-->
+        <Connector label="Closest"/>
+        <!--Connector label="ConnectCCs"/-->
+        <Evaluator label="Query"/>
       </BasicPRM>
 
       <!-- Basic PRM restarted from an input roadmap input.map. -->
@@ -148,14 +215,14 @@
       </BasicPRM>
 
       <!-- LazyPRM -->
-      <BasicPRM label="LazyPRM" debug="true">
+      <BasicPRM label="LazyPRM" debug="false">
         <Sampler label="UniformRandom" number="1" attempts="1"/>
         <Connector label="ClosestAlwaysTrue"/>
         <Evaluator label="LazyQuery"/>
       </BasicPRM>
 
       <!-- Basic RRT -->
-      <BasicRRTStrategy label="RRT" debug="true"
+      <BasicRRTStrategy label="RRT" debug="false"
         querySampler="UniformRandomFree" samplerLabel="UniformRandom"
         nfLabel="Nearest" extenderLabel="BERO"
         growGoals="false" growthFocus="0.01" m="1"
@@ -170,34 +237,17 @@
         <ColConnector label="ToggleConnect"/>
         <Evaluator label="Query"/>
       </TogglePRMStrategy>
+
+      <!-- Strategy  Sequence -->
+      <StrategySequence label="Sequence" debug="false">
+        <StrategyMethod label="PRM-build" task="build" path="false"/>
+        <StrategyMethod label="PRM-query" task="query1" path="true"/>
+        <StrategyMethod label="PRM-query" task="query2" path="true"/>
+        <StrategyMethod label="PRM-query" task="query3" path="true"/>
+      </StrategySequence>
     </MPStrategies>
 
     <MPTools>
-      <!-- Example nodes for a workspace decomposition with tetgen. Be aware
-           that each decomposition defined will be created immediately upon
-           initialization. If you don't need them, comment them out to save
-           pre-processing time. These examples would create new decompositions.
-      <TetGenDecomposition label="coarse" debug="false" switches="pnQ"/>
-      <TetGenDecomposition label="fine" debug="false" switches="pnqQ"/>
-      -->
-
-      <!-- The same workspace decomposition nodes, this time reading in from
-           saved files like 'coarse.ele' and 'coarse.node'. This is preferred as
-           we cannot completely control the randomness in the CGAL functions
-           which generate the decompositions. -->
-      <!-- <TetGenDecomposition label="coarse" debug="false" switches="pnQ"
-        io="read" baseFilename="3D/coarse"/>
-      <TetGenDecomposition label="fine" debug="false" switches="pnqQ"
-        io="read" baseFilename="3D/quality"/> -->
-
-      <!-- Different objects need to work with different granularities when it
-           comes to decomposition-based tools. You can define multiple
-           topological maps for this purpose. -->
-      <!-- <TopologicalMap label="tm-coarse" decompositionLabel="coarse"
-        gridSize="1"/>
-      <TopologicalMap label="tm-fine" decompositionLabel="fine"
-        gridSize="1"/> -->
-
       <ReebGraphConstruction debug="false" write="false" filename=""/>
 
       <ClearanceUtility label="clearanceUtil" vcLabel="pqp_solid"

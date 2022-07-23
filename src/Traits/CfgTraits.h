@@ -68,6 +68,7 @@
 #include "MPLibrary/MPStrategies/DynamicRegionRRT.h"
 #include "MPLibrary/MPStrategies/GroupDecoupledStrategy.h"
 #include "MPLibrary/MPStrategies/GroupStrategyMethod.h"
+#include "MPLibrary/MPStrategies/StrategySequence.h"
 #include "MPLibrary/MPStrategies/TogglePRMStrategy.h"
 #include "MPLibrary/MPStrategies/ValidationStrategy.h"
 
@@ -179,6 +180,7 @@ struct MPTraits {
     DynamicRegionRRT<MPTraits>,
     GroupDecoupledStrategy<MPTraits>,
     GroupStrategyMethod<MPTraits>,
+    StrategySequence<MPTraits>,
     TogglePRMStrategy<MPTraits>,
     ValidationStrategy<MPTraits>
       > MPStrategyMethodList;
