@@ -419,14 +419,22 @@ ValidationFunction(Node& _node) {
               }
 
               size_t zero = 0;
-              Range<size_t> interval1(std::max(zero,t-duration1),endT);
-              Range<size_t> interval2(std::max(zero,t-duration2),endT);
+              Range<size_t> interval1(t < duration1 ? zero : t-duration1,endT);
+              Range<size_t> interval2(t < duration2 ? zero : t-duration2,endT);
 
               std::vector<std::pair<SemanticTask*,Constraint>> constraints;
               constraints.push_back(std::make_pair(task1,
                                     std::make_pair(edge1,interval1)));
               constraints.push_back(std::make_pair(task2,
                                     std::make_pair(edge2,interval2)));
+
+              for(auto constraint : constraints) {
+                for(auto c : _node.constraintMap[constraint.first]) {
+                  if(c == constraint.second)
+                    throw RunTimeException(WHERE) << "Adding constraint that already exists.";
+                }
+              }
+
               return constraints;
             }
           }
@@ -552,12 +560,12 @@ QueryPath(SemanticTask* _task, const size_t _startTime,
   // Compute Intervals
   ComputeIntervals(_task,_node);
 
-  const double timeRes = this->GetMPProblem()->GetEnvironment()->GetTimeRes();
+  //const double timeRes = this->GetMPProblem()->GetEnvironment()->GetTimeRes();
   auto q = dynamic_cast<SIPPMethod<MPTraits<Cfg>>*>(
     this->GetMPLibrary()->GetMapEvaluator(m_queryLabel)
   );
-  q->SetMinEndTime(double(lastTimestep) * timeRes);
-  q->SetStartTime(double(_startTime));
+  q->SetMinEndTime(lastTimestep);
+  q->SetStartTime(_startTime);
   q->SetVertexIntervals(m_vertexIntervals);
   q->SetEdgeIntervals(m_edgeIntervals);
 
@@ -691,15 +699,15 @@ ConstructSafeIntervals(std::vector<Range<size_t>>& _unsafeIntervals) {
       const auto& interval1 = copyIntervals[i];
 
       size_t zero = 0;
-      size_t min = std::max(zero,interval1.min - (firstTime ? buffer : 0));
-      size_t max = interval1.max + (firstTime ? buffer : 0);
+      size_t min = std::max(zero,std::min(interval1.min,interval1.min - (firstTime ? buffer : 0)));
+      size_t max = std::max(interval1.max,interval1.max + (firstTime ? buffer : 0));
 
       for(size_t j = i+1; j < copyIntervals.size(); j++) {
 
         const auto& interval2 = copyIntervals[j];
 
         // Check if there is no overlap
-        if(interval2.min - max > buffer or min - interval2.max > buffer)
+        if(interval2.min > max + buffer or min > interval2.max + buffer)
           continue;
 
         // If there is, merge the intervals
