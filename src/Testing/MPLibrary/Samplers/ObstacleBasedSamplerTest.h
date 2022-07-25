@@ -102,27 +102,7 @@ TestIndividualCfgSample() {
 
   // Make sure that all valids are inside free space and boundary 
   // and all invalids are inside the obstacle c space.
-  for(auto cfg : valids) {
-    if(vc->IsValid(cfg, callee))   
-      continue;
-    passed = false;
-    message = message + "\n\tA configuration was incorrectly labeled "
-              "valid for the given boundary. Part 1\n";
-    break;
-  }
-
-  for(auto cfg : invalids) {
-    if(!vc->IsValid(cfg, callee))
-      continue;
-    passed = false;
-    message = message + "\n\tA configuration was incorrectly labeled "
-              "invalid for the given boundary. Part 2\n";
-    break;
-  }
-
   // FindApproximateWitness
-  std::vector<CDInfo> cdInfo_vec;
-  std::vector<double> minDistInfo_vec;
   MPLibrary* mpl = this->GetMPLibrary();
   
   // Initialize MedialAxisUtility
@@ -133,8 +113,17 @@ TestIndividualCfgSample() {
     m_medialAxisUtility.Initialize();
   }
 
-  // Iterate through cfgs
+  std::vector<CDInfo> cdInfo_vec;
+  std::vector<double> minDistInfo_vec;
+  // Iterate through valid cfgs
   for (auto cfg : valids){
+    if(!vc->IsValid(cfg, callee)) {   
+      passed = false;
+      message = message + "\n\tA configuration was incorrectly labeled "
+                "valid for the given boundary. n";
+      break;
+    }
+
     CDInfo _cdInfo;
     CfgType _cfgClr;
     bool valid = false;
@@ -166,6 +155,48 @@ TestIndividualCfgSample() {
       break;
     }
   }
+
+  // cdInfo_vec.clear();
+  // minDistInfo_vec.clear();
+  // for (auto cfg : invalids){
+  //   if(vc->IsValid(cfg, callee)) {   
+  //     passed = false;
+  //     message = message + "\n\tA configuration was incorrectly labeled "
+  //               "valid for the given boundary. n";
+  //     break;
+  //   }
+
+  //   CDInfo _cdInfo;
+  //   CfgType _cfgClr;
+  //   bool valid = false;
+
+  //   // Find a nearest obstacle cfg
+  //   valid = m_medialAxisUtility.ApproxCollisionInfo(cfg, _cfgClr, boundary, _cdInfo);
+
+  //   // Cannot find a valid obstacle cfg    
+  //   if (!valid) {
+  //     passed = false;
+  //     message = "Cannot find the closest obstacle from given cfg\n";
+  //     break;
+  //   }
+
+  //   // Store cdInfo and minimum distance
+  //   cdInfo_vec.push_back(_cdInfo);
+  //   minDistInfo_vec.push_back(_cdInfo.m_minDist);
+
+  //   // Average out the distances
+  //   double avgDist = std::accumulate(minDistInfo_vec.begin(), minDistInfo_vec.end(), 0.0) / minDistInfo_vec.size();
+  //   // Set a criteria for pass
+  //   double c = 15*min(this->GetEnvironment()->GetPositionRes(), this->GetEnvironment()->GetOrientationRes());
+  //   std::cout << "(average distance)" << avgDist << " | (threshold)" << c << std::endl;
+
+  //   // Compare them 
+  //   if (avgDist > c) {
+  //     passed = false;
+  //     message = "Average minimum distance from cfgs to obstacles are too large: ";
+  //     break;
+  //   }
+  // }
   
   if(passed) {
     message = "IndividualCfgSample::PASSED!\n";
@@ -220,18 +251,97 @@ template <typename MPTraits>
 typename ObstacleBasedSamplerTest<MPTraits>::TestResult
 ObstacleBasedSamplerTest<MPTraits>::
 TestGroupCfgSampleSingleBoundary() {
-
+  std::cout << "1" << std::endl;
   bool passed = true;
   std::string message = "";
-  
-  //TODO::Setup test of this function.
-  //this->GroupCfgSampleSingleBoundary();
 
+  Boundary* boundary = nullptr;
+  std::vector<GroupCfg> valids;
+  std::vector<GroupCfg> invalids;
+  std::cout << "2" << std::endl;
+
+  this->GroupCfgSampleSingleBoundary(boundary, valids, invalids);
+  std::cout << "2" << std::endl;
+  string callee = this->GetNameAndLabel() + "::Sampler()";
+  std::cout << "2" << std::endl;
+  auto vc = this->GetValidityChecker("rapid");
+
+  // Make sure that all valids are inside free space and boundary 
+  // and all invalids are inside the obstacle c space.
+  // FindApproximateWitness
+  std::cout << "2" << std::endl;
+  MPLibrary* mpl = this->GetMPLibrary();
+  
+  // Initialize MedialAxisUtility
+  std::cout << "2" << std::endl;
+  if(!m_medialAxisUtility.IsInitialized()) {
+    // Set MPLibrary pointer
+    m_medialAxisUtility.SetMPLibrary(mpl);
+    // Initialize
+    m_medialAxisUtility.Initialize();
+  }
+
+  std::vector<CDInfo> cdInfo_vec;
+  std::vector<double> minDistInfo_vec;
+  std::cout << "3" << std::endl;
+
+  // Iterate through valid cfgs
+  for (auto groupCfg : valids) {
+    
+    if(!vc->IsValid(groupCfg, callee)) {
+      passed = false;
+      message = message + "\n\tA configuration was incorrectly labeled "
+                "valid for the given boundary. n";
+      break;
+    }
+
+    for (size_t i = 0; i < groupCfg.GetNumRobots(); ++i) {
+      CfgType cfg = groupCfg.GetRobotCfg(i);
+      
+      CDInfo _cdInfo;
+      CfgType _cfgClr;
+      bool valid = false;
+
+      // Find a nearest obstacle cfg
+      valid = m_medialAxisUtility.ApproxCollisionInfo(cfg, _cfgClr, boundary, _cdInfo);
+
+      // Cannot find a valid obstacle cfg    
+      if (!valid) {
+        passed = false;
+        message = "Cannot find the closest obstacle from given cfg\n";
+        break;
+      }
+
+      // Store cdInfo and minimum distance
+      cdInfo_vec.push_back(_cdInfo);
+      minDistInfo_vec.push_back(_cdInfo.m_minDist);
+    }
+
+    if (!passed)
+      break;
+    
+    // Average out the distances
+    double avgDist = std::accumulate(minDistInfo_vec.begin(), minDistInfo_vec.end(), 0.0) / minDistInfo_vec.size();
+    
+    // Set a criteria for pass
+    double c = 15*min(this->GetEnvironment()->GetPositionRes(), this->GetEnvironment()->GetOrientationRes());
+    std::cout << "(average distance)" << avgDist << " | (threshold)" << c << std::endl;
+
+    // Compare them 
+    if (avgDist > c) {
+      passed = false;
+      message = "Average minimum distance from cfgs to obstacles are too large: ";
+      break;
+    }
+  }
+
+
+  
   if(passed) {
-    message = "GroupCfgSampleSingleBoundary::PASSED!\n";
+    message = "IndividualCfgSample::PASSED!\n";
   }
   else {
-    message = "GroupCfgSampleSingleBoundary::FAILED :(\n" + message;
+    message = "IndividualCfgSample::FAILED :(\n" + message;
   }
   return std::make_pair(passed,message);
 }
