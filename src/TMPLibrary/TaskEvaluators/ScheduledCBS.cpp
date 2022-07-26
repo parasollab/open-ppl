@@ -1,5 +1,7 @@
 #include "ScheduledCBS.h"
 
+#include "Behaviors/Agents/Coordinator.h"
+
 #include "MPProblem/TaskHierarchy/Decomposition.h"
 #include "MPProblem/TaskHierarchy/SemanticTask.h"
 
@@ -56,6 +58,8 @@ ScheduledCBS::
 Run(Plan* _plan) {
   if(!_plan)
     _plan = this->GetPlan();
+
+  BuildScheduleGraph(_plan);
 
   // Configure CBS Functions
   CBSLowLevelPlanner<SemanticTask,Constraint,GroupPathType> lowLevel(
@@ -268,6 +272,8 @@ ValidationFunction(Node& _node) {
   auto vc = static_cast<CollisionDetectionValidityMethod<MPTraits<Cfg>>*>(
               this->GetMPLibrary()->GetValidityChecker(m_vcLabel));
 
+  auto criticalPaths = ComputeCriticalPaths(_node);
+
   // Find max timestep
   size_t maxTimestep = 0;
   for(auto kv : _node.solutionMap) {
@@ -283,6 +289,9 @@ ValidationFunction(Node& _node) {
     auto path = kv.second;
     cfgPaths[task] = path->FullCfgsWithWait(lib);
   }
+
+  //TODO::Make sure collision checking happens until start of next task, 
+  //      not just end of current path.
 
   for(size_t t = 0; t <= maxTimestep; t++) {
     for(auto iter1 = cfgPaths.begin(); iter1 != cfgPaths.end(); iter1++) {
@@ -762,6 +771,142 @@ ConstructSafeIntervals(std::vector<Range<size_t>>& _unsafeIntervals) {
   intervals.push_back(Range<size_t>(min,max));
 
   return intervals;
+}
+
+/*------------------ Critical Path Functions -----------------*/
+
+void
+ScheduledCBS::
+BuildScheduleGraph(Plan* _plan) {
+
+  // Clear old schedule
+  m_scheduleGraph.reset(new ScheduleGraph(_plan->GetCoordinator()->GetRobot()));
+
+  // Add root node
+  auto root = m_scheduleGraph->AddVertex(nullptr);
+
+  // Collect tasks with dependents
+  std::set<size_t> parentTasks;
+
+  // Add all tasks to graph
+  for(auto task : _plan->GetDecomposition()->GetGroupMotionTasks()) {
+    auto vid = m_scheduleGraph->AddVertex(task);
+
+    for(auto dep : task->GetDependencies()) {
+      for(auto t : dep.second) {
+        auto depVID = m_scheduleGraph->AddVertex(t);
+        parentTasks.insert(depVID);
+
+        m_scheduleGraph->AddEdge(vid,depVID,size_t(1));
+      }
+    }
+  }
+
+  // Add edges from root to tasks with no dependencies
+  for(auto vit = m_scheduleGraph->begin(); vit != m_scheduleGraph->end(); vit++) {
+    auto vid = vit->descriptor();
+    if(parentTasks.count(vid) or vid == root)
+      continue;
+
+    m_scheduleGraph->AddEdge(root,vid,size_t(1));
+  }
+
+  // Compute atomic distances
+  ComputeScheduleAtomicDistances();
+
+  if(m_debug) {
+    std::cout << "Built Schedule Graph" << std::endl;
+
+    for(auto vit = m_scheduleGraph->begin(); vit != m_scheduleGraph->end(); vit++) {
+
+      std::cout << vit->descriptor() 
+                << ":"
+                << m_scheduleAtomicDistances[vit->descriptor()]
+                << "\tname: " 
+                << (vit->property() != nullptr ? vit->property()->GetLabel() : "root")
+                << std::endl
+                << "\t";
+
+      for(auto eit = vit->begin(); eit != vit->end(); eit++) {
+        std::cout << eit->target() << ", ";
+      }
+
+      std::cout << std::endl;
+    }
+  }
+}
+
+void
+ScheduledCBS::
+ComputeScheduleAtomicDistances() {
+
+  m_scheduleAtomicDistances.clear();
+
+  SSSPPathWeightFunction<ScheduleGraph> weight = [this](
+      typename ScheduleGraph::adj_edge_iterator& _ei,
+      const double _sourceDistance,
+      const double _targetDistance) {
+    return _sourceDistance + 1.;
+  };
+  
+  auto sssp = DijkstraSSSP(m_scheduleGraph.get(),{0},weight);
+
+  for(auto kv : sssp.distance) {
+    m_scheduleAtomicDistances[kv.first] = kv.second;
+  }
+}
+
+std::vector<std::vector<size_t>>
+ScheduledCBS::
+ComputeCriticalPaths(const Node& _node) {
+
+  auto slack = ComputeScheduleSlack(_node);
+
+  if(m_debug) {
+    std::cout << "Slack values" << std::endl;
+    for(auto kv : slack) {
+      auto task = m_scheduleGraph->GetVertex(kv.first);
+      auto slack = kv.second;
+      std::cout << (task ? task->GetLabel() : "root") 
+                << " : " 
+                << slack 
+                << std::endl;
+    }
+  }
+
+  return {};
+}
+
+std::unordered_map<size_t,double>
+ScheduledCBS::
+ComputeScheduleSlack(const Node& _node) {
+
+  SSSPPathWeightFunction<ScheduleGraph> weight = [this,_node](
+      typename ScheduleGraph::adj_edge_iterator& _ei,
+      const double _sourceDistance,
+      const double _targetDistance) {
+    
+    auto source = this->m_scheduleGraph->GetVertex(_ei->source());
+    auto target = this->m_scheduleGraph->GetVertex(_ei->target());
+
+    // Check if source is root vertex
+    if(!source)
+      return 0.;
+
+    // Otherwise compute slack between parent task (target) and child task (source)
+    auto child = _node.solutionMap.at(source);
+    auto parent = _node.solutionMap.at(target);
+
+    auto start = m_startTimes[child];
+    auto end = m_startTimes[parent] + parent->TimeSteps();
+
+    auto additionalSlack = start - end;
+
+    return double(additionalSlack) + _sourceDistance;
+  };
+
+  auto sssp = DijkstraSSSP(m_scheduleGraph.get(),{0},weight);
+  return sssp.distance;
 }
 
 /*------------------------------------------------------------*/

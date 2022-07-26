@@ -3,6 +3,7 @@
 
 #include "TaskEvaluatorMethod.h"
 
+#include "ConfigurationSpace/GenericStateGraph.h"
 #include "ConfigurationSpace/GroupCfg.h"
 #include "ConfigurationSpace/GroupPath.h"
 
@@ -11,6 +12,10 @@
 #include "Traits/CfgTraits.h"
 
 #include "Utilities/CBS.h"
+
+#include <map>
+#include <unordered_map>
+#include <vector>
 
 class ScheduledCBS : public TaskEvaluatorMethod {
 
@@ -28,6 +33,8 @@ class ScheduledCBS : public TaskEvaluatorMethod {
 
     typedef std::map<size_t,std::vector<Range<size_t>>> VertexIntervals;
     typedef std::map<std::pair<size_t,size_t>,std::vector<Range<size_t>>> EdgeIntervals;
+
+    typedef GenericStateGraph<SemanticTask*,size_t> ScheduleGraph;
 
     ///@}
     ///@name Construction
@@ -93,6 +100,18 @@ class ScheduledCBS : public TaskEvaluatorMethod {
     std::vector<Range<size_t>> ConstructSafeIntervals(std::vector<Range<size_t>>& _unsafeIntervals);
 
     ///@}
+    ///@name Critical Path Functions
+    ///@{
+
+    void BuildScheduleGraph(Plan* _plan);
+
+    void ComputeScheduleAtomicDistances();
+
+    std::vector<std::vector<size_t>> ComputeCriticalPaths(const Node& _node);
+
+    std::unordered_map<size_t,double> ComputeScheduleSlack(const Node& _node);
+
+    ///@}
     ///@name Internal State
     ///@{
 
@@ -115,6 +134,10 @@ class ScheduledCBS : public TaskEvaluatorMethod {
 
     VertexIntervals m_vertexIntervals;
     EdgeIntervals m_edgeIntervals;
+
+    std::unique_ptr<ScheduleGraph> m_scheduleGraph;
+
+    std::map<size_t,size_t> m_scheduleAtomicDistances;
 
     ///@}
 
