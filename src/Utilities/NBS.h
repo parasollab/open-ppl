@@ -25,7 +25,7 @@ NBS(
   SolutionType* _solution,
   RelaxedPlanFunction<TaskType, PlanType>& _relaxedPlanner,
   RelaxedCostFunction<PlanType>& _relaxedCost,
-  ConstrainedPlanFunction<SolutionType, PlanType>& _constrainedPlan,
+  ConstrainedPlanFunction<SolutionType, PlanType>& _constrainedPlanner,
   ConstrainedCostFunction<SolutionType>& _constrainedCost)
 {
 
@@ -40,12 +40,13 @@ NBS(
     if (upperBound < lowerBound)
       break;
 
-    auto solution = _constrainedPlan(relaxedPlan);
+    auto solution = _constrainedPlanner(relaxedPlan);
     double solutionCost = _constrainedCost(solution);
 
-    if(solutionCost < upperBound)
+    if(solutionCost < upperBound) {
       _solution = solution;
       upperBound = solutionCost;
+    }
   }
 }
 
