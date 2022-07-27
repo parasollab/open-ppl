@@ -2,7 +2,11 @@
 #define PPL_OBSTACLE_BASED_SAMPLER_H_
 
 #include "MPLibrary/Samplers/UniformObstacleBasedSampler.h"
+#include "MPLibrary/MPTools/MedialAxisUtilities.h"
 #include "Testing/MPLibrary/Samplers/SamplerMethodTest.h"
+
+#include "MPLibrary/ValidityCheckers/CollisionDetection/CDInfo.h"
+#include "Utilities/MetricUtils.h"
 
 template <class MPTraits>
 class UniformObstacleBasedSamplerTest : virtual public UniformObstacleBasedSampler<MPTraits>,
@@ -11,9 +15,9 @@ class UniformObstacleBasedSamplerTest : virtual public UniformObstacleBasedSampl
 
     ///@name Local Types
     ///@{
-
+    typedef typename MPTraits::CfgType        CfgType;
     typedef TestBaseObject::TestResult TestResult;
-
+    typedef typename MPTraits::MPLibrary      MPLibrary;
     ///@}
     ///@name Construction
     ///@{
@@ -43,6 +47,8 @@ class UniformObstacleBasedSamplerTest : virtual public UniformObstacleBasedSampl
 
     virtual TestResult TestGroupFilter() override;
 
+    MedialAxisUtility<MPTraits> m_medialAxisUtility;
+
     ///@}
 };
 
@@ -50,12 +56,19 @@ class UniformObstacleBasedSamplerTest : virtual public UniformObstacleBasedSampl
 
 template <typename MPTraits>
 UniformObstacleBasedSamplerTest<MPTraits>::
-UniformObstacleBasedSamplerTest() : UniformObstacleBasedSampler<MPTraits>() {}
+UniformObstacleBasedSamplerTest() : UniformObstacleBasedSampler<MPTraits>() {
+  m_medialAxisUtility = MedialAxisUtility<MPTraits>("pqp_solid", "euclidean",
+                              false, false, 500, 500, true, true, true, 0.1, 5);
+
+}
 
 template <typename MPTraits>
 UniformObstacleBasedSamplerTest<MPTraits>::
 UniformObstacleBasedSamplerTest(XMLNode& _node) : SamplerMethod<MPTraits>(_node),
-                                           UniformObstacleBasedSampler<MPTraits>(_node) {}
+                                           UniformObstacleBasedSampler<MPTraits>(_node) {
+  m_medialAxisUtility = MedialAxisUtility<MPTraits>("pqp_solid", "euclidean",
+                                false, false, 500, 500, true, true, true, 0.1, 5);
+                                           }
 
 template <typename MPTraits>
 UniformObstacleBasedSamplerTest<MPTraits>::
@@ -76,29 +89,70 @@ TestIndividualCfgSample() {
   std::vector<Cfg> invalids;
 
   this->IndividualCfgSample(boundary, valids, invalids);
+  string callee = this->GetNameAndLabel() + "::Sampler()";
+  auto vc = this->GetValidityChecker("rapid");
 
   // Make sure that all valids are inside the boundary
   // and all invalids are outside the boundary.
+  // FindApproximateWitness
+  MPLibrary* mpl = this->GetMPLibrary();
+
+  // Initialize MedialAxisUtility
+  if(!m_medialAxisUtility.IsInitialized()) {
+    // Set MPLibrary pointer
+    m_medialAxisUtility.SetMPLibrary(mpl);
+    // Initialize
+    m_medialAxisUtility.Initialize();
+  }
+
+  std::vector<CDInfo> cdInfo_vec;
+  std::vector<double> minDistInfo_vec;
+  // Iterate through valid cfgs
 
   for(auto cfg : valids) {
-    if(boundary->InBoundary(cfg))
-      continue;
-
+    std::cout << cfg.PrettyPrint();
+    if(!vc->IsValid(cfg, callee)) { 
     passed = false;
     message = message + "\n\tA configuration was incorrectly labeled "
               "valid for the given boundary.\n";
     break;
   }
 
-  for(auto cfg : invalids) {
-    if(!boundary->InBoundary(cfg))
-      continue;
+  CDInfo _cdInfo;
+  CfgType _cfgClr;
+  bool valid = false;
 
+  // Find a nearest obstacle cfg
+  valid = m_medialAxisUtility.ApproxCollisionInfo(cfg, _cfgClr, boundary, _cdInfo);
+
+  // Cannot find a valid obstacle cfg    
+  if (!valid) {
     passed = false;
-    message = message + "\n\tA configuration was incorrectly labeled "
-              "invalid for the given boundary.\n";
+    message = "Cannot find the closest obstacle from given cfg\n";
     break;
   }
+
+  // Store cdInfo and minimum distance
+  cdInfo_vec.push_back(_cdInfo);
+  minDistInfo_vec.push_back(_cdInfo.m_minDist);
+
+
+  // Average out the distances
+  double avgDist = std::accumulate(minDistInfo_vec.begin(), minDistInfo_vec.end(), 0.0) / minDistInfo_vec.size();
+  // Set a criteria for pass
+  double c = 15*min(this->GetEnvironment()->GetPositionRes(), this->GetEnvironment()->GetOrientationRes());
+  std::cout << "(average distance)" << avgDist << " | (threshold)" << c << std::endl;
+
+  // Compare them 
+  if (avgDist > c) {
+    passed = false;
+    message = "Average minimum distance from cfgs to obstacles are too large: ";
+    break;
+  }
+}
+
+//same thing needs to be implemented for invalid configurations...
+
 
   if(passed) {
     message = "IndividualCfgSample::PASSED!\n";
