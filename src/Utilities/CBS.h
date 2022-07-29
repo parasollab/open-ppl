@@ -20,6 +20,10 @@ struct CBSNode {
   /// Cost of current solution
   double cost;
 
+  /// Number of conflicts in node
+  size_t conflicts = MAX_INT;
+
+  std::vector<std::pair<IndividualTask*,ConstraintType>> cachedNextConstraintSet;
 
   CBSNode() {
     cost = 0;
@@ -96,7 +100,10 @@ struct CBSNode {
   }
 
   bool operator>(const CBSNode& _node) const noexcept {
-    return cost > _node.cost;
+    if(cost != _node.cost)
+      return cost > _node.cost;
+
+    return conflicts > _node.conflicts;
   }
 
 };

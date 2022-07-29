@@ -32,6 +32,9 @@ ScheduledCBS(XMLNode& _node) : TaskEvaluatorMethod(_node) {
   m_queryStrategy = _node.Read("queryStrategy",true,"",
          "MPStrategy to sue to query individial paths.");
 
+  m_bypass = _node.Read("bypass",false,m_bypass,
+          "Flag to use bypass strategy.");
+
   m_upperBound = std::numeric_limits<double>::infinity();
 }
 
@@ -269,192 +272,19 @@ ValidationFunction(Node& _node) {
   auto stats = plan->GetStatClass();
   MethodTimer mt(stats,this->GetNameAndLabel() + "::ValidationFunction");
 
-  auto vc = static_cast<CollisionDetectionValidityMethod<MPTraits<Cfg>>*>(
-              this->GetMPLibrary()->GetValidityChecker(m_vcLabel));
+  if(!_node.cachedNextConstraintSet.empty())
+    return _node.cachedNextConstraintSet;
 
-  auto criticalPaths = ComputeCriticalPaths(_node);
+  auto constraintSets = FindConflicts(_node,m_bypass);
 
-  // Find max timestep
-  size_t maxTimestep = 0;
-  for(auto kv : _node.solutionMap) {
-    auto path = kv.second;
-    maxTimestep = std::max(maxTimestep,m_endTimes[path]);
-  }
+  _node.conflicts = constraintSets.size();
 
-  // Collect cfgs
-  auto lib = this->GetMPLibrary();
-  std::map<SemanticTask*,std::vector<GroupCfg>> cfgPaths;
-  for(auto kv : _node.solutionMap) {
-    auto task = kv.first;
-    auto path = kv.second;
-    cfgPaths[task] = path->FullCfgsWithWait(lib);
-  }
+  if(constraintSets.empty())
+    return {};
 
-  //TODO::Make sure collision checking happens until start of next task, 
-  //      not just end of current path.
-
-  for(size_t t = 0; t <= maxTimestep; t++) {
-    for(auto iter1 = cfgPaths.begin(); iter1 != cfgPaths.end(); iter1++) {
-
-      auto task1 = iter1->first;
-      auto path1 = _node.solutionMap[task1];
-      
-      const size_t start1 = m_startTimes[path1];
-      if(t < start1)
-        continue;
-
-      const size_t end1 = m_endTimes[path1];
-      if(t > end1)
-        continue;
-
-      const auto& cfgs1 = iter1->second;
-      const size_t index1 = t- start1;
-      const auto gcfg1 = cfgs1[index1];
-      gcfg1.ConfigureRobot();
-      auto group1 = gcfg1.GetGroupRoadmap()->GetGroup();
-
-      auto iter2 = iter1;
-      iter2++;
-      for(; iter2 != cfgPaths.end(); iter2++) {
-        auto task2 = iter2->first;
-        auto path2 = _node.solutionMap[task2];
-        
-        const size_t start2 = m_startTimes[path2];
-        if(t < start2)
-          continue;
-
-        const size_t end2 = m_endTimes[path2];
-        if(t > end2)
-          continue;
-
-        const auto& cfgs2 = iter2->second;
-        const size_t index2 = t - start2;
-        const auto gcfg2 = cfgs2[index2];
-        gcfg2.ConfigureRobot();
-        auto group2 = gcfg2.GetGroupRoadmap()->GetGroup();
-
-        // Check for collision
-        bool collision = false;
-        for(auto robot1 : group1->GetRobots()) {
-          for(auto robot2 : group2->GetRobots()) {
-
-            if(robot1 == robot2)
-              continue;
-
-            auto mb1 = robot1->GetMultiBody();
-            auto mb2 = robot2->GetMultiBody();
-
-            CDInfo cdInfo;
-            collision = collision or vc->IsMultiBodyCollision(cdInfo,
-              mb1,mb2,this->GetNameAndLabel());
-
-            if(collision) {
-              if(m_debug) {
-                std::cout << "Collision found between "
-                          << robot1->GetLabel()
-                          << " and "
-                          << robot2->GetLabel()
-                          << ", at timestep "
-                          << t
-                          << " and positions\n\t1: "
-                          << gcfg1.GetRobotCfg(robot1).PrettyPrint()
-                          << "\n\t2: "
-                          << gcfg2.GetRobotCfg(robot2).PrettyPrint()
-                          << " during tasks "
-                          << task1->GetLabel()
-                          << " and "
-                          << task2->GetLabel()
-                          << std::endl;
-
-                std::cout << "Task starts: " << start1 
-                          << ", " << start2 << std::endl;
-
-                std::cout << "Task1:" << std::endl
-                          << path1->VIDs() << std::endl
-                          << path1->GetWaitTimes() << std::endl << std::endl;
-
-                std::cout << "Task2:" << std::endl
-                          << path2->VIDs() << std::endl
-                          << path2->GetWaitTimes() << std::endl << std::endl;
-  
-              }
-
-              auto endT = t;
-              bool group1Passive = true;
-              bool group2Passive = false;
-
-              for(auto r : group1->GetRobots()) {
-                if(!r->GetMultiBody()->IsPassive()) {
-                  group1Passive = false;
-                  break;
-                }
-              }
-
-              for(auto r : group2->GetRobots()) {
-                if(!r->GetMultiBody()->IsPassive()) {
-                  group2Passive = false;
-                  break;
-                }
-              }
-
-              if(group1Passive) {
-                endT = end1;
-              }
-              else if(group2Passive) {
-                endT = end2;
-              }
-
-              stats->IncStat(this->GetNameAndLabel()+"::CollisionFound");
-
-              auto edge1 = path1->GetEdgeAtTimestep(index1);
-              auto edge2 = path2->GetEdgeAtTimestep(index2);
-
-              if(m_debug) {
-                std::cout << "Edge 1: " << edge1 << std::endl; 
-                std::cout << "Edge 2: " << edge2 << std::endl; 
-              }
-
-              size_t duration1 = 0;
-              size_t duration2 = 0;
-
-              if(edge1.first != edge1.second) {
-                duration1 = path1->GetRoadmap()->GetEdge(
-                  edge1.first,edge1.second).GetTimeSteps();
-              }
-
-              if(edge2.first != edge2.second) {
-                duration2 = path2->GetRoadmap()->GetEdge(
-                  edge2.first,edge2.second).GetTimeSteps();
-              }
-
-              size_t zero = 0;
-              Range<size_t> interval1(t < duration1 ? zero : t-duration1,endT);
-              Range<size_t> interval2(t < duration2 ? zero : t-duration2,endT);
-
-              std::vector<std::pair<SemanticTask*,Constraint>> constraints;
-              constraints.push_back(std::make_pair(task1,
-                                    std::make_pair(edge1,interval1)));
-              constraints.push_back(std::make_pair(task2,
-                                    std::make_pair(edge2,interval2)));
-
-              for(auto constraint : constraints) {
-                for(auto c : _node.constraintMap[constraint.first]) {
-                  if(c == constraint.second)
-                    throw RunTimeException(WHERE) << "Adding constraint that already exists.";
-                }
-              }
-
-              return constraints;
-            }
-          }
-        }
-      }
-    }
-  }
-
-  return {};
+  return constraintSets[0];
 }
-    
+ 
 std::vector<ScheduledCBS::Node>
 ScheduledCBS::
 SplitNodeFunction(Node& _node, 
@@ -483,8 +313,25 @@ SplitNodeFunction(Node& _node,
     double cost = _cost(child);
     child.cost = cost;
 
+    if(child.cost < _node.cost)
+      throw RunTimeException(WHERE) << "Child cost less than parent.";
+
     if(child.cost > m_upperBound)
       continue;
+
+    if(m_bypass and child.cost == _node.cost) {
+
+      auto newConstraints = FindConflicts(child,true);
+      child.conflicts = newConstraints.size();
+      if(!newConstraints.empty())
+        child.cachedNextConstraintSet = newConstraints[0];
+
+      if(child.conflicts < _node.conflicts) {
+        child.constraintMap = _node.constraintMap;
+        return {child};
+      }
+
+    }
 
     newNodes.push_back(child);
   }
@@ -596,6 +443,288 @@ QueryPath(SemanticTask* _task, const size_t _startTime,
   m_endTimes[newPath] = _startTime + offset;
 
   return newPath;
+}
+
+std::vector<std::vector<std::pair<SemanticTask*,ScheduledCBS::Constraint>>>
+ScheduledCBS::
+FindConflicts(Node& _node, bool _getAll) {
+  auto plan = this->GetPlan();
+  auto stats = plan->GetStatClass();
+
+  std::vector<std::vector<std::pair<SemanticTask*,ScheduledCBS::Constraint>>> constraintSets;
+
+  auto vc = static_cast<CollisionDetectionValidityMethod<MPTraits<Cfg>>*>(
+              this->GetMPLibrary()->GetValidityChecker(m_vcLabel));
+
+  // Sort tasks based on slack
+  auto slack = ComputeScheduleSlack(_node);
+  std::vector<std::pair<size_t,SemanticTask*>> slackOrderedTasks;
+  
+  for(auto kv : slack) {
+    auto task = m_scheduleGraph->GetVertex(kv.first);
+    if(!task)
+      continue;
+
+    auto pair = std::make_pair(size_t(kv.second),task);
+    slackOrderedTasks.push_back(pair);
+  }
+
+  std::sort(slackOrderedTasks.begin(),slackOrderedTasks.end(),
+            [this,_node](const std::pair<size_t,SemanticTask*> _elem1,
+                   const std::pair<size_t,SemanticTask*> _elem2) {
+    
+    if(_elem1.first != _elem2.first)
+      return _elem1.first < _elem2.first;
+
+    auto path1 = _node.solutionMap.at(_elem1.second);
+    auto path2 = _node.solutionMap.at(_elem2.second);
+
+    return this->m_startTimes[path1] < this->m_startTimes[path2];
+  });
+
+  // Find max timestep
+  size_t maxTimestep = 0;
+  for(auto kv : _node.solutionMap) {
+    auto path = kv.second;
+    maxTimestep = std::max(maxTimestep,m_endTimes[path]);
+  }
+
+  // Collect cfgs
+  auto lib = this->GetMPLibrary();
+  std::map<SemanticTask*,std::vector<GroupCfg>> cfgPaths;
+  for(auto kv : _node.solutionMap) {
+    auto task = kv.first;
+    auto path = kv.second;
+    cfgPaths[task] = path->FullCfgsWithWait(lib);
+  }
+
+  //TODO::Make sure collision checking happens until start of next task, 
+  //      not just end of current path.
+
+  //for(size_t t = 0; t <= maxTimestep; t++) {
+    //for(auto iter1 = cfgPaths.begin(); iter1 != cfgPaths.end(); iter1++) {
+
+  for(size_t i = 0; i < slackOrderedTasks.size(); i++) {
+    auto task1 = slackOrderedTasks[i].second;
+    auto slack1 = slackOrderedTasks[i].first;
+    auto path1 = _node.solutionMap.at(task1);
+ 
+    const size_t start1 = m_startTimes[path1];
+
+    // Compute final timestep for path after waiting
+    size_t end1 = m_endTimes[path1];
+    auto vid1 = m_scheduleGraph->GetVID(task1);
+    for(auto dep : m_scheduleGraph->GetPredecessors(vid1)) {
+      auto depTask = m_scheduleGraph->GetVertex(dep);
+      if(depTask)
+        end1 = std::min(end1,m_startTimes[_node.solutionMap.at(depTask)]);
+    }
+
+    const auto& cfgs1 = cfgPaths[task1];
+
+    std::set<SemanticTask*> collidingTasks;
+
+    for(size_t t = start1; t < end1; t++) {
+      const size_t index1 = std::min(t - start1,cfgs1.size()-1);
+      const auto gcfg1 = cfgs1[index1];
+      gcfg1.ConfigureRobot();
+      auto group1 = gcfg1.GetGroupRoadmap()->GetGroup();
+
+      bool collision = false;
+
+      //auto iter2 = iter1;
+      //iter2++;
+      //for(; iter2 != cfgPaths.end(); iter2++) {
+      for(size_t j = i+1; j < slackOrderedTasks.size(); j++) {
+        auto task2 = slackOrderedTasks[j].second;
+
+        if(collidingTasks.count(task2))
+          continue;
+
+        auto slack2 = slackOrderedTasks[j].first;
+        auto path2 = _node.solutionMap.at(task2);
+        
+        const size_t start2 = m_startTimes[path2];
+        if(t < start2)
+          continue;
+
+        // Compute final timestep for path after waiting
+        size_t end2 = m_endTimes[path2];
+        auto vid2 = m_scheduleGraph->GetVID(task2);
+        for(auto dep : m_scheduleGraph->GetPredecessors(vid2)) {
+          auto depTask = m_scheduleGraph->GetVertex(dep);
+          if(depTask)
+            end2 = std::min(end2,m_startTimes[_node.solutionMap.at(depTask)]);
+        }
+
+        if(t > end2)
+          continue;
+
+        const auto& cfgs2 = cfgPaths[task2];
+        const size_t index2 = std::min(t - start2,cfgs2.size()-1);
+        const auto gcfg2 = cfgs2[index2];
+        gcfg2.ConfigureRobot();
+        auto group2 = gcfg2.GetGroupRoadmap()->GetGroup();
+
+        // Check for collision
+        for(auto robot1 : group1->GetRobots()) {
+          for(auto robot2 : group2->GetRobots()) {
+
+            if(robot1 == robot2)
+              continue;
+
+            auto mb1 = robot1->GetMultiBody();
+            auto mb2 = robot2->GetMultiBody();
+
+            CDInfo cdInfo;
+            collision = collision or vc->IsMultiBodyCollision(cdInfo,
+              mb1,mb2,this->GetNameAndLabel());
+
+            if(collision) {
+              if(m_debug) {
+                std::cout << "Collision found between "
+                          << robot1->GetLabel()
+                          << " and "
+                          << robot2->GetLabel()
+                          << ", at timestep "
+                          << t
+                          << " and positions\n\t1: "
+                          << gcfg1.GetRobotCfg(robot1).PrettyPrint()
+                          << "\n\t2: "
+                          << gcfg2.GetRobotCfg(robot2).PrettyPrint()
+                          << " during tasks "
+                          << task1->GetLabel()
+                          << " and "
+                          << task2->GetLabel()
+                          << std::endl;
+
+                std::cout << "Task starts: " << start1 
+                          << ", " << start2 << std::endl;
+
+                std::cout << "Task1:" << std::endl
+                          << path1->VIDs() << std::endl
+                          << path1->GetWaitTimes() << std::endl << std::endl;
+
+                std::cout << "Task2:" << std::endl
+                          << path2->VIDs() << std::endl
+                          << path2->GetWaitTimes() << std::endl << std::endl;
+  
+              }
+
+              std::cout << "COLLISION BETWEEN SLACKS OF "
+                        << slack1 << " AND " << slack2 << std::endl; 
+
+              collidingTasks.insert(task2);
+
+              auto endT = t;
+              bool group1Passive = true;
+              bool group2Passive = false;
+
+              for(auto r : group1->GetRobots()) {
+                if(!r->GetMultiBody()->IsPassive()) {
+                  group1Passive = false;
+                  break;
+                }
+              }
+
+              for(auto r : group2->GetRobots()) {
+                if(!r->GetMultiBody()->IsPassive()) {
+                  group2Passive = false;
+                  break;
+                }
+              }
+
+              if(group1Passive) {
+                endT = end1;
+              }
+              else if(group2Passive) {
+                endT = end2;
+              }
+
+              stats->IncStat(this->GetNameAndLabel()+"::CollisionFound");
+
+              auto edge1 = path1->GetEdgeAtTimestep(index1);
+              auto edge2 = path2->GetEdgeAtTimestep(index2);
+
+              if(m_debug) {
+                std::cout << "Edge 1: " << edge1 << std::endl; 
+                std::cout << "Edge 2: " << edge2 << std::endl; 
+              }
+
+              size_t duration1 = 0;
+              size_t duration2 = 0;
+
+              if(edge1.first != edge1.second) {
+                duration1 = path1->GetRoadmap()->GetEdge(
+                  edge1.first,edge1.second).GetTimeSteps();
+              }
+
+              if(edge2.first != edge2.second) {
+                duration2 = path2->GetRoadmap()->GetEdge(
+                  edge2.first,edge2.second).GetTimeSteps();
+              }
+
+              size_t zero = 0;
+              Range<size_t> interval1(t < duration1 ? zero : t-duration1,endT);
+              Range<size_t> interval2(t < duration2 ? zero : t-duration2,endT);
+
+              std::vector<std::pair<SemanticTask*,Constraint>> constraints;
+              constraints.push_back(std::make_pair(task1,
+                                    std::make_pair(edge1,interval1)));
+              constraints.push_back(std::make_pair(task2,
+                                    std::make_pair(edge2,interval2)));
+
+              for(auto constraint : constraints) {
+                for(auto c : _node.constraintMap[constraint.first]) {
+                  if(c == constraint.second)
+                    throw RunTimeException(WHERE) << "Adding constraint that already exists.";
+                }
+              }
+
+              constraintSets.push_back(constraints);
+
+              if(!_getAll)
+                return constraintSets;
+            }
+
+            if(collision)
+              break;
+          }
+          if(collision)
+            break;
+        }
+        if(collision)
+          break;
+      }
+    }
+  }
+
+  std::sort(constraintSets.begin(), constraintSets.end(), [slack,this](
+              const std::vector<std::pair<SemanticTask*,ScheduledCBS::Constraint>> _elem1,
+              const std::vector<std::pair<SemanticTask*,ScheduledCBS::Constraint>> _elem2) {
+    for(size_t i = 0; i < _elem1.size() and i < _elem2.size(); i++) {
+      if(i >= _elem2.size())
+        return true;
+
+      auto task1 = _elem1[i].first;
+      auto task2 = _elem2[i].first;
+
+      auto vid1 = this->m_scheduleGraph->GetVID(task1);
+      auto vid2 = this->m_scheduleGraph->GetVID(task2);
+
+      auto slack1 = slack.at(vid1);
+      auto slack2 = slack.at(vid2);
+
+      if(slack1 == slack2)
+        continue;
+
+      return slack1 < slack2;
+    }
+
+    return true;
+  });
+
+  return constraintSets;
 }
 
 void

@@ -24,9 +24,9 @@ Initialize() { }
 bool
 TaskEvaluatorMethod::
 operator()(Plan* _plan) {
-  this->GetPlan()->GetStatClass()->StartClock("TaskEvaluationTime");
+  this->GetPlan()->GetStatClass()->StartClock(this->GetNameAndLabel());
   auto ret = Run(_plan);
-  this->GetPlan()->GetStatClass()->StopClock("TaskEvaluationTime");
+  this->GetPlan()->GetStatClass()->StopClock(this->GetNameAndLabel());
   return ret;
 }
 
