@@ -151,7 +151,8 @@ MPLibraryTests<MPTraits>::
 RunTest() {
 
   // Init mpsolution for stat purposes (and avoiding seg faults)
-  this->SetMPSolution(new MPSolutionType<MPTraits>(this->GetMPProblem()->GetRobots()[0].get()));
+  this->SetMPSolution(new MPSolutionType<MPTraits>(this->GetMPProblem()->GetRobotGroups()[0].get()));
+  // this->SetMPSolution(new MPSolutionType<MPTraits>(this->GetMPProblem()->GetRobots()[0].get()));
 
   size_t passed = 0;
   size_t failed = 0;

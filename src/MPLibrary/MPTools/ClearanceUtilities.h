@@ -12,6 +12,9 @@
 #include "Utilities/MPUtils.h"
 
 
+class Robot;
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup Utilities
 /// Return structure for clearance information.
@@ -260,6 +263,8 @@ class ClearanceUtility : virtual public MPBaseObject<MPTraits> {
     const bool GetNearestVertexWitness(CfgType& _cfg, CDInfo& _cdInfo,
                                        const Boundary* const _b);
 
+    void SetRobot(Robot* _robot);
+
     ///@}
 
   protected:
@@ -306,6 +311,8 @@ class ClearanceUtility : virtual public MPBaseObject<MPTraits> {
     /// we need that are not available at construction time:
     bool m_initialized{false};
 
+    Robot* m_robot;
+
     ///@}
 
     /// Adjusts a witness from a nearby witness point to a point of guaranteed
@@ -324,6 +331,8 @@ class ClearanceUtility : virtual public MPBaseObject<MPTraits> {
                                 const CfgType& _cfg, const bool _initValidity,
                                 CfgType& _witnessCfg, const Boundary* const _b,
                                 const bool _useOppValidityWitness = true);
+
+    int abcd = 0;
 };
 
 /*---------------------------- Clearance Utility -----------------------------*/
@@ -665,6 +674,7 @@ ClearanceUtility<MPTraits>::
 ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg, const Boundary* const _b,
                     CDInfo& _cdInfo, const bool& _useOppValidityWitness) {
   const string fName = "ApproxCollisionInfo: ";
+  std::cout << "initial _cfg: " << _cfg << std::endl;
 
   // Check computation cache
   if(_cfg.m_witnessCfg.get() != 0) {
@@ -732,6 +742,8 @@ ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg, const Boundary* const _b,
   _clrCfg = cand.second;
 
   _cdInfo.m_minDist = (initValidity ? 1.0 : -1.0) * dm->Distance(_clrCfg, _cfg);
+  std::cout << "_clrCfg: " << _clrCfg << " | _cfg: " << _cfg << " | dist: " << dm->Distance(_clrCfg,_cfg) << std::endl;
+
   _cfg.m_clearanceInfo = _cdInfo;
   _cfg.m_witnessCfg = shared_ptr<Cfg>(new CfgType(_clrCfg));
   return true;
@@ -749,6 +761,8 @@ FindApproximateWitness(const std::size_t& _numRays,
   if(this->m_debug)
     cout << "FindApproximateWitness: numRays = " << _numRays << endl;
   auto vcm = this->GetValidityChecker(m_vcLabel);
+
+  std::cout << "boundary: " << _b << std::endl;
 
   string callee = this->GetNameAndLabel() + "::FindApproximateWitness()";
 
@@ -771,11 +785,13 @@ FindApproximateWitness(const std::size_t& _numRays,
   //or not free->free or iterates n times. Within it, it loops through all
   //rays each time, moving outward along these and checking that condition.
   //m_maxRayIterations is calculated by maxRayMagnitude/rayTickResolution
+  int i = 0;
   while(!candidateFound && iterations++ < m_maxRayIterations) {
     if(this->m_debug)
       cout << "\n\t" << iterations;
-
+    i = 0;
     for(auto rit = _rays.begin(); rit != _rays.end();) {
+      i += 1;
       //step out
       rit->m_tick += rit->m_incr;
 
@@ -855,9 +871,10 @@ FindApproximateWitness(const std::size_t& _numRays,
       }
       //Must increment the iterator here due to the flow of the for loop:
       ++rit;
+      
     }
   }//end while (!stateChangedFlag && iterations < max)
-
+  std::cout << "==== Count " << i << std::endl;
   //Check that we actually found a candidate
   if(!candidateFound) {
     if(this->m_debug)
@@ -922,7 +939,23 @@ MakeRays(const CfgType& _sampledCfg, const std::size_t& _numRays,
   double angleRad = 2.*PI*DRand();//Note 2d case only currently
 
   for(size_t i = 0; i < _numRays; ++i) {
-    CfgType tmpDirection(this->GetTask()->GetRobot());
+    abcd += 1;
+    // std::cout << "=== " << this->GetMPLibrary() << " ===" << std::endl;
+    // std::cout << abcd << std::endl;
+    
+    // Robot* robot;
+    // if (!this->GetTask()->GetRobot()) {
+    //   robot = this->GetTask()->GetRobot();
+    // }
+    // else {
+    //   robot = m_robot;
+    // }
+
+    auto robot = this->GetTask()->GetRobot();
+
+    // CfgType tmpDirection(this->GetTask()->GetRobot());
+    CfgType tmpDirection(robot);
+
     // std::cout << "temp Direction 1: " << tmpDirection << std::endl;
     ///@TODO expand to 3D, and then to N dimensions for uniform distribution:
     /// there are only approximate algorithms to do this "fib lattices"
@@ -1213,6 +1246,11 @@ EdgeClearance(const CfgType& _c1, const CfgType& _c2,
   //is already available, return it here.
 
   Environment* env = this->GetEnvironment();
+
+  // if (!this->GetTask()->GetRobot())
+  //   auto robot = this->GetTask()->GetRobot();
+  // else
+  //   auto robot = m_robot;
   auto robot = this->GetTask()->GetRobot();
 
   // Find the LP to use.
@@ -1242,6 +1280,13 @@ EdgeClearance(const CfgType& _c1, const CfgType& _c2,
     clearance.push_back(collInfo.m_minDist);
   }
   return clearance;
+}
+
+template<class MPTraits>
+void
+ClearanceUtility<MPTraits>::
+SetRobot(Robot* _robot) {
+  m_robot = _robot;
 }
 
 #endif

@@ -257,6 +257,7 @@ Sampler(GroupCfgType& _cfg, const Boundary* const _boundary,
     c2Free = vc->IsValid(c2, callee);
   }
 
+
   // Construct Shells and generate _collision and _result
   // If we treat the bounding box as an obstacle
   if (!m_useBBX) { 
@@ -453,6 +454,7 @@ GenerateShells(const Boundary* const _boundary,
       _collision.push_back(_cColl);
     // Get next shell
     _cColl += _incr;
+    std::cout << "=========== INCR " << _cColl << std::endl; 
   }
 }
 
