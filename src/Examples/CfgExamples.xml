@@ -18,22 +18,20 @@
         waypointThreshold=".05"/>
     </Robot>
 
-    <Task label="query" robot="boxy1">
+    <!-- Single query with single robot -->
+    <!-- <Task label="query" robot="boxy1">
       <StartConstraints>
-        <!-- WARNING Support for multiple constraints is not yet implemented! -->
         <CSpaceConstraint point="0 0 0 0 0 0"/>
       </StartConstraints>
 
       <GoalConstraints>
-        <!-- Here multiple constraints indicates a compound goal. Each constraint
-             represents a single intermediate goal. -->
         <CSpaceConstraint point="20 5 10 0.2 0.8 0.5"/>
       </GoalConstraints>
-    </Task>
+    </Task> -->
 
     <!-- Multiple queries can be solved in sequence -->
+    <!-- <Task label="build" robot="boxy1"></Task>
 
-    <!--
     <Task label="query1" robot="boxy1">
       <StartConstraints>
         <CSpaceConstraint point="0 0 0 0 0 0"/>
@@ -59,12 +57,10 @@
       <GoalConstraints>
         <CSpaceConstraint point="20 5 10 0.8 0.5 0.2"/>
       </GoalConstraints>
-    </Task>
-    -->
+    </Task> -->
+  
 
     <!-- Group task defines start and goal constraints for multiple robots -->
-
-    <!--
     <RobotGroup label="2-robotGroup" robotLabels="boxy1 boxy2"/>
 
     <GroupTask label="2-groupQuery" group="2-robotGroup">
@@ -85,7 +81,7 @@
         </GoalConstraints>
       </Task>
     </GroupTask>
-    -->
+   
 
   </Problem>
 
@@ -119,7 +115,7 @@
       <UniformRandomSampler label="UniformRandomFree" vcLabel="pqp_solid"/>
       <ObstacleBasedSampler label="OBPRM" vcLabel="rapid" useBBX="false"
         pointSelection="cspace" dmLabel="euclidean" stepSize="0.0"
-        nShellsColl="0" nShellsFree="1" debug="false"/>
+        nShellsColl="0" nShellsFree="1" debug="true"/>
     </Samplers>
 
     <LocalPlanners>
@@ -129,9 +125,9 @@
     </LocalPlanners>
 
     <Extenders>
-      <BasicExtender label="BERO" debug="false" dmLabel="euclidean"
+      <BasicExtender label="BERO" debug="true" dmLabel="euclidean"
         vcLabel="rapid" maxDist="4." minDist=".01"/>
-      <BasicExtender label="BESO" debug="false" dmLabel="euclidean"
+      <BasicExtender label="BESO" debug="true" dmLabel="euclidean"
         vcLabel="rapid" maxDist="10." minDist=".001" randomOrientation="false"/>
     </Extenders>
 
@@ -139,9 +135,9 @@
     </PathModifiers>
 
     <Connectors>
-      <CCsConnector label="ConnectCCs" debug="false"
+      <CCsConnector label="ConnectCCs" debug="true"
         nfLabel="BFNF" lpLabel="sl"/>
-      <NeighborhoodConnector label="Closest" debug="false"
+      <NeighborhoodConnector label="Closest" debug="true"
         nfLabel="BFNF" lpLabel="sl" checkIfSameCC="false"/>
       <NeighborhoodConnector label="ToggleConnect" nfLabel="BFNF" lpLabel="sl"
         maxFailures="1" checkIfSameCC="false"/>
@@ -158,9 +154,9 @@
     </Metrics>
 
     <MapEvaluators>
-      <QueryMethod label="Query" debug="false"
+      <QueryMethod label="Query" debug="true"
         graphSearchAlg="dijkstras" safeIntervalToolLabel="SI"/>
-      <LazyQuery label="LazyQuery" debug="false"
+      <LazyQuery label="LazyQuery" debug="true"
         vcLabel="pqp_solid" lpLabel="sl" enhanceDmLabel="euclidean"
         numEnhance="10" d="0.5" deleteInvalid="true">
         <NodeConnectionMethod label="ClosestAlwaysTrue"/>
@@ -184,12 +180,13 @@
         <Evaluator label="NodesEval"/>
       </ComposeEvaluator>
       <TimeEvaluator label="TimeEval" timeout="10"/>
+      <GroupQuery label = "CompositeQuery"/>
     </MapEvaluators>
 
     <MPStrategies>
 
       <!-- Basic PRM where num samples is based on Number -->
-      <BasicPRM label="PRM-build" debug="false" querySampler="UniformRandomFree">
+      <BasicPRM label="PRM-build" debug="true" querySampler="UniformRandomFree">
         <Sampler label="UniformRandomFree" number="10" attempts="1"/>
         <!--Sampler Method="OBPRM" number="10" attempts="10"/-->
         <Connector label="Closest"/>
@@ -198,7 +195,7 @@
       </BasicPRM>
 
       <!-- Basic PRM where num samples is based on Number -->
-      <BasicPRM label="PRM-query" debug="false" querySampler="UniformRandomFree">
+      <BasicPRM label="PRM-query" debug="true" querySampler="UniformRandomFree">
         <Sampler label="UniformRandomFree" number="10" attempts="1"/>
         <!--Sampler Method="OBPRM" number="10" attempts="10"/-->
         <Connector label="Closest"/>
@@ -215,14 +212,14 @@
       </BasicPRM>
 
       <!-- LazyPRM -->
-      <BasicPRM label="LazyPRM" debug="false">
+      <BasicPRM label="LazyPRM" debug="true">
         <Sampler label="UniformRandom" number="1" attempts="1"/>
         <Connector label="ClosestAlwaysTrue"/>
         <Evaluator label="LazyQuery"/>
       </BasicPRM>
 
       <!-- Basic RRT -->
-      <BasicRRTStrategy label="RRT" debug="false"
+      <BasicRRTStrategy label="RRT" debug="true"
         querySampler="UniformRandomFree" samplerLabel="UniformRandom"
         nfLabel="Nearest" extenderLabel="BERO"
         growGoals="false" growthFocus="0.01" m="1"
@@ -238,17 +235,25 @@
         <Evaluator label="Query"/>
       </TogglePRMStrategy>
 
-      <!-- Strategy  Sequence -->
-      <StrategySequence label="Sequence" debug="false">
+      <!-- Strategy Sequence -->
+      <StrategySequence label="Sequence" debug="true">
         <StrategyMethod label="PRM-build" task="build" path="false"/>
         <StrategyMethod label="PRM-query" task="query1" path="true"/>
         <StrategyMethod label="PRM-query" task="query2" path="true"/>
         <StrategyMethod label="PRM-query" task="query3" path="true"/>
       </StrategySequence>
+
+      <!-- Group PRM -->
+      <GroupPRM label="CompositePRM" querySampler="UniformRandomFree" debug="true">
+        <Sampler label="UniformRandomFree" number="10" attempts="1"/>
+        <Connector label="Closest"/>
+        <Evaluator label = "CompositeQuery"/>
+      </GroupPRM>
+
     </MPStrategies>
 
     <MPTools>
-      <ReebGraphConstruction debug="false" write="false" filename=""/>
+      <ReebGraphConstruction debug="true" write="false" filename=""/>
 
       <ClearanceUtility label="clearanceUtil" vcLabel="pqp_solid"
         dmLabel="euclidean" clearanceType="exact" penetrationType="exact"
@@ -264,8 +269,8 @@
 
     <!-- MPProblem allows multiple solvers to be specified and executed. -->
 
-    <Solver mpStrategyLabel="PRM-build" seed="12345678"
-      baseFilename="example" vizmoDebug="true"/>
+    <Solver mpStrategyLabel="CompositePRM" seed="12345678"
+      baseFilename="CompositePRM" vizmoDebug="true"/>
 
   </Library>
 
