@@ -38,6 +38,7 @@
 
 //sampler includes
 #include "Testing/MPLibrary/Samplers/UniformRandomSamplerTest.h"
+#include "Testing/MPLibrary/Samplers/BridgeTestSamplerTest.h"
 
 //local planner includes
 #include "Testing/MPLibrary/LocalPlanners/StraightLineTest.h"
@@ -126,9 +127,10 @@ struct MPTraits {
 
   //types of samplers available in our world
   typedef boost::mpl::list<
-      //UniformRandomSamplerTest<MPTraits>
+      UniformRandomSamplerTest<MPTraits>,
+      BridgeTestSamplerTest<MPTraits>
       > SamplerMethodList;
-
+  
   //types of local planners available in our world
   typedef boost::mpl::list<
     // StraightLine<MPTraits>

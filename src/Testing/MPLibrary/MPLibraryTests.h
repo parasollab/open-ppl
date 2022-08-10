@@ -151,8 +151,7 @@ MPLibraryTests<MPTraits>::
 RunTest() {
 
   // Init mpsolution for stat purposes (and avoiding seg faults)
-  this->SetMPSolution(new MPSolutionType<MPTraits>(this->GetMPProblem()->GetRobots()[0].get()));
-
+  this->SetMPSolution(new MPSolutionType<MPTraits>(this->GetMPProblem()->GetRobotGroups()[0].get()));
   size_t passed = 0;
   size_t failed = 0;
   size_t total = 0;
@@ -166,7 +165,7 @@ RunTest() {
   RunMPStrategyMethodTests(passed, failed, total);
 
   // Distance metric tests
-   RunMethodSetTests(*this->m_distanceMetricTests,passed,failed,total);
+  RunMethodSetTests(*this->m_distanceMetricTests,passed,failed,total);
 
   // Validity checker tests
   RunMethodSetTests(*this->m_validityCheckerTests,passed,failed,total);
@@ -213,8 +212,8 @@ template <typename MPTraits>
 void
 MPLibraryTests<MPTraits>::
 InitializeMethodSets() {
-   m_distanceMetricTests = new DistanceMetricTestSet(this,
-       typename MPTraits::DistanceMetricMethodList(), "DistanceMetrics");
+  m_distanceMetricTests = new DistanceMetricTestSet(this,
+      typename MPTraits::DistanceMetricMethodList(), "DistanceMetrics");
   m_validityCheckerTests = new ValidityCheckerTestSet(this,
       typename MPTraits::ValidityCheckerMethodList(), "ValidityCheckers");
   m_neighborhoodFinderTests = new NeighborhoodFinderTestSet(this,
