@@ -17,8 +17,6 @@
 #include "ConfigurationSpace/Weight.h"
 
 //distance metric includes
-// #include "MPLibrary/DistanceMetrics/EuclideanDistance.h"
-// #include "MPLibrary/DistanceMetrics/MinkowskiDistance.h"
 
 //validity checker includes
 #include "MPLibrary/ValidityCheckers/CollisionDetectionValidity.h"
@@ -31,6 +29,7 @@
 
 //sampler includes
 #include "Testing/MPLibrary/Samplers/UniformRandomSamplerTest.h"
+#include "Testing/MPLibrary/Samplers/BridgeTestSamplerTest.h"
 
 //local planner includes
 #include "Testing/MPLibrary/LocalPlanners/StraightLineTest.h"
@@ -96,8 +95,6 @@ struct MPTraits {
 
   //types of distance metrics available in our world
   typedef boost::mpl::list<
-    // EuclideanDistance<MPTraits>,
-    // MinkowskiDistance<MPTraits>
       > DistanceMetricMethodList;
 
   //types of validity checkers available in our world
@@ -112,9 +109,10 @@ struct MPTraits {
 
   //types of samplers available in our world
   typedef boost::mpl::list<
-      UniformRandomSamplerTest<MPTraits>
+      UniformRandomSamplerTest<MPTraits>,
+      BridgeTestSamplerTest<MPTraits>
       > SamplerMethodList;
-
+  
   //types of local planners available in our world
   typedef boost::mpl::list<
     // StraightLine<MPTraits>
