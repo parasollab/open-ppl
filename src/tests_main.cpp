@@ -146,7 +146,7 @@ main(int _argc, char** _argv) {
   std::cout << "PASSED: " << mpResults.first << std::endl << mpResults.second;
 
   auto geomResults =  geometry->RunTest();
-  std::cout << "PASSED: " << geomResults.first << std::endl; << geomResults.second;
+  std::cout << "PASSED: " << geomResults.first << std::endl << geomResults.second;
 
   auto behavResults = behaviors->RunTest();
   std::cout << "PASSED: " << behavResults.first << std::endl << behavResults.second;
