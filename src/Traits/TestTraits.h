@@ -8,10 +8,10 @@
 #include "Testing/MPLibrary/MPLibraryTests.h"
 
 #include "ConfigurationSpace/LocalObstacleMap.h"
+#include "ConfigurationSpace/CompositeGraph.h"
 #include "ConfigurationSpace/GroupCfg.h"
 #include "ConfigurationSpace/GroupLocalPlan.h"
 #include "ConfigurationSpace/GroupPath.h"
-#include "ConfigurationSpace/GroupRoadmap.h"
 #include "ConfigurationSpace/Path.h"
 #include "ConfigurationSpace/RoadmapGraph.h"
 #include "ConfigurationSpace/Weight.h"
@@ -98,7 +98,7 @@ struct MPTraits {
   typedef GoalTrackerType<MPTraits>       GoalTracker;
 
   typedef GroupLocalPlan<CfgType>                    GroupWeightType;
-  typedef GroupRoadmap<GroupCfg, GroupWeightType>    GroupRoadmapType;
+  typedef CompositeGraph<GroupCfg, GroupWeightType>  GroupRoadmapType;
   typedef GroupPath<MPTraits>                        GroupPathType;
   typedef GroupCfg                                   GroupCfgType;
 
