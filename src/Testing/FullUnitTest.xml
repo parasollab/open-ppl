@@ -44,10 +44,10 @@
     </GroupTask>
 
     <Robot label="coordinator" virtual="true" filename="../Examples/3D/boxy.robot" manipulator="false">
-      <Agent type="coordinator" dmLabel="minkowski" debug="true">
+      <Agent type="coordinator" dmLabel="minkowski" debug="false">
         <Member label="boxy1"/>
         <Member label="boxy2"/>
-        <StepFunction type="defaultcoordinator" debug="true"/>
+        <StepFunction type="defaultcoordinator" debug="false"/>
       </Agent>
     </Robot>
 
@@ -114,6 +114,11 @@
 
   <!-- Set available algorithms and parameters. -->
   <Library>
+
+    <!-- <NBox>
+      <NBo label="NBox"/>
+    </NBox> -->
+
 
     <DistanceMetrics>
       <Manhattan label="manhattan"/>
@@ -201,15 +206,15 @@
       <!--/BasicRRTStrategy-->
       <!-- LazyPRM-->
 
-      <DynamicRegionRRT label="DRRRT" debug="true" querySampler="UniformRandomFree"
-          samplerLabel="UniformRandom" nfLabel="Nearest" extenderLabel="BERO" 
+      <DynamicRegionRRT label="DRRRT" debug="false" querySampler="UniformRandomFree"
+          samplerLabel="UniformRandom" nfLabel="Nearest" extenderLabel="BERO"
           growGoals="true" connectorLabel="Closest" explore=".2" regionFactor="2.5"
           penetration="1" velocityBiasing="false" velocityAlignment=".4"
           decompositionLabel="fine" skeletonType="ma">
           <Evaluator label="BoundedQuery" />
       </DynamicRegionRRT>
 
-      <BasicPRM label="LazyPRM" debug="true">
+      <BasicPRM label="LazyPRM" debug="false">
         <Sampler label="UniformRandom" number="1" attempts="1"/>
         <Connector label="ClosestAlwaysTrue" />
         <Evaluator label="LazyQuery"/>
@@ -222,8 +227,8 @@
 
     <!-- MPProblem allows multiple solvers to be specified and executed. -->
 
-    <!-- <Solver mpStrategyLabel="RRT" seed="12345678"
-      baseFilename="example" vizmoDebug="true"/> -->
+    <Solver mpStrategyLabel="RRT" seed="12345678"
+      baseFilename="example" vizmoDebug="true"/>
 
     <Solver mpStrategyLabel="LazyPRM" seed="12345678"
       baseFilename="example" vizmoDebug="true"/>

@@ -65,6 +65,9 @@
 //mp strategies includes
 #include "MPLibrary/MPStrategies/ValidationStrategy.h"
 
+//geometry includes
+#include "Testing/Geometry/Shapes/NBoxTest.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup MotionPlanningUniverse
 /// @brief Defines available methods in the Motion Planning Universe for Cfg
@@ -91,7 +94,7 @@ struct MPTraits {
   typedef W                               WeightType;
   typedef RoadmapGraph<C, W>              RoadmapType;
   typedef PathType<MPTraits>              Path;
-  typedef MPLibraryTests<MPTraits>         MPLibrary;
+  typedef MPLibraryTests<MPTraits>        MPLibrary;
   typedef MPSolutionType<MPTraits>        MPSolution;
   typedef MPToolsType<MPTraits>           MPTools;
   typedef LocalObstacleMapType<MPTraits>  LocalObstacleMap;
@@ -101,6 +104,7 @@ struct MPTraits {
   typedef GroupRoadmap<GroupCfg, GroupWeightType>    GroupRoadmapType;
   typedef GroupPath<MPTraits>                        GroupPathType;
   typedef GroupCfg                                   GroupCfgType;
+
 
   //types of distance metrics available in our world
   typedef boost::mpl::list<
@@ -145,7 +149,6 @@ struct MPTraits {
   typedef boost::mpl::list<
       > PathModifierMethodList;
 
-
   //types of connectors available in our world
   typedef boost::mpl::list<
       CCsConnectorTest<MPTraits>,
@@ -171,6 +174,11 @@ struct MPTraits {
   typedef boost::mpl::list<
     //ValidationStrategy<MPTraits>
       > MPStrategyMethodList;
+
+  //types of shapes available in our world
+  typedef boost::mpl::list<
+    NBox  
+      > ShapesList;
 };
 
 #endif
