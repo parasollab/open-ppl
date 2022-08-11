@@ -39,11 +39,11 @@
       <SemanticTask label="first">
         <Task label="query1" robot="boxy">
           <StartConstraints>
-            <CSpaceConstraint point="0 0 0 0 0 0"/>
+            <CSpaceConstraint point="0 5 0 0 0 0"/>
           </StartConstraints>
 
           <GoalConstraints>
-            <CSpaceConstraint point="20 5 10 0.2 0.8 0.5"/>
+            <CSpaceConstraint point="0 -5 0 0.2 0.8 0.5"/>
           </GoalConstraints>
         </Task>
       </SemanticTask>
@@ -70,23 +70,25 @@
     </ValidityCheckers>
 
     <NeighborhoodFinders>
-      <BruteForceNF label="Nearest" dmLabel="minkowski" unconnected="false"
+      <BruteForceNF label="Nearest" dmLabel="euclidean" unconnected="false"
         k="1"/>
+      <BruteForceNF label="Closest" dmLabel="euclidean" unconnected="true"
+        k="6"/>
     </NeighborhoodFinders>
 
     <Samplers>
       <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
-
       <UniformRandomSampler label="UniformRandomFree" vcLabel="pqp_solid"/>
+      <BridgeTestSampler label="BridgeTest" vcLabel="alwaysTrue" d="10" dmLabel="euclidean" />
     </Samplers>
 
     <LocalPlanners>
-      <StraightLine label="sl" binaryEvaluation="true" vcLabel="rapid"/>
+      <StraightLine label="sl" binaryEvaluation="true" vcLabel="pqp_solid" dmLabel="euclidean"/>
     </LocalPlanners>
 
     <Extenders>
-      <BasicExtender label="BERO" debug="false" dmLabel="minkowski"
-        vcLabel="alwaysTrue" maxDist="4." minDist=".01"/>
+      <BasicExtender label="BERO" debug="false" dmLabel="euclidean"
+        vcLabel="pqp_solid" maxDist="4." minDist=".01"/>
     </Extenders>
 
     <PathModifiers>
@@ -95,6 +97,7 @@
     <Connectors>
       <NeighborhoodConnector label="Closest" debug="true"
         nfLabel="Nearest" lpLabel="sl" checkIfSameCC="false"/>
+      <RewireConnector label="Rewire" nfLabel="Closest" lpLabel="sl"/>
     </Connectors>
 
     <Metrics>
@@ -120,11 +123,20 @@
       </AdaptiveRRT>
 
       <BasicRRTStrategy label="RRT" debug="false"
-        querySampler="UniformRandom" samplerLabel="UniformRandom"
+        querySampler="UniformRandomFree" samplerLabel="UniformRandomFree"
         nfLabel="Nearest" extenderLabel="BERO"
         growGoals="false" growthFocus="0.01" m="1"
-        goalDmLabel="minkowski" goalThreshold="5">
-        <!--Evaluator label="Query"/-->
+        goalDmLabel="euclidean" goalThreshold="5">
+        <Evaluator label="Query"/>
+      </BasicRRTStrategy>
+
+      <!-- RRT Star -->
+      <BasicRRTStrategy label="RRTstar" debug="false"
+        querySampler="UniformRandomFree" samplerLabel="UniformRandomFree"
+        nfLabel="Nearest" extenderLabel="BERO"
+        growGoals="false" growthFocus="0.01" m="1"
+        goalDmLabel="euclidean" goalThreshold="5" connectorLabel="Rewire">
+        <Evaluator label="Query"/>
       </BasicRRTStrategy>
 
       <!-- Toggle PRM-->
@@ -144,6 +156,8 @@
 
     <Solver mpStrategyLabel="RRT" seed="12345678"
       baseFilename="example" vizmoDebug="true"/> 
+    <Solver mpStrategyLabel="RRTstar" seed="12345"
+      baseFilename="RRTstar" vizmoDebug="true"/> 
 
   </Library>
 

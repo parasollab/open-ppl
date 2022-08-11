@@ -10,6 +10,7 @@
 #include "Testing/MPLibrary/MPLibraryTests.h"
 #include "Testing/TMPLibrary/TMPLibraryTests.h"
 #include "Testing/Geometry/GeometryTests.h"
+#include "Testing/Behaviors/BehaviorsTests.h"
 #include "TMPLibrary/Solution/Plan.h"
 #include "Testing/MPProblem/MPProblemTests.h"
 #include "MPProblem/MPTask.h"
@@ -39,6 +40,9 @@ main(int _argc, char** _argv) {
 
   // Parse the Problem node into an MPProblem object.
   MPProblemTests* problem = new MPProblemTests(xmlFile);
+
+  // Create an object to test the Behaviors
+  BehaviorsTests* behaviors = new BehaviorsTests(problem, xmlFile);
 
   // Parse the Library node into an TMPLibrary object.
   TMPLibraryTests* ppl = new TMPLibraryTests(xmlFile);
@@ -109,7 +113,7 @@ main(int _argc, char** _argv) {
   // Also solve the group task(s).
 	std::vector<std::shared_ptr<GroupTask>> groupTasks;
   if(!problem->GetRobotGroups().empty()) {
-    for(auto& robotGroup : problem->GetRobotGroups()) 
+    for(auto& robotGroup : problem->GetRobotGroups())
 	    for(auto groupTask : problem->GetTasks(robotGroup.get()))
 				groupTasks.push_back(groupTask);
   	ppl->Solve(problem, groupTasks);
@@ -119,7 +123,7 @@ main(int _argc, char** _argv) {
     throw RunTimeException(WHERE) << "No tasks were specified!";
 	*/
 
-  
+
 	for(const auto& decomps : problem->GetDecompositions()) {
 		auto a = decomps.first->GetAgent();
 		auto c = dynamic_cast<Coordinator*>(a);
@@ -138,14 +142,18 @@ main(int _argc, char** _argv) {
 	}
 
 
-  
   auto mpResults = mpl->RunTest();
   std::cout << "PASSED: " << mpResults.first << std::endl << mpResults.second;
-  
-  geometry->RunTest();
- 
+
+  auto geomResults =  geometry->RunTest();
+  std::cout << "PASSED: " << geomResults.first << std::endl; << geomResults.second;
+
+  auto behavResults = behaviors->RunTest();
+  std::cout << "PASSED: " << behavResults.first << std::endl << behavResults.second;
+
   // Release resources.
   delete geometry;
+  delete behaviors;
   delete problem;
   delete ppl;
   delete mpl;

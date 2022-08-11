@@ -24,7 +24,7 @@
 /// @ingroup LocalPlanners
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
-class StraightLine : public LocalPlannerMethod<MPTraits> {
+class StraightLine : virtual public LocalPlannerMethod<MPTraits> {
 
   public:
 
@@ -318,8 +318,12 @@ IsConnected(const GroupCfgType& _c1, const GroupCfgType& _c2, GroupCfgType& _col
   }
 
   // Set data in the LPOutput object.
-  _lpOutput->m_edge.first.SetWeight(numSteps);
-  _lpOutput->m_edge.second.SetWeight(numSteps);
+  //_lpOutput->m_edge.first.SetWeight(numSteps);
+  //_lpOutput->m_edge.second.SetWeight(numSteps);
+  auto dm = this->GetDistanceMetric(m_dmLabel);
+  auto distance = dm->Distance(_c1,_c2);
+  _lpOutput->m_edge.first.SetWeight(distance);
+  _lpOutput->m_edge.second.SetWeight(distance);
   _lpOutput->SetIndividualEdges(_robotIndexes);
   _lpOutput->SetActiveRobots(_robotIndexes);
 
@@ -545,24 +549,24 @@ IsConnectedSLBinary(
     int mid = low + (high - low) / 2;
     CfgType midCfg = increment * mid + _c1;
 
-    // // Check collision if requested.
-    // if(_checkCollision) {
-    //   _cdCounter++;
-    //   if(this->m_debug)
-    //     std::cout << "\n\t\tChecking step " << mid << " at "
-    //               << midCfg.PrettyPrint()
-    //               << std::endl;
+    // Check collision if requested.
+    if(_checkCollision) {
+      _cdCounter++;
+      if(this->m_debug)
+        std::cout << "\n\t\tChecking step " << mid << " at "
+                  << midCfg.PrettyPrint()
+                  << std::endl;
 
-    //   const bool inBounds = midCfg.InBounds(env);
-    //   if(!inBounds or !vc->IsValid(midCfg, id)) {
-    //     _col = midCfg;
-    //     if(this->m_debug)
-    //       std::cout << "\n\t\t\tINVALID" << std::endl;
-    //     return false;
-    //   }
-    // }
-    // else if(this->m_debug)
-    //   std::cout << "\n\t\t\tOK" << std::endl;
+      const bool inBounds = midCfg.InBounds(env);
+      if(!inBounds or !vc->IsValid(midCfg, id)) {
+        _col = midCfg;
+        if(this->m_debug)
+          std::cout << "\n\t\t\tINVALID" << std::endl;
+        return false;
+      }
+    }
+    else if(this->m_debug)
+      std::cout << "\n\t\t\tOK" << std::endl;
 
 
     // Check for collisions.

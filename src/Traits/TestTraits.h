@@ -17,29 +17,50 @@
 #include "ConfigurationSpace/Weight.h"
 
 //distance metric includes
+#include "Testing/MPLibrary/DistanceMetrics/ManhattanDistanceTest.h"
+#include "Testing/MPLibrary/DistanceMetrics/MinkowskiDistanceTest.h"
+#include "Testing/MPLibrary/DistanceMetrics/EuclideanDistanceTest.h"
+#include "Testing/MPLibrary/DistanceMetrics/WorkspaceTranslationDistanceTest.h"
+#include "Testing/MPLibrary/DistanceMetrics/RMSDDistanceTest.h"
+#include "Testing/MPLibrary/DistanceMetrics/WeightedEuclideanDistanceTest.h"
+#include "Testing/MPLibrary/DistanceMetrics/ScaledEuclideanDistanceTest.h"
+#include "Testing/MPLibrary/DistanceMetrics/LPSweptDistanceTest.h"
+#include "Testing/MPLibrary/DistanceMetrics/BinaryLPSweptDistanceTest.h"
 
 //validity checker includes
 #include "MPLibrary/ValidityCheckers/CollisionDetectionValidity.h"
 #include "Testing/MPLibrary/ValidityCheckers/AlwaysTrueValidityTest.h"
 #include "Testing/MPLibrary/ValidityCheckers/CollisionDetection/BoundingSpheresCollisionDetectionTest.h"
 #include "Testing/MPLibrary/ValidityCheckers/CollisionDetection/InsideSpheresCollisionDetectionTest.h"
+
 //neighborhood finder includes
+#include "Testing/MPLibrary/NeighborhoodFinders/BruteForceNFTest.h"
 
 //sampler includes
 #include "Testing/MPLibrary/Samplers/UniformRandomSamplerTest.h"
+#include "Testing/MPLibrary/Samplers/BridgeTestSamplerTest.h"
 
 //local planner includes
+#include "Testing/MPLibrary/LocalPlanners/StraightLineTest.h"
 
 //extenders includes
+#include "Testing/MPLibrary/Extenders/BasicExtenderTest.h"
 
 //path smoothing includes
 
 //connector includes
+#include "Testing/MPLibrary/Connectors/CCsConnectorTest.h"
+#include "Testing/MPLibrary/Connectors/NeighborhoodConnectorTest.h"
+#include "Testing/MPLibrary/Connectors/RewireConnectorTest.h"
 
 //metric includes
+#include "Testing/MPLibrary/Metrics/NumNodesMetricTest.h"
+#include "Testing/MPLibrary/Metrics/NumEdgesMetricTest.h"
+#include "Testing/MPLibrary/Metrics/TimeMetricTest.h"
 
 //map evaluator includes
 #include "Testing/MPLibrary/MapEvaluators/LazyQueryTest.h"
+#include "Testing/MPLibrary/MapEvaluators/QueryMethodTest.h"
 
 //mp strategies includes
 #include "MPLibrary/MPStrategies/ValidationStrategy.h"
@@ -87,6 +108,15 @@ struct MPTraits {
 
   //types of distance metrics available in our world
   typedef boost::mpl::list<
+      ManhattanDistanceTest<MPTraits>,
+      MinkowskiDistanceTest<MPTraits>,
+      EuclideanDistanceTest<MPTraits>,
+      WorkspaceTranslationDistanceTest<MPTraits>,
+      RMSDDistanceTest<MPTraits>,
+      WeightedEuclideanDistanceTest<MPTraits>,
+      LPSweptDistanceTest<MPTraits>,
+      BinaryLPSweptDistanceTest<MPTraits>,
+      ScaledEuclideanDistanceTest<MPTraits>
       > DistanceMetricMethodList;
 
   //types of validity checkers available in our world
@@ -96,19 +126,23 @@ struct MPTraits {
 
   //types of neighborhood finders available in our world
   typedef boost::mpl::list<
+      BruteForceNFTest<MPTraits>
       > NeighborhoodFinderMethodList;
 
   //types of samplers available in our world
   typedef boost::mpl::list<
-      UniformRandomSamplerTest<MPTraits>
+      UniformRandomSamplerTest<MPTraits>,
+      BridgeTestSamplerTest<MPTraits>
       > SamplerMethodList;
-
+  
   //types of local planners available in our world
   typedef boost::mpl::list<
+    // StraightLine<MPTraits>
       > LocalPlannerMethodList;
 
   //types of extenders avaible in our world
   typedef boost::mpl::list<
+      BasicExtenderTest<MPTraits>
       > ExtenderMethodList;
 
   //types of path smoothing available in our world
@@ -117,21 +151,28 @@ struct MPTraits {
 
   //types of connectors available in our world
   typedef boost::mpl::list<
+      CCsConnectorTest<MPTraits>,
+      NeighborhoodConnectorTest<MPTraits>,
+      RewireConnectorTest<MPTraits>
       > ConnectorMethodList;
 
   //types of metrics available in our world
   typedef boost::mpl::list<
+      NumNodesMetricTest<MPTraits>,
+      NumEdgesMetricTest<MPTraits>,
+      TimeMetricTest<MPTraits>
       > MetricMethodList;
 
 
   //types of map evaluators available in our world
   typedef boost::mpl::list<
-    LazyQueryTest<MPTraits>
+    LazyQueryTest<MPTraits>,
+    QueryMethodTest<MPTraits>
       > MapEvaluatorMethodList;
 
   //types of motion planning strategies available in our world
   typedef boost::mpl::list<
-    ValidationStrategy<MPTraits>
+    //ValidationStrategy<MPTraits>
       > MPStrategyMethodList;
 
   //types of shapes available in our world

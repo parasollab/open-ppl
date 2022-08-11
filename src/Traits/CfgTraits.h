@@ -17,7 +17,15 @@
 
 //distance metric includes
 #include "MPLibrary/DistanceMetrics/EuclideanDistance.h"
+#include "MPLibrary/DistanceMetrics/ManhattanDistance.h"
 #include "MPLibrary/DistanceMetrics/MinkowskiDistance.h"
+#include "MPLibrary/DistanceMetrics/WorkspaceTranslationDistance.h"
+#include "MPLibrary/DistanceMetrics/RMSDDistance.h"
+#include "MPLibrary/DistanceMetrics/WeightedEuclideanDistance.h"
+#include "MPLibrary/DistanceMetrics/ScaledEuclideanDistance.h"
+#include "MPLibrary/DistanceMetrics/LPSweptDistance.h"
+#include "MPLibrary/DistanceMetrics/BinaryLPSweptDistance.h"
+
 
 //validity checker includes
 #include "MPLibrary/ValidityCheckers/CollisionDetectionValidity.h"
@@ -29,6 +37,8 @@
 #include "MPLibrary/NeighborhoodFinders/BruteForceNF.h"
 
 //sampler includes
+#include "MPLibrary/Samplers/BridgeTestSampler.h"
+#include "MPLibrary/Samplers/ObstacleBasedSampler.h"
 #include "MPLibrary/Samplers/UniformRandomSampler.h"
 
 //local planner includes
@@ -41,15 +51,20 @@
 
 //connector includes
 #include "MPLibrary/Connectors/NeighborhoodConnector.h"
+#include "MPLibrary/Connectors/CCsConnector.h"
+#include "MPLibrary/Connectors/RewireConnector.h"
 
 //metric includes
 #include "MPLibrary/Metrics/NumNodesMetric.h"
+#include "MPLibrary/Metrics/NumEdgesMetric.h"
+#include "MPLibrary/Metrics/TimeMetric.h"
 
 //map evaluator includes
 #include "MPLibrary/MapEvaluators/CBSQuery.h"
 #include "MPLibrary/MapEvaluators/ComposeEvaluator.h"
 #include "MPLibrary/MapEvaluators/ConditionalEvaluator.h"
 #include "MPLibrary/MapEvaluators/LazyQuery.h"
+#include "MPLibrary/MapEvaluators/PrintMapEvaluation.h"
 #include "MPLibrary/MapEvaluators/QueryMethod.h"
 #include "MPLibrary/MapEvaluators/SIPPMethod.h"
 #include "MPLibrary/MapEvaluators/TimeEvaluator.h"
@@ -58,6 +73,7 @@
 #include "MPLibrary/MPStrategies/AdaptiveRRT.h"
 #include "MPLibrary/MPStrategies/BasicPRM.h"
 #include "MPLibrary/MPStrategies/BasicRRTStrategy.h"
+#include "MPLibrary/MPStrategies/DynamicRegionRRT.h"
 #include "MPLibrary/MPStrategies/GroupDecoupledStrategy.h"
 #include "MPLibrary/MPStrategies/GroupStrategyMethod.h"
 #include "MPLibrary/MPStrategies/TogglePRMStrategy.h"
@@ -98,7 +114,14 @@ struct MPTraits {
   //types of distance metrics available in our world
   typedef boost::mpl::list<
     EuclideanDistance<MPTraits>,
-    MinkowskiDistance<MPTraits>
+    ManhattanDistance<MPTraits>,
+    MinkowskiDistance<MPTraits>,
+    WorkspaceTranslationDistance<MPTraits>,
+    RMSDDistance<MPTraits>,
+    WeightedEuclideanDistance<MPTraits>,
+    LPSweptDistance<MPTraits>,
+    BinaryLPSweptDistance<MPTraits>,
+    ScaledEuclideanDistance<MPTraits>
       > DistanceMetricMethodList;
 
   //types of validity checkers available in our world
@@ -116,6 +139,8 @@ struct MPTraits {
 
   //types of samplers available in our world
   typedef boost::mpl::list<
+    BridgeTestSampler<MPTraits>,
+    ObstacleBasedSampler<MPTraits>,
     UniformRandomSampler<MPTraits>
       > SamplerMethodList;
 
@@ -136,12 +161,16 @@ struct MPTraits {
 
   //types of connectors available in our world
   typedef boost::mpl::list<
-    NeighborhoodConnector<MPTraits>
+    NeighborhoodConnector<MPTraits>,
+    CCsConnector<MPTraits>,
+    RewireConnector<MPTraits>
       > ConnectorMethodList;
 
   //types of metrics available in our world
   typedef boost::mpl::list<
-    NumNodesMetric<MPTraits>
+    NumNodesMetric<MPTraits>,
+    NumEdgesMetric<MPTraits>,
+    TimeMetric<MPTraits>
       > MetricMethodList;
 
 
@@ -151,6 +180,7 @@ struct MPTraits {
     ComposeEvaluator<MPTraits>,
     ConditionalEvaluator<MPTraits>,
     LazyQuery<MPTraits>,
+    PrintMapEvaluation<MPTraits>,
     QueryMethod<MPTraits>,
     SIPPMethod<MPTraits>,
     TimeEvaluator<MPTraits>
@@ -161,6 +191,7 @@ struct MPTraits {
     AdaptiveRRT<MPTraits>,
     BasicPRM<MPTraits>,
     BasicRRTStrategy<MPTraits>,
+    DynamicRegionRRT<MPTraits>,
     GroupDecoupledStrategy<MPTraits>,
     GroupStrategyMethod<MPTraits>,
     TogglePRMStrategy<MPTraits>,
