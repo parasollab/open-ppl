@@ -19,7 +19,7 @@
     </Robot>
 
     <!-- Single query with single robot -->
-    <!-- <Task label="query" robot="boxy1">
+    <Task label="query" robot="boxy1">
       <StartConstraints>
         <CSpaceConstraint point="0 0 0 0 0 0"/>
       </StartConstraints>
@@ -27,7 +27,7 @@
       <GoalConstraints>
         <CSpaceConstraint point="20 5 10 0.2 0.8 0.5"/>
       </GoalConstraints>
-    </Task> -->
+    </Task>
 
     <!-- Multiple queries can be solved in sequence -->
     <!-- <Task label="build" robot="boxy1"></Task>
@@ -58,9 +58,10 @@
         <CSpaceConstraint point="20 5 10 0.8 0.5 0.2"/>
       </GoalConstraints>
     </Task> -->
-  
+
 
     <!-- Group task defines start and goal constraints for multiple robots -->
+    <!--
     <RobotGroup label="2-robotGroup" robotLabels="boxy1 boxy2"/>
 
     <GroupTask label="2-groupQuery" group="2-robotGroup">
@@ -81,7 +82,7 @@
         </GoalConstraints>
       </Task>
     </GroupTask>
-   
+    -->
 
   </Problem>
 
@@ -269,8 +270,8 @@
 
     <!-- MPProblem allows multiple solvers to be specified and executed. -->
 
-    <Solver mpStrategyLabel="CompositePRM" seed="12345678"
-      baseFilename="CompositePRM" vizmoDebug="true"/>
+    <Solver mpStrategyLabel="PRM-build" seed="12345678"
+      baseFilename="PRM-build" vizmoDebug="true"/>
 
   </Library>
 
