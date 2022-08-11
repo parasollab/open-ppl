@@ -17,6 +17,15 @@
 #include "ConfigurationSpace/Weight.h"
 
 //distance metric includes
+#include "Testing/MPLibrary/DistanceMetrics/ManhattanDistanceTest.h"
+#include "Testing/MPLibrary/DistanceMetrics/MinkowskiDistanceTest.h"
+#include "Testing/MPLibrary/DistanceMetrics/EuclideanDistanceTest.h"
+#include "Testing/MPLibrary/DistanceMetrics/WorkspaceTranslationDistanceTest.h"
+#include "Testing/MPLibrary/DistanceMetrics/RMSDDistanceTest.h"
+#include "Testing/MPLibrary/DistanceMetrics/WeightedEuclideanDistanceTest.h"
+#include "Testing/MPLibrary/DistanceMetrics/ScaledEuclideanDistanceTest.h"
+#include "Testing/MPLibrary/DistanceMetrics/LPSweptDistanceTest.h"
+#include "Testing/MPLibrary/DistanceMetrics/BinaryLPSweptDistanceTest.h"
 
 //validity checker includes
 #include "MPLibrary/ValidityCheckers/CollisionDetectionValidity.h"
@@ -95,6 +104,15 @@ struct MPTraits {
 
   //types of distance metrics available in our world
   typedef boost::mpl::list<
+      ManhattanDistanceTest<MPTraits>,
+      MinkowskiDistanceTest<MPTraits>,
+      EuclideanDistanceTest<MPTraits>,
+      WorkspaceTranslationDistanceTest<MPTraits>,
+      RMSDDistanceTest<MPTraits>,
+      WeightedEuclideanDistanceTest<MPTraits>,
+      LPSweptDistanceTest<MPTraits>,
+      BinaryLPSweptDistanceTest<MPTraits>,
+      ScaledEuclideanDistanceTest<MPTraits>
       > DistanceMetricMethodList;
 
   //types of validity checkers available in our world
@@ -151,7 +169,7 @@ struct MPTraits {
 
   //types of motion planning strategies available in our world
   typedef boost::mpl::list<
-    ValidationStrategy<MPTraits>
+    //ValidationStrategy<MPTraits>
       > MPStrategyMethodList;
 };
 

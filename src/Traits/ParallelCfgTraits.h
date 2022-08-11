@@ -12,6 +12,7 @@
 //#include "MPLibrary/DistanceMetrics/ManhattanDistance.h"
 //#include "MPLibrary/DistanceMetrics/RMSDDistance.h"
 #include "MPLibrary/DistanceMetrics/ScaledEuclideanDistance.h"
+#include "MPLibrary/DistanceMetrics/WorkspaceTranslationDistance.h"
 
 //validity checker includes
 #include "MPLibrary/ValidityCheckers/AlwaysTrueValidity.h"
@@ -157,7 +158,8 @@ struct MPTraits {
     //ManhattanDistance<MPTraits>,
     //MinkowskiDistance<MPTraits>,
     //RMSDDistance<MPTraits>,
-    ScaledEuclideanDistance<MPTraits>
+    ScaledEuclideanDistance<MPTraits>,
+    WorkspaceTranslationDistance<MPTraits>
       > DistanceMetricMethodList;
 
   //types of validity checkers available in our world

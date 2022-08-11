@@ -225,7 +225,7 @@ InitializeMethodSets() {
   m_extenderTests = new ExtenderTestSet(this,
       typename MPTraits::ExtenderMethodList(), "Extenders");
   m_pathModifierTests = new PathModifierTestSet(this,
-     typename MPTraits::PathModifierMethodList(), "PathModifiers");
+      typename MPTraits::PathModifierMethodList(), "PathModifiers");
   m_connectorTests = new ConnectorTestSet(this,
       typename MPTraits::ConnectorMethodList(), "Connectors");
   m_metricTests = new MetricTestSet(this,
@@ -396,18 +396,18 @@ ParseChild(XMLNode& _node) {
     m_samplerTests->ParseXML(_node);
     return true;
   }
-   else if(_node.Name() == "LocalPlanners") {
+  else if(_node.Name() == "LocalPlanners") {
     m_localPlannerTests->ParseXML(_node);
-     return true;
-   }
+    return true;
+  }
   else if(_node.Name() == "Extenders") {
     m_extenderTests->ParseXML(_node);
     return true;
   }
-   else if(_node.Name() == "PathModifiers") {
+  else if(_node.Name() == "PathModifiers") {
     m_pathModifierTests->ParseXML(_node);
-     return true;
-   }
+    return true;
+  }
   else if(_node.Name() == "Connectors") {
     m_connectorTests->ParseXML(_node);
     return true;

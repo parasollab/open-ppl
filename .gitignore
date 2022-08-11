@@ -2,10 +2,12 @@
 *.swo
 pmpl
 ppl
+tests
 sim
 build
 libobprm.a
 pmpl_utils
+src/tests
 src/Examples/example*
 src/Examples
 src/Testing/StrategyTests/Scratch*
