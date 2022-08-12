@@ -59,7 +59,7 @@ template <typename MPTraits>
 ObstacleBasedSamplerTest<MPTraits>::
 ObstacleBasedSamplerTest() : ObstacleBasedSampler<MPTraits>() {
   m_medialAxisUtility = MedialAxisUtility<MPTraits>("pqp_solid", "euclidean",
-                                false, false, 500, 500, true, true, true, 0.1, 5);
+                                false, false, 100, 100, false, false, false, 0.1, 5);
 }
 
 template <typename MPTraits>
@@ -67,7 +67,7 @@ ObstacleBasedSamplerTest<MPTraits>::
 ObstacleBasedSamplerTest(XMLNode& _node) : SamplerMethod<MPTraits>(_node),
                                            ObstacleBasedSampler<MPTraits>(_node) {
   m_medialAxisUtility = MedialAxisUtility<MPTraits>("pqp_solid", "euclidean",
-                                false, false, 500, 500, true, true, true, 0.1, 5);
+                                false, false, 100, 100, false, false, false, 0.1, 5);
 }
 
 template <typename MPTraits>
@@ -81,6 +81,7 @@ typename ObstacleBasedSamplerTest<MPTraits>::TestResult
 ObstacleBasedSamplerTest<MPTraits>::
 TestIndividualCfgSample() {
   auto mpl = this->GetMPLibrary();
+  auto env = this->GetEnvironment();
 
   bool passed = true;
   std::string message = "";
@@ -93,18 +94,15 @@ TestIndividualCfgSample() {
   string callee = this->GetNameAndLabel() + "::Sampler()";
   auto vc = this->GetValidityChecker("rapid");
 
-  std::cout << "====1 " << mpl << "=====1" << std::endl;
 
   if(!m_medialAxisUtility.IsInitialized()) {
-    std::cout << "=== Initialize MedialAxisUtilitiy (Single Robot) ===" << std::endl;
     // Set MPLibrary pointer
     m_medialAxisUtility.SetMPLibrary(mpl);
     // Initialize
     m_medialAxisUtility.Initialize();
   }
 
-  std::vector<CDInfo> cdInfo_vec;
-  std::vector<double> minDistInfo_vec;
+  std::vector<double> minDistInfoVec;
   // Iterate through valid cfgs
   for (auto cfg : valids){
     if(!vc->IsValid(cfg, callee)) {   
@@ -129,21 +127,21 @@ TestIndividualCfgSample() {
     }
 
     // Store cdInfo and minimum distance
-    cdInfo_vec.push_back(_cdInfo);
-    minDistInfo_vec.push_back(_cdInfo.m_minDist);
+    minDistInfoVec.push_back(_cdInfo.m_minDist);
+  }
 
-    // Average out the distances
-    double avgDist = std::accumulate(minDistInfo_vec.begin(), minDistInfo_vec.end(), 0.0) / minDistInfo_vec.size();
-    // Set a criteria for pass
-    double c = 15*min(this->GetEnvironment()->GetPositionRes(), this->GetEnvironment()->GetOrientationRes());
-    std::cout << "(average distance)" << avgDist << " | (threshold)" << c << std::endl;
+  // Average out the distances
+  double avgDist = std::accumulate(minDistInfoVec.begin(), minDistInfoVec.end(), 0.0) / minDistInfoVec.size();
 
-    // Compare them 
-    if (avgDist > c) {
-      passed = false;
-      message = "Average minimum distance from cfgs to obstacles are too large: ";
-      break;
-    }
+  std::cout << "Single Robot Single Boundary: " << avgDist << std::endl;
+
+  // Set a criteria for pass
+  double envRes = max(env->GetPositionRes(), env->GetOrientationRes());
+
+  // Compare them 
+  if (avgDist > envRes) {
+    passed = false;
+    message = "Average minimum distance from cfgs to obstacles are too large: ";
   }
 
   if(passed) {
@@ -210,30 +208,19 @@ TestGroupCfgSampleSingleBoundary() {
   string callee = this->GetNameAndLabel() + "::Sampler()";
   auto vc = this->GetValidityChecker("rapid");
 
-  
-
   auto mpl = this->GetMPLibrary();
-  // if(!m_medialAxisUtility.IsInitialized()) {
-  std::cout << "=== Initialize MedialAxisUtilitiy (Group) ===" << std::endl;
-  // Set MPLibrary pointer
   m_medialAxisUtility.SetMPLibrary(mpl);
-  // Initialize
   m_medialAxisUtility.Initialize();
-  // }
 
-  std::vector<CDInfo> cdInfo_vec;
-  std::vector<double> minDistInfo_vec;
+  std::vector<double> minDistInfoVec;
 
-  // auto groupTask = this->GetGroupTask();
-  auto group = this->GetMPProblem()->GetRobotGroups()[0].get();
-  auto groupTask = this->GetMPProblem()->GetTasks(group)[0].get();
+  auto groupTask = this->GetGroupTask();
 
   m_medialAxisUtility.GetMPLibrary()->SetGroupTask(groupTask);
   m_medialAxisUtility.GetMPLibrary()->SetTask(nullptr);
 
   // Iterate through valid cfgs
   for (auto groupCfg : valids) {
-    
     if(!vc->IsValid(groupCfg, callee)) {
       passed = false;
       message = message + "\n\tA configuration was incorrectly labeled "
@@ -241,30 +228,17 @@ TestGroupCfgSampleSingleBoundary() {
       break;
     }
 
-    int i = 0;
+    std::vector<double> tmpMinDistVec;
 
-    for (auto& task : *groupTask) {
-      // if (i == 0) {
-      //   continue;
-      // }
-      auto robot = task.GetRobot();
-      std::cout << "======= " << i << "task: " << task.GetRobot() << " | robot: " << robot << std::endl;
-
-      // auto task2 = m_medialAxisUtility.GetMPProblem()->GetTasks(robot)[0].get();
-      // m_medialAxisUtility.GetMPLibrary()->SetTask(&task);
-      // throw invalid_argument("MyFunc argument too large.");
-      // if (!m_medialAxisUtility.GetTask()->GetRobot()) {
-      //   m_medialAxisUtility.SetRobot(robot);
-      // }
-
-      MPTask* tmpTask = &task;
-      m_medialAxisUtility.GetMPLibrary()->SetTask(tmpTask);
-
-      CfgType cfg = groupCfg.GetRobotCfg(robot);
-
+    for (auto task : *groupTask) {
       CDInfo _cdInfo;
       CfgType _cfgClr;
       bool valid = false;
+      
+      m_medialAxisUtility.GetMPLibrary()->SetTask(&task);
+      
+      auto robot = task.GetRobot();
+      CfgType cfg = groupCfg.GetRobotCfg(robot);
 
       // Find a nearest obstacle cfg
       valid = m_medialAxisUtility.ApproxCollisionInfo(cfg, _cfgClr, boundary, _cdInfo);
@@ -277,45 +251,37 @@ TestGroupCfgSampleSingleBoundary() {
         break;
       }
 
-      // Store cdInfo and minimum distance
-      cdInfo_vec.push_back(_cdInfo);
-      minDistInfo_vec.push_back(_cdInfo.m_minDist);
-      // throw std::invalid_argument("AddPositiveIntegers a");
-
-      i += 1;
+      tmpMinDistVec.push_back(_cdInfo.m_minDist);
     }
 
-
+    // Store cdInfo and minimum distance
+    auto minVal = std::min_element(tmpMinDistVec.begin(), tmpMinDistVec.end());
+    minDistInfoVec.push_back(*minVal);
 
     if (!passed)
       break;
-    
-    for (unsigned int i=0; i < minDistInfo_vec.size(); i++) {
-      std::cout << minDistInfo_vec.at(i) << ' ';
-    }
 
     // Average out the distances
-    double avgDist = std::accumulate(minDistInfo_vec.begin(), minDistInfo_vec.end(), 0.0) / minDistInfo_vec.size();
-    
+    double avgDist = std::accumulate(minDistInfoVec.begin(), minDistInfoVec.end(), 0.0) / minDistInfoVec.size();
+
+    std::cout << "Group Robot Single Boundary: " << avgDist << std::endl;
+
     // Set a criteria for pass
-    double c = 1000*min(this->GetEnvironment()->GetPositionRes(), this->GetEnvironment()->GetOrientationRes());
-    std::cout << "(average distance)" << avgDist << " | (threshold)" << c << std::endl;
+    double envRes = max(this->GetEnvironment()->GetPositionRes(), this->GetEnvironment()->GetOrientationRes());
 
     // Compare them 
-    if (avgDist > c) {
+    if (avgDist > envRes) {
       passed = false;
       message = "Average minimum distance from cfgs to obstacles are too large \n";
       break;
     }
   }
-
-
   
   if(passed) {
-    message = "IndividualCfgSample::PASSED!\n";
+    message = "GroupCfgSampleSingleBoundary::PASSED!\n";
   }
   else {
-    message = "IndividualCfgSample::FAILED :(\n" + message;
+    message = "GroupCfgSampleSingleBoundary::FAILED :(\n" + message;
   }
   return std::make_pair(passed,message);
 }
@@ -325,12 +291,94 @@ typename ObstacleBasedSamplerTest<MPTraits>::TestResult
 ObstacleBasedSamplerTest<MPTraits>::
 TestGroupCfgSampleIndividualBoundaries() {
 
-  bool passed = true;
-  std::string message = "";
-  
   //TODO::Setup test of this function.
   //this->GroupCfgSampleIndividualBoundaries();
 
+  
+  bool passed = true;
+  std::string message = "";
+
+  std::map<Robot*,const Boundary*> boundaryMap;
+  std::vector<GroupCfg> valids;
+  std::vector<GroupCfg> invalids;
+
+  // std::map<Robot*,const Boundary*>& _boundaryMap, 
+  //     std::vector<GroupCfg>& _valids, std::vector<GroupCfg>& _invalids
+
+  this->GroupCfgSampleIndividualBoundaries(boundaryMap, valids, invalids);
+  string callee = this->GetNameAndLabel() + "::Sampler()";
+  auto vc = this->GetValidityChecker("rapid");
+
+  auto mpl = this->GetMPLibrary();
+  m_medialAxisUtility.SetMPLibrary(mpl);
+  m_medialAxisUtility.Initialize();
+
+  std::vector<double> minDistInfoVec;
+
+  auto groupTask = this->GetGroupTask();
+
+  m_medialAxisUtility.GetMPLibrary()->SetGroupTask(groupTask);
+  m_medialAxisUtility.GetMPLibrary()->SetTask(nullptr);
+
+  // Iterate through valid cfgs
+  for (auto groupCfg : valids) {
+    if(!vc->IsValid(groupCfg, callee)) {
+      passed = false;
+      message = message + "\n\tA configuration was incorrectly labeled "
+                "valid for the given boundary. n";
+      break;
+    }
+
+    std::vector<double> tmpMinDistVec;
+
+    for (auto task : *groupTask) {
+      CDInfo _cdInfo;
+      CfgType _cfgClr;
+      bool valid = false;
+      
+      m_medialAxisUtility.GetMPLibrary()->SetTask(&task);
+      
+      auto robot = task.GetRobot();
+      CfgType cfg = groupCfg.GetRobotCfg(robot);
+      auto boundary = boundaryMap.at(robot);
+
+      // Find a nearest obstacle cfg
+      valid = m_medialAxisUtility.ApproxCollisionInfo(cfg, _cfgClr, boundary, _cdInfo);
+
+      // Cannot find a valid obstacle cfg    
+      if (!valid) {
+        passed = false;
+        message = "Cannot find the closest obstacle from given cfg\n";
+        std::cout << message << std::endl;
+        break;
+      }
+
+      tmpMinDistVec.push_back(_cdInfo.m_minDist);
+    }
+
+    // Store cdInfo and minimum distance
+    auto minVal = std::min_element(tmpMinDistVec.begin(), tmpMinDistVec.end());
+    minDistInfoVec.push_back(*minVal);
+
+    if (!passed)
+      break;
+
+    // Average out the distances
+    double avgDist = std::accumulate(minDistInfoVec.begin(), minDistInfoVec.end(), 0.0) / minDistInfoVec.size();
+    
+    std::cout << "Group Robot Individual Boundary: " << avgDist << std::endl;
+
+    // Set a criteria for pass
+    double envRes = max(this->GetEnvironment()->GetPositionRes(), this->GetEnvironment()->GetOrientationRes());
+
+    // Compare them 
+    if (avgDist > envRes) {
+      passed = false;
+      message = "Average minimum distance from cfgs to obstacles are too large \n";
+      break;
+    }
+  }
+  
   if(passed) {
     message = "GroupCfgSampleIndividualBoundaries::PASSED!\n";
   }
