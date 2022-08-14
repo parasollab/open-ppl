@@ -674,7 +674,6 @@ ClearanceUtility<MPTraits>::
 ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg, const Boundary* const _b,
                     CDInfo& _cdInfo, const bool& _useOppValidityWitness) {
   const string fName = "ApproxCollisionInfo: ";
-  std::cout << "initial _cfg: " << _cfg << std::endl;
 
   // Check computation cache
   if(_cfg.m_witnessCfg.get() != 0) {
@@ -742,7 +741,6 @@ ApproxCollisionInfo(CfgType& _cfg, CfgType& _clrCfg, const Boundary* const _b,
   _clrCfg = cand.second;
 
   _cdInfo.m_minDist = (initValidity ? 1.0 : -1.0) * dm->Distance(_clrCfg, _cfg);
-  std::cout << "_clrCfg: " << _clrCfg << " | _cfg: " << _cfg << " | dist: " << dm->Distance(_clrCfg,_cfg) << std::endl;
 
   _cfg.m_clearanceInfo = _cdInfo;
   _cfg.m_witnessCfg = shared_ptr<Cfg>(new CfgType(_clrCfg));
@@ -761,8 +759,6 @@ FindApproximateWitness(const std::size_t& _numRays,
   if(this->m_debug)
     cout << "FindApproximateWitness: numRays = " << _numRays << endl;
   auto vcm = this->GetValidityChecker(m_vcLabel);
-
-  std::cout << "boundary: " << _b << std::endl;
 
   string callee = this->GetNameAndLabel() + "::FindApproximateWitness()";
 
@@ -874,7 +870,6 @@ FindApproximateWitness(const std::size_t& _numRays,
       
     }
   }//end while (!stateChangedFlag && iterations < max)
-  std::cout << "==== Count " << i << std::endl;
   //Check that we actually found a candidate
   if(!candidateFound) {
     if(this->m_debug)

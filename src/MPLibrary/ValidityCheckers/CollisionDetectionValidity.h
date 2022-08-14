@@ -214,7 +214,7 @@ CollisionDetectionValidity(XMLNode& _node)
   m_ignoreSiblingCollisions = _node.Read("ignoreSiblingCollisions", false,
       m_ignoreSiblingCollisions,
       "Ignore bodies that share a parent in self-collision checks.");
-
+                
   const std::string cdLabel = _node.Read("method", true, "", "method");
 
   if(cdLabel == "BoundingSpheres")
