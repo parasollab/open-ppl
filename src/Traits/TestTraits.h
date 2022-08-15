@@ -17,8 +17,15 @@
 #include "ConfigurationSpace/Weight.h"
 
 //distance metric includes
-// #include "MPLibrary/DistanceMetrics/EuclideanDistance.h"
-// #include "MPLibrary/DistanceMetrics/MinkowskiDistance.h"
+#include "Testing/MPLibrary/DistanceMetrics/ManhattanDistanceTest.h"
+#include "Testing/MPLibrary/DistanceMetrics/MinkowskiDistanceTest.h"
+#include "Testing/MPLibrary/DistanceMetrics/EuclideanDistanceTest.h"
+#include "Testing/MPLibrary/DistanceMetrics/WorkspaceTranslationDistanceTest.h"
+#include "Testing/MPLibrary/DistanceMetrics/RMSDDistanceTest.h"
+#include "Testing/MPLibrary/DistanceMetrics/WeightedEuclideanDistanceTest.h"
+#include "Testing/MPLibrary/DistanceMetrics/ScaledEuclideanDistanceTest.h"
+#include "Testing/MPLibrary/DistanceMetrics/LPSweptDistanceTest.h"
+#include "Testing/MPLibrary/DistanceMetrics/BinaryLPSweptDistanceTest.h"
 
 //validity checker includes
 #include "MPLibrary/ValidityCheckers/CollisionDetectionValidity.h"
@@ -30,8 +37,9 @@
 #include "Testing/MPLibrary/NeighborhoodFinders/BruteForceNFTest.h"
 
 //sampler includes
-#include "Testing/MPLibrary/Samplers/UniformRandomSamplerTest.h"
+#include "Testing/MPLibrary/Samplers/BridgeTestSamplerTest.h"
 #include "Testing/MPLibrary/Samplers/ObstacleBasedSamplerTest.h"
+#include "Testing/MPLibrary/Samplers/UniformRandomSamplerTest.h"
 
 //local planner includes
 #include "Testing/MPLibrary/LocalPlanners/StraightLineTest.h"
@@ -57,6 +65,9 @@
 
 //mp strategies includes
 #include "MPLibrary/MPStrategies/ValidationStrategy.h"
+
+//geometry includes
+#include "Testing/Geometry/Shapes/NBoxTest.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup MotionPlanningUniverse
@@ -84,7 +95,7 @@ struct MPTraits {
   typedef W                               WeightType;
   typedef RoadmapGraph<C, W>              RoadmapType;
   typedef PathType<MPTraits>              Path;
-  typedef MPLibraryTests<MPTraits>         MPLibrary;
+  typedef MPLibraryTests<MPTraits>        MPLibrary;
   typedef MPSolutionType<MPTraits>        MPSolution;
   typedef MPToolsType<MPTraits>           MPTools;
   typedef LocalObstacleMapType<MPTraits>  LocalObstacleMap;
@@ -95,10 +106,18 @@ struct MPTraits {
   typedef GroupPath<MPTraits>                        GroupPathType;
   typedef GroupCfg                                   GroupCfgType;
 
+
   //types of distance metrics available in our world
   typedef boost::mpl::list<
-    // EuclideanDistance<MPTraits>,
-    // MinkowskiDistance<MPTraits>
+      ManhattanDistanceTest<MPTraits>,
+      MinkowskiDistanceTest<MPTraits>,
+      EuclideanDistanceTest<MPTraits>,
+      WorkspaceTranslationDistanceTest<MPTraits>,
+      RMSDDistanceTest<MPTraits>,
+      WeightedEuclideanDistanceTest<MPTraits>,
+      LPSweptDistanceTest<MPTraits>,
+      BinaryLPSweptDistanceTest<MPTraits>,
+      ScaledEuclideanDistanceTest<MPTraits>
       > DistanceMetricMethodList;
 
   //types of validity checkers available in our world
@@ -113,10 +132,10 @@ struct MPTraits {
 
   //types of samplers available in our world
   typedef boost::mpl::list<
-      UniformRandomSamplerTest<MPTraits>,
-      ObstacleBasedSamplerTest<MPTraits>
+      BridgeTestSamplerTest<MPTraits>,
+      ObstacleBasedSamplerTest<MPTraits>,
+      UniformRandomSamplerTest<MPTraits>
       > SamplerMethodList;
-    
 
   //types of local planners available in our world
   typedef boost::mpl::list<
@@ -131,7 +150,6 @@ struct MPTraits {
   //types of path smoothing available in our world
   typedef boost::mpl::list<
       > PathModifierMethodList;
-
 
   //types of connectors available in our world
   typedef boost::mpl::list<
@@ -156,8 +174,13 @@ struct MPTraits {
 
   //types of motion planning strategies available in our world
   typedef boost::mpl::list<
-    ValidationStrategy<MPTraits>
+    //ValidationStrategy<MPTraits>
       > MPStrategyMethodList;
+
+  //types of shapes available in our world
+  typedef boost::mpl::list<
+    NBox
+      > ShapesList;
 };
 
 #endif

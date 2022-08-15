@@ -12,7 +12,7 @@
 /// @ingroup DistanceMetrics
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
-class EuclideanDistance : public MinkowskiDistance<MPTraits> {
+class EuclideanDistance : virtual public MinkowskiDistance<MPTraits> {
 
   public:
 
@@ -39,7 +39,8 @@ EuclideanDistance(bool _normalize) :
 
 template <typename MPTraits>
 EuclideanDistance<MPTraits>::
-EuclideanDistance(XMLNode& _node) : MinkowskiDistance<MPTraits>(_node) {
+EuclideanDistance(XMLNode& _node) : DistanceMetricMethod<MPTraits>(_node), 
+                                    MinkowskiDistance<MPTraits>(_node) {
   this->SetName("Euclidean");
 
   this->m_r1 = 2;

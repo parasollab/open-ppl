@@ -44,10 +44,10 @@
     </GroupTask>
 
     <Robot label="coordinator" virtual="true" filename="../Examples/3D/boxy.robot" manipulator="false">
-      <Agent type="coordinator" dmLabel="minkowski" debug="true">
+      <Agent type="coordinator" dmLabel="minkowski" debug="false">
         <Member label="boxy1"/>
         <Member label="boxy2"/>
-        <StepFunction type="defaultcoordinator" debug="true"/>
+        <StepFunction type="defaultcoordinator" debug="false"/>
       </Agent>
     </Robot>
 
@@ -115,13 +115,21 @@
   <!-- Set available algorithms and parameters. -->
   <Library>
 
-    <DistanceMetrics>
-      <!-- Test not yet added -->
-      <Minkowski label="minkowski" r1="3.0" r2="3.0" r3="0.333"
-        normalize="false"/>
+    <!-- <NBox>
+      <NBo label="NBox"/>
+    </NBox> -->
 
-      <!-- Test not yet added -->
+
+    <DistanceMetrics>
+      <Manhattan label="manhattan"/>
+      <Minkowski label="minkowski"/>
       <Euclidean label="euclidean"/>
+      <LPSwept label="lpSwept" lpLabel="sl"/>
+      <BinaryLPSwept label="binaryLPSwept" lpLabel="sl"/>
+      <WeightedEuclidean label="weightedEuclidean" posWeight=0.25 rotWeight=0.25 velWeight=0.25 avlWeight=0.25/>
+      <ScaledEuclidean label="scaledEuclidean"/>
+      <WorkspaceTranslation label="workspaceTranslation" />
+      <RMSD label="RMSD" />
     </DistanceMetrics>
 
     <ValidityCheckers>
@@ -140,10 +148,11 @@
     </NeighborhoodFinders>
 
     <Samplers>
-      <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
+      <BridgeTestSampler label="BridgeTest" d="10" dmLabel="euclidean" vcLabel="pqp_solid"/>
       <ObstacleBasedSampler label="OBPRM" vcLabel="rapid" useBBX="false"
         pointSelection="cspace" dmLabel="euclidean" stepSize="0.0"
         nShellsColl="0" nShellsFree="10" debug="false"/>
+      <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
     </Samplers>
 
     <LocalPlanners>
@@ -200,15 +209,15 @@
       <!--/BasicRRTStrategy-->
       <!-- LazyPRM-->
 
-      <DynamicRegionRRT label="DRRRT" debug="true" querySampler="UniformRandomFree"
-          samplerLabel="UniformRandom" nfLabel="Nearest" extenderLabel="BERO" 
+      <DynamicRegionRRT label="DRRRT" debug="false" querySampler="UniformRandomFree"
+          samplerLabel="UniformRandom" nfLabel="Nearest" extenderLabel="BERO"
           growGoals="true" connectorLabel="Closest" explore=".2" regionFactor="2.5"
           penetration="1" velocityBiasing="false" velocityAlignment=".4"
           decompositionLabel="fine" skeletonType="ma">
           <Evaluator label="BoundedQuery" />
       </DynamicRegionRRT>
 
-      <BasicPRM label="LazyPRM" debug="true">
+      <BasicPRM label="LazyPRM" debug="false">
         <Sampler label="UniformRandom" number="1" attempts="1"/>
         <Connector label="ClosestAlwaysTrue" />
         <Evaluator label="LazyQuery"/>
@@ -221,8 +230,8 @@
 
     <!-- MPProblem allows multiple solvers to be specified and executed. -->
 
-    <!-- <Solver mpStrategyLabel="RRT" seed="12345678"
-      baseFilename="example" vizmoDebug="true"/> -->
+    <Solver mpStrategyLabel="RRT" seed="12345678"
+      baseFilename="example" vizmoDebug="true"/>
 
     <Solver mpStrategyLabel="LazyPRM" seed="12345678"
       baseFilename="example" vizmoDebug="true"/>

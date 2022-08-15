@@ -8,7 +8,7 @@ template <typename MPTraits>
 class DistanceMetricMethodTest : virtual public DistanceMetricMethod<MPTraits>,
                                  public TestBaseObject {
 
-  public: 
+  public:
 
     ///@name Local Types
     ///@{
@@ -71,7 +71,7 @@ class DistanceMetricMethodTest : virtual public DistanceMetricMethod<MPTraits>,
     ///@}
     ///@name Helper Functions
     ///@{
-  
+
     CfgType GetIndividualCfg();
 
     GroupCfgType GetGroupCfg();
@@ -84,7 +84,7 @@ class DistanceMetricMethodTest : virtual public DistanceMetricMethod<MPTraits>,
 
 template <typename MPTraits>
 DistanceMetricMethodTest<MPTraits>::
-DistanceMetricMethodTest() {}
+DistanceMetricMethodTest() : DistanceMetricMethod<MPTraits>() {}
 
 template <typename MPTraits>
 DistanceMetricMethodTest<MPTraits>::
@@ -124,7 +124,7 @@ RunTest() {
   passed = passed and result.first;
   message = message + result.second;
 
-  return std::make_pair(passed,message); 
+  return std::make_pair(passed,message);
 }
 
 /*----------------------- Default Function Calls ---------------------*/
@@ -135,13 +135,13 @@ DistanceMetricMethodTest<MPTraits>::
 IndividualCfgDistance() {
   auto cfg1 = GetIndividualCfg();
   auto cfg2 = GetIndividualCfg();
-  
+
   for(size_t i = 0; i < cfg2.PosDOF(); i++) {
-    cfg2[i] = 5;
+    cfg2[i] += 5;
   }
 
   for(size_t i = cfg2.PosDOF(); i < cfg2.DOF(); i++) {
-    cfg2[i+cfg2.PosDOF()] = .5;
+    cfg2[i] += 0.5;
   }
 
   return this->Distance(cfg1,cfg2);
@@ -159,13 +159,13 @@ IndividualEdgeWeight() {
   // Get cfgs for edge
   auto cfg1 = GetIndividualCfg();
   auto cfg2 = GetIndividualCfg();
-  
+
   for(size_t i = 0; i < cfg2.PosDOF(); i++) {
-    cfg2[i] = 5;
+    cfg2[i] += 5;
   }
 
   for(size_t i = cfg2.PosDOF(); i < cfg2.DOF(); i++) {
-    cfg2[i+cfg2.PosDOF()] = .5;
+    cfg2[i] += .5;
   }
 
   // Add cfgs to roadmap
@@ -195,9 +195,9 @@ IndividualScaleCfg() {
   }
 
   // Call distance metric method
-  this->Scale(length,cfg);
+  this->ScaleCfg(length,cfg);
 
-  return cfg; 
+  return cfg;
 }
 
 template <typename MPTraits>
@@ -206,7 +206,7 @@ DistanceMetricMethodTest<MPTraits>::
 GroupCfgDistance() {
   auto gcfg1 = GetGroupCfg();
   auto gcfg2 = GetGroupCfg();
-  
+
   for(size_t i = 0; i < gcfg2.GetNumRobots(); i++) {
 
     // Grab individual cfg
@@ -214,11 +214,11 @@ GroupCfgDistance() {
 
     // Adjust individual cfg
     for(size_t j = 0; j < cfg.PosDOF(); j++) {
-      cfg[j] = 5;
+      cfg[j] += 5;
     }
-    
+
     for(size_t j = cfg.PosDOF(); j < cfg.DOF(); j++) {
-      cfg[j+cfg.PosDOF()] = .5;
+      cfg[j] += .5;
     }
   }
 
@@ -231,7 +231,7 @@ double
 DistanceMetricMethodTest<MPTraits>::
 GroupEdgeWeight() {
   // TODO::Implement this default function.
-  // This function does not currently exists in the 
+  // This function does not currently exists in the
   // distance metric method.
   return 0;
 }
@@ -256,13 +256,13 @@ GroupScaleCfg() {
     }
   }
 
-  this->Scale(length,gcfg);
+  this->ScaleCfg(length,gcfg);
 
-  return gcfg; 
+  return gcfg;
 }
 
 /*-------------------------- Helper Functions ------------------------*/
-  
+
 template <typename MPTraits>
 typename MPTraits::CfgType
 DistanceMetricMethodTest<MPTraits>::
@@ -277,7 +277,8 @@ typename MPTraits::GroupCfgType
 DistanceMetricMethodTest<MPTraits>::
 GetGroupCfg() {
   auto group = this->GetMPProblem()->GetRobotGroups()[0].get();
-  GroupCfgType gcfg(group);
+  auto groupRoadmap = this->GetMPLibrary()->GetGroupRoadmap(group);
+  GroupCfgType gcfg(groupRoadmap, true);
   return gcfg;
 }
 
