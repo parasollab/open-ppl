@@ -219,6 +219,7 @@ AddEdge(const VID _source, const VID _target, const Edge& _lp) noexcept {
     // Execute post-add hooks.
     this->ExecuteAddEdgeHooks(ei);
 
+    this->m_predecessors[_target].insert(_source);
     ++this->m_timestamp;
 
     return edgeDescriptor;

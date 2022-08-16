@@ -498,7 +498,7 @@ InitializeLocalCfgs() noexcept {
   m_localCfgs.resize(numRobots);
 
   for(size_t i = 0; i < numRobots; ++i)
-    m_localCfgs[i] = CfgType();
+    m_localCfgs[i] = CfgType(this->GetRobot(i));
 }
 
 /*----------------------------------------------------------------------------*/

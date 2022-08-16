@@ -234,7 +234,12 @@ CompositeEdge<GraphType>::
 CompositeEdge(GroupGraphType* const & _g, const double _w, 
     const CompositePath& _intermediates)
     : m_groupMap(_g), m_group(_g->GetGroup()), 
-      m_weight(_w), m_intermediates(_intermediates) {
+      m_weight(_w) {
+
+  m_intermediates.clear();
+  for(auto intermediate : _intermediates) {
+    m_intermediates.push_back(intermediate);
+  }
 
   if(m_groupMap) {
     m_edges.resize(m_groupMap->GetGroup()->Size(), INVALID_ED);
