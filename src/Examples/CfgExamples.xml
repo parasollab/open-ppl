@@ -231,11 +231,11 @@
 
       <ReebGraphConstruction debug="false" write="false" filename=""/>
 
-      <MedialAxisUtility label="maUtil" vcLabel="pqp_solid"
+      <!--MedialAxisUtility label="maUtil" vcLabel="pqp_solid"
         dmLabel="euclidean" clearanceType="exact" penetrationType="exact"
-        useBBX="true" positional="true"/>
+        useBBX="true" positional="true"/-->
 
-      <SkeletonClearanceUtility label="scu" mauLabel="maUtil"/>
+      <!--SkeletonClearanceUtility label="scu" mauLabel="maUtil"/-->
 
       <SafeIntervalTool label="SI" vcLabel="rapid"/>
 
