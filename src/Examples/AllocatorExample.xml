@@ -172,6 +172,7 @@
   <TMPLibrary>
     <TMPStrategies>
       <SimpleMotionMethod label="SimpleMotion" teLabel="MotionEval"/>
+      <SimpleTaskAllocationMethod label="SimpleAllocator" taLabel="GreedyAlloc"/>
     </TMPStrategies>
 
     <PoIPlacementMethods>
@@ -194,7 +195,8 @@
     <TMPTools>
     </TMPTools>
 
-    <Solver tmpStrategyLabel="SimpleMotion" baseFilename="tmp_examples"/>
+    <Solver tmpStrategyLabel="SimpleAllocator" baseFilename="tmp_examples"/>
+    <!--Solver tmpStrategyLabel="SimpleMotion" baseFilename="tmp_examples"/-->
   </TMPLibrary>
 
 </MotionPlanning>

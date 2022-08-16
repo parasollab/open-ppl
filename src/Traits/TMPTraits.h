@@ -6,6 +6,7 @@
 // TMPStrategyMethods to include
 
 #include "TMPLibrary/TMPStrategies/SimpleMotionMethod.h"
+#include "TMPLibrary/TMPStrategies/SimpleTaskAllocationMethod.h"
 
 // PoIPlacementMethods to include
 
@@ -33,6 +34,7 @@ struct TMPTraits {
 
   //types of tmp strategy methods available in our world
   typedef boost::mpl::list<
+		SimpleTaskAllocationMethod,
 		SimpleMotionMethod
       > TMPStrategyMethodList;
 

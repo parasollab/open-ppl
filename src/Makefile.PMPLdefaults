@@ -458,6 +458,7 @@ TASK_SRCS := \
   TMPLibrary/TaskEvaluators/SimpleMotionEvaluator.cpp \
   TMPLibrary/TaskEvaluators/TaskEvaluatorMethod.cpp \
   TMPLibrary/TMPBaseObject.cpp \
+	TMPLibrary/TMPStrategies/SimpleTaskAllocationMethod.cpp \
 	TMPLibrary/TMPStrategies/SimpleMotionMethod.cpp \
 	TMPLibrary/TMPStrategies/TMPStrategyMethod.cpp \
   TMPLibrary/TMPTools/TMPTools.cpp \
