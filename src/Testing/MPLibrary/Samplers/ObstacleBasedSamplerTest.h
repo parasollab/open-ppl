@@ -51,7 +51,6 @@ class ObstacleBasedSamplerTest : virtual public ObstacleBasedSampler<MPTraits>,
 
     MedialAxisUtility<MPTraits> m_medialAxisUtility;
 
-    string m_vcLabel, m_dmLabel; ///< Validity checker method, distance metric method
     int m_nShellsFree, m_nShellsColl; ///< Number of free and collision shells
     bool m_useBBX; ///< Is the bounding box an obstacle?
     string m_pointSelection; ///< Needed for the WOBPRM
@@ -63,7 +62,7 @@ template <typename MPTraits>
 ObstacleBasedSamplerTest<MPTraits>::
 ObstacleBasedSamplerTest() : ObstacleBasedSampler<MPTraits>() {
   m_medialAxisUtility = MedialAxisUtility<MPTraits>("rapid", "euclidean",
-                                false, false, 300, 300, false, true, false, 0.1, 5);
+                                false, false, 30, 30, false, true, false, 0.1, 5);
 }
 
 template <typename MPTraits>
@@ -71,13 +70,10 @@ ObstacleBasedSamplerTest<MPTraits>::
 ObstacleBasedSamplerTest(XMLNode& _node) : SamplerMethod<MPTraits>(_node),
                                            ObstacleBasedSampler<MPTraits>(_node) {
 
-  m_vcLabel = _node.Read("vcLabel", false, m_vcLabel, "Validity Test Method");
-  m_dmLabel = _node.Read("dmLabel", false, m_dmLabel, "Distance metric");
-
   m_useBBX = _node.Read("useBBX", true, false, "Use bounding box as obstacle");
 
   m_medialAxisUtility = MedialAxisUtility<MPTraits>("rapid", "euclidean",
-                                false, false, 300, 300, m_useBBX, true, false, 0.1, 5);
+                                false, false, 30, 30, m_useBBX, true, false, 0.1, 5);
 
   m_nShellsColl = _node.Read("nShellsColl", true, 3, 0, 10,
       "Number of collision shells");
@@ -107,106 +103,118 @@ TestIndividualCfgSample() {
   Boundary* boundary = nullptr;
   std::vector<Cfg> valids;
   std::vector<Cfg> invalids;
-  std::vector<double> minDistInfoVec;
+  std::vector<double> minDistVec;
+  double avgDist;
+  double envRes;
 
   // Call the Sampler
   this->IndividualCfgSample(boundary, valids, invalids);
   string callee = this->GetNameAndLabel() + "::Sampler()";
   auto vc = this->GetValidityChecker("rapid");
 
-  // Initialize the Medial Axis Utilitiy
-  // Set MPLibrary
+  // Set MPLibrary and initialize the Medial Axis Utilitiy
   m_medialAxisUtility.SetMPLibrary(mpl);
-  // Initialize
   m_medialAxisUtility.Initialize();
 
   // Iterate through valid cfgs
-  for (auto cfg : valids){
-    if(!vc->IsValid(cfg, callee)) {   
-      passed = false;
-      message = message + "\n\tA configuration was incorrectly labeled "
-                "valid for the given boundary. n";
-      break;
+  // First check the number of free shell
+  if (m_nShellsFree > 0) {
+    for (auto cfg : valids){
+      // Check the validity
+      if(!vc->IsValid(cfg, callee)) {   
+        passed = false;
+        message = message + "\n\tA configuration was incorrectly labeled "
+                  "valid for the given boundary.\n";
+        break;
+      }
+
+      // Initilize necessary variables
+      CDInfo _cdInfo;
+      CfgType _cfgClr;
+      bool valid = false;
+
+      // Find a nearest obstacle cfg
+      valid = m_medialAxisUtility.ApproxCollisionInfo(cfg, _cfgClr, boundary, _cdInfo);
+
+      // Cannot find a valid obstacle cfg    
+      if (!valid) {
+        passed = false;
+        message = "Cannot find the closest obstacle from given cfg\n";
+        break;
+      }
+
+      // Store cdInfo and minimum distance
+      minDistVec.push_back(_cdInfo.m_minDist);
+
+      if (!passed)
+        break;
     }
 
-    CDInfo _cdInfo;
-    CfgType _cfgClr;
-    bool valid = false;
-
-    // Find a nearest obstacle cfg
-    valid = m_medialAxisUtility.ApproxCollisionInfo(cfg, _cfgClr, boundary, _cdInfo);
-
-    // Cannot find a valid obstacle cfg    
-    if (!valid) {
+    // Set a criteria to pass
+    envRes = m_nShellsFree*max(env->GetPositionRes(), env->GetOrientationRes());
+    avgDist = std::accumulate(minDistVec.begin(), minDistVec.end(), 0.0) / minDistVec.size();
+    
+    // Debug
+    std::cout << "[Single Robot Single Boundary] Approximated average distance (valid) = " << avgDist << std::endl;
+    
+    // Compare them 
+    if (avgDist > envRes) {
       passed = false;
-      message = "Cannot find the closest obstacle from given cfg\n";
-      break;
+      message = "Average minimum distance from valid cfgs to obstacles is too large \n";
     }
-
-    // Store cdInfo and minimum distance
-    minDistInfoVec.push_back(_cdInfo.m_minDist);
-  }
-
-  // Average out the distances
-  double avgDist = std::accumulate(minDistInfoVec.begin(), minDistInfoVec.end(), 0.0) / minDistInfoVec.size();
-
-  // std::cout << "Single Robot Single Boundary: " << avgDist << std::endl;
-
-  // Set a criteria for pass
-  double envRes = m_nShellsFree*max(env->GetPositionRes(), env->GetOrientationRes());
-
-  // Compare them 
-  if (avgDist > envRes) {
-    passed = false;
-    message = "Average minimum distance from valid cfgs to obstacles is too large \n";
   }
 
   // Iterate through invalid cfgs
-  for (auto cfg : invalids){
-    if(vc->IsValid(cfg, callee)) {   
-      passed = false;
-      message = message + "\n\tA configuration was incorrectly labeled "
-                "invalid for the given boundary. n";
-      break;
+  // First check the number of collision shell
+  if (m_nShellsColl > 0) {  
+    minDistVec.empty();
+    for (auto cfg : invalids) {
+      // Check the validity
+      if(vc->IsValid(cfg, callee)) {   
+        passed = false;
+        message = message + "\n\tA configuration was incorrectly labeled "
+                  "invalid for the given boundary.\n";
+        break;
+      }
+
+      // Initialize necessary variables
+      CDInfo _cdInfo;
+      CfgType _cfgClr;
+      bool valid = false;
+
+      // Find a nearest obstacle cfg
+      valid = m_medialAxisUtility.ApproxCollisionInfo(cfg, _cfgClr, boundary, _cdInfo);
+
+      // Cannot find a nearby obstacle
+      if (!valid) {
+        passed = false;
+        message = "Cannot find the closest obstacle from given cfg\n";
+        break;
+      }
+
+      // Store cdInfo and minimum distance
+      minDistVec.push_back(abs(_cdInfo.m_minDist));
+
+      if (!passed) 
+        break;
     }
 
-    CDInfo _cdInfo;
-    CfgType _cfgClr;
-    bool valid = false;
 
-    // Find a nearest obstacle cfg
-    valid = m_medialAxisUtility.ApproxCollisionInfo(cfg, _cfgClr, boundary, _cdInfo);
+    // Set a criteria to pass
+    envRes = m_nShellsColl*max(env->GetPositionRes(), env->GetOrientationRes());
+    avgDist = std::accumulate(minDistVec.begin(), minDistVec.end(), 0.0) / minDistVec.size();
 
-    // Cannot find a invalid obstacle cfg    
-    if (valid) {
+    // Debug
+    std::cout << "[Single Robot Single Boundary] Approximated average distance (invalid) = " << avgDist << std::endl;
+    
+    // Compare them 
+    if (avgDist > envRes) {
       passed = false;
-      message = "Cannot find the closest obstacle from given cfg\n";
-      break;
+      message = "Average minimum distance from cfgs to obstacles are too large \n";
     }
-
-    // Store cdInfo and minimum distance
-    minDistInfoVec.push_back(_cdInfo.m_minDist);
   }
 
-  // Average out the distances
-  double avgDist = std::accumulate(minDistInfoVec.begin(), minDistInfoVec.end(), 0.0) / minDistInfoVec.size();
-
-  // std::cout << "Single Robot Single Boundary: " << avgDist << std::endl;
-
-  // Set a criteria for pass
-  double envRes = m_nShellsFree*max(env->GetPositionRes(), env->GetOrientationRes());
-
-  // Compare them 
-  if (avgDist > envRes) {
-    passed = false;
-    message = "Average minimum distance from cfgs to obstacles are too large \n";
-  }
-
-
-
-
-
-
+  
   if(passed) {
     message = "IndividualCfgSample::PASSED!\n";
   }
@@ -271,7 +279,10 @@ TestGroupCfgSampleSingleBoundary() {
   Boundary* boundary = nullptr;
   std::vector<GroupCfg> valids;
   std::vector<GroupCfg> invalids;
-  std::vector<double> minDistInfoVec;
+  std::vector<double> tmpMinDistVec;
+  std::vector<double> minDistVec;
+  double envRes;
+  double avgDist;
 
   // Call the Sampler
   this->GroupCfgSampleSingleBoundary(boundary, valids, invalids);
@@ -282,61 +293,140 @@ TestGroupCfgSampleSingleBoundary() {
   m_medialAxisUtility.SetMPLibrary(mpl);
   m_medialAxisUtility.Initialize();
   auto groupTask = this->GetGroupTask();
-
   m_medialAxisUtility.GetMPLibrary()->SetGroupTask(groupTask);
   m_medialAxisUtility.GetMPLibrary()->SetTask(nullptr);
 
   // Iterate through valid cfgs
-  for (auto groupCfg : valids) {
-    if(!vc->IsValid(groupCfg, callee)) {
-      passed = false;
-      message = message + "\n\tA configuration was incorrectly labeled "
-                "valid for the given boundary. n";
-      break;
-    }
-
-    std::vector<double> tmpMinDistVec;
-
-    for (auto task : *groupTask) {
-      CDInfo _cdInfo;
-      CfgType _cfgClr;
-      bool valid = false;
-      
-      m_medialAxisUtility.GetMPLibrary()->SetTask(&task);
-      
-      auto robot = task.GetRobot();
-      CfgType cfg = groupCfg.GetRobotCfg(robot);
-
-      // Find a nearest obstacle cfg
-      valid = m_medialAxisUtility.ApproxCollisionInfo(cfg, _cfgClr, boundary, _cdInfo);
-
-      // Cannot find a valid obstacle cfg    
-      if (!valid) {
+  // First check the number of free shell
+  if (m_nShellsFree > 0) {
+    for (auto groupCfg : valids) {
+      // Check the validity
+      if(!vc->IsValid(groupCfg, callee)) {
         passed = false;
-        message = "Cannot find the closest obstacle from given cfg\n";
-        std::cout << message << std::endl;
+        message = message + "\n\tA configuration was incorrectly labeled "
+                  "valid for the given boundary.\n";
         break;
       }
 
-      tmpMinDistVec.push_back(_cdInfo.m_minDist);
+      tmpMinDistVec.empty();
+
+      // Iterate through the individual task
+      for (auto task : *groupTask) {
+        // Initialize necessary variables
+        CDInfo _cdInfo;
+        CfgType _cfgClr;
+        bool valid = false;
+        
+        // Set the individual task of the Medial Axis Utility
+        m_medialAxisUtility.GetMPLibrary()->SetTask(&task);
+        
+        // Get the corresponding robot as its cfg
+        auto robot = task.GetRobot();
+        CfgType cfg = groupCfg.GetRobotCfg(robot);
+
+        // Find a nearest obstacle cfg
+        valid = m_medialAxisUtility.ApproxCollisionInfo(cfg, _cfgClr, boundary, _cdInfo);
+
+        // Cannot find a valid obstacle cfg    
+        if (!valid) {
+          passed = false;
+          message = "Cannot find the closest obstacle from given cfg\n";
+          std::cout << message << std::endl;
+          break;
+        }
+
+        // Store the minimum distance information of each individual robot
+        tmpMinDistVec.push_back(_cdInfo.m_minDist);
+      }
+
+      // Find the shortest distance and store it in the vector
+      auto minVal = std::min_element(tmpMinDistVec.begin(), tmpMinDistVec.end());
+      minDistVec.push_back(*minVal);
+
+      if (!passed)
+        break;
     }
+    
+    // Set a criteria to pass
+    envRes = m_nShellsFree*max(this->GetEnvironment()->GetPositionRes(), this->GetEnvironment()->GetOrientationRes());
+    avgDist = std::accumulate(minDistVec.begin(), minDistVec.end(), 0.0) / minDistVec.size();
 
-    // Store cdInfo and minimum distance
-    auto minVal = std::min_element(tmpMinDistVec.begin(), tmpMinDistVec.end());
-
-    if (!passed)
-      break;
-
-    // std::cout << "Group Robot Single Boundary: " << *minVal << std::endl;
-
-    // Set a criteria for pass
-    double envRes = m_nShellsFree*max(this->GetEnvironment()->GetPositionRes(), this->GetEnvironment()->GetOrientationRes());
-
+    // Debug
+    std::cout << "[Group Robot Single Boundary] Approximated average distance (valid) = " << avgDist << std::endl;
+    
     // Compare them 
-    if (*minVal > envRes) {
+    if (avgDist > envRes) {
       passed = false;
       message = "Average minimum distance from cfgs to obstacles are too large \n";
-      break;
+    }
+  }
+
+
+  // Iterate through invalid cfgs
+  // First check the number of free shell
+  if (m_nShellsColl > 0) {
+    tmpMinDistVec.empty();
+    minDistVec.empty();
+
+    for (auto groupCfg : invalids) {
+      // Check the validity
+      if(vc->IsValid(groupCfg, callee)) {
+        passed = false;
+        message = message + "\n\tA configuration was incorrectly labeled "
+                  "valid for the given boundary.\n";
+        break;
+      }
+
+      tmpMinDistVec.empty();
+
+      // Iterate through the individual task
+      for (auto task : *groupTask) {
+        // Initialize necessary variables
+        CDInfo _cdInfo;
+        CfgType _cfgClr;
+        bool valid = false;
+
+        // Set the individual task of the Medial Axis Utility
+        m_medialAxisUtility.GetMPLibrary()->SetTask(&task);
+
+        // Get the corresponding robot as its cfg
+        auto robot = task.GetRobot();
+        CfgType cfg = groupCfg.GetRobotCfg(robot);
+
+        // Find a nearest obstacle cfg
+        valid = m_medialAxisUtility.ApproxCollisionInfo(cfg, _cfgClr, boundary, _cdInfo);
+
+        // Cannot find a valid obstacle cfg    
+        if (!valid) {
+          passed = false;
+          message = "Cannot find the closest obstacle from given cfg\n";
+          std::cout << message << std::endl;
+          break;
+        }
+
+        // Store the minimum distance information of each individual robot
+        tmpMinDistVec.push_back(_cdInfo.m_minDist);
+      }
+
+      // Find the shortest distance and store it in the vector
+      auto minVal = std::min_element(tmpMinDistVec.begin(), tmpMinDistVec.end());
+      minDistVec.push_back(abs(*minVal));
+
+      if (!passed)
+        break;
+    }
+    
+    // set a criteria to pass
+    double envRes = m_nShellsColl*max(this->GetEnvironment()->GetPositionRes(), this->GetEnvironment()->GetOrientationRes());
+    avgDist = std::accumulate(minDistVec.begin(), minDistVec.end(), 0.0) / minDistVec.size();
+
+    // Debug
+    std::cout << "[Group Robot Single Boundary] Approximated average distance (invalid) = " << avgDist << std::endl;
+
+    // Compare them 
+    if (avgDist > envRes) {
+      passed = false;
+      message = "Average minimum distance from cfgs to obstacles are too large \n";
     }
   }
   
@@ -364,7 +454,10 @@ TestGroupCfgSampleIndividualBoundaries() {
   std::map<Robot*,const Boundary*> boundaryMap;
   std::vector<GroupCfg> valids;
   std::vector<GroupCfg> invalids;
-  std::vector<double> minDistInfoVec;
+  std::vector<double> tmpMinDistVec;
+  std::vector<double> minDistVec;
+  double envRes;
+  double avgDist;
 
   // Call the Sampler
   this->GroupCfgSampleIndividualBoundaries(boundaryMap, valids, invalids);
@@ -380,64 +473,145 @@ TestGroupCfgSampleIndividualBoundaries() {
   m_medialAxisUtility.GetMPLibrary()->SetTask(nullptr);
 
   // Iterate through valid cfgs
-  for (auto groupCfg : valids) {
-    if(!vc->IsValid(groupCfg, callee)) {
-      passed = false;
-      message = message + "\n\tA configuration was incorrectly labeled "
-                "valid for the given boundary. n";
-      break;
-    }
-
-    std::vector<double> tmpMinDistVec;
-
-    for (auto task : *groupTask) {
-      CDInfo _cdInfo;
-      CfgType _cfgClr;
-      bool valid = false;
-
-      // Set an individual task for the Medial Axis Utility
-      m_medialAxisUtility.GetMPLibrary()->SetTask(&task);
-      
-      // Get the individual robot and corresponding cfg
-      auto robot = task.GetRobot();
-      CfgType cfg = groupCfg.GetRobotCfg(robot);
-
-      // Get a boundary of a robot
-      auto boundary = boundaryMap.at(robot);
-
-      // Find a nearest obstacle cfg
-      valid = m_medialAxisUtility.ApproxCollisionInfo(cfg, _cfgClr, boundary, _cdInfo);
-
-      // Cannot find a valid obstacle cfg    
-      if (!valid) {
+  // First check the number of free shell
+  if (m_nShellsFree > 0) {
+    // Check the validity
+    for (auto groupCfg : valids) {
+      if(!vc->IsValid(groupCfg, callee)) {
         passed = false;
-        message = "Cannot find the closest obstacle from given cfg\n";
-        std::cout << message << std::endl;
+        message = message + "\n\tA configuration was incorrectly labeled "
+                  "valid for the given boundary.\n";
         break;
       }
 
-      tmpMinDistVec.push_back(_cdInfo.m_minDist);
+      tmpMinDistVec.empty();
+
+      // Iterate through the individual task
+      for (auto task : *groupTask) {
+        // Initialize necessary variables
+        CDInfo _cdInfo;
+        CfgType _cfgClr;
+        bool valid = false;
+
+        // Set an individual task for the Medial Axis Utility
+        m_medialAxisUtility.GetMPLibrary()->SetTask(&task);
+        
+        // Get the individual robot and corresponding cfg
+        auto robot = task.GetRobot();
+        CfgType cfg = groupCfg.GetRobotCfg(robot);
+
+        // Get a boundary of a robot
+        auto boundary = boundaryMap.at(robot);
+
+        // Find a nearest obstacle cfg
+        valid = m_medialAxisUtility.ApproxCollisionInfo(cfg, _cfgClr, boundary, _cdInfo);
+
+        // Cannot find a valid obstacle cfg    
+        if (!valid) {
+          passed = false;
+          message = "Cannot find the closest obstacle from given cfg\n";
+          std::cout << message << std::endl;
+          break;
+        }
+
+        // Store the minimum distance information of each individual robot
+        tmpMinDistVec.push_back(_cdInfo.m_minDist);
+      }
+
+      // Find the shortest distacne and store it in the vector
+      auto minVal = std::min_element(tmpMinDistVec.begin(), tmpMinDistVec.end());
+      minDistVec.push_back(*minVal);
+      
+      if (!passed)
+        break;
     }
 
-    // Find the minimum distacne and store it in the vector
-    auto minVal = std::min_element(tmpMinDistVec.begin(), tmpMinDistVec.end());
+    // Set a criteria to pass
+    envRes = m_nShellsFree*max(this->GetEnvironment()->GetPositionRes(), this->GetEnvironment()->GetOrientationRes());
+    avgDist = std::accumulate(minDistVec.begin(), minDistVec.end(), 0.0) / minDistVec.size();
     
-    if (!passed)
-      break;
-
-    // std::cout << "Group Robot Individual Boundary: " << *minVal << std::endl;
-
-    // Set a criteria for pass
-    double envRes = m_nShellsFree*max(this->GetEnvironment()->GetPositionRes(), this->GetEnvironment()->GetOrientationRes());
-
+    // Debug
+    std::cout << "[Group Robot Individual Boundary] Approximated average distance (valid) = " << avgDist << std::endl;
+    
     // Compare them 
-    if (*minVal > envRes) {
+    if (avgDist > envRes) {
       passed = false;
       message = "Average minimum distance from cfgs to obstacles are too large \n";
-      break;
     }
   }
+
+  // Iterate through valid cfgs
+  // First check the number of free shell  
+  if (m_nShellsColl > 0) {
+    tmpMinDistVec.empty();
+    minDistVec.empty();
+
+    for (auto groupCfg : invalids) {
+      // Check the validity
+      if(vc->IsValid(groupCfg, callee)) {
+        passed = false;
+        message = message + "\n\tA configuration was incorrectly labeled "
+                  "valid for the given boundary.\n";
+        break;
+      }
+
+      tmpMinDistVec.empty();
+
+      // Iterate through the individual task
+      for (auto task : *groupTask) {
+        // Initialize necessary variables
+        CDInfo _cdInfo;
+        CfgType _cfgClr;
+        bool valid = false;
+
+        // Set an individual task for the Medial Axis Utility
+        m_medialAxisUtility.GetMPLibrary()->SetTask(&task);
+        
+        // Get the individual robot and corresponding cfg
+        auto robot = task.GetRobot();
+        CfgType cfg = groupCfg.GetRobotCfg(robot);
+
+        // Get a boundary of a robot
+        auto boundary = boundaryMap.at(robot);
+
+        // Find a nearest obstacle cfg
+        valid = m_medialAxisUtility.ApproxCollisionInfo(cfg, _cfgClr, boundary, _cdInfo);
+
+        // Cannot find a valid obstacle cfg    
+        if (!valid) {
+          passed = false;
+          message = "Cannot find the closest obstacle from given cfg\n";
+          std::cout << message << std::endl;
+          break;
+        }
+
+        // Store the minimum distance information of each individual robot
+        tmpMinDistVec.push_back(_cdInfo.m_minDist);
+      }
+
+      // Find the minimum distacne and store it in the vector
+      auto minVal = std::min_element(tmpMinDistVec.begin(), tmpMinDistVec.end());
+      minDistVec.push_back(abs(*minVal));
+
+      if (!passed)
+        break;
+    }
+
+    // set a criteria to pass
+    envRes = m_nShellsColl*max(this->GetEnvironment()->GetPositionRes(), this->GetEnvironment()->GetOrientationRes());
+    avgDist = std::accumulate(minDistVec.begin(), minDistVec.end(), 0.0) / minDistVec.size();
+
+    // Debug
+    std::cout << "[Group Robot Individual Boundary] Approximated average distance (invalid) = " << avgDist << std::endl;
+    
+    // Compare them 
+    if (avgDist > envRes) {
+      passed = false;
+      message = "Average minimum distance from cfgs to obstacles are too large \n";
+    }
   
+  }
+
   if(passed) {
     message = "GroupCfgSampleIndividualBoundaries::PASSED!\n";
   }
