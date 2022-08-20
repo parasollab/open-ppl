@@ -116,7 +116,8 @@ class ObstacleBasedSampler : virtual public SamplerMethod<MPTraits> {
     /// @param _incr The amount of increments in the specified direction.
     /// @param _result A vector that stores Free Group Configuration Space
     /// @param _collision A vector that stores Collision Group Configuration Space
-    void GenerateShells(const Environment* const _environment,
+    // void GenerateShells(const Environment* const _environment,
+    void GenerateShells(const BoundaryMap& _boundaryMap,
         GroupCfgType& _cFree, GroupCfgType& _cColl, GroupCfgType& _incr,
         vector<GroupCfgType>& _result, vector<GroupCfgType>& _collision);
 
@@ -164,6 +165,11 @@ class ObstacleBasedSampler : virtual public SamplerMethod<MPTraits> {
     /// @param _v Multibody of the obstacle
     /// @return Configuration Type of the sample
     CfgType GetCfgWithParams(const Vector3d& _v);
+
+    bool GroupInBounds(GroupCfgType& _groupCfg, const BoundaryMap& _boundaryMap);
+    bool GroupInBounds(GroupCfgType& _groupCfg, const Boundary* const _boundary);
+    // GroupIsValid(GroupCfgType& _groupCfg, std::string callee)
+
 
     ///@}
 
@@ -376,7 +382,7 @@ Sampler(GroupCfgType& _cfg, const Boundary* const _boundary,
     c1Free = c2Free;
     // Update new state
     c2 += r;
-    c2BBox = c2.InBounds(_boundary);
+    c2BBox = GroupInBounds(c2, _boundary);
     c2Free = vc->IsValid(c2, callee);
   }
 
@@ -461,7 +467,7 @@ Sampler(GroupCfgType& _cfg, const BoundaryMap& _boundaryMap,
     c1Free = c2Free;
     // Update new state
     c2 += r;
-    c2BBox = c2.InBounds(env);
+    c2BBox = GroupInBounds(c2, _boundaryMap);
     c2Free = vc->IsValid(c2, callee);
   }
 
@@ -475,14 +481,14 @@ Sampler(GroupCfgType& _cfg, const BoundaryMap& _boundaryMap,
         // Reverse direction of r
         r -= r;
         // Process configurations
-        GenerateShells(env, c1, c2, r, _result, _collision);
+        GenerateShells(_boundaryMap, c1, c2, r, _result, _collision);
         // Add the new state (c2) to the collision vecter
         _collision.push_back(c2);
       }
       // If the new state (c2) is in the free C space
       else { 
         // Process configurations
-        GenerateShells(env, c2, c1, r, _result, _collision);
+        GenerateShells(_boundaryMap, c2, c1, r, _result, _collision);
         // Add the old state (c1) to the collision vecter
         _collision.push_back(c1);
       }
@@ -494,7 +500,7 @@ Sampler(GroupCfgType& _cfg, const BoundaryMap& _boundaryMap,
         // Reverse direction of r
         r -= r;
         // Process configurations
-        GenerateShells(env, c1, c2, r, _result, _collision);
+        GenerateShells(_boundaryMap, c1, c2, r, _result, _collision);
         // Add the new state (c2) to the collision vecter
         _collision.push_back(c2);
         return true;
@@ -503,6 +509,55 @@ Sampler(GroupCfgType& _cfg, const BoundaryMap& _boundaryMap,
   }
   return false;
 }
+
+template <typename MPTraits>
+bool
+ObstacleBasedSampler<MPTraits>::
+GroupInBounds(GroupCfgType& _groupCfg, const BoundaryMap& _boundaryMap) {
+  auto groupTask = this->GetGroupTask();
+  for (auto task : *groupTask) {
+    auto robot = task.GetRobot();
+    CfgType cfg = _groupCfg.GetRobotCfg(robot);
+    auto boundary = _boundaryMap.at(robot);
+    if (!cfg.InBounds(boundary))
+      return false;
+  }
+  return true;
+}
+
+
+template <typename MPTraits>
+bool
+ObstacleBasedSampler<MPTraits>::
+GroupInBounds(GroupCfgType& _groupCfg, const Boundary* const _boundary) {
+  auto groupTask = this->GetGroupTask();
+  for (auto task : *groupTask) {
+    auto robot = task.GetRobot();
+    CfgType cfg = _groupCfg.GetRobotCfg(robot);
+    if (!cfg.InBounds(_boundary))
+      return false;
+  }
+  return true;
+}
+
+
+// template <typename MPTraits>
+// bool
+// ObstacleBasedSampler<MPTraits>::
+// GroupIsValid(GroupCfgType& _groupCfg, std::string callee) {
+//   bool isValid = true;
+//   auto vc = this->GetValidityChecker(m_vcLabel);
+//   auto groupTask = this->GetGroupTask();
+//   for (auto task : *groupTask) {
+//     auto robot = task.GetRobot();
+//     CfgType cfg = _groupCfg.GetRobotCfg(robot);
+//     if (!vc->IsValid(cfg, callee))
+//       isValid = false;
+//       break;
+//   }
+//   return isValid;
+// }
+
 
 
 // Shell Generator
@@ -559,7 +614,7 @@ GenerateShells(const Boundary* const _boundary,
   // Add "free" shells
   for(int i = 0; i < m_nShellsFree; i++) {
     // If the shell is valid (If it is in the free C space)
-    if(_cFree.InBounds(_boundary) and vc->IsValid(_cFree, callee))
+    if(GroupInBounds(_cFree, _boundary) and vc->IsValid(_cFree, callee))
       _result.push_back(_cFree);  
     // Get next shell
     _cFree += _incr;
@@ -571,7 +626,7 @@ GenerateShells(const Boundary* const _boundary,
   // Add "collision" shells
   for(int i = 0; i < m_nShellsColl; i++) {
     // If the shell is valid (If it is in the collision C space)
-    if(_cColl.InBounds(_boundary) and !vc->IsValid(_cColl, callee))
+    if(GroupInBounds(_cColl, _boundary) and !vc->IsValid(_cColl, callee))
       _collision.push_back(_cColl);
     // Get next shell
     _cColl += _incr;
@@ -581,7 +636,7 @@ GenerateShells(const Boundary* const _boundary,
 template <typename MPTraits>
 void
 ObstacleBasedSampler<MPTraits>::
-GenerateShells(const Environment* const _environment,
+GenerateShells(const BoundaryMap& _boundaryMap,
     GroupCfgType& _cFree, GroupCfgType& _cColl, GroupCfgType& _incr,
     vector<GroupCfgType>& _result, vector<GroupCfgType>& _collision) {
 
@@ -595,7 +650,8 @@ GenerateShells(const Environment* const _environment,
   // Add "free" shells
   for(int i = 0; i < m_nShellsFree; i++) {
     // If the shell is valid (If it is in the free C space)
-    if(_cFree.InBounds(_environment) and vc->IsValid(_cFree, callee))
+    if(GroupInBounds(_cFree, _boundaryMap) and vc->IsValid(_cFree, callee))
+    // if(_cFree.InBounds(_environment) and vc->IsValid(_cFree, callee))
       _result.push_back(_cFree);  
     // Get next shell
     _cFree += _incr;
@@ -607,7 +663,8 @@ GenerateShells(const Environment* const _environment,
   // Add "collision" shells
   for(int i = 0; i < m_nShellsColl; i++) {
     // If the shell is valid (If it is in the collision C space)
-    if(_cColl.InBounds(_environment) and !vc->IsValid(_cColl, callee))
+    if(GroupInBounds(_cColl, _boundaryMap) and vc->IsValid(_cColl, callee))
+    // if(_cColl.InBounds(_environment) and !vc->IsValid(_cColl, callee))
       _collision.push_back(_cColl);
     // Get next shell
     _cColl += _incr;

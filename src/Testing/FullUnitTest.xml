@@ -151,7 +151,7 @@
       <BridgeTestSampler label="BridgeTest" d="10" dmLabel="euclidean" vcLabel="pqp_solid"/>
       <ObstacleBasedSampler label="OBPRM" vcLabel="rapid" useBBX="false"
         pointSelection="cspace" dmLabel="euclidean" stepSize="0.0"
-        nShellsColl="0" nShellsFree="10" debug="false"/>
+        nShellsColl="0" nShellsFree="10" debug="false" />
       <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
     </Samplers>
 
@@ -224,8 +224,12 @@
       </BasicPRM>
     </MPStrategies>
 
+
     <MPTools>
       <SafeIntervalTool label="SI" vcLabel="pqp_solid"/>
+      <MedialAxisUtility vcLabel="pqp_solid"
+        dmLabel="euclidean" clearanceType="exact" penetrationType="exact"
+        useBBX="true" positionalDofsOnly="true" clearanceRays="300" penetrationRayFactor="1"/>
     </MPTools>
 
     <!-- MPProblem allows multiple solvers to be specified and executed. -->
@@ -235,7 +239,6 @@
 
     <Solver mpStrategyLabel="LazyPRM" seed="12345678"
       baseFilename="example" vizmoDebug="true"/>
-
 
   </Library>
 
