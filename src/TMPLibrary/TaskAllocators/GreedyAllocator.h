@@ -57,7 +57,7 @@ class GreedyAllocator : public TaskAllocatorMethod {
     std::shared_ptr<MPTask> CreateMPTask(Robot* _robot, const Cfg& _start, const Cfg& _goal);
 
     /// Create a MPTask from cfg and constraint
-    std::shared_ptr<MPTask> CreateMPTask(Robot* _robot, const Cfg& _start, Constraint*  _goal);
+    std::shared_ptr<MPTask> CreateMPTask(Robot* _robot, const Cfg& _start, const Constraint*  _goal);
 
     ///@}
     ///@name Internal State
@@ -65,6 +65,8 @@ class GreedyAllocator : public TaskAllocatorMethod {
 
     /// Flag keeping track of initialization status
     bool m_initialized;
+
+    std::string m_multiSolver;
 
     /// Local MPSolution to store roadmaps and query paths from
     std::unique_ptr<MPSolution> m_solution;
