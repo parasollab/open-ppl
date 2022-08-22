@@ -4,7 +4,7 @@
 #include "MapEvaluatorMethod.h"
 
 #include "ConfigurationSpace/Path.h"
-#include "ConfigurationSpace/RoadmapGraph.h"
+#include "ConfigurationSpace/GenericStateGraph.h"
 #include "MPLibrary/LocalPlanners/LPOutput.h"
 #include "MPLibrary/LocalPlanners/StraightLine.h"
 #include "MPProblem/MPProblem.h"
@@ -65,8 +65,8 @@ class SIPPMethod : public MapEvaluatorMethod<MPTraits> {
       }
 
     };
-    typedef RoadmapGraph<Cfg, DefaultWeight<Cfg>> RoadmapGraphType;
-    typedef RoadmapGraph<State, DefaultWeight<Cfg>> SIPPGraph;
+    typedef GenericStateGraph<Cfg, DefaultWeight<Cfg>> RoadmapGraphType;
+    typedef GenericStateGraph<State, DefaultWeight<Cfg>> SIPPGraph;
 
     ///@}
     ///@name Construction

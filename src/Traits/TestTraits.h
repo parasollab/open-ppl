@@ -8,12 +8,11 @@
 #include "Testing/MPLibrary/MPLibraryTests.h"
 
 #include "ConfigurationSpace/LocalObstacleMap.h"
+#include "ConfigurationSpace/CompositeGraph.h"
 #include "ConfigurationSpace/GroupCfg.h"
 #include "ConfigurationSpace/GroupLocalPlan.h"
 #include "ConfigurationSpace/GroupPath.h"
-#include "ConfigurationSpace/GroupRoadmap.h"
 #include "ConfigurationSpace/Path.h"
-#include "ConfigurationSpace/RoadmapGraph.h"
 #include "ConfigurationSpace/Weight.h"
 
 //distance metric includes
@@ -93,7 +92,7 @@ struct MPTraits {
 
   typedef C                               CfgType;
   typedef W                               WeightType;
-  typedef RoadmapGraph<C, W>              RoadmapType;
+  typedef GenericStateGraph<C, W>              RoadmapType;
   typedef PathType<MPTraits>              Path;
   typedef MPLibraryTests<MPTraits>        MPLibrary;
   typedef MPSolutionType<MPTraits>        MPSolution;
@@ -101,11 +100,10 @@ struct MPTraits {
   typedef LocalObstacleMapType<MPTraits>  LocalObstacleMap;
   typedef GoalTrackerType<MPTraits>       GoalTracker;
 
-  typedef GroupLocalPlan<CfgType>                    GroupWeightType;
-  typedef GroupRoadmap<GroupCfg, GroupWeightType>    GroupRoadmapType;
-  typedef GroupPath<MPTraits>                        GroupPathType;
-  typedef GroupCfg                                   GroupCfgType;
-
+  typedef GroupCfg<RoadmapType>                          GroupCfgType;
+  typedef GroupLocalPlan<RoadmapType>                    GroupWeightType;
+  typedef GroupRoadmap<GroupCfgType, GroupWeightType>    GroupRoadmapType;
+  typedef GroupPath<MPTraits>                            GroupPathType;
 
   //types of distance metrics available in our world
   typedef boost::mpl::list<

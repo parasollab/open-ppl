@@ -14,6 +14,8 @@ class BridgeTestSamplerTest : virtual public BridgeTestSampler<MPTraits>,
 
     typedef TestBaseObject::TestResult TestResult;
 
+    typedef typename MPTraits::GroupCfgType GroupCfgType;
+
     ///@}
     ///@name Construction
     ///@{
@@ -160,8 +162,8 @@ TestGroupCfgSampleSingleBoundary() {
   std::string message = "";
 
   Boundary* boundary = nullptr;
-  std::vector<GroupCfg> valids;
-  std::vector<GroupCfg> invalids;
+  std::vector<GroupCfgType> valids;
+  std::vector<GroupCfgType> invalids;
   
   this->GroupCfgSampleSingleBoundary(boundary, valids, invalids);
 
@@ -204,8 +206,8 @@ TestGroupCfgSampleIndividualBoundaries() {
   for(auto robot : this->GetGroupRoadmap()->GetGroup()->GetRobots()) {
     boundaryMap.emplace(std::make_pair(robot, this->GetEnvironment()->GetBoundary()));
   }
-  std::vector<GroupCfg> valids;
-  std::vector<GroupCfg> invalids;
+  std::vector<GroupCfgType> valids;
+  std::vector<GroupCfgType> invalids;
   
   this->GroupCfgSampleIndividualBoundaries(boundaryMap, valids, invalids);
 

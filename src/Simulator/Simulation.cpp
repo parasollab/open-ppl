@@ -343,7 +343,7 @@ RemovePath(const size_t _id) {
 
 size_t
 Simulation::
-AddRoadmap(RoadmapGraph<Cfg, DefaultWeight<Cfg>>* _graph,
+AddRoadmap(GenericStateGraph<Cfg, DefaultWeight<Cfg>>* _graph,
     const glutils::color& _color) {
   std::lock_guard<std::mutex> lock(m_guard);
 

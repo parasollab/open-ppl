@@ -18,6 +18,7 @@ class GroupDecoupledStrategy : public GroupStrategyMethod<MPTraits> {
     ///@{
 
     typedef typename MPTraits::CfgType          CfgType;
+    typedef typename MPTraits::GroupCfgType     GroupCfgType;
     typedef typename MPTraits::WeightType       WeightType;
     typedef typename MPTraits::RoadmapType      RoadmapType;
     typedef typename MPTraits::GroupWeightType  GroupWeightType;
@@ -189,7 +190,7 @@ Finalize() {
       std::cout << "Creating group path vertex " << i << std::endl;
 
     // Add the next node to the group map.
-    GroupCfg cfg(groupRoadmap);
+    GroupCfgType cfg(groupRoadmap);
     for(size_t j = 0; j < numRobots; ++j) {
       const VID vid = i >= paths[j].size() ? paths[j].back() : paths[j][i];
       if(this->m_debug)

@@ -1,7 +1,7 @@
 #ifndef PMPL_MP_STRATEGY_METHOD_H_
 #define PMPL_MP_STRATEGY_METHOD_H_
 
-#include "ConfigurationSpace/RoadmapGraph.h"
+#include "ConfigurationSpace/GenericStateGraph.h"
 #include "MPProblem/Constraints/Constraint.h"
 #include "MPProblem/MPTask.h"
 #include "MPLibrary/Samplers/SamplerMethod.h"
