@@ -64,7 +64,7 @@ class GreedyAllocator : public TaskAllocatorMethod {
     ///@{
 
     /// Flag keeping track of initialization status
-    bool m_initialized;
+    bool m_initialized = false;
 
     std::string m_multiSolver;
 

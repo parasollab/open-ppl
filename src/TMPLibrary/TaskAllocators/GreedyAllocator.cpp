@@ -97,7 +97,7 @@ AllocateTask(SemanticTask* _semanticTask) {
     //       SemanticTask as the goal (_semanticTask->GetMotionTask()->GetStartConstraint())
 
     std::cout<< "Checking robot " << robot.get() << endl;
- 
+
     auto task = CreateMPTask(robot.get(), problem->GetInitialCfg(robot.get()), _semanticTask->GetMotionTask()->GetStartConstraint());
 
     // compute cost of path
@@ -109,12 +109,13 @@ AllocateTask(SemanticTask* _semanticTask) {
     //auto roadmap = m_solution->GetRoadmap(robot.get());
     //m_solution->SetRoadmap(robot.get(),c);
 
-    
-    m_solution->AddRobot(robot.get()); 
-    m_solution->SetRoadmap(robot.get(), lib->GetMPSolution()->GetRoadmap(robot.get())); 
+    //auto solution = new MPSolution(robot.get());
+    //solution->SetRoadmap(robot.get(), lib->GetMPSolution()->GetRoadmap(robot.get()));
+    m_solution->AddRobot(robot.get());
     lib->Solve(problem, task.get(),
-      m_solution.get(), "PRM", LRand(),
+      m_solution.get(), "BasicPRM", LRand(),
       this->GetNameAndLabel()+"::"+task->GetLabel());
+
 
     double pathCost;
     if(!m_solution->GetPath()->Cfgs().empty()){
@@ -127,21 +128,21 @@ AllocateTask(SemanticTask* _semanticTask) {
     // compute cost (i.e. distance)
     //double pathCost = m_solution->GetPath()->Length();
     std::cout << "path cost = " << pathCost << endl;
-    
+
     // TODO::Compute cost for robot to execute task
     //       Use the motion task inside the SemanticTask (_semanticTask->GetMotionTask())
 
     //if (m_solution->GetPath()->Cfgs().empty()) {
     //  lib->Solve(problem,_semanticTask->GetMotionTask().get());
     //}
-    //else 
+    //else
     lib->Solve(problem,_semanticTask->GetMotionTask().get(),m_solution.get());
 
     // compute cost of this task
     double taskCost = m_solution->GetPath()->Length();
     std::cout << "task cost = " << taskCost << endl;
 
-    double totalCost = pathCost + taskCost; 
+    double totalCost = pathCost + taskCost;
 
 
     // TODO::Assign to best robot
@@ -152,7 +153,7 @@ AllocateTask(SemanticTask* _semanticTask) {
 
   }
 
-  
+
   // TODO::Update plan allocation
   SaveAllocation(bestRobot,_semanticTask);
 
