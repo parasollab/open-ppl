@@ -371,8 +371,16 @@ Sampler(GroupCfgType& _cfg, const Boundary* const _boundary,
   bool c2Free = c1Free;
 
   // Create a random ray
-  GroupCfgType r(groupRoadmap, false);
-  r.GetRandomRay(m_stepSize, dm);
+  GroupCfgType r(groupRoadmap);
+  // r.GetRandomRay(m_stepSize, dm);
+  for(size_t j = 0; j < r.GetNumRobots(); ++j) {
+    r.GetRobotCfg(j).GetRandomRay(m_stepSize, dm);
+      // for(size_t i = 0; i < r.GetRobotCfg(j).DOF(); ++i)
+          // r.GetRobotCfg(j)[i] = GRand();
+  }
+
+  // dm->ScaleCfg(m_stepSize, *this);
+
 
   // Loop until the new state is outside the bounds or the validity changes
   while(c2BBox && (c1Free == c2Free)) {
@@ -456,8 +464,13 @@ Sampler(GroupCfgType& _cfg, const BoundaryMap& _boundaryMap,
   bool c2Free = c1Free;
 
   // Create a random ray
-  GroupCfgType r(groupRoadmap, false);
-  r.GetRandomRay(m_stepSize, dm);
+  GroupCfgType r(groupRoadmap);
+  // r.GetRandomRay(m_stepSize, dm);
+  for(size_t j = 0; j < r.GetNumRobots(); ++j) {
+    r.GetRobotCfg(j).GetRandomRay(m_stepSize, dm);
+      // for(size_t i = 0; i < r.GetRobotCfg(j).DOF(); ++i)
+          // r.GetRobotCfg(j)[i] = GRand();
+  }
 
   // Loop until the new state is outside the bounds or the validity changes
   while(c2BBox && (c1Free == c2Free)) {

@@ -17,6 +17,7 @@ class ObstacleBasedSamplerTest : virtual public ObstacleBasedSampler<MPTraits>,
     ///@name Local Types
     ///@{
     typedef typename MPTraits::CfgType        CfgType;
+    typedef typename MPTraits::GroupCfgType   GroupCfg;
     typedef TestBaseObject::TestResult        TestResult;
     typedef typename MPTraits::MPLibrary      MPLibrary;
 
