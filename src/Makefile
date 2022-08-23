@@ -19,7 +19,7 @@ asan     ?= 0
 vizmo_map := -DVIZMO_MAP
 
 # Temporary setting for making vizmo-compatible maps for robot groups.
-group_map := #-DGROUP_MAP
+group_map := -DGROUP_MAP
 ifeq ($(group_map), -DGROUP_MAP)
   vizmo_map ?= -DVIZMO_MAP
 endif
