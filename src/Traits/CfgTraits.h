@@ -169,7 +169,7 @@ struct MPTraits {
     QueryMethod<MPTraits>,
     SIPPMethod<MPTraits>,
     TimeEvaluator<MPTraits>,
-    GroupQuery`<MPTraits>
+    GroupQuery<MPTraits>
       > MapEvaluatorMethodList;
 
   //types of motion planning strategies available in our world
