@@ -706,6 +706,8 @@ RewireTest(GroupRoadmapType* const _r, const VID _vid,
     const VID _currentParent,   const double _currentCost,
     const VID _potentialParent, const double _potentialParentCost,
     OutputIterator<GroupRoadmapType>* const _collision) noexcept {
+
+  GroupLPOutput<MPTraits> glpo(_r);
   // Skip rewiring through the same parent.
   const bool sameParent = _potentialParent == _currentParent;
   if(sameParent) {
@@ -713,7 +715,7 @@ RewireTest(GroupRoadmapType* const _r, const VID _vid,
       std::cout << "\t\tNot rewiring node " << _vid
                 << " which is already a child of " << _potentialParent << "."
                 << std::endl;
-    return GroupRewireTestOutput();
+    return GroupRewireTestOutput(false, std::move(glpo), 0.0);
   }
 
   // Check for previous failures to generate this local plan.
@@ -724,7 +726,7 @@ RewireTest(GroupRoadmapType* const _r, const VID _vid,
                 << _potentialParent << ", " << _vid
                 << ") was already found invalid."
                 << std::endl;
-    return GroupRewireTestOutput();
+    return GroupRewireTestOutput(false, std::move(glpo), 0.0);
   }
 
   // Skip rewiring if the current path to _vid is better than the path to
@@ -736,7 +738,7 @@ RewireTest(GroupRoadmapType* const _r, const VID _vid,
                 << _currentCost << " is better than cost to " << _potentialParent
                 << " of " << _potentialParentCost << "."
                 << std::endl;
-    return GroupRewireTestOutput();
+    return GroupRewireTestOutput(false, std::move(glpo), 0.0);
   }
 
   // If the total cost isn't better, do not rewire.
@@ -753,7 +755,7 @@ RewireTest(GroupRoadmapType* const _r, const VID _vid,
                 << _currentCost << " is better than cost through "
                 << _potentialParent << " of " << potentialCost << "."
                 << std::endl;
-    return GroupRewireTestOutput();
+    return GroupRewireTestOutput(false, std::move(glpo), 0.0);
   }
 
   // Create a local plan. If we fail, do not rewire.
@@ -776,7 +778,7 @@ RewireTest(GroupRoadmapType* const _r, const VID _vid,
                 << _potentialParent << ", " << _vid
                 << ") is invalid."
                 << std::endl;
-    return GroupRewireTestOutput();
+    return GroupRewireTestOutput(false, std::move(glpo), 0.0);
   }
 
   // Ensure that the computed LP cost is approximately equal to the distance

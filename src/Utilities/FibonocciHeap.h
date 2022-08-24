@@ -1,12 +1,13 @@
 #ifndef FIBONACCI_HEAP_H_
 #define FIBONACCI_HEAP_H_
 
-#include "ConfigurationSpace/RoadmapGraph.h"
+#include "ConfigurationSpace/GenericStateGraph.h"
 
+template<typename State, typename Action>
 class FibonacciHeap {
 	public:
 
-		typedef RoadmapGraph<Cfg, DefaultWeight<Cfg>> Roadmap;
+		typedef GenericStateGraph<State, Action> StateGraph;
 
 		/** node structure for a node in fibonacci heap */
 	struct FibonacciNode {
@@ -21,8 +22,8 @@ class FibonacciHeap {
 		size_t m_VID;             //Pointer to the node. Simplifying, we use an int-index to represent each node.
 	};
 
-	Fibonacci(Roadmap* _roadmap){
-		m_roadmap = _roadmap;
+	Fibonacci(StateGraph* _stateGraph){
+		m_stateGraph = _stateGraph;
 	}
 
 	void fib_heap_insert(FibonacciNode *new_node, double key);
@@ -49,10 +50,10 @@ class FibonacciHeap {
 
 	void fib_heap_delete(FibonacciNode *node);
 
-	int get_min_distant_unmarked_node(int *distance_to_dest, 
+	int get_min_distant_unmarked_node(int *distance_to_dest,
 			std::unordered_map<size_t,bool> marked);
 
-	int get_min_distant_unmarked_node_fib_heap(std::unordered_map<size_t,FibonacciNode*> node_array, 
+	int get_min_distant_unmarked_node_fib_heap(std::unordered_map<size_t,FibonacciNode*> node_array,
 			std::unordered_map<size_t,bool> marked);
 
 	void dijkstra_fibanocci(int src);
@@ -67,6 +68,6 @@ class FibonacciHeap {
 	private:
 		FibonacciNode* m_minNode{nullptr};
 		size_t m_numNodes{0};
-		Roadmap* m_roadmap{nullptr};
-		Roadmap* m_highLevelGraph{nullptr};
+		StateGraph* m_roadmap{nullptr};
+		StateGraph* m_highLevelGraph{nullptr};
 };

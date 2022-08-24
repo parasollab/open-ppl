@@ -7,12 +7,12 @@
 #include "MPLibrary/MPTools/MPTools.h"
 
 #include "ConfigurationSpace/LocalObstacleMap.h"
+#include "ConfigurationSpace/GenericStateGraph.h"
 #include "ConfigurationSpace/GroupCfg.h"
 #include "ConfigurationSpace/GroupLocalPlan.h"
 #include "ConfigurationSpace/GroupPath.h"
 #include "ConfigurationSpace/GroupRoadmap.h"
 #include "ConfigurationSpace/Path.h"
-#include "ConfigurationSpace/RoadmapGraph.h"
 #include "ConfigurationSpace/Weight.h"
 
 //distance metric includes
@@ -74,6 +74,7 @@
 #include "MPLibrary/MPStrategies/BasicPRM.h"
 #include "MPLibrary/MPStrategies/BasicRRTStrategy.h"
 #include "MPLibrary/MPStrategies/DynamicRegionRRT.h"
+#include "MPLibrary/MPStrategies/DynamicRegionsPRM.h"
 #include "MPLibrary/MPStrategies/GroupDecoupledStrategy.h"
 #include "MPLibrary/MPStrategies/GroupStrategyMethod.h"
 #include "MPLibrary/MPStrategies/TogglePRMStrategy.h"
@@ -98,7 +99,7 @@ struct MPTraits {
 
   typedef C                               CfgType;
   typedef W                               WeightType;
-  typedef RoadmapGraph<C, W>              RoadmapType;
+  typedef GenericStateGraph<C, W>         RoadmapType;
   typedef PathType<MPTraits>              Path;
   typedef MPLibraryType<MPTraits>         MPLibrary;
   typedef MPSolutionType<MPTraits>        MPSolution;
@@ -106,10 +107,10 @@ struct MPTraits {
   typedef LocalObstacleMapType<MPTraits>  LocalObstacleMap;
   typedef GoalTrackerType<MPTraits>       GoalTracker;
 
-  typedef GroupLocalPlan<CfgType>                    GroupWeightType;
-  typedef GroupRoadmap<GroupCfg, GroupWeightType>    GroupRoadmapType;
-  typedef GroupPath<MPTraits>                        GroupPathType;
-  typedef GroupCfg                                   GroupCfgType;
+  typedef GroupCfg<RoadmapType>                          GroupCfgType;
+  typedef GroupLocalPlan<RoadmapType>                    GroupWeightType;
+  typedef GroupRoadmap<GroupCfgType, GroupWeightType>    GroupRoadmapType;
+  typedef GroupPath<MPTraits>                            GroupPathType;
 
   //types of distance metrics available in our world
   typedef boost::mpl::list<
@@ -192,6 +193,7 @@ struct MPTraits {
     BasicPRM<MPTraits>,
     BasicRRTStrategy<MPTraits>,
     DynamicRegionRRT<MPTraits>,
+    DynamicRegionsPRM<MPTraits>,
     GroupDecoupledStrategy<MPTraits>,
     GroupStrategyMethod<MPTraits>,
     TogglePRMStrategy<MPTraits>,

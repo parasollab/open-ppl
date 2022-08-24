@@ -240,7 +240,7 @@ template <typename MPTraits>
 void
 DistanceMetricMethod<MPTraits>::
 ScaleCfg(double _length, GroupCfgType& _c) {
-  const GroupCfgType origin(_c.GetGroupRoadmap(), true);
+  const GroupCfgType origin(_c.GetGroupRoadmap());
   ScaleCfg(_length, _c, origin);
 }
 

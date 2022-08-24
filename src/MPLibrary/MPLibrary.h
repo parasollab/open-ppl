@@ -952,7 +952,7 @@ ReconstructEdge(GroupRoadmapType* const _roadmap, const VID _source,
 
   // Construct a resolution-level path along the recreated edge.
   auto lp = this->GetLocalPlanner(lpLabel);
-  return lp->BlindPath(waypoints, _posRes, _oriRes, edge.GetActiveRobots());
+  return lp->BlindPath(waypoints, _posRes, _oriRes, edge.GetFormation());
 }
 
 
