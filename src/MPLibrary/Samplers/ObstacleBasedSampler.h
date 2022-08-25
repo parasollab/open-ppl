@@ -158,19 +158,31 @@ class ObstacleBasedSampler : virtual public SamplerMethod<MPTraits> {
     /// @return Configuration of the sample
     virtual CfgType ChooseASample(CfgType& _cfg);
 
+    /// Checks m_pointSelection and returns an appropriate GroupCfgType
+    /// @param _cfg Group configuration of the sample
+    /// @return Group configuration chosen from the Extreme Vertex method
     virtual GroupCfgType ChooseASample(GroupCfgType& _cfg);
 
-    CfgType CooseASampleOtherMethods();
+    /// Call the various sample method other than cspace method
+    /// @return Configuration obtained according to the m_pointSelection
+    CfgType ChooseASampleOtherMethods();
+
     /// Returns a CfgType with the coordinates specified in the vector and no rotation
     /// @param _v Multibody of the obstacle
     /// @return Configuration Type of the sample
     CfgType GetCfgWithParams(const Vector3d& _v);
 
+    /// Checks if the groupCfg is in the boundary map
+    /// @param _groupCfg The group configuration needs to be checked
+    /// @param _boundaryMap The map that pairs each robot and corresponding boundary
+    /// @return true or false
     bool GroupInBounds(GroupCfgType& _groupCfg, const BoundaryMap& _boundaryMap);
+
+    /// Checks if the groupCfg is in the boundary map
+    /// @param _groupCfg The group configuration needs to be checked
+    /// @param _boundary The single boundary of every robots
+    /// @return true or false
     bool GroupInBounds(GroupCfgType& _groupCfg, const Boundary* const _boundary);
-    // GroupIsValid(GroupCfgType& _groupCfg, std::string callee)
-
-
     ///@}
 
   private:
@@ -553,26 +565,6 @@ GroupInBounds(GroupCfgType& _groupCfg, const Boundary* const _boundary) {
   return true;
 }
 
-
-// template <typename MPTraits>
-// bool
-// ObstacleBasedSampler<MPTraits>::
-// GroupIsValid(GroupCfgType& _groupCfg, std::string callee) {
-//   bool isValid = true;
-//   auto vc = this->GetValidityChecker(m_vcLabel);
-//   auto groupTask = this->GetGroupTask();
-//   for (auto task : *groupTask) {
-//     auto robot = task.GetRobot();
-//     CfgType cfg = _groupCfg.GetRobotCfg(robot);
-//     if (!vc->IsValid(cfg, callee))
-//       isValid = false;
-//       break;
-//   }
-//   return isValid;
-// }
-
-
-
 // Shell Generator
 template <typename MPTraits>
 void
@@ -797,7 +789,7 @@ ChooseASample(CfgType& _cfg) {
   if(m_pointSelection == "cspace")
     return _cfg;
   else
-    return CooseASampleOtherMethods();
+    return ChooseASampleOtherMethods();
 }
 
 template <typename MPTraits>
@@ -810,7 +802,7 @@ ChooseASample(GroupCfgType& _cfg) {
   else {
     GroupCfgType groupCfg;
     for (auto robot : _cfg.GetRobots()) {
-      groupCfg.SetRobotCfg(robot, CooseASampleOtherMethods());
+      groupCfg.SetRobotCfg(robot, ChooseASampleOtherMethods());
     }
     return groupCfg;
   }
@@ -819,7 +811,7 @@ ChooseASample(GroupCfgType& _cfg) {
 template <typename MPTraits>
 typename ObstacleBasedSampler<MPTraits>::CfgType
 ObstacleBasedSampler<MPTraits>::
-CooseASampleOtherMethods() {
+ChooseASampleOtherMethods() {
   MultiBody* mBody{nullptr};
   if(m_pointSelection != "cspace")
     mBody = this->GetEnvironment()->GetRandomObstacle();

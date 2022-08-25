@@ -155,9 +155,6 @@ TestIndividualCfgSample() {
     envRes = m_nShellsFree*max(env->GetPositionRes(), env->GetOrientationRes());
     avgDist = std::accumulate(minDistVec.begin(), minDistVec.end(), 0.0) / minDistVec.size();
     
-    // Debug
-    std::cout << "[Single Robot Single Boundary] Approximated average distance (valid) = " << avgDist << std::endl;
-    
     // Compare them 
     if (avgDist > envRes) {
       passed = false;
@@ -205,9 +202,6 @@ TestIndividualCfgSample() {
     envRes = m_nShellsColl*max(env->GetPositionRes(), env->GetOrientationRes());
     avgDist = std::accumulate(minDistVec.begin(), minDistVec.end(), 0.0) / minDistVec.size();
 
-    // Debug
-    std::cout << "[Single Robot Single Boundary] Approximated average distance (invalid) = " << avgDist << std::endl;
-    
     // Compare them 
     if (avgDist > envRes) {
       passed = false;
@@ -352,9 +346,6 @@ TestGroupCfgSampleSingleBoundary() {
     envRes = m_nShellsFree*max(this->GetEnvironment()->GetPositionRes(), this->GetEnvironment()->GetOrientationRes());
     avgDist = std::accumulate(minDistVec.begin(), minDistVec.end(), 0.0) / minDistVec.size();
 
-    // Debug
-    std::cout << "[Group Robot Single Boundary] Approximated average distance (valid) = " << avgDist << std::endl;
-    
     // Compare them 
     if (avgDist > envRes) {
       passed = false;
@@ -420,9 +411,6 @@ TestGroupCfgSampleSingleBoundary() {
     // set a criteria to pass
     double envRes = m_nShellsColl*max(this->GetEnvironment()->GetPositionRes(), this->GetEnvironment()->GetOrientationRes());
     avgDist = std::accumulate(minDistVec.begin(), minDistVec.end(), 0.0) / minDistVec.size();
-
-    // Debug
-    std::cout << "[Group Robot Single Boundary] Approximated average distance (invalid) = " << avgDist << std::endl;
 
     // Compare them 
     if (avgDist > envRes) {
@@ -531,9 +519,6 @@ TestGroupCfgSampleIndividualBoundaries() {
     envRes = m_nShellsFree*max(this->GetEnvironment()->GetPositionRes(), this->GetEnvironment()->GetOrientationRes());
     avgDist = std::accumulate(minDistVec.begin(), minDistVec.end(), 0.0) / minDistVec.size();
     
-    // Debug
-    std::cout << "[Group Robot Individual Boundary] Approximated average distance (valid) = " << avgDist << std::endl;
-    
     // Compare them 
     if (avgDist > envRes) {
       passed = false;
@@ -602,9 +587,6 @@ TestGroupCfgSampleIndividualBoundaries() {
     envRes = m_nShellsColl*max(this->GetEnvironment()->GetPositionRes(), this->GetEnvironment()->GetOrientationRes());
     avgDist = std::accumulate(minDistVec.begin(), minDistVec.end(), 0.0) / minDistVec.size();
 
-    // Debug
-    std::cout << "[Group Robot Individual Boundary] Approximated average distance (invalid) = " << avgDist << std::endl;
-    
     // Compare them 
     if (avgDist > envRes) {
       passed = false;
