@@ -36,8 +36,9 @@
 #include "Testing/MPLibrary/NeighborhoodFinders/BruteForceNFTest.h"
 
 //sampler includes
-#include "Testing/MPLibrary/Samplers/UniformRandomSamplerTest.h"
 #include "Testing/MPLibrary/Samplers/BridgeTestSamplerTest.h"
+#include "Testing/MPLibrary/Samplers/ObstacleBasedSamplerTest.h"
+#include "Testing/MPLibrary/Samplers/UniformRandomSamplerTest.h"
 
 //local planner includes
 #include "Testing/MPLibrary/LocalPlanners/StraightLineTest.h"
@@ -129,10 +130,11 @@ struct MPTraits {
 
   //types of samplers available in our world
   typedef boost::mpl::list<
-      UniformRandomSamplerTest<MPTraits>,
-      BridgeTestSamplerTest<MPTraits>
+      BridgeTestSamplerTest<MPTraits>,
+      ObstacleBasedSamplerTest<MPTraits>,
+      UniformRandomSamplerTest<MPTraits>
       > SamplerMethodList;
-  
+
   //types of local planners available in our world
   typedef boost::mpl::list<
     // StraightLine<MPTraits>
@@ -175,7 +177,7 @@ struct MPTraits {
 
   //types of shapes available in our world
   typedef boost::mpl::list<
-    NBox  
+    NBox
       > ShapesList;
 };
 

@@ -208,8 +208,9 @@ GroupCfgSampleSingleBoundary(Boundary*& _boundary, std::vector<GroupCfgType>& _v
   size_t numNodes = 10;
   size_t maxAttempts = 100;
 
-  if(!_boundary)
+  if(!_boundary){
     _boundary = this->GetMPProblem()->GetEnvironment()->GetBoundary();
+  }
 
   this->Sample(numNodes,maxAttempts,_boundary,std::back_inserter(_valids), 
                std::back_inserter(_invalids));
@@ -225,6 +226,16 @@ GroupCfgSampleIndividualBoundaries(std::map<Robot*,const Boundary*>& _boundaryMa
 
   size_t numNodes = 10;
   size_t maxAttempts = 100;
+  
+  if(_boundaryMap.empty()){
+    const Boundary* const envBoundary = this->GetEnvironment()->GetBoundary();
+    
+    auto groupTask = this->GetGroupTask();
+    for (auto task : *groupTask) {
+      auto robot = task.GetRobot();
+      _boundaryMap.insert(make_pair(robot, envBoundary));
+    }
+  }
 
   this->Sample(numNodes,maxAttempts,_boundaryMap,std::back_inserter(_valids), 
                std::back_inserter(_invalids));

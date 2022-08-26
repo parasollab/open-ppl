@@ -60,11 +60,14 @@
     <Samplers>
       <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
       <UniformRandomSampler label="UniformRandomFree" vcLabel="pqp_solid"/>
-      <ObstacleBasedSampler label="OBPRM" vcLabel="rapid" useBBX="false"
+      <ObstacleBasedSampler label="ObstacleBased" vcLabel="rapid" useBBX="false"
         pointSelection="cspace" dmLabel="euclidean" stepSize="0.0"
+        nShellsColl="0" nShellsFree="10" debug="false"/>
+      <!--<GaussianSampler label="Gauss" vcLabel="rapid" d="0.2" dmLabel="euclidean"
+        useBBX="false"/>
         nShellsColl="0" nShellsFree="1" debug="false"/>
       <BridgeTestSampler label="Bridge" vcLabel="rapid" d="0.2"
-        dmLabel="euclidean" useBBX="true"/>
+        dmLabel="euclidean" useBBX="true"/> -->
     </Samplers>
 
     <LocalPlanners>
@@ -143,13 +146,18 @@
     <MPStrategies>
 
       <!-- Basic PRM where num samples is based on Number -->
-      <BasicPRM label="BasicPRM1" debug="true" querySampler="UniformRandomFree">
-        <Sampler label="UniformRandomFree" number="10" attempts="1"/>
-        <!--Sampler Method="OBPRM" number="10" attempts="10"/-->
+      <BasicPRM label="OBPRM" debug="true" querySampler="UniformRandomFree">
+        <Sampler label="ObstacleBased" number="10" attempts="10"/>
         <Connector label="Closest"/>
-        <!--Connector label="ConnectCCs"/-->
         <Evaluator label="NodesEval"/>
       </BasicPRM>
+
+      <BasicPRM label="BasicPRM1" debug="true" querySampler="UniformRandomFree">
+        <Sampler label="UniformRandomFree" number="10" attempts="1"/>
+        <Connector label="Closest"/>
+        <Evaluator label="NodesEval"/>
+      </BasicPRM>
+
 
       <!-- Basic PRM restarted from an input roadmap input.map. -->
       <BasicPRM label="BasicPRM2"
@@ -185,10 +193,10 @@
 
       <!-- DynamicRegionRRT -->
       <DynamicRegionRRT label="DRRRT" debug="true" querySampler="UniformRandomFree"
-          samplerLabel="UniformRandom" nfLabel="Nearest" extenderLabel="BERO" 
+          samplerLabel="UniformRandom" nfLabel="Nearest" extenderLabel="BERO"
           growGoals="false" connectorLabel="Closest" explore=".2" regionFactor="2.5"
           penetration="1" velocityBiasing="false" velocityAlignment=".4"
-          decompositionLabel="fine" skeletonType="ma" goalThreshold="5" 
+          decompositionLabel="fine" skeletonType="ma" goalThreshold="5"
           goalDmLabel="euclidean">
           <Evaluator label="BoundedQuery" />
       </DynamicRegionRRT>
@@ -223,11 +231,11 @@
 
       <ReebGraphConstruction debug="false" write="false" filename=""/>
 
-      <MedialAxisUtility label="maUtil" vcLabel="pqp_solid"
+      <!--MedialAxisUtility label="maUtil" vcLabel="pqp_solid"
         dmLabel="euclidean" clearanceType="exact" penetrationType="exact"
-        useBBX="true" positional="true"/>
+        useBBX="true" positional="true"/-->
 
-      <SkeletonClearanceUtility label="scu" mauLabel="maUtil"/>
+      <!--SkeletonClearanceUtility label="scu" mauLabel="maUtil"/-->
 
       <SafeIntervalTool label="SI" vcLabel="rapid"/>
 
@@ -235,7 +243,7 @@
 
     <!-- MPProblem allows multiple solvers to be specified and executed. -->
 
-    <Solver mpStrategyLabel="BasicPRM1" seed="12345678"
+    <Solver mpStrategyLabel="OBPRM" seed="12345678"
       baseFilename="example" vizmoDebug="true"/>
 
   </Library>
