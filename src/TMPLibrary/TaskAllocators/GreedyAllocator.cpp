@@ -18,7 +18,7 @@ GreedyAllocator(XMLNode& _node) : TaskAllocatorMethod(_node) {
   this->SetName("GreedyAllocator");
 
   // TODO::Parse xml node
-  m_multiSolver = _node.Read("multiAgentSolver", false, "PRM", "Provide multi agent solver label.");
+  m_singleSolver = _node.Read("singleAgentSolver", false, "BasicPRM", "Provide single agent solver label.");
 
 }
 
@@ -61,19 +61,24 @@ Initialize() {
   auto problem = this->GetMPProblem();
   //auto lib = this->GetMPLibrary();
 
-  // Intiialize robot start positions
-  for(auto& robot : problem->GetRobots()) {
-    auto startPosition = problem->GetInitialCfg(robot.get());
-    m_currentPositions[robot.get()] = startPosition;
-  }
-
   // Initialize mp solution object if it is not yet initialized
   if(!m_initialized) {
     m_solution = std::unique_ptr<MPSolution>(new MPSolution(
                   this->GetPlan()->GetCoordinator()->GetRobot()));
   }
 
-  cout << "m_solution" << m_solution.get() << endl;
+  
+  // Intialize robot start positions
+  auto plan = this->GetPlan();
+  auto coordinator = plan->GetCoordinator();
+  for(auto& robot : problem->GetRobots()) {
+    if(robot.get() == coordinator->GetRobot())
+      continue;
+
+    auto startPosition = problem->GetInitialCfg(robot.get());
+    m_currentPositions[robot.get()] = startPosition;
+    m_solution->AddRobot(robot.get());
+  }
 
   m_initialized = true;
 }
@@ -91,32 +96,29 @@ AllocateTask(SemanticTask* _semanticTask) {
   double bestCost = numeric_limits<double>::max();
 
   // Iterate through all robots
+  auto plan = this->GetPlan();
+  auto coordinator = plan->GetCoordinator();
   for(auto& robot : problem->GetRobots()) {
-    // TODO::Compute cost from robot's current position to start
-    //       Use the CreateMPTask function with robot's current position as start and start of
-    //       SemanticTask as the goal (_semanticTask->GetMotionTask()->GetStartConstraint())
+    if(robot.get() == coordinator->GetRobot())
+      continue;
 
-    std::cout<< "Checking robot " << robot.get() << endl;
 
-    auto task = CreateMPTask(robot.get(), problem->GetInitialCfg(robot.get()), _semanticTask->GetMotionTask()->GetStartConstraint());
+    // Use the CreateMPTask function to create a task with robot's current position as start and start of
+    // SemanticTask as the goal (_semanticTask->GetMotionTask()->GetStartConstraint())
+    // This task represents the robot getting to the start of the actual task 
 
-    // compute cost of path
-    //task->SetRobot(robot.get());
+    auto task = CreateMPTask(robot.get(), m_currentPositions[robot.get()], _semanticTask->GetMotionTask()->GetStartConstraint());
+ 
+    
+    task->SetRobot(robot.get());
+
+    //lib->SetMPSolution(m_solution.get());
     //m_solution->GetPath()->Clear();
 
-    //auto c = m_solution->GetRoadmap(this->GetPlan()->GetCoordinator()->GetRobot());
+    // solve the "getting there" task 
+    lib->Solve(problem, task.get(), m_solution.get(), m_singleSolver, LRand(), this->GetNameAndLabel()+"::"+task->GetLabel());
 
-    //auto roadmap = m_solution->GetRoadmap(robot.get());
-    //m_solution->SetRoadmap(robot.get(),c);
-
-    //auto solution = new MPSolution(robot.get());
-    //solution->SetRoadmap(robot.get(), lib->GetMPSolution()->GetRoadmap(robot.get()));
-    m_solution->AddRobot(robot.get());
-    lib->Solve(problem, task.get(),
-      m_solution.get(), "BasicPRM", LRand(),
-      this->GetNameAndLabel()+"::"+task->GetLabel());
-
-
+    // compute cost of path
     double pathCost;
     if(!m_solution->GetPath()->Cfgs().empty()){
       pathCost = m_solution->GetPath()->Length();
@@ -126,16 +128,11 @@ AllocateTask(SemanticTask* _semanticTask) {
 
 
     // compute cost (i.e. distance)
-    //double pathCost = m_solution->GetPath()->Length();
     std::cout << "path cost = " << pathCost << endl;
 
-    // TODO::Compute cost for robot to execute task
-    //       Use the motion task inside the SemanticTask (_semanticTask->GetMotionTask())
+    // Compute cost for robot to execute task
+    // Use the motion task inside the SemanticTask (_semanticTask->GetMotionTask())
 
-    //if (m_solution->GetPath()->Cfgs().empty()) {
-    //  lib->Solve(problem,_semanticTask->GetMotionTask().get());
-    //}
-    //else
     lib->Solve(problem,_semanticTask->GetMotionTask().get(),m_solution.get());
 
     // compute cost of this task
@@ -145,7 +142,7 @@ AllocateTask(SemanticTask* _semanticTask) {
     double totalCost = pathCost + taskCost;
 
 
-    // TODO::Assign to best robot
+    // Assign to best robot
     if (totalCost < bestCost){
       bestCost = totalCost;
       bestRobot = robot.get();
@@ -154,7 +151,7 @@ AllocateTask(SemanticTask* _semanticTask) {
   }
 
 
-  // TODO::Update plan allocation
+  // Update plan allocation
   SaveAllocation(bestRobot,_semanticTask);
 
 }
@@ -163,7 +160,7 @@ void
 GreedyAllocator::
 SaveAllocation(Robot* _robot, SemanticTask* _task) {
 
-  if(m_debug) {
+  if(true) {
     std::cout << "Allocation "
               << _task->GetLabel()
               << " to "
@@ -174,10 +171,10 @@ SaveAllocation(Robot* _robot, SemanticTask* _task) {
   // Add the allocation to the plan
   auto plan = this->GetPlan();
 
-  // TODO::Build out task solution object - do this much later
+  // TODO::Build our task solution object - do this much later
   plan->AddAllocation(_robot,_task);
 
-  // TODO::Update the robot position
+  // Update the robot position
   auto rm = m_solution->GetRoadmap(_robot);
   auto path = m_solution->GetPath(_robot);
   auto lastVID = path->VIDs().back();
@@ -216,7 +213,9 @@ CreateMPTask(Robot* _robot, const Cfg& _start, const Constraint* _goal) {
   // Create task
   auto task = std::shared_ptr<MPTask>(new MPTask(_robot));
   task->SetStartConstraint(std::move(startConstraint));
-  task->AddGoalConstraint(std::move(_goal->Clone()));
+  auto goal = _goal->Clone();
+  goal->SetRobot(_robot);
+  task->AddGoalConstraint(std::move(goal));
 
   return task;
 }

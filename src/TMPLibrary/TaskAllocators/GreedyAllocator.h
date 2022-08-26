@@ -66,7 +66,7 @@ class GreedyAllocator : public TaskAllocatorMethod {
     /// Flag keeping track of initialization status
     bool m_initialized = false;
 
-    std::string m_multiSolver;
+    std::string m_singleSolver;
 
     /// Local MPSolution to store roadmaps and query paths from
     std::unique_ptr<MPSolution> m_solution;
