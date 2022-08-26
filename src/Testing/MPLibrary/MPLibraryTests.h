@@ -196,7 +196,7 @@ RunTest() {
 
 
   bool success = (failed == 0);
-  std::string message = "COMPLETED TESTS"
+  std::string message = "COMPLETED MPLibrary TESTS"
     "\nTotal: "  + std::to_string(total)  +
     "\nPassed: " + std::to_string(passed) +
     "\nFailed: " + std::to_string(failed) +

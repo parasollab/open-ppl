@@ -143,13 +143,31 @@ main(int _argc, char** _argv) {
 
 
   auto mpResults = mpl->RunTest();
-  std::cout << "PASSED: " << mpResults.first << std::endl << mpResults.second;
-
   auto geomResults =  geometry->RunTest();
-  std::cout << "PASSED: " << geomResults.first << std::endl << geomResults.second;
-
   auto behavResults = behaviors->RunTest();
-  std::cout << "PASSED: " << behavResults.first << std::endl << behavResults.second;
+
+  std::cout << "===============================================================" << std::endl;
+  std::cout << std::endl << std::endl << "PASSED: ";
+  if (geomResults.first)
+    std::cout << "TRUE" << std::endl;
+  else
+    std::cout << "FALSE" << std::endl;
+  std::cout << geomResults.second;
+  std::cout << "===============================================================" << std::endl;
+  std::cout << std::endl << std::endl << "PASSED: ";
+  if (mpResults.first)
+    std::cout << "TRUE" << std::endl;
+  else
+    std::cout << "FALSE" << std::endl;
+  std::cout << mpResults.second;
+  std::cout << "===============================================================" << std::endl;
+  std::cout << std::endl << std::endl << "PASSED: ";
+  if (behavResults.first)
+    std::cout << "TRUE" << std::endl;
+  else
+    std::cout << "FALSE" << std::endl;
+  std::cout << behavResults.second;
+  std::cout << "===============================================================" << std::endl;
 
   // Release resources.
   delete geometry;

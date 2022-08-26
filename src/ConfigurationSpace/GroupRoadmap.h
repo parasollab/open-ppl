@@ -104,7 +104,7 @@ GroupRoadmap(RobotGroup* const _g, MPSolution* const _solution) :
   std::vector<IndividualRoadmap*> roadmaps;
   for(Robot* const robot : *_g)
     roadmaps.push_back(_solution->GetRoadmap(robot));
-  
+
   this->m_graphs = roadmaps;
 }
 
@@ -182,11 +182,13 @@ AddEdge(const VID _source, const VID _target, const Edge& _lp) noexcept {
     // If not, assert that the edge to be added does not already exist and then
     // add it.
     else {
+      /*
       if(edgeExists)
         std::cerr << "\nGroupRoadmap::AddEdge: robot " << i
                   << "'s individual edge (" << individualSourceVID << ", "
                   << individualTargetVID << ") already exists, "
                   << "not adding to its roadmap." << std::endl;
+      */
 
       // NOTE: If you are getting a seg fault here, it's most likely due to not
       //       calling GroupLPOutput::SetIndividualEdges() before calling this!
@@ -205,9 +207,11 @@ AddEdge(const VID _source, const VID _target, const Edge& _lp) noexcept {
   const bool notNew = edgeDescriptor.id() == INVALID_EID;
 
   if(notNew) {
+    /*
     std::cerr << "\nGroupRoadmap::AddEdge: edge (" << _source << ", "
               << _target << ") already exists, not adding."
               << std::endl;
+    */
     return INVALID_ED;
   }
   else {

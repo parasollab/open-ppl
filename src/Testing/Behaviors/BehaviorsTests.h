@@ -31,7 +31,7 @@ class BehaviorsTests : public TestBaseObject {
     virtual TestResult RunTest() override;
 
     ///@}
-  
+
   private:
     ///@name Test objects
     ///@{
@@ -50,7 +50,7 @@ BehaviorsTests::
 BehaviorsTests() {}
 
 BehaviorsTests::
-BehaviorsTests(MPProblem* _problem, const std::string& _filename) : 
+BehaviorsTests(MPProblem* _problem, const std::string& _filename) :
                m_problem(_problem), m_xmlFilename(_filename) {}
 
 BehaviorsTests::
@@ -84,7 +84,7 @@ RunTest() {
       }
     }
   }
-  
+
   // Run the coordinator tests
   auto robot = m_problem->GetRobot("coordinator");
   m_coordinatorTest = new CoordinatorTest(robot, *m_coordinatorNode);
@@ -102,7 +102,7 @@ RunTest() {
   passed = passed and result.first;
   message = message + result.second;
 
-  message = message + "\nCOMPLETED BEHAVIORS TESTS\n"
+  message = message + "\nCOMPLETED Behaviors TESTS\n"
                       "Total: " + std::to_string(total) + "\n"
                       "Passed: " + std::to_string(numPassed) + "\n"
                       "Failed: " + std::to_string(total - numPassed) + "\n\n";
