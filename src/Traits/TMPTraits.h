@@ -18,6 +18,7 @@
 
 // TaskAllocators to include
 #include "TMPLibrary/TaskAllocators/GreedyAllocator.h" 
+#include "TMPLibrary/TaskAllocators/SmartAllocator.h" 
 
 // StateGraphs to include
 
@@ -53,11 +54,13 @@ struct TMPTraits {
 
   //types of task allocators available in our world
   typedef boost::mpl::list<
-    GreedyAllocator
+    GreedyAllocator,
+    SmartAllocator
       > TaskAllocatorMethodList;
 
 	typedef boost::mpl::list<
 			> StateGraphList;
+
 };
 
 #endif

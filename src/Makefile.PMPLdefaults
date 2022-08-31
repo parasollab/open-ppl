@@ -453,6 +453,7 @@ TASK_SRCS := \
 	TMPLibrary/Solution/TaskSolution.cpp \
   TMPLibrary/StateGraphs/StateGraph.cpp \
   TMPLibrary/TaskAllocators/GreedyAllocator.cpp \
+  TMPLibrary/TaskAllocators/SmartAllocator.cpp \
   TMPLibrary/TaskAllocators/TaskAllocatorMethod.cpp \
   TMPLibrary/TaskDecomposers/TaskDecomposerMethod.cpp \
   TMPLibrary/TaskEvaluators/SimpleMotionEvaluator.cpp \
