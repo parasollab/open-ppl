@@ -20,7 +20,7 @@
 /// @ingroup DistanceMetrics
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
-class MinkowskiDistance : public DistanceMetricMethod<MPTraits> {
+class MinkowskiDistance : virtual public DistanceMetricMethod<MPTraits> {
 
   public:
 

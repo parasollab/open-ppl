@@ -7,17 +7,25 @@
 #include "MPLibrary/MPTools/MPTools.h"
 
 #include "ConfigurationSpace/LocalObstacleMap.h"
+#include "ConfigurationSpace/GenericStateGraph.h"
 #include "ConfigurationSpace/GroupCfg.h"
 #include "ConfigurationSpace/GroupLocalPlan.h"
 #include "ConfigurationSpace/GroupPath.h"
 #include "ConfigurationSpace/GroupRoadmap.h"
 #include "ConfigurationSpace/Path.h"
-#include "ConfigurationSpace/RoadmapGraph.h"
 #include "ConfigurationSpace/Weight.h"
 
 //distance metric includes
 #include "MPLibrary/DistanceMetrics/EuclideanDistance.h"
+#include "MPLibrary/DistanceMetrics/ManhattanDistance.h"
 #include "MPLibrary/DistanceMetrics/MinkowskiDistance.h"
+#include "MPLibrary/DistanceMetrics/WorkspaceTranslationDistance.h"
+#include "MPLibrary/DistanceMetrics/RMSDDistance.h"
+#include "MPLibrary/DistanceMetrics/WeightedEuclideanDistance.h"
+#include "MPLibrary/DistanceMetrics/ScaledEuclideanDistance.h"
+#include "MPLibrary/DistanceMetrics/LPSweptDistance.h"
+#include "MPLibrary/DistanceMetrics/BinaryLPSweptDistance.h"
+
 
 //validity checker includes
 #include "MPLibrary/ValidityCheckers/CollisionDetectionValidity.h"
@@ -29,6 +37,7 @@
 #include "MPLibrary/NeighborhoodFinders/BruteForceNF.h"
 
 //sampler includes
+#include "MPLibrary/Samplers/BridgeTestSampler.h"
 #include "MPLibrary/Samplers/ObstacleBasedSampler.h"
 #include "MPLibrary/Samplers/UniformRandomSampler.h"
 #include "MPLibrary/Samplers/UniformObstacleBasedSampler.h"
@@ -53,9 +62,11 @@
 
 //map evaluator includes
 #include "MPLibrary/MapEvaluators/CBSQuery.h"
+#include "MPLibrary/MapEvaluators/GroupQuery.h"
 #include "MPLibrary/MapEvaluators/ComposeEvaluator.h"
 #include "MPLibrary/MapEvaluators/ConditionalEvaluator.h"
 #include "MPLibrary/MapEvaluators/LazyQuery.h"
+#include "MPLibrary/MapEvaluators/PrintMapEvaluation.h"
 #include "MPLibrary/MapEvaluators/QueryMethod.h"
 #include "MPLibrary/MapEvaluators/SIPPMethod.h"
 #include "MPLibrary/MapEvaluators/TimeEvaluator.h"
@@ -63,9 +74,11 @@
 
 //mp strategies includes
 #include "MPLibrary/MPStrategies/AdaptiveRRT.h"
+#include "MPLibrary/MPStrategies/GroupPRM.h"
 #include "MPLibrary/MPStrategies/BasicPRM.h"
 #include "MPLibrary/MPStrategies/BasicRRTStrategy.h"
 #include "MPLibrary/MPStrategies/DynamicRegionRRT.h"
+#include "MPLibrary/MPStrategies/DynamicRegionsPRM.h"
 #include "MPLibrary/MPStrategies/GroupDecoupledStrategy.h"
 #include "MPLibrary/MPStrategies/GroupStrategyMethod.h"
 #include "MPLibrary/MPStrategies/TogglePRMStrategy.h"
@@ -91,7 +104,7 @@ struct MPTraits {
 
   typedef C                               CfgType;
   typedef W                               WeightType;
-  typedef RoadmapGraph<C, W>              RoadmapType;
+  typedef GenericStateGraph<C, W>         RoadmapType;
   typedef PathType<MPTraits>              Path;
   typedef MPLibraryType<MPTraits>         MPLibrary;
   typedef MPSolutionType<MPTraits>        MPSolution;
@@ -99,15 +112,22 @@ struct MPTraits {
   typedef LocalObstacleMapType<MPTraits>  LocalObstacleMap;
   typedef GoalTrackerType<MPTraits>       GoalTracker;
 
-  typedef GroupLocalPlan<CfgType>                    GroupWeightType;
-  typedef GroupRoadmap<GroupCfg, GroupWeightType>    GroupRoadmapType;
-  typedef GroupPath<MPTraits>                        GroupPathType;
-  typedef GroupCfg                                   GroupCfgType;
+  typedef GroupCfg<RoadmapType>                          GroupCfgType;
+  typedef GroupLocalPlan<RoadmapType>                    GroupWeightType;
+  typedef GroupRoadmap<GroupCfgType, GroupWeightType>    GroupRoadmapType;
+  typedef GroupPath<MPTraits>                            GroupPathType;
 
   //types of distance metrics available in our world
   typedef boost::mpl::list<
     EuclideanDistance<MPTraits>,
-    MinkowskiDistance<MPTraits>
+    ManhattanDistance<MPTraits>,
+    MinkowskiDistance<MPTraits>,
+    WorkspaceTranslationDistance<MPTraits>,
+    RMSDDistance<MPTraits>,
+    WeightedEuclideanDistance<MPTraits>,
+    LPSweptDistance<MPTraits>,
+    BinaryLPSweptDistance<MPTraits>,
+    ScaledEuclideanDistance<MPTraits>
       > DistanceMetricMethodList;
 
   //types of validity checkers available in our world
@@ -125,6 +145,7 @@ struct MPTraits {
 
   //types of samplers available in our world
   typedef boost::mpl::list<
+    BridgeTestSampler<MPTraits>,
     ObstacleBasedSampler<MPTraits>,
     UniformRandomSampler<MPTraits>,
     UniformObstacleBasedSampler<MPTraits>
@@ -163,9 +184,11 @@ struct MPTraits {
   //types of map evaluators available in our world
   typedef boost::mpl::list<
     CBSQuery<MPTraits>,
+    GroupQuery<MPTraits>,
     ComposeEvaluator<MPTraits>,
     ConditionalEvaluator<MPTraits>,
     LazyQuery<MPTraits>,
+    PrintMapEvaluation<MPTraits>,
     QueryMethod<MPTraits>,
     SIPPMethod<MPTraits>,
     TimeEvaluator<MPTraits>,
@@ -175,9 +198,11 @@ struct MPTraits {
   //types of motion planning strategies available in our world
   typedef boost::mpl::list<
     AdaptiveRRT<MPTraits>,
+    GroupPRM<MPTraits>,
     BasicPRM<MPTraits>,
     BasicRRTStrategy<MPTraits>,
     DynamicRegionRRT<MPTraits>,
+    DynamicRegionsPRM<MPTraits>,
     GroupDecoupledStrategy<MPTraits>,
     GroupStrategyMethod<MPTraits>,
     TogglePRMStrategy<MPTraits>,

@@ -200,7 +200,6 @@ ScaleCfg(double _length, CfgType& _c, const CfgType& _o) {
   while(Distance(origin, outsideCfg) < 2 * _length)
     for(size_t i = 0; i < outsideCfg.DOF(); ++i)
       outsideCfg[i] *= 2.0;
-
   // now, using binary search find a configuration with the approximate length
   CfgType aboveCfg = outsideCfg;
   CfgType belowCfg = origin;
@@ -274,7 +273,7 @@ template <typename MPTraits>
 void
 DistanceMetricMethod<MPTraits>::
 ScaleCfg(double _length, GroupCfgType& _c) {
-  const GroupCfgType origin(_c.GetGroupRoadmap(), true);
+  const GroupCfgType origin(_c.GetGroupRoadmap());
   ScaleCfg(_length, _c, origin);
 }
 

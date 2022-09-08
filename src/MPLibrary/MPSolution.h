@@ -2,7 +2,7 @@
 #define PMPL_MP_SOLUTION_TYPE_H_
 
 #include "ConfigurationSpace/LocalObstacleMap.h"
-#include "ConfigurationSpace/RoadmapGraph.h"
+#include "ConfigurationSpace/GenericStateGraph.h"
 #include "MPProblem/Robot/Robot.h"
 #include "MPProblem/RobotGroup/RobotGroup.h"
 #include "Utilities/MetricUtils.h"

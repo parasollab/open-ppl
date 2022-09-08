@@ -124,10 +124,10 @@
     <Samplers>
       <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
       <UniformRandomSampler label="UniformRandomFree" vcLabel="pqp_solid"/>
-      <!-- <ObstacleBasedSampler label="OBPRM" vcLabel="rapid" useBBX="false"
+      <ObstacleBasedSampler label="OBPRM" vcLabel="rapid" useBBX="false"
         pointSelection="cspace" dmLabel="euclidean" stepSize="0.0"
         nShellsColl="0" nShellsFree="1" debug="false"/>
-      <GaussianSampler label="Gauss" vcLabel="rapid" d="0.2" dmLabel="euclidean"
+      <!--GaussianSampler label="Gauss" vcLabel="rapid" d="0.2" dmLabel="euclidean"
         useBBX="false"/>
       <BridgeTestSampler label="Bridge" vcLabel="rapid" d="0.2"
         dmLabel="euclidean" useBBX="true"/>
@@ -140,8 +140,8 @@
         <Sampler label="UniformRandomFree" p="0.8"/>
         <Sampler label="UniformRandom" p="0.2"/>
       </MixSampler> -->
-      <UniformObstacleBasedSampler label="UOBPRM" vcLabel="rapid" useBBX="false"
-        dmLabel="euclidean" d="0.02" />
+      <!-- <UniformObstacleBasedSampler label="UOBPRM" vcLabel="rapid" useBBX="false"
+        dmLabel="euclidean" d="0.02" /> -->
         <!--
       <UniformMedialAxisSampler label="UMAPRM" vcLabel="pqp_solid" useBBX="true"
         dmLabel="euclidean" d="2.00" t="10" clearanceType="exact"
@@ -364,19 +364,19 @@
 
     <MPStrategies>
 
-    <GroupPRM label="CompositePRM" querySampler="UniformRandomFree" debug="true">
-      <Sampler label="UOBPRM" number="10" attempts="1"/>
-      <Connector label="Closest"/>
-      <Evaluator label = "CompositeQuery"/>
-    </GroupPRM>
+      <GroupPRM label="CompositePRM" querySampler="UniformRandomFree" debug="true">
+        <Sampler label="OBPRM" number="10" attempts="1"/>
+        <Connector label="Closest"/>
+        <Evaluator label = "NodesEval"/>
+      </GroupPRM>
 
 
 
       <!-- Basic PRM where num samples is based on Number -->
       <BasicPRM label="BasicPRM1" debug="true" querySampler="UniformRandomFree">
-        <Sampler label="UOBPRM" number="10" attempts="1"/>
+        <!-- <Sampler label="UOBPRM" number="10" attempts="1"/> -->
         <!--Sampler Method="Gauss" number="10" attempts="10"/-->
-        <!--Sampler Method="OBPRM" number="10" attempts="10"/-->
+        <Sampler label="OBPRM" number="10" attempts="10"/>
         <!--Sampler label="MAPRM" number="10" attempts="10"/-->
         <Connector label="Closest"/>
         <!--Connector label="ConnectCCs"/-->
@@ -618,6 +618,4 @@
   </TMPLibrary>
 
 </MotionPlanning>
-
-
 

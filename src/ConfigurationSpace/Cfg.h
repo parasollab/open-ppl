@@ -491,6 +491,7 @@ class Cfg {
 
 };
 
+
 /*--------------------------- Generation Methods -----------------------------*/
 
 template <class DistanceMetricPointer>
@@ -515,3 +516,4 @@ std::ostream& operator<<(std::ostream& _os, const Cfg& _cfg);
 std::istream& operator>>(std::istream& _is, Cfg& _cfg);
 
 #endif
+

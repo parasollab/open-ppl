@@ -20,17 +20,17 @@ StateGraph(XMLNode& _node) : TMPBaseObject(_node) {
 void
 StateGraph::
 Initialize() {
-  if(m_graph) {
-    delete m_graph;
-  }
-  m_graph = new RoadmapGraph<Cfg, DefaultWeight<Cfg>>(this->GetPlan()->GetCoordinator()->GetRobot());
+	if(m_graph){
+		delete m_graph;
+	}
+	m_graph = new GenericStateGraph<Cfg, DefaultWeight<Cfg>>(this->GetPlan()->GetCoordinator()->GetRobot());
 
   ConstructGraph();
 }
 
 /*------------------------------ Accessors --------------------------------*/
 
-RoadmapGraph<Cfg, DefaultWeight<Cfg>>*
+GenericStateGraph<Cfg, DefaultWeight<Cfg>>*
 StateGraph::
 GetGraph() {
   return m_graph;
@@ -38,8 +38,8 @@ GetGraph() {
 
 void
 StateGraph::
-LoadStateGraph() {
-  this->GetPlan()->GetCoordinator()->SetRoadmapGraph(m_graph);
+LoadStateGraph(){
+	this->GetPlan()->GetCoordinator()->SetGenericStateGraph(m_graph);
 }
 
 /*------------------------------ Helpers --------------------------------*/

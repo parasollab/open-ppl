@@ -1,5 +1,5 @@
-#ifndef PMPL_ROADMAP_GRAPH_H_
-#define PMPL_ROADMAP_GRAPH_H_
+#ifndef PPL_STATE_GRAPH_H_
+#define PPL_STATE_GRAPH_H_
 
 #include "MPProblem/Environment/Environment.h"
 #include "Utilities/PMPLExceptions.h"
@@ -57,7 +57,7 @@ class Robot;
 /// @tparam Edge The edge or local plan type.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename Vertex, typename Edge>
-class RoadmapGraph : public
+class GenericStateGraph: public
 #ifdef _PARALLEL
     stapl::dynamic_graph<stapl::DIRECTED, stapl::NONMULTIEDGES, Vertex, Edge>
 #else
@@ -106,48 +106,31 @@ class RoadmapGraph : public
     enum class HookType {AddVertex, DeleteVertex, AddEdge, DeleteEdge};
 
     // CC Tracker.
-    typedef CCTracker<RoadmapGraph<Vertex, Edge>> CCTrackerType;
+    typedef CCTracker<GenericStateGraph<Vertex, Edge>> CCTrackerType;
 
     ///@}
     ///@name Construction
     ///@{
 
-    /// Construct a roadmap for a given robot.
-    /// @param _r The given robot.
-    RoadmapGraph(Robot* const _r);
+    GenericStateGraph(Robot* const _r);
 
     ///@}
     ///@name Move and Copy
     ///@{
     /// Move and copy operations do not copy hook functions.
 
-    /// Construct a copy of the given roadmap.
-    /// @param _r The given roadmap.
-    RoadmapGraph(const RoadmapGraph& _r);
-    /// Construct a copy of the given roadmap.
-    /// @param _r The given roadmap.
-    RoadmapGraph(RoadmapGraph&& _r);
+    GenericStateGraph(const GenericStateGraph& _r);
+    GenericStateGraph(GenericStateGraph&& _r);
 
-    /// Copy the given roadmap into the current.
-    /// @param _r The given roadmap.
-    RoadmapGraph& operator=(const RoadmapGraph& _r);
-    /// Copy the given roadmap into the current.
-    /// @param _r The given roadmap.
-    RoadmapGraph& operator=(RoadmapGraph&& _r);
+    GenericStateGraph& operator=(const GenericStateGraph& _r);
+    GenericStateGraph& operator=(GenericStateGraph&& _r);
 
     ///@}
     ///@name Equality
     ///@{
 
-    /// Check if the current and given roadmaps are equal.
-    /// @param _r The given roadmap.
-    /// @return True is equal, false otherwise.
-    bool operator==(const RoadmapGraph& _r) const noexcept;
-
-    /// Check if the current and given roadmaps are unequal.
-    /// @param _r The given roadmap.
-    /// @return True is unequal, false otherwise.
-    bool operator!=(const RoadmapGraph& _r) const noexcept;
+    bool operator==(const GenericStateGraph& _r) const noexcept;
+    bool operator!=(const GenericStateGraph& _r) const noexcept;
 
     ///@}
     ///@name Modifiers
@@ -159,13 +142,13 @@ class RoadmapGraph : public
     /// @return A new VID of the added vertex, or the VID of the existing vertex.
     virtual VID AddVertex(const Vertex& _v) noexcept;
 
-    // Add a new unique vertex to the graph with a designated descriptor. If it
-    // already exists or the descriptor is already in use, a warning will be
-    // printed to cerr.
-    // @param _vid The desired descriptor.
-    // @param _v The vertex property.
-    // @return A new VID of the added vertex, or the VID of the existing vertex
-    //virtual VID AddVertex(const VID _vid, const Vertex& _v) noexcept;
+    /// Add a new unique vertex to the graph with a designated descriptor. If it
+    /// already exists or the descriptor is already in use, a warning will be
+    /// printed to cerr.
+    /// @param _vid The desired descriptor.
+    /// @param _v The vertex property.
+    /// @return A new VID of the added vertex, or the VID of the existing vertex.
+    virtual VID AddVertex(const VID _vid, const Vertex& _v) noexcept;
 
     /// Add a vertex to the graph without checking for uniqueness.
     /// @param _v The vertex to add.
@@ -180,15 +163,19 @@ class RoadmapGraph : public
     /// @param _source The source vertex.
     /// @param _target The target vertex.
     /// @param _w  The edge property.
-    virtual void AddEdge(const VID _source, const VID _target, const Edge& _w)
+    virtual EID AddEdge(const VID _source, const VID _target, const Edge& _w)
         noexcept;
 
     /// Add edges both ways between source and target vertices.
     /// @param _source The source vertex.
     /// @param _target The target vertex.
     /// @param _w  The edge properties (source to target first).
-    virtual void AddEdge(const VID _source, const VID _target,
+    virtual std::pair<EID, EID> AddEdge(const VID _source, const VID _target,
         const std::pair<Edge, Edge>& _w) noexcept;
+
+    virtual EID AddEdge(const EID _eid, const Edge& _w) noexcept;
+
+    virtual EID AddEdge(const VID _source, const VID _target) noexcept;
 
     /// Remove an edge from the graph if it exists.
     /// @param _source The source vertex.
@@ -205,7 +192,7 @@ class RoadmapGraph : public
     /// Copy the nodes and edges from another roadmap and append them to this.
     /// Assumes the configurations are compatible with this roadmap's robot.
     /// @param _r The roadmap to copy from.
-    void AppendRoadmap(const RoadmapGraph& _r);
+    void AppendRoadmap(const GenericStateGraph& _r);
 
     /// Set the CC tracker.
     /// @param _stats Optional stat class for performance profiling.
@@ -291,6 +278,10 @@ class RoadmapGraph : public
     /// @return The VIDs of each node u for which and edge (_vid, u) exists.
     std::vector<VID> GetChildren(const VID _vid) const noexcept;
 
+    size_t GetInDegree(const VID _vid) noexcept;
+
+    std::vector<EI> FindInboundEdges(const VID _vid);
+
     /// Retrieve an edge from the graph.
     /// @param _source The source node VID.
     /// @param _target The target node VID.
@@ -299,12 +290,6 @@ class RoadmapGraph : public
     /// @return True if the edge was located.
     bool GetEdge(const VID _source, const VID _target, EI& _ei) noexcept;
 
-    /// Retrieve an edge from the graph.
-    /// @param _source The source node VID.
-    /// @param _target The target node VID.
-    /// @param _ei An edge iterator, set to the specified edge if found or end
-    ///            otherwise.
-    /// @return True if the edge was located.
     /// @overload For const edge iterator.
     bool GetEdge(const VID _source, const VID _target, CEI& _ei) const noexcept;
 
@@ -381,8 +366,8 @@ class RoadmapGraph : public
     friend void Read(RG* _g, const std::string& _filename);
 
 		template <typename RG>
-		friend void ReadMessage(RG* _g, const std::string& _msg); 
-		//void ReadMessage(RoadmapGraph* _g, const std::string& _msg); 
+		friend void ReadMessage(RG* _g, const std::string& _msg);
+		//void ReadMessage(GenericStateGraph* _g, const std::string& _msg);
     /// Write the current roadmap out to a roadmap (.map) file.
     /// @param _filename The name of the map file to write to.
     /// @param _env The environment for which this map was constructed.
@@ -405,7 +390,7 @@ class RoadmapGraph : public
     ///@{
 
     /// Unhide the add and delete vertex and edge function within private
-    /// encapsulation to prevent users of the RoadmapGraph from calling those
+    /// encapsulation to prevent users of the GenericStateGraph from calling those
     /// functions.
     using STAPLGraph::add_vertex;
     using STAPLGraph::add_edge;
@@ -478,29 +463,29 @@ class RoadmapGraph : public
 /*------------------------------- Construction -------------------------------*/
 
 template <typename Vertex, typename Edge>
-RoadmapGraph<Vertex, Edge>::
-RoadmapGraph(Robot* const _r) : m_robot(_r) { }
+GenericStateGraph<Vertex, Edge>::
+GenericStateGraph(Robot* const _r) : m_robot(_r) { }
 
 /*------------------------------ Move and Copy -------------------------------*/
 
 template <typename Vertex, typename Edge>
-RoadmapGraph<Vertex, Edge>::
-RoadmapGraph(const RoadmapGraph& _r) : RoadmapGraph(_r.m_robot) {
+GenericStateGraph<Vertex, Edge>::
+GenericStateGraph(const GenericStateGraph& _r) : GenericStateGraph(_r.m_robot) {
   *this = _r;
 }
 
 
 template <typename Vertex, typename Edge>
-RoadmapGraph<Vertex, Edge>::
-RoadmapGraph(RoadmapGraph&& _r) : RoadmapGraph(_r.m_robot) {
+GenericStateGraph<Vertex, Edge>::
+GenericStateGraph(GenericStateGraph&& _r) : GenericStateGraph(_r.m_robot) {
   *this = std::move(_r);
 }
 
 
 template <typename Vertex, typename Edge>
-RoadmapGraph<Vertex, Edge>&
-RoadmapGraph<Vertex, Edge>::
-operator=(const RoadmapGraph& _r) {
+GenericStateGraph<Vertex, Edge>&
+GenericStateGraph<Vertex, Edge>::
+operator=(const GenericStateGraph& _r) {
   // Clear any hooks installed on this map.
   ClearHooks();
 
@@ -509,11 +494,16 @@ operator=(const RoadmapGraph& _r) {
   m_robot        = _r.m_robot;
   m_timestamp    = _r.m_timestamp;
   m_predecessors = _r.m_predecessors;
+  m_allVIDs      = _r.m_allVIDs;
 
   // If the other graph had a CC tracker, copy it and point at this roadmap.
   if(_r.m_ccTracker) {
     m_ccTracker.reset(new CCTrackerType(*_r.m_ccTracker));
     m_ccTracker->SetRoadmap(this);
+
+		// Old CC tracker hooks are reinstalled in first call.
+		// These need to be cleared and the new CC tracker hooks installed.
+		ClearHooks();
   }
 
   return *this;
@@ -521,9 +511,9 @@ operator=(const RoadmapGraph& _r) {
 
 
 template <typename Vertex, typename Edge>
-RoadmapGraph<Vertex, Edge>&
-RoadmapGraph<Vertex, Edge>::
-operator=(RoadmapGraph&& _r) {
+GenericStateGraph<Vertex, Edge>&
+GenericStateGraph<Vertex, Edge>::
+operator=(GenericStateGraph&& _r) {
   // Clear any hooks installed on this map.
   ClearHooks();
 
@@ -532,6 +522,7 @@ operator=(RoadmapGraph&& _r) {
   m_robot        = _r.m_robot;
   m_timestamp    = _r.m_timestamp;
   m_predecessors = std::move(_r.m_predecessors);
+  m_allVIDs      = _r.m_allVIDs;
 
   // If the other graph had a CC tracker, move it and point at this roadmap.
   if(_r.m_ccTracker) {
@@ -549,8 +540,8 @@ operator=(RoadmapGraph&& _r) {
 
 template <typename Vertex, typename Edge>
 bool
-RoadmapGraph<Vertex, Edge>::
-operator==(const RoadmapGraph& _r) const noexcept {
+GenericStateGraph<Vertex, Edge>::
+operator==(const GenericStateGraph& _r) const noexcept {
   // First do fast checks on addess and sizes.
   if(this == &_r)
     return true;
@@ -582,23 +573,23 @@ operator==(const RoadmapGraph& _r) const noexcept {
 
 template <typename Vertex, typename Edge>
 bool
-RoadmapGraph<Vertex, Edge>::
-operator!=(const RoadmapGraph& _r) const noexcept {
+GenericStateGraph<Vertex, Edge>::
+operator!=(const GenericStateGraph& _r) const noexcept {
   return !(*this == _r);
 }
 
 /*------------------------------- Modifiers ----------------------------------*/
 
 template <typename Vertex, typename Edge>
-typename RoadmapGraph<Vertex, Edge>::VID
-RoadmapGraph<Vertex, Edge>::
+typename GenericStateGraph<Vertex, Edge>::VID
+GenericStateGraph<Vertex, Edge>::
 AddVertex(const Vertex& _v) noexcept {
   // Find the vertex and ensure it does not already exist.
   CVI vi;
   if(IsVertex(_v, vi)) {
-    std::cerr << "\nRoadmapGraph::AddVertex: vertex " << vi->descriptor()
-              << " already in graph, not adding again."
-              << std::endl;
+    //std::cerr << "\nGenericStateGraph::AddVertex: vertex " << vi->descriptor()
+    //          << " already in graph, not adding again."
+    //          << std::endl;
     return vi->descriptor();
   }
 
@@ -615,10 +606,42 @@ AddVertex(const Vertex& _v) noexcept {
 }
 
 template <typename Vertex, typename Edge>
-typename RoadmapGraph<Vertex, Edge>::VID
-RoadmapGraph<Vertex, Edge>::
+typename GenericStateGraph<Vertex, Edge>::VID
+GenericStateGraph<Vertex, Edge>::
+AddVertex(const VID _vid, const Vertex& _v) noexcept {
+  // Find the vertex and ensure it does not already exist.
+  CVI vi;
+  if(IsVertex(_v, vi)) {
+    //std::cerr << "\nGenericStateGraph::AddVertex: vertex " << vi->descriptor()
+    //          << " already in graph, not adding again."
+    //          << std::endl;
+    return vi->descriptor();
+  }
+
+  if(m_allVIDs.count(_vid) > 0) {
+    //std::cerr << "\nGenericStateGraph::AddVertex: vertex " << _vid
+    //          << " already in graph, not adding again."
+    //          << std::endl;
+    return _vid;
+  }
+
+  // The vertex does not exist. Add it now.
+  const VID vid = this->add_vertex(_vid, _v);
+  m_predecessors[vid];
+  m_allVIDs.insert(vid);
+  ++m_timestamp;
+
+  // Execute post-add hooks and update vizmo debug.
+  ExecuteAddVertexHooks(this->find_vertex(vid));
+
+  return vid;
+}
+
+template <typename Vertex, typename Edge>
+typename GenericStateGraph<Vertex, Edge>::VID
+GenericStateGraph<Vertex, Edge>::
 AddDuplicateVertex(const Vertex& _v) noexcept {
-  
+
 	const VID vid = this->add_vertex(_v);
   ++m_timestamp;
 
@@ -631,7 +654,7 @@ AddDuplicateVertex(const Vertex& _v) noexcept {
 
 template <typename Vertex, typename Edge>
 void
-RoadmapGraph<Vertex, Edge>::
+GenericStateGraph<Vertex, Edge>::
 DeleteVertex(const VID _v) noexcept {
   // Find the vertex and crash if it doesn't exist.
   VI vi = this->find_vertex(_v);
@@ -665,8 +688,8 @@ DeleteVertex(const VID _v) noexcept {
 
 
 template <class Vertex, class Edge>
-void
-RoadmapGraph<Vertex, Edge>::
+typename GenericStateGraph<Vertex, Edge>::EID
+GenericStateGraph<Vertex, Edge>::
 AddEdge(const VID _source, const VID _target, const Edge& _w) noexcept {
   // Let the add_edge function handle checking for existance incase we are using
   // a multigraph.
@@ -674,10 +697,13 @@ AddEdge(const VID _source, const VID _target, const Edge& _w) noexcept {
   const bool notNew = edgeDescriptor.id() == INVALID_EID;
 
   if(notNew) {
-    std::cerr << "\nRoadmapGraph::AddEdge: edge (" << _source << ", "
+    /*
+    std::cerr << "\nGenericStateGraph::AddEdge: edge (" << _source << ", "
               << _target << ") already exists, not adding."
               << std::endl;
-    return;
+    */
+
+    return edgeDescriptor;
   }
 
   // Add the source as a predecessor of target.
@@ -689,22 +715,89 @@ AddEdge(const VID _source, const VID _target, const Edge& _w) noexcept {
   EI ei;
   this->find_edge(edgeDescriptor, vi, ei);
   ExecuteAddEdgeHooks(ei);
+  return edgeDescriptor;
 }
 
 
 template <class Vertex, class Edge>
-void
-RoadmapGraph<Vertex, Edge>::
+typename GenericStateGraph<Vertex, Edge>::EID
+GenericStateGraph<Vertex, Edge>::
+AddEdge(const VID _source, const VID _target) noexcept {
+  // Let the add_edge function handle checking for existance incase we are using
+  // a multigraph.
+  const auto edgeDescriptor = this->add_edge(_source, _target);
+  const bool notNew = edgeDescriptor.id() == INVALID_EID;
+
+  if(notNew) {
+    /*
+    std::cerr << "\nGenericStateGraph::AddEdge: edge (" << _source << ", "
+              << _target << ") already exists, not adding."
+              << std::endl;
+    */
+    return edgeDescriptor;
+  }
+
+  // Add the source as a predecessor of target.
+  m_predecessors[_target].insert(_source);
+  ++m_timestamp;
+
+  // Execute post-add hooks.
+  VI vi;
+  EI ei;
+  this->find_edge(edgeDescriptor, vi, ei);
+  ExecuteAddEdgeHooks(ei);
+  return edgeDescriptor;
+}
+
+
+template <class Vertex, class Edge>
+std::pair<typename GenericStateGraph<Vertex, Edge>::EID, typename GenericStateGraph<Vertex, Edge>::EID>
+GenericStateGraph<Vertex, Edge>::
 AddEdge(const VID _source, const VID _target, const std::pair<Edge, Edge>& _w)
     noexcept {
-  AddEdge(_source, _target, _w.first);
-  AddEdge(_target, _source, _w.second);
+  EID e1 = AddEdge(_source, _target, _w.first);
+  EID e2 = AddEdge(_target, _source, _w.second);
+  return std::make_pair(e1, e2);
+}
+
+
+template <class Vertex, class Edge>
+typename GenericStateGraph<Vertex, Edge>::EID
+GenericStateGraph<Vertex, Edge>::
+AddEdge(const EID _eid, const Edge& _w) noexcept {
+  // Let the add_edge function handle checking for existance incase we are using
+  // a multigraph.
+  const auto edgeDescriptor = this->add_edge(_eid, _w);
+  const bool notNew = edgeDescriptor.id() == INVALID_EID;
+
+  auto source = _eid.source();
+  auto target = _eid.target();
+
+  if(notNew) {
+    /*
+    std::cerr << "\nGenericStateGraph::AddEdge: edge (" << source << ", "
+              << target << ") already exists, not adding."
+              << std::endl;
+    */
+    return edgeDescriptor;
+  }
+
+  // Add the source as a predecessor of target.
+  m_predecessors[target].insert(source);
+  ++m_timestamp;
+
+  // Execute post-add hooks.
+  VI vi;
+  EI ei;
+  this->find_edge(edgeDescriptor, vi, ei);
+  ExecuteAddEdgeHooks(ei);
+  return edgeDescriptor;
 }
 
 
 template <class Vertex, class Edge>
 void
-RoadmapGraph<Vertex, Edge>::
+GenericStateGraph<Vertex, Edge>::
 DeleteEdge(const VID _source, const VID _target) noexcept {
   // Find the edge and crash if it isn't found.
   const EID edgeDescriptor(_source, _target);
@@ -722,7 +815,7 @@ DeleteEdge(const VID _source, const VID _target) noexcept {
 
 template <class Vertex, class Edge>
 void
-RoadmapGraph<Vertex, Edge>::
+GenericStateGraph<Vertex, Edge>::
 DeleteEdge(EI _iterator) noexcept {
   // Execute pre-delete hooks.
   const VID source = _iterator->source(),
@@ -738,7 +831,7 @@ DeleteEdge(EI _iterator) noexcept {
 
 template <typename Vertex, typename Edge>
 void
-RoadmapGraph<Vertex, Edge>::
+GenericStateGraph<Vertex, Edge>::
 SetRobot(Robot* const _r) noexcept {
   m_robot = _r;
   for(VI vi = this->begin(); vi != this->end(); ++vi)
@@ -748,8 +841,8 @@ SetRobot(Robot* const _r) noexcept {
 
 template <typename Vertex, typename Edge>
 void
-RoadmapGraph<Vertex, Edge>::
-AppendRoadmap(const RoadmapGraph& _r) {
+GenericStateGraph<Vertex, Edge>::
+AppendRoadmap(const GenericStateGraph& _r) {
   // Copy vertices and map the change in VIDs.
   std::unordered_map<VID, VID> oldToNew;
   for(auto vit = _r.begin(); vit != _r.end(); ++vit) {
@@ -773,7 +866,7 @@ AppendRoadmap(const RoadmapGraph& _r) {
 template <typename Vertex, typename Edge>
 inline
 void
-RoadmapGraph<Vertex, Edge>::
+GenericStateGraph<Vertex, Edge>::
 SetCCTracker(StatClass* const _stats) {
   m_ccTracker.reset(new CCTrackerType(this));
   if(_stats)
@@ -785,7 +878,7 @@ SetCCTracker(StatClass* const _stats) {
 template <typename Vertex, typename Edge>
 inline
 size_t
-RoadmapGraph<Vertex, Edge>::
+GenericStateGraph<Vertex, Edge>::
 Size() const noexcept {
   return this->get_num_vertices();
 }
@@ -794,7 +887,7 @@ Size() const noexcept {
 template <typename Vertex, typename Edge>
 inline
 bool
-RoadmapGraph<Vertex, Edge>::
+GenericStateGraph<Vertex, Edge>::
 IsVertex(const VID _vid) const noexcept {
   return this->find_vertex(_vid) != this->end();
 }
@@ -802,7 +895,7 @@ IsVertex(const VID _vid) const noexcept {
 template <typename Vertex, typename Edge>
 inline
 bool
-RoadmapGraph<Vertex, Edge>::
+GenericStateGraph<Vertex, Edge>::
 IsVertex(const Vertex& _v) const noexcept {
   CVI vi;
   return IsVertex(_v, vi);
@@ -812,7 +905,7 @@ IsVertex(const Vertex& _v) const noexcept {
 template <typename Vertex, typename Edge>
 inline
 bool
-RoadmapGraph<Vertex, Edge>::
+GenericStateGraph<Vertex, Edge>::
 IsVertex(const Vertex& _v, CVI& _vi) const noexcept {
 #ifndef _PARALLEL
   for(CVI vi = this->begin(); vi != this->end(); ++vi){
@@ -831,7 +924,7 @@ IsVertex(const Vertex& _v, CVI& _vi) const noexcept {
 template <typename Vertex, typename Edge>
 inline
 bool
-RoadmapGraph<Vertex, Edge>::
+GenericStateGraph<Vertex, Edge>::
 IsEdge(const VID _source, const VID _target) const noexcept {
   CEI ei;
   CVI vi;
@@ -842,8 +935,8 @@ IsEdge(const VID _source, const VID _target) const noexcept {
 template <typename Vertex, typename Edge>
 template <typename T>
 inline
-typename RoadmapGraph<Vertex, Edge>::VID
-RoadmapGraph<Vertex, Edge>::
+typename GenericStateGraph<Vertex, Edge>::VID
+GenericStateGraph<Vertex, Edge>::
 GetVID(const T& _t) const noexcept {
   return *_t;
 }
@@ -851,8 +944,8 @@ GetVID(const T& _t) const noexcept {
 
 template <typename Vertex, typename Edge>
 inline
-typename RoadmapGraph<Vertex, Edge>::VID
-RoadmapGraph<Vertex, Edge>::
+typename GenericStateGraph<Vertex, Edge>::VID
+GenericStateGraph<Vertex, Edge>::
 GetVID(const VI& _t) const noexcept {
   return _t->descriptor();
 }
@@ -860,8 +953,8 @@ GetVID(const VI& _t) const noexcept {
 
 template <typename Vertex, typename Edge>
 inline
-typename RoadmapGraph<Vertex, Edge>::VID
-RoadmapGraph<Vertex, Edge>::
+typename GenericStateGraph<Vertex, Edge>::VID
+GenericStateGraph<Vertex, Edge>::
 GetVID(const Vertex& _t) const noexcept {
   CVI vi;
   if(IsVertex(_t, vi))
@@ -872,8 +965,8 @@ GetVID(const Vertex& _t) const noexcept {
 
 template <typename Vertex, typename Edge>
 inline
-const typename RoadmapGraph<Vertex, Edge>::VertexSet&
-RoadmapGraph<Vertex, Edge>::
+const typename GenericStateGraph<Vertex, Edge>::VertexSet&
+GenericStateGraph<Vertex, Edge>::
 GetPredecessors(const VID _vid) const noexcept {
   return m_predecessors.at(_vid);
 }
@@ -881,8 +974,8 @@ GetPredecessors(const VID _vid) const noexcept {
 
 template <typename Vertex, typename Edge>
 inline
-typename RoadmapGraph<Vertex, Edge>::VID
-RoadmapGraph<Vertex, Edge>::
+typename GenericStateGraph<Vertex, Edge>::VID
+GenericStateGraph<Vertex, Edge>::
 GetLastVID() const noexcept {
   if(this->get_num_vertices() == 0)
     return INVALID_VID;
@@ -894,7 +987,7 @@ GetLastVID() const noexcept {
 template <typename Vertex, typename Edge>
 inline
 size_t
-RoadmapGraph<Vertex, Edge>::
+GenericStateGraph<Vertex, Edge>::
 GetTimestamp() const noexcept {
   return m_timestamp;
 }
@@ -902,8 +995,8 @@ GetTimestamp() const noexcept {
 
 template <typename Vertex, typename Edge>
 inline
-const typename RoadmapGraph<Vertex, Edge>::VertexSet&
-RoadmapGraph<Vertex, Edge>::
+const typename GenericStateGraph<Vertex, Edge>::VertexSet&
+GenericStateGraph<Vertex, Edge>::
 GetAllVIDs() const noexcept {
   return m_allVIDs;
 }
@@ -913,7 +1006,7 @@ GetAllVIDs() const noexcept {
 template <typename Vertex, typename Edge>
 inline
 Robot*
-RoadmapGraph<Vertex, Edge>::
+GenericStateGraph<Vertex, Edge>::
 GetRobot() const noexcept {
   return m_robot;
 }
@@ -921,8 +1014,8 @@ GetRobot() const noexcept {
 
 template <typename Vertex, typename Edge>
 inline
-typename RoadmapGraph<Vertex, Edge>::CCTrackerType*
-RoadmapGraph<Vertex, Edge>::
+typename GenericStateGraph<Vertex, Edge>::CCTrackerType*
+GenericStateGraph<Vertex, Edge>::
 GetCCTracker() const noexcept {
   return m_ccTracker.get();
 }
@@ -931,8 +1024,8 @@ GetCCTracker() const noexcept {
 template <typename Vertex, typename Edge>
 template <typename T>
 inline
-typename RoadmapGraph<Vertex, Edge>::VP&
-RoadmapGraph<Vertex, Edge>::
+typename GenericStateGraph<Vertex, Edge>::VP&
+GenericStateGraph<Vertex, Edge>::
 GetVertex(T& _t) noexcept {
   return GetVertex(VID(*_t));
 }
@@ -940,8 +1033,8 @@ GetVertex(T& _t) noexcept {
 
 template <typename Vertex, typename Edge>
 inline
-typename RoadmapGraph<Vertex, Edge>::VP&
-RoadmapGraph<Vertex, Edge>::
+typename GenericStateGraph<Vertex, Edge>::VP&
+GenericStateGraph<Vertex, Edge>::
 GetVertex(VI& _t) noexcept {
   return _t->property();
 }
@@ -949,8 +1042,8 @@ GetVertex(VI& _t) noexcept {
 
 template <typename Vertex, typename Edge>
 inline
-typename RoadmapGraph<Vertex, Edge>::VP&
-RoadmapGraph<Vertex, Edge>::
+typename GenericStateGraph<Vertex, Edge>::VP&
+GenericStateGraph<Vertex, Edge>::
 GetVertex(VID _t) noexcept {
   VI iter = this->find_vertex(_t);
   if(iter == this->end())
@@ -964,8 +1057,8 @@ GetVertex(VID _t) noexcept {
 template <typename Vertex, typename Edge>
 template <typename T>
 inline
-const typename RoadmapGraph<Vertex, Edge>::VP&
-RoadmapGraph<Vertex, Edge>::
+const typename GenericStateGraph<Vertex, Edge>::VP&
+GenericStateGraph<Vertex, Edge>::
 GetVertex(T& _t) const noexcept {
   return GetVertex(VID(*_t));
 }
@@ -973,8 +1066,8 @@ GetVertex(T& _t) const noexcept {
 
 template <typename Vertex, typename Edge>
 inline
-const typename RoadmapGraph<Vertex, Edge>::VP&
-RoadmapGraph<Vertex, Edge>::
+const typename GenericStateGraph<Vertex, Edge>::VP&
+GenericStateGraph<Vertex, Edge>::
 GetVertex(CVI& _t) const noexcept {
   return (*_t).property();
 }
@@ -982,8 +1075,8 @@ GetVertex(CVI& _t) const noexcept {
 
 template <typename Vertex, typename Edge>
 inline
-const typename RoadmapGraph<Vertex, Edge>::VP&
-RoadmapGraph<Vertex, Edge>::
+const typename GenericStateGraph<Vertex, Edge>::VP&
+GenericStateGraph<Vertex, Edge>::
 GetVertex(VID _t) const noexcept {
   CVI iter = this->find_vertex(_t);
   if(iter == this->end())
@@ -995,8 +1088,8 @@ GetVertex(VID _t) const noexcept {
 
 
 template <typename Vertex, typename Edge>
-std::vector<typename RoadmapGraph<Vertex, Edge>::VID>
-RoadmapGraph<Vertex, Edge>::
+std::vector<typename GenericStateGraph<Vertex, Edge>::VID>
+GenericStateGraph<Vertex, Edge>::
 GetChildren(const VID _vid) const noexcept {
   auto vi = this->find_vertex(_vid);
   if(vi == this->end())
@@ -1011,9 +1104,39 @@ GetChildren(const VID _vid) const noexcept {
 
 
 template <typename Vertex, typename Edge>
+size_t
+GenericStateGraph<Vertex, Edge>::
+GetInDegree(const VID _vid) noexcept {
+  auto predIter = m_predecessors.find(_vid);
+  VertexSet& preds = predIter->second;
+  return preds.size();
+}
+
+
+template <typename Vertex, typename Edge>
+std::vector<typename GenericStateGraph<Vertex, Edge>::EI>
+GenericStateGraph<Vertex, Edge>::
+FindInboundEdges(const VID _vid) {
+  std::vector<EI> inEdges;
+
+  auto predIter = m_predecessors.find(_vid);
+  VertexSet& predecessors = predIter->second;
+
+  for(const auto pred : predecessors) {
+    auto predIter = this->find_vertex(pred);
+    for(auto eit = predIter->begin(); eit != predIter->end(); ++eit)
+      if(eit->target() == _vid)
+        inEdges.push_back(eit);
+  }
+
+  return inEdges;
+}
+
+
+template <typename Vertex, typename Edge>
 inline
 bool
-RoadmapGraph<Vertex, Edge>::
+GenericStateGraph<Vertex, Edge>::
 GetEdge(const VID _source, const VID _target, EI& _ei) noexcept {
   VI vi;
   return this->find_edge(EID(_source, _target), vi, _ei);
@@ -1023,7 +1146,7 @@ GetEdge(const VID _source, const VID _target, EI& _ei) noexcept {
 template <typename Vertex, typename Edge>
 inline
 bool
-RoadmapGraph<Vertex, Edge>::
+GenericStateGraph<Vertex, Edge>::
 GetEdge(const VID _source, const VID _target, CEI& _ei) const noexcept {
   CVI vi;
   return this->find_edge(EID(_source, _target), vi, _ei);
@@ -1032,8 +1155,8 @@ GetEdge(const VID _source, const VID _target, CEI& _ei) const noexcept {
 
 template <typename Vertex, typename Edge>
 inline
-typename RoadmapGraph<Vertex, Edge>::EP&
-RoadmapGraph<Vertex, Edge>::
+typename GenericStateGraph<Vertex, Edge>::EP&
+GenericStateGraph<Vertex, Edge>::
 GetEdge(const VID _source, const VID _target) noexcept {
   EI ei;
   if(!GetEdge(_source, _target, ei))
@@ -1046,8 +1169,8 @@ GetEdge(const VID _source, const VID _target) noexcept {
 
 template <typename Vertex, typename Edge>
 inline
-typename RoadmapGraph<Vertex, Edge>::EP&
-RoadmapGraph<Vertex, Edge>::
+typename GenericStateGraph<Vertex, Edge>::EP&
+GenericStateGraph<Vertex, Edge>::
 GetEdge(const EID _descriptor) noexcept {
   return GetEdge(_descriptor.source(), _descriptor.target());
 }
@@ -1056,7 +1179,7 @@ GetEdge(const EID _descriptor) noexcept {
 
 template <typename Vertex, typename Edge>
 bool
-RoadmapGraph<Vertex, Edge>::
+GenericStateGraph<Vertex, Edge>::
 IsHook(const HookType _type, const std::string& _label) const {
   switch(_type) {
     case HookType::AddVertex:
@@ -1076,7 +1199,7 @@ IsHook(const HookType _type, const std::string& _label) const {
 
 template <typename Vertex, typename Edge>
 void
-RoadmapGraph<Vertex, Edge>::
+GenericStateGraph<Vertex, Edge>::
 InstallHook(const HookType _type, const std::string& _label,
     const VertexHook& _h) {
   // Ensure that the hook does not already exist.
@@ -1107,7 +1230,7 @@ InstallHook(const HookType _type, const std::string& _label,
 
 template <typename Vertex, typename Edge>
 void
-RoadmapGraph<Vertex, Edge>::
+GenericStateGraph<Vertex, Edge>::
 InstallHook(const HookType _type, const std::string& _label, const EdgeHook& _h) {
   // Ensure that the hook does not already exist.
   if(IsHook(_type, _label))
@@ -1137,7 +1260,7 @@ InstallHook(const HookType _type, const std::string& _label, const EdgeHook& _h)
 
 template <typename Vertex, typename Edge>
 void
-RoadmapGraph<Vertex, Edge>::
+GenericStateGraph<Vertex, Edge>::
 RemoveHook(const HookType _type, const std::string& _label) {
   if(!IsHook(_type, _label))
     throw RunTimeException(WHERE) << "Hook of type '" << ToString(_type)
@@ -1168,7 +1291,7 @@ RemoveHook(const HookType _type, const std::string& _label) {
 template <typename Vertex, typename Edge>
 inline
 void
-RoadmapGraph<Vertex, Edge>::
+GenericStateGraph<Vertex, Edge>::
 DisableHooks() noexcept {
   m_enableHooks = false;
 }
@@ -1177,7 +1300,7 @@ DisableHooks() noexcept {
 template <typename Vertex, typename Edge>
 inline
 void
-RoadmapGraph<Vertex, Edge>::
+GenericStateGraph<Vertex, Edge>::
 EnableHooks() noexcept {
   m_enableHooks = true;
 }
@@ -1185,7 +1308,7 @@ EnableHooks() noexcept {
 
 template <typename Vertex, typename Edge>
 void
-RoadmapGraph<Vertex, Edge>::
+GenericStateGraph<Vertex, Edge>::
 ClearHooks() noexcept {
   m_addVertexHooks.clear();
   m_deleteVertexHooks.clear();
@@ -1204,9 +1327,9 @@ ClearHooks() noexcept {
 ///       this function for robot groups. It should be returned to a member
 ///       function when we have an elegant means for implementing group roadmap
 ///       input.
-template <typename RoadmapGraph>
+template <typename GenericStateGraph>
 void
-Read(RoadmapGraph* _g, const std::string& _filename) {
+Read(GenericStateGraph* _g, const std::string& _filename) {
   std::ifstream ifs(_filename);
   if(!ifs)
     throw ParseException(WHERE) << "Cannot open file '" << _filename << "'.";
@@ -1230,9 +1353,9 @@ Read(RoadmapGraph* _g, const std::string& _filename) {
   if(!_g->GetRobot())
     RunTimeException(WHERE) << "Must specify robot when reading in roadmaps.";
 
-  typedef typename RoadmapGraph::STAPLGraph STAPLGraph;
-  typedef typename RoadmapGraph::vertex_property Vertex;
-  typedef typename RoadmapGraph::edge_property Edge;
+  typedef typename GenericStateGraph::STAPLGraph STAPLGraph;
+  typedef typename GenericStateGraph::vertex_property Vertex;
+  typedef typename GenericStateGraph::edge_property Edge;
 
   // Set the input robot for our edge class.
   /// @TODO this is a bad way to handle the fact that it's necessary to know
@@ -1257,7 +1380,7 @@ Read(RoadmapGraph* _g, const std::string& _filename) {
 #else
 template <typename Vertex, typename Edge>
 void
-RoadmapGraph<Vertex, Edge>::
+GenericStateGraph<Vertex, Edge>::
 Read(const std::string& _filename) {
   std::ifstream ifs(_filename);
   if(!ifs)
@@ -1305,9 +1428,9 @@ Read(const std::string& _filename) {
 ///       this function for robot groups. It should be returned to a member
 ///       function when we have an elegant means for implementing group roadmap
 ///       input.
-template <typename RoadmapGraph>
+template <typename GenericStateGraph>
 void
-ReadMessage(RoadmapGraph* _g, const std::string& _msg) {
+ReadMessage(GenericStateGraph* _g, const std::string& _msg) {
   std::stringstream ss(_msg);
 
   std::string tag;
@@ -1329,9 +1452,9 @@ ReadMessage(RoadmapGraph* _g, const std::string& _msg) {
   if(!_g->GetRobot())
     RunTimeException(WHERE) << "Must specify robot when reading in roadmaps.";
 
-  typedef typename RoadmapGraph::STAPLGraph STAPLGraph;
-  typedef typename RoadmapGraph::vertex_property Vertex;
-  typedef typename RoadmapGraph::edge_property Edge;
+  typedef typename GenericStateGraph::STAPLGraph STAPLGraph;
+  typedef typename GenericStateGraph::vertex_property Vertex;
+  typedef typename GenericStateGraph::edge_property Edge;
 
   // Set the input robot for our edge class.
   /// @TODO this is a bad way to handle the fact that it's necessary to know
@@ -1356,7 +1479,7 @@ ReadMessage(RoadmapGraph* _g, const std::string& _msg) {
 
 template <typename Vertex, typename Edge>
 void
-RoadmapGraph<Vertex, Edge>::
+GenericStateGraph<Vertex, Edge>::
 Write(const std::string& _filename, Environment* _env) const {
   std::ofstream ofs(_filename);
   ofs << "#####ENVFILESTART#####" << std::endl
@@ -1378,7 +1501,7 @@ Write(const std::string& _filename, Environment* _env) const {
 template <typename Vertex, typename Edge>
 inline
 void
-RoadmapGraph<Vertex, Edge>::
+GenericStateGraph<Vertex, Edge>::
 ExecuteAddVertexHooks(const VI _iterator) noexcept {
   if(!m_enableHooks)
     return;
@@ -1394,7 +1517,7 @@ ExecuteAddVertexHooks(const VI _iterator) noexcept {
 template <typename Vertex, typename Edge>
 inline
 void
-RoadmapGraph<Vertex, Edge>::
+GenericStateGraph<Vertex, Edge>::
 ExecuteDeleteVertexHooks(const VI _iterator) noexcept {
   if(!m_enableHooks)
     return;
@@ -1410,7 +1533,7 @@ ExecuteDeleteVertexHooks(const VI _iterator) noexcept {
 template <typename Vertex, typename Edge>
 inline
 void
-RoadmapGraph<Vertex, Edge>::
+GenericStateGraph<Vertex, Edge>::
 ExecuteAddEdgeHooks(const EI _iterator) noexcept {
   if(!m_enableHooks)
     return;
@@ -1426,7 +1549,7 @@ ExecuteAddEdgeHooks(const EI _iterator) noexcept {
 template <typename Vertex, typename Edge>
 inline
 void
-RoadmapGraph<Vertex, Edge>::
+GenericStateGraph<Vertex, Edge>::
 ExecuteDeleteEdgeHooks(const EI _iterator) noexcept {
   if(!m_enableHooks)
     return;
@@ -1441,7 +1564,7 @@ ExecuteDeleteEdgeHooks(const EI _iterator) noexcept {
 
 template <typename Vertex, typename Edge>
 std::string
-RoadmapGraph<Vertex, Edge>::
+GenericStateGraph<Vertex, Edge>::
 ToString(const HookType& _t) const noexcept {
   switch(_t) {
     case HookType::AddVertex:
@@ -1517,6 +1640,21 @@ HaveCommonVertex(const std::unordered_set<size_t>& _a,
                      [larger](const size_t _vid) {return larger->count(_vid);});
 }
 
+/// Merge one vertex set into another.
+/// @param _receiver The vertex set receiving new VIDs.
+/// @param _source   The source of the new VIDs.
+/// @return A reference to _receiver.
+inline
+std::unordered_set<size_t>&
+VertexSetUnionInPlace(std::unordered_set<size_t>& _receiver,
+    const std::unordered_set<size_t>& _source) {
+  // Reserve sufficient space for the worst case. This wastes a bit of space
+  // (which is inevitable anyway) but avoids more than one rehash.
+  _receiver.reserve(_receiver.size() + _source.size());
+  for(const size_t vid : _source)
+    _receiver.insert(vid);
+  return _receiver;
+}
 
 /// Select a random element from a vertex set (or other unordered set).
 /// @param _set The set.

@@ -1,17 +1,22 @@
-#ifndef PMPL_GROUP_CFG_H_
-#define PMPL_GROUP_CFG_H_
+#ifndef PPL_GROUP_CFG_H_
+#define PPL_GROUP_CFG_H_
 
 #include <cstddef>
 #include <iostream>
 #include <vector>
 
 #include "ConfigurationSpace/Cfg.h"
-#include "ConfigurationSpace/GroupRoadmap.h"
+#include "ConfigurationSpace/CompositeState.h"
 #include "ConfigurationSpace/GroupLocalPlan.h"
+#include "ConfigurationSpace/GroupRoadmap.h"
+#include "MPProblem/Environment/Environment.h"
+#include "MPProblem/RobotGroup/RobotGroup.h"
 
+#include "nonstd.h"
 #include "Transformation.h"
 #include "Vector.h"
 
+class Environment;
 class Robot;
 class RobotGroup;
 
@@ -27,27 +32,23 @@ class RobotGroup;
 /// storage (m_localCfgs) which stores individual cfgs not yet in a roadmap.
 /// When adding a group cfg to a group roadmap, the VID is used in place after
 /// adding the individual cfg to the individual roadmap.
-///
-/// @note Do not use 'SetRobotCfg' on a roadmap configuration with a non-VID:
-///       The 'set' configuration will be lost since it is not in the individual
-///       roadmap.
-///
-/// @todo Rework so that we only need a robot group to construct this, in which
-///       case it will have all local cfgs. It should only get tied to a roadmap
-///       with SetGroupRoadmap after it has been added to one.
+/// 
+/// 'GraphType' represents the individual roadmap type for a single robot.
 ////////////////////////////////////////////////////////////////////////////////
-class GroupCfg final {
+template <typename GraphType>
+class GroupCfg final : public CompositeState<GraphType> {
 
   public:
 
     ///@name Local Types
     ///@{
 
-    typedef size_t           VID;      ///< A VID in an individual Robot roadmap.
-    typedef std::vector<VID> VIDSet;   ///< A set of VIDs from indiv. Robot roadmaps.
+    typedef CompositeState<GraphType>                         BaseType;
+    typedef GroupRoadmap<GroupCfg, GroupLocalPlan<GraphType>> GroupRoadmapType;
 
-    typedef Cfg              IndividualCfg;
-    typedef GroupRoadmap<GroupCfg, GroupLocalPlan<IndividualCfg>> GroupRoadmapType;
+    typedef typename BaseType::VID                            VID;
+    typedef typename BaseType::GroupGraphType                 GroupGraphType;
+    typedef typename BaseType::CfgType                        IndividualCfg; 
 
     /// A formation represents a group of robots which are maintaining their
     /// configurations relative to a leader, such as maintaining a square or
@@ -63,11 +64,11 @@ class GroupCfg final {
     /// Construct a group configuration.
     /// @param _groupMap The group roadmap to which this configuration belongs,
     ///                  or null if it is not in a map.
-    /// @param _init Default-initialize local configurations?
-    /// @todo This object does not work at all without a group map. We should
-    ///       throw relevant exceptions if needed.
-    explicit GroupCfg(GroupRoadmapType* const _groupMap = nullptr,
-        const bool _init = false);
+    explicit GroupCfg(GroupRoadmapType* const& _groupMap = nullptr);
+
+    /// Construct a group configuration.
+    /// @param _group The group to which this configuration belongs.
+    explicit GroupCfg(RobotGroup* const& _group);
 
     ///@}
     ///@name Equality
@@ -77,10 +78,11 @@ class GroupCfg final {
     /// @param _other The given group configuration.
     /// @return True if equal, false otherwise.
     bool operator==(const GroupCfg& _other) const noexcept;
-    /// Check if the current and given group configurations are unequal.
+
+    /// Check if the current group cfg is less than the given group cfg.
     /// @param _other The given group configuration.
-    /// @return True if unequal, false otherwise.
-    bool operator!=(const GroupCfg& _other) const noexcept;
+    /// @return True if less than, false otherwise.
+    bool operator<(const GroupCfg& _other) const noexcept;
 
     ///@}
     ///@name Arithmetic
@@ -117,21 +119,6 @@ class GroupCfg final {
     GroupCfg& operator*=(const double& _val);
 
     ///@}
-    ///@name Robots
-    ///@{
-    /// Access the robots within this group configuration.
-
-    /// Get the number of robots.
-    size_t GetNumRobots() const noexcept;
-
-    /// Get the full vector of robot pointers.
-    const std::vector<Robot*>& GetRobots() const noexcept;
-
-    /// Get the robot pointer for a group member by index.
-    /// @param _index The desired index.
-    Robot* GetRobot(const size_t _index) const;
-
-    ///@}
     ///@name Roadmap Accessors
     ///@{
     /// These functions provide access to the related group map (if any) and
@@ -142,80 +129,14 @@ class GroupCfg final {
 
     /// Change the roadmap that this group is using/in reference to. Also
     /// performs compatibility/verification tests to see if it's possible.
-    /// Note: Does NOT add this new cfg to any roadmap, but makes all cfg info
+    /// @note Does NOT add this new cfg to any roadmap, but makes all cfg info
     ///       local (everything will be in m_localCfgs) so that there are no
     ///       issues when adding to the roadmap later.
-    /// @todo Fix this, it looks like it was meant to be a copy-constructor with
-    ///       a different roadmap. We will still need a roadmap setter in case
-    ///       the roadmap moves.
-    GroupCfg SetGroupRoadmap(GroupRoadmapType* const _newRoadmap) const;
-
-    /// Get the VID for a particular robot.
-    /// @param _index The index (within the group) of the robot.
-    /// @return The VID of the robot's individual configuration, or INVALID_VID
-    ///         if it is a local configuration.
-    VID GetVID(const size_t _index) const noexcept;
-
-    ///@}
-    ///@name Individual Configurations
-    ///@{
-    /// These functions manage the individual configurations that comprise this
-    /// group configuration.
-
-    /// Set the individual cfg for a robot to a local copy of an cfg.
-    /// @param _robot The robot which the cfg refers to.
-    /// @param _cfg The cfg.
-    void SetRobotCfg(Robot* const _robot, IndividualCfg&& _cfg);
-
-    /// Set the individual cfg for a robot to a local copy of an cfg.
-    /// @param _index The robot's group index which the cfg refers to.
-    /// @param _cfg The cfg.
-    void SetRobotCfg(const size_t _index, IndividualCfg&& _cfg);
-
-    /// Set the individual cfg for a robot to a roadmap copy of an cfg.
-    /// @param _robot The robot which the cfg refers to.
-    /// @param _vid The cfg descriptor.
-    void SetRobotCfg(Robot* const _robot, const VID _vid);
-
-    /// Set the individual cfg for a robot to a roadmap copy of an cfg.
-    /// @param _index The robot's group index which the cfg refers to.
-    /// @param _vid The cfg descriptor.
-    void SetRobotCfg(const size_t _index, const VID _vid);
-
-    /// Get the individual Cfg for a robot in the group.
-    /// @param _robot The robot which the cfg refers to.
-    /// @return The individual configuration for the indexed robot.
-    IndividualCfg& GetRobotCfg(Robot* const _robot);
-
-    /// Get the individual Cfg for a robot in the group.
-    /// @param _index The index of the robot.
-    /// @return The individual configuration for the indexed robot.
-    IndividualCfg& GetRobotCfg(const size_t _index);
-
-    /// Get the individual Cfg for a robot in the group.
-    /// @param _robot The robot which the cfg refers to.
-    /// @return The individual configuration for the indexed robot.
-    const IndividualCfg& GetRobotCfg(Robot* const _robot) const;
-
-    /// Get the individual Cfg for a robot in the group.
-    /// @param _index The index of the robot.
-    /// @return The individual configuration for the indexed robot.
-    const IndividualCfg& GetRobotCfg(const size_t _index) const;
-
-    /// Clear the Local Cfg information in the cfg (for after adding to roadmap)
-    void ClearLocalCfgs();
+    void SetGroupRoadmap(GroupRoadmapType* const _newRoadmap);
 
     ///@}
     ///@name DOF Accessors
     ///@{
-    /// @todo These should not return any single-robot values, which can always
-    ///       be obtained by accessing the relevant robot.
-
-    /// We assume homogeneous robots right now, so the default argument
-    /// finds the values for the first one.
-    size_t PosDOF(const size_t _index = 0) const;
-    size_t OriDOF(const size_t _index = 0) const;
-    size_t DOF(const size_t _index = 0) const;
 
     /// Check if there is a nonholonomic robot in the group.
     bool IsNonholonomic() const noexcept;
@@ -371,6 +292,18 @@ class GroupCfg final {
     /// @overload
     bool InBounds(const Environment* const _env) const noexcept;
 
+    /// Create a group configuration where every vertex of every robots
+    /// is guaranteed to lie within the specified boundary. If a group cfg
+    /// cannot be found, the program will abort. The function will try a
+    /// predefined number of times.
+    /// @param _b The bondary to sample within.
+    void GetRandomGroupCfg(const Boundary* const _b);
+
+    /// Create a group cfg where all robots are guaranteed to lie within
+    /// the input environment.
+    /// @param _env The environment to sample within.
+    void GetRandomGroupCfg(Environment* _env);
+
     /// Generate a random configuration for group robotswith a set length.
     /// @param _length The desired length.
     /// @param _dm The distance metric for checking length.
@@ -378,7 +311,7 @@ class GroupCfg final {
     template<typename DistanceMetricPointer>
     void GetRandomRay(const double _length, DistanceMetricPointer _dm, const bool _norm = true);
     /// Normalize Orientation DOFs for a Group Cfg
-    virtual void NormalizeOrientation(const Formation& _robots = Formation())
+    virtual void NormalizeOrientation(const std::vector<size_t>& _robots = {})
         noexcept;
 
     ///@}
@@ -394,33 +327,607 @@ class GroupCfg final {
     ///@name Helpers
     ///@{
 
-    /// Return whether the cfg for the robot is local to the group cfg, or if
-    /// it's in an individual roadmap already.
-    bool IsLocalCfg(const size_t _robotIndex) const noexcept;
-
     /// Initialize the set of local configurations if not already done.
-    void InitializeLocalCfgs() noexcept;
-
-    /// Verify that an index is valid. Throw an exception if not.
-    /// @param _robotIndex The (group) index to verify.
-    void VerifyIndex(const size_t _robotIndex) const noexcept;
-
-    ///@}
-    ///@name Internal State
-    ///@{
-
-    GroupRoadmapType* m_groupMap{nullptr};  ///< The robot group.
-
-    VIDSet m_vids;   ///< The individual VIDs in this aggregate configuration.
-    std::vector<IndividualCfg> m_localCfgs; ///< Individual cfgs not in a map.
+    virtual void InitializeLocalCfgs() noexcept override;
 
     ///@}
 
 };
 
+template <typename GraphType>
+GroupCfg<GraphType>::
+GroupCfg(GroupRoadmapType* const& _groupMap) 
+     : CompositeState<GraphType>((GroupGraphType*)_groupMap) {}
+
+template <typename GraphType>
+GroupCfg<GraphType>::
+GroupCfg(RobotGroup* const& _group) : CompositeState<GraphType>(_group) {}
+
+/*--------------------------------- Equality ---------------------------------*/
+
+template <typename GraphType>
+bool
+GroupCfg<GraphType>::
+operator==(const GroupCfg& _other) const noexcept {
+  // If _other is for another group, these are not the same.
+  if(this->m_group != _other.m_group)
+    return false;
+
+  // If _other is from another map, these are not the same.
+  if(this->m_groupMap != _other.m_groupMap)
+    return false;
+
+  // Else, compare VIDs if both are valid, or by-value other wise.
+  for(size_t i = 0; i < this->m_vids.size(); ++i) {
+    const VID thisVID  = this->m_vids[i],
+              otherVID = _other.m_vids[i];
+
+    if(thisVID != INVALID_VID and otherVID != INVALID_VID) {
+      if(thisVID != otherVID)
+        return false;
+    }
+    else if(this->GetRobotCfg(i) != _other.GetRobotCfg(i))
+      return false;
+  }
+
+  return true;
+}
+
+
+template <typename GraphType>
+bool
+GroupCfg<GraphType>::
+operator<(const GroupCfg& _other) const noexcept {
+
+  const auto& robots = this->GetRobots();
+
+  for(size_t i = 0; i < robots.size(); i++) {
+    const auto& cfg1 = this->GetRobotCfg(i);
+    const auto& cfg2 = _other.GetRobotCfg(i);
+    if(cfg1 < cfg2)
+      return true;
+    else if(cfg2 < cfg1)
+      return false;
+  }
+
+  return false;
+}
+/*-------------------------------- Arithmetic --------------------------------*/
+
+template <typename GraphType>
+GroupCfg<GraphType>
+GroupCfg<GraphType>::
+operator+(const GroupCfg& _other) const {
+  GroupCfg newCfg = *this;
+  return (newCfg += _other);
+}
+
+
+template <typename GraphType>
+GroupCfg<GraphType>
+GroupCfg<GraphType>::
+operator-(const GroupCfg& _other) const {
+  GroupCfg newCfg = *this;
+  return (newCfg -= _other);
+}
+
+
+template <typename GraphType>
+GroupCfg<GraphType>
+GroupCfg<GraphType>::
+operator*(const double& _other) const {
+  GroupCfg newCfg = *this;
+  return (newCfg *= _other);
+}
+
+
+template <typename GraphType>
+GroupCfg<GraphType>&
+GroupCfg<GraphType>::
+operator+=(const GroupCfg& _other) {
+  // We must require the exact same group, which indicates everything
+  // lines up between the two cfgs (namely the exact robots/order of the group).
+  if(this->m_group != _other.m_group)
+    throw RunTimeException(WHERE, "Cannot add GroupCfgs with different groups!");
+
+  // We will be using the local cfgs, as we don't want to require any cfgs that
+  // use this operator to have to add cfgs to roadmaps.
+  for(size_t i = 0; i < this->GetNumRobots(); ++i)
+    this->SetRobotCfg(i, this->GetRobotCfg(i) + _other.GetRobotCfg(i));
+
+  return *this;
+}
+
+
+template <typename GraphType>
+GroupCfg<GraphType>&
+GroupCfg<GraphType>::
+operator-=(const GroupCfg& _other) {
+  // We must require the exact same group, which indicates everything
+  // lines up between the two cfgs (namely the exact robots/order of the group).
+  if(this->m_group != _other.m_group)
+    throw RunTimeException(WHERE, "Cannot subtract GroupCfgs with different groups!");
+
+  // We will be using the local cfgs, as we don't want to require any cfgs that
+  // use this operator to have to add cfgs to roadmaps.
+  for(size_t i = 0; i < this->GetNumRobots(); ++i)
+    this->SetRobotCfg(i, this->GetRobotCfg(i) - _other.GetRobotCfg(i));
+
+  return *this;
+}
+
+
+template <typename GraphType>
+GroupCfg<GraphType>&
+GroupCfg<GraphType>::
+operator*=(const double& _val) {
+  // We will be using the local cfgs, as we don't want to require any cfgs that
+  // use this operator to have to add cfgs to roadmaps.
+  for(size_t i = 0; i < this->GetNumRobots(); ++i)
+    this->SetRobotCfg(i, this->GetRobotCfg(i) * _val);
+
+  return *this;
+}
+
+/*---------------------------- Roadmap Accessors -----------------------------*/
+
+template <typename GraphType>
+typename GroupCfg<GraphType>::GroupRoadmapType*
+GroupCfg<GraphType>::
+GetGroupRoadmap() const noexcept {
+  return (GroupRoadmapType*)this->m_groupMap;
+}
+
+
+template <typename GraphType>
+void
+GroupCfg<GraphType>::
+SetGroupRoadmap(GroupRoadmapType* const _newRoadmap) {
+  // Check that groups are compatible.
+  if(this->m_group != _newRoadmap->GetGroup())
+    throw RunTimeException(WHERE) << "Trying to change roadmaps on incompatible "
+                                  << "groups!";
+
+  // Set the group graph of the composite state.
+  this->m_groupMap = (GroupGraphType*) _newRoadmap;
+
+  // Put all individual cfgs into the group cfg so that all are local:
+  for(size_t i = 0; i < this->GetNumRobots(); ++i)
+    this->SetRobotCfg(i, IndividualCfg(this->GetRobotCfg(i)));
+}
+
+/*------------------------------ DOF Accessors -------------------------------*/
+
+template <typename GraphType>
+bool
+GroupCfg<GraphType>::
+IsNonholonomic() const noexcept {
+  for(auto robot : this->GetRobots())
+    if(robot->IsNonholonomic())
+      return true;
+  return false;
+}
+
+
+template <typename GraphType>
+size_t
+GroupCfg<GraphType>::
+CompositeDOF() const {
+  size_t dofSum = 0;
+  for(auto robot : this->GetRobots())
+    dofSum += robot->GetMultiBody()->DOF();
+  return dofSum;
+}
+
+
+template <typename GraphType>
+double
+GroupCfg<GraphType>::
+Magnitude() const {
+  double result = 0;
+  for(size_t i = 0; i < this->GetNumRobots(); ++i) {
+    const double m = this->GetRobotCfg(i).Magnitude();
+    result += m * m;
+  }
+  return std::sqrt(result);
+}
+
+
+template <typename GraphType>
+double
+GroupCfg<GraphType>::
+PositionMagnitude() const {
+  double result = 0;
+  for(size_t i = 0; i < this->GetNumRobots(); ++i) {
+    const double m = this->GetRobotCfg(i).PositionMagnitude();
+    result += m * m;
+  }
+  return std::sqrt(result);
+}
+
+
+template <typename GraphType>
+double
+GroupCfg<GraphType>::
+OrientationMagnitude() const {
+  double result = 0;
+  for(size_t i = 0; i < this->GetNumRobots(); ++i) {
+    const double m = this->GetRobotCfg(i).OrientationMagnitude();
+    result += m * m;
+  }
+  return std::sqrt(result);
+}
+
+/*------------------------- Configuration Helpers ----------------------------*/
+
+template <typename GraphType>
+void
+GroupCfg<GraphType>::
+ConfigureRobot() const {
+  for(size_t i = 0; i < this->GetNumRobots(); ++i)
+    this->GetRobotCfg(i).ConfigureRobot();
+}
+
+
+template <typename GraphType>
+bool
+GroupCfg<GraphType>::
+WithinResolution(const GroupCfg& _cfg, const double _posRes,
+    const double _oriRes) const {
+  for(size_t i = 0; i < this->GetNumRobots(); ++i)
+    if(!this->GetRobotCfg(i).WithinResolution(_cfg.GetRobotCfg(i), _posRes, _oriRes))
+      return false;
+
+  return true;
+}
+
+/*------------------------------DOF Modifiers---------------------------------*/
+
+template <typename GraphType>
+void
+GroupCfg<GraphType>::
+RotateFormationAboutLeader(const Formation& _robotList,
+    const mathtool::Orientation& _rotation, const bool _debug) {
+  /// Note: Currently assumes all robots just have ONE body. The case of multi-
+  /// bodied robots would need to be specially handled (right now it should just
+  /// be split into multiple robots if a group is needed).
+
+  /// @todo We can probably compute this without having to configure the models
+  ///       (which cost a lot of transformations).
+  ConfigureRobot(); // Configure all individual cfgs.
+
+  const size_t leaderIndex = _robotList[0];
+
+  // Get transformation of leader before rotation:
+  const IndividualCfg& leaderCfg = this->GetRobotCfg(leaderIndex);
+
+  // TODO update this to handle multiple bodies per robot.
+  // Use the multibody's body 0, since we assume each MB just has a single body.
+  mathtool::Transformation initialLeaderTransform = leaderCfg.GetMultiBody()->
+                                           GetBody(0)->GetWorldTransformation();
+
+  const mathtool::Transformation rotation(mathtool::Vector3d(0,0,0), _rotation);
+
+  if(_debug)
+    std::cout << "Rotating bodies " << _robotList << " with rotation = "
+              << rotation << std::endl;
+
+  // The transform to be applied to all parts (including the first one). We
+  // move the part to its relative world position with A at the world origin,
+  // then the rotation is applied, and we return the part to its relative
+  // position from A.
+  const mathtool::Transformation transform = initialLeaderTransform * rotation;
+
+  ApplyTransformationForRobots(_robotList, transform, initialLeaderTransform);
+}
+
+
+template <typename GraphType>
+void
+GroupCfg<GraphType>::
+ApplyTransformationForRobots(const Formation& _robotList,
+    const mathtool::Transformation& _transform,
+    const mathtool::Transformation& _relativeTransform) {
+  //Compute each robot's needed transformation and set dofs in cfg.
+  for (const size_t robotIndex : _robotList) {
+    const IndividualCfg& robotCfg = this->GetRobotCfg(robotIndex);
+
+    /// @todo Generalize this to handle robots with more than one body.
+    if(robotCfg.GetMultiBody()->GetNumBodies() > 1)
+      throw RunTimeException(WHERE) << "Multiple bodies not supported!";
+
+    // Retrieve current position and rotation of robot:
+    const mathtool::Transformation& initialRobotTransform =
+                  robotCfg.GetMultiBody()->GetBody(0)->GetWorldTransformation();
+
+    // From right to left: apply the inverse relative transform to the initial
+    // robot transform (puts the robot into the desired frame). Then apply
+    // the transform given.
+    const mathtool::Transformation newTransformation =   _transform *
+                                                       (-_relativeTransform) *
+                                                         initialRobotTransform;
+
+    // Extract the transformation. Note: This is assuming 6 DOFs!
+    const std::vector<double>& transformed = newTransformation.GetCfg();
+
+    OverwriteDofsForRobots(transformed, {robotIndex});
+  }
+}
+
+
+template <typename GraphType>
+void
+GroupCfg<GraphType>::
+AddDofsForRobots(const std::vector<double>& _dofs, const Formation& _robots) {
+  for(const size_t robotIndex : _robots) {
+    if(this->IsLocalCfg(robotIndex)) {
+      // We can simply modify the local values, since it's not a roadmap cfg yet
+      IndividualCfg& cfg = this->GetRobotCfg(robotIndex);
+
+      // Ensure this robot has the correct number of DOF.
+      if(_dofs.size() != cfg.DOF())
+        throw RunTimeException(WHERE) << "Tried to add " << _dofs.size()
+                                      << "dofs to robot " << robotIndex
+                                      << ", which has " << cfg.DOF() << " DOFs.";
+
+      // Update the robot's cfg.
+      for(unsigned int i = 0; i < _dofs.size(); ++i)
+        cfg[i] += _dofs[i];
+    }
+    else {
+      // Must copy the cfg since it is not local.
+      IndividualCfg cfg = this->GetRobotCfg(robotIndex);
+
+      // Ensure this robot has the correct number of DOF.
+      if(_dofs.size() != cfg.DOF())
+        throw RunTimeException(WHERE) << "Tried to add " << _dofs.size()
+                                      << "dofs to robot " << robotIndex
+                                      << ", which has " << cfg.DOF() << " DOFs.";
+
+      // Update the robot's cfg.
+      for(unsigned int i = 0; i < _dofs.size(); ++i)
+        cfg[i] += _dofs[i];
+      this->SetRobotCfg(robotIndex, std::move(cfg));
+    }
+  }
+}
+
+
+template <typename GraphType>
+void
+GroupCfg<GraphType>::
+AddDofsForRobots(const mathtool::Vector3d& _dofs, const Formation& _robots) {
+  for(const size_t robotIndex : _robots) {
+    IndividualCfg robotCfg = this->GetRobotCfg(robotIndex);
+    for(size_t i = 0; i < robotCfg.PosDOF(); ++i)
+      robotCfg[i] += _dofs[i];
+    this->SetRobotCfg(robotIndex, std::move(robotCfg));
+  }
+}
+
+
+template <typename GraphType>
+void
+GroupCfg<GraphType>::
+OverwriteDofsForRobots(const std::vector<double>& _dofs,
+    const Formation& _robots) {
+  for(const size_t robotIndex : _robots) {
+    IndividualCfg newIndividualCfg(this->GetRobot(robotIndex));
+    newIndividualCfg.SetData(_dofs);
+    this->SetRobotCfg(robotIndex, std::move(newIndividualCfg));
+  }
+}
+
+
+template <typename GraphType>
+void
+GroupCfg<GraphType>::
+OverwriteDofsForRobots(const mathtool::Vector3d& _dofs,
+    const Formation& _robots) {
+  for(const size_t robotIndex : _robots) {
+    IndividualCfg newIndividualCfg(this->GetRobot(robotIndex));
+    newIndividualCfg.SetLinearPosition(_dofs);
+    this->SetRobotCfg(robotIndex, std::move(newIndividualCfg));
+  }
+}
+
+
+template <typename GraphType>
+void
+GroupCfg<GraphType>::
+OverwriteDofsForRobots(const GroupCfg& _fromCfg, const Formation& _robots) {
+  for(const size_t robotIndex : _robots) {
+    IndividualCfg robotCfg = _fromCfg.GetRobotCfg(robotIndex);
+    this->SetRobotCfg(robotIndex, std::move(robotCfg));
+  }
+}
+
+
+template <typename GraphType>
+void
+GroupCfg<GraphType>::
+OverwriteDofsForRobots(const GroupCfg& _fromCfg,
+    const std::vector<Robot*>& _robots) {
+  auto fromGroup = _fromCfg.GetGroupRoadmap()->GetGroup(),
+       toGroup   = this->m_groupMap->GetGroup();
+
+  for(Robot* const robot : _robots) {
+    const size_t fromIndex = fromGroup->GetGroupIndex(robot),
+                 toIndex   = toGroup->GetGroupIndex(robot);
+    IndividualCfg robotCfg = _fromCfg.GetRobotCfg(fromIndex);
+    this->SetRobotCfg(toIndex, std::move(robotCfg));
+  }
+}
+
+
+template <typename GraphType>
+void
+GroupCfg<GraphType>::
+SetData(const std::vector<double>& _dofs) {
+  if(_dofs.size() != CompositeDOF())
+    throw RunTimeException(WHERE) << "Tried to set " << _dofs.size()
+                                  << " DOFs on a robot group with "
+                                  << CompositeDOF() << " DOFs.";
+
+  size_t compositeIndex = 0;
+  for(size_t i = 0; i < this->GetNumRobots(); ++i) {
+    const size_t robotDof = this->GetRobot(i)->GetMultiBody()->DOF();
+    IndividualCfg& robotCfg = this->GetRobotCfg(i);
+
+    for(size_t i = 0; i < robotDof; ++i, ++compositeIndex)
+      robotCfg[i] = _dofs[compositeIndex];
+  }
+}
+
+
+template <typename GraphType>
+void
+GroupCfg<GraphType>::
+FindIncrement(const GroupCfg& _start, const GroupCfg& _goal, const int _nTicks) {
+  // Need positive number of ticks.
+  if(_nTicks <= 0)
+    throw RunTimeException(WHERE) << "Divide by 0";
+  if(_start.m_group != _goal.m_group)
+    throw RunTimeException(WHERE) << "Cannot use two different groups "
+                                  << "with this operation currently!";
+
+  // For each robot in the group, find the increment for the individual cfg
+  // given the number of ticks found.
+  for(size_t i = 0; i < this->GetNumRobots(); ++i) {
+    IndividualCfg incr(this->GetRobot(i));
+    incr.FindIncrement(_start.GetRobotCfg(i), _goal.GetRobotCfg(i), _nTicks);
+    this->SetRobotCfg(i, std::move(incr));
+  }
+}
+
+
+template <typename GraphType>
+void
+GroupCfg<GraphType>::
+FindIncrement(const GroupCfg& _start, const GroupCfg& _goal, int* const _nTicks,
+    const double _positionRes, const double _orientationRes) {
+  const GroupCfg<GraphType> diff = _goal - _start;
+
+  *_nTicks = std::max(1., std::ceil(std::max(
+                      diff.PositionMagnitude() / _positionRes,
+                      diff.OrientationMagnitude() / _orientationRes)));
+
+  FindIncrement(_start, _goal, *_nTicks);
+}
+
+
+template <typename GraphType>
+bool
+GroupCfg<GraphType>::
+InBounds(const Boundary* const _b) const noexcept {
+  for(size_t i = 0; i < this->GetNumRobots(); ++i)
+    if(!this->GetRobotCfg(i).InBounds(_b))
+      return false;
+
+  return true;
+}
+
+
+template <typename GraphType>
+bool
+GroupCfg<GraphType>::
+InBounds(const Environment* const _env) const noexcept {
+  return InBounds(_env->GetBoundary());
+}
+
+template <typename GraphType>
+void
+GroupCfg<GraphType>::
+GetRandomGroupCfg(const Boundary* const _b) {
+  std::set<Robot*> found;
+  auto group = this->m_group;
+
+  for(size_t i = 0; i < this->GetNumRobots(); i++) {
+    this->m_vids[i] = INVALID_VID;
+  }
+  InitializeLocalCfgs();
+
+  auto robots = group->GetRobots();
+  for(size_t i = 0; i < robots.size(); i++) {
+    auto robot = robots[i];
+
+    // Check if robot cfg was set by formation sampling.
+    if(found.count(robot))
+      continue;
+
+    // If not, get a random configuration for it.
+    Cfg cfg(robot);
+    cfg.GetRandomCfg(_b);
+
+    // Save cfg to local cfgs.
+    this->m_localCfgs[i] = cfg;
+  }
+}
+
+template <typename GraphType>
+void
+GroupCfg<GraphType>::
+GetRandomGroupCfg(Environment* _env) {
+  GetRandomGroupCfg(_env->GetBoundary());
+}
+
+template <typename GraphType>
+void
+GroupCfg<GraphType>::
+NormalizeOrientation(const std::vector<size_t>& _robots) noexcept {
+  if(_robots.empty()) // Do all robots in this case.
+    for(size_t i = 0; i < this->GetNumRobots(); ++i)
+      this->GetRobotCfg(i).NormalizeOrientation();
+  else
+    for(size_t i : _robots)
+      this->GetRobotCfg(i).NormalizeOrientation();
+}
+
+/*------------------------------ Output Helpers ------------------------------*/
+
+template <typename GraphType>
+std::string
+GroupCfg<GraphType>::
+PrettyPrint(const size_t _precision) const {
+  std::ostringstream oss;
+  oss.precision(_precision);
+  oss << "{ ";
+  for(size_t i = 0; i < this->GetNumRobots(); ++i) {
+    const IndividualCfg& robotCfg = this->GetRobotCfg(i);
+    if(this->IsLocalCfg(i))
+      oss << "Local: ";
+    oss << robotCfg.PrettyPrint(_precision) << ", ";
+  }
+  oss << " }";
+
+  return oss.str();
+}
+
+/*----------------------------------------------------------------------------*/
+
+template <typename GraphType>
+void
+GroupCfg<GraphType>::
+InitializeLocalCfgs() noexcept {
+  // We will assume the local cfgs are initialized if the container size is
+  // correct.
+  const size_t numRobots = this->GetNumRobots();
+  if(this->m_localCfgs.size() == numRobots)
+    return;
+
+  this->m_localCfgs.clear();
+  this->m_localCfgs.resize(numRobots);
+
+  for(size_t i = 0; i < numRobots; ++i)
+    this->m_localCfgs[i] = IndividualCfg(this->GetRobot(i));
+}
+
+/*----------------------------------------------------------------------------*/
+
+template <typename GraphType>
 template <class DistanceMetricPointer>
 void
-GroupCfg::
+GroupCfg<GraphType>::
 GetRandomRay(const double _length, DistanceMetricPointer _dm, const bool _norm) {
   // Randomly sample DOFs.
 
@@ -436,7 +943,20 @@ GetRandomRay(const double _length, DistanceMetricPointer _dm, const bool _norm) 
     NormalizeOrientation();
 }
 
+template <typename GraphType>
+std::ostream&
+operator<<(std::ostream& _os, const GroupCfg<GraphType>& _groupCfg) {
+  // Might not need to be hidden behind GROUP_MAP, but doing for consistency
+#ifdef GROUP_MAP
+  _os << "0 ";
+#endif
 
-std::ostream& operator<<(std::ostream&, const GroupCfg&);
+  // Loop through all robots in the group and print each one's cfg in order.
+  for(size_t i = 0; i < _groupCfg.GetNumRobots(); ++i)
+    _os << _groupCfg.GetRobotCfg(i);
+
+    return _os;
+}
+
 
 #endif
