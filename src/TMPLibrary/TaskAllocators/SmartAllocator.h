@@ -59,6 +59,15 @@ class SmartAllocator : public TaskAllocatorMethod {
     /// Create a MPTask from cfg and constraint
     std::shared_ptr<MPTask> CreateMPTask(Robot* _robot, const Cfg& _start, const Constraint*  _goal);
 
+    void SubtractSmallest();
+    void Munkres();
+    void StarZeros();
+    void CoverColumns();
+    void PrimeZeros();
+    void ConstructSeries();
+    void AddAndSubtractValue();
+    vector<int> FindZero(int row, int col);
+
     ///@}
     ///@name Internal State
     ///@{
@@ -73,6 +82,20 @@ class SmartAllocator : public TaskAllocatorMethod {
 
     /// Map tracking robot positions through allocation process
     std::map<Robot*,Cfg> m_currentPositions;
+
+    /// Cost matrix
+    vector<vector<double>> m_costMatrix;
+
+    /// Mask matrix
+    vector<vector<double>> m_mask;
+    int m_n;
+    int m_m; 
+    int m_step =1;
+    int m_row0;
+    int m_col0;
+
+    vector<int> m_rowCover;
+    vector<int> m_colCover;
 
     ///@}
 };
