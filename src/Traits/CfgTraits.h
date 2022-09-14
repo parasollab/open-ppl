@@ -30,6 +30,9 @@
 #include "MPLibrary/NeighborhoodFinders/BruteForceNF.h"
 
 //sampler includes
+#include "MPLibrary/Samplers/BridgeTestSampler.h"
+#include "MPLibrary/Samplers/GaussianSampler.h"
+#include "MPLibrary/Samplers/MedialAxisSampler.h"
 #include "MPLibrary/Samplers/ObstacleBasedSampler.h"
 #include "MPLibrary/Samplers/UniformRandomSampler.h"
 
