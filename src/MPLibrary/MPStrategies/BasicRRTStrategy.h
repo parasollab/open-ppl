@@ -183,7 +183,7 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
     /// @param _target The target configuration.
     /// @return The VID of a newly created Cfg if successful, INVALID_VID
     ///         otherwise.
-    virtual VID ExpandTree(const CfgType& _target);
+    VID ExpandTree(const CfgType& _target);
 
     /// Attempt to expand the map by growing towards a target configuration from
     /// an arbitrary existing node.
