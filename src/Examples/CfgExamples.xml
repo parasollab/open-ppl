@@ -13,10 +13,10 @@
         waypointThreshold=".05"/>
     </Robot>
 
-    <Robot label="boxy2" filename="3D/boxy.robot">
+    <!--Robot label="boxy2" filename="3D/boxy.robot">
       <Agent type="pathfollowing" waypointDm="euclideanPosition"
         waypointThreshold=".05"/>
-    </Robot>
+    </Robot-->
 
     <!-- Single query with single robot -->
     <Task label="query" robot="boxy1">
@@ -117,6 +117,13 @@
       <ObstacleBasedSampler label="OBPRM" vcLabel="rapid" useBBX="false"
         pointSelection="cspace" dmLabel="euclidean" stepSize="0.0"
         nShellsColl="0" nShellsFree="1" debug="true"/>
+      <MedialAxisSampler label="MAPRM" vcLabel="pqp_solid" dmLabel="euclidean"
+        clearanceType="exact" penetrationType="exact" useBBX="true" debug="false"
+        positional="true"/>
+      <GaussianSampler label="Gauss" vcLabel="rapid" d="0.2" dmLabel="euclidean"
+        useBBX="false"/>
+      <BridgeTestSampler label="Bridge" vcLabel="rapid" d="0.2"
+        dmLabel="euclidean" useBBX="true"/>
     </Samplers>
 
     <LocalPlanners>
@@ -189,7 +196,7 @@
       <!-- Basic PRM where num samples is based on Number -->
       <BasicPRM label="PRM-build" debug="true" querySampler="UniformRandomFree">
         <Sampler label="UniformRandomFree" number="10" attempts="1"/>
-        <!--Sampler Method="OBPRM" number="10" attempts="10"/-->
+        <!--Sampler label="OBPRM" number="10" attempts="10"/-->
         <Connector label="Closest"/>
         <!--Connector label="ConnectCCs"/-->
         <Evaluator label="NodesEval"/>
