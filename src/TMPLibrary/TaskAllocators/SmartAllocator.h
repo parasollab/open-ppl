@@ -59,6 +59,8 @@ class SmartAllocator : public TaskAllocatorMethod {
     /// Create a MPTask from cfg and constraint
     std::shared_ptr<MPTask> CreateMPTask(Robot* _robot, const Cfg& _start, const Constraint*  _goal);
 
+    std::shared_ptr<MPTask> CreateMPTask(Robot* _robot, const Constraint* _start, const Constraint* _goal);
+
     void SubtractSmallest();
     void Munkres();
     void StarZeros();
@@ -86,13 +88,14 @@ class SmartAllocator : public TaskAllocatorMethod {
     /// Cost matrix
     vector<vector<double>> m_costMatrix;
 
-    /// Mask matrix
+    /// Mask matrixm_
     vector<vector<double>> m_mask;
     int m_n;
     int m_m; 
     int m_step =1;
     int m_row0;
     int m_col0;
+
 
     vector<int> m_rowCover;
     vector<int> m_colCover;
