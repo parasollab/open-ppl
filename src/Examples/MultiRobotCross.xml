@@ -87,7 +87,7 @@
                 <Evaluator label="IndividualQuery" />
             </ComposeEvaluator>
 
-            <CBSQuery label="CBSQuery" queryLabel="SIPP" debug="true" vcLabel="pqp_solid" safeIntervalToolLabel="SI" />
+            <CBSQuery label="CBSQuery" queryLabel="SIPP" debug="true" vcLabel="pqp_solid"/>
         </MapEvaluators>
 
         <MPStrategies>

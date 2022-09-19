@@ -1,5 +1,5 @@
-#ifndef PMPL_CBS_QUERY_H_
-#define PMPL_CBS_QUERY_H_
+#ifndef PPL_CBS_QUERY_H_
+#define PPL_CBS_QUERY_H_
 
 #include "MapEvaluatorMethod.h"
 #include "SIPPMethod.h"
@@ -42,52 +42,15 @@ class CBSQuery : public MapEvaluatorMethod<MPTraits> {
 
   private:
 
-    struct Conflict {
-      CfgType cfg1;     ///< The first robot's configuration.
-      CfgType cfg2;     ///< The second robot's configuration.
-      size_t  timestep; ///< The timestep when the collision occurred.
-
-      /// @todo This is to support old gcc v4.x, replace with
-      ///       default-constructed class members after we upgrade.
-      Conflict(const CfgType& _cfg1 = CfgType(nullptr),
-          const CfgType& _cfg2 = CfgType(nullptr),
-          const size_t _timestep = 0) :
-          cfg1(_cfg1),
-          cfg2(_cfg2),
-          timestep(_timestep)
-      {}
-
-      /// @return True if this is an empty conflict.
-      bool Empty() const noexcept {
-        return !cfg1.GetRobot();
-      }
-    };
-
-    ///@name Internal Types 
+    ///@name Internal Types
     ///@{
 
-    typedef std::pair<size_t, CfgType> Constraint;
+    // Edge <Source, Target>, Time Interval <Start, End> 
+    typedef std::pair<std::pair<size_t,size_t>,Range<size_t>> Constraint;
+    typedef CBSNode<Robot,Constraint,Path>    Node;
 
-    typedef std::set<Constraint> ConstraintSet;
-
-    typedef std::map<Robot*, ConstraintSet> ConstraintMap;
-
-    typedef std::unordered_map<Robot*, Path*> SolutionMap;
-
-    typedef CBSNode<Robot, Constraint, Path> CBSNodeType;
-
-    typedef std::unordered_map<size_t,
-                std::unordered_map<size_t,
-                    std::vector<Range<double>>>> EdgeIntervals;
-
-    typedef std::unordered_map<Robot*,
-                std::unordered_map<size_t,
-                    EdgeIntervals>> EdgeIntervalsMap;
-
-    typedef std::multimap<size_t,
-                std::pair<CfgType,size_t>> SingleConflictsCache;
-
-    typedef std::unordered_map<Robot*,SingleConflictsCache> GroupConflictsCache;
+    typedef std::map<size_t,std::vector<Range<size_t>>> VertexIntervals;
+    typedef std::map<std::pair<size_t,size_t>,std::vector<Range<size_t>>> EdgeIntervals;
 
     ///@}
 
@@ -118,49 +81,81 @@ class CBSQuery : public MapEvaluatorMethod<MPTraits> {
 
   protected:
 
+    ///@name CBS Functors
+    ///@{
+
+    /// Generate a path for a robot given a set of constraints.
+    /// @param _robot The robot to solve the task for.
+    /// @param _node The CBS node to store the new path in.
+    /// @return Path pointer to the resulting path. A nullptr indicates failure.
+    Path* SolveIndividualTask(Robot* const _robot, Node& _node);
+
+    /// Validate that the set of paths in the node do not contain conflicts.
+    /// @param _node The node to validate
+    /// @return The set of new robot-constraint pairs to add to the node generated
+    ///         from discovered conflicts.
+    std::vector<std::pair<Robot*,Constraint>> ValidationFunction(Node& _node);
+
+    /// Create child nodes corresponding to the additional constraints.
+    /// @param _node The parent CBS node to spawn children for.
+    /// @param _constraints The set of new constraints to spawn new child nodes for.
+    /// @param _lowLevel The functor to plan new paths for robots with new constraints.
+    /// @param _cost The functor to compute the cost of new child nodes.
+    /// @return The set of new child nodes.
+    std::vector<Node> SplitNodeFunction(Node& _node, 
+          std::vector<std::pair<Robot*, Constraint>> _constraints,
+          CBSLowLevelPlanner<Robot, Constraint, typename MPTraits::Path>& _lowlevel,
+          CBSCostFunction<Robot, Constraint, typename MPTraits::Path>& _cost);
+
+    /// Compute the cost of a CBS node. Can either be makespace or sum-of-cost.
+    /// @param _node Node to compute cost for.
+    /// @return The computed cost.
+    double CostFunction(Node& _node);
+
+    ///@}
     ///@name Helpers
     ///@{
 
-    /// Generate a path for a robot given a set of constraints
-    Path* SolveIndividualTask(Robot* const _robot,
-        const ConstraintMap& _constraintMap = {});
+    /// Compute the safe intervals for a robot given its constraint set in the node.
+    /// @param _robot The robot to compute safe intervals for.
+    /// @param _node The node containing the constraint set.
+    void ComputeIntervals(Robot* _robot, const Node& _node);
 
-    /// Find a conflict between a pair of robots
-    std::pair<std::pair<Robot*, Robot*>, Conflict> FindConflict(const SolutionMap& _solution);
+    /// Construct the safe intervals that complement the unsafe intervals.
+    /// @param _unsafeIntervals The unsafe intervals that define the complement.
+    /// @return The set of safe intervals.
+    std::vector<Range<size_t>> ConstructSafeIntervals(std::vector<Range<size_t>>& _unsafeIntervals);
 
-    /// Compute the safe intervals for a robot's roadmap
-    EdgeIntervals ComputeIntervals(Robot* _robot);
+    /// Check if two intervals are overlapping.
+    /// @param _interval1 First interval to check.
+    /// @param _interval2 Second interval to check.
+    /// @return Boolean indicating if they are overlapping.
+    bool OverlappingIntervals(Range<size_t> _interval1, Range<size_t> _interval2);
 
-    /// Join the edge intervals for a robot's roadmap
-    EdgeIntervals JoinEdgeIntervals(Robot* _robot, std::vector<EdgeIntervals> _edgeIntervals);
-
-    /// Computes joint safe intervals for the intervals in _allIntervals
-    std::vector<Range<double>> JoinIntervals(std::vector<std::vector<Range<double>>> _allIntervals);
-
-    /// Inserts _jointIntervals into _newIntervals
-    std::vector<Range<double>> InsertIntervals(std::vector<Range<double>> _jointIntervals, std::vector<Range<double>> _newIntervals);
-
-    /// Checks if there is overlap between two safe intervals
-    bool OverlappingIntervals(Range<double> _existingInterval, Range<double> _newInterval);
-
-    /// Merges two safe intervals
+    /// Merge a pair of intervals into a new interval.
+    /// @param _interval1 First interval to check.
+    /// @param _interval2 Second interval to check.
+    /// @return New merged interval.
     Range<double> MergeIntervals(Range<double> _interval1, Range<double> _interval2);
+
+    ///@}
+    ///@name Internal State
+    ///@{
 
     std::vector<Robot*> m_robots; ///< The robots in the group
 
     std::string m_queryLabel;  ///< Query method for making individual plans.
     std::string m_vcLabel;     ///< Validity checker for conflict detection.
-    std::string m_safeIntervalLabel; ///< The Safe Intarval Tool label
     std::string m_costLabel = "SOC"; ///< The label of the cost function
+
     size_t m_nodeLimit{std::numeric_limits<size_t>::max()}; ///< The maximum number of nodes
 
-    const ConstraintSet* m_currentConstraints{nullptr}; ///< The current constraints
-    std::set<ConstraintMap> m_constraintCache; ///< The cached constraints
     std::unordered_map<Robot*, MPTask*> m_taskMap; ///< The task for each robot
 
-    GroupConflictsCache m_groupConflictsCache; ///< The cache of contraints with cached safe intervals
-    EdgeIntervalsMap m_edgeIntervalsMap; ///< The cached edge intervals
-    size_t m_cacheIndex{0}; ///< The size of the cache
+    VertexIntervals m_vertexIntervals;  ///< The current set of safe vertex intervals.
+    EdgeIntervals m_edgeIntervals;      ///< The current set of safe edge intervals.
+
+    ///@}
 
 };
 
@@ -179,9 +174,6 @@ CBSQuery(XMLNode& _node) : MapEvaluatorMethod<MPTraits>(_node) {
   m_queryLabel = _node.Read("queryLabel", true, "",
       "The individual query method. Must be derived from QueryMethod and "
       "should not be used by any other object.");
-
-  m_safeIntervalLabel = _node.Read("safeIntervalToolLabel", true, "",
-      "The Safe Interval Tool Label");
 
   m_nodeLimit = _node.Read("nodeLimit", false, m_nodeLimit,
       size_t(1), std::numeric_limits<size_t>::max(),
@@ -221,6 +213,9 @@ template <typename MPTraits>
 bool
 CBSQuery<MPTraits>::
 operator()() {
+  auto stats = this->GetStatClass();
+  const std::string clockName = this->GetNameAndLabel() + "::Query";
+  MethodTimer mt(stats, clockName);
 
   m_robots = this->GetGroupTask()->GetRobotGroup()->GetRobots();
   for (auto& task : *(this->GetGroupTask())){
@@ -238,207 +233,82 @@ operator()() {
 
   //CBSLowLevelPlanner<MPTask, Constraint, std::shared_ptr<typename MPTraits::Path>>(
   CBSLowLevelPlanner<Robot, Constraint, typename MPTraits::Path> lowlevel(
-      [this](CBSNodeType& _node, Robot* _robot) {
-        auto path = this->SolveIndividualTask(_robot, _node.constraintMap);
-        if(!path or path->Cfgs().empty())
+      [this](Node& _node, Robot* _robot) {
+        auto path = this->SolveIndividualTask(_robot, _node);
+        if(!path or path->VIDs().empty())
           return false;
 
-        Path* pathCopy = new Path(path->GetRoadmap());
-        *pathCopy = *path;
-        _node.solutionMap[_robot] = pathCopy;
         return true;
       });
 
   CBSValidationFunction<Robot, Constraint, typename MPTraits::Path> validation(
-      [this](CBSNodeType& _node) {
-        auto robotConflict = this->FindConflict(_node.solutionMap);
-        std::vector<std::pair<Robot*, Constraint>> constraints;
-        if (robotConflict.first.first != nullptr) {
-          auto c = robotConflict.second;
-          constraints = {std::make_pair(robotConflict.first.first, std::make_pair(c.timestep, c.cfg2)), std::make_pair(robotConflict.first.second, std::make_pair(c.timestep, c.cfg1))};
-        }
-        return constraints;
+      [this](Node& _node) {
+        return this->ValidationFunction(_node);
       });
 
   CBSSplitNodeFunction<Robot, Constraint, typename MPTraits::Path> split(
-        [this](CBSNodeType& _node, std::vector<std::pair<Robot*, Constraint>> _constraints,
-          CBSLowLevelPlanner<Robot, Constraint, typename MPTraits::Path>& _lowlevel,
-          CBSCostFunction<Robot, Constraint, typename MPTraits::Path>& _cost) {
-
-            std::vector<CBSNodeType> children;
-            for (auto constraintPair : _constraints) {
-              auto robot = constraintPair.first;
-              auto constraint = constraintPair.second;
-              CBSNodeType child = _node;
-              if(child.constraintMap[robot].find(constraint) != child.constraintMap[robot].end()){
-                if(this->m_debug)
-                  std::cout << "\t\t\tConflict double-assigned to robot "
-                            << robot->GetLabel() << ", skipping."
-                            << std::endl;
-                continue;
-              }
-              child.constraintMap[robot].insert(constraint);
-
-              if(m_constraintCache.count(child.constraintMap)) {
-                if (this->m_debug)
-                  std::cout << "\t\t\tThis conflict set was already attempted, skipping."
-                            << std::endl;
-                continue;
-              }
-              m_constraintCache.insert(child.constraintMap);
-              if (!_lowlevel(child, robot))
-                continue;
-
-              child.cost = _cost(child);
-              children.push_back(child);
-
-              if(this->m_debug)
-                std::cout << "\t\t\tChild node created." << std::endl;
-            }
-
-            return children;
+      [this](Node& _node, std::vector<std::pair<Robot*, Constraint>> _constraints,
+             CBSLowLevelPlanner<Robot, Constraint, typename MPTraits::Path>& _lowlevel,
+             CBSCostFunction<Robot, Constraint, typename MPTraits::Path>& _cost) {
+        return this->SplitNodeFunction(_node,_constraints,_lowlevel,_cost);
       });
+
   CBSCostFunction<Robot, Constraint, typename MPTraits::Path> cost(
-      [this](CBSNodeType& _node) {
-        double cost = 0;
-        if (this->m_costLabel == "SOC") {
-          for (const auto& ts : _node.solutionMap) {
-            cost += ts.second->Length();
-          }
-        } else {
-          for (const auto& ts : _node.solutionMap) {
-            if (ts.second->Length() > cost)
-              cost = ts.second->Length();
-          }
-        }
-        return cost;
+      [this](Node& _node) {
+        return this->CostFunction(_node);
       });
 
-  auto solution_node =  CBS(m_robots, validation, split, lowlevel, cost);
+  auto solutionNode =  CBS(m_robots, validation, split, lowlevel, cost);
   auto solution = this->GetMPSolution();
-  if (solution_node.solutionMap.size() > 0) {
-    for(auto rp : solution_node.solutionMap) {
-      solution->SetPath(rp.first, rp.second);
-    }
-    return true;
+
+  if(solutionNode.solutionMap.empty())
+    return false;
+
+  for(auto rp : solutionNode.solutionMap) {
+    solution->SetPath(rp.first, rp.second);
   }
-  return false;
+
+  return true;
 }
 
 template <typename MPTraits>
 typename MPTraits::Path*
 CBSQuery<MPTraits>::
-SolveIndividualTask(Robot* const _robot, const ConstraintMap& _constraintMap) {
+SolveIndividualTask(Robot* const _robot, Node& _node) {
   MethodTimer mt(this->GetStatClass(),
       this->GetNameAndLabel() + "SolveIndividualTask");
 
   MPTask* const task = m_taskMap.at(_robot);
 
-  if(this->m_debug)
-    std::cout << (_constraintMap.empty() ? "\t" : "\t\t\t")
-              << "Solving task '" << task->GetLabel() << "' (" << task
+  if(this->m_debug) {
+    std::cout << "Solving task '" << task->GetLabel() << "' (" << task
               << ") for robot '" << _robot->GetLabel() << "' (" << _robot
               << ")."
               << std::endl;
-
-  // Set the conflicts to avoid.
-  if (!_constraintMap.empty())
-    m_currentConstraints = &_constraintMap.at(_robot);
-
-  // Turn conflicts into dynamic obstacles
-  this->GetMPProblem()->ClearDynamicObstacles();
-  std::vector<EdgeIntervals> edgeIntervalsSet;
-  EdgeIntervals jointEdgeIntervals;
-
-  if(m_currentConstraints) {
-    for(auto c : *m_currentConstraints) {
-      bool conflictCached = false;
-      // First, we check if _robot has a SafeInterval's that have been cached before (at least once).
-      if(m_groupConflictsCache.count(_robot)){
-        auto it = m_groupConflictsCache.find(_robot);
-        // If so, we check if the current constraint has been cached (we first
-        // check the timestep).
-        if (this->m_debug) {
-          std::cout << "\t\t\tm_currentConstraints[_robot] has size  set has a size of " << m_currentConstraints->size() << std::endl;
-          std::cout << "\t\t\tm_groupConflictsCache[_robot] has size  set has a size of " << it->second.size() << std::endl;
-        }
-        if(it->second.count(c.first)){
-          //auto it2 = it->second.find(c.first);
-          auto eq = it->second.equal_range(c.first);
-          // Now we iterate through all the constraints that have the same
-          // timestep, when we match the same constraint cfg, we can now get the
-          // safe intervals.
-          for(auto it2 = eq.first; it2 != eq.second ; ++it2) {
-            if(it2->second.first == c.second){
-              if (this->m_debug)
-                std::cout << "cfg: " << it2->second.first.PrettyPrint() << ", index: " << it2->second.second
-                          << ", timestep: " << c.first << std::endl;
-              auto index = it2->second.second;
-              auto edgeIntervals = m_edgeIntervalsMap[_robot][index];
-              edgeIntervalsSet.push_back(edgeIntervals);
-              conflictCached = true;
-              //break;
-            }
-          }
-        }
-      }
-      // If we got here it means that the current constraint has not been
-      // cached, then we have to compute its safe intervals by turning it into a
-      // dynamic obstacle.
-      if(!conflictCached) {
-        if (this->m_debug)
-          std::cout << "\t\t\tEdgeIntervals has not been cached we have to compute it  manually." << std::endl;
-        
-        std::vector<CfgType> path = {c.second,c.second,c.second};
-        Robot* constraintRobot = c.second.GetRobot();
-        DynamicObstacle dyOb(constraintRobot, path);
-        dyOb.SetStartTime(c.first-1);
-        this->GetMPProblem()->AddDynamicObstacle(std::move(dyOb));
-        auto edgeIntervals = ComputeIntervals(_robot);
-        // This is not ok since we will print the number of robots
-        auto newIndex = m_cacheIndex;
-        ++m_cacheIndex;
-        m_edgeIntervalsMap[_robot][newIndex] = edgeIntervals;
-        m_groupConflictsCache[_robot].emplace(c.first,std::make_pair(c.second,newIndex));
-
-        if (this->m_debug)
-          std::cout << "\t\t\t\tEMPLACING NEW CONFLICT "
-                    << "cfg: " << c.second.PrettyPrint() << ", index: " << newIndex << ", timestep: " << c.first << std::endl;
-        
-        edgeIntervalsSet.push_back(edgeIntervals);
-        this->GetMPProblem()->ClearDynamicObstacles();
-      }
-    }
-    if (this->m_debug)
-      std::cout << "\t\t\tEdgeIntervals set has a size of " << edgeIntervalsSet.size() << std::endl;
-    jointEdgeIntervals = JoinEdgeIntervals(_robot,edgeIntervalsSet);
   }
-  edgeIntervalsSet.clear();
 
-  size_t minEndtime = 0;
-  if(m_currentConstraints) {
-    for(auto c : *m_currentConstraints) {
-      minEndtime = std::max(c.first, minEndtime);
-    }
+  size_t minEndTime = 0;
+  
+  for(auto c : _node.constraintMap[_robot]) {
+    minEndTime = std::max(minEndTime,c.second.max);
   }
+
+  ComputeIntervals(_robot,_node);
 
   // Generate a path for this robot individually while avoiding the conflicts.
   auto groupTask = this->GetGroupTask();
   this->GetMPLibrary()->SetGroupTask(nullptr);
   this->GetMPLibrary()->SetTask(task);
-  auto query = this->GetMapEvaluator(m_queryLabel);
-  query->SetEdgeIntervals(jointEdgeIntervals);
-  query->SetMinEndtime(minEndtime);
+  auto query = dynamic_cast<SIPPMethod<MPTraits>*>(this->GetMapEvaluator(m_queryLabel));
+  query->SetEdgeIntervals(m_edgeIntervals);
+  query->SetVertexIntervals(m_vertexIntervals);
+  query->SetMinEndTime(minEndTime);
   const bool success = (*query)();
   this->GetMPLibrary()->SetTask(nullptr);
   this->GetMPLibrary()->SetGroupTask(groupTask);
 
-  // Clear the conflicts.
-  m_currentConstraints = nullptr;
-
   if(this->m_debug)
-    std::cout << (_constraintMap.empty() ? "\t\t" : "\t\t\t\t")
-              << "Path for robot " << _robot->GetLabel() << " was "
+    std::cout << "Path for robot " << _robot->GetLabel() << " was "
               << (success ? "" : "not ") << "found."
               << std::endl;
 
@@ -448,207 +318,351 @@ SolveIndividualTask(Robot* const _robot, const ConstraintMap& _constraintMap) {
 
   // Otherwise, return a copy of the robot's path from the solution object.
   Path* path = this->GetPath(_robot);
-  //auto out = new Path(std::move(*path));
-  //path->Clear();
 
-  return path;
+  Path* pathCopy = new Path(path->GetRoadmap());
+  *pathCopy = *path;
+  _node.solutionMap[_robot] = pathCopy;
+
+  return pathCopy;
 }
 
 template <typename MPTraits>
-std::pair<std::pair<Robot*, Robot*>, typename CBSQuery<MPTraits>::Conflict>
+void
 CBSQuery<MPTraits>::
-FindConflict(const SolutionMap& _solution) {
-  // Recreate each path at resolution level.
-  std::map<Robot*, std::vector<CfgType>> cfgPaths;
-  for(const auto& pair : _solution) {
-    Robot* const robot = pair.first;
-    const auto& path   = pair.second;
-    cfgPaths[robot] = path->FullCfgs(this->GetMPLibrary());
-  }
-
-  // Find the latest timestep in which a robot is still moving.
-  size_t lastTimestep = 0;
-  for(auto& path : cfgPaths)
-    lastTimestep = std::max(lastTimestep, path.second.size());
-
-  auto vc = static_cast<CollisionDetectionValidity<MPTraits>*>(
-      this->GetValidityChecker(m_vcLabel)
-  );
-
-  // Step through each timestep.
-  for(size_t t = 0; t < lastTimestep; ++t) {
-    // Collision check each robot path against all others at this timestep.
-    for(auto iter1 = cfgPaths.begin(); iter1 != cfgPaths.end();) {
-      // Configure the first robot at the approriate configuration.
-      auto robot1         = iter1->first;
-      const auto& path1  = iter1->second;
-      const size_t step1 = std::min(t, path1.size() - 1);
-      const auto& cfg1   = path1[step1];
-      auto multibody1    = robot1->GetMultiBody();
-      multibody1->Configure(cfg1);
-
-      // Compare to all remaining robots.
-      for(auto iter2 = ++iter1; iter2 != cfgPaths.end(); ++iter2) {
-        // Configure the second robot at the appropriate configuration.
-        auto robot2         = iter2->first;
-        const auto& path2  = iter2->second;
-        const size_t step2 = std::min(t, path2.size() - 1);
-        const auto& cfg2   = path2[step2];
-        auto multibody2    = robot2->GetMultiBody();
-        multibody2->Configure(cfg2);
-
-        // Check for collision. If none, move on.
-        CDInfo cdInfo;
-        const bool collision = vc->IsMultiBodyCollision(cdInfo,
-            multibody1, multibody2, this->GetNameAndLabel());
-        if(!collision)
-          continue;
-
-        if(this->m_debug)
-          std::cout << "\t\tConflict detected at timestep " << t
-                    << " (time " << this->GetEnvironment()->GetTimeRes() * t
-                    << ")."
-                    << "\n\t\t\tRobot " << robot1->GetLabel() << ": "
-                    << cfg1.PrettyPrint()
-                    << "\n\t\t\tRobot " << robot2->GetLabel() << ": "
-                    << cfg2.PrettyPrint()
-                    << std::endl;
-
-				//Old block pre-merge with master, remove if compiles
-				//TODO::Was getting some weird complication bug about explicit construction
-        Conflict newConflict(cfg1,cfg2,t);
-        std::pair<Robot*, Robot*> robotPair = std::make_pair(robot1, robot2);
-        //newConflict.cfg1     = cfg1;
-        //newConflict.cfg2     = cfg2;
-        //newConflict.timestep = t;
-
-        //Conflict newConflict{cfg1, cfg2, t};
-
-        return std::make_pair(robotPair, newConflict);
-      }
-    }
-  }
-
-  if(this->m_debug)
-    std::cout << "\t\tNo conflict detected." << std::endl;
-
-  // We didn't find a conflict, return an empty one.
-  // Again weird compilation - I'll figure these out later
-  Conflict c;
-  return std::make_pair(std::make_pair(nullptr, nullptr), c);
-}
-
-template <typename MPTraits>
-typename CBSQuery<MPTraits>::EdgeIntervals
-CBSQuery<MPTraits>::
-ComputeIntervals(Robot* _robot) {
+ComputeIntervals(Robot* _robot, const Node& _node) {
   MethodTimer mt(this->GetStatClass(),
     this->GetNameAndLabel() + "::ComputeIntervals");
-  auto si = this->GetMPTools()->GetSafeIntervalTool(m_safeIntervalLabel);
-  //std::cout << "Using SI Tool: "
-  //          << si->GetLabel()
-  //          << std::endl;
-  //std::cout << "Computing Intervals" << std::endl;
-  auto roadmap = this->GetRoadmap(_robot);
-  typename CBSQuery<MPTraits>::EdgeIntervals edgeIntervals;
-  for(auto vi = roadmap->begin(); vi != roadmap->end(); ++vi) {
-    //auto vid = roadmap->GetVID(vi);
-    //auto cfg = roadmap->GetVertex(vi);
-    //auto vertexIntervals = si->ComputeIntervals(cfg);
-    //m_roadmap_intervals[vid] = vertexIntervals;
-    for(auto ei = vi->begin(); ei != vi->end(); ++ei) {
 
-      //if(ei->source() == 602 and ei->target() == 534)
-      //  std::cout << "HERE" << std::endl;
-      MethodTimer mt(this->GetStatClass(),
-        this->GetNameAndLabel() + "::EdgeIntervals");
-      auto singleEdgeIntervals = si->ComputeIntervals(ei->property(), ei->source(),
-          ei->target(), roadmap);
-      edgeIntervals[ei->source()][ei->target()] = singleEdgeIntervals;
+  auto solution = this->GetMPSolution();
+  auto rm = solution->GetRoadmap(_robot);
+
+  m_vertexIntervals.clear();
+  m_edgeIntervals.clear();
+
+  const auto& constraints = _node.constraintMap.at(_robot);
+
+  VertexIntervals vertexUnsafeIntervals;
+  EdgeIntervals edgeUnsafeIntervals;
+
+  for(auto c : constraints) {
+    auto edge = c.first;
+    if(edge.first == edge.second) {
+      vertexUnsafeIntervals[edge.first].push_back(c.second);
+    }
+    else {
+      edgeUnsafeIntervals[edge].push_back(c.second);
     }
   }
-  return edgeIntervals;
+
+  for(auto vit = rm->begin(); vit != rm->end(); vit++) {
+    m_vertexIntervals[vit->descriptor()] = ConstructSafeIntervals(vertexUnsafeIntervals[vit->descriptor()]);
+
+    for(auto eit = vit->begin(); eit != vit->end(); eit++) {
+      m_edgeIntervals[std::make_pair(eit->source(),eit->target())] = ConstructSafeIntervals(
+        edgeUnsafeIntervals[std::make_pair(eit->source(),eit->target())]);
+    }
+  }
 }
 
-
 template <typename MPTraits>
-typename CBSQuery<MPTraits>::EdgeIntervals
+std::vector<Range<size_t>>
 CBSQuery<MPTraits>::
-JoinEdgeIntervals(Robot* _robot, std::vector<typename CBSQuery<MPTraits>::EdgeIntervals> _edgeIntervals) {
-  auto roadmap = this->GetRoadmap(_robot);
-  typename CBSQuery<MPTraits>::EdgeIntervals jointEdgeIntervals;
-  for(auto vi = roadmap->begin(); vi != roadmap->end(); ++vi) {
-    for(auto ei = vi->begin(); ei != vi->end(); ++ei) {
-      std::vector<std::vector<Range<double>>> allIntervals;
-      for(size_t i = 0 ; i < _edgeIntervals.size() ; ++i ) {
-        auto intervals = _edgeIntervals[i][ei->source()][ei->target()];
-        //std::cout << "edge(" << ei->source() << "," << ei->target() << ")[" << i << "]: " << intervals << std::endl;
-        allIntervals.push_back(intervals);
-        //MethodTimer mt(this->GetStatClass(),
-        //  this->GetNameAndLabel() + "::EdgeIntervals");
+ConstructSafeIntervals(std::vector<Range<size_t>>& _unsafeIntervals) {
+  const size_t buffer = 2;
+
+  // Return infinite interval if there are no unsafe intervals
+  if(_unsafeIntervals.empty())
+    return {Range<size_t>(0,MAX_INT)};
+
+  // Merge unsafe intervals
+  std::vector<Range<size_t>> unsafeIntervals = _unsafeIntervals;
+
+  bool firstTime = true;
+  do {
+
+    std::set<size_t> merged;
+    
+    std::vector<Range<size_t>> copyIntervals = unsafeIntervals;
+    const size_t size = copyIntervals.size();
+
+    unsafeIntervals.clear();
+
+    for(size_t i = 0; i < size; i++) {
+      if(merged.count(i))
+        continue;
+
+      const auto& interval1 = copyIntervals[i];
+
+      size_t zero = 0;
+      size_t min = std::max(zero,std::min(interval1.min,interval1.min - (firstTime ? buffer : 0)));
+      size_t max = std::max(interval1.max,interval1.max + (firstTime ? buffer : 0));
+
+      for(size_t j = i+1; j < copyIntervals.size(); j++) {
+
+        const auto& interval2 = copyIntervals[j];
+
+        // Check if there is no overlap
+        if(interval2.min > max + buffer or min > interval2.max + buffer)
+          continue;
+
+        // If there is, merge the intervals
+        min = std::min(min,interval2.min-buffer);
+        max = std::max(max,interval2.max+buffer);
+
+        merged.insert(j);
       }
-      auto jointIntervals = JoinIntervals(allIntervals);
-      jointEdgeIntervals[ei->source()][ei->target()] = jointIntervals;
-      //std::cout << "edge(" << ei->source() << "," << ei->target() << ")[joint]: " << jointIntervals << std::endl;
+
+      Range<size_t> interval(min,max);
+      unsafeIntervals.push_back(interval);
     }
+
+    firstTime = false;
+
+    if(copyIntervals.size() == unsafeIntervals.size())
+      break;
+
+  } while(true);
+
+  struct less_than {
+    inline bool operator()(const Range<size_t>& _r1, const Range<size_t>& _r2) {
+      return _r1.min < _r2.min;
+    }
+  };
+
+  std::sort(unsafeIntervals.begin(), unsafeIntervals.end(), less_than());
+  
+  for(size_t i = 1; i < unsafeIntervals.size(); i++) {
+    if(unsafeIntervals[i-1].max > unsafeIntervals[i].max
+      or unsafeIntervals[i-1].max > unsafeIntervals[i].min)
+      throw RunTimeException(WHERE) << "THIS IS VERY BAD AND WILL RESULT IN AN INFINITE LOOP WITH NO ANSWERS.";
   }
-  return jointEdgeIntervals;
+
+  // Construct set of intervals
+  std::vector<Range<size_t>> intervals;
+
+  size_t min = 0;
+  size_t max = std::numeric_limits<size_t>::infinity();
+
+  auto iter = unsafeIntervals.begin();
+  while(iter != unsafeIntervals.end()) {
+    max = std::min(iter->min - 1,iter->min);
+    if(min < max)
+      intervals.emplace_back(min,max);
+  
+    min = std::max(iter->max + 1,iter->max);
+    iter++;
+  }
+
+  max = MAX_INT;
+  intervals.push_back(Range<size_t>(min,max));
+
+  return intervals;
 }
 
+/*---------------------------- CBS Functor Methods ---------------------------*/
 
 template <typename MPTraits>
-std::vector<Range<double>>
+std::vector<std::pair<Robot*,typename CBSQuery<MPTraits>::Constraint>>
 CBSQuery<MPTraits>::
-JoinIntervals(std::vector<std::vector<Range<double>>> _allIntervals) {
-  std::vector<Range<double>> jointIntervals;
-  for(auto intervals : _allIntervals)
-    jointIntervals = InsertIntervals(jointIntervals, intervals);
-  return jointIntervals;
-}
+ValidationFunction(Node& _node) {
+  auto stats = this->GetStatClass();
+  MethodTimer mt(stats, this->GetNameAndLabel() + "::ValidationFunction");
 
+  auto vc = static_cast<CollisionDetectionValidityMethod<MPTraits>*>(
+              this->GetMPLibrary()->GetValidityChecker(m_vcLabel));
 
-template <typename MPTraits>
-std::vector<Range<double>>
-CBSQuery<MPTraits>::
-InsertIntervals(std::vector<Range<double>> _jointIntervals, std::vector<Range<double>> _newIntervals) {
-  std::vector<Range<double>> newJointIntervals;
-  if(_newIntervals.empty()) {
-    newJointIntervals = _jointIntervals;
-    return newJointIntervals;
-  } else if(_jointIntervals.empty()) {
-    newJointIntervals = _newIntervals;
-  return newJointIntervals;
-  } else {
-    for(size_t i = 0 ; i < _jointIntervals.size() ; ++i) {
-      for(size_t j = 0 ; j < _newIntervals.size() ; ++j) {
-        if(OverlappingIntervals(_jointIntervals[i], _newIntervals[j])) {
-          auto newInterval = MergeIntervals(_jointIntervals[i],_newIntervals[j]);
-          newJointIntervals.push_back(newInterval);
+  // Find max timestep
+  size_t maxTimestep = 0;
+  for(auto kv : _node.solutionMap) {
+    auto path = kv.second;
+    maxTimestep = std::max(maxTimestep,path->TimeSteps());
+  }
+
+  // Collect cfgs
+  auto lib = this->GetMPLibrary();
+  std::map<Robot*,std::vector<Cfg>> cfgPaths;
+  for(auto kv : _node.solutionMap) {
+    auto robot = kv.first;
+    auto path = kv.second;
+    cfgPaths[robot] = path->FullCfgsWithWait(lib);
+  }
+
+  for(size_t t = 0; t <= maxTimestep; t++) {
+    for(auto iter1 = cfgPaths.begin(); iter1 != cfgPaths.end(); iter1++) {
+
+      auto robot1 = iter1->first;
+      auto path1 = _node.solutionMap[robot1];
+      
+      const auto& cfgs1 = iter1->second;
+      const size_t index1 = std::min(t,cfgs1.size()-1);
+      const auto cfg1 = cfgs1[index1];
+      cfg1.ConfigureRobot();
+      auto mb1 = robot1->GetMultiBody();
+
+      auto iter2 = iter1;
+      iter2++;
+      for(; iter2 != cfgPaths.end(); iter2++) {
+        auto robot2 = iter2->first;
+        auto path2 = _node.solutionMap[robot2];
+        
+        const auto& cfgs2 = iter2->second;
+        const size_t index2 = std::min(t,cfgs2.size()-1);
+        const auto cfg2 = cfgs2[index2];
+        cfg2.ConfigureRobot();
+
+        // Check for collision
+        bool collision = false;
+
+        auto mb2 = robot2->GetMultiBody();
+
+        CDInfo cdInfo;
+        collision = collision or vc->IsMultiBodyCollision(cdInfo,
+                        mb1,mb2,this->GetNameAndLabel());
+
+        if(collision) {
+          if(this->m_debug) {
+            std::cout << "Collision found between "
+                      << robot1->GetLabel()
+                      << " and "
+                      << robot2->GetLabel()
+                      << ", at timestep "
+                      << t
+                      << " and positions\n\t1: "
+                      << cfg1.PrettyPrint()
+                      << "\n\t2: "
+                      << cfg2.PrettyPrint()
+                      << "."
+                      << std::endl;
+
+            std::cout << "Task1:" << std::endl
+                      << path1->VIDs() << std::endl
+                      << path1->GetWaitTimes() << std::endl << std::endl;
+
+            std::cout << "Task2:" << std::endl
+                      << path2->VIDs() << std::endl
+                      << path2->GetWaitTimes() << std::endl << std::endl;
+          }
+
+          auto endT = t;
+
+          stats->IncStat(this->GetNameAndLabel()+"::CollisionFound");
+
+          auto edge1 = path1->GetEdgeAtTimestep(t).first;
+          auto edge2 = path2->GetEdgeAtTimestep(t).first;
+
+          if(this->m_debug) {
+            std::cout << "Edge 1: " << edge1 << std::endl; 
+            std::cout << "Edge 2: " << edge2 << std::endl; 
+          }
+
+          size_t duration1 = 0;
+          size_t duration2 = 0;
+
+          if(edge1.first != edge1.second) {
+            duration1 = path1->GetRoadmap()->GetEdge(
+            edge1.first,edge1.second).GetTimeSteps();
+          }
+
+          if(edge2.first != edge2.second) {
+            duration2 = path2->GetRoadmap()->GetEdge(
+            edge2.first,edge2.second).GetTimeSteps();
+          }
+
+          size_t zero = 0;
+          Range<size_t> interval1(t < duration1 ? zero : t-duration1,endT);
+          Range<size_t> interval2(t < duration2 ? zero : t-duration2,endT);
+
+          std::vector<std::pair<Robot*,Constraint>> constraints;
+          constraints.push_back(std::make_pair(robot1,
+                                std::make_pair(edge1,interval1)));
+          constraints.push_back(std::make_pair(robot2,
+                                std::make_pair(edge2,interval2)));
+
+          for(auto constraint : constraints) {
+            for(auto c : _node.constraintMap[constraint.first]) {
+              if(c == constraint.second) {
+                throw RunTimeException(WHERE) << "Adding constraint that already exists.";
+                // std::cout << "Adding constraint that already exists." << std::endl;
+              }
+            }
+          }
+
+          return constraints;
         }
       }
     }
   }
-  return newJointIntervals;
-  //std::vector<Range<double>> alternativeJointIntervals;
-  //alternativeJointIntervals.push_back(newJointIntervals[0]);
-  //alternativeJointIntervals.push_back(newJointIntervals[newJointIntervals.size()-1]);
-  //return alternativeJointIntervals;
+
+  return {};
 }
 
+template <typename MPTraits>
+std::vector<typename CBSQuery<MPTraits>::Node>
+CBSQuery<MPTraits>::
+SplitNodeFunction(Node& _node, std::vector<std::pair<Robot*, Constraint>> _constraints,
+                  CBSLowLevelPlanner<Robot, Constraint, typename MPTraits::Path>& _lowlevel,
+                  CBSCostFunction<Robot, Constraint, typename MPTraits::Path>& _cost) {
+  MethodTimer mt(this->GetStatClass(),
+    this->GetNameAndLabel() + "::SplitNodes");
+
+  std::vector<Node> children;
+
+
+  for(auto constraintPair : _constraints) {
+    auto robot = constraintPair.first;
+    auto constraint = constraintPair.second;
+    Node child = _node;
+
+    child.constraintMap[robot].insert(constraint);
+
+    if(!_lowlevel(child, robot))
+      continue;
+
+    child.cost = _cost(child);
+    children.push_back(child);
+
+    if(this->m_debug)
+      std::cout << "\t\t\tChild node created." << std::endl;
+  }
+
+  return children;
+}
+
+template <typename MPTraits>
+double
+CBSQuery<MPTraits>::
+CostFunction(Node& _node) {
+
+  size_t cost = 0;
+
+  if(this->m_costLabel == "SOC") {
+    for(const auto& ts : _node.solutionMap) {
+      cost += ts.second->TimeSteps();
+    }
+  }
+  else {
+    for(const auto& ts : _node.solutionMap) {
+      cost = std::max(cost,ts.second->TimeSteps());
+    }
+  }
+
+  return double(cost);
+}
+
+/*---------------------------- Helper Functions ---------------------*/
 
 template <typename MPTraits>
 bool
 CBSQuery<MPTraits>::
-OverlappingIntervals(Range<double> _existingInterval, Range<double> _newInterval) {
-  if(_existingInterval.max <= _newInterval.min)
+OverlappingIntervals(Range<size_t> _interval1, Range<size_t> _interval2) {
+  if(_interval1.max <= _interval2.min)
     return false;
 
-  if(_existingInterval.min >= _newInterval.max)
+  if(_interval1.min >= _interval2.max)
     return false;
 
   return true;
 }
-
 
 template <typename MPTraits>
 Range<double>
@@ -657,6 +671,5 @@ MergeIntervals(Range<double> _interval1, Range<double> _interval2) {
  return Range<double>(std::max(_interval1.min,_interval2.min),
           std::min(_interval1.max, _interval2.max));
 }
-
 
 #endif
