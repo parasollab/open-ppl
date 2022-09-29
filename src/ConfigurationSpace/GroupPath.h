@@ -216,15 +216,15 @@ FullCfgs(MPLibrary* const _lib) const {
   for(auto it = m_vids.begin(); it + 1 < m_vids.end(); ++it) {
     const VID source = *it,
               target = *(it + 1);
-    const auto& edge = m_roadmap->GetEdge(source, target);
+    // const auto& edge = m_roadmap->GetEdge(source, target);
 
     // Insert intermediates between vertices. For assembly planning (skip edge):
     // don't reconstruct the edge when it's for a part that has been placed off
     // to the side, just use the two cfgs. This edge will just be (start, end).
-    if(!edge.SkipEdge()) {
-      std::vector<GroupCfg> edge = _lib->ReconstructEdge(m_roadmap, source, target);
-      out.insert(out.end(), edge.begin(), edge.end());
-    }
+    // if(!edge.SkipEdge()) {
+      std::vector<GroupCfg> edge_ = _lib->ReconstructEdge(m_roadmap, source, target);
+      out.insert(out.end(), edge_.begin(), edge_.end());
+    // }
 
     // Insert the next vertex.
     out.push_back(m_roadmap->GetVertex(target));
