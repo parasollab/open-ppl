@@ -931,9 +931,9 @@ GroupCfg<GraphType>::
 GetRandomRay(const double _length, DistanceMetricPointer _dm, const bool _norm) {
   // Randomly sample DOFs.
 
-    for(size_t j = 0; j < GetNumRobots(); ++j) {
-        for(size_t i = 0; i < GetRobotCfg(j).DOF(); ++i)
-            GetRobotCfg(j)[i] = GRand();
+    for(size_t j = 0; j < this->GetNumRobots(); ++j) {
+        for(size_t i = 0; i < this->GetRobotCfg(j).DOF(); ++i)
+            this->GetRobotCfg(j)[i] = GRand();
     }
   // Scale to appropriate length. 
   _dm->ScaleCfg(_length, *this);
