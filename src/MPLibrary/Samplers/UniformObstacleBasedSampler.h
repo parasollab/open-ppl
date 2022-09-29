@@ -231,8 +231,8 @@ Sampler(GroupCfgType& _cfg, const Boundary* const _boundary,
 
   cfg1Free = vc->IsValid(cfg1, callee);
 
-  GroupCfgType cfg2(groupRoadmap, false);
-  GroupCfgType incr(groupRoadmap, false);
+  GroupCfgType cfg2(groupRoadmap);
+  GroupCfgType incr(groupRoadmap);
 
   //Generate a random direction ray using margin and distance metric method.
   //increment direction to group robots
@@ -241,7 +241,7 @@ Sampler(GroupCfgType& _cfg, const Boundary* const _boundary,
   //Extend segment cfg1 with distance incr.
   cfg2 = cfg1 + incr;
 
-  GroupCfgType inter(groupRoadmap, false);
+  GroupCfgType inter(groupRoadmap);
   GroupCfgType tick = cfg1;
   int nTicks;
 
