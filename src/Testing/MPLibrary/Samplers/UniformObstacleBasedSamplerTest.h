@@ -1,5 +1,5 @@
-#ifndef PPL_OBSTACLE_BASED_SAMPLER_H_
-#define PPL_OBSTACLE_BASED_SAMPLER_H_
+#ifndef PPL_UNIFORM_OBSTACLE_BASED_SAMPLER_H_
+#define PPL_UNIFORM_OBSTACLE_BASED_SAMPLER_H_
 
 #include "MPLibrary/Samplers/UniformObstacleBasedSampler.h"
 #include "MPLibrary/MPTools/MedialAxisUtilities.h"
