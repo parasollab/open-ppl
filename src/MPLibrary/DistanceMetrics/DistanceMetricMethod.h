@@ -252,7 +252,7 @@ ScaleCfg(double _length, GroupCfgType& _c, const GroupCfgType& _o) {
 
   while (1) {
     for(size_t i = 0; i < _c.GetNumRobots(); ++i) {
-      for(size_t j=0; j<currentCfg.DOF(); ++j)
+      for(size_t j=0; j<currentCfg.GetRobotCfg(i).DOF(); ++j)
           currentCfg.GetRobotCfg(i)[j] = (aboveCfg.GetRobotCfg(i)[j] + belowCfg.GetRobotCfg(i)[j]) / 2.0;
     }
     double magnitude = Distance(origin, currentCfg); 
