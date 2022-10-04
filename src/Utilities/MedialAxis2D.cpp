@@ -332,14 +332,13 @@ tuple<WorkspaceSkeleton,MedialAxis2D::VertexClearanceMapType,
 MedialAxis2D::EdgeClearanceMapType>
 MedialAxis2D::
 GetSkeleton(size_t _t) {
-  typedef WorkspaceSkeleton::GraphType Graph;
-  Graph g;
+  WorkspaceSkeleton skeleton;
   VertexClearanceMapType vertexMap;
   EdgeClearanceMapType edgeMap;
   // Copy vertices.
   for(auto vit = m_graph.begin(); vit != m_graph.end(); ++vit) {
     auto p = vit->property();
-    g.add_vertex(vit->descriptor(), Point3d(p.x(),p.y(),0));
+    skeleton.AddVertex(vit->descriptor(), Point3d(p.x(),p.y(),0));
   }
   // Copy edges.
   for(auto eit = m_graph.edges_begin(); eit != m_graph.edges_end();
@@ -350,14 +349,14 @@ GetSkeleton(size_t _t) {
     for(auto it = eit->property().m_interpolated.begin();
       it != eit->property().m_interpolated.end(); ++it)
       edge.emplace_back(Point3d(it->x(),it->y(),0));
-    auto ed = g.add_edge(eit->descriptor(), edge);
+    auto ed = skeleton.AddEdge(eit->descriptor(), edge);
     // Put the clearance info as vector of clearance info -
     // clearance and witness
     edgeMap.insert(make_pair(ed,AnnotateSegment(eit->property())));
     // Add the bidirectional edge for the opposite direction
     std::reverse(edge.begin(), edge.end());
     // Need to add it this way so that the edge ID matches.
-    add_internal_edge(g, reverse(ed), edge);
+    add_internal_edge(skeleton, reverse(ed), edge);
     //TODO:: figure out if this needs to be added to the edge map or not.
   }
 
@@ -366,12 +365,12 @@ GetSkeleton(size_t _t) {
   if(_t > 0) {
     vector<size_t> deletedVertices;
     for(auto vit = m_graph.begin(); vit != m_graph.end(); ++vit) {
-      if(g.get_out_degree(vit->descriptor())
-          + g.get_in_degree(vit->descriptor()) == 0)
+      if(skeleton.get_out_degree(vit->descriptor())
+          + skeleton.get_degree(vit->descriptor()) == 0)
         deletedVertices.emplace_back(vit->descriptor());
     }
     for(auto v : deletedVertices)
-      g.delete_vertex(v);
+      skeleton.DeleteVertex(v);
   }
 
   // Set the vertex clearance map
@@ -379,8 +378,6 @@ GetSkeleton(size_t _t) {
     vertexMap.insert(make_pair(vit->descriptor(),
           m_vertexClearance[vit->descriptor()]));
 
-  WorkspaceSkeleton skeleton;
-  skeleton.SetGraph(g);
   return make_tuple(skeleton, vertexMap, edgeMap);
 }
 
