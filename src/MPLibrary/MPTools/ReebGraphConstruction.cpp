@@ -66,12 +66,11 @@ Construct(const WorkspaceDecomposition* _decomposition) {
 WorkspaceSkeleton
 ReebGraphConstruction::
 GetSkeleton() {
-  typedef WorkspaceSkeleton::GraphType Graph;
-  Graph g;
+  WorkspaceSkeleton skeleton;
 
   // Copy vertices.
   for(auto vit = m_reebGraph.begin(); vit != m_reebGraph.end(); ++vit)
-    g.add_vertex(vit->descriptor(), vit->property().m_vertex);
+    skeleton.AddVertex(vit->descriptor(), vit->property().m_vertex);
 
   // Copy edges.
   for(auto eit = m_reebGraph.edges_begin(); eit != m_reebGraph.edges_end(); ++eit)
@@ -83,11 +82,9 @@ GetSkeleton() {
                   << std::endl;
       continue;
     }
-    g.add_edge(eit->descriptor(), eit->property().m_path);
+    skeleton.AddEdge(eit->descriptor(), eit->property().m_path);
   }
 
-  WorkspaceSkeleton skeleton;
-  skeleton.SetGraph(g);
   if(!m_params.filename.empty() && m_params.write)
     skeleton.Write("skeleton_" + m_params.filename);
   return skeleton;

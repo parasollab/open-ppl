@@ -373,8 +373,7 @@ DynamicRegionRRT<MPTraits>::Initialize(){
 
     // Mark all nodes unvisited.
     m_visited.clear();
-    auto& g = m_skeleton.GetGraph();
-    for(auto vit = g.begin(); vit != g.end(); ++vit)
+    for(auto vit = m_skeleton.begin(); vit != m_skeleton.end(); ++vit)
       m_visited[vit->descriptor()] = false;
 
     // Find the vertex nearest to start and create regions for each outgoing
@@ -903,10 +902,9 @@ template <typename MPTraits>
 void
 DynamicRegionRRT<MPTraits>::
 CheckRegionProximity(const Point3d& _p) {
-  auto& g = m_skeleton.GetGraph();
 
   // Check each skeleton node to see if a new region should be created.
-  for(auto iter = g.begin(); iter != g.end(); ++iter) {
+  for(auto iter = m_skeleton.begin(); iter != m_skeleton.end(); ++iter) {
     // Skip skeleton nodes that are too far away.
     const double dist = (iter->property() - _p).norm();
     if(dist >= m_regionRadius)

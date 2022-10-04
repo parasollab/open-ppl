@@ -49,7 +49,7 @@ class MedialAxis2D {
     // Type for clearance info - first: clearance value, second: witness
     typedef pair<double,Point3d> ClearanceType;
     // Types for skeleton and its annotations
-    typedef WorkspaceSkeleton::GraphType SkeletonGraphType;
+    typedef WorkspaceSkeleton       SkeletonGraphType;
     typedef unordered_map<WorkspaceSkeleton::VD, ClearanceType>
       VertexClearanceMapType;
 
