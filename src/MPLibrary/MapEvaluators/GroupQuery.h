@@ -174,7 +174,7 @@ operator()() {
     }
 
     // Get the start VID for this subquery.
-    VID start = MAX_INT;
+    VID start = SIZE_MAX;
     if(!path->Empty()) {
       path->VIDs().back();
     }
@@ -187,7 +187,7 @@ operator()() {
       }
     }
 
-    if(start == MAX_INT)
+    if(start == SIZE_MAX)
       throw RunTimeException(WHERE) << "No VIDs located for start.";
 
     // Get the goal VIDs for this subquery.
