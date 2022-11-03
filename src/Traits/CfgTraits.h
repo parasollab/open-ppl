@@ -73,6 +73,7 @@
 //mp strategies includes
 #include "MPLibrary/MPStrategies/AdaptiveRRT.h"
 #include "MPLibrary/MPStrategies/GroupPRM.h"
+#include "MPLibrary/MPStrategies/EET.h"
 #include "MPLibrary/MPStrategies/BasicPRM.h"
 #include "MPLibrary/MPStrategies/BasicRRTStrategy.h"
 #include "MPLibrary/MPStrategies/DynamicRegionRRT.h"
@@ -198,6 +199,7 @@ struct MPTraits {
     BasicRRTStrategy<MPTraits>,
     DynamicRegionRRT<MPTraits>,
     DynamicRegionsPRM<MPTraits>,
+    EET<MPTraits>,
     GroupDecoupledStrategy<MPTraits>,
     GroupStrategyMethod<MPTraits>,
     TogglePRMStrategy<MPTraits>,
