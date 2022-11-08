@@ -71,6 +71,54 @@
         </Task>
       </SemanticTask>
     </Decomposition>
+    <Decomposition label="main" taskLabel="first" coordinator="coordinator">
+      <SemanticTask label="first" fixedAllocation="false">
+        <Task label="query1" robot="boxy1">
+          <StartConstraints>
+            <CSpaceConstraint point="0 5 0 0 0 0"/>
+          </StartConstraints>
+
+          <GoalConstraints>
+            <CSpaceConstraint point="0 -5 0 0.2 0.8 0.5"/>
+          </GoalConstraints>
+        </Task>
+      </SemanticTask>
+      <SemanticTask label="second" fixedAllocation="false">
+        <Task label="query2" robot="boxy1">
+          <StartConstraints>
+            <CSpaceConstraint point="0 7 0 0 0 0"/>
+          </StartConstraints>
+
+          <GoalConstraints>
+            <CSpaceConstraint point="0 -3 0 0.2 0.8 0.5"/>
+          </GoalConstraints>
+        </Task>
+      </SemanticTask>
+    </Decomposition>
+    <Decomposition label="main" taskLabel="first" coordinator="coordinator">
+      <SemanticTask label="first" fixedAllocation="false">
+        <Task label="query1" robot="boxy1">
+          <StartConstraints>
+            <CSpaceConstraint point="0 5 0 0 0 0"/>
+          </StartConstraints>
+
+          <GoalConstraints>
+            <CSpaceConstraint point="0 -5 0 0.2 0.8 0.5"/>
+          </GoalConstraints>
+        </Task>
+      </SemanticTask>
+      <SemanticTask label="second" fixedAllocation="false">
+        <Task label="query2" robot="boxy1">
+          <StartConstraints>
+            <CSpaceConstraint point="0 7 0 0 0 0"/>
+          </StartConstraints>
+
+          <GoalConstraints>
+            <CSpaceConstraint point="0 -3 0 0.2 0.8 0.5"/>
+          </GoalConstraints>
+        </Task>
+      </SemanticTask>
+    </Decomposition>
 
   </Problem>
 

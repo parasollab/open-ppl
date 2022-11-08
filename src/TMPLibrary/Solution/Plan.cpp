@@ -75,26 +75,28 @@ ClearAllocations(RobotGroup* _group) {
 void
 Plan::
 AddAllocation(Robot* _robot, SemanticTask* _task) {
-  m_allocations[_robot].push_back(_task);
+  auto& allocs = m_allocations[_robot];
+  allocs.push_back(_task);
 }
 
 void
 Plan::
 AddAllocation(RobotGroup* _group, SemanticTask* _task) {
-	m_groupAllocations[_group].push_back(_task);
+	auto& allocs = m_groupAllocations[_group];
+  allocs.push_back(_task);
   //TODO:: Quick idea - need to think through how to represent group better
   for(auto r : _group->GetRobots()) {
     this->AddAllocation(r,_task);
   }
 }
 
-std::list<SemanticTask*>
+std::vector<SemanticTask*>
 Plan::
 GetAllocations(Robot* _robot) {
   return m_allocations[_robot];
 }
 
-std::list<SemanticTask*>
+std::vector<SemanticTask*>
 Plan::
 GetAllocations(RobotGroup* _group) {
   return m_groupAllocations[_group];
@@ -106,6 +108,7 @@ Plan::
 SetTaskSolution(SemanticTask* _task, std::shared_ptr<TaskSolution> _solution) {
   m_taskSolutions[_task] = _solution;
 
+  /*
   auto& allocs = m_allocations[_solution->GetRobot()];
   auto iter = std::find(allocs.begin(), allocs.end(), _task);
   if(iter != allocs.end()) {
@@ -119,6 +122,7 @@ SetTaskSolution(SemanticTask* _task, std::shared_ptr<TaskSolution> _solution) {
   }
   if(allocs.empty())
     allocs.push_back(_task);
+  */
 }
 
 TaskSolution*

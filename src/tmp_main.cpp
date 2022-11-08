@@ -120,8 +120,8 @@ main(int _argc, char** _argv) {
 			team.push_back(problem->GetRobot(label));
 		}
 
+	  Plan* plan = new Plan();
 		for(const auto& decomp : decomps.second) {
-			Plan* plan = new Plan();
 			plan->SetCoordinator(c);
 			plan->SetTeam(team);
 			plan->SetDecomposition(decomp.get());
@@ -133,6 +133,7 @@ main(int _argc, char** _argv) {
       std::ofstream osStat(fullname);
       plan->GetStatClass()->PrintAllStats(osStat);
 		}
+    delete plan;
 	}
   // Release resources.
   delete problem;

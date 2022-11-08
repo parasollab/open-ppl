@@ -74,6 +74,10 @@ class GreedyAllocator : public TaskAllocatorMethod {
     /// Map tracking robot positions through allocation process
     std::map<Robot*,Cfg> m_currentPositions;
 
+    std::map<Robot*,double> m_nextFreeTime;
+
+    bool m_clearAfterInitializing{false};
+
     ///@}
 };
 

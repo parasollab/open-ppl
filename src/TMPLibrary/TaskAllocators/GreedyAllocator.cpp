@@ -21,6 +21,9 @@ GreedyAllocator(XMLNode& _node) : TaskAllocatorMethod(_node) {
   // TODO::Parse xml node
   m_singleSolver = _node.Read("singleAgentSolver", false, "BasicPRM", "Provide single agent solver label.");
 
+  m_clearAfterInitializing = _node.Read("reset",false,m_clearAfterInitializing,
+      "Flag to reset all existing allocations after initializing.");
+
 }
 
 
@@ -76,8 +79,32 @@ Initialize() {
     if(robot.get() == coordinator->GetRobot())
       continue;
 
-    auto startPosition = problem->GetInitialCfg(robot.get());
+    Cfg startPosition(robot.get());
+    double nextFreeTime = 0.;
+
+    auto allocs = plan->GetAllocations(robot.get());
+    if(allocs.empty()) {
+      startPosition = problem->GetInitialCfg(robot.get());
+    }
+    else {
+      auto task = allocs.back();
+      auto sol = plan->GetTaskSolution(task);
+      auto vid = sol->GetPath()->VIDs().back();
+      startPosition = sol->GetMotionSolution()->GetRoadmap(
+                        robot.get())->GetVertex(vid);
+
+      auto startTime = sol->GetStartTime();
+      auto length = sol->GetPath()->Length();
+      // TODO::This should really be timesteps not length
+      nextFreeTime = startTime + length;
+
+      if(m_clearAfterInitializing)
+        plan->ClearAllocations(robot.get());
+    }
+    
     m_currentPositions[robot.get()] = startPosition;
+    m_nextFreeTime[robot.get()] = nextFreeTime; 
+
     m_solution->AddRobot(robot.get());
   }
 
@@ -155,14 +182,16 @@ AllocateTask(SemanticTask* _semanticTask) {
     
     double totalCost = pathCost + taskCost;
 
+    double estimatedCompletion = totalCost + m_nextFreeTime[robot.get()];
+
+    std::cout << "estimated completion = " << estimatedCompletion << std::endl;
 
     // Assign to best robot
-    if (totalCost < bestCost){
-      bestCost = totalCost;
+    if (estimatedCompletion < bestCost){
+      bestCost = estimatedCompletion;
       bestRobot = robot.get();
       bestPath = std::move(pathCopy);
     }
-
   }
 
   // Update plan allocation
@@ -187,9 +216,11 @@ SaveAllocation(Robot* _robot, SemanticTask* _task, std::unique_ptr<Path> _path) 
   auto lastVID = _path->VIDs().back();
   auto lastPosition = rm->GetVertex(lastVID);
   m_currentPositions[_robot] = lastPosition;
-  auto plan = this->GetPlan();
+  auto startTime = m_nextFreeTime[_robot];
+  m_nextFreeTime[_robot] += _path->Length();
 
   // Add the allocation to the plan
+  auto plan = this->GetPlan();
   plan->AddAllocation(_robot,_task);
 
   // TODO::Build our task solution object - do this much later
@@ -197,6 +228,7 @@ SaveAllocation(Robot* _robot, SemanticTask* _task, std::unique_ptr<Path> _path) 
   sol->SetRobot(_robot);
   sol->SetMotionSolution(m_solution.get());
   sol->SetPath(std::move(_path));
+  sol->SetStartTime(startTime);
 
   plan->SetTaskSolution(_task,sol);
 }
