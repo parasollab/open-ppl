@@ -14,7 +14,7 @@
 /// @ingroup Extenders
 ////////////////////////////////////////////////////////////////////////////////
 template <class MPTraits>
-class BasicExtender : public ExtenderMethod<MPTraits> {
+class BasicExtender : virtual public ExtenderMethod<MPTraits> {
 
   public:
 
@@ -193,7 +193,7 @@ Extend(const GroupCfgType& _start, const GroupCfgType& _end, GroupCfgType& _new,
   Environment* env = this->GetEnvironment();
 
   //_lp.SetLPLabel(this->GetLabel());
-  _lp.SetActiveRobots(_robotIndexes);
+  //_lp.SetActiveRobots(_robotIndexes);
 
   return Expand(_start, _end, _new, this->m_maxDist, _lp,
       env->GetPositionRes(), env->GetOrientationRes(), _robotIndexes);
@@ -209,7 +209,7 @@ Extend(const GroupCfgType& _start, const GroupCfgType& _end, GroupCfgType& _new,
   Environment* env = this->GetEnvironment();
 
   //_lp.SetLPLabel(this->GetLabel());
-  _lp.SetActiveRobots(_robotIndexes);
+  //_lp.SetActiveRobots(_robotIndexes);
 
   _cdInfo.ResetVars(_cdInfo.m_retAllInfo);
 
@@ -341,19 +341,9 @@ Expand(const GroupCfgType& _start, const GroupCfgType& _end,
   GroupCfgType tick = _start;
   GroupCfgType previous = _start;
 
-
-  //TODO::Make sure this is no longer needed with new formation implementation
-  /// Set these to true to have single parts treated (less efficiently) as
-  /// multiple parts, which should now be identical.
-  //const bool multipleParts = _robotIndexes.size() > 1;
-  //const bool isRotational = _start.OriDOF() > 0;
-  //const bool subassemblyRotation = multipleParts && isRotational;
-
   GroupCfgType oneStep = _start; // The placeholder for computing steps of angles.
 
   int nTicks;
-  //TODO::Make sure this is no longer needed with new formation implementation
-  //const unsigned int leaderRobotIndex = _robotIndexes[0]; // The body rotated about.
 
   GroupCfgType incr(_start.GetGroupRoadmap());
 
@@ -362,17 +352,6 @@ Expand(const GroupCfgType& _start, const GroupCfgType& _end,
   incr.FindIncrement(_start, _end, &nTicks, _posRes, _oriRes);
   const GroupCfgType incrUntouched = incr;
 
-  //TODO::Make sure this is no longer needed with new formation implementation
-  /*
-  if(subassemblyRotation) {
-    // Remove the rotational bits, as incr should only do the translation
-    // and then RotateRobotFormationAboutLeader() will handle all rotations.
-    incr = GroupCfgType(_start.GetGroupRoadmap(), true); // Ensure zeroed out.
-    incr.OverwriteDofsForRobots(
-            incrUntouched.GetRobotCfg(leaderRobotIndex).GetLinearPosition(),
-            _robotIndexes);
-  }
-  */
 
   // Move out from start towards dir, bounded by number of ticks allowed at a
   // given resolution and the distance _delta: the maximum distance to grow
@@ -387,46 +366,8 @@ Expand(const GroupCfgType& _start, const GroupCfgType& _end,
     if(this->m_debug)
       std::cout << "Extending group on tick " << ticker << std::endl;
 
-    //TODO::Make sure this is no longer needed with new formation implementation
-    /*if(subassemblyRotation) {
-      // Handle subassembly rotation. We must update the delta transformation
-      // due to Euler Angles not conforming to linear angle changes between cfgs
-
-      /// TODO: this can likely be optimized. For one, only one Configure call
-      /// should be necessary here. Also a lot of the group Cfgs here could be
-      /// made individual if using the leader, then using Configure on that.
-      oneStep += incrUntouched;
-
-      // Note we get the 0 body from the robot, as right now it's assumed that
-      // all robots in a group have multibodies with a single body.
-      previous.ConfigureRobot();
-      mathtool::Transformation initialTransform =
-                            previous.GetRobot(leaderRobotIndex)->GetMultiBody()->
-                            GetBody(0)->GetWorldTransformation();
-
-      oneStep.ConfigureRobot();
-      mathtool::Transformation finalTransform =
-                            oneStep.GetRobot(leaderRobotIndex)->GetMultiBody()->
-                            GetBody(0)->GetWorldTransformation();
-
-      mathtool::Transformation delta = -initialTransform * finalTransform;
-      rotation = delta.rotation();
-
-      if(this->m_debug)
-        std::cout << "tick before rotation = " << tick.PrettyPrint()
-                  << std::endl;
-
-      //TODO::Update this to new Formation representation.
-      throw RunTimeException(WHERE) << "Not currently supported.";
-      //tick.RotateRobotFormationAboutLeader(_robotIndexes, rotation, this->m_debug);
-
-      if(this->m_debug)
-        std::cout << "tick after rotation = " << tick.PrettyPrint()
-                  << std::endl << std::endl;
-    }*/
 
     if(tick.InBounds(env->GetBoundary())) {
-      //if(!vc->IsValid(tick, _cdInfo, "GroupExtender::Expand", _robotIndexes)) {
       if(!vc->IsValid(tick, _cdInfo, "GroupExtender::Expand")) {
         collision = true; //return previous tick, as it is collision-free
         if(this->m_debug)

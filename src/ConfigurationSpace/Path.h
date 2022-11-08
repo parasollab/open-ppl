@@ -128,7 +128,14 @@ class PathType final {
     /// Used in Safe Interval Path Planning
     void SetWaitTimes(std::vector<size_t> _waitTimes);
 
+    /// Get the wait time at each vertex index in the path.
     std::vector<size_t> GetWaitTimes();
+
+    /// Get the (source,target) of the path at the input timestep.
+    /// @param _timestep The timestep to find the corresponding edge.
+    /// @return  The source and target of the corresponding edge.
+    std::pair<std::pair<size_t,size_t>,std::pair<size_t,size_t>> 
+                        GetEdgeAtTimestep(size_t _timestep);
 
     ///@}
 
@@ -340,23 +347,27 @@ TimeSteps() const {
   if(m_timestepsCached)
     return m_timesteps;
 
-  m_timestepsCached = true;
-
   if(m_vids.empty())
     return 0;
 
 	m_timesteps = 0;
 
-  for(auto it = m_vids.begin(); it + 1 < m_vids.end(); ++it) {
-		if(*it == *(it+1)) {
+  for(size_t i = 0; i < m_vids.size()-1; i++) {
+		if(m_vids[i] == m_vids[i+1]) {
 			m_timesteps++;
 			continue;
 		}
+
     if(!m_waitingTimesteps.empty())
-      m_timesteps += m_waitingTimesteps[*it];
-		auto edge = m_roadmap->GetEdge(*it, *(it+1));
+      m_timesteps += m_waitingTimesteps[i];
+
+		auto edge = m_roadmap->GetEdge(m_vids[i], m_vids[i+1]);
 		m_timesteps += edge.GetTimeSteps();
   }
+
+  if(!m_waitingTimesteps.empty())
+    m_timesteps += m_waitingTimesteps.back();
+
   return m_timesteps;
 }
 
@@ -423,11 +434,12 @@ operator=(const PathType& _p) {
   if(m_roadmap != _p.m_roadmap)
     throw RunTimeException(WHERE) << "Can't assign path from another roadmap";
 
-  m_vids         = _p.m_vids;
-  m_cfgs         = _p.m_cfgs;
-  m_cfgsCached   = _p.m_cfgsCached;
-  m_length       = _p.m_length;
-  m_lengthCached = _p.m_lengthCached;
+  m_vids             = _p.m_vids;
+  m_waitingTimesteps = _p.m_waitingTimesteps;
+  m_cfgs             = _p.m_cfgs;
+  m_cfgsCached       = _p.m_cfgsCached;
+  m_length           = _p.m_length;
+  m_lengthCached     = _p.m_lengthCached;
 
   return *this;
 }
@@ -485,6 +497,41 @@ PathType<MPTraits>::
 GetWaitTimes() {
   return m_waitingTimesteps;
 }
+
+template <typename MPTraits>
+std::pair<std::pair<size_t,size_t>,std::pair<size_t,size_t>>
+PathType<MPTraits>::
+GetEdgeAtTimestep(size_t _timestep) {
+
+  size_t step = 0;
+
+  for(size_t i = 0; i + 1 < m_vids.size(); i++) {
+    
+    if(!m_waitingTimesteps.empty())
+      step += m_waitingTimesteps[i];
+
+    if(_timestep <= step) {
+      auto vertex = std::make_pair(m_vids[i],m_vids[i]);
+      auto interval = std::make_pair(step-m_waitingTimesteps[i],step);
+      return std::make_pair(vertex,interval);
+    }
+
+    auto duration = m_roadmap->GetEdge(m_vids[i],m_vids[i+1]).GetTimeSteps();
+
+    step += duration;
+
+    if(_timestep <= step) { 
+      auto edge = std::make_pair(m_vids[i],m_vids[i+1]);
+      auto interval = std::make_pair(step-duration,step);
+      return std::make_pair(edge,interval);
+    }
+  }
+
+  auto vertex = std::make_pair(m_vids.back(),m_vids.back());
+  auto interval = std::make_pair(step,std::numeric_limits<size_t>::infinity());
+  return std::make_pair(vertex,interval);
+}
+
 /*--------------------------------- Helpers ----------------------------------*/
 
 template <typename MPTraits>

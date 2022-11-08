@@ -2,8 +2,6 @@
 #define PMPL_DRAWABLE_ROADMAP_H_
 
 #include "DrawableCfg.h"
-//#include "ConfigurationSpace/GenericStateGraph.h"
-
 #include "ConfigurationSpace/GenericStateGraph.h"
 #include "ConfigurationSpace/Weight.h"
 #include "Utilities/Hash.h"
@@ -32,9 +30,9 @@ class DrawableRoadmap : public glutils::drawable  {
     ///@name Local Types
     ///@{
 
-    typedef GenericStateGraph<Cfg, DefaultWeight<Cfg>> RoadmapType;
-    typedef typename RoadmapType::VI VI;
-    typedef typename RoadmapType::EI EI;
+    typedef GenericStateGraph<Cfg, DefaultWeight<Cfg>>   RoadmapType;
+    typedef typename RoadmapType::VI                VI;
+    typedef typename RoadmapType::EI                EI;
     typedef typename RoadmapType::VID               VID;
     typedef typename std::pair<VID, VID>            EdgeID;
 

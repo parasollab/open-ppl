@@ -24,7 +24,9 @@ class ScheduledCBS : public TaskEvaluatorMethod {
     ///@name Local Types
     ///@{
 
-    typedef MPTraits<Cfg>::GroupRoadmapType                   GroupRoadmapType;
+    typedef TMPBaseObject::GroupCfgType                       GroupCfgType;
+    typedef TMPBaseObject::GroupLocalPlanType                 GroupLocalPlanType;
+    typedef TMPBaseObject::GroupRoadmapType                   GroupRoadmapType;
     typedef MPTraits<Cfg>::GroupPathType                      GroupPathType;
 
     // Edge <Source, Target>, Time Interval <Start, End> 

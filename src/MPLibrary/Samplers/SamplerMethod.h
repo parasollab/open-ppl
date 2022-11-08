@@ -91,6 +91,7 @@ class SamplerMethod : public MPBaseObject<MPTraits> {
 
     /// A map from robots to sampling boundaries.
     typedef std::map<Robot*, const Boundary*> BoundaryMap;
+    typedef std::map<Robot*, std::vector<Robot*>> RobotMap;
 
     ///@}
     ///@name Construction
@@ -195,6 +196,15 @@ class SamplerMethod : public MPBaseObject<MPTraits> {
     virtual void Sample(size_t _numNodes, size_t _maxAttempts,
         const BoundaryMap& _boundary, GroupOutputIterator _valid);
 
+    virtual void Sample(size_t _numNodes, size_t _maxAttempts,
+        const BoundaryMap& _boundary, GroupOutputIterator _valid,
+        GroupOutputIterator _invalid, const RobotMap& _robotMap);
+    /// This version does not return invalid samples.
+    /// @overload
+    virtual void Sample(size_t _numNodes, size_t _maxAttempts,
+        const BoundaryMap& _boundary, GroupOutputIterator _valid,
+        const RobotMap& _robotMap);
+
     /// Apply the sampler rule to a set of existing configurations. The output
     /// will generally be a filtered or perturbed version of the input set.
     /// @param _first An iterator to the beginning of a list of input
@@ -257,6 +267,10 @@ class SamplerMethod : public MPBaseObject<MPTraits> {
     /// @overload
     virtual bool Sampler(GroupCfgType& _cfg, const BoundaryMap& _boundaryMap,
         std::vector<GroupCfgType>& _valid, std::vector<GroupCfgType>& _invalid);
+
+    virtual bool Sampler(GroupCfgType& _cfg, const BoundaryMap& _boundaryMap,
+        std::vector<GroupCfgType>& _valid, std::vector<GroupCfgType>& _invalid,
+        const RobotMap& _robotMap);
 
     ///@}
 
@@ -486,10 +500,13 @@ Sample(size_t _numNodes, size_t _maxAttempts, const BoundaryMap& _boundaryMap,
       for(size_t i = 0; i < cfg.GetNumRobots(); ++i) {
         // Determine the boundary to use.
         auto robot = cfg.GetRobot(i);
-        if(used.count(robot)) continue;
+        if(used.count(robot)) 
+          continue;
         auto boundary = _boundaryMap.count(robot) ? _boundaryMap.at(robot)
                                                   : envBoundary;
-        cfg.GetRobotCfg(i).GetRandomCfg(boundary);
+        Cfg individualCfg(robot);
+        individualCfg.GetRandomCfg(boundary);
+        cfg.SetRobotCfg(i,std::move(individualCfg));
       }
 
       if(this->Sampler(cfg, _boundaryMap, valid, invalid)){
@@ -516,6 +533,59 @@ Sample(size_t _numNodes, size_t _maxAttempts, const BoundaryMap& _boundaryMap,
   std::vector<GroupCfgType> invalid;
   Sample(_numNodes, _maxAttempts, _boundaryMap, _valid,
       std::back_inserter(invalid));
+}
+
+
+template <typename MPTraits>
+void
+SamplerMethod<MPTraits>::
+Sample(size_t _numNodes, size_t _maxAttempts, const BoundaryMap& _boundaryMap,
+    GroupOutputIterator _valid, GroupOutputIterator _invalid, const RobotMap& _robotMap) {
+  auto stats = this->GetStatClass();
+  MethodTimer mt(stats, this->GetNameAndLabel() + "::GroupSample");
+
+  const Boundary* const envBoundary = this->GetEnvironment()->GetBoundary();
+  GroupCfgType cfg(this->GetGroupRoadmap());
+  std::vector<GroupCfgType> valid, invalid;
+
+  for(size_t i = 0; i < _numNodes; ++i) {
+    for(size_t attempts = 0; attempts < _maxAttempts; ++attempts) {
+
+      // Generate a random configuration for each robot.
+      for(size_t i = 0; i < cfg.GetNumRobots(); ++i) {
+        // Determine the boundary to use.
+        auto robot = cfg.GetRobot(i);
+        auto boundary = _boundaryMap.count(robot) ? _boundaryMap.at(robot)
+                                                  : envBoundary;
+        Cfg individualCfg(robot);
+        individualCfg.GetRandomCfg(boundary);
+        cfg.SetRobotCfg(i,std::move(individualCfg));
+      }
+
+      if(this->Sampler(cfg, _boundaryMap, valid, invalid, _robotMap)){
+        break;
+      }
+    }
+  }
+
+  stats->IncNodesGenerated(this->GetNameAndLabel(), valid.size());
+  stats->IncNodesAttempted(this->GetNameAndLabel(),
+      valid.size() + invalid.size());
+
+  std::copy(valid.begin(), valid.end(), _valid);
+  std::copy(invalid.begin(), invalid.end(), _invalid);
+  auto vect = cfg.GetRobots();
+}
+
+
+template <typename MPTraits>
+void
+SamplerMethod<MPTraits>::
+Sample(size_t _numNodes, size_t _maxAttempts, const BoundaryMap& _boundaryMap,
+    GroupOutputIterator _valid, const RobotMap& _robotMap) {
+  std::vector<GroupCfgType> invalid;
+  Sample(_numNodes, _maxAttempts, _boundaryMap, _valid,
+      std::back_inserter(invalid), _robotMap);
 }
 
 
@@ -579,6 +649,17 @@ bool
 SamplerMethod<MPTraits>::
 Sampler(GroupCfgType& _cfg, const BoundaryMap& _boundaryMap,
     std::vector<GroupCfgType>& _valid, std::vector<GroupCfgType>& _invalid) {
+  throw NotImplementedException(WHERE) << "No default implementation is "
+                                       << "provided.";
+}
+
+
+template <typename MPTraits>
+bool
+SamplerMethod<MPTraits>::
+Sampler(GroupCfgType& _cfg, const BoundaryMap& _boundaryMap,
+    std::vector<GroupCfgType>& _valid, std::vector<GroupCfgType>& _invalid,
+    const RobotMap& _robotMap) {
   throw NotImplementedException(WHERE) << "No default implementation is "
                                        << "provided.";
 }

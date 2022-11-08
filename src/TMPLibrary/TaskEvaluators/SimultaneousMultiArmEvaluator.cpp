@@ -353,7 +353,7 @@ CreateRootNodes() {
   auto sg = static_cast<ObjectCentricModeGraph*>(
                 this->GetStateGraph(m_sgLabel).get());
  
-  std::vector<GroupCfg> cfgs;
+  std::vector<GroupCfgType> cfgs;
 
   // Get initial vertex in TensorProductRoadmap
   auto c = this->GetPlan()->GetCoordinator();
@@ -719,7 +719,7 @@ ConnectToExistingRoadmap(Interaction* _interaction, State& _start, State& _end, 
         rm->AddFormation(formation);
     }
 
-    GroupCfg gcfg(rm);
+    GroupCfgType gcfg(rm);
 
     for(auto robot : group->GetRobots()) {
       const auto& path = robotPaths[robot];
@@ -763,7 +763,7 @@ ConnectToExistingRoadmap(Interaction* _interaction, State& _start, State& _end, 
         rm->AddFormation(formation);
     }
 
-    GroupCfg gcfg(rm);
+    GroupCfgType gcfg(rm);
 
     for(auto robot : group->GetRobots()) {
       const auto& path = robotPaths[robot];
@@ -809,7 +809,7 @@ ConnectToExistingRoadmap(Interaction* _interaction, State& _start, State& _end, 
 
 SimultaneousMultiArmEvaluator::VID
 SimultaneousMultiArmEvaluator::
-AddToRoadmap(GroupCfg _cfg) {
+AddToRoadmap(GroupCfgType _cfg) {
   auto plan = this->GetPlan();
   auto stats = plan->GetStatClass();
   MethodTimer mt(stats,this->GetNameAndLabel() + "::AddToRoadmap");
@@ -871,7 +871,7 @@ AddToRoadmap(GroupCfg _cfg) {
 
 SimultaneousMultiArmEvaluator::VID
 SimultaneousMultiArmEvaluator::
-CreateTensorProductVertex(const std::vector<GroupCfg>& _cfgs) {
+CreateTensorProductVertex(const std::vector<GroupCfgType>& _cfgs) {
   auto plan = this->GetPlan();
   auto stats = plan->GetStatClass();
   MethodTimer mt(stats,this->GetNameAndLabel() + "::CreateTensorProductVertex");
@@ -899,7 +899,7 @@ CreateTensorProductVertex(const std::vector<GroupCfg>& _cfgs) {
     tpr->AddFormation(f,true);
   }
 
-  GroupCfg tensorCfg(tpr);
+  GroupCfgType tensorCfg(tpr);
 
   for(auto cfg : individualCfgs) {
     auto robot = cfg.second.GetRobot();
@@ -951,7 +951,7 @@ Select(size_t _modeID, size_t _history, std::unordered_map<Robot*,size_t> _heuri
   return closest;
 }
 
-GroupCfg
+SimultaneousMultiArmEvaluator::GroupCfgType
 SimultaneousMultiArmEvaluator::
 SampleVertex(size_t _modeID) {
   auto plan = this->GetPlan();
@@ -977,7 +977,7 @@ SampleVertex(size_t _modeID) {
   }
 
   // Sample random vertex
-  GroupCfg cfg(m_tensorProductRoadmap.get());
+  GroupCfgType cfg(m_tensorProductRoadmap.get());
   cfg.GetRandomGroupCfg(env->GetBoundary());
 
   return cfg;
@@ -994,7 +994,7 @@ Extend(TID _qNear, size_t _history, std::unordered_map<Robot*,size_t> _heuristic
   auto cfg = m_tensorProductRoadmap->GetVertex(taskState.vid);
 
   // Use heuristic to select direction to extend
-  GroupCfg direction;
+  GroupCfgType direction;
   if(DRand() <= m_heuristicProb) {
     direction = GetHeuristicDirection(taskState.mode,_heuristic);
     if(m_debug) {
@@ -1009,7 +1009,7 @@ Extend(TID _qNear, size_t _history, std::unordered_map<Robot*,size_t> _heuristic
     }
   }
 
-  auto computeAngle = [stats,this](GroupCfg& _cfg1, GroupCfg& _cfg2) {
+  auto computeAngle = [stats,this](GroupCfgType& _cfg1, GroupCfgType& _cfg2) {
     MethodTimer mt(stats,this->GetNameAndLabel() + "::Extend::ComputeAngle");
 
     if(_cfg1 == _cfg2)
@@ -1096,8 +1096,8 @@ Extend(TID _qNear, size_t _history, std::unordered_map<Robot*,size_t> _heuristic
     MethodTimer mt(stats,this->GetNameAndLabel() + "::Extend::FindNearestNeighbor");
 
     // Create group cfgs within this roadmap
-    GroupCfg start = nearCfgs[i];
-    GroupCfg d = directionCfgs[i];
+    GroupCfgType start = nearCfgs[i];
+    GroupCfgType d = directionCfgs[i];
 
     auto rm = start.GetGroupRoadmap();
     auto vid = rm->GetVID(start);
@@ -1117,7 +1117,7 @@ Extend(TID _qNear, size_t _history, std::unordered_map<Robot*,size_t> _heuristic
 
     // Initialize minimum neighbor as staying put
     auto vec1 = d - start;
-    GroupCfg empty(rm);
+    GroupCfgType empty(rm);
     for(auto robot : group->GetRobots()) {
       Cfg cfg(robot);
       for(size_t i = 0; i < cfg.DOF(); i++) {
@@ -1152,7 +1152,7 @@ Extend(TID _qNear, size_t _history, std::unordered_map<Robot*,size_t> _heuristic
   }
 
   // Create tensor product vertex
-  GroupCfg qNew(m_tensorProductRoadmap.get());
+  GroupCfgType qNew(m_tensorProductRoadmap.get());
 
   for(size_t i = 0; i < nearCfgs.size(); i++) {
     MethodTimer mt(stats,this->GetNameAndLabel() + "::Extend::Construction");
@@ -1176,7 +1176,7 @@ Extend(TID _qNear, size_t _history, std::unordered_map<Robot*,size_t> _heuristic
 
 size_t
 SimultaneousMultiArmEvaluator::
-ExtendTaskVertices(const TID& _source, const GroupCfg& _target, size_t _history) {
+ExtendTaskVertices(const TID& _source, const GroupCfgType& _target, size_t _history) {
     
   auto plan = this->GetPlan();
   auto stats = plan->GetStatClass();
@@ -1187,7 +1187,7 @@ ExtendTaskVertices(const TID& _source, const GroupCfg& _target, size_t _history)
 
   auto lp = this->GetMPLibrary()->GetLocalPlanner(m_lpLabel);
   GroupLPOutputType lpOut(m_tensorProductRoadmap.get());
-  GroupCfg col(m_tensorProductRoadmap.get());
+  GroupCfgType col(m_tensorProductRoadmap.get());
 
   auto taskState = m_taskGraph->GetVertex(_source);
   auto cfg = m_tensorProductRoadmap->GetVertex(taskState.vid);
@@ -1231,7 +1231,7 @@ ExtendTaskVertices(const TID& _source, const GroupCfg& _target, size_t _history)
 }
 
     
-GroupCfg
+SimultaneousMultiArmEvaluator::GroupCfgType
 SimultaneousMultiArmEvaluator::
 GetHeuristicDirection(size_t _modeID, std::unordered_map<Robot*,size_t> _heuristic) {
   auto plan = this->GetPlan();
@@ -1377,7 +1377,7 @@ GetHeuristicDirection(size_t _modeID, std::unordered_map<Robot*,size_t> _heurist
   }
 
   // Create direction vertex
-  GroupCfg cfg(m_tensorProductRoadmap.get());
+  GroupCfgType cfg(m_tensorProductRoadmap.get());
   for(auto kv : directions) {
     for(auto pair : kv.second) {
       auto rm = pair.first;
@@ -1603,7 +1603,7 @@ CheckForModeTransition(size_t _aid, size_t _history) {
 
     TaskState newState;
     ObjectMode newMode;
-    std::vector<GroupCfg> cfgs;
+    std::vector<GroupCfgType> cfgs;
 
     TaskEdge edge;
     size_t cost = 0;
@@ -1700,7 +1700,7 @@ CheckForModeTransition(size_t _aid, size_t _history) {
         m_tensorProductRoadmap->AddFormation(formation);
     }
 
-    GroupCfg newCfg(m_tensorProductRoadmap.get());
+    GroupCfgType newCfg(m_tensorProductRoadmap.get());
     //std::set<Robot*> used;
     for(const auto& cfg : cfgs) {
       for(auto robot : cfg.GetGroupRoadmap()->GetGroup()->GetRobots()) {
@@ -1894,9 +1894,9 @@ CheckForGoal(size_t _aid) {
   return true;
 }
 
-std::vector<GroupCfg>
+std::vector<SimultaneousMultiArmEvaluator::GroupCfgType>
 SimultaneousMultiArmEvaluator::
-SplitTensorProductVertex(GroupCfg _cfg, size_t _modeID) {
+SplitTensorProductVertex(GroupCfgType _cfg, size_t _modeID) {
   auto plan = this->GetPlan();
   auto stats = plan->GetStatClass();
   MethodTimer mt(stats,this->GetNameAndLabel() + "::SplitTensorProductVertex");
@@ -1948,11 +1948,11 @@ SplitTensorProductVertex(GroupCfg _cfg, size_t _modeID) {
     roadmaps.push_back(rm);
   }
 
-  std::vector<GroupCfg> splitCfgs;
+  std::vector<GroupCfgType> splitCfgs;
 
   for(auto rm : roadmaps) {
     // Create group cfgs within this roadmap
-    GroupCfg cfg(rm);
+    GroupCfgType cfg(rm);
     auto group = rm->GetGroup();
 
     for(auto robot : group->GetRobots()) {

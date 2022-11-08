@@ -48,9 +48,13 @@ class TMPBaseObject {
     ///@name LocalTypes
     ///@{
 
-    typedef GroupLocalPlan<Cfg>                       GroupLocalPlanType;
-    typedef GroupRoadmap<GroupCfg,GroupLocalPlanType> GroupRoadmapType;
-    typedef typename MPTraits<Cfg>::MPLibrary         MPLibrary;
+    typedef GenericStateGraph<Cfg,DefaultWeight<Cfg>>     RoadmapType;
+
+    typedef GroupCfg<RoadmapType>                         GroupCfgType;
+    typedef GroupLocalPlan<RoadmapType>                   GroupLocalPlanType;
+    typedef GroupRoadmap<GroupCfgType,GroupLocalPlanType> GroupRoadmapType;
+
+    typedef typename MPTraits<Cfg>::MPLibrary             MPLibrary;
 
     ///@}
     ///@name Method Set Types

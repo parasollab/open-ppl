@@ -1,0 +1,125 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<MotionPlanning warnings="true" warningsAsErrors="true" print="false">
+    <Problem>
+        <Environment filename="./3D/inlet-narrow.xml" />
+
+        <Robot label="boxy-0" filename="3D/iCreate.xml">
+            <Agent type="child" waypointDm="euclidean" waypointThreshold=".05" debug="false" />
+        </Robot>      
+        <Robot label="boxy-1" filename="3D/iCreate.xml">
+            <Agent type="child" waypointDm="euclidean" waypointThreshold=".05" debug="false" />
+        </Robot>  
+
+        <!-- The robotLabels parameter lists all of the robots included in this group -->
+        <RobotGroup label="robotGroup" robotLabels="boxy-0 boxy-1" />
+
+        <GroupTask label="groupQuery" group="robotGroup">
+            <Task label="query-0" robot="boxy-0">
+                <StartConstraints>
+                    <CSpaceConstraint point="-6 1.25 0 0 0 0" />
+                </StartConstraints>
+                <GoalConstraints>
+                    <CSpaceConstraint point="6 1.25 0 0 0 0" />
+                </GoalConstraints>
+            </Task>
+            <Task label="query-1" robot="boxy-1">
+                <StartConstraints>
+                    <CSpaceConstraint point="6 1.25 0 0 0 0" />
+                </StartConstraints>
+                <GoalConstraints>
+                    <CSpaceConstraint point="-6 1.25 0 0 0 0" />
+                </GoalConstraints>
+            </Task>
+        </GroupTask>
+
+    </Problem>
+    <Library>
+
+        <DistanceMetrics>
+            <Euclidean label="euclidean" />
+        </DistanceMetrics>
+
+        <ValidityCheckers>
+            <CollisionDetection label="rapid" method="RAPID" />
+            <CollisionDetection label="pqp_solid" method="PQP_SOLID" />
+            <AlwaysTrueValidity label="alwaysTrue" />
+        </ValidityCheckers>
+
+        <NeighborhoodFinders>
+            <BruteForceNF label="Nearest" dmLabel="euclidean"
+                unconnected="false" k="1" debug="false"/>
+        </NeighborhoodFinders>
+
+        <Samplers>
+            <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue" />
+            <UniformRandomSampler label="UniformRandomFree" vcLabel="pqp_solid" />
+        </Samplers>
+
+        <LocalPlanners>
+            <StraightLine label="sl" binaryEvaluation="true" vcLabel="rapid" />
+        </LocalPlanners>
+
+        <Extenders>
+            <BasicExtender label="BERO" debug="false" dmLabel="euclidean"
+                vcLabel="rapid" maxDist="4." minDist=".01" />
+        </Extenders>
+
+        <Connectors>
+            <NeighborhoodConnector label="Closest" debug="false"
+                nfLabel="Nearest" lpLabel="sl" checkIfSameCC="false" />
+        </Connectors>
+
+        <Metrics>
+            <NumNodesMetric label="NumNodes"/>
+        </Metrics>
+
+        <MapEvaluators>
+            <GroupQuery label="CompositeQuery"/>
+            <TimeEvaluator label="TimeEval" timeout="10" />
+            <ConditionalEvaluator label="NodesEval" metric_method="NumNodes"
+                value="10000" operator=">="/>
+            <QueryMethod label="Query" debug="false" graphSearchAlg="dijkstras"
+                safeIntervalToolLabel="SI" />
+            <ComposeEvaluator label="BoundedCompositeQuery" operator="or">
+                <Evaluator label="NodesEval"/>
+                <Evaluator label="CompositeQuery"/>
+            </ComposeEvaluator>
+        </MapEvaluators>
+
+        <MPStrategies>
+            <GroupRRTStrategy label="GroupRRRT" debug="false" querySampler="UniformRandomFree"
+                samplerLabel="UniformRandom" nfLabel="Nearest" extenderLabel="BERO" 
+                growGoals="true" connectorLabel="Closest">
+                <Evaluator label="BoundedCompositeQuery" />
+            </GroupRRTStrategy>
+        </MPStrategies>
+
+        <!-- MPProblem allows multiple solvers to be specified and executed. -->
+        <Solver mpStrategyLabel="GroupRRRT" seed="12345678"
+            baseFilename="GroupRRT-inlet" vizmoDebug="true" />
+
+    </Library>
+
+    <TMPLibrary>
+        <TMPStrategies>
+            <SimpleMotionMethod label="SimpleMotion" teLabel="motionEval" />
+        </TMPStrategies>
+
+        <PoIPlacementMethods></PoIPlacementMethods>
+
+        <TaskEvaluators>
+            <SimpleMotionEvaluator label="motionEval" />
+        </TaskEvaluators>
+
+        <TaskDecomposers></TaskDecomposers>
+
+        <TaskAllocators></TaskAllocators>
+
+        <StateGraphs></StateGraphs>
+
+        <TMPTools></TMPTools>
+
+        <Solver tmpStrategyLabel="SimpleMotion" baseFilename="tmp_examples" />
+    </TMPLibrary>
+
+</MotionPlanning>

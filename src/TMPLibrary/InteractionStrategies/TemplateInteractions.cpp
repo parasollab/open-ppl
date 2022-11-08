@@ -106,9 +106,9 @@ TransformSolution(MPSolution* _old, MPSolution* _new) {
 
 }
 
-GroupCfg 
+TemplateInteractions::GroupCfgType 
 TemplateInteractions::
-TransformGroupCfg(GroupCfg& _gcfg) {
+TransformGroupCfg(GroupCfgType& _gcfg) {
   return _gcfg;
 }
 

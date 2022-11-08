@@ -160,7 +160,7 @@ Distance(const GroupCfgType& _c1, const GroupCfgType& _c2) {
     for(auto f1 : _c1.GetFormations()) {
       matched = false;
       for(auto f2 : _c2.GetFormations()) {
-        if(*f1 == *f2) {
+        if(f1 == f2 or *f1 == *f2) {
           matched = true;
           break;
         }
@@ -176,7 +176,7 @@ Distance(const GroupCfgType& _c1, const GroupCfgType& _c2) {
     for(auto f2 : _c2.GetFormations()) {
       matched = false;
       for(auto f1 : _c1.GetFormations()) {
-        if(*f2 == *f1) {
+        if(f2 == f1 or *f2 == *f1) {
           matched = true;
           break;
         }
@@ -258,7 +258,6 @@ ScaleCfg(double _length, CfgType& _c, const CfgType& _o) {
   while(Distance(origin, outsideCfg) < 2 * _length)
     for(size_t i = 0; i < outsideCfg.DOF(); ++i)
       outsideCfg[i] *= 2.0;
-
   // now, using binary search find a configuration with the approximate length
   CfgType aboveCfg = outsideCfg;
   CfgType belowCfg = origin;
@@ -291,7 +290,12 @@ template <typename MPTraits>
 void
 DistanceMetricMethod<MPTraits>::
 ScaleCfg(double _length, GroupCfgType& _c, const GroupCfgType& _o) {
-  throw NotImplementedException(WHERE) << "Not yet implemented.";
+  // throw NotImplementedException(WHERE) << "Not yet implemented.";
+
+   for(size_t j = 0; j < _c.GetNumRobots(); ++j) {
+      ScaleCfg(_length, _c.GetRobotCfg(j));
+   }
+
 }
 
 
@@ -299,7 +303,7 @@ template <typename MPTraits>
 void
 DistanceMetricMethod<MPTraits>::
 ScaleCfg(double _length, GroupCfgType& _c) {
-  const GroupCfgType origin(_c.GetGroupRoadmap(), true);
+  const GroupCfgType origin(_c.GetGroupRoadmap());
   ScaleCfg(_length, _c, origin);
 }
 

@@ -22,8 +22,9 @@ class ObjectCentricModeGraph : public StateGraph {
     ///@{
 
     typedef Condition::State                          State;
-    typedef GroupLocalPlan<Cfg>                       GroupLocalPlanType;
-    typedef GroupRoadmap<GroupCfg,GroupLocalPlanType> GroupRoadmapType;
+    typedef TMPBaseObject::GroupCfgType               GroupCfgType;
+    typedef TMPBaseObject::GroupLocalPlanType         GroupLocalPlanType;
+    typedef TMPBaseObject::GroupRoadmapType           GroupRoadmapType;
 
     struct ModeInfo {
       Robot* robot;

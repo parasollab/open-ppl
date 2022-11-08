@@ -79,7 +79,7 @@ Initialize(){
     auto sr = AddSemanticRoadmap(grm,ActionUpdate());
 
     // Create initial group vertex
-    auto gcfg = GroupCfg(grm);
+    auto gcfg = GroupCfgType(grm);
 
     // Add initial cfg to individual roadmaps
     for(auto& r : group->GetRobots()) {
@@ -326,13 +326,13 @@ AddInteraction(CompositeSemanticRoadmap _csr, State _input, State _output, Inter
 
   // Add first cfg to path.
   auto cfg = interimRm->GetVertex(interimVIDs[0]);
-  auto previousVID = MoveGroupCfg(cfg,grm);
+  auto previousVID = MoveGroupCfgType(cfg,grm);
   auto interimPathStartVID = m_vertexMap[sr][previousVID];
 
   // Iterate through path and add vertices and edges.
   for(size_t i = 1; i < interimVIDs.size(); i++) {
     cfg = interimRm->GetVertex(interimVIDs[i]);
-    auto vid = MoveGroupCfg(cfg,grm);
+    auto vid = MoveGroupCfgType(cfg,grm);
 
     MoveGroupEdge(interimVIDs[i-1], interimVIDs[i],
                   previousVID,vid,
@@ -349,14 +349,14 @@ AddInteraction(CompositeSemanticRoadmap _csr, State _input, State _output, Inter
 
   // Add first cfg to path.
   cfg = postRm->GetVertex(postVIDs[0]);
-  previousVID = MoveGroupCfg(cfg,grm);
+  previousVID = MoveGroupCfgType(cfg,grm);
 
   auto postPathStartVID = m_vertexMap[sr][previousVID];
 
   // Iterate through path and add vertices and edges.
   for(size_t i = 1; i < postVIDs.size(); i++) {
     cfg = postRm->GetVertex(postVIDs[i]);
-    auto vid = MoveGroupCfg(cfg,grm);
+    auto vid = MoveGroupCfgType(cfg,grm);
 
     MoveGroupEdge(postVIDs[i-1], postVIDs[i],
                   previousVID,vid,
@@ -1119,7 +1119,7 @@ AddHypergraphArc(SemanticRoadmap* _sr, EI _ei) {
   auto& robots = group->GetRobots();
   for(size_t i = 0; i < robots.size(); i++) {
     auto eid = edgeDescriptors[i];
-    auto roadmap = grm->GetRoadmap(i);
+    auto roadmap = grm->GetIndividualGraph(i);
     Path* path = new Path(roadmap);
     std::vector<size_t> vids = {eid.source(),eid.target()};
     *path += vids;
@@ -1139,10 +1139,11 @@ AddHypergraphArc(SemanticRoadmap* _sr, EI _ei) {
 
 size_t
 CombinedRoadmap::
-MoveGroupCfg(GroupCfg& _original, GroupRoadmapType* _newRoadmap) {
+MoveGroupCfg(GroupCfgType& _original, GroupRoadmapType* _newRoadmap) {
 
-  GroupCfg gcfg = _original.SetGroupRoadmap(_newRoadmap);
-  return _newRoadmap->AddVertex(gcfg);
+  //GroupCfgType gcfg = _original.SetGroupRoadmap(_newRoadmap);
+  _original.SetGroupRoadmap(_newRoadmap);
+  return _newRoadmap->AddVertex(_original);
 }
 
 void

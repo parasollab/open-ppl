@@ -142,8 +142,8 @@ void
 ClearanceMap<MPTraits>::
 Construct(WorkspaceSkeleton* _s){
   m_skeleton = _s;
-  for(auto eit = m_skeleton->GetGraph().edges_begin();
-		  eit != m_skeleton->GetGraph().edges_end(); eit++){
+  for(auto eit = m_skeleton.edges_begin();
+		  eit != m_skeleton.edges_end(); eit++){
     ComputeMinClearance(eit->descriptor());
   }
 }
@@ -154,7 +154,7 @@ ClearanceMap<MPTraits>::
 ComputeMinClearance(const ED& _ed){
   vertex_iterator vit;
   adj_edge_iterator eit;
-  m_skeleton->GetGraph().find_edge(_ed, vit, eit);
+  m_skeleton.find_edge(_ed, vit, eit);
 
   const vector<Point3d>& vp = eit->property();
 
@@ -177,16 +177,16 @@ WorkspaceSkeleton*
 ClearanceMap<MPTraits>::
 GetAnnotatedSkeleton(FilterFunction&& _f){
 
-  auto graph = m_skeleton->GetGraph();
+  // auto graph = m_skeleton->GetGraph();
 
   for(auto mit = m_clearanceMap.begin();
 		  mit != m_clearanceMap.end(); ++mit){
     if(_f(mit->second)){
       m_clearanceMap[mit->first] = numeric_limits<double>::infinity();
-      graph.delete_edge(mit->first);
+      m_skeleton.delete_edge(mit->first);
     }
   }
-  m_skeleton->SetGraph(graph);
+  // m_skeleton->SetGraph(graph);
   Remove2Nodes();
 
   return m_skeleton;
@@ -236,14 +236,14 @@ void
 ClearanceMap<MPTraits>::
 Remove2Nodes() {
   bool removed;
-  auto graph = m_skeleton->GetGraph();
+  // auto graph = m_skeleton->GetGraph();
   do {
     removed = false;
-    for(auto vit = graph.begin(); vit != graph.end(); ++vit) {
+    for(auto vit = m_skeletonbegin(); vit != m_skeletonend(); ++vit) {
       //detect 2-node
       if(vit->predecessors().size() == 1 && vit->size() == 1) {
         //get in and out edge
-        auto pred = graph.find_vertex(vit->predecessors()[0]);
+        auto pred = m_skeletonfind_vertex(vit->predecessors()[0]);
         ED in, out;
         vector<Vector3d> inPath;
         vector<Vector3d> outPath;
@@ -264,19 +264,19 @@ Remove2Nodes() {
         for(size_t i = 1; i < outPath.size(); i++){
           mergedPath.push_back(outPath[i]);
         }
-        ED neweid = graph.add_edge(in.source(), out.target(), mergedPath);
+        ED neweid = m_skeletonadd_edge(in.source(), out.target(), mergedPath);
 
         //Delete old edges and delete old vertex
-        graph.delete_edge(in);
-        graph.delete_edge(out);
+        m_skeletondelete_edge(in);
+        m_skeletondelete_edge(out);
         cout << "deleted 2-node ID: " << vit->descriptor() << endl;
-        graph.delete_vertex(vit->descriptor());
+        m_skeletondelete_vertex(vit->descriptor());
         --vit;
         removed = true;
       }
     }
   } while(removed);
-  m_skeleton->SetGraph(graph);
+  // m_skeleton->SetGraph(graph);
 }
 
 

@@ -12,7 +12,8 @@ class GraspStrategy : public IndependentPaths {
     ///@name Local Types
     ///@{
 
-    typedef Condition::State State;
+    typedef TMPBaseObject::GroupCfgType GroupCfgType;
+    typedef Condition::State            State;
 
     ///@}
     ///@name Construction

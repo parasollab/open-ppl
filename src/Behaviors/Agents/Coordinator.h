@@ -54,7 +54,7 @@ class Coordinator : public Agent {
     ///@name Motion Planning Types
     ///@{
 
-    typedef GenericStateGraph<CfgType, WeightType>         RoadmapType;
+    typedef GenericStateGraph<CfgType, WeightType>    RoadmapType;
     typedef typename RoadmapType::vertex_descriptor   VID;
     typedef typename std::vector<VID>::const_iterator VIDIterator;
 
@@ -107,7 +107,7 @@ class Coordinator : public Agent {
 
     TMPLibrary* GetTMPLibrary();
 
-		void SetGenericStateGraph(GenericStateGraph<Cfg, DefaultWeight<Cfg>>* _graph);
+    void SetGenericStateGraph(GenericStateGraph<Cfg, DefaultWeight<Cfg>>* _graph);
 
     std::vector<std::string> GetMemberLabels();
 

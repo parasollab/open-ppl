@@ -15,7 +15,7 @@
 /// @ingroup DistanceMetrics
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
-class WeightedEuclideanDistance : public DistanceMetricMethod<MPTraits> {
+class WeightedEuclideanDistance : virtual public DistanceMetricMethod<MPTraits> {
 
   public:
 

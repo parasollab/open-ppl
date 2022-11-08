@@ -22,7 +22,7 @@
 template <typename MPTraits>
 class TRPGoalMap : public stapl::sequential::graph<stapl::DIRECTED,
                           stapl::NONMULTIEDGES, std::shared_ptr<Constraint>,
-                          PathType<MPTraits>>{
+                          typename MPTraits::Path>{
 
   public:
 
@@ -30,7 +30,7 @@ class TRPGoalMap : public stapl::sequential::graph<stapl::DIRECTED,
     ///@{
 
     typedef stapl::sequential::graph<stapl::DIRECTED, stapl::NONMULTIEDGES,
-        std::shared_ptr<Constraint>, PathType<MPTraits>>    GoalGraph;
+        std::shared_ptr<Constraint>, typename MPTraits::Path>    GoalGraph;
 
     typedef typename GoalGraph::vertex_iterator                 iterator;
     typedef typename GoalGraph::const_vertex_iterator           const_iterator;

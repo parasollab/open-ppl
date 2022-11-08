@@ -12,6 +12,7 @@ class TemplateInteractions : public InteractionStrategyMethod {
     ///@name Local Types
     ///@{
 
+    typedef TMPBaseObject::GroupCfgType GroupCfgType;
     typedef InteractionStrategyMethod::State State;
 
     struct InteractionTemplate {
@@ -49,7 +50,7 @@ class TemplateInteractions : public InteractionStrategyMethod {
 
     void TransformSolution(MPSolution* _old, MPSolution* _new);
 
-    GroupCfg TransformGroupCfg(GroupCfg& _gcfg);
+    GroupCfgType TransformGroupCfg(GroupCfgType& _gcfg);
 
     Cfg TransformCfg(Cfg& _cfg);
     

@@ -20,8 +20,9 @@ class OCMG : public StateGraph {
     ///@name Local Types
     ///@{
 
-    typedef GroupLocalPlan<Cfg>                                  GroupLocalPlanType;
-    typedef GroupRoadmap<GroupCfg,GroupLocalPlanType>            GroupRoadmapType;
+    typedef TMPBaseObject::GroupCfgType               GroupCfgType;
+    typedef TMPBaseObject::GroupLocalPlanType         GroupLocalPlanType;
+    typedef TMPBaseObject::GroupRoadmapType           GroupRoadmapType;
     typedef MPSolutionType<MPTraits<Cfg,DefaultWeight<Cfg>>>     MPSolution;
 
     typedef Condition::State State;

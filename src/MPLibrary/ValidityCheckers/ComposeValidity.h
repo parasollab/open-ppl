@@ -51,6 +51,9 @@ class ComposeValidity : public ValidityCheckerMethod<MPTraits> {
     virtual bool IsValidImpl(GroupCfgType& _cfg, CDInfo& _cdInfo,
         const std::string& _caller) override;
 
+    virtual bool IsValidImpl(GroupCfgType& _cfg, Robot* _robot, std::vector<Robot*> _robots,
+        CDInfo& _cdInfo, const std::string& _caller) override;
+
     ///@}
     ///@name Internal State
     ///@{
@@ -155,6 +158,16 @@ IsValidImpl(GroupCfgType& _cfg, CDInfo& _cdInfo, const std::string& _caller) {
 
   return true;
 }
+
+template <typename MPTraits>
+bool
+ComposeValidity<MPTraits>::
+IsValidImpl(GroupCfgType& _cfg, Robot* _robot, std::vector<Robot*> _robots,
+    CDInfo& _cdInfo, const std::string& _caller) {
+
+    throw NotImplementedException(WHERE) << "Not Implemented";
+}
+
 /*----------------------------------------------------------------------------*/
 
 #endif

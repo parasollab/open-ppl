@@ -117,7 +117,7 @@ class SafeIntervalTool final : public MPBaseObject<MPTraits> {
     ///         following the configuration sequence.
     Intervals ComputeSafeIntervals(const std::vector<Cfg>& _cfgs);
 
-    Intervals ComputeSafeIntervals(const std::vector<GroupCfg>& _cfgs);
+    Intervals ComputeSafeIntervals(const std::vector<GroupCfgType>& _cfgs);
 
     ///@}
     ///@name Internal State
@@ -483,7 +483,7 @@ ComputeSafeIntervals(const std::vector<Cfg>& _cfgs) {
 template <typename MPTraits>
 typename SafeIntervalTool<MPTraits>::Intervals
 SafeIntervalTool<MPTraits>::
-ComputeSafeIntervals(const std::vector<GroupCfg>& _cfgs) {
+ComputeSafeIntervals(const std::vector<GroupCfgType>& _cfgs) {
   MethodTimer mt(this->GetStatClass(), "SafeIntervalTool::ComputeSafeIntervals");
 
   // If there are no dynamic obstacles, the safe interval is infinite.

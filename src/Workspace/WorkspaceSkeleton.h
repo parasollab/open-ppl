@@ -2,6 +2,8 @@
 #define PMPL_WORKSPACE_SKELETON_H_
 
 #include "ConfigurationSpace/Cfg.h"
+#include "ConfigurationSpace/GenericStateGraph.h"
+#include "ConfigurationSpace/Weight.h"
 #include "Geometry/Boundaries/Boundary.h"
 
 #include <containers/sequential/graph/directed_preds_graph.h>
@@ -17,22 +19,30 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// Geometric skeleton of the workspace.
 ////////////////////////////////////////////////////////////////////////////////
-class WorkspaceSkeleton {
+class WorkspaceSkeleton : public GenericStateGraph<mathtool::Point3d, std::vector<mathtool::Point3d>> {
 
   public:
 
     ///@name Local Types
     ///@{
 
-    /// Graph type is a directed multiedge graph of points and paths.
-    typedef stapl::sequential::directed_preds_graph<
-        stapl::MULTIEDGES, mathtool::Point3d, std::vector<mathtool::Point3d>>
-        GraphType;
-    typedef GraphType::vertex_descriptor             VD;
-    typedef GraphType::edge_descriptor               ED;
-    typedef typename GraphType::vertex_iterator      vertex_iterator;
-    typedef typename GraphType::vertex_descriptor    vertex_descriptor;
-    typedef typename GraphType::adj_edge_iterator    adj_edge_iterator;
+    typedef GenericStateGraph<mathtool::Point3d, std::vector<mathtool::Point3d>> BaseType;
+
+    typedef BaseType::VID             VD;
+    typedef BaseType::EID             ED;
+    typedef typename BaseType::VI     vertex_iterator;
+    typedef typename BaseType::VID    vertex_descriptor;
+    typedef typename BaseType::EI     adj_edge_iterator;
+
+    // Interface with CompositeState, CompositeEdge
+    typedef mathtool::Point3d                        CfgType;
+    typedef std::vector<mathtool::Point3d>           EdgeType;
+
+    ///@}
+    ///@name Construction
+    ///@{
+
+    WorkspaceSkeleton();
 
     ///@}
     ///@name Locators
@@ -53,16 +63,6 @@ class WorkspaceSkeleton {
     /// @param _edgeDescriptor The descriptor of the edge to search for.
     /// @return An iterator to the desired edge.
     adj_edge_iterator FindEdge(const ED& _edgeDescriptor);
-
-    /// Find iterators to all edges inbound on a given vertex.
-    /// @param _vertexDescriptor The descriptor for the vertex of interest.
-    /// @return A set of iterators for each edge incident on _vertexDescriptor.
-    std::vector<adj_edge_iterator> FindInboundEdges(const VD& _vertexDescriptor);
-
-    /// Find iterators to all edges inbound on a given vertex.
-    /// @param _vi An iterator to the vertex of interest.
-    /// @return A set of iterators for each edge incident on _vi.
-    std::vector<adj_edge_iterator> FindInboundEdges(const vertex_iterator& _vi);
 
     ///@}
     ///@name Modifiers
@@ -92,18 +92,6 @@ class WorkspaceSkeleton {
     void DoubleEdges();
 
     ///@}
-    ///@name Accessors
-    ///@{
-
-    /// Set the skeleton graph.
-    /// @param _graph the flow graph we want to set for this skeleton.
-    void SetGraph(GraphType& _graph) noexcept;
-
-    /// Get the skeleton graph.
-    GraphType& GetGraph() noexcept;
-    const GraphType& GetGraph() const noexcept;
-
-    ///@}
     ///@name IO
     ///@{
 
@@ -119,17 +107,10 @@ class WorkspaceSkeleton {
 
     ///@}
 
-    /// Find a vertex iterator in the skeleton by descriptor.
-    /// @param _vd The descriptor of the vertex to search for.
-    /// @return An iterator to the desired vertex.
-	  vertex_iterator find_vertex(VD _vd);
-
   private:
 
     ///@name Internal State
     ///@{
-
-    GraphType m_graph;    ///< The skeleton graph.
 
     bool m_debug{false};  ///< Show debug messages?
 

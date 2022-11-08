@@ -1,0 +1,27 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Environment frictionCoefficient=".01" gravity="0 0 0"
+  positionRes=".05" orientationRes=".05">
+
+  <Boundary space="workspace" shape="box" limits="[-6.25:6.25 ; -2:1.5 ]"/>
+
+  <MultiBody type="passive">
+    <Base filename="square_flat.obj" comAdjustment="com" type="fixed"
+      color="0 0 1 1" transform="-4.75 -0.5 0 0 0 0"/>
+  </MultiBody>
+
+  <MultiBody type="passive">
+    <Base filename="square_flat.obj" comAdjustment="com" type="fixed"
+      color="0 0 1 1" transform="4.75 -0.5 0 0 0 0"/>
+  </MultiBody>
+
+  <MultiBody type="passive">
+    <Base filename="square_flat.obj" comAdjustment="com" type="fixed"
+      color="0 0 1 1" transform="1.75 -0.5 0 0 0 0"/>
+  </MultiBody>
+
+  <MultiBody type="passive">
+    <Base filename="square_flat.obj" comAdjustment="com" type="fixed"
+      color="0 0 1 1" transform="-1.75 -0.5 0 0 0 0"/>
+  </MultiBody>
+
+</Environment>

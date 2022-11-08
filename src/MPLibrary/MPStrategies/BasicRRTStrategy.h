@@ -88,6 +88,7 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
 
     virtual void Initialize() override;
     virtual void Iterate() override;
+    virtual void Finalize() override;
 
     ///@}
     ///@name Direction Helpers
@@ -183,7 +184,7 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
     /// @param _target The target configuration.
     /// @return The VID of a newly created Cfg if successful, INVALID_VID
     ///         otherwise.
-    VID ExpandTree(const CfgType& _target);
+    virtual VID ExpandTree(const CfgType& _target);
 
     /// Attempt to expand the map by growing towards a target configuration from
     /// an arbitrary existing node.
@@ -219,12 +220,15 @@ class BasicRRTStrategy : public MPStrategyMethod<MPTraits> {
     double m_goalThreshold{0};    ///< Distance threshold for goal extension.
     size_t m_numDirections{1};    ///< Expansion directions per iteration.
     size_t m_disperseTrials{3};   ///< Sample attempts for disperse search.
+    bool m_trackTargets{false};
 
     ///@}
     ///@name Internal State
     ///@{
 
     std::vector<VertexSet> m_trees;  ///< The current tree set.
+
+    std::unique_ptr<RoadmapType> m_targetRoadmap; ///< The set of growth targets.
 
     ///@}
 
@@ -257,6 +261,8 @@ BasicRRTStrategy(XMLNode& _node) : MPStrategyMethod<MPTraits>(_node) {
   m_disperseTrials = _node.Read("trial", m_numDirections > 1,
       m_disperseTrials, size_t(1), size_t(1000),
       "Number of trials to get a dispersed direction");
+  m_trackTargets = _node.Read("trackTargets", false, m_trackTargets,
+      "Flag to track expansion targets.");
 
   // Parse MP object labels
   m_samplerLabel = _node.Read("samplerLabel", true, "", "Sampler Label");
@@ -333,6 +339,11 @@ Initialize() {
                                     << "non-tree roadmap.";
   }
 
+  // If track targets is set to true, initialize the roadmap.
+  if(m_trackTargets) {
+    m_targetRoadmap = std::unique_ptr<RoadmapType>(new RoadmapType(this->GetTask()->GetRobot()));
+  }
+
   // Try to generate a start configuration if we have start constraints.
   const VID start = this->GenerateStart(m_samplerLabel);
   const bool noStart = start == INVALID_VID;
@@ -404,6 +415,11 @@ Iterate() {
   // Find growth target.
   const CfgType target = this->SelectTarget();
 
+  // If tracking targets, add it to the roadmap.
+  if(m_trackTargets) {
+    m_targetRoadmap->AddVertex(target);
+  }
+
   // Expand the tree from nearest neigbor to target.
   const VID newVID = this->ExpandTree(target);
   if(newVID == INVALID_VID)
@@ -415,6 +431,17 @@ Iterate() {
     ConnectTrees(newVID);
   else
     TryGoalExtension(newVID);
+}
+
+template <typename MPTraits>
+void
+BasicRRTStrategy<MPTraits>::
+Finalize() {
+  if(m_trackTargets){
+    const std::string base = this->GetBaseFilename();
+    m_targetRoadmap->Write(base + ".targets.map",this->GetEnvironment());
+  }
+  MPStrategyMethod<MPTraits>::Finalize();
 }
 
 /*--------------------------- Direction Helpers ------------------------------*/

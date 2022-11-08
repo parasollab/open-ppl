@@ -123,6 +123,7 @@ class MPStrategyMethod : public MPBaseObject<MPTraits> {
     std::vector<std::string> m_meLabels; ///< The list of map evaluators to use.
     size_t m_iterations{0};              ///< The number of executed iterations.
     bool m_writeOutput{true};            ///< Write output at the end?
+    bool m_writeFullCfgs{false};         ///< Write full cfg path?
     bool m_clearMap{false};              ///< Clear the roadmap(s) before run?
 
     ///@}
@@ -141,6 +142,8 @@ MPStrategyMethod(XMLNode& _node) : MPBaseObject<MPTraits>(_node) {
 
   m_writeOutput = _node.Read("writeOutput", false, m_writeOutput,
       "Enable writing of output files (roadmap, path, stats)?");
+  m_writeFullCfgs = _node.Read("writeFullCfgs",false,m_writeFullCfgs,
+      "Enable writing of the full cfg path.");
   m_clearMap = _node.Read("clearMap", false, m_clearMap,
       "Clear the roadmap(s) prior to executing the strategy?");
 
@@ -306,8 +309,13 @@ Finalize() {
 
   // Output path vertices. If you want all of the intermediates as well,
   // override this function in the derived class.
-  if(this->GetPath() and this->GetPath()->Size())
+  if(this->GetPath() and this->GetPath()->Size()) {
     ::WritePath(base + ".rdmp.path", this->GetPath()->Cfgs());
+  
+    if(m_writeFullCfgs) {
+      ::WritePath(base + ".path", this->GetPath()->FullCfgs(this->GetMPLibrary()));
+    }
+  }
 
   // Output stats.
   std::ofstream osStat(base + ".stat");

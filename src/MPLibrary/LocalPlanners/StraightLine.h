@@ -1,8 +1,6 @@
 #ifndef PMPL_STRAIGHT_LINE_H_
 #define PMPL_STRAIGHT_LINE_H_
 
-#include "ConfigurationSpace/GroupRoadmap.h"
-
 #include "LocalPlannerMethod.h"
 #include "GroupLPOutput.h"
 #include "LPOutput.h"
@@ -24,7 +22,7 @@
 /// @ingroup LocalPlanners
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
-class StraightLine : public LocalPlannerMethod<MPTraits> {
+class StraightLine : virtual public LocalPlannerMethod<MPTraits> {
 
   public:
 
@@ -338,7 +336,7 @@ IsConnected(const GroupCfgType& _c1, const GroupCfgType& _c2, GroupCfgType& _col
   _lpOutput->m_edge.first.SetWeight(distance);
   _lpOutput->m_edge.second.SetWeight(distance);
   _lpOutput->SetIndividualEdges(_robotIndexes);
-  _lpOutput->SetActiveRobots(_robotIndexes);
+  _lpOutput->SetFormation(_robotIndexes);
 
   if(connected)
     _lpOutput->AddIntermediatesToWeights(this->m_saveIntermediates);
@@ -421,6 +419,7 @@ IsConnectedSLSequential(
   CfgType currentStep = _c1,
           previousStep;
   double distance = 0;
+  double minClearance = numeric_limits<double>::max();
   for(int i = 1; i < numSteps; ++i) {
     // Update the current step.
     previousStep = currentStep;
@@ -467,8 +466,18 @@ IsConnectedSLSequential(
       //in case the validity is switched for toggle operations.
       const bool validity = vc->GetValidity();
       
-      if (inBounds)
-        valid = vc->IsValid(currentStep, id);
+      if (inBounds) {
+        if (this->m_useClearance) {
+          CDInfo cdInfo;
+          cdInfo.ResetVars();
+          cdInfo.m_retAllInfo = true;
+
+          valid = vc->IsValid(currentStep, cdInfo, id);
+          if(cdInfo.m_minDist < minClearance)
+            minClearance = cdInfo.m_minDist;
+        } else
+          valid = vc->IsValid(currentStep, id);
+      }
       
       if (!valid) {
         _col = currentStep;
@@ -492,8 +501,13 @@ IsConnectedSLSequential(
   auto& edge1 = _lpOutput->m_edge.first,
       & edge2 = _lpOutput->m_edge.second;
 
-  edge1.SetWeight(edge1.GetWeight() + distance);
-  edge2.SetWeight(edge2.GetWeight() + distance);
+  if(this->m_useClearance) {
+    edge1.SetWeight(minClearance);
+    edge2.SetWeight(minClearance);
+  } else {
+    edge1.SetWeight(edge1.GetWeight() + distance);
+    edge2.SetWeight(edge2.GetWeight() + distance);
+  }
   edge1.SetTimeSteps(edge1.GetTimeSteps() + numSteps);
   edge2.SetTimeSteps(edge2.GetTimeSteps() + numSteps);
 
@@ -549,6 +563,7 @@ IsConnectedSLBinary(
   if(numSteps > 1)
     queue.emplace(0, numSteps);
 
+  double minClearance = numeric_limits<double>::max();
   while(!queue.empty()) {
     // Get the next interval to check.
     std::pair<int,int> interval = queue.front();
@@ -600,8 +615,18 @@ IsConnectedSLBinary(
       const bool validity = vc->GetValidity();
       
 
-      if (inBounds)
-        valid = vc->IsValid(midCfg, id);
+      if (inBounds) {
+        if (this->m_useClearance) {
+          CDInfo cdInfo;
+          cdInfo.ResetVars();
+          cdInfo.m_retAllInfo = true;
+
+          valid = vc->IsValid(midCfg, cdInfo, id);
+          if(cdInfo.m_minDist < minClearance)
+            minClearance = cdInfo.m_minDist;
+        } else
+          valid = vc->IsValid(midCfg, id);
+      }
       
       if (!valid) {
         _col = midCfg;
@@ -640,8 +665,13 @@ IsConnectedSLBinary(
   auto& edge1 = _lpOutput->m_edge.first,
       & edge2 = _lpOutput->m_edge.second;
 
-  edge1.SetWeight(edge1.GetWeight() + distance);
-  edge2.SetWeight(edge2.GetWeight() + distance);
+  if(this->m_useClearance) {
+    edge1.SetWeight(minClearance);
+    edge2.SetWeight(minClearance);
+  } else {
+    edge1.SetWeight(edge1.GetWeight() + distance);
+    edge2.SetWeight(edge2.GetWeight() + distance);
+  }
   edge1.SetTimeSteps(edge1.GetTimeSteps() + numSteps);
   edge2.SetTimeSteps(edge2.GetTimeSteps() + numSteps);
 

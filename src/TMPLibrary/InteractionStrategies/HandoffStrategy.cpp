@@ -261,10 +261,10 @@ GenerateInitialState(Interaction* _interaction, const State& _previous, const si
       auto rm = solution->GetGroupRoadmap(group);
       // Check formation
 
-      GroupCfg cfg(rm);
+      GroupCfgType cfg(rm);
 
       if(!m_physicalDemo) {
-        std::vector<GroupCfg> samples;
+        std::vector<GroupCfgType> samples;
         sampler->Sample(1,1,boundaryMap,std::back_inserter(samples));
         if(samples.empty())
           break;
@@ -382,7 +382,7 @@ GenerateInitialState(Interaction* _interaction, const State& _previous, const si
       // Check formation
       
 
-      std::vector<GroupCfg> samples;
+      std::vector<GroupCfgType> samples;
       sampler->Sample(1,1,boundaryMap,std::back_inserter(samples));
       if(samples.empty())
         break;
@@ -412,7 +412,7 @@ GenerateInitialState(Interaction* _interaction, const State& _previous, const si
     for(auto group : receivers) {
       solution->AddRobotGroup(group);
       auto rm = solution->GetGroupRoadmap(group);
-      GroupCfg gcfg(rm);
+      GroupCfgType gcfg(rm);
 
       for(auto robot : group->GetRobots()) {
        auto cfg = ComputeManipulatorCfg(robot,eeFrames[robot]);
@@ -543,7 +543,7 @@ GenerateTransitionState(Interaction* _interaction, const State& _previous, const
     for(auto kv : _previous) {
       auto group = kv.first;
       auto grm = _solution->GetGroupRoadmap(group);
-      GroupCfg gcfg(grm);
+      GroupCfgType gcfg(grm);
       for(auto robot : group->GetRobots()) {
         Cfg cfg(robot);
         if(robot->GetMultiBody()->IsPassive())

@@ -15,14 +15,15 @@ class SMART : public TaskEvaluatorMethod {
     ///@name Local Types
     ///@{
 
-    typedef GroupLocalPlan<Cfg>                       GroupLocalPlanType;
-    typedef GroupRoadmap<GroupCfg,GroupLocalPlanType> GroupRoadmapType;
+    typedef TMPBaseObject::GroupCfgType               GroupCfgType;
+    typedef TMPBaseObject::GroupLocalPlanType         GroupLocalPlanType;
+    typedef TMPBaseObject::GroupRoadmapType           GroupRoadmapType;
     typedef size_t                                    VID;
 
     // Robot* is the object, size_t is the vid in the single object mode graph
     typedef std::map<Robot*,size_t> Mode;
 
-    typedef std::map<GroupRoadmapType*,GroupCfg> Direction;
+    typedef std::map<GroupRoadmapType*,GroupCfgType> Direction;
 
     struct Vertex {
       std::vector<std::pair<GroupRoadmapType*,VID>> cfgs;

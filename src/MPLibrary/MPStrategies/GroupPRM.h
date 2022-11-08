@@ -197,7 +197,7 @@ Sample() {
       bool match = false;
       for(const auto& c : iter->GetPathConstraints()) {
         pathConstraintMap[c->GetRobot()] = c->GetBoundary();
-	match = true;
+	      match = true;
       }
       if(!match) {
         pathConstraintMap[iter->GetRobot()] = boundary;

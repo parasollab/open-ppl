@@ -20,7 +20,9 @@ class InteractionStrategyMethod : public TMPBaseObject {
     typedef MPSolutionType<MPTraits<Cfg,DefaultWeight<Cfg>>> MPSolution;
     typedef PathType<MPTraits<Cfg,DefaultWeight<Cfg>>>       Path;
     typedef GroupPath<MPTraits<Cfg,DefaultWeight<Cfg>>>      GroupPathType;
-    typedef GroupLocalPlan<Cfg>                              GroupWeightType;
+    typedef TMPBaseObject::GroupCfgType                      GroupCfgType;
+    typedef TMPBaseObject::GroupLocalPlanType                GroupWeightType;
+    typedef TMPBaseObject::GroupRoadmapType                  GroupRoadmapType;
     typedef std::map<Robot*, const Boundary*> BoundaryMap;
 
 

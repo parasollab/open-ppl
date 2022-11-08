@@ -163,6 +163,12 @@ inline
 bool
 Range<T>::
 Contains(const U& _val, const double _tolerance) const noexcept {
+  // James: Tolerance is causing issues with abs compilation.
+  // There is also an imbalance with the amount of tolerance at either end of the 
+  // range with this implementation.
+  // An alternative is to just offer tolerance as a constant amount to extend the
+  // range in either direction "min - _tolernace, max  + _tolerance".
+
   //return (min - std::abs(min) * _tolerance) <= _val
   //   and _val <= (max + std::abs(max) * _tolerance);
 

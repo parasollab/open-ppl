@@ -18,6 +18,7 @@ class GroupDecoupledStrategy : public GroupStrategyMethod<MPTraits> {
     ///@{
 
     typedef typename MPTraits::CfgType          CfgType;
+    typedef typename MPTraits::GroupCfgType     GroupCfgType;
     typedef typename MPTraits::WeightType       WeightType;
     typedef typename MPTraits::RoadmapType      RoadmapType;
     typedef typename MPTraits::GroupWeightType  GroupWeightType;
@@ -118,9 +119,9 @@ Iterate() {
 
     this->GetMPLibrary()->SetTask(&task);
     auto s = this->GetMPStrategy(strategy);
-    s->EnableOutputFiles(false);
+    //s->EnableOutputFiles(false);
     (*s)();
-    s->EnableOutputFiles(true);
+    //s->EnableOutputFiles(true);
   }
 
   // Restore the group task.
@@ -147,6 +148,7 @@ Finalize() {
   // Collect the full cfg paths for each robot.
   size_t longestPath = 0;
   std::vector<std::vector<VID>> paths;
+  std::vector<std::vector<Cfg>> cfgPaths;
   paths.reserve(groupTask->Size());
   size_t i = 0;
   for(auto& task : *groupTask) {
@@ -175,8 +177,9 @@ Finalize() {
     if(path and path->Size()) {
       ::WritePath(base +"."+ robot->GetLabel() + ".rdmp.path", path->Cfgs());
       // FullCfgsWithWait: Used for Safe Interval Path Planning
-      ::WritePath(base +"."+ robot->GetLabel()  + ".path",
-        path->FullCfgsWithWait(this->GetMPLibrary()));
+      auto fullCfgs = path->FullCfgsWithWait(this->GetMPLibrary());
+      ::WritePath(base +"."+ robot->GetLabel()  + ".path",fullCfgs);
+      cfgPaths.push_back(fullCfgs);
     }
     ++i;
   }
@@ -196,7 +199,7 @@ Finalize() {
       std::cout << "Creating group path vertex " << i << std::endl;
 
     // Add the next node to the group map.
-    GroupCfg cfg(groupRoadmap);
+    GroupCfgType cfg(groupRoadmap);
     for(size_t j = 0; j < numRobots; ++j) {
       const VID vid = i >= paths[j].size() ? paths[j].back() : paths[j][i];
       if(this->m_debug)
@@ -252,7 +255,29 @@ Finalize() {
   groupPath->Clear();
   *groupPath += groupPathVIDs;
 
+  // Put together full cfgs path
+  std::vector<GroupCfgType> groupCfgs;
+
+  GroupCfgType cfg(groupRoadmap);
+  size_t max = 0; 
+  for(auto& path : cfgPaths) {
+    max = std::max(path.size(),max);
+  }
+
+  for(size_t i = 0; i < max; i++) {
+    for(auto& path : cfgPaths) {
+      const size_t index = i < path.size() ? i : path.size() - 1;
+      auto c = path[index];
+      cfg.SetRobotCfg(c.GetRobot(),std::move(c));
+    }
+    groupCfgs.push_back(cfg);
+  } 
+
   GroupStrategyMethod<MPTraits>::Finalize();
+#ifdef GROUP_MAP
+  const std::string base = this->GetBaseFilename();
+    ::WritePath(base + ".path", groupCfgs);
+#endif
 }
 
 /*----------------------------------------------------------------------------*/

@@ -189,6 +189,10 @@ class LazyQuery : virtual public QueryMethod<MPTraits> {
     /// Lazy-invalidated edges.
     std::unordered_map<RoadmapType*, EdgeSet> m_invalidEdges;
 
+    /// Stuff for sample checking for guiding spaces things
+    bool m_trackVerified{false};
+    std::unique_ptr<RoadmapType> m_verifiedRoadmap;
+    std::unique_ptr<RoadmapType> m_validRoadmap;
     ///@}
 
 };
@@ -221,6 +225,9 @@ LazyQuery(XMLNode& _node) : MapEvaluatorMethod<MPTraits>(_node), QueryMethod<MPT
       "Gaussian d value for node enhancement");
   m_enhanceDmLabel = _node.Read("enhanceDmLabel", m_numEnhance, "",
       "Distance metric method for generating enhancement nodes.");
+
+  m_trackVerified = _node.Read("trackVerified",false,m_trackVerified,
+      "Flag indicating if all verified vertices should be tracked.");
 
   for(auto& child : _node) {
     if(child.Name() == "Resolution")
@@ -271,6 +278,11 @@ Initialize() {
   m_edges.clear();
   m_invalidVertices.clear();
   m_invalidEdges.clear();
+
+  if(m_trackVerified) {
+    m_verifiedRoadmap = std::unique_ptr<RoadmapType>(new RoadmapType(this->GetTask()->GetRobot()));
+    m_validRoadmap = std::unique_ptr<RoadmapType>(new RoadmapType(this->GetTask()->GetRobot()));
+  }
 }
 
 /*--------------------------- QueryMethod Overrides --------------------------*/
@@ -310,8 +322,17 @@ LazyQuery<MPTraits>::
 PerformSubQuery(const VID _start, const VIDSet& _goals) {
   // Extract paths and validate them until there are no more left to try.
   while(QueryMethod<MPTraits>::PerformSubQuery(_start, _goals)) {
-    if(ValidatePath())
+    if(ValidatePath()) {
+
+      if(m_trackVerified) {
+        const std::string base = this->GetBaseFilename();
+        m_verifiedRoadmap->Write(base + ".verification.map",
+            this->GetEnvironment());
+        m_verifiedRoadmap->Write(base + ".valid.map",
+            this->GetEnvironment());
+      }
       return true;
+    }
   }
 
   // There are no valid paths, enhance and return false.
@@ -375,6 +396,7 @@ ValidatePath() {
 
   if(this->m_debug)
     std::cout << "\tPath is valid." << std::endl;
+
   return true;
 }
 
@@ -401,7 +423,15 @@ PruneInvalidVertices() {
       continue;
 
     // Validate cfg. Move on to the next if it is valid.
-    if(vc->IsValid(cfg, "LazyQuery::ValidatePath"))
+    auto valid = vc->IsValid(cfg, "LazyQuery::ValidatePath");
+
+    // If tracking which vertices have been verified, add to roadmap.
+    if(m_trackVerified)
+      m_verifiedRoadmap->AddVertex(cfg);
+    if(m_trackVerified and valid)
+      m_validRoadmap->AddVertex(cfg);
+
+    if(valid)
       continue;
 
     // If we're here, the cfg is invalid.

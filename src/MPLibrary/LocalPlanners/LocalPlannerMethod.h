@@ -155,6 +155,7 @@ class LocalPlannerMethod : public MPBaseObject<MPTraits> {
     ///@{
 
     bool m_saveIntermediates{false}; ///< Save the intermediates in the roadmap?
+    bool m_useClearance{false};
 
     ///@}
 };
@@ -173,6 +174,7 @@ LocalPlannerMethod<MPTraits>::
 LocalPlannerMethod(XMLNode& _node) : MPBaseObject<MPTraits>(_node) {
   m_saveIntermediates = _node.Read("saveIntermediates", false,
       m_saveIntermediates, "Save intermediate nodes");
+  m_useClearance = _node.Read("useClearance", false, m_useClearance, "Use clearance as edge weights");
 }
 
 /*------------------------- MPBaseObject Overrides ---------------------------*/

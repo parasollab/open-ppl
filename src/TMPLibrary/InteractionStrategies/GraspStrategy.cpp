@@ -224,17 +224,17 @@ operator()(Interaction* _interaction, State& _start) {
     }
 
     // Setup group cfgs
-    GroupCfg objGcfg(objGrm);
+    GroupCfgType objGcfg(objGrm);
     for(auto kv : objectPoses) {
       objGcfg.SetRobotCfg(kv.first,std::move(kv.second));
     }
 
-    GroupCfg pregrasp(grm);
+    GroupCfgType pregrasp(grm);
     for(auto kv : pregraspCfgs) {
       pregrasp.SetRobotCfg(kv.first,std::move(kv.second));
     }
 
-    GroupCfg grasp(grm);
+    GroupCfgType grasp(grm);
     for(auto kv : graspCfgs) {
       grasp.SetRobotCfg(kv.first,std::move(kv.second));
     }
@@ -384,7 +384,7 @@ operator()(Interaction* _interaction, State& _start) {
       break;
     }
 
-    GroupCfg gcfg(rm);
+    GroupCfgType gcfg(rm);
     gcfg.GetRandomGroupCfg(constraintMap[active]->GetBoundary());
     auto vid = rm->AddVertex(gcfg);
 

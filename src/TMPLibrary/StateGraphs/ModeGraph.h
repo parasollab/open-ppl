@@ -41,8 +41,9 @@ class ModeGraph : public StateGraph {
     typedef std::pair<Action*,bool>                              ReversibleAction;
     typedef Hypergraph<Mode*,ReversibleAction>                   ModeHypergraph;
     typedef size_t                                               VID;
-    typedef GroupLocalPlan<Cfg>                                  GroupLocalPlanType;
-    typedef GroupRoadmap<GroupCfg,GroupLocalPlanType>            GroupRoadmapType;
+    typedef TMPBaseObject::GroupCfgType                          GroupCfgType;
+    typedef TMPBaseObject::GroupLocalPlanType                    GroupLocalPlanType;
+    typedef TMPBaseObject::GroupRoadmapType                      GroupRoadmapType;
     typedef GroupPath<MPTraits<Cfg,DefaultWeight<Cfg>>>          GroupPathType;
     typedef PathType<MPTraits<Cfg,DefaultWeight<Cfg>>>           Path;
     typedef MPSolutionType<MPTraits<Cfg,DefaultWeight<Cfg>>>     MPSolution;

@@ -73,11 +73,11 @@ struct GroupLPOutput {
 
   void AddIntermediatesToWeights(const bool _saveIntermediates);
 
-  void SetActiveRobots(const std::vector<size_t>& _activeRobots);
+  void SetFormation(const std::vector<size_t>& _formation);
 
-  void SetIndividualEdges(const std::vector<size_t>& _activeRobots);
+  void SetIndividualEdges(const std::vector<size_t>& _formation);
 
-  std::vector<size_t> GetActiveRobots() {return m_edge.first.GetActiveRobots();}
+  std::vector<size_t> GetFormation() {return m_edge.first.GetFormation();}
 
   void SetSkipEdge();
 
@@ -161,16 +161,16 @@ AddIntermediatesToWeights(const bool _saveIntermediates) {
 template <typename MPTraits>
 void
 GroupLPOutput<MPTraits>::
-SetActiveRobots(const std::vector<size_t>& _activeRobots) {
-  m_edge.first.SetActiveRobots(_activeRobots);
-  m_edge.second.SetActiveRobots(_activeRobots);
+SetFormation(const std::vector<size_t>& _formation) {
+  m_edge.first.SetFormation(_formation);
+  m_edge.second.SetFormation(_formation);
 }
 
 
 template <typename MPTraits>
 void
 GroupLPOutput<MPTraits>::
-SetIndividualEdges(const std::vector<size_t>& _activeRobots) {
+SetIndividualEdges(const std::vector<size_t>& _formation) {
   /// @todo We need to preserve the intermediates.
   /// @todo This is not a correct edge for each individual robot - they will not
   ///       all have the same weight. This needs to be tracked separately.
@@ -182,16 +182,16 @@ SetIndividualEdges(const std::vector<size_t>& _activeRobots) {
   const std::string label = m_edge.first.GetLPLabel();
   const double weight = m_edge.first.GetWeight();
 
-  // If there are no active robots, then we need to set the individual edges for
-  // all of them.
-  if(_activeRobots.empty()) {
+  // If there are no robots in the formation, then we need to set the individual
+  // edges for all of them.
+  if(_formation.empty()) {
     const size_t numRobots = m_groupRoadmap->GetGroup()->Size();
     for(size_t i = 0; i < numRobots; ++i) {
       m_edge.first.SetEdge(i, IndividualEdge(label, weight));
       m_edge.second.SetEdge(i, IndividualEdge(label, weight));
     }
   }
-  else for(const size_t robotIndex : _activeRobots) {
+  else for(const size_t robotIndex : _formation) {
     m_edge.first.SetEdge(robotIndex, IndividualEdge(label, weight));
     m_edge.second.SetEdge(robotIndex, IndividualEdge(label, weight));
   }

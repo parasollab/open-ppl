@@ -9,6 +9,8 @@
 #include "Behaviors/Agents/Coordinator.h"
 #include "Testing/MPLibrary/MPLibraryTests.h"
 #include "Testing/TMPLibrary/TMPLibraryTests.h"
+#include "Testing/Geometry/GeometryTests.h"
+#include "Testing/Behaviors/BehaviorsTests.h"
 #include "TMPLibrary/Solution/Plan.h"
 #include "Testing/MPProblem/MPProblemTests.h"
 #include "MPProblem/MPTask.h"
@@ -26,14 +28,21 @@ main(int _argc, char** _argv) {
                                   << "for double-types, which is required for "
                                   << "pmpl to work properly.";
 
+
+  // add -g for geometry tests
   if(_argc != 3 || !(std::string(_argv[1]) == "-u" || std::string(_argv[1]) == "-s"))
     throw ParseException(WHERE) << "Incorrect usage. Usage: -u/s options.xml";
 
   // Get the XML file name from the command line.
   std::string xmlFile = _argv[2];
 
+  GeometryTests* geometry = new GeometryTests();
+
   // Parse the Problem node into an MPProblem object.
   MPProblemTests* problem = new MPProblemTests(xmlFile);
+
+  // Create an object to test the Behaviors
+  BehaviorsTests* behaviors = new BehaviorsTests(problem, xmlFile);
 
   // Parse the Library node into an TMPLibrary object.
   TMPLibraryTests* ppl = new TMPLibraryTests(xmlFile);
@@ -104,7 +113,7 @@ main(int _argc, char** _argv) {
   // Also solve the group task(s).
 	std::vector<std::shared_ptr<GroupTask>> groupTasks;
   if(!problem->GetRobotGroups().empty()) {
-    for(auto& robotGroup : problem->GetRobotGroups()) 
+    for(auto& robotGroup : problem->GetRobotGroups())
 	    for(auto groupTask : problem->GetTasks(robotGroup.get()))
 				groupTasks.push_back(groupTask);
   	ppl->Solve(problem, groupTasks);
@@ -114,7 +123,7 @@ main(int _argc, char** _argv) {
     throw RunTimeException(WHERE) << "No tasks were specified!";
 	*/
 
-  
+
 	for(const auto& decomps : problem->GetDecompositions()) {
 		auto a = decomps.first->GetAgent();
 		auto c = dynamic_cast<Coordinator*>(a);
@@ -133,12 +142,36 @@ main(int _argc, char** _argv) {
 	}
 
 
-  
   auto mpResults = mpl->RunTest();
-  std::cout << "PASSED: " << mpResults.first << std::endl << mpResults.second;
-  
- 
+  auto geomResults =  geometry->RunTest();
+  auto behavResults = behaviors->RunTest();
+
+  std::cout << "===============================================================" << std::endl;
+  std::cout << std::endl << std::endl << "PASSED: ";
+  if (geomResults.first)
+    std::cout << "TRUE" << std::endl;
+  else
+    std::cout << "FALSE" << std::endl;
+  std::cout << geomResults.second;
+  std::cout << "===============================================================" << std::endl;
+  std::cout << std::endl << std::endl << "PASSED: ";
+  if (mpResults.first)
+    std::cout << "TRUE" << std::endl;
+  else
+    std::cout << "FALSE" << std::endl;
+  std::cout << mpResults.second;
+  std::cout << "===============================================================" << std::endl;
+  std::cout << std::endl << std::endl << "PASSED: ";
+  if (behavResults.first)
+    std::cout << "TRUE" << std::endl;
+  else
+    std::cout << "FALSE" << std::endl;
+  std::cout << behavResults.second;
+  std::cout << "===============================================================" << std::endl;
+
   // Release resources.
+  delete geometry;
+  delete behaviors;
   delete problem;
   delete ppl;
   delete mpl;

@@ -79,6 +79,10 @@ class ComposeCollision : public CollisionDetectionValidityMethod<MPTraits> {
     virtual bool IsValidImpl(GroupCfg& _cfg, CDInfo& _cdInfo,
         const std::string& _caller) override;
 
+    /// @todo
+    virtual bool IsValidImpl(GroupCfg& _cfg, Robot* _robot, std::vector<Robot*> _robots,
+        CDInfo& _cdInfo, const std::string& _caller) override;
+
     ///@}
     ///@name Internal State
     ///@{
@@ -315,6 +319,16 @@ IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo, const std::string& _caller) {
       throw RunTimeException(WHERE, "Unknown operator is stated.");
   }
   return false;
+}
+
+
+template <typename MPTraits>
+bool
+ComposeCollision<MPTraits>::
+IsValidImpl(GroupCfg& _cfg, Robot* _robot, std::vector<Robot*> _robots,
+    CDInfo& _cdInfo, const std::string& _caller) {
+
+    throw RunTimeException(WHERE) << "Not Implemented";
 }
 
 

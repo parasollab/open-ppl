@@ -619,7 +619,7 @@ PMPL_SRCS := \
   Behaviors/Controllers/DiffDriveController.cpp \
   ConfigurationSpace/Cfg.cpp \
   ConfigurationSpace/Formation.cpp \
-  ConfigurationSpace/GroupCfg.cpp \
+  ConfigurationSpace/ReachableVolumes.cpp \
   Geometry/GMSPolygon.cpp \
   Geometry/GMSPolyhedron.cpp \
   Geometry/Bodies/Body.cpp \
@@ -644,7 +644,6 @@ PMPL_SRCS := \
   MPLibrary/MapEvaluators/SIPPMethod.cpp \
   MPLibrary/MPTools/MeanCurvatureSkeleton3D.cpp \
   MPLibrary/MPTools/ReebGraphConstruction.cpp \
-  MPLibrary/MPTools/RegionKit.cpp \
   MPLibrary/MPTools/TetGenDecomposition.cpp \
   MPLibrary/ValidityCheckers/CollisionDetection/CDInfo.cpp \
   MPLibrary/ValidityCheckers/CollisionDetection/SpheresCollisionDetection.cpp \
@@ -670,6 +669,15 @@ PMPL_SRCS := \
   Simulator/BulletModel.cpp \
   Simulator/Conversions.cpp \
   Simulator/MicroSimulator.cpp \
+  Utilities/ClockClass.cpp \
+  Utilities/CountingStreamBuffer.cpp \
+  Utilities/IOUtils.cpp \
+  Utilities/MedialAxis2D.cpp \
+  Utilities/MetricUtils.cpp \
+  Utilities/MPUtils.cpp \
+  Utilities/SSSP.cpp \
+  Utilities/SSSHP.cpp \
+  Utilities/XMLNode.cpp \
   Workspace/GridOverlay.cpp \
   Workspace/WorkspaceDecomposition.cpp \
   Workspace/WorkspacePortal.cpp \

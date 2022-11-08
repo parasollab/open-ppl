@@ -491,7 +491,7 @@ FindConflicts(Node& _node, bool _getAll) {
 
   // Collect cfgs
   auto lib = this->GetMPLibrary();
-  std::map<SemanticTask*,std::vector<GroupCfg>> cfgPaths;
+  std::map<SemanticTask*,std::vector<GroupCfgType>> cfgPaths;
   for(auto kv : _node.solutionMap) {
     auto task = kv.first;
     auto path = kv.second;

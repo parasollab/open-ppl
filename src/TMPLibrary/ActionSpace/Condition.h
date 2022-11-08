@@ -17,8 +17,8 @@ class Condition : public TMPBaseObject {
     ///@name Local Types
     ///@{
 
-    typedef GroupLocalPlan<Cfg>                        GroupLocalPlanType;
-    typedef GroupRoadmap<GroupCfg,GroupLocalPlanType>  GroupRoadmapType;
+    typedef TMPBaseObject::GroupLocalPlanType          GroupLocalPlanType;
+    typedef TMPBaseObject::GroupRoadmapType            GroupRoadmapType;
     typedef size_t                                     VID;
     typedef std::unordered_map<RobotGroup*,
                      std::pair<GroupRoadmapType*,VID>> State;

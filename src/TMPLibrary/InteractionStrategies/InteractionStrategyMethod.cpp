@@ -519,7 +519,7 @@ SampleMotionConstraintsDependent(const std::vector<std::string>& _conditions,
     // }
     Boundary* Bounds = FirstRun ? boundary : handoffBounds;
     auto sampler = lib->GetSampler(m_smLabel);
-    std::vector<GroupCfg> samples;
+    std::vector<GroupCfgType> samples;
     // Sample configurations for the group in the boundary.
     sampler->Sample(m_numNodes,m_maxAttempts,Bounds,
                     std::back_inserter(samples));
@@ -684,7 +684,7 @@ SampleMotionConstraints(const std::vector<std::string>& _conditions,
 
     // Sample configurations for the group in the boundary.
     auto sampler = lib->GetSampler(m_smLabel);
-    std::vector<GroupCfg> samples;
+    std::vector<GroupCfgType> samples;
     sampler->Sample(m_numNodes,m_maxAttempts,boundary,
                     std::back_inserter(samples));
 
@@ -736,8 +736,7 @@ SetActiveFormations(std::vector<std::string> _conditions, MPSolution* _solution)
   auto prob = this->GetMPProblem();
  
   // Map of group roadmaps to active formations
-  std::unordered_map<GroupRoadmap<GroupCfg,GroupLocalPlan<Cfg>>*,
-                     std::vector<Formation*>> roadmapFormations;
+  std::unordered_map<GroupRoadmapType*,std::vector<Formation*>> roadmapFormations;
 
   for(auto label : _conditions) {
     // Make sure it's a formation condition.
@@ -789,7 +788,7 @@ SetActiveFormations(std::vector<std::string> _conditions, MPSolution* _solution)
 std::vector<Path*> 
 InteractionStrategyMethod::
 DecouplePath(MPSolution* _solution, GroupPathType* _groupPath) {
-  auto grm = _groupPath->GetRoadmap();
+  GroupRoadmapType* grm = _groupPath->GetRoadmap();
   auto group = grm->GetGroup();
   auto robots = group->GetRobots();
   auto lib = this->GetMPLibrary();
@@ -800,7 +799,7 @@ DecouplePath(MPSolution* _solution, GroupPathType* _groupPath) {
   for(auto& gcfg : gcfgs) {
     for(size_t i = 0; i < robots.size(); i++) {
       auto cfg = gcfg.GetRobotCfg(i);
-      auto rm = grm->GetRoadmap(i);
+      auto rm = grm->GetIndividualGraph(i);
       
       auto vid = rm->AddVertex(cfg);
       individualVIDs[cfg.GetRobot()].push_back(vid);
@@ -940,8 +939,8 @@ MoveStateToLocalSolution(Interaction* _interaction, State& _state) {
       grm->AddFormation(form,true);
     }
 
-    auto newGcfg = gcfg.SetGroupRoadmap(grm);
-    vid = grm->AddVertex(newGcfg);
+    gcfg.SetGroupRoadmap(grm);
+    vid = grm->AddVertex(gcfg);
 
     // Update values in the state
     kv.second = std::make_pair(grm,vid);

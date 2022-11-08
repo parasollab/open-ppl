@@ -20,12 +20,12 @@ build() {
   glDisable(GL_LIGHTING);
   glColor4fv(m_color);
 
-  auto& graph = m_skeleton->GetGraph();
+  // auto& graph = m_skeleton->GetGraph();
 
   // Draw each vertex.
   glPointSize(6);
   glBegin(GL_POINTS);
-  for(auto iter = graph.begin(); iter != graph.end(); ++iter) {
+  for(auto iter = m_skeleton->begin(); iter != m_skeleton->end(); ++iter) {
     const Point3d& point = iter->property();
     glVertex3dv(point);
   }
@@ -34,7 +34,7 @@ build() {
   // Draw each edge.
   glLineWidth(1.);
   glPointSize(3);
-  for(auto iter = graph.edges_begin(); iter != graph.edges_end(); ++iter) {
+  for(auto iter = m_skeleton->edges_begin(); iter != m_skeleton->edges_end(); ++iter) {
     const std::vector<Point3d>& path = iter->property();
     glBegin(GL_LINE_STRIP);
     for(const auto& point : path)

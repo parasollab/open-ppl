@@ -37,6 +37,9 @@ class AlwaysTrueValidity : virtual public ValidityCheckerMethod<MPTraits> {
     virtual bool IsValidImpl(GroupCfgType& _cfg, CDInfo& _cdInfo,
         const std::string& _caller) override;
 
+    virtual bool IsValidImpl(GroupCfgType& _cfg, Robot* _robot, std::vector<Robot*> _robots,
+        CDInfo& _cdInfo, const std::string& _caller) override;
+
     ///@}
 };
 
@@ -74,6 +77,18 @@ IsValidImpl(GroupCfgType& _cfg, CDInfo& _cdInfo, const std::string& _caller) {
     auto& cfg = _cfg.GetRobotCfg(i);
     cfg.SetLabel("Lazy",true);
   } 
+
+  return true;
+}
+
+template <typename MPTraits>
+bool
+AlwaysTrueValidity<MPTraits>::
+IsValidImpl(GroupCfgType& _cfg, Robot* _robot, std::vector<Robot*> _robots,
+  CDInfo& _cdInfo, const std::string& _caller) {
+
+  auto& cfg = _cfg.GetRobotCfg(_robot);
+  cfg.SetLabel("Lazy", true);
 
   return true;
 }

@@ -179,7 +179,7 @@ Extend(const GroupCfgType& _start, const GroupCfgType& _end,
   // Compute Local Plan between _start and _new
 
   auto lp = this->GetLocalPlanner(m_lpLabel);
-  GroupCfg col(this->GetGroupRoadmap());
+  GroupCfgType col(this->GetGroupRoadmap());
   auto env = this->GetMPProblem()->GetEnvironment();
 
   auto isConnected = lp->IsConnected(_start,_new,col,&_lp,

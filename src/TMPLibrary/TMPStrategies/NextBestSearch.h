@@ -22,8 +22,10 @@ class NextBestSearch : public TMPStrategyMethod {
     ///@{
 
     typedef size_t                                         VID;
-    typedef MPTraits<Cfg>::GroupRoadmapType                GroupRoadmapType;
-    typedef MPTraits<Cfg>::GroupPathType                   GroupPathType;
+    typedef TMPBaseObject::GroupCfgType                    GroupCfgType;
+    typedef TMPBaseObject::GroupLocalPlanType              GroupLocalPlanType;
+    typedef TMPBaseObject::GroupRoadmapType                GroupRoadmapType;
+    typedef GroupPath<MPTraits<Cfg>>                       GroupPathType;
     typedef std::pair<std::pair<size_t,size_t>,size_t>     Constraint;
     typedef CBSNode<SemanticTask,Constraint,GroupPathType> Node;
 
@@ -125,7 +127,7 @@ class NextBestSearch : public TMPStrategyMethod {
     typedef std::map<size_t,std::vector<Range<double>>> UnsafeVertexIntervals;
     typedef std::map<std::pair<size_t,size_t>,std::vector<Range<double>>> UnsafeEdgeIntervals;
 
-    std::vector<GroupCfg> m_conflicts;
+    std::vector<GroupCfgType> m_conflicts;
     std::vector<std::map<SemanticTask*,UnsafeVertexIntervals>> m_unsafeVertexIntervalMap;
     std::vector<std::map<SemanticTask*,UnsafeEdgeIntervals>> m_unsafeEdgeIntervalMap;
 

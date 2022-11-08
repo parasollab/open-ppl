@@ -22,9 +22,10 @@ class SimultaneousMultiArmEvaluator : public TaskEvaluatorMethod {
     typedef ObjectCentricModeGraph::SingleObjectModeGraph   SingleObjectModeGraph;
     typedef GraphType::VID                                  VID;
 
-    typedef GroupLocalPlan<Cfg>                             GroupLocalPlanType;
-    typedef GroupRoadmap<GroupCfg,GroupLocalPlanType>       GroupRoadmapType;
-    typedef GroupRoadmap<GroupCfg,GroupLocalPlanType>       TensorProductRoadmap;
+    typedef TMPBaseObject::GroupCfgType                     GroupCfgType;
+    typedef TMPBaseObject::GroupLocalPlanType               GroupLocalPlanType;
+    typedef TMPBaseObject::GroupRoadmapType                 GroupRoadmapType;
+    typedef GroupRoadmapType                                TensorProductRoadmap;
     typedef GroupPath<MPTraits<Cfg,DefaultWeight<Cfg>>>     GroupPathType;
     typedef GroupLPOutput<MPTraits<Cfg,DefaultWeight<Cfg>>> GroupLPOutputType;
     typedef std::unordered_map<std::string,Robot*>          RoleMap;
@@ -122,19 +123,19 @@ class SimultaneousMultiArmEvaluator : public TaskEvaluatorMethod {
     bool ConnectToExistingRoadmap(Interaction* _interaction, State& _state, State& _end, 
                                   bool _reverse, size_t _sourceMode, size_t _targetMode);
     
-    VID AddToRoadmap(GroupCfg _cfg);
+    VID AddToRoadmap(GroupCfgType _cfg);
 
-    VID CreateTensorProductVertex(const std::vector<GroupCfg>& _cfgs);
+    VID CreateTensorProductVertex(const std::vector<GroupCfgType>& _cfgs);
 
     TID Select(size_t _modeID, size_t _history, std::unordered_map<Robot*,size_t> _heuristic);
 
-    GroupCfg SampleVertex(size_t _modeID);
+    GroupCfgType SampleVertex(size_t _modeID);
 
     TID Extend(TID _qNear, size_t _history, std::unordered_map<Robot*,size_t> _heuristic);
 
-    TID ExtendTaskVertices(const TID& _source, const GroupCfg& _target, size_t _history);
+    TID ExtendTaskVertices(const TID& _source, const GroupCfgType& _target, size_t _history);
 
-    GroupCfg GetHeuristicDirection(size_t _mode, std::unordered_map<Robot*,size_t> _heuristic);
+    GroupCfgType GetHeuristicDirection(size_t _mode, std::unordered_map<Robot*,size_t> _heuristic);
 
     TID Rewire(TID _qNew, TID _qNear, size_t _history);
 
@@ -144,7 +145,7 @@ class SimultaneousMultiArmEvaluator : public TaskEvaluatorMethod {
 
     bool CheckForGoal(size_t _aid);
 
-    std::vector<GroupCfg> SplitTensorProductVertex(GroupCfg _cfg, size_t _modeID);
+    std::vector<GroupCfgType> SplitTensorProductVertex(GroupCfgType _cfg, size_t _modeID);
 
     size_t AddHistory(const ActionHistory& _history);
 

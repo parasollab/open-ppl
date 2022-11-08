@@ -10,11 +10,13 @@ class IndependentPaths : public InteractionStrategyMethod {
     ///@name Local Types
     ///@{
 
+    typedef TMPBaseObject::GroupCfgType                      GroupCfgType;
+    typedef TMPBaseObject::GroupLocalPlanType                GroupLocalPlanType;
+    typedef TMPBaseObject::GroupRoadmapType                  GroupRoadmapType;
     typedef InteractionStrategyMethod::State                 State;
 		typedef MPSolutionType<MPTraits<Cfg,DefaultWeight<Cfg>>> MPSolution;
     typedef PathType<MPTraits<Cfg,DefaultWeight<Cfg>>>       Path;
     typedef GroupPath<MPTraits<Cfg,DefaultWeight<Cfg>>>      GroupPathType;
-    typedef GroupLocalPlan<Cfg>                              GroupWeightType;
 
     ///@}
     ///@name Construction

@@ -132,7 +132,7 @@ CreateSMARTreeRoot() {
     auto rm = sg->GetGroupRoadmap(group);
 
     // Get vid from rm of initial cfg
-    GroupCfg gcfg(rm);
+    GroupCfgType gcfg(rm);
 
     for(auto robot : group->GetRobots()) {
       auto cfg = problem->GetInitialCfg(robot);
@@ -332,7 +332,7 @@ Extend(size_t _qNear, Direction _direction, size_t _modeID,
   }
 
   // Compute angle between vectors
-  auto computeAngle = [stats,this](GroupCfg& _cfg1, GroupCfg& _cfg2) {
+  auto computeAngle = [stats,this](GroupCfgType& _cfg1, GroupCfgType& _cfg2) {
     MethodTimer mt(stats,this->GetNameAndLabel() + "::Extend::ComputeAngle");
 
     if(_cfg1 == _cfg2)
@@ -403,7 +403,7 @@ Extend(size_t _qNear, Direction _direction, size_t _modeID,
       continue;
     }
 
-    GroupCfg empty(grm);
+    GroupCfgType empty(grm);
     for(auto robot : group->GetRobots()) {
       Cfg cfg(robot);
       for(size_t i = 0; i < cfg.DOF(); i++) {
@@ -669,7 +669,7 @@ ValidConnection(const Vertex& _source, const Vertex& _target) {
   auto problem = this->GetMPProblem();
   auto env = problem->GetEnvironment();
 
-  std::map<RobotGroup*,std::vector<GroupCfg>> localPlans;
+  std::map<RobotGroup*,std::vector<GroupCfgType>> localPlans;
   size_t maxTimestep = 0;
 
   for(auto kv : edges) {
@@ -1018,7 +1018,7 @@ CheckForGoal(size_t _qNew) {
   return true;
 }
 
-std::map<SMART::GroupRoadmapType*,GroupCfg>
+std::map<SMART::GroupRoadmapType*,SMART::GroupCfgType>
 SMART::
 GetRandomDirection(size_t _historyID) {
   auto plan = this->GetPlan();
@@ -1031,7 +1031,7 @@ GetRandomDirection(size_t _historyID) {
   auto aeState = m_actionExtendedGraph->GetVertex(*(m_historyVIDs[_historyID].begin()));
   auto illustrative = m_tensorProductRoadmap->GetVertex(aeState.vid);
 
-  std::map<GroupRoadmapType*,GroupCfg> random;
+  std::map<GroupRoadmapType*,GroupCfgType> random;
   
   for(auto pair : illustrative.cfgs) {
     auto rm = pair.first;
@@ -1041,7 +1041,7 @@ GetRandomDirection(size_t _historyID) {
       rm->SetFormationActive(f);
     }
 
-    GroupCfg gcfg(rm);
+    GroupCfgType gcfg(rm);
     gcfg.GetRandomGroupCfg(env->GetBoundary());
     random[rm] = gcfg;
   }
@@ -1049,7 +1049,7 @@ GetRandomDirection(size_t _historyID) {
   return random;
 }
 
-std::map<SMART::GroupRoadmapType*,GroupCfg>
+std::map<SMART::GroupRoadmapType*,SMART::GroupCfgType>
 SMART::
 GetHeuristicDirection(size_t _vid, size_t _modeID, Mode _heuristic) {
   auto plan = this->GetPlan();
@@ -1063,7 +1063,7 @@ GetHeuristicDirection(size_t _vid, size_t _modeID, Mode _heuristic) {
 
   auto vertex = m_tensorProductRoadmap->GetVertex(_vid);
 
-  std::map<GroupRoadmapType*,GroupCfg> direction;
+  std::map<GroupRoadmapType*,GroupCfgType> direction;
 
   for(auto kv1 : mode) {
     auto object = kv1.first;

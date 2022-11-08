@@ -95,7 +95,7 @@ Initialize() {
     }
 
     // Create initial group cfgs
-    auto gcfg = GroupCfg(grm);
+    auto gcfg = GroupCfgType(grm);
 
     // Add initial cfg to individual roadmaps
     for(auto& r : group->GetRobots()) {
@@ -366,7 +366,7 @@ SampleNonActuatedCfgs(const State& _start, std::set<VID>& _startVIDs, std::set<V
         boundaryMap[iter->GetRobot()] = b;
       }
 
-      std::vector<GroupCfg> samples;
+      std::vector<GroupCfgType> samples;
       qSM->Sample(1,m_maxAttempts,boundaryMap,std::back_inserter(samples));
       
       if(samples.size() == 0)
@@ -374,7 +374,9 @@ SampleNonActuatedCfgs(const State& _start, std::set<VID>& _startVIDs, std::set<V
                                       << mode->robotGroup->GetLabel()
                                       << ".";
       // Add goal cfg to grounded hypergraph
-      auto gcfg = samples[0].SetGroupRoadmap(grm);
+      //auto gcfg = samples[0].SetGroupRoadmap(grm);
+      auto gcfg = samples[0];
+      gcfg.SetGroupRoadmap(grm);
       auto vid = grm->AddVertex(gcfg);
       auto gv = std::make_pair(grm,vid);
 
@@ -387,12 +389,13 @@ SampleNonActuatedCfgs(const State& _start, std::set<VID>& _startVIDs, std::set<V
 
     // Sample other cfgs and add to grounded hypergraph
     auto b = this->GetMPProblem()->GetEnvironment()->GetBoundary(); 
-    std::vector<GroupCfg> samples;
+    std::vector<GroupCfgType> samples;
     uaSM->Sample(m_numUnactuatedSamples,m_maxAttempts,b,std::back_inserter(samples));
     
     for(auto sample : samples) { 
       // Add sample to grounded hypergraph
-      auto gcfg = sample.SetGroupRoadmap(grm);
+      auto gcfg = sample;
+      gcfg.SetGroupRoadmap(grm);
       auto vid = grm->AddVertex(gcfg);
       auto gv = std::make_pair(grm,vid);
 
@@ -707,7 +710,8 @@ GenerateRoadmaps(const State& _start, std::set<VID>& _startVIDs, std::set<VID>& 
 
       // Add start cfg to grounded hypergraph
       auto state = _start.at(mode->robotGroup);
-      auto gcfg = state.first->GetVertex(state.second).SetGroupRoadmap(grm);
+      auto gcfg = state.first->GetVertex(state.second);
+      gcfg.SetGroupRoadmap(grm);
       auto vid = grm->AddVertex(gcfg);
       GroundedVertex gv = std::make_pair(grm,vid);
 
@@ -731,7 +735,7 @@ GenerateRoadmaps(const State& _start, std::set<VID>& _startVIDs, std::set<VID>& 
         boundaryMap[iter->GetRobot()] = b;
       }
 
-      std::vector<GroupCfg> samples;
+      std::vector<GroupCfgType> samples;
       qSM->Sample(1,m_maxAttempts,boundaryMap,std::back_inserter(samples));
       
       if(samples.size() == 0)
@@ -739,7 +743,9 @@ GenerateRoadmaps(const State& _start, std::set<VID>& _startVIDs, std::set<VID>& 
                                       << mode->robotGroup->GetLabel()
                                       << ".";
       // Add goal cfg to grounded hypergraph
-      auto gcfg = samples[0].SetGroupRoadmap(grm);
+      //auto gcfg = samples[0].SetGroupRoadmap(grm);
+      auto gcfg = samples[0];
+      gcfg.SetGroupRoadmap(grm);
       auto vid = grm->AddVertex(gcfg);
       auto gv = std::make_pair(grm,vid);
 
@@ -1534,8 +1540,8 @@ SaveInteractionPaths(Interaction* _interaction, State& _start, State& _end,
         grm = m_solution->GetGroupRoadmap(group);
       }
 
-      GroupCfg start(grm);
-      GroupCfg end(grm);
+      GroupCfgType start(grm);
+      GroupCfgType end(grm);
       double weight = 0;
       for(auto robot : group->GetRobots()) {
         start.SetRobotCfg(robot,std::move(startCfgs[robot]));
@@ -1602,7 +1608,7 @@ SaveInteractionPaths(Interaction* _interaction, State& _start, State& _end,
         }
 
         // Construct group cfg
-        GroupCfg newGcfg(localGrm);
+        GroupCfgType newGcfg(localGrm);
         for(size_t i = 0; i < group->GetRobots().size(); i++) {
           auto oldVID = oldGcfg.GetVID(i);
 
@@ -1628,7 +1634,7 @@ SaveInteractionPaths(Interaction* _interaction, State& _start, State& _end,
           auto oldEdge = eit->property();
 
           // Reconstruct edge in local group roadmap
-          GroupLocalPlan<Cfg> newEdge(localGrm);
+          GroupLocalPlanType newEdge(localGrm);
 
           newEdge.SetLPLabel(oldEdge.GetLPLabel());
 
@@ -1651,9 +1657,10 @@ SaveInteractionPaths(Interaction* _interaction, State& _start, State& _end,
           newEdge.SetWeight(oldEdge.GetWeight());
           newEdge.SetTimeSteps(oldEdge.GetTimeSteps());
           // Copy intermediates
-          std::vector<GroupCfg> intermediates;
+          std::vector<GroupCfgType> intermediates;
           for(auto cfg : oldEdge.GetIntermediates()) {
-            auto newCfg = cfg.SetGroupRoadmap(localGrm);
+            auto newCfg = cfg;
+            newCfg.SetGroupRoadmap(localGrm);
             intermediates.push_back(newCfg);
           }
           newEdge.SetIntermediates(intermediates);
@@ -1686,7 +1693,7 @@ SaveInteractionPaths(Interaction* _interaction, State& _start, State& _end,
       grm->SetFormationActive(f);
     }
 
-    GroupCfg gcfg(grm);
+    GroupCfgType gcfg(grm);
     for(auto robot : group->GetRobots()) {
       gcfg.SetRobotCfg(robot,std::move(startCfgs[robot]));
     }
@@ -1707,7 +1714,7 @@ SaveInteractionPaths(Interaction* _interaction, State& _start, State& _end,
       grm->SetFormationActive(f);
     }
 
-    GroupCfg gcfg(grm);
+    GroupCfgType gcfg(grm);
     for(auto robot : group->GetRobots()) {
       gcfg.SetRobotCfg(robot,std::move(endCfgs[robot]));
     }
@@ -1836,7 +1843,7 @@ SaveInteractionPaths(Interaction* _interaction, State& _start, State& _end,
     for(auto& kv : start) {
       auto group = kv.first;
       auto grm = m_solution->GetGroupRoadmap(group);
-      GroupCfg gcfg(grm);
+      GroupCfgType gcfg(grm);
 
       for(auto robot : group->GetRobots()) {
         auto cfg = startCfgs[robot];

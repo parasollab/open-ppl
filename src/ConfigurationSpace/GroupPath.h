@@ -109,9 +109,13 @@ class GroupPath final {
     /// Set the wait times at each vertex in path
     /// Used in Safe Interval Path Planning
     void SetWaitTimes(std::vector<size_t> _waitTimes);
-
+  
+    /// Get the wait times at each vertex in the path.
     std::vector<size_t> GetWaitTimes();
 
+    /// Get the (source,target) of the path at the input timestep.
+    /// @param _timestep The timestep to find the corresponding edge.
+    /// @return  The source and target of the corresponding edge.
     std::pair<size_t,size_t> GetEdgeAtTimestep(size_t _timestep);
 
     ///@}
@@ -121,6 +125,8 @@ class GroupPath final {
     ///@name Helpers
     ///@{
 
+    /// Enforce that both group paths are using the same roadmap.
+    /// @param _p The group path to check against.
     void AssertSameMap(const GroupPath& _p) const;
 
     ///@}
@@ -269,12 +275,13 @@ FullCfgs(MPLibrary* const _lib) const {
   for(auto it = m_vids.begin(); it + 1 < m_vids.end(); ++it) {
     const VID source = *it,
               target = *(it + 1);
-    const auto& edge = m_roadmap->GetEdge(source, target);
+    //const auto& edge = m_roadmap->GetEdge(source, target);
 
     // Insert intermediates between vertices. For assembly planning (skip edge):
     // don't reconstruct the edge when it's for a part that has been placed off
     // to the side, just use the two cfgs. This edge will just be (start, end).
-    if(!edge.SkipEdge()) {
+    //if(!edge.SkipEdge()) {
+    if(true) {
       auto e = m_roadmap->GetEdge(source,target);
       auto edge = !e.GetIntermediates().empty() ? e.GetIntermediates()
                                               : _lib->ReconstructEdge(m_roadmap, source, target);
@@ -282,7 +289,6 @@ FullCfgs(MPLibrary* const _lib) const {
       if(!edge.empty()) {
         // Only grab the intermediate cfgs.
         auto startIter = edge.begin();
-
         auto endIter = edge.end();
 
         out.insert(out.end(), startIter, endIter);
@@ -392,10 +398,14 @@ operator=(const GroupPath& _p) {
   if(m_roadmap != _p.m_roadmap)
     throw RunTimeException(WHERE) << "Can't assign path from another roadmap";
 
-  m_vids         = _p.m_vids;
-  m_waitingTimesteps = _p.m_waitingTimesteps;
-
   FlushCache();
+  m_vids         = _p.m_vids;
+  m_cfgs         = _p.m_cfgs;
+  m_cfgsCached   = _p.m_cfgsCached;
+  m_length       = _p.m_length;
+  m_lengthCached = _p.m_lengthCached;
+  m_timestepsCached = _p.m_timestepsCached;
+  m_waitingTimesteps = _p.m_waitingTimesteps;
 
   return *this;
 }

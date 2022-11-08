@@ -4,18 +4,30 @@
 #include "SamplerMethod.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-/// @ingroup Samplers
-/// @brief Obstacle-based sampling
-///
 /// OBPRM samples by pushing random configurations along a random ray until they
 /// change validity, keeping the best free configuration.
+///
+/// @todo Implement GetCenterOfMass function in the ChooseCenterOfMass class
+///
+/// @ingroup Samplers
+/// @brief Obstacle-based sampling
 ////////////////////////////////////////////////////////////////////////////////
-template <typename MPTraits>
-class ObstacleBasedSampler : public SamplerMethod<MPTraits> {
+
+template <class MPTraits>
+class ObstacleBasedSampler : virtual public SamplerMethod<MPTraits> {
 
   public:
 
+    ///@name Motion Planning Types
+    ///@{
+
     typedef typename MPTraits::CfgType CfgType;
+    typedef typename MPTraits::GroupCfgType GroupCfgType;
+    typedef std::map<Robot*, const Boundary*> BoundaryMap;
+
+    ///@}
+    ///@name Construction
+    ///@{
 
     ObstacleBasedSampler(string _vcLabel = "", string _dmLabel = "",
         int _free = 1, int _coll = 0, double _step = 0,
@@ -23,56 +35,168 @@ class ObstacleBasedSampler : public SamplerMethod<MPTraits> {
 
     ObstacleBasedSampler(XMLNode& _node);
 
-    void ParseXML(XMLNode& _node);
+    virtual ~ObstacleBasedSampler() = default;
 
-    virtual void Print(ostream& _os) const;
+    ///@}
+    ///@name MPBaseObject Overrides
+    ///@{
 
-    // Generates and adds shells to their containers
+    virtual void Print(ostream& _os) const override;
+
+    ///@}
+
+  protected:
+
+    // ///@name XML Parser
+    // ///@{
+
+    // void ParseXML(XMLNode& _node);
+
+    // ///@}
+    ///@name Helpers
+    ///@{
+    
+    /// Main Sampler
+    /// Sampler for a single robot in a single boundary
+    /// @param _cfg Configuration Type
+    /// @param _boundary Boundary of the environment
+    /// @param _result A vector that stores Free Configuration Space
+    /// @param _collision A vector that stores Collision Configuration Space
+    /// @return Success or Failure of sampling
+    virtual bool Sampler(CfgType& _cfg, const Boundary* const _boundary,
+        vector<CfgType>& _result, vector<CfgType>& _collision);
+    
+    /// Sampler for multiple robots in a single boundary
+    /// @param _cfg Configuration Type
+    /// @param _boundary Boundary of the environment
+    /// @param _result A vector that stores Free Group Configuration Space
+    /// @param _collision A vector that stores Collision Group Configuration Space
+    /// @return Success or Failure of sampling
+    virtual bool Sampler(GroupCfgType& _cfg, const Boundary* const _boundary,
+        vector<GroupCfgType>& _result, vector<GroupCfgType>& _invalid);
+
+    /// Sampler for multiple robots in each individual boundary
+    /// @param _cfg Configuration Type
+    /// @param _boundaryMap BoundaryMap of the environment
+    /// @param _result A vector that stores Free Group Configuration Space
+    /// @param _collision A vector that stores Collision Group Configuration Space
+    /// @return Success or Failure of sampling
+    virtual bool Sampler(GroupCfgType& _cfg, const BoundaryMap& _boundaryMap,
+        vector<GroupCfgType>& _result, vector<GroupCfgType>& _collision);
+
+    /// Generates and adds shells to their containers 
+    /// for a single robot in a single boundary case
+    /// @param _boundary Boundary of the environment
+    /// @param _cFree The configuration in the Free Configuration Space
+    /// @param _cColl The configuration in the Collision Configuration Space
+    /// @param _incr The amount of increments in the specified direction.
+    /// @param _result A vector that stores Free Configuration Space
+    /// @param _collision A vector that stores Collision Configuration Space
     void GenerateShells(const Boundary* const _boundary,
         CfgType& _cFree, CfgType& _cColl, CfgType& _incr,
         vector<CfgType>& _result, vector<CfgType>& _collision);
 
-    virtual bool Sampler(CfgType& _cfg, const Boundary* const _boundary,
-        vector<CfgType>& _result, vector<CfgType>& _collision);
+    /// Generates and adds shells to their containers
+    /// for multiple robots in a single boundary case
+    /// @param _boundary Boundary of the environment
+    /// @param _cFree The configuration in the Free Configuration Space
+    /// @param _cColl The configuration in the Collision Configuration Space
+    /// @param _incr The amount of increments in the specified direction.
+    /// @param _result A vector that stores Free Group Configuration Space
+    /// @param _collision A vector that stores Collision Group Configuration Space
+    void GenerateShells(const Boundary* const _boundary,
+        GroupCfgType& _cFree, GroupCfgType& _cColl, GroupCfgType& _incr,
+        vector<GroupCfgType>& _result, vector<GroupCfgType>& _collision);
+    
+    /// Generates and adds shells to their containers
+    /// for multiple robots in each individual boundary case
+    /// @param _boundary Boundary of the environment
+    /// @param _cFree The configuration in the Free Configuration Space
+    /// @param _cColl The configuration in the Collision Configuration Space
+    /// @param _incr The amount of increments in the specified direction.
+    /// @param _result A vector that stores Free Group Configuration Space
+    /// @param _collision A vector that stores Collision Group Configuration Space
+    // void GenerateShells(const Environment* const _environment,
+    void GenerateShells(const BoundaryMap& _boundaryMap,
+        GroupCfgType& _cFree, GroupCfgType& _cColl, GroupCfgType& _incr,
+        vector<GroupCfgType>& _result, vector<GroupCfgType>& _collision);
 
-    ////////////////////////////////////////////////////////////////
-    // The following was added after unification with WOBPRM code //
-    ////////////////////////////////////////////////////////////////
-
-    // Returns a CfgType at the center of mass of the MultiBody
+    /// Returns a CfgType at the center of mass of the MultiBody
+    /// @param _mBody Multibody of the obstacle
+    /// @return Configuration corresponding to the center of mass of the Multibody
     CfgType ChooseCenterOfMass(MultiBody* _mBody);
 
     // Returns a CfgType at a random vertex of the MultiBody
-    CfgType ChooseRandomVertex(MultiBody* _mBody, bool _isFreeBody);
+    /// @param _mBody Multibody of the obstacle
+    /// @return Configuration chosen from the Random Vertex method
+    CfgType ChooseRandomVertex(MultiBody* _mBody);
 
-    // Returns a point inside the triangle determined by the vectors
+    /// Returns a point inside the triangle determined by the vectors
+    /// @param _p The first 3d point of a triangle
+    /// @param _q The second 3d point of a triangle
+    /// @param _r The Third 3d point of a triangle
+    /// @return Configuration chosen from the Point On Triangle method
     Vector3d ChoosePointOnTriangle(Vector3d _p, Vector3d _q, Vector3d _r);
 
-    // Chooses a random point on a random triangle (weighted by area) in the
-    // MultiBody
-    CfgType ChooseRandomWeightedTriangle(MultiBody* _mBody,
-        bool _isFreeBody);
+    /// Chooses a random point on a random triangle (weighted by area) in the MultiBody
+    /// @param _mBody Multibody of the obstacle
+    /// @return Configuration chosen from the Random Weighted Triangle method
+    CfgType ChooseRandomWeightedTriangle(MultiBody* _mBody);
 
-    // Chooses a random point in a random triangle in the MultiBody
-    CfgType ChooseRandomTriangle(MultiBody* _mBody, bool _isFreeBody);
+    /// Chooses a random point in a random triangle in the MultiBody
+    /// @param _mBody Multibody of the obstacle
+    /// @return Configuration chosen from the Random Triangle method
+    CfgType ChooseRandomTriangle(MultiBody* _mBody);
 
-    // Chooses a random extreme vertex of the MultiBody
-    CfgType ChooseExtremeVertex(MultiBody* _mBody, bool _isFreeBody);
+    /// Chooses a random extreme vertex of the MultiBody
+    /// @param _mBody Multibody of the obstacle
+    /// @return Configuration chosen from the Extreme Vertex method
+    CfgType ChooseExtremeVertex(MultiBody* _mBody);
 
-    // Checks m_pointSelection and returns an appropriate CfgType
+    /// Checks m_pointSelection and returns an appropriate CfgType
+    /// @param _cfg Configuration of the sample
+    /// @return Configuration of the sample
     virtual CfgType ChooseASample(CfgType& _cfg);
+
+    /// Checks m_pointSelection and returns an appropriate GroupCfgType
+    /// @param _cfg Group configuration of the sample
+    /// @return Group configuration chosen from the Extreme Vertex method
+    virtual GroupCfgType ChooseASample(GroupCfgType& _cfg);
+
+    /// Call the various sample method other than cspace method
+    /// @return Configuration obtained according to the m_pointSelection
+    CfgType ChooseASampleOtherMethods();
+
+    /// Returns a CfgType with the coordinates specified in the vector and no rotation
+    /// @param _v Multibody of the obstacle
+    /// @return Configuration Type of the sample
+    CfgType GetCfgWithParams(const Vector3d& _v);
+
+    /// Checks if the groupCfg is in the boundary map
+    /// @param _groupCfg The group configuration needs to be checked
+    /// @param _boundaryMap The map that pairs each robot and corresponding boundary
+    /// @return true or false
+    bool GroupInBounds(GroupCfgType& _groupCfg, const BoundaryMap& _boundaryMap);
+
+    /// Checks if the groupCfg is in the boundary map
+    /// @param _groupCfg The group configuration needs to be checked
+    /// @param _boundary The single boundary of every robots
+    /// @return true or false
+    bool GroupInBounds(GroupCfgType& _groupCfg, const Boundary* const _boundary);
+    ///@}
 
   private:
 
-    // Returns a CfgType with the coordinates specified in the vector and no
-    // rotation
-    CfgType GetCfgWithParams(const Vector3d& _v);
+    ///@name Internal States
+    ///@{
+    
+    string m_vcLabel, m_dmLabel; ///< Validity checker method, distance metric method
+    int m_nShellsFree, m_nShellsColl; ///< Number of free and collision shells
+    double m_stepSize; ///< Step size along the random ray
+    bool m_useBBX; ///< Is the bounding box an obstacle?
+    string m_pointSelection; ///< Needed for the WOBPRM
 
-    string m_vcLabel, m_dmLabel; // Validity checker method, distance metric method
-    int m_nShellsFree, m_nShellsColl; // Number of free and collision shells
-    double m_stepSize; // Step size along the random ray
-    bool m_useBBX; // Is the bounding box an obstacle?
-    string m_pointSelection; // Needed for the WOBPRM
+    ///@}
 };
 
 /*------------------------------ Construction --------------------------------*/
@@ -86,7 +210,6 @@ ObstacleBasedSampler(string _vcLabel, string _dmLabel,
     m_pointSelection(_pointSelection) {
   this->SetName("ObstacleBasedSampler");
 }
-
 
 template <typename MPTraits>
 ObstacleBasedSampler<MPTraits>::
@@ -110,16 +233,17 @@ ObstacleBasedSampler(XMLNode& _node) : SamplerMethod<MPTraits>(_node) {
   // Check if the read point_selection is valid
   if(m_pointSelection != "cspace" && m_pointSelection != "cM" &&
       m_pointSelection != "rV" && m_pointSelection != "rT" &&
-      m_pointSelection != "rW" && m_pointSelection != "eV" &&
-      m_pointSelection != "rV_rT" && m_pointSelection != "rV_rW" &&
+      m_pointSelection != "wT" && m_pointSelection != "eV" &&
+      m_pointSelection != "rV_rT" && m_pointSelection != "rV_wT" &&
+      m_pointSelection != "cM_rV" &&
       m_pointSelection != "all")
     throw ParseException(_node.Where(),
         "Invalid point selection type '" + m_pointSelection + "'."
-        "Choices are: 'cspace', 'cM', 'rV', 'rT', 'rW', 'eV', 'rV_rT', 'rV_rW',"
+        "Choices are: 'cspace', 'cM', 'rV', 'rT', 'wT', 'eV', 'rV_rT', 'rV_wT', 'cM_rV'"
         " and 'all'.");
 }
 
-/*------------------------- MPBaseObject Overrides ---------------------------*/
+/*-------------------------- MPBaseObject Overrides --------------------------*/
 
 template <typename MPTraits>
 void
@@ -135,61 +259,32 @@ Print(ostream& _os) const {
   _os << "\tpointSelectionStrategy = " << m_pointSelection << endl;
 }
 
+/*-------------------------- Helpers --------------------------*/
 
-template <typename MPTraits>
-void
-ObstacleBasedSampler<MPTraits>::
-GenerateShells(const Boundary* const _boundary,
-    CfgType& _cFree, CfgType& _cColl, CfgType& _incr,
-    vector<CfgType>& _result, vector<CfgType>& _collision) {
-
-  string callee = this->GetNameAndLabel() + "::GenerateShells()";
-  auto vcm = this->GetValidityChecker(m_vcLabel);
-  if(this->m_debug)
-    cout << "nShellsColl = " << m_nShellsColl << endl;
-
-  // Add free shells
-  for(int i = 0; i < m_nShellsFree; i++) {
-    // If the shell is valid
-    if(_cFree.InBounds(_boundary) and vcm->IsValid(_cFree, callee))
-      _result.push_back(_cFree);
-    // Get next shell
-    _cFree += _incr;
-  }
-
-  // Reverse direction of _incr
-  _incr = -_incr;
-
-  // Add collision shells
-  for(int i = 0; i < m_nShellsColl; i++) {
-    // If the shell is valid
-    if(_cColl.InBounds(_boundary) and !vcm->IsValid(_cColl, callee))
-      _collision.push_back(_cColl);
-    // Get next shell
-    _cColl += _incr;
-  }
-}
-
-
+// Sampling Rules
 template <typename MPTraits>
 bool
 ObstacleBasedSampler<MPTraits>::
 Sampler(CfgType& _cfg, const Boundary* const _boundary,
     vector<CfgType>& _result, vector<CfgType>& _collision) {
+
+  // Call the environment
   Environment* env = this->GetEnvironment();
+  
   // If the step size is unreasonable, set it to the minimum
   if(m_stepSize <= 0.0)
     m_stepSize = min(env->GetPositionRes(), env->GetOrientationRes());
 
+  // Define a validity checker, a distance metric, and a task
   string callee = this->GetNameAndLabel() + "::Sampler()";
-  auto vcm = this->GetValidityChecker(m_vcLabel);
+  auto vc = this->GetValidityChecker(m_vcLabel);
   auto dm = this->GetDistanceMetric(m_dmLabel);
   auto robot = this->GetTask()->GetRobot();
 
-  // Old state
+  // Old state that is generated by point selection strategies
   CfgType c1 = ChooseASample(_cfg);
   bool c1BBox = c1.InBounds(_boundary);
-  bool c1Free = vcm->IsValid(c1, callee);
+  bool c1Free = vc->IsValid(c1, callee);
 
   // New state
   CfgType c2 = c1;
@@ -205,6 +300,7 @@ Sampler(CfgType& _cfg, const Boundary* const _boundary,
         Continuing with loop." << endl;
     return false;
   }
+
   // Loop until the new state is outside the bounds or the validity changes
   while(c2BBox && (c1Free == c2Free)) {
     // Copy new data to old state
@@ -214,52 +310,390 @@ Sampler(CfgType& _cfg, const Boundary* const _boundary,
     // Update new state
     c2 += r;
     c2BBox = c2.InBounds(_boundary);
-    c2Free = vcm->IsValid(c2, callee);
+    c2Free = vc->IsValid(c2, callee);
   }
-  // If new state is in BBox (there must be a validity change)
-  if(c2BBox) {
-    if(c1Free) { // Old state (c1) is free
-      // Reverse direction of r
-      r = -r;
-      // Process configurations
-      GenerateShells(_boundary, c1, c2, r, _result, _collision);
-      _collision.push_back(c2);
+
+  // Construct Shells and generate _collision and _result
+  // If we treat the bounding box as an obstacle
+  if (!m_useBBX) { 
+    // If the new state (c2) is in the bounding box
+    if (c2BBox) { 
+      // If the old state (c1) is  in the free C space
+      if (c1Free) { 
+        // Reverse direction of r
+        r = -r;
+        // Process configurations
+        GenerateShells(_boundary, c1, c2, r, _result, _collision);
+        // Add the new state (c2) to the collision vecter
+        _collision.push_back(c2);
+      }
+      // If the new state (c2) is in the free C space
+      else { 
+        // Process configurations
+        GenerateShells(_boundary, c2, c1, r, _result, _collision);
+        // Add the old state (c1) to the collision vecter
+        _collision.push_back(c1);
+      }
+      return true;
     }
-    else { // New state (c2) is free
-      // Process configurations
-      GenerateShells(_boundary, c2, c1, r, _result, _collision);
-      _collision.push_back(c1);
+  } else {
+    if (c1BBox) {
+      if (c1Free) { // If the old state (c1) is in the free C space
+        // Reverse direction of r
+        r = -r;
+        // Process configurations
+        GenerateShells(_boundary, c1, c2, r, _result, _collision);
+        // Add the new state (c2) to the collision vecter
+        _collision.push_back(c2);
+        return true;
+      }
     }
-    return true;
-  }
-  else if(m_useBBX && c1BBox && c1Free) {
-    // Reverse direction of r
-    r = -r;
-    // Process configurations
-    GenerateShells(_boundary, c1, c2, r, _result, _collision);
-    _collision.push_back(c2);
-    return true;
   }
   return false;
 }
 
-////////////////////////////////////////////////////////////////
-// The following was added after unification with WOBPRM code //
-// ////////////////////////////////////////////////////////////////
 
-// Returns a CfgType at the center of mass of the MultiBody
+template <typename MPTraits>
+bool
+ObstacleBasedSampler<MPTraits>::
+Sampler(GroupCfgType& _cfg, const Boundary* const _boundary,
+    vector<GroupCfgType>& _result, vector<GroupCfgType>& _collision) {
+
+  // Call the environment
+  Environment* env = this->GetEnvironment();
+
+  // If the step size is unreasonable, set it to the minimum
+  if(m_stepSize <= 0.0)
+    m_stepSize = min(env->GetPositionRes(), env->GetOrientationRes());
+
+  // Define a validity checker, a distance metric, and a groupRoadmap
+  string callee = this->GetNameAndLabel() + "::Sampler()";
+  auto vc = this->GetValidityChecker(m_vcLabel);
+  auto dm = this->GetDistanceMetric(m_dmLabel);
+  auto groupRoadmap = this->GetGroupRoadmap();
+
+  // Old state that is generated by point selection strategies
+  GroupCfgType c1 = ChooseASample(_cfg);
+  bool c1BBox = c1.InBounds(_boundary);
+  bool c1Free = vc->IsValid(c1, callee);
+
+  // New state
+  GroupCfgType c2 = c1;
+  bool c2BBox = c1BBox;
+  bool c2Free = c1Free;
+
+  // Create a random ray
+  GroupCfgType r(groupRoadmap);
+  // r.GetRandomRay(m_stepSize, dm);
+  for(size_t j = 0; j < r.GetNumRobots(); ++j) {
+    r.GetRobotCfg(j).GetRandomRay(m_stepSize, dm);
+      // for(size_t i = 0; i < r.GetRobotCfg(j).DOF(); ++i)
+          // r.GetRobotCfg(j)[i] = GRand();
+  }
+
+  // dm->ScaleCfg(m_stepSize, *this);
+
+
+  // Loop until the new state is outside the bounds or the validity changes
+  while(c2BBox && (c1Free == c2Free)) {
+    // Copy new data to old state
+    c1 = c2;
+    c1BBox = c2BBox;
+    c1Free = c2Free;
+    // Update new state
+    c2 += r;
+    c2BBox = GroupInBounds(c2, _boundary);
+    c2Free = vc->IsValid(c2, callee);
+  }
+
+  // Construct Shells and generate _collision and _result
+  // If we treat the bounding box as an obstacle
+  if (!m_useBBX) { 
+    // If the new state (c2) is in the bounding box
+    if (c2BBox) { 
+      // If the old state (c1) is  in the free C space
+      if (c1Free) { 
+        // Reverse direction of r
+        r -= r;
+        // Process configurations
+        GenerateShells(_boundary, c1, c2, r, _result, _collision);
+        // Add the new state (c2) to the collision vecter
+        _collision.push_back(c2);
+      }
+      // If the new state (c2) is in the free C space
+      else { 
+        // Process configurations
+        GenerateShells(_boundary, c2, c1, r, _result, _collision);
+        // Add the old state (c1) to the collision vecter
+        _collision.push_back(c1);
+      }
+      return true;
+    }
+  } else {
+    if (c1BBox) {
+      if (c1Free) { // If the old state (c1) is in the free C space
+        // Reverse direction of r
+        r -= r;
+        // Process configurations
+        GenerateShells(_boundary, c1, c2, r, _result, _collision);
+        // Add the new state (c2) to the collision vecter
+        _collision.push_back(c2);
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+
+template <typename MPTraits>
+bool
+ObstacleBasedSampler<MPTraits>::
+Sampler(GroupCfgType& _cfg, const BoundaryMap& _boundaryMap,
+    vector<GroupCfgType>& _result, vector<GroupCfgType>& _collision) {
+  
+  // Call the environment
+  Environment* env = this->GetEnvironment();
+
+  // If the step size is unreasonable, set it to the minimum
+  if(m_stepSize <= 0.0)
+    m_stepSize = min(env->GetPositionRes(), env->GetOrientationRes());
+
+  // Define a validity checker, a distance metric, and a groupRoadmap
+  string callee = this->GetNameAndLabel() + "::Sampler()";
+  auto vc = this->GetValidityChecker(m_vcLabel);
+  auto dm = this->GetDistanceMetric(m_dmLabel);
+  auto groupRoadmap = this->GetGroupRoadmap();
+  
+  // Old state that is generated by point selection strategies
+  GroupCfgType c1 = ChooseASample(_cfg);
+  bool c1BBox = c1.InBounds(env);
+  bool c1Free = vc->IsValid(c1, callee);
+
+  // New state
+  GroupCfgType c2 = c1;
+  bool c2BBox = c1BBox;
+  bool c2Free = c1Free;
+
+  // Create a random ray
+  GroupCfgType r(groupRoadmap);
+  // r.GetRandomRay(m_stepSize, dm);
+  for(size_t j = 0; j < r.GetNumRobots(); ++j) {
+    r.GetRobotCfg(j).GetRandomRay(m_stepSize, dm);
+      // for(size_t i = 0; i < r.GetRobotCfg(j).DOF(); ++i)
+          // r.GetRobotCfg(j)[i] = GRand();
+  }
+
+  // Loop until the new state is outside the bounds or the validity changes
+  while(c2BBox && (c1Free == c2Free)) {
+    // Copy new data to old state
+    c1 = c2;
+    c1BBox = c2BBox;
+    c1Free = c2Free;
+    // Update new state
+    c2 += r;
+    c2BBox = GroupInBounds(c2, _boundaryMap);
+    c2Free = vc->IsValid(c2, callee);
+  }
+
+  // Construct Shells and generate _collision and _result
+  // If we treat the bounding box as an obstacle
+  if (!m_useBBX) { 
+    // If the new state (c2) is in the bounding box
+    if (c2BBox) { 
+      // If the old state (c1) is  in the free C space
+      if (c1Free) { 
+        // Reverse direction of r
+        r -= r;
+        // Process configurations
+        GenerateShells(_boundaryMap, c1, c2, r, _result, _collision);
+        // Add the new state (c2) to the collision vecter
+        _collision.push_back(c2);
+      }
+      // If the new state (c2) is in the free C space
+      else { 
+        // Process configurations
+        GenerateShells(_boundaryMap, c2, c1, r, _result, _collision);
+        // Add the old state (c1) to the collision vecter
+        _collision.push_back(c1);
+      }
+      return true;
+    }
+  } else {
+    if (c1BBox) {
+      if (c1Free) { // If the old state (c1) is in the free C space
+        // Reverse direction of r
+        r -= r;
+        // Process configurations
+        GenerateShells(_boundaryMap, c1, c2, r, _result, _collision);
+        // Add the new state (c2) to the collision vecter
+        _collision.push_back(c2);
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+template <typename MPTraits>
+bool
+ObstacleBasedSampler<MPTraits>::
+GroupInBounds(GroupCfgType& _groupCfg, const BoundaryMap& _boundaryMap) {
+  auto groupTask = this->GetGroupTask();
+  for (auto task : *groupTask) {
+    auto robot = task.GetRobot();
+    CfgType cfg = _groupCfg.GetRobotCfg(robot);
+    auto boundary = _boundaryMap.at(robot);
+    if (!cfg.InBounds(boundary))
+      return false;
+  }
+  return true;
+}
+
+
+template <typename MPTraits>
+bool
+ObstacleBasedSampler<MPTraits>::
+GroupInBounds(GroupCfgType& _groupCfg, const Boundary* const _boundary) {
+  auto groupTask = this->GetGroupTask();
+  for (auto task : *groupTask) {
+    auto robot = task.GetRobot();
+    CfgType cfg = _groupCfg.GetRobotCfg(robot);
+    if (!cfg.InBounds(_boundary))
+      return false;
+  }
+  return true;
+}
+
+// Shell Generator
+template <typename MPTraits>
+void
+ObstacleBasedSampler<MPTraits>::
+GenerateShells(const Boundary* const _boundary,
+    CfgType& _cFree, CfgType& _cColl, CfgType& _incr,
+    vector<CfgType>& _result, vector<CfgType>& _collision) {
+
+  string callee = this->GetNameAndLabel() + "::GenerateShells()";
+
+  // Call a validity checker
+  auto vc = this->GetValidityChecker(m_vcLabel);
+  if(this->m_debug)
+    cout << "nShellsColl = " << m_nShellsColl << endl;
+
+  // Add "free" shells
+  for(int i = 0; i < m_nShellsFree; i++) {
+    // If the shell is valid (If it is in the free C space)
+    if(_cFree.InBounds(_boundary) and vc->IsValid(_cFree, callee))
+      _result.push_back(_cFree);  
+    // Get next shell
+    _cFree += _incr;
+  }
+
+  // Reverse direction of _incr
+  _incr = -_incr;
+
+  // Add "collision" shells
+  for(int i = 0; i < m_nShellsColl; i++) {
+    // If the shell is valid (If it is in the collision C space)
+    if(_cColl.InBounds(_boundary) and !vc->IsValid(_cColl, callee))
+      _collision.push_back(_cColl);
+    // Get next shell
+    _cColl += _incr;
+  }
+}
+
+template <typename MPTraits>
+void
+ObstacleBasedSampler<MPTraits>::
+GenerateShells(const Boundary* const _boundary,
+    GroupCfgType& _cFree, GroupCfgType& _cColl, GroupCfgType& _incr,
+    vector<GroupCfgType>& _result, vector<GroupCfgType>& _collision) {
+
+  string callee = this->GetNameAndLabel() + "::GenerateShells()";
+
+  // Call a validity checker
+  auto vc = this->GetValidityChecker(m_vcLabel);
+  if(this->m_debug)
+    cout << "nShellsColl = " << m_nShellsColl << endl;
+
+  // Add "free" shells
+  for(int i = 0; i < m_nShellsFree; i++) {
+    // If the shell is valid (If it is in the free C space)
+    if(GroupInBounds(_cFree, _boundary) and vc->IsValid(_cFree, callee))
+      _result.push_back(_cFree);  
+    // Get next shell
+    _cFree += _incr;
+  }
+
+  // Reverse direction of _incr
+  _incr -= _incr;
+
+  // Add "collision" shells
+  for(int i = 0; i < m_nShellsColl; i++) {
+    // If the shell is valid (If it is in the collision C space)
+    if(GroupInBounds(_cColl, _boundary) and !vc->IsValid(_cColl, callee))
+      _collision.push_back(_cColl);
+    // Get next shell
+    _cColl += _incr;
+  }
+}
+
+template <typename MPTraits>
+void
+ObstacleBasedSampler<MPTraits>::
+GenerateShells(const BoundaryMap& _boundaryMap,
+    GroupCfgType& _cFree, GroupCfgType& _cColl, GroupCfgType& _incr,
+    vector<GroupCfgType>& _result, vector<GroupCfgType>& _collision) {
+
+  string callee = this->GetNameAndLabel() + "::GenerateShells()";
+
+  // Call a validity checker
+  auto vc = this->GetValidityChecker(m_vcLabel);
+  if(this->m_debug)
+    cout << "nShellsColl = " << m_nShellsColl << endl;
+
+  // Add "free" shells
+  for(int i = 0; i < m_nShellsFree; i++) {
+    // If the shell is valid (If it is in the free C space)
+    if(GroupInBounds(_cFree, _boundaryMap) and vc->IsValid(_cFree, callee))
+    // if(_cFree.InBounds(_environment) and vc->IsValid(_cFree, callee))
+      _result.push_back(_cFree);  
+    // Get next shell
+    _cFree += _incr;
+  }
+
+  // Reverse direction of _incr
+  _incr -= _incr;
+
+  // Add "collision" shells
+  for(int i = 0; i < m_nShellsColl; i++) {
+    // If the shell is valid (If it is in the collision C space)
+    if(GroupInBounds(_cColl, _boundaryMap) and vc->IsValid(_cColl, callee))
+    // if(_cColl.InBounds(_environment) and !vc->IsValid(_cColl, callee))
+      _collision.push_back(_cColl);
+    // Get next shell
+    _cColl += _incr;
+  }
+}
+
+
+// Returns a CfgType of the center of mass
 template <typename MPTraits>
 typename ObstacleBasedSampler<MPTraits>::CfgType
 ObstacleBasedSampler<MPTraits>::
 ChooseCenterOfMass(MultiBody* _mBody) {
-  return GetCfgWithParams(_mBody->GetCenterOfMass());
+  // return GetCfgWithParams(_mBody->poly());
+  size_t body = LRand() % _mBody->GetNumBodies();
+  const GMSPolyhedron& polyhedron = _mBody->GetBody(body)->GetWorldPolyhedron();
+  Vector3d x = polyhedron.GetCentroid();
+  return GetCfgWithParams(x);
 }
 
 // Returns a CfgType at a random vertex of the MultiBody
 template <typename MPTraits>
 typename ObstacleBasedSampler<MPTraits>::CfgType
 ObstacleBasedSampler<MPTraits>::
-ChooseRandomVertex(MultiBody* _mBody, bool _isFreeBody) {
+ChooseRandomVertex(MultiBody* _mBody) {
   size_t body = LRand() % _mBody->GetNumBodies();
   const GMSPolyhedron& polyhedron = _mBody->GetBody(body)->GetWorldPolyhedron();
   Vector3d x = polyhedron.GetVertexList()[(int)(DRand()*polyhedron.GetVertexList().size())];
@@ -287,7 +721,7 @@ ChoosePointOnTriangle(Vector3d _p, Vector3d _q, Vector3d _r) {
 template <typename MPTraits>
 typename ObstacleBasedSampler<MPTraits>::CfgType
 ObstacleBasedSampler<MPTraits>::
-ChooseRandomWeightedTriangle(MultiBody* _mBody, bool _isFreeBody) {
+ChooseRandomWeightedTriangle(MultiBody* _mBody) {
   size_t body = LRand() % _mBody->GetNumBodies();
   const GMSPolyhedron& polyhedron = _mBody->GetBody(body)->GetWorldPolyhedron();
   // A random fraction of the area
@@ -313,7 +747,7 @@ ChooseRandomWeightedTriangle(MultiBody* _mBody, bool _isFreeBody) {
 template <typename MPTraits>
 typename ObstacleBasedSampler<MPTraits>::CfgType
 ObstacleBasedSampler<MPTraits>::
-ChooseRandomTriangle(MultiBody* _mBody, bool _isFreeBody) {
+ChooseRandomTriangle(MultiBody* _mBody) {
   size_t body = LRand() % _mBody->GetNumBodies();
   const GMSPolyhedron& polyhedron = _mBody->GetBody(body)->GetWorldPolyhedron();
 
@@ -331,7 +765,7 @@ ChooseRandomTriangle(MultiBody* _mBody, bool _isFreeBody) {
 template <typename MPTraits>
 typename ObstacleBasedSampler<MPTraits>::CfgType
 ObstacleBasedSampler<MPTraits>::
-ChooseExtremeVertex(MultiBody* _mBody, bool _isFreeBody) {
+ChooseExtremeVertex(MultiBody* _mBody) {
   size_t body = LRand() % _mBody->GetNumBodies();
   const GMSPolyhedron& polyhedron = _mBody->GetBody(body)->GetWorldPolyhedron();
   int xyz = LRand() % 3; // 0: x, 1: y, 2: z
@@ -347,58 +781,81 @@ ChooseExtremeVertex(MultiBody* _mBody, bool _isFreeBody) {
   return GetCfgWithParams(polyhedron.GetVertexList()[x]);
 }
 
-// Checks m_pointSelection and returns an appropriate CfgType
+// Returns the CfgType according to the sampling type
 template <typename MPTraits>
 typename ObstacleBasedSampler<MPTraits>::CfgType
 ObstacleBasedSampler<MPTraits>::
 ChooseASample(CfgType& _cfg) {
+  if(m_pointSelection == "cspace")
+    return _cfg;
+  else
+    return ChooseASampleOtherMethods();
+}
+
+template <typename MPTraits>
+typename ObstacleBasedSampler<MPTraits>::GroupCfgType
+ObstacleBasedSampler<MPTraits>::
+ChooseASample(GroupCfgType& _cfg) {
+  if(m_pointSelection == "cspace") {
+    return _cfg;
+  }
+  else {
+    GroupCfgType groupCfg;
+    for (auto robot : _cfg.GetRobots()) {
+      groupCfg.SetRobotCfg(robot, ChooseASampleOtherMethods());
+    }
+    return groupCfg;
+  }
+}
+
+template <typename MPTraits>
+typename ObstacleBasedSampler<MPTraits>::CfgType
+ObstacleBasedSampler<MPTraits>::
+ChooseASampleOtherMethods() {
   MultiBody* mBody{nullptr};
   if(m_pointSelection != "cspace")
     mBody = this->GetEnvironment()->GetRandomObstacle();
 
-  // cspace is for Configuration space (This is for unifying OBPRM and WOBPRM)
-  if(m_pointSelection == "cspace")
-    return _cfg;
-  else if(m_pointSelection == "cM")
+  if(m_pointSelection == "cM")
     return ChooseCenterOfMass(mBody);
   else if(m_pointSelection == "rV")
-    return ChooseRandomVertex(mBody, false);
+    return ChooseRandomVertex(mBody);
   else if(m_pointSelection == "rT")
-    return ChooseRandomTriangle(mBody, false);
-  else if(m_pointSelection == "rW")
-    return ChooseRandomWeightedTriangle(mBody, false);
+    return ChooseRandomTriangle(mBody);
+  else if(m_pointSelection == "wT")
+    return ChooseRandomWeightedTriangle(mBody);
   else if(m_pointSelection == "eV")
-    return ChooseExtremeVertex(mBody, false);
+    return ChooseExtremeVertex(mBody);
   else if(m_pointSelection == "cM_rV") {
     if(LRand() % 2)
       return ChooseCenterOfMass(mBody);
     else
-      return ChooseRandomVertex(mBody, false);
+      return ChooseRandomVertex(mBody);
   }
   else if(m_pointSelection == "rV_rT") {
     if(LRand() % 2)
-      return ChooseRandomVertex(mBody, false);
+      return ChooseRandomVertex(mBody);
     else
-      return ChooseRandomTriangle(mBody, false);
+      return ChooseRandomTriangle(mBody);
   }
-  else if(m_pointSelection == "rV_rW") {
+  else if(m_pointSelection == "rV_wT") {
     if(LRand() % 2)
-      return ChooseRandomVertex(mBody, false);
+      return ChooseRandomVertex(mBody);
     else
-      return ChooseRandomWeightedTriangle(mBody, false);
+      return ChooseRandomWeightedTriangle(mBody);
   }
   else if(m_pointSelection == "all") {
     switch(LRand() % 5) {
       case 0:
         return ChooseCenterOfMass(mBody);
       case 1:
-        return ChooseRandomVertex(mBody, false);
+        return ChooseRandomVertex(mBody);
       case 2:
-        return ChooseRandomTriangle(mBody, false);
+        return ChooseRandomTriangle(mBody);
       case 3:
-        return ChooseRandomWeightedTriangle(mBody, false);
+        return ChooseRandomWeightedTriangle(mBody);
       default:
-        return ChooseExtremeVertex(mBody, false);
+        return ChooseExtremeVertex(mBody);
     }
   }
   else {
@@ -406,7 +863,6 @@ ChooseASample(CfgType& _cfg) {
   }
 }
 
-// Returns a CfgType with the coordinates specified in the vector and no rotation
 template <typename MPTraits>
 typename ObstacleBasedSampler<MPTraits>::CfgType
 ObstacleBasedSampler<MPTraits>::

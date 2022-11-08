@@ -88,11 +88,11 @@ SkeletonClearanceUtility<MPTraits>::
 operator()(WorkspaceSkeleton& _skeleton) const {
   MethodTimer mt(this->GetStatClass(), "SkeletonClearanceUtility");
 
-  auto g = _skeleton.GetGraph();
+  // auto g = _skeleton.GetGraph();
 
   if(this->m_debug)
-    std::cout << "Skeleton has " << g.get_num_vertices() << " vertices "
-              << "and " << g.get_num_edges() << " edges."
+    std::cout << "Skeleton has " << _skeleton.get_num_vertices() << " vertices "
+              << "and " << _skeleton.get_num_edges() << " edges."
               << "\n\tPushing vertices and edge points to the medial axis.\n";
 
   auto mau = this->GetMPTools()->GetMedialAxisUtility(m_mauLabel);
@@ -115,11 +115,11 @@ operator()(WorkspaceSkeleton& _skeleton) const {
   };
 
   // Push flow graph vertices.
-  for(auto vit = g.begin(); vit != g.end(); ++vit)
+  for(auto vit = _skeleton.begin(); vit != _skeleton.end(); ++vit)
     push(vit->property());
 
   // Push flowgraph edges.
-  for(auto eit = g.edges_begin(); eit != g.edges_end(); ++eit)
+  for(auto eit = _skeleton.edges_begin(); eit != _skeleton.edges_end(); ++eit)
     for(auto pit = eit->property().begin(); pit < eit->property().end(); ++pit)
       push(*pit);
 
@@ -134,11 +134,11 @@ SkeletonClearanceUtility<MPTraits>::
 HackFix(WorkspaceSkeleton& _skeleton) const {
   MethodTimer mt(this->GetStatClass(), "SkeletonClearanceUtility::HackFix");
 
-  auto g = _skeleton.GetGraph();
+  // auto g = _skeleton.GetGraph();
 
   if(this->m_debug)
-    std::cout << "Skeleton has " << g.get_num_vertices() << " vertices "
-              << "and " << g.get_num_edges() << " edges."
+    std::cout << "Skeleton has " << _skeleton.get_num_vertices() << " vertices "
+              << "and " << _skeleton.get_num_edges() << " edges."
               << "\n\tPushing vertices and edge points with low clearance away "
               << "from nearest obstacles.";
 
@@ -211,11 +211,11 @@ HackFix(WorkspaceSkeleton& _skeleton) const {
   };
 
   // Push flowgraph vertices.
-  for(auto vit = g.begin(); vit != g.end(); ++vit)
+  for(auto vit = _skeleton.begin(); vit != _skeleton.end(); ++vit)
     push(vit->property());
 
   // Push flowgraph edges.
-  for(auto eit = g.edges_begin(); eit != g.edges_end(); ++eit)
+  for(auto eit = _skeleton.edges_begin(); eit != _skeleton.edges_end(); ++eit)
     for(auto pit = eit->property().begin(); pit < eit->property().end(); ++pit)
       push(*pit);
 

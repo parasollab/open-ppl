@@ -3,6 +3,7 @@
 
 #include "MPLibrary/MPBaseObject.h"
 #include "MPLibrary/ValidityCheckers/CollisionDetectionValidity.h"
+#include "Simulator/Conversions.h"
 #include "Utilities/Hash.h"
 #include "Utilities/SSSP.h"
 #include "Utilities/XMLNode.h"

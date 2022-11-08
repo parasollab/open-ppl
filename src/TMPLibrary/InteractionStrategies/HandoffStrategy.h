@@ -9,8 +9,9 @@ class HandoffStrategy : public GraspStrategy {
     ///@name Local Types
     ///@{
 
-    typedef Condition::State            State;
-    typedef Condition::GroupRoadmapType GroupRoadmapType;
+    typedef TMPBaseObject::GroupCfgType     GroupCfgType;
+    typedef TMPBaseObject::GroupRoadmapType GroupRoadmapType;
+    typedef Condition::State                State;
 
     ///@}
     ///@name Construction

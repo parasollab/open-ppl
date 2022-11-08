@@ -658,7 +658,7 @@ ValidationFunction(Node& _node) {
   auto vc = static_cast<CollisionDetectionValidityMethod<MPTraits<Cfg>>*>(
               lib->GetValidityChecker(m_vcLabel));
 
-  std::unordered_map<SemanticTask*,std::vector<GroupCfg>> cfgPaths;
+  std::unordered_map<SemanticTask*,std::vector<GroupCfgType>> cfgPaths;
 
   std::unordered_map<SemanticTask*,size_t> startTimes;
   std::unordered_map<SemanticTask*,size_t> endTimes;
@@ -1271,7 +1271,7 @@ RobotGroupPathWeight(typename GroupRoadmapType::adj_edge_iterator& _ei,
       continue;
 
     if(this->m_debug) {
-      const GroupCfg& gcfg = m_conflicts[iter->second];
+      const GroupCfgType& gcfg = m_conflicts[iter->second];
       std::cout << "Edge (" << _ei->source() << ","
                 << _ei->target() << ") collides against group "
                 << gcfg.GetGroupRoadmap()->GetGroup()->GetLabel()
@@ -1297,10 +1297,10 @@ IsEdgeSafe(const VID _source, const VID _target, const Constraint _constraint,
   auto grm = lib->GetMPSolution()->GetGroupRoadmap(group);
 
   // Reconstruct edge path at resolution level
-  std::vector<GroupCfg> path;
+  std::vector<GroupCfgType> path;
   path.push_back(grm->GetVertex(_source));
   auto e = grm->GetEdge(_source,_target);
-  std::vector<GroupCfg> edge = !e.GetIntermediates().empty() ? e.GetIntermediates()
+  std::vector<GroupCfgType> edge = !e.GetIntermediates().empty() ? e.GetIntermediates()
                              : lib->ReconstructEdge(grm,_source,_target);
   path.insert(path.end(),edge.begin(),edge.end());
   path.push_back(grm->GetVertex(_target));
@@ -1384,7 +1384,7 @@ SaveSolution(const Node& _node) {
 
   auto lib = this->GetMPLibrary();
 
-  std::unordered_map<SemanticTask*,std::vector<GroupCfg>> cfgPaths;
+  std::unordered_map<SemanticTask*,std::vector<GroupCfgType>> cfgPaths;
 
   std::unordered_map<SemanticTask*,size_t> startTimes;
   std::unordered_map<SemanticTask*,size_t> endTimes;

@@ -63,7 +63,7 @@ Initialize() {
     m_groups[group].insert(formation);
 
     // Create initial group cfgs
-    auto gcfg = GroupCfg(grm);
+    auto gcfg = GroupCfgType(grm);
 
     // Add initial cfg to individual roadmaps
     for(auto& r : group->GetRobots()) {
@@ -90,7 +90,7 @@ Initialize() {
     m_solution->AddRobotGroup(group);
     auto rm = m_solution->GetGroupRoadmap(group);
 
-    GroupCfg gcfg(rm);
+    GroupCfgType gcfg(rm);
 
     for(auto iter = gt->begin(); iter != gt->end(); iter++) {
       auto robot = iter->GetRobot();

@@ -106,9 +106,6 @@ class SIPPMethod : public MapEvaluatorMethod<MPTraits> {
     std::pair<std::vector<size_t>,std::vector<size_t>> 
           GeneratePath(const size_t _start, const std::vector<size_t> _goals);
 
-    /// Set the distance metric to use
-    void SetDMLabel(const std::string& _dmLabel);
-
     /// Set the start time of the query
     void SetStartTime(size_t _start);
 
@@ -187,31 +184,27 @@ class SIPPMethod : public MapEvaluatorMethod<MPTraits> {
     ///@name Internal State
     ///@{
 
-    size_t m_goalIndex{0};
-    size_t m_startVID{MAX_INT};
+    /// The graph representing the time-interval extended state space.
+    SIPPGraph* m_sippGraph{nullptr}; 
 
-    SIPPGraph* m_sippGraph{nullptr};
+    size_t m_goalIndex{0};      ///< Index of the current goal to extend the path to.
+    size_t m_startVID{MAX_INT}; ///< The start vid in the sipp graph.
 
-    std::string m_safeIntervalLabel;
-
-    std::string m_dmLabel;
-
+    /// Cost-to-go map used for heuristic values.
     std::unordered_map<size_t,double> m_costToGoMap;
 
-    EdgeIntervalMap m_edgeIntervals;
+    EdgeIntervalMap m_edgeIntervals; ///< Set of safe edge intervals.
+    VertexIntervalMap m_vertexIntervals; ///< Set of safe vertex intervals.
 
-    VertexIntervalMap m_vertexIntervals;
-
+    /// Compute wait timesteps at each vertex during the search process.
     std::unordered_map<size_t,std::unordered_map<size_t,size_t>> m_waitTimesteps;
 
-    size_t m_startTime{0};
-    size_t m_minEndTime{0};
+    size_t m_startTime{0}; ///< The start time of the path.
+    size_t m_minEndTime{0}; ///< The minimum end time of the path.
 
-    bool m_initialized{false};
-    bool m_invervalsSet{false};
-    bool m_sippSet{false};
-
+    bool m_initialized{false}; ///< Flag indicating if the object has been initialized.
     bool m_minTime{true}; ///< Flag indiciating if search is minimizing time or distance metric
+
     ///@}
 };
 
@@ -229,10 +222,6 @@ SIPPMethod(XMLNode& _node) : MapEvaluatorMethod<MPTraits>(_node) {
   this->SetName("SIPPMethod");
 
   // Parse options
-  m_safeIntervalLabel = _node.Read("safeIntervalToolLabel", true, "",
-      "Label of the SafeIntervalTool");
-  m_dmLabel = _node.Read("dmLabel", false, "",
-      "Alternate distance metric to replace edge weight during search.");
   m_minTime = _node.Read("minTime",false,m_minTime,
       "Flag indicating if search is minimizing time or distance metric.");
 }
@@ -246,8 +235,6 @@ SIPPMethod<MPTraits>::
 Print(std::ostream& _os) const {
   _os << this->GetNameAndLabel() << "::"
       << "\n\tSearch Alg: astar"
-      << "\n\tSI Tool Label: " << m_safeIntervalLabel
-      << "\n\tAlternative DM: " << m_dmLabel
       << std::endl;
 }
 
@@ -510,13 +497,6 @@ GeneratePath(const size_t _start, const std::vector<size_t> _goals) {
   std::reverse(waitTimesteps.begin(), waitTimesteps.end());
 
   return std::make_pair(path,waitTimesteps);
-}
-
-template <typename MPTraits>
-void
-SIPPMethod<MPTraits>::
-SetDMLabel(const std::string& _dmLabel) {
-  m_dmLabel = _dmLabel;
 }
 
 template <typename MPTraits>
@@ -785,7 +765,6 @@ BuildNeighbors(typename SIPPGraph::vertex_descriptor _sippSource, size_t _rmTarg
 
     m_sippGraph->AddEdge(_sippSource,targetVID,newEdge);
   }
-
 }
 
 template<typename MPTraits>
@@ -850,12 +829,6 @@ SetVertexIntervals(VertexIntervalMap _vertexIntervals) {
   m_vertexIntervals = _vertexIntervals;
 }
 
-template <typename MPTraits>
-bool
-SIPPMethod<MPTraits>::
-SatisfyConstraints(Range<size_t> _interval) {
-  return _interval.max >= m_minEndTime;
-}
 
 template <typename MPTraits>
 bool
@@ -895,8 +868,14 @@ SameFormations(std::unordered_set<Formation*> _set1, std::unordered_set<Formatio
 
   if(!matched)
     return false;
-
   return true;
+}
+
+template <typename MPTraits>
+bool
+SIPPMethod<MPTraits>::
+SatisfyConstraints(Range<size_t> _interval) {
+  return _interval.max >= m_minEndTime;
 }
 
 /*------------------------------------------------------------*/
@@ -909,4 +888,5 @@ std::istream& operator>>(std::istream& _is, SIPPEdge& _edge);
 
 std::ostream& operator<<(std::ostream& _os, const SIPPEdge& _edge);
 
+/*------------------------------------------------------------*/
 #endif

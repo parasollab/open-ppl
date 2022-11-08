@@ -315,11 +315,12 @@ GroupRRTStrategy<MPTraits>::
 Initialize() {
   // Sanity checks on grow goals option.
   if(m_growGoals) {
-    // Assert that we are not using a nonholonomic robot.
-    if(this->GetTask()->GetRobot()->IsNonholonomic())
-      throw RunTimeException(WHERE) << "Bi-directional growth with nonholonomic "
-                                    << "robots is not supported (requires a "
-                                    << "steering function).";
+    for(auto robot : this->GetGroupTask()->GetRobotGroup()->GetRobots()) {
+      if(robot->IsNonholonomic())
+        throw RunTimeException(WHERE) << "Bi-directional growth with nonholonomic "
+                                      << "robots is not supported (requires a "
+                                      << "steering function).";
+    }
 
     // Assert that we are not using a rewiring connector.
     const bool rewiring = !m_ncLabel.empty()
@@ -457,7 +458,7 @@ SelectTarget() {
   auto groupTask = this->GetGroupTask();
   this->GetMPLibrary()->SetGroupTask(nullptr);
 
-  GroupCfg gcfg(grm);
+  GroupCfgType gcfg(grm);
 
   for(auto& task : *groupTask) {
     auto robot = task.GetRobot();

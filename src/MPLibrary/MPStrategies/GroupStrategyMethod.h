@@ -157,6 +157,15 @@ Finalize() {
     ::WritePath(base + ".path", path->FullCfgs(this->GetMPLibrary()));
   }
 
+  auto robots = roadmap->GetGroup()->GetRobots();
+  for(auto robot : robots) {
+    std::vector<CfgType> cfgs;
+    for(auto gcfg : path->Cfgs()) {
+      cfgs.push_back(gcfg.GetRobotCfg(robot));
+    }
+    ::WritePath(base + "." + robot->GetLabel() + ".rdmp.path", cfgs);
+  }
+
   // Output stats.
   std::ofstream osStat(base + ".stat");
   this->GetStatClass()->PrintAllStats(osStat, roadmap);
@@ -255,6 +264,7 @@ GenerateGoals(const std::string& _samplerLabel) {
     std::vector<GroupCfgType> cfgs;
     // TODO Write this API
     sampler->Sample(1, attempts, boundaryMap, std::back_inserter(cfgs));
+
     if(this->m_debug) {
       auto iter = boundaryMap.begin();
       while(iter != boundaryMap.end()){
@@ -266,12 +276,6 @@ GenerateGoals(const std::string& _samplerLabel) {
       }
     }
 
-    //THIS SHOULD BE REMOVED, IT WAS ADDED TO DETERMINE IF AN ERROR WOULD CONTINUE TO OCCUR IF I SET VIRTUAL
-    // auto iter2 = boundaryMap.begin();
-    // while(iter2 != boundaryMap.end()){
-    //   iter2->first->SetVirtual(false);
-    //   ++iter2;
-    // }
     // Throw an error if we failed to generate a single configuration.
     if(cfgs.empty())
       throw RunTimeException(WHERE) << "Could not generate valid goal "

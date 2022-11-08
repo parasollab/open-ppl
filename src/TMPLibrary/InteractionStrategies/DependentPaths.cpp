@@ -383,7 +383,7 @@ PlanMotions(std::vector<std::shared_ptr<GroupTask>> _tasks, MPSolution* _solutio
     }
 
     // Check decoupled paths.
-    GroupCfg gcfg(grm);
+    GroupCfgType gcfg(grm);
 
     for(auto robot : group->GetRobots()) {
       auto path = _solution->GetPath(robot);
@@ -462,7 +462,7 @@ InterimState(Interaction* _interaction, const std::string& _current,
     grm->AddFormation(formation,true);
 
     // Create initial group vertex
-    auto gcfg = GroupCfg(grm);
+    auto gcfg = GroupCfgType(grm);
 
     // Add initial cfg to individual roadmaps
     for(auto& robot : group->GetRobots()) {

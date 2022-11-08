@@ -22,8 +22,9 @@ class CombinedRoadmap : public StateGraph {
     ///@name Local Types
     ///@{
 
-    typedef GroupLocalPlan<Cfg>                              GroupLocalPlanType;
-    typedef GroupRoadmap<GroupCfg,GroupLocalPlanType>        GroupRoadmapType;
+    typedef TMPBaseObject::GroupCfgType                      GroupCfgType;
+    typedef TMPBaseObject::GroupLocalPlanType                GroupLocalPlanType;
+    typedef TMPBaseObject::GroupRoadmapType                  GroupRoadmapType;
     typedef GroupPath<MPTraits<Cfg,DefaultWeight<Cfg>>>      GroupPathType;
     typedef PathType<MPTraits<Cfg,DefaultWeight<Cfg>>>       Path;
 		typedef MPSolutionType<MPTraits<Cfg,DefaultWeight<Cfg>>> MPSolution;
@@ -171,7 +172,7 @@ class CombinedRoadmap : public StateGraph {
 
     ///@param _original The cfg to be copied to the new roadmap.
     ///@param _newRoadmap The roadmap to copy the cfg into.
-    size_t MoveGroupCfg(GroupCfg& _original, GroupRoadmapType* _newRoadmap);
+    size_t MoveGroupCfg(GroupCfgType& _original, GroupRoadmapType* _newRoadmap);
 
     ///@param _originalSource the source of the edge to copy.
     ///@param _originalTarget the target of the edge to copy.

@@ -63,7 +63,7 @@ class LocalPlannerMethodTest : virtual public LocalPlannerMethod<MPTraits>,
     virtual std::vector<CfgType> IndividualRobotBlindPath();
 
     virtual bool RobotGroupIsConnected(const GroupCfgType& _start, 
-            const GroupCfgType& _end, GroupCfgType& _col, LPOutput<MPTraits>* _lpOutput);
+            const GroupCfgType& _end, GroupCfgType& _col, GroupLPOutput<MPTraits>* _lpOutput);
 
     virtual std::vector<GroupCfgType> RobotGroupBlindPath();
 
@@ -130,7 +130,7 @@ IndividualRobotIsConnected(const CfgType& _start, const CfgType& _end,
                            CfgType& _col, LPOutput<MPTraits>* _lpOutput) {
 
   auto env = this->GetMPProblem()->GetEnvironment();
-  auto pos = env->GetPostionRes();
+  auto pos = env->GetPositionRes();
   auto ori = env->GetOrientationRes();
   bool checkCollision = true;
   bool savePath = true;
@@ -156,7 +156,7 @@ IndividualRobotBlindPath() {
   std::vector<CfgType> waypoints = {start,middle,end};
 
   auto env = this->GetMPProblem()->GetEnvironment();
-  auto pos = env->GetPostionRes();
+  auto pos = env->GetPositionRes();
   auto ori = env->GetOrientationRes();
 
   return this->BlindPath(waypoints,pos,ori);
@@ -166,9 +166,9 @@ template <typename MPTraits>
 bool
 LocalPlannerMethodTest<MPTraits>::
 RobotGroupIsConnected(const GroupCfgType& _start, 
-            const GroupCfgType& _end, GroupCfgType& _col, LPOutput<MPTraits>* _lpOutput) {
+            const GroupCfgType& _end, GroupCfgType& _col, GroupLPOutput<MPTraits>* _lpOutput) {
   auto env = this->GetMPProblem()->GetEnvironment();
-  auto pos = env->GetPostionRes();
+  auto pos = env->GetPositionRes();
   auto ori = env->GetOrientationRes();
   bool checkCollision = true;
   bool savePath = true;
@@ -202,7 +202,7 @@ RobotGroupBlindPath() {
   std::vector<GroupCfgType> waypoints = {start,middle,end};
 
   auto env = this->GetMPProblem()->GetEnvironment();
-  auto pos = env->GetPostionRes();
+  auto pos = env->GetPositionRes();
   auto ori = env->GetOrientationRes();
 
   return this->BlindPath(waypoints,pos,ori);
@@ -216,7 +216,7 @@ LocalPlannerMethodTest<MPTraits>::
 SetLibraryRobot() {
   // Set MPLibrary to sample for single robot
   auto robot = this->GetMPProblem()->GetRobots()[0].get();
-  auto task = this->GetMPProblem()->GetTasks(robot)[0];
+  auto task = this->GetMPProblem()->GetTasks(robot)[0].get();
   this->GetMPLibrary()->SetTask(task);
   this->GetMPLibrary()->SetGroupTask(nullptr);
 }
@@ -225,9 +225,10 @@ template <typename MPTraits>
 void
 LocalPlannerMethodTest<MPTraits>::
 SetLibraryGroup() {
+  // TODO this doesn't work, we need some way to easily set a group roadmap
   // Set MPLibrary to sample for robot group
   auto group = this->GetMPProblem()->GetRobotGroups()[0].get();
-  auto task = this->GetMPProblem()->GetTasks(group)[0];
+  auto task = this->GetMPProblem()->GetTasks(group)[0].get();
   this->GetMPLibrary()->SetGroupTask(task);
   this->GetMPLibrary()->SetTask(nullptr);
 }
@@ -246,7 +247,8 @@ typename MPTraits::GroupCfgType
 LocalPlannerMethodTest<MPTraits>::
 GetGroupCfg() {
   auto group = this->GetMPProblem()->GetRobotGroups()[0].get();
-  GroupCfgType gcfg(group);
+  auto groupRoadmap = this->GetMPLibrary()->GetGroupRoadmap(group);
+  GroupCfgType gcfg(groupRoadmap);
   return gcfg;
 }
 

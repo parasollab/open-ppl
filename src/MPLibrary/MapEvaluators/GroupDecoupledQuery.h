@@ -118,6 +118,9 @@ operator()() {
 
   }
 
+  if(success)
+    this->GetStatClass()->SetStat(this->GetNameAndLabel() + "::FoundPath", 1);
+
   if(this->m_debug)
     std::cout << "\tDone." << std::endl;
 

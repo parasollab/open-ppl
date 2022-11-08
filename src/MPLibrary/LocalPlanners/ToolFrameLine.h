@@ -364,7 +364,6 @@ IsConnected(const GroupCfgType& _c1, const GroupCfgType& _c2, GroupCfgType& _col
   _lpOutput->m_edge.first.SetTimeSteps(numSteps);
   _lpOutput->m_edge.second.SetTimeSteps(numSteps);
   _lpOutput->SetIndividualEdges(_robotIndexes);
-  _lpOutput->SetActiveRobots(_robotIndexes);
 
   if(connected)
     _lpOutput->AddIntermediatesToWeights(this->m_saveIntermediates);
@@ -569,7 +568,7 @@ ComputeIncrement(const std::unordered_map<Robot*,std::vector<double>>& _posIncre
       if(this->m_debug) {
         std::cout << "No joint angles found for (TODO::TYPE FRAME INFO)" << std::endl;
       }
-      return GroupCfgType(nullptr);
+      return GroupCfgType();
     }
 
     cfg.SetData(jointValues);
@@ -586,7 +585,7 @@ ComputeIncrement(const std::unordered_map<Robot*,std::vector<double>>& _posIncre
   sm->Sample(1,100,boundaryMap,std::back_inserter(valid));
 
   if(valid.empty())
-    GroupCfgType(nullptr);
+    GroupCfgType();
 
   return valid[0];
 }

@@ -1,7 +1,6 @@
 #include "GroupTask.h"
 
 #include "ConfigurationSpace/Cfg.h"
-#include "ConfigurationSpace/GroupCfg.h"
 #include "Geometry/Boundaries/Boundary.h"
 #include "MPProblem/MPProblem.h"
 #include "MPProblem/Constraints/Constraint.h"
@@ -253,7 +252,7 @@ GetEndEffectorRobot() {
 
 void
 GroupTask::
-GetStartConstraintCenter(GroupCfg& _center) const noexcept {
+GetStartConstraintCenter(GroupCfgType& _center) const noexcept {
   for(size_t i = 0; i < _center.GetNumRobots(); ++i) {
     Cfg robotCfg(_center.GetRobot(i));
     robotCfg.SetData(m_individualTasks.at(i).GetStartConstraint()->
@@ -266,7 +265,7 @@ GetStartConstraintCenter(GroupCfg& _center) const noexcept {
 
 bool
 GroupTask::
-EvaluateStartConstraints(const GroupCfg& _cfg) const {
+EvaluateStartConstraints(const GroupCfgType& _cfg) const {
   for(const auto& task : m_individualTasks) {
     // For now we will require all individual tasks to be assigned to a robot.
     auto robot = task.GetRobot();
@@ -287,7 +286,7 @@ EvaluateStartConstraints(const GroupCfg& _cfg) const {
 
 bool
 GroupTask::
-EvaluatePathConstraints(const GroupCfg& _cfg) const {
+EvaluatePathConstraints(const GroupCfgType& _cfg) const {
   for(const auto& task : m_individualTasks) {
     // For now we will require all individual tasks to be assigned to a robot.
     auto robot = task.GetRobot();
@@ -308,7 +307,7 @@ EvaluatePathConstraints(const GroupCfg& _cfg) const {
 
 bool
 GroupTask::
-EvaluateGoalConstraints(const GroupCfg& _cfg) const {
+EvaluateGoalConstraints(const GroupCfgType& _cfg) const {
   for(const auto& task : m_individualTasks) {
     // For now we will require all individual tasks to be assigned to a robot.
     auto robot = task.GetRobot();
@@ -329,7 +328,7 @@ EvaluateGoalConstraints(const GroupCfg& _cfg) const {
 
 bool
 GroupTask::
-EvaluateGoalConstraints(const GroupCfg& _cfg, const size_t _index) const {
+EvaluateGoalConstraints(const GroupCfgType& _cfg, const size_t _index) const {
   const size_t maxGoals = GetNumGoals();
 
   for(const auto& task : m_individualTasks) {

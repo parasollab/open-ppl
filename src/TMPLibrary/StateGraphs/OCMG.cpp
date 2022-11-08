@@ -169,7 +169,7 @@ ConstructObjectRoadmap(Robot* _object) {
 
   // Add vertex for robot start
   auto startCfg = problem->GetInitialCfg(_object);
-  GroupCfg startGcfg(rm);
+  GroupCfgType startGcfg(rm);
   startGcfg.SetRobotCfg(_object,std::move(startCfg));
   rm->AddVertex(startGcfg);
 
@@ -203,7 +203,7 @@ ConstructObjectRoadmap(Robot* _object) {
       lib->SetTask(nullptr);
 
       // Add to roadmap
-      GroupCfg gcfg(rm);
+      GroupCfgType gcfg(rm);
       gcfg.SetRobotCfg(_object,std::move(samples[0]));
       rm->AddVertex(gcfg);
     }
@@ -347,7 +347,7 @@ ConstructRobotRoadmap(Robot* _robot) {
     else {
       // Add vertex for robot start
       auto startCfg = problem->GetInitialCfg(_robot);
-      GroupCfg startGcfg(rm);
+      GroupCfgType startGcfg(rm);
       startGcfg.SetRobotCfg(_robot,std::move(startCfg));
       rm->AddVertex(startGcfg);
     }
@@ -475,7 +475,7 @@ CopyRoadmap(GroupRoadmapType* _rm, Robot* _passive, FormationCondition* _conditi
   for(auto vit = _rm->begin(); vit != _rm->end(); vit++) {
     auto oldGcfg = vit->property();
 
-    GroupCfg newGcfg(rm);
+    GroupCfgType newGcfg(rm);
 
     for(auto robot : originalGroup->GetRobots()) {
       Cfg cfg = oldGcfg.GetRobotCfg(robot);
@@ -507,7 +507,7 @@ CopyRoadmap(GroupRoadmapType* _rm, Robot* _passive, FormationCondition* _conditi
       glp.SetTimeSteps(property.GetTimeSteps());
 
       for(auto robot : originalGroup->GetRobots()) {
-        auto edge = _rm->GetRoadmap(originalGroup->GetGroupIndex(robot))->GetEdge(
+        auto edge = _rm->GetIndividualGraph(originalGroup->GetGroupIndex(robot))->GetEdge(
               sourceGcfg.GetVID(robot),targetGcfg.GetVID(robot));
         if(robot == swapped) {
           glp.SetEdge(_passive,std::move(edge));
@@ -741,7 +741,7 @@ RunInteractionStrategy(Interaction* _interaction, State _start) {
     if(oldRm)
       continue;
 
-    GroupCfg gcfg(nullptr);
+    GroupCfgType gcfg;
     auto stages = _interaction->GetStages();
     for(size_t i = 1; i < stages.size(); i++) {
       auto paths = _interaction->GetToStagePaths(stages[i]);
@@ -750,7 +750,7 @@ RunInteractionStrategy(Interaction* _interaction, State _start) {
 
       oldRm = _interaction->GetToStageSolution(stages[i])->GetGroupRoadmap(group);
         
-      gcfg = GroupCfg(oldRm);
+      gcfg = GroupCfgType(oldRm);
 
       for(auto robot : group->GetRobots()) {
         for(const auto& path : paths) {
@@ -813,7 +813,7 @@ CopyAndConnectState(State _state) {
       rm->AddFormation(f);
     }
 
-    GroupCfg newGcfg(rm);
+    GroupCfgType newGcfg(rm);
     for(auto robot : group->GetRobots()) {
       auto cfg = gcfg.GetRobotCfg(robot);
       newGcfg.SetRobotCfg(robot,std::move(cfg));

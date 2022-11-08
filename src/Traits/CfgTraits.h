@@ -7,6 +7,7 @@
 #include "MPLibrary/MPTools/MPTools.h"
 
 #include "ConfigurationSpace/LocalObstacleMap.h"
+#include "ConfigurationSpace/GenericStateGraph.h"
 #include "ConfigurationSpace/GroupCfg.h"
 #include "ConfigurationSpace/GroupLocalPlan.h"
 #include "ConfigurationSpace/GroupPath.h"
@@ -15,10 +16,21 @@
 #include "ConfigurationSpace/Weight.h"
 #include "ConfigurationSpace/GenericStateGraph.h"
 
+#include "Workspace/WorkspaceSkeleton.h"
+#include "Workspace/CompositeWorkspaceSkeleton.h"
+#include "Workspace/HypergraphWorkspaceSkeleton.h"
+
 //distance metric includes
+#include "MPLibrary/DistanceMetrics/BinaryLPSweptDistance.h"
 #include "MPLibrary/DistanceMetrics/EuclideanDistance.h"
+#include "MPLibrary/DistanceMetrics/LPSweptDistance.h"
+#include "MPLibrary/DistanceMetrics/ManhattanDistance.h"
 #include "MPLibrary/DistanceMetrics/MinkowskiDistance.h"
+#include "MPLibrary/DistanceMetrics/RMSDDistance.h"
+#include "MPLibrary/DistanceMetrics/ScaledEuclideanDistance.h"
 #include "MPLibrary/DistanceMetrics/WeightedEuclideanDistance.h"
+#include "MPLibrary/DistanceMetrics/WorkspaceTranslationDistance.h"
+
 
 //validity checker includes
 #include "MPLibrary/ValidityCheckers/AlwaysTrueValidity.h"
@@ -33,8 +45,9 @@
 #include "MPLibrary/NeighborhoodFinders/RadiusNF.h"
 
 //sampler includes
-#include "MPLibrary/Samplers/TerrainSampler.h"
+#include "MPLibrary/Samplers/BridgeTestSampler.h"
 #include "MPLibrary/Samplers/ObstacleBasedSampler.h"
+#include "MPLibrary/Samplers/TerrainSampler.h"
 #include "MPLibrary/Samplers/UniformRandomSampler.h"
 
 //local planner includes
@@ -55,30 +68,40 @@
 #include "MPLibrary/Connectors/RewireConnector.h"
 
 //metric includes
+#include "MPLibrary/Metrics/NumEdgesMetric.h"
 #include "MPLibrary/Metrics/NumNodesMetric.h"
+#include "MPLibrary/Metrics/TimeMetric.h"
 
 //map evaluator includes
 #include "MPLibrary/MapEvaluators/CBSQuery.h"
 #include "MPLibrary/MapEvaluators/ComposeEvaluator.h"
 #include "MPLibrary/MapEvaluators/ConditionalEvaluator.h"
 #include "MPLibrary/MapEvaluators/DRRT.h"
+#include "MPLibrary/MapEvaluators/GroupQuery.h"
 #include "MPLibrary/MapEvaluators/GroupDecoupledQuery.h"
 #include "MPLibrary/MapEvaluators/GroupQuery.h"
 #include "MPLibrary/MapEvaluators/LazyQuery.h"
 #include "MPLibrary/MapEvaluators/SIPPMethod.h"
+#include "MPLibrary/MapEvaluators/PrintMapEvaluation.h"
 #include "MPLibrary/MapEvaluators/QueryMethod.h"
 #include "MPLibrary/MapEvaluators/SIPPMethod.h"
 #include "MPLibrary/MapEvaluators/TimeEvaluator.h"
 
 //mp strategies includes
 #include "MPLibrary/MPStrategies/AdaptiveRRT.h"
+#include "MPLibrary/MPStrategies/GroupPRM.h"
 #include "MPLibrary/MPStrategies/BasicPRM.h"
 #include "MPLibrary/MPStrategies/BasicRRTStrategy.h"
+#include "MPLibrary/MPStrategies/CompositeDynamicRegionRRT.h"
+#include "MPLibrary/MPStrategies/DynamicRegionRRT.h"
+#include "MPLibrary/MPStrategies/DynamicRegionsPRM.h"
 #include "MPLibrary/MPStrategies/EvaluateMapStrategy.h"
 #include "MPLibrary/MPStrategies/GroupDecoupledStrategy.h"
 #include "MPLibrary/MPStrategies/GroupPRM.h"
 #include "MPLibrary/MPStrategies/GroupRRTStrategy.h"
 #include "MPLibrary/MPStrategies/GroupStrategyMethod.h"
+#include "MPLibrary/MPStrategies/PathGuidedRRT.h"
+#include "MPLibrary/MPStrategies/PathSamplerStrategy.h"
 #include "MPLibrary/MPStrategies/TogglePRMStrategy.h"
 #include "MPLibrary/MPStrategies/ValidationStrategy.h"
 
@@ -101,8 +124,6 @@ struct MPTraits {
 
   typedef C                               CfgType;
   typedef W                               WeightType;
-//  typedef GenericStateGraph<C, W>              RoadmapType;
-
   typedef GenericStateGraph<C, W>         RoadmapType;
   typedef PathType<MPTraits>              Path;
   typedef MPLibraryType<MPTraits>         MPLibrary;
@@ -111,16 +132,30 @@ struct MPTraits {
   typedef LocalObstacleMapType<MPTraits>  LocalObstacleMap;
   typedef GoalTrackerType<MPTraits>       GoalTracker;
 
-  typedef GroupLocalPlan<CfgType>                    GroupWeightType;
-  typedef GroupRoadmap<GroupCfg, GroupWeightType>    GroupRoadmapType;
-  typedef GroupPath<MPTraits>                        GroupPathType;
-  typedef GroupCfg                                   GroupCfgType;
+  typedef GroupCfg<RoadmapType>                          GroupCfgType;
+  typedef GroupLocalPlan<RoadmapType>                    GroupWeightType;
+  typedef GroupRoadmap<GroupCfgType, GroupWeightType>    GroupRoadmapType;
+  typedef GroupPath<MPTraits>                            GroupPathType;
+
+  typedef CompositeState<WorkspaceSkeleton>  CompositeSkeletonVertex;
+  typedef CompositeEdge<WorkspaceSkeleton>   CompositeSkeletonEdge;
+  typedef CompositeWorkspaceSkeleton<CompositeSkeletonVertex, 
+        CompositeSkeletonEdge> CompositeSkeletonType;
+  typedef HypergraphWorkspaceSkeleton<CompositeSkeletonVertex, 
+        CompositeSkeletonEdge> HypergraphSkeletonType;        
 
   //types of distance metrics available in our world
   typedef boost::mpl::list<
+    BinaryLPSweptDistance<MPTraits>,
     EuclideanDistance<MPTraits>,
+    LPSweptDistance<MPTraits>,
     MinkowskiDistance<MPTraits>,
-    WeightedEuclideanDistance<MPTraits>
+    ManhattanDistance<MPTraits>,
+    MinkowskiDistance<MPTraits>,
+    RMSDDistance<MPTraits>,
+    ScaledEuclideanDistance<MPTraits>,
+    WeightedEuclideanDistance<MPTraits>,
+    WorkspaceTranslationDistance<MPTraits>
       > DistanceMetricMethodList;
 
   //types of validity checkers available in our world
@@ -141,8 +176,9 @@ struct MPTraits {
 
   //types of samplers available in our world
   typedef boost::mpl::list<
-    TerrainSampler<MPTraits>,
+    BridgeTestSampler<MPTraits>,
     ObstacleBasedSampler<MPTraits>,
+    TerrainSampler<MPTraits>,
     UniformRandomSampler<MPTraits>
       > SamplerMethodList;
     //DynamicRegionSampler<MPTraits>,
@@ -175,7 +211,9 @@ struct MPTraits {
 
   //types of metrics available in our world
   typedef boost::mpl::list<
-    NumNodesMetric<MPTraits>
+    NumNodesMetric<MPTraits>,
+    NumEdgesMetric<MPTraits>,
+    TimeMetric<MPTraits>
       > MetricMethodList;
 
 
@@ -188,7 +226,7 @@ struct MPTraits {
     GroupDecoupledQuery<MPTraits>,
     GroupQuery<MPTraits>,
     LazyQuery<MPTraits>,
-    SIPPMethod<MPTraits>,
+    PrintMapEvaluation<MPTraits>,
     QueryMethod<MPTraits>,
     SIPPMethod<MPTraits>,
     TimeEvaluator<MPTraits>
@@ -199,11 +237,16 @@ struct MPTraits {
     AdaptiveRRT<MPTraits>,
     BasicPRM<MPTraits>,
     BasicRRTStrategy<MPTraits>,
+    CompositeDynamicRegionRRT<MPTraits>,
+    DynamicRegionRRT<MPTraits>,
+    DynamicRegionsPRM<MPTraits>,
     EvaluateMapStrategy<MPTraits>,
-    GroupDecoupledStrategy<MPTraits>,
     GroupPRM<MPTraits>,
-    GroupRRTStrategy<MPTraits>,
+    GroupDecoupledStrategy<MPTraits>,
     GroupStrategyMethod<MPTraits>,
+    GroupRRTStrategy<MPTraits>,
+    PathGuidedRRT<MPTraits>,
+    PathSamplerStrategy<MPTraits>,
     TogglePRMStrategy<MPTraits>,
     ValidationStrategy<MPTraits>
       > MPStrategyMethodList;

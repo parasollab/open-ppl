@@ -8,7 +8,6 @@
 #include "MPTask.h"
 #include "MPProblem.h"
 #include "ConfigurationSpace/Cfg.h"
-//#include "ConfigurationSpace/RoadmapGraph.h"
 #include "ConfigurationSpace/GenericStateGraph.h"
 #include "MPLibrary/MPBaseObject.h"
 #include "Utilities/XMLNode.h"

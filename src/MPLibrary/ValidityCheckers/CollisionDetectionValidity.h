@@ -110,6 +110,9 @@ class CollisionDetectionValidity
     virtual bool IsValidImpl(GroupCfg& _cfg, CDInfo& _cdInfo,
         const std::string& _caller) override;
 
+    virtual bool IsValidImpl(GroupCfg& _cfg, Robot* _robot, std::vector<Robot*> _robots,
+        CDInfo& _cdInfo, const std::string& _caller) override;
+
     ///@}
     ///@name Helpers
     ///@{
@@ -131,6 +134,9 @@ class CollisionDetectionValidity
     /// @return True if the robot group is in collision at _cfg.
     virtual bool IsInCollision(CDInfo& _cdInfo, const GroupCfg& _cfg,
         const std::string& _caller);
+
+    virtual bool IsInCollision(CDInfo& _cdInfo, const GroupCfg& _cfg,
+        Robot* _robot, std::vector<Robot*> _robots, const std::string& _caller);
 
     /// Check if any of the robot's bodies are in collision with each other.
     /// @param _cdInfo Output for collision detection info. It will only be
@@ -213,7 +219,7 @@ CollisionDetectionValidity(XMLNode& _node)
   m_ignoreSiblingCollisions = _node.Read("ignoreSiblingCollisions", false,
       m_ignoreSiblingCollisions,
       "Ignore bodies that share a parent in self-collision checks.");
-
+                
   const std::string cdLabel = _node.Read("method", true, "", "method");
 
   if(cdLabel == "BoundingSpheres")
@@ -404,6 +410,25 @@ IsValidImpl(GroupCfg& _cfg, CDInfo& _cdInfo, const std::string& _caller) {
   return valid;
 }
 
+
+template <typename MPTraits>
+bool
+CollisionDetectionValidity<MPTraits>::
+IsValidImpl(GroupCfg& _cfg, Robot* _robot, std::vector<Robot*> _robots,
+   CDInfo& _cdInfo, const std::string& _caller) {
+
+  this->GetStatClass()->IncCfgIsColl(_caller);
+
+  // Position the robots within the environment.
+  _cfg.ConfigureRobot();
+
+  // Check for collisions.
+  const bool valid = !IsInCollision(_cdInfo, _cfg, _robot, _robots, _caller);
+  //_cfg.SetLabel("VALID");
+
+  return valid;
+}
+
 /*--------------------------------- Helpers ----------------------------------*/
 
 template <typename MPTraits>
@@ -549,6 +574,60 @@ IsInCollision(CDInfo& _cdInfo, const GroupCfg& _cfg, const std::string& _caller)
   }
 
   _cdInfo.m_clearanceMap = clearanceMap;
+
+  return collision;
+}
+
+
+template <typename MPTraits>
+bool
+CollisionDetectionValidity<MPTraits>::
+IsInCollision(CDInfo& _cdInfo, const GroupCfg& _cfg, Robot* _robot, 
+  std::vector<Robot*> _robots, const std::string& _caller) {
+
+  const bool allInfo = _cdInfo.m_retAllInfo;
+  _cdInfo.ResetVars(allInfo);
+
+  if(this->m_debug)
+    std::cout << "Checking robot '" << _robot->GetLabel()
+              << "' for collision against " << _robots.size()
+              << " other robots."
+              << "\n\tCfg: " << _cfg.PrettyPrint()
+              << std::endl;
+
+  bool collision = false;
+
+  // Check the group for self-collisions.
+  if(!m_ignoreSelfCollision) {
+    // Check the robot for self-collision.
+    collision |= IsInSelfCollision(_cdInfo, _robot->GetMultiBody(), _caller);
+
+    // Early quit if we don't care for all collision info.
+    if(!allInfo and collision)
+      return true;
+
+    // Check for inter-robot collisions within the given group.
+    for(Robot* const robot : _robots) {
+      collision |= IsInInterRobotCollision(_cdInfo, _robot, {robot}, _caller);
+
+      if(!allInfo and collision)
+        return true;
+    }
+  }
+
+  // Check the robot for boundary containment.
+  collision |= IsInBoundaryCollision(_cdInfo, _cfg.GetRobotCfg(_robot));
+
+  // Early quit if we don't care for all collision info.
+  if(!allInfo and collision)
+    return true;
+
+  // Check the robot for obstacle collisions.
+  collision |= IsInObstacleCollision(_cdInfo, _robot->GetMultiBody(), _caller);
+
+  // Early quit if we don't care for all collision info.
+  if(!allInfo and collision)
+    return true;
 
   return collision;
 }

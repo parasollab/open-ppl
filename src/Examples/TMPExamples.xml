@@ -78,8 +78,8 @@
 
     <Samplers>
       <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
-
       <UniformRandomSampler label="UniformRandomFree" vcLabel="pqp_solid"/>
+      <BridgeTestSampler label="BridgeTest" vcLabel="alwaysTrue" d="10" dmLabel="euclidean" />
     </Samplers>
 
     <LocalPlanners>
@@ -134,6 +134,7 @@
         goalDmLabel="euclidean" goalThreshold="5">
         <Evaluator label="Query"/>
       </BasicRRTStrategy>
+
       <!-- RRT Star -->
       <BasicRRTStrategy label="RRTstar" debug="false"
         querySampler="UniformRandomFree" samplerLabel="UniformRandomFree"
