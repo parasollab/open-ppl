@@ -31,7 +31,6 @@
 #include "MPLibrary/DistanceMetrics/WeightedEuclideanDistance.h"
 #include "MPLibrary/DistanceMetrics/WorkspaceTranslationDistance.h"
 
-
 //validity checker includes
 #include "MPLibrary/ValidityCheckers/AlwaysTrueValidity.h"
 #include "MPLibrary/ValidityCheckers/CollisionDetectionValidity.h"
@@ -65,11 +64,13 @@
 //connector includes
 #include "MPLibrary/Connectors/CCsConnector.h"
 #include "MPLibrary/Connectors/NeighborhoodConnector.h"
+#include "MPLibrary/Connectors/CCsConnector.h"
 #include "MPLibrary/Connectors/RewireConnector.h"
 
 //metric includes
 #include "MPLibrary/Metrics/NumEdgesMetric.h"
 #include "MPLibrary/Metrics/NumNodesMetric.h"
+#include "MPLibrary/Metrics/NumEdgesMetric.h"
 #include "MPLibrary/Metrics/TimeMetric.h"
 
 //map evaluator includes
@@ -81,7 +82,6 @@
 #include "MPLibrary/MapEvaluators/GroupDecoupledQuery.h"
 #include "MPLibrary/MapEvaluators/GroupQuery.h"
 #include "MPLibrary/MapEvaluators/LazyQuery.h"
-#include "MPLibrary/MapEvaluators/SIPPMethod.h"
 #include "MPLibrary/MapEvaluators/PrintMapEvaluation.h"
 #include "MPLibrary/MapEvaluators/QueryMethod.h"
 #include "MPLibrary/MapEvaluators/SIPPMethod.h"
@@ -206,6 +206,7 @@ struct MPTraits {
   typedef boost::mpl::list<
     CCsConnector<MPTraits>,
     NeighborhoodConnector<MPTraits>,
+    CCsConnector<MPTraits>,
     RewireConnector<MPTraits>
       > ConnectorMethodList;
 

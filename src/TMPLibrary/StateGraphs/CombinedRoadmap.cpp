@@ -1141,8 +1141,8 @@ size_t
 CombinedRoadmap::
 MoveGroupCfg(GroupCfgType& _original, GroupRoadmapType* _newRoadmap) {
 
-  //GroupCfgType gcfg = _original.SetGroupRoadmap(_newRoadmap);
-  _original.SetGroupRoadmap(_newRoadmap);
+  GroupCfgType gcfg = _original;
+  gcfg.SetGroupRoadmap(_newRoadmap);
   return _newRoadmap->AddVertex(_original);
 }
 

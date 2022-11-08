@@ -206,6 +206,7 @@ TestGroupCfgSampleIndividualBoundaries() {
   for(auto robot : this->GetGroupRoadmap()->GetGroup()->GetRobots()) {
     boundaryMap.emplace(std::make_pair(robot, this->GetEnvironment()->GetBoundary()));
   }
+
   std::vector<GroupCfgType> valids;
   std::vector<GroupCfgType> invalids;
   
