@@ -45,21 +45,24 @@ class SmartAllocator : public TaskAllocatorMethod {
     ///@{
 
     /// Initialize the member variables
-    void Initialize();
+    //void Initialize();
 
     /// Allocate an individual task
     void AllocateTask(vector<SemanticTask*> _semanticTasks);
 
     /// Save the allocation in the plan
-    void SaveAllocation(Robot* _robot, SemanticTask* _task);
+    //void SaveAllocation(Robot* _robot, SemanticTask* _task,std::unique_ptr<Path> _path);
 
     /// Create a MPTask from cfgs
-    std::shared_ptr<MPTask> CreateMPTask(Robot* _robot, const Cfg& _start, const Cfg& _goal);
+    std::shared_ptr<MPTask> CreateMPTask(Robot* _robot, const Cfg& _start, const
+        Cfg& _goal);
 
     /// Create a MPTask from cfg and constraint
-    std::shared_ptr<MPTask> CreateMPTask(Robot* _robot, const Cfg& _start, const Constraint*  _goal);
+    std::shared_ptr<MPTask> CreateMPTask(Robot* _robot, const Cfg& _start, const
+        Constraint*  _goal);
 
-    std::shared_ptr<MPTask> CreateMPTask(Robot* _robot, const Constraint* _start, const Constraint* _goal);
+    std::shared_ptr<MPTask> CreateMPTask(Robot* _robot, const Constraint*
+        _start, const Constraint* _goal);
 
     void SubtractSmallest();
     void Munkres();
@@ -77,21 +80,28 @@ class SmartAllocator : public TaskAllocatorMethod {
     /// Flag keeping track of initialization status
     bool m_initialized = false;
 
-    std::string m_singleSolver;
+    std::string m_solver;
 
     /// Local MPSolution to store roadmaps and query paths from
-    std::unique_ptr<MPSolution> m_solution;
+    //std::unique_ptr<MPSolution> m_solution;
 
     /// Map tracking robot positions through allocation process
-    std::map<Robot*,Cfg> m_currentPositions;
+    //std::map<Robot*,Cfg> m_currentPositions;
+
+    //std::map<Robot*,double> m_nextFreeTime;
+
+    //bool m_clearAfterInitializing{false};
 
     /// Cost matrix
     vector<vector<double>> m_costMatrix;
 
+    /// Path matrix
+    vector<vector<std::unique_ptr<Path>>> m_pathMatrix;
+
     /// Mask matrixm_
     vector<vector<double>> m_mask;
     int m_n;
-    int m_m; 
+    int m_m;
     int m_step =1;
     int m_row0;
     int m_col0;

@@ -7,6 +7,7 @@
 #include "Utilities/MetricUtils.h"
 
 #include "TMPLibrary/Solution/Plan.h"
+#include "TMPLibrary/Solution/TaskSolution.h"
 
 /*----------------------- Construction -----------------------*/
 
@@ -19,10 +20,13 @@ SmartAllocator::
 SmartAllocator(XMLNode& _node) : TaskAllocatorMethod(_node) {
   this->SetName("SmartAllocator");
 
-  // TODO::Parse xml node
-  m_singleSolver = _node.Read("singleAgentSolver", false, "BasicPRM",
-      "Provide single agent solver label.");
+  // Parse xml node
+  m_solver = _node.Read("solver", false, "BasicPRM",
+      "Provide a solver label.");
 
+
+  m_clearAfterInitializing = _node.Read("reset",false,m_clearAfterInitializing,
+      "Flag to reset all existing allocations after initializing.");
 }
 
 
@@ -49,33 +53,6 @@ AllocateTasks() {
 
 void
 SmartAllocator::
-Initialize() {
-  auto problem = this->GetMPProblem();
-
-  // Initialize mp solution object if it is not yet initialized
-  if(!m_initialized) {
-    m_solution = std::unique_ptr<MPSolution>(new MPSolution(
-                  this->GetPlan()->GetCoordinator()->GetRobot()));
-  }
-
-
-  // Intialize robot start positions
-  auto plan = this->GetPlan();
-  auto coordinator = plan->GetCoordinator();
-  for(auto& robot : problem->GetRobots()) {
-    if(robot.get() == coordinator->GetRobot())
-      continue;
-
-    auto startPosition = problem->GetInitialCfg(robot.get());
-    m_currentPositions[robot.get()] = startPosition;
-    m_solution->AddRobot(robot.get());
-  }
-
-  m_initialized = true;
-}
-
-void
-SmartAllocator::
 AllocateTask(vector<SemanticTask*> _semanticTasks) {
 
   auto lib = this->GetMPLibrary();
@@ -96,6 +73,9 @@ AllocateTask(vector<SemanticTask*> _semanticTasks) {
 
   // create an nxm array. n = num robots, m = num tasks
   vector<vector<double>> costMatrix(m_n, vector<double>(m_m));
+  //vector<vector<std::unique_ptr<Path>>> pathMatrix(m_n, vector<std::unique_ptr<Path>>(m_m));
+  //m_pathMatrix = pathMatrix;
+
   // mask matrix that wil be used in Munkres algorithm
   vector<vector<double>> mask(m_n, vector<double>(m_m/2));
 
@@ -103,6 +83,7 @@ AllocateTask(vector<SemanticTask*> _semanticTasks) {
   vector<bool> assigned;
   for(int i=0; i<m_m/2; i++) assigned.push_back(false);
 
+  vector<vector<std::unique_ptr<Path>>> pathMatrix;
   // keep looping until every task has a robot assigned to it
   // in this loop, find the cost matrix and then call munkres
   while(!solved) {
@@ -133,7 +114,6 @@ AllocateTask(vector<SemanticTask*> _semanticTasks) {
       // assigned to it and add the cost of completing those tasks to the
       // cost of this task
       double previousCost = 0.0;
-      int lastAssigned =0; // keep track of the last task it was assigned
 
       if(robot.get() == coordinator->GetRobot())
         continue;
@@ -142,9 +122,11 @@ AllocateTask(vector<SemanticTask*> _semanticTasks) {
       // If it does, we need to add the cost of those to these task costs
 
       for(int l=0; l<originalNumTasks; l++){
+        // robot i assigned to task l = 1 if true
         if(assignments[i][l] ==1){
+          // if this robot is assigned to a task, add the cost of completing
+          // that task to its previous cost
           previousCost+= costMatrix[i][l];
-          lastAssigned = l;
         }
       }
 
@@ -154,53 +136,54 @@ AllocateTask(vector<SemanticTask*> _semanticTasks) {
       // Iterate through all tasks
       for(auto& semanticTask : _semanticTasks) {
 
-        // TODO:: check if the robot is already assigned to another task
+        // check if the robot is already assigned to another task
         // if so, add the cost of that task to the cost of this task
         // note: be careful about start/goal config for each of the tasks
 
-        if(previousCost > 0) {
 
-          const auto& goals = _semanticTasks[(lastAssigned*2)+1]->GetMotionTask()->GetGoalConstraints();
-          auto goal = goals[0]->Clone();
+        auto task = CreateMPTask(robot.get(), m_currentPositions[robot.get()],
+              semanticTask->GetMotionTask()->GetStartConstraint());
 
+        task->SetRobot(robot.get());
 
-          auto task = CreateMPTask(robot.get(), goal.get(), semanticTask->GetMotionTask()->GetStartConstraint());
-          task->SetRobot(robot.get());
-
-          // solve the "getting there" task
-          lib->Solve(problem, task.get(), m_solution.get(), m_singleSolver, LRand(), this->GetNameAndLabel()+"::"+task->GetLabel());
-
-        }
-
-        else {
-          auto task = CreateMPTask(robot.get(), m_currentPositions[robot.get()], semanticTask->GetMotionTask()->GetStartConstraint());
-
-          task->SetRobot(robot.get());
-
-          // solve the "getting there" task
-          lib->Solve(problem, task.get(), m_solution.get(), m_singleSolver, LRand(), this->GetNameAndLabel()+"::"+task->GetLabel());
-
-        }
-
+        // solve the "getting there" task
+        lib->Solve(problem, task.get(), m_solution.get(), m_solver,
+            LRand(), this->GetNameAndLabel()+"::"+task->GetLabel());
 
         // compute cost of path
         double pathCost;
-        if(!m_solution->GetPath()->Cfgs().empty()){ // only get the cost if we found a valid path
-          pathCost = m_solution->GetPath()->Length();
-        } else {
-          pathCost = std::numeric_limits<double>::max(); // otherwise, assign some huge cost for this task
-        }
+        auto path = m_solution->GetPath(robot.get());
+
+        if(path->VIDs().empty())
+          continue;
+
+
+        auto rm = m_solution->GetRoadmap(robot.get());
+        auto pathCopy = std::unique_ptr<Path>(new Path(rm));
+        pathCost = path->Length();
+        *(pathCopy.get()) = *path;
 
         // Compute cost for robot to execute task
-        lib->Solve(problem,semanticTask->GetMotionTask().get(),m_solution.get());
+        auto mainTask = semanticTask->GetMotionTask().get();
+        mainTask->SetRobot(robot.get());
+        lib->Solve(problem,mainTask,m_solution.get());
+
+        path = m_solution->GetPath();
+        if(path->VIDs().empty())
+          continue;
+
+        *(pathCopy.get()) += path->VIDs();
 
         // compute cost of this task
         double taskCost = m_solution->GetPath()->Length();
 
-        double totalCost = pathCost + taskCost;
+        double totalCost = previousCost + pathCost + taskCost;
 
+        double estimatedCompletion = totalCost + m_nextFreeTime[robot.get()];
+        std::cout << "estimated completion = " << estimatedCompletion << std::endl;
 
-        costMatrix[i][j] = totalCost;
+        costMatrix[i][j] = estimatedCompletion;
+        pathMatrix[i][j] = std::move(pathCopy);
         j++;
 
       }
@@ -208,10 +191,12 @@ AllocateTask(vector<SemanticTask*> _semanticTasks) {
     }
 
 
-    // the cost matrix we use for munkres should have hte correct number of
+    // the cost matrix we use for munkres should have the correct number of
     // tasks
     vector<vector<double>> mat(m_n, vector<double>(m_m/2));
     m_costMatrix = mat;
+    vector<vector<std::unique_ptr<Path>>> path1;
+    //m_pathMatrix = path1;
 
 
     // clean up the cost matrix. dont give it the duplicate tasks and only
@@ -221,6 +206,7 @@ AllocateTask(vector<SemanticTask*> _semanticTasks) {
     for(int i=0; i<m_n; i++){
       int index = 0;
       for(int j=1; j<m_m; j+=2){
+        path1[i][index] = std::move(pathMatrix[i][index]);
         if(!assigned[index]) {
           m_costMatrix[i][index] = costMatrix[i][j];
         }
@@ -244,7 +230,8 @@ AllocateTask(vector<SemanticTask*> _semanticTasks) {
     for (int j=0; j<m_m/2; j++){
       if(m_mask[i][j] == 1) {
 
-      SaveAllocation(problem->GetRobots()[i].get(),_semanticTasks[(j*2)+1]);
+      SaveAllocation(problem->GetRobots()[i].get(),_semanticTasks[(j*2)+1],
+          std::move(path1[i][j]));
 
       // Also update assignments
       assignments[i][j] = m_mask[i][j];
@@ -266,31 +253,7 @@ AllocateTask(vector<SemanticTask*> _semanticTasks) {
 
 }
 
-void
-SmartAllocator::
-SaveAllocation(Robot* _robot, SemanticTask* _task) {
 
-  if(true) {
-    std::cout << "Allocation "
-              << _task->GetLabel()
-              << " to "
-              << _robot->GetLabel()
-              << std::endl;
-  }
-
-  // Add the allocation to the plan
-  auto plan = this->GetPlan();
-
-  // TODO::Build our task solution object - do this much later
-  plan->AddAllocation(_robot,_task);
-
-  // Update the robot position
-  auto rm = m_solution->GetRoadmap(_robot);
-  auto path = m_solution->GetPath(_robot);
-  auto lastVID = path->VIDs().back();
-  auto lastPosition = rm->GetVertex(lastVID);
-  m_currentPositions[_robot] = lastPosition;
-}
 
 std::shared_ptr<MPTask>
 SmartAllocator::

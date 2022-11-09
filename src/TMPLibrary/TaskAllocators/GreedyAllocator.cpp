@@ -61,58 +61,6 @@ AllocateTasks() {
 
 void
 GreedyAllocator::
-Initialize() {
-  auto problem = this->GetMPProblem();
-  //auto lib = this->GetMPLibrary();
-
-  // Initialize mp solution object if it is not yet initialized
-  if(!m_initialized) {
-    m_solution = std::unique_ptr<MPSolution>(new MPSolution(
-                  this->GetPlan()->GetCoordinator()->GetRobot()));
-  }
-
-  
-  // Intialize robot start positions
-  auto plan = this->GetPlan();
-  auto coordinator = plan->GetCoordinator();
-  for(auto& robot : problem->GetRobots()) {
-    if(robot.get() == coordinator->GetRobot())
-      continue;
-
-    Cfg startPosition(robot.get());
-    double nextFreeTime = 0.;
-
-    auto allocs = plan->GetAllocations(robot.get());
-    if(allocs.empty()) {
-      startPosition = problem->GetInitialCfg(robot.get());
-    }
-    else {
-      auto task = allocs.back();
-      auto sol = plan->GetTaskSolution(task);
-      auto vid = sol->GetPath()->VIDs().back();
-      startPosition = sol->GetMotionSolution()->GetRoadmap(
-                        robot.get())->GetVertex(vid);
-
-      auto startTime = sol->GetStartTime();
-      auto length = sol->GetPath()->Length();
-      // TODO::This should really be timesteps not length
-      nextFreeTime = startTime + length;
-
-      if(m_clearAfterInitializing)
-        plan->ClearAllocations(robot.get());
-    }
-    
-    m_currentPositions[robot.get()] = startPosition;
-    m_nextFreeTime[robot.get()] = nextFreeTime; 
-
-    m_solution->AddRobot(robot.get());
-  }
-
-  m_initialized = true;
-}
-
-void
-GreedyAllocator::
 AllocateTask(SemanticTask* _semanticTask) {
 
   auto lib = this->GetMPLibrary();
@@ -134,17 +82,17 @@ AllocateTask(SemanticTask* _semanticTask) {
 
     // Use the CreateMPTask function to create a task with robot's current position as start and start of
     // SemanticTask as the goal (_semanticTask->GetMotionTask()->GetStartConstraint())
-    // This task represents the robot getting to the start of the actual task 
+    // This task represents the robot getting to the start of the actual task
 
     auto task = CreateMPTask(robot.get(), m_currentPositions[robot.get()], _semanticTask->GetMotionTask()->GetStartConstraint());
- 
-    
+
+
     task->SetRobot(robot.get());
 
     //lib->SetMPSolution(m_solution.get());
     //m_solution->GetPath()->Clear();
 
-    // solve the "getting there" task 
+    // solve the "getting there" task
     lib->Solve(problem, task.get(), m_solution.get(), m_singleSolver, LRand(), this->GetNameAndLabel()+"::"+task->GetLabel());
 
     // compute cost of path
@@ -166,7 +114,7 @@ AllocateTask(SemanticTask* _semanticTask) {
     // Use the motion task inside the SemanticTask (_semanticTask->GetMotionTask())
 
     auto mainTask = _semanticTask->GetMotionTask().get();
-    mainTask->SetRobot(robot.get());    
+    mainTask->SetRobot(robot.get());
 
     lib->Solve(problem,mainTask,m_solution.get());
 
@@ -174,12 +122,12 @@ AllocateTask(SemanticTask* _semanticTask) {
     if(path->VIDs().empty())
       continue;
 
-    *(pathCopy.get()) += path->VIDs();    
+    *(pathCopy.get()) += path->VIDs();
 
     // compute cost of this task
     double taskCost = m_solution->GetPath()->Length();
     std::cout << "task cost = " << taskCost << endl;
-    
+
     double totalCost = pathCost + taskCost;
 
     double estimatedCompletion = totalCost + m_nextFreeTime[robot.get()];
@@ -199,39 +147,6 @@ AllocateTask(SemanticTask* _semanticTask) {
 
 }
 
-void
-GreedyAllocator::
-SaveAllocation(Robot* _robot, SemanticTask* _task, std::unique_ptr<Path> _path) {
-
-  if(true) {
-    std::cout << "Allocation "
-              << _task->GetLabel()
-              << " to "
-              << _robot->GetLabel()
-              << std::endl;
-  }
-
-  // Update the robot position
-  auto rm = m_solution->GetRoadmap(_robot);
-  auto lastVID = _path->VIDs().back();
-  auto lastPosition = rm->GetVertex(lastVID);
-  m_currentPositions[_robot] = lastPosition;
-  auto startTime = m_nextFreeTime[_robot];
-  m_nextFreeTime[_robot] += _path->Length();
-
-  // Add the allocation to the plan
-  auto plan = this->GetPlan();
-  plan->AddAllocation(_robot,_task);
-
-  // TODO::Build our task solution object - do this much later
-  auto sol = std::shared_ptr<TaskSolution>(new TaskSolution(_task));
-  sol->SetRobot(_robot);
-  sol->SetMotionSolution(m_solution.get());
-  sol->SetPath(std::move(_path));
-  sol->SetStartTime(startTime);
-
-  plan->SetTaskSolution(_task,sol);
-}
 
 std::shared_ptr<MPTask>
 GreedyAllocator::

@@ -45,13 +45,13 @@ class GreedyAllocator : public TaskAllocatorMethod {
     ///@{
 
     /// Initialize the member variables
-    void Initialize();
+    //void Initialize();
 
     /// Allocate an individual task
     void AllocateTask(SemanticTask* _semanticTask);
 
     /// Save the allocation in the plan
-    void SaveAllocation(Robot* _robot, SemanticTask* _task,std::unique_ptr<Path> _path);
+    //void SaveAllocation(Robot* _robot, SemanticTask* _task,std::unique_ptr<Path> _path);
 
     /// Create a MPTask from cfgs
     std::shared_ptr<MPTask> CreateMPTask(Robot* _robot, const Cfg& _start, const Cfg& _goal);
@@ -64,19 +64,19 @@ class GreedyAllocator : public TaskAllocatorMethod {
     ///@{
 
     /// Flag keeping track of initialization status
-    bool m_initialized = false;
+    //bool m_initialized = false;
 
     std::string m_singleSolver;
 
     /// Local MPSolution to store roadmaps and query paths from
-    std::unique_ptr<MPSolution> m_solution;
+    //std::unique_ptr<MPSolution> m_solution;
 
     /// Map tracking robot positions through allocation process
-    std::map<Robot*,Cfg> m_currentPositions;
+    //std::map<Robot*,Cfg> m_currentPositions;
 
-    std::map<Robot*,double> m_nextFreeTime;
+    //std::map<Robot*,double> m_nextFreeTime;
 
-    bool m_clearAfterInitializing{false};
+    //bool m_clearAfterInitializing{false};
 
     ///@}
 };
