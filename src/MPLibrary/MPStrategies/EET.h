@@ -13,17 +13,25 @@
 // #include <vector>
 #include <queue>
 
+
+/* HYPERPARAMETER NOTES THAT ANANYA NEEDS TO MOVE BUT IS
+TOO HAPPY TO AT THE MOMENT
+
+1. THE MINIMUM RADIUS IS HIGHLY DEPENDENT ON THE CLEARANCE OF THE AREA. LOWER CLEARANCE, YOU NEED TO STEP DOWN THE MIN RADIUS BY AN ORDER OF MAGNITUDE OR SO. 
+2. THE MINIMUM RADIUS IS HIGHLY FINNICKY. IN ONE TEST, MIN RADIUS 0.1 WAS TOO BIG, 0.01 TOOK FOREVER (TOO SMALL) AND 0.05 WAS JUST RIGHT
+3. WHEN CHANGING MIN RADIUS YOU ALSO NEED TO CHANGE NUM SAMPLES TAKEN ON SPHERE. RADIUS INCREASES, NUM POINTS SHOULD INCREASE (I THINK)
+
+*/
+
 template <typename MPTraits>
 class EET : public BasicRRTStrategy<MPTraits> {
   public:
-    typedef GenericStateGraph<mathtool::Point3d, 
-                                std::vector<mathtool::Point3d>> BaseType;
-
     typedef typename mathtool::Point3d      Point;
     typedef typename MPTraits::CfgType      CfgType;
     typedef typename MPTraits::WeightType   WeightType;
     typedef typename MPTraits::RoadmapType  RoadmapType;
     typedef typename RoadmapType::VID       VID;
+    typedef typename RoadmapType::EID       EID;
     typedef typename RoadmapType::VertexSet VertexSet;
 
 
@@ -46,6 +54,7 @@ class EET : public BasicRRTStrategy<MPTraits> {
     
     // double explore_exploit_bias{0};  
     int m_nSphereSamples{100};
+    double m_minSphereRadius{0.001};
 
     // Start and goal points (not cfgs)
     Point pStart;
@@ -60,14 +69,32 @@ class EET : public BasicRRTStrategy<MPTraits> {
       VID wavefrontVID;
       VID parentVID;
 
-      Sphere(const Point _center, double _radius, double _priority, VID _parent)
-      : center(_center), radius(_radius), priority(_priority), parentVID(_parent) {}
+      Sphere(const Point _center, double _radius, double _priority, VID _parentVID)
+      : center(_center), radius(_radius), priority(_priority), parentVID(_parentVID) {
+        // Priority=distance to goal. 
+        // So we want the lower numbers to be processed first. 
+        priority *= -1; 
+      }
 
-      Sphere() {}
+      Sphere() {
+        radius = 0;
+        priority = 0;
+        wavefrontVID = INVALID_VID;
+        parentVID = INVALID_VID;
+        center = Point();
+      }
 
+      bool isEmpty() {
+        return radius == 0 
+            && priority == 0
+            && wavefrontVID == INVALID_VID
+            && parentVID == INVALID_VID;
+      }
 
       bool operator==(const Sphere& _other) const {
-        return center == _other.center && radius == _other.radius;
+        return center == _other.center 
+            && radius == _other.radius 
+            && priority == _other.priority;
       }
 
       bool operator!=(const Sphere& _other) const {
@@ -75,6 +102,9 @@ class EET : public BasicRRTStrategy<MPTraits> {
       }
 
       friend std::ostream& operator<<(std::ostream& _os, const Sphere& _vertex) {
+        _os << _vertex.center[0] << " " 
+            << _vertex.center[1] << " " 
+            << _vertex.center[2];
         return _os;
       }
 
@@ -93,9 +123,10 @@ class EET : public BasicRRTStrategy<MPTraits> {
   private:
 
     // For WAVEFRONT expansion.
-    void InsertSphereIntoPQ(Point pCenter, std::priority_queue<Sphere>& q);
+    Sphere InsertSphereIntoPQ(Point pCenter, std::priority_queue<Sphere>& q, VID parentVID);
 
-    
+    bool DEBUG_veryverbose{false};
+    bool DEBUG_verbose{true};
 };
 
 /*---------------------------------------------------------------------------*/
@@ -110,8 +141,12 @@ EET<MPTraits>::
 EET(XMLNode& _node) : BasicRRTStrategy<MPTraits>(_node) {
   this->SetName("EET");
 
-  m_nSphereSamples = _node.Read("nSphereSamples", false, m_nSphereSamples,
+  m_nSphereSamples = _node.Read("nSphereSamples", false, m_nSphereSamples, 
+                                0, std::numeric_limits<int>::max(),
       "Number of samples on the sphere, for Wavefront Expansion.");
+  m_minSphereRadius = _node.Read("minSphereRadius", false, m_minSphereRadius, 
+                                0., std::numeric_limits<double>::max(),
+      "Minimum sphere radius for sphere growth.");
 }
 
 
@@ -169,7 +204,7 @@ Wavefront() {
 
   // Root the WE. 
   std::priority_queue<Sphere> sphereQueue;
-  InsertSphereIntoPQ(pStart, sphereQueue);
+  InsertSphereIntoPQ(pStart, sphereQueue, INVALID_VID);
   wavefrontRoot = sphereQueue.top();
 
   // Grow WE! 
@@ -181,46 +216,85 @@ Wavefront() {
     VID sVID = wavefrontExpansion.AddVertex(s);
     s.wavefrontVID = sVID;
     wavefrontExpansionSpheres[sVID] = s;
+    if (this->m_debug) {
+      std::cout << "adding to WE. " << 
+                    "Sphere " << s.center[0] << " " 
+                              << s.center[1] << " " 
+                              << s.center[2] << " " 
+                        << "with radius " << s.radius
+                        << " priority: " << s.priority 
+                << " (There are " << sphereQueue.size() << " elments in the queue)."
+                << std::endl;
+    }
 
     // add edge to WE
     VID parentVID = s.parentVID;
     wavefrontExpansion.AddEdge(parentVID, sVID);
-
-    // If we are within a goal region, we do not need to pursue this sphere.
-    bool withinGoalRegion = false;
-    for (Point pGoal : pGoals) {
-      if (Distance(pGoal, s.center) < s.radius) 
-        withinGoalRegion = true;
+    if (this->m_debug) {
+      std::cout << "adding edge from VID " << parentVID 
+                << " to VID " << sVID << std::endl;
+      std::cout << "VID " << parentVID << " has children VIDs:";
+      if (parentVID != INVALID_VID) {
+        for (auto v : wavefrontExpansion.GetChildren(parentVID)){
+          std::cout << " " << v;
+        }
+        std::cout << " " << std::endl;
+      } else {std::cout << "parentVID invalid" << std::endl;}
     }
-    if (withinGoalRegion)
-      continue;
 
-    // Sample n points on sphere surface
-    auto sampler = this->GetSampler("UniformRandomFree");
-    std::vector<CfgType> samples;
-    sampler->Sample(1, m_nSphereSamples, this->GetEnvironment()->GetBoundary(),
-        std::back_inserter(samples));
+    // If we are within the goal region, we are done.
+    // TODO ANANYA: CHECK ALL GOAL REGIONS. 
+    if (Distance(pGoals[0], s.center) < s.radius) {
+      if (this->m_debug) {
+        std::cout << "this sample is within the goal region." << std::endl;
+      }
+      break;
+    }
+
+    // Sample n points on sphere surface. 
+    PointConstruction<MPTraits> _p;
+    std::vector<Point> samples;
+    samples = _p.SampleSphereSurface(s.center, s.radius, m_nSphereSamples);
+    if (this->m_debug){
+      std::cout << "sampled " << samples.size() 
+                << " samples on the surface of sphere with VID " << sVID 
+                << std::endl;
+    }
 
     // Calculate sphere diameter for all points
-    for (auto sample : samples) {
-      Point pi = sample.GetPoint();
+    for (Point p_i : samples) {
+      if (this->m_debug && DEBUG_veryverbose) {
+        std::cout << "investigating sample at point " << p_i << std::endl;
+      }
 
       // spheres in tree. 
+      bool sphereAddedToQueue = false;
       for (auto sphereVID : wavefrontExpansion.GetAllVIDs()) {
         Sphere sphere = wavefrontExpansionSpheres[sphereVID];
 
         // outside existing spheres
-        if (Distance(pi, sphere.center) < sphere.radius) {
-          InsertSphereIntoPQ(pi, sphereQueue);
+        if (Distance(p_i, sphere.center) < sphere.radius) {
+          InsertSphereIntoPQ(p_i, sphereQueue, sphereVID);
+          sphereAddedToQueue = true;
         }
+
+        if (sphereAddedToQueue) { break; }
       }
     } // sphere diameter for all pts
 
   } // tree growth while loop
 
+  if (this->m_debug) {
+    std::cout << "Wavefront expansion has "
+              << wavefrontExpansion.GetAllVIDs().size() 
+              << " nodes." << std::endl;
+  }
+
   return;
 }
 
+
+//TODO ANANYA: FIGURE OUT WHY THIS SOMETIMES RETURNS A NEGATIVE NUMBER. 
 template<class MPTraits>
 double 
 EET<MPTraits>::
@@ -239,9 +313,10 @@ template<class MPTraits>
 double
 EET<MPTraits>::
 DistanceToObstacles(Point _p){ 
-  // This whole function shamelessly copied from Workspace/ClearanceMap.h
+  // This whole function is shamelessly copied from Workspace/ClearceMap.h
+  // (And slightly modified, but not much.)
   
-  // auto boundary = this->GetEnvironment()->GetBoundary();
+  auto boundary = this->GetEnvironment()->GetBoundary();
   auto vc = this->GetValidityChecker("pqp_solid");
   auto pointRobot = this->GetMPProblem()->GetRobot("point");
 
@@ -251,27 +326,33 @@ DistanceToObstacles(Point _p){
   cdInfo.m_retAllInfo = true;
   vc->IsValid(cfg, cdInfo, "Obtain clearance map");
 
-  // Check against boundary
-  // const double boundaryClearance = boundary->GetClearance(_p);
-  // if(boundaryClearance < cdInfo.m_minDist){
-  //   cdInfo.m_objectPoint = boundary->GetClearancePoint(_p);
-  //   cdInfo.m_minDist = boundaryClearance;
-  // }
+  // Check against boundary, 
+  // because we don't want any sphere growing action outside the boundary. 
+  const double boundaryClearance = boundary->GetClearance(_p);
+  if(boundaryClearance < cdInfo.m_minDist){
+    cdInfo.m_objectPoint = boundary->GetClearancePoint(_p);
+    cdInfo.m_minDist = boundaryClearance;
+  }
   return cdInfo.m_minDist;
 }
 
 template <class MPTraits>
-void 
+typename EET<MPTraits>::Sphere
 EET<MPTraits>::
-InsertSphereIntoPQ(Point pCenter, std::priority_queue<Sphere>& q) {
+InsertSphereIntoPQ(Point pCenter, std::priority_queue<Sphere>& q, VID parentVID) {
 
   double radius = DistanceToObstacles(pCenter); // radius. 
+  
+  // Throw out spheres that are too small.. 
+  if (radius < m_minSphereRadius) {
+    return Sphere();
+  }
 
   // Calculate the priority for this point
   // If multiple goals, use the min distance i guess
   // We're probably never going to run this with multiple goals anyway
 
-  double min_priority = 1000000; //big number
+  double min_priority = std::numeric_limits<int>::max();
   for (Point pGoal : pGoals) {
     // calculate the difference between p_goal and p_other_center
     double distance = Distance(pGoal, pCenter);
@@ -283,13 +364,21 @@ InsertSphereIntoPQ(Point pCenter, std::priority_queue<Sphere>& q) {
     }
   }
 
-  // use "-1" as default parent VID. 
-  Sphere s(pCenter, radius, min_priority, -1);
+  Sphere s(pCenter, radius, min_priority, parentVID);
+  if (this->m_debug) {
+    std::cout << "Added to queue " << 
+              "Sphere " << s.center[0] << " " 
+                        << s.center[1] << " " 
+                        << s.center[2] << " " 
+                  << "with radius " << s.radius
+              << " and priority " << s.priority
+               << std::endl;
+  }
 
   q.push(s);
+
+  return s;
 }
 
-
 /*----------------------------------------------------------------------------*/
-
 #endif
