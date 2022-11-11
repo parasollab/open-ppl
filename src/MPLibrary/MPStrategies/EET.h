@@ -124,9 +124,6 @@ class EET : public BasicRRTStrategy<MPTraits> {
 
     // For WAVEFRONT expansion.
     Sphere InsertSphereIntoPQ(Point pCenter, std::priority_queue<Sphere>& q, VID parentVID);
-
-    bool DEBUG_veryverbose{false};
-    bool DEBUG_verbose{true};
 };
 
 /*---------------------------------------------------------------------------*/
@@ -217,13 +214,14 @@ Wavefront() {
     s.wavefrontVID = sVID;
     wavefrontExpansionSpheres[sVID] = s;
     if (this->m_debug) {
-      std::cout << "adding to WE. " << 
+      std::cout << "Investigating " << 
                     "Sphere " << s.center[0] << " " 
                               << s.center[1] << " " 
                               << s.center[2] << " " 
                         << "with radius " << s.radius
                         << " priority: " << s.priority 
-                << " (There are " << sphereQueue.size() << " elments in the queue)."
+                << "Added to WE." << std::endl 
+                << "   (There are " << sphereQueue.size() << " elments in the queue)."
                 << std::endl;
     }
 
@@ -231,22 +229,22 @@ Wavefront() {
     VID parentVID = s.parentVID;
     wavefrontExpansion.AddEdge(parentVID, sVID);
     if (this->m_debug) {
-      std::cout << "adding edge from VID " << parentVID 
+      std::cout << "   Adding edge from VID " << parentVID 
                 << " to VID " << sVID << std::endl;
-      std::cout << "VID " << parentVID << " has children VIDs:";
+      std::cout << "VID " << parentVID << " has children VIDs: ";
       if (parentVID != INVALID_VID) {
         for (auto v : wavefrontExpansion.GetChildren(parentVID)){
           std::cout << " " << v;
         }
         std::cout << " " << std::endl;
-      } else {std::cout << "parentVID invalid" << std::endl;}
+      } else {std::cout << "parentVID invalid. This is likely the root node. " << std::endl;}
     }
 
     // If we are within the goal region, we are done.
     // TODO ANANYA: CHECK ALL GOAL REGIONS. 
     if (Distance(pGoals[0], s.center) < s.radius) {
       if (this->m_debug) {
-        std::cout << "this sample is within the goal region." << std::endl;
+        std::cout << "   This sphere contains the goal region." << std::endl;
       }
       break;
     }
@@ -256,19 +254,19 @@ Wavefront() {
     std::vector<Point> samples;
     samples = _p.SampleSphereSurface(s.center, s.radius, m_nSphereSamples);
     if (this->m_debug){
-      std::cout << "sampled " << samples.size() 
+      std::cout << "   sampled " << samples.size() 
                 << " samples on the surface of sphere with VID " << sVID 
                 << std::endl;
     }
 
     // Calculate sphere diameter for all points
     for (Point p_i : samples) {
-      if (this->m_debug && DEBUG_veryverbose) {
-        std::cout << "investigating sample at point " << p_i << std::endl;
-      }
+      // check which sphere in tree to attach this one to. 
 
-      // spheres in tree. 
-      bool sphereAddedToQueue = false;
+      // not in pseudocode, but don't want to insert 
+      // the same sphere into queue so many times. Priority will be the same. 
+      // TODO: is sphereAddedToQueue bad? making path longer?
+      bool sphereAddedToQueue = false; 
       for (auto sphereVID : wavefrontExpansion.GetAllVIDs()) {
         Sphere sphere = wavefrontExpansionSpheres[sphereVID];
 
