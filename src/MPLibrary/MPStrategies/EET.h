@@ -9,7 +9,7 @@
 // #include <iomanip>
 // #include <iterator>
 #include <string>
-// #include <unordered_set>
+#include <set>
 // #include <vector>
 #include <queue>
 
@@ -204,8 +204,17 @@ Wavefront() {
   InsertSphereIntoPQ(pStart, sphereQueue, INVALID_VID);
   wavefrontRoot = sphereQueue.top();
 
+  // in-loop variables
+  std::set<int> goalsReached;
+
   // Grow WE! 
   while (!sphereQueue.empty()) {
+    // if we've reached all the goals, we are done. 
+    if (goalsReached.size() == pGoals.size()) {
+      break;
+    }
+
+
     Sphere s = sphereQueue.top();
     sphereQueue.pop();
 
@@ -231,7 +240,7 @@ Wavefront() {
     if (this->m_debug) {
       std::cout << "   Adding edge from VID " << parentVID 
                 << " to VID " << sVID << std::endl;
-      std::cout << "VID " << parentVID << " has children VIDs: ";
+      std::cout << "   VID " << parentVID << " has children VIDs: ";
       if (parentVID != INVALID_VID) {
         for (auto v : wavefrontExpansion.GetChildren(parentVID)){
           std::cout << " " << v;
@@ -241,12 +250,21 @@ Wavefront() {
     }
 
     // If we are within the goal region, we are done.
-    // TODO ANANYA: CHECK ALL GOAL REGIONS. 
-    if (Distance(pGoals[0], s.center) < s.radius) {
-      if (this->m_debug) {
-        std::cout << "   This sphere contains the goal region." << std::endl;
+    // TODO ANANYA: CHECK ALL GOAL REGIONS.
+    bool inGoalRegion = false;
+    for (size_t i=0; i < pGoals.size(); i++) { 
+      auto pGoal = pGoals[i];
+      if (Distance(pGoal, s.center) < s.radius) {
+        inGoalRegion = true;
+        goalsReached.insert(i);
+        if (this->m_debug) {
+          std::cout << "   This sphere contains the goal region." << std::endl;
+        }
+        break;
       }
-      break;
+    }
+    if (inGoalRegion) {
+      continue;
     }
 
     // Sample n points on sphere surface. 
