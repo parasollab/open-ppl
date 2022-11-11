@@ -123,7 +123,9 @@ class EET : public BasicRRTStrategy<MPTraits> {
   private:
 
     // For WAVEFRONT expansion.
-    Sphere InsertSphereIntoPQ(Point pCenter, std::priority_queue<Sphere>& q, VID parentVID);
+    Sphere InsertSphereIntoPQ(Point pCenter, 
+                              std::priority_queue<Sphere>& q, 
+                              VID parentVID);
 };
 
 /*---------------------------------------------------------------------------*/
@@ -249,8 +251,7 @@ Wavefront() {
       } else {std::cout << "parentVID invalid. This is likely the root node. " << std::endl;}
     }
 
-    // If we are within the goal region, we are done.
-    // TODO ANANYA: CHECK ALL GOAL REGIONS.
+    // If we are within a goal region, we are done.
     bool inGoalRegion = false;
     for (size_t i=0; i < pGoals.size(); i++) { 
       auto pGoal = pGoals[i];
@@ -382,7 +383,7 @@ InsertSphereIntoPQ(Point pCenter, std::priority_queue<Sphere>& q, VID parentVID)
 
   Sphere s(pCenter, radius, min_priority, parentVID);
   if (this->m_debug) {
-    std::cout << "Added to queue " << 
+    std::cout << "   Added to queue " << 
               "Sphere " << s.center[0] << " " 
                         << s.center[1] << " " 
                         << s.center[2] << " " 
