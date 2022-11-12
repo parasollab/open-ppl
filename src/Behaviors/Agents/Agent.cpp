@@ -26,28 +26,33 @@ Agent(Robot* const _r) : m_robot(_r) { }
 Agent::
 Agent(Robot* const _r, XMLNode& _node) : m_robot(_r) {
 
-  bool setStepFunction = false;
-	for(auto& child : _node) {
+  for(auto& child : _node) {
     if(child.Name() == "StepFunction") {
-      m_stepFunction = StepFunction::Factory(this,child);
-      setStepFunction = true;
+      m_stepFunctions.push_back(StepFunction::Factory(this,child));
     }
-	}
-
-  if(!setStepFunction) {
-    m_stepFunction = nullptr;
   }
 }
 
 Agent::
 Agent(Robot* const _r, const Agent& _a)
   : m_robot(_r),
+    // m_library(std::move(_a.m_library.get())),
+    // m_solution(std::move(_a.m_solution.get())),
     m_initialized(_a.m_initialized),
     m_debug(_a.m_debug)
-{ }
+{
+  /// TODO: move is probably not the correct method to call.
+  /// Need to create new unique_ptr for a new object
+}
 
 Agent::
-~Agent() { }
+~Agent() = default;
+
+std::unique_ptr<Agent>
+Agent::
+Clone(Robot* const _r) const {
+  return std::unique_ptr<Agent>(new Agent(_r, *this));
+}
 
 /*----------------------------- Accessors ------------------------------------*/
 
@@ -82,10 +87,16 @@ ResetStartConstraint() {
   GetTask()->SetStartConstraint(std::move(start));
 }
 
-const std::string&
+// const std::string&
+// Agent::
+// GetCapability() const noexcept {
+//   return m_robot->GetCapability();
+// }
+
+MPSolution*
 Agent::
-GetCapability() const noexcept {
-  return m_robot->GetCapability();
+GetMPSolution() {
+  return m_solution.get();
 }
 
 /*------------------------------ Internal State ------------------------------*/
@@ -98,6 +109,59 @@ IsChild() const noexcept {
 
 /*---------------------------- Simulation Interface --------------------------*/
 
+void
+Agent::
+Initialize() {
+  // Guard against re-init.
+  if(m_initialized)
+    return;
+  m_initialized = true;
+
+  for(auto& step : m_stepFunctions) {
+    step->Initialize();
+  }
+
+  // Get problem info.
+  auto problem = m_robot->GetMPProblem();
+  const std::string& xmlFile = problem->GetXMLFilename();
+
+  // Initialize the agent's planning library.
+  m_library = std::unique_ptr<MPLibrary>(new MPLibrary(xmlFile));
+  m_solution = std::unique_ptr<MPSolution>(new MPSolution(m_robot));
+
+}
+
+void
+Agent::
+Step(const double _dt) {
+  Initialize();
+
+  if(m_stepFunctions.empty())
+    return;
+  
+  for(auto& stepFunction : m_stepFunctions) {
+    if(!stepFunction.get())
+      return;
+    stepFunction->StepAgent(_dt);
+  }
+}
+
+void
+Agent::
+Uninitialize() {
+  if(!m_initialized)
+    return;
+  m_initialized = false;
+
+  for(auto& step : m_stepFunctions) {
+    step->Uninitialize();
+  }
+
+  SetTask(nullptr);
+  m_library.reset();
+  m_solution.reset();
+}
+
 size_t
 Agent::
 MinimumSteps() const {
@@ -105,127 +169,127 @@ MinimumSteps() const {
   const double timeRes = m_robot->GetMPProblem()->GetEnvironment()->GetTimeRes();
 
   // If we are not controlling a hardware base, the problem resolution is OK.
-  auto hardware = m_robot->GetHardwareQueue();
-  if(!hardware)
-    return timeRes;
+  // auto hardware = m_robot->GetHardwareQueue();
+  // if(!hardware)
+  return timeRes;
 
   // Otherwise, return the largest multiple of timeRes which is at least as long
   // as the hardware time.
-  const double hardwareTime = hardware->GetCommunicationTime();
-  return Simulation::NearestNumSteps(hardwareTime);
+  // const double hardwareTime = hardware->GetCommunicationTime();
+  // return Simulation::NearestNumSteps(hardwareTime);
 }
 
-std::vector<Agent*>
-Agent::
-ProximityCheck(const double _distance) const {
-  /// @TODO This implementation checks only the distance between reference
-  ///       points. Adjust this function to find the true minimum distance
-  ///       between the robot bodies.
-  auto problem = m_robot->GetMPProblem();
-  auto myPosition = m_robot->GetSimulationModel()->GetState().GetPoint();
+// std::vector<Agent*>
+// Agent::
+// ProximityCheck(const double _distance) const {
+//   /// @TODO This implementation checks only the distance between reference
+//   ///       points. Adjust this function to find the true minimum distance
+//   ///       between the robot bodies.
+//   auto problem = m_robot->GetMPProblem();
+//   auto myPosition = m_robot->GetSimulationModel()->GetState().GetPoint();
 
-  std::vector<Agent*> result;
+//   std::vector<Agent*> result;
 
-  for(auto& robotPtr : problem->GetRobots()) {
-    auto robot = robotPtr.get();
-    // Skip this agent's robot and any virtual robots.
-    if(robot->IsVirtual() or robot == m_robot)
-      continue;
+//   for(auto& robotPtr : problem->GetRobots()) {
+//     auto robot = robotPtr.get();
+//     // Skip this agent's robot and any virtual robots.
+//     if(robot->IsVirtual() or robot == m_robot)
+//       continue;
 
-    auto robotPosition = robot->GetSimulationModel()->GetState().GetPoint();
-    const double distance = (robotPosition - myPosition).norm();
+//     auto robotPosition = robot->GetSimulationModel()->GetState().GetPoint();
+//     const double distance = (robotPosition - myPosition).norm();
 
-    if(distance < _distance){
-      result.push_back(robot->GetAgent());
-    }
-  }
-  return result;
-}
+//     if(distance < _distance){
+//       result.push_back(robot->GetAgent());
+//     }
+//   }
+//   return result;
+// }
 
 /*------------------------------ Agent Control -------------------------------*/
 
-void
-Agent::
-Halt() {
-  m_robot->GetSimulationModel()->ZeroVelocities();
+// void
+// Agent::
+// Halt() {
+//   m_robot->GetSimulationModel()->ZeroVelocities();
 
-  if(m_debug)
-    std::cout << "\nHalting robot '" << m_robot->GetLabel() << "'."
-              << "\nAll velocity DOFs set to 0 for visual inspection."
-              << std::endl;
-}
+//   if(m_debug)
+//     std::cout << "\nHalting robot '" << m_robot->GetLabel() << "'."
+//               << "\nAll velocity DOFs set to 0 for visual inspection."
+//               << std::endl;
+// }
 
-void
-Agent::
-PauseAgent(const size_t _steps) {
-  m_robot->GetSimulationModel()->ZeroVelocities();
-  return;
+// void
+// Agent::
+// PauseAgent(const size_t _steps) {
+//   m_robot->GetSimulationModel()->ZeroVelocities();
+//   return;
 
-  // Set a goal at the current position with 0 velocity.
-  const Cfg current = m_robot->GetSimulationModel()->GetState();
-  Cfg desired = current;
-  desired.SetLinearVelocity(Vector3d());
-  desired.SetAngularVelocity(Vector3d());
+//   // Set a goal at the current position with 0 velocity.
+//   const Cfg current = m_robot->GetSimulationModel()->GetState();
+//   Cfg desired = current;
+//   desired.SetLinearVelocity(Vector3d());
+//   desired.SetAngularVelocity(Vector3d());
 
-  const size_t steps = std::max(_steps, MinimumSteps());
+//   const size_t steps = std::max(_steps, MinimumSteps());
 
-  auto stopControl = m_robot->GetController()->operator()(current, desired,
-      m_robot->GetMPProblem()->GetEnvironment()->GetTimeRes() * steps);
+//   auto stopControl = m_robot->GetController()->operator()(current, desired,
+//       m_robot->GetMPProblem()->GetEnvironment()->GetTimeRes() * steps);
 
-  ExecuteControls({stopControl}, steps);
-}
+//   ExecuteControls({stopControl}, steps);
+// }
 
-void
-Agent::
-Localize() {
-  // Get the hardware and sensor interface. If either is null, this agent has no
-  // sensor and cannot localize.
-  auto hardware = m_robot->GetHardwareQueue();
-  if(!hardware)
-    return;
+// void
+// Agent::
+// Localize() {
+//   // Get the hardware and sensor interface. If either is null, this agent has no
+//   // sensor and cannot localize.
+//   auto hardware = m_robot->GetHardwareQueue();
+//   if(!hardware)
+//     return;
 
-  auto sensor = hardware->GetSensor();
-  if(!sensor)
-    return;
+//   auto sensor = hardware->GetSensor();
+//   if(!sensor)
+//     return;
 
-  if(m_debug)
-    std::cout << "Enqueueing localize command." << std::endl;
+//   if(m_debug)
+//     std::cout << "Enqueueing localize command." << std::endl;
 
-  // Pause the agent to make sure the hardware actuator doesn't continue
-  // executing a previous motion command while localizing.
-  PauseAgent(1);
+//   // Pause the agent to make sure the hardware actuator doesn't continue
+//   // executing a previous motion command while localizing.
+//   PauseAgent(1);
 
-  // Ask sensor to take measurement.
-  hardware->EnqueueCommand(SensorCommand());
-}
+//   // Ask sensor to take measurement.
+//   hardware->EnqueueCommand(SensorCommand());
+// }
 
-bool
-Agent::
-IsLocalizing() const noexcept {
-  // Get the hardware and sensor interface. If either is null, this agent has no
-  // sensor and cannot localize.
-  auto hardware = m_robot->GetHardwareQueue();
-  if(!hardware)
-    return false;
+// bool
+// Agent::
+// IsLocalizing() const noexcept {
+//   // Get the hardware and sensor interface. If either is null, this agent has no
+//   // sensor and cannot localize.
+//   auto hardware = m_robot->GetHardwareQueue();
+//   if(!hardware)
+//     return false;
 
-  auto sensor = hardware->GetSensor();
-  if(!sensor)
-    return false;
+//   auto sensor = hardware->GetSensor();
+//   if(!sensor)
+//     return false;
 
-  // We are localizing if the hardware is waiting to localize or sensor isn't ready.
-  return hardware->IsLocalizing() or !sensor->IsReady();
-}
+//   // We are localizing if the hardware is waiting to localize or sensor isn't ready.
+//   return hardware->IsLocalizing() or !sensor->IsReady();
+// }
 
-Cfg
-Agent::
-EstimateState() {
-  // Get odometry relative to last localization.
-  // Get last sensor readings.
-  // Feed into state estimator.
-  // Return result.
+// Cfg
+// Agent::
+// EstimateState() {
+//   // Get odometry relative to last localization.
+//   // Get last sensor readings.
+//   // Feed into state estimator.
+//   // Return result.
 
-  return Cfg();
-}
+//   return Cfg();
+// }
 
 bool
 Agent::
@@ -264,7 +328,7 @@ ExecuteControls(const ControlSet& _c, const size_t _steps) {
   }
 
   ExecuteControlsSimulation(_c, _steps);
-  ExecuteControlsHardware(_c, _steps);
+  // ExecuteControlsHardware(_c, _steps);
 }
 
 void
@@ -281,34 +345,24 @@ ExecuteControlsSimulation(const ControlSet& _c, const size_t _steps) {
   m_robot->GetSimulationModel()->Execute(_c);
 }
 
-void
-Agent::
-ExecuteControlsHardware(const ControlSet& _c, const size_t _steps) {
-  // Do nothing if we are not controlling a hardware base.
-  auto hardware = m_robot->GetHardwareQueue();
-  if(!hardware)
-    return;
+// void
+// Agent::
+// ExecuteControlsHardware(const ControlSet& _c, const size_t _steps) {
+//   // Do nothing if we are not controlling a hardware base.
+//   auto hardware = m_robot->GetHardwareQueue();
+//   if(!hardware)
+//     return;
 
-  // Make sure that the requested time is at least as long as the hardware time.
-  if(_steps < MinimumSteps())
-    throw RunTimeException(WHERE) << "Cannot enqueue command for fewer steps "
-                                  << "than the hardware's minimum response time "
-                                  << "(" << _steps << " < " << MinimumSteps()
-                                  << ").";
+//   // Make sure that the requested time is at least as long as the hardware time.
+//   if(_steps < MinimumSteps())
+//     throw RunTimeException(WHERE) << "Cannot enqueue command for fewer steps "
+//                                   << "than the hardware's minimum response time "
+//                                   << "(" << _steps << " < " << MinimumSteps()
+//                                   << ").";
 
-  // Convert steps to time and enqueue the command.
-  const double timeRes = m_robot->GetMPProblem()->GetEnvironment()->GetTimeRes();
-  hardware->EnqueueCommand(MotionCommand(_c, _steps * timeRes));
-}
+//   // Convert steps to time and enqueue the command.
+//   const double timeRes = m_robot->GetMPProblem()->GetEnvironment()->GetTimeRes();
+//   hardware->EnqueueCommand(MotionCommand(_c, _steps * timeRes));
+// }
 
 /*----------------------------------------------------------------------------*/
-
-//Step Function Interface
-//TODO:: Make this a lot cleaner
-void
-Agent::
-Step(const double _dt) {
-  if(!m_stepFunction.get())
-    return;
-  m_stepFunction->StepAgent(_dt);
-}

@@ -861,8 +861,8 @@ ValidationFunction(Node& _node) {
               //endT = std::max(endT,t+100);
 
               // Check if conflict has been found before
-              size_t c1Index = MAX_INT;
-              size_t c2Index = MAX_INT;
+              size_t c1Index = MAX_UINT;
+              size_t c2Index = MAX_UINT;
               //for(size_t i = 0; i < m_conflicts.size(); i++) {
               for(auto constraint : _node.constraintMap[t1]) {
                 size_t i = constraint.second;
@@ -880,7 +880,7 @@ ValidationFunction(Node& _node) {
               }
 
               // Create constraints
-              if(c1Index == MAX_INT and c2Index == MAX_INT) {
+              if(c1Index == MAX_UINT and c2Index == MAX_UINT) {
 
                 // Configure constraint 1
                 c1Index = m_conflicts.size();
@@ -913,9 +913,9 @@ ValidationFunction(Node& _node) {
               Constraint constraint1 = std::make_pair(std::make_pair(t,endT),c1Index);
               Constraint constraint2 = std::make_pair(std::make_pair(t,endT),c2Index);
  
-              if(c1Index != MAX_INT)
+              if(c1Index != MAX_UINT)
                 constraints.emplace_back(t1,constraint1);
-              if(c2Index != MAX_INT)
+              if(c2Index != MAX_UINT)
                 constraints.emplace_back(t2,constraint2);
 
 
@@ -946,7 +946,7 @@ ValidationFunction(Node& _node) {
               Range<double> interval1(std::max(0.,constraintStart-duration1),constraintEnd);
               Range<double> interval2(std::max(0.,constraintStart-duration2),constraintEnd);
 
-              if(c1Index != MAX_INT) {
+              if(c1Index != MAX_UINT) {
                 if(edge1.first == edge1.second) {
                   /*
                   UnsafeVertexIntervals intervals;
@@ -1006,7 +1006,7 @@ ValidationFunction(Node& _node) {
                 }
               }
 
-              if(c2Index != MAX_INT) {
+              if(c2Index != MAX_UINT) {
                 if(edge2.first == edge2.second) {
                   /*
                   UnsafeVertexIntervals intervals;

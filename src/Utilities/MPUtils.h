@@ -27,6 +27,7 @@ class Robot;
 /*-------------------------------- Constants ---------------------------------*/
 
 #define MAX_INT  std::numeric_limits<int>::max()
+#define MAX_UINT std::numeric_limits<size_t>::max()
 #define MAX_DBL  std::numeric_limits<double>::max()
 
 /// Variable resolution epsilon for doubles and float. This number is based upon

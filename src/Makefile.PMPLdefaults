@@ -431,10 +431,18 @@ URDF_LIBS :=
 URDF_DEFS :=
 URDF_SRCS :=
 
-ROS_DIR :=
+ROS_DIR := 
 
 ifeq ($(platform), Ubuntu)
-  ROS_DIR := /opt/ros/melodic
+
+	ifeq ("$([ -d "/opt/ros/noetic"])", "")
+		ROS_DIR := /opt/ros/noetic
+	endif
+	
+	ifeq ("$([ -d "/opt/ros/melodic"])","")
+		ROS_DIR := /opt/ros/melodic
+	endif
+  
   URDF_INCL := -I$(ROS_DIR)/include -I/usr/include/eigen3
   #URDF_LIBS := -L/$(ROS_DIR)/lib -lorocos-kdl -lkdl_parser
   URDF_LIBS := -L/$(ROS_DIR)/lib $(ROS_DIR)/lib/liburdf.so \
@@ -448,7 +456,7 @@ ifeq ($(platform), Ubuntu)
     MPProblem/Robot/Kinematics/ur_kin.cpp \
     Utilities/KDLParser.cpp \
     Utilities/URDFParser.cpp \
-    Behaviors/Agents/StepFunctions/ROSStepFunction.cpp \
+    Behaviors/Agents/StepFunctions/ROSWorkstationNodeStepFunction.cpp \
 		Behaviors/Agents/StepFunctions/ROSStepFunctionFactory.cpp \
 		Geometry/Bodies/URDFSupport.cpp \
 		MPProblem/Robot/RobotURDFSupport.cpp
@@ -457,7 +465,6 @@ else
   	Behaviors/Agents/StepFunctions/StepFunctionFactory.cpp \
 		MPProblem/Robot/RobotEmptyFunctions.cpp
 endif
-
 
 ################################################################################
 # Simulator
@@ -539,11 +546,8 @@ TASK_SRCS := \
   Behaviors/Agents/AgentFactory_sim.cpp \
   Behaviors/Agents/ChildAgent.cpp \
   Behaviors/Agents/Coordinator.cpp \
-  Behaviors/Agents/PathFollowingAgent.cpp \
-  Behaviors/Agents/PlanningAgent.cpp \
-  Behaviors/Agents/StepFunctions/DefaultCoordinatorStepFunction.cpp \
+  Behaviors/Agents/StepFunctions/PlanGroupPathStepFunction.cpp \
   Behaviors/Agents/StepFunctions/EmptyStepFunction.cpp \
-  Behaviors/Agents/StepFunctions/FollowPath.cpp \
   Behaviors/Agents/StepFunctions/StepFunction.cpp \
   TMPLibrary/TMPLibrary.cpp
 ################################################################################

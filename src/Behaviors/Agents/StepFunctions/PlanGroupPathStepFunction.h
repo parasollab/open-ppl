@@ -1,5 +1,5 @@
-#ifndef _PPL_DEFAULT_COORDINATOR_STEP_FUNCTION_H_
-#define _PPL_DEFAULT_COORDINATOR_STEP_FUNCTION_H_
+#ifndef _PPL_PLAN_GROUP_PATH_STEP_FUNCTION_H_
+#define _PPL_PLAN_GROUP_PATH_STEP_FUNCTION_H_
 
 //////////////////////////////////////////////////////////////////
 ///
@@ -20,15 +20,15 @@
 #include "TMPLibrary/Solution/Plan.h"
 #include "TMPLibrary/TMPLibrary.h"
 
-class DefaultCoordinatorStepFunction : public StepFunction {
+class PlanGroupPathStepFunction : public StepFunction {
 
   public :
     ///@name Construction
     ///@{
 
-    DefaultCoordinatorStepFunction(Coordinator* _coordinator, XMLNode& _node);
+    PlanGroupPathStepFunction(Coordinator* _coordinator, XMLNode& _node);
 
-    ~DefaultCoordinatorStepFunction();
+    ~PlanGroupPathStepFunction();
 
     ///@}
     ///@name Interface

@@ -1,7 +1,8 @@
 #include "StepFunction.h"
-#include "DefaultCoordinatorStepFunction.h"
+#include "PlanGroupPathStepFunction.h"
 #include "FollowPath.h"
 #include "ROSStepFunction.h"
+#include "ROSWorkstationNodeStepFunction.h"
 
 #include <algorithm>
 #include <string>
@@ -15,25 +16,33 @@ Factory(Agent* _agent, XMLNode& _node) {
 
   std::unique_ptr<StepFunction> output;
 
-  if(type == "defaultcoordinator") {
+  if(type == "plangrouppath") {
     Coordinator* c = static_cast<Coordinator*>(_agent);
     if(c) {
       output = std::unique_ptr<StepFunction>(
-          new DefaultCoordinatorStepFunction(c, _node)
+          new PlanGroupPathStepFunction(c, _node)
       );
     }
   }
-  else if(type == "followpath") {
-    output = std::unique_ptr<StepFunction>(
-      new FollowPath(_agent, _node)
-    );
-  }
-  else if(type == "ros") {
+  // else if(type == "followpath") {
+  //   output = std::unique_ptr<StepFunction>(
+  //     new FollowPath(_agent, _node)
+  //   );
+  // }
+  // else if(type == "ros") {
+  //   int argc = 0;
+  //   char* argv[255];
+  //   ros::init(argc,argv,"ppl_" + _agent->GetRobot()->GetLabel());
+  //   output = std::unique_ptr<StepFunction>(
+  //     new ROSStepFunction(_agent, _node)
+  //   );
+  // }
+  else if(type == "workstation") {
     int argc = 0;
     char* argv[255];
     ros::init(argc,argv,"ppl_" + _agent->GetRobot()->GetLabel());
     output = std::unique_ptr<StepFunction>(
-      new ROSStepFunction(_agent, _node)
+      new ROSWorkstationNodeStepFunction(_agent, _node)
     );
   }
   else {

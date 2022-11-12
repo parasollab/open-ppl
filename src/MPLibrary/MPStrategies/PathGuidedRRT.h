@@ -196,7 +196,7 @@ ExpandTree(const CfgType& _target) {
 
   auto vid = BasicRRTStrategy<MPTraits>::ExpandTree(_target);
 
-  if(vid == MAX_INT or vid == INVALID_VID)
+  if(vid == MAX_UINT or vid == INVALID_VID)
     return vid;
 
   // If already moved through guiding path, return

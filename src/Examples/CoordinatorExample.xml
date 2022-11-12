@@ -8,15 +8,14 @@
     </Environment>
 
     <Robot label="member1" filename="3D/boxy.robot" capability="plain" color="red">
-      <Agent type="child" waypointDm="positionEuclidean"
-        waypointThreshold=".05" debug="true">
+      <Agent type="child" debug="true">
+        <StepFunction type="workstation"/>
         <!--StepFunction type="followpath" waypointDm="euclidean"/-->
       </Agent>
     </Robot>
 
     <Robot label="member2" filename="3D/boxy.robot" capability="plain" color="green">
-      <Agent type="child" waypointDm="positionEuclidean"
-        waypointThreshold=".05" debug="true">
+      <Agent type="child" debug="true">
         <!--StepFunction type="followpath" waypointDm="euclidean"/-->
       </Agent>
     </Robot>
@@ -25,7 +24,7 @@
       <Agent type="coordinator" dmLabel="euclidean" debug="true"> 
         <Member label="member1"/>
         <Member label="member2"/>
-        <StepFunction type="defaultcoordinator" debug="true"/>
+        <StepFunction type="plangrouppath" debug="true"/>
       </Agent>
     </Robot>
 
@@ -154,7 +153,7 @@
     </Metrics>
 
     <MapEvaluators>
-      <TrueEvaluation label="TrueEvaluator" />
+      <!-- <TrueEvaluation label="TrueEvaluator" /> -->
       <QueryMethod label="PRMQuery" debug="false" graphSearchAlg="dijkstras">
       </QueryMethod>
       <QueryMethod label="MegaQuery" debug="false" graphSearchAlg="dijkstras">
@@ -185,7 +184,7 @@
         value="3" operator=">"/>
       <ConditionalEvaluator label="TimeEvalLong" metric_method="TimeInSec"
         value="5" operator=">"/>
-      <NegateEvaluator label="Neg" evalLabel="NodesEval"/>
+      <!-- <NegateEvaluator label="Neg" evalLabel="NodesEval"/> -->
       <ComposeEvaluator label="BoundedQuery" operator="or">
         <Evaluator label="NodesEval"/>
         <Evaluator label="PRMQuery"/>
@@ -230,13 +229,13 @@
         <Evaluator label="MegaQuery"/>
       </EvaluateMapStrategy>
 
-      <ScratchStrategy label="scratch"/>
+      <!-- <ScratchStrategy label="scratch"/> -->
 
     </MPStrategies>
 
     <MPTools>
-      <LKHSearch label="lkhSearch"/>
-      <TRPTool label="trpTool" queryLabel="LazyPRM"/>
+      <!-- <LKHSearch label="lkhSearch"/> -->
+      <!-- <TRPTool label="trpTool" queryLabel="LazyPRM"/> -->
     </MPTools>
 
     <!-- MPProblem allows multiple solvers to be specified and executed. -->

@@ -68,7 +68,7 @@ Run(Plan* _plan) {
     m_actionExtendedHypergraph.Print();
   }
 
-  if(m_goalVID == MAX_INT)
+  if(m_goalVID == MAX_UINT)
     return false;
 
   ConvertToPlan(_plan);
@@ -637,7 +637,7 @@ HyperpathQuery() {
 
 
   if(m_pq.empty()) {
-    m_goalVID = MAX_INT;
+    m_goalVID = MAX_UINT;
     auto output = SBTDijkstraWithFrontier(&m_actionExtendedHypergraph,0,weight,termination,forwardStar,heuristic);
     m_mbt = output.first;
     m_pq = output.second;
@@ -647,7 +647,7 @@ HyperpathQuery() {
     m_mbt.weightMap[m_goalVID] = MAX_DBL;
     m_mbt.vertexParentMap.erase(m_goalVID);
 
-    m_goalVID = MAX_INT;
+    m_goalVID = MAX_UINT;
     SBTDijkstra(&m_actionExtendedHypergraph,m_mbt,m_pq,weight,termination,forwardStar,heuristic);
   }
 
@@ -714,7 +714,7 @@ HyperpathForwardStar(const size_t& _vid, ActionExtendedHypergraph* _h) {
 
   // Check if vid's parent was in the same mode
   // Used for inter mode blocks
-  size_t blockedMode = MAX_INT;
+  size_t blockedMode = MAX_UINT;
 
   // Extra for blocking reverse actions
   std::vector<size_t> blockedVertices;
@@ -748,7 +748,7 @@ HyperpathForwardStar(const size_t& _vid, ActionExtendedHypergraph* _h) {
     for(auto v : hyperarc.tail) {
       auto gvid  =_h->GetVertexType(v).groundedVID;
       auto mvid = mg->GetModeOfGroundedVID(gvid);
-      if(mvid == MAX_INT)
+      if(mvid == MAX_UINT)
         break;
 
       auto mode = modeHypergraph.GetVertexType(mvid);
@@ -807,7 +807,7 @@ HyperpathForwardStar(const size_t& _vid, ActionExtendedHypergraph* _h) {
     // If this vertex's parent is in the same submode,
     // ensure that there is not an additional transition within
     // that submode.
-    if(head.size() == 1 and blockedMode != MAX_INT) {
+    if(head.size() == 1 and blockedMode != MAX_UINT) {
       auto groundedHead = *(head.begin());
       auto headModeVID = mg->GetModeOfGroundedVID(groundedHead);
       if(headModeVID == blockedMode)
@@ -957,7 +957,7 @@ HyperpathHeuristic(const size_t& _target) {
   // Compute max heuristic from child nodes
 
   auto outgoings = gh.GetOutgoingHyperarcs(vid);
-  size_t outgoing = MAX_INT;
+  size_t outgoing = MAX_UINT;
   
   // Find outgoing hyperarc that exits the mode
   for(auto hid : outgoings) {
@@ -969,7 +969,7 @@ HyperpathHeuristic(const size_t& _target) {
         break;
       }
     }
-    if(outgoing != MAX_INT)
+    if(outgoing != MAX_UINT)
       break;
   }
 

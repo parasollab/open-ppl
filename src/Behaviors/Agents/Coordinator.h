@@ -3,25 +3,13 @@
 
 #include "Agent.h"
 #include "ChildAgent.h"
-#include "PlanningAgent.h"
+// #include "PlanningAgent.h"
 
 #include "TMPLibrary/TMPLibrary.h"
 
 #include "ConfigurationSpace/Cfg.h"
-#include "MPLibrary/PMPL.h"
-
-class HandoffAgent;
-class Formation;
-class InteractionTemplate;
-class TMPStrategyMethod;
-class ITMethod;
-class Plan;
-class RobotGroup;
 
 #include "TMPLibrary/Solution/Plan.h"
-
-#include "MPLibrary/PMPL.h"
-
 
 class TMPStrategyMethod;
 
@@ -117,7 +105,6 @@ class Coordinator : public Agent {
 
     std::unordered_map<std::shared_ptr<MPTask>,std::vector<Cfg>> m_interactionPathsDelivering;
     std::unordered_map<std::shared_ptr<MPTask>,std::vector<Cfg>> m_interactionPathsReceiving;
-
     ///@}
   private:
 
@@ -186,7 +173,7 @@ class Coordinator : public Agent {
     bool m_runDummies;
 
     std::unordered_map<RobotGroup*,Formation*> m_initialGroups;
-
+    
     ///@}
 
 };

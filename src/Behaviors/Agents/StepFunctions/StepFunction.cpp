@@ -7,3 +7,11 @@ StepFunction(Agent* _agent, XMLNode& _node) : m_agent(_agent) {}
 
 StepFunction::
 ~StepFunction() {}
+
+void
+StepFunction::
+Initialize() {}
+
+void
+StepFunction::
+Uninitialize() {}

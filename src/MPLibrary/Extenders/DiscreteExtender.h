@@ -142,7 +142,7 @@ Extend(const GroupCfgType& _start, const GroupCfgType& _end,
     auto rm = this->GetRoadmap(robot);
 
     auto vid = _start.GetVID(i);
-    if(vid == MAX_INT)
+    if(vid == MAX_UINT)
       throw RunTimeException(WHERE) << "Expecting _start to be a tensor product vertex.";
 
     auto cfg1 = _start.GetRobotCfg(i);

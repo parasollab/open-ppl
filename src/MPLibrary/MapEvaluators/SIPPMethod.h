@@ -188,7 +188,7 @@ class SIPPMethod : public MapEvaluatorMethod<MPTraits> {
     SIPPGraph* m_sippGraph{nullptr}; 
 
     size_t m_goalIndex{0};      ///< Index of the current goal to extend the path to.
-    size_t m_startVID{MAX_INT}; ///< The start vid in the sipp graph.
+    size_t m_startVID{MAX_UINT}; ///< The start vid in the sipp graph.
 
     /// Cost-to-go map used for heuristic values.
     std::unordered_map<size_t,double> m_costToGoMap;
@@ -287,12 +287,12 @@ operator()() {
     }
 
     // Get the start VID for this subquery.
-    //const size_t start = m_startVID == MAX_INT ? *goalTracker->GetStartVIDs().begin()
+    //const size_t start = m_startVID == MAX_UINT ? *goalTracker->GetStartVIDs().begin()
     //                                           : m_sippGraph->GetVertex(m_startVID).vid;
 
     // Get the start VID for this subquery.
-    size_t start = MAX_INT;
-    if(m_startVID != MAX_INT) {
+    size_t start = MAX_UINT;
+    if(m_startVID != MAX_UINT) {
       m_sippGraph->GetVertex(m_startVID).vid;
     }
     else if(this->GetTask()) {
@@ -313,7 +313,7 @@ operator()() {
       }
     }
 
-    if(start == MAX_INT)
+    if(start == MAX_UINT)
       throw RunTimeException(WHERE) << "No VIDs located for start.";
 
     // Get the goal VIDs for this subquery.
@@ -333,7 +333,7 @@ operator()() {
                 << "this case." << std::endl;
 
     // Check if this is the first query or not
-    if(m_startVID == MAX_INT) {
+    if(m_startVID == MAX_UINT) {
 
       // Create start state for query
       SIPPVertex vertex;
@@ -344,7 +344,7 @@ operator()() {
         startIntervals = m_vertexIntervals[start];
       }
       else {
-        startIntervals.push_back(Range<size_t>(0,MAX_INT)); 
+        startIntervals.push_back(Range<size_t>(0,MAX_UINT)); 
       }
 
       bool found = false;
@@ -519,7 +519,7 @@ SIPPMethod<MPTraits>::
 Reset() {
   m_waitTimesteps.clear();
   m_goalIndex = 0;
-  m_startVID = MAX_INT;
+  m_startVID = MAX_UINT;
   delete m_sippGraph;
   m_sippGraph = nullptr;
 
@@ -589,7 +589,7 @@ PathWeight(typename SIPPGraph::adj_edge_iterator& _ei,
     intervals = m_edgeIntervals[std::make_pair(source.vid,target.vid)];
   }
   else {
-    intervals.push_back(Range<size_t>(zero,MAX_INT));
+    intervals.push_back(Range<size_t>(zero,MAX_UINT));
   }
 
   //bool reachedFirstInterval = false;
@@ -747,7 +747,7 @@ BuildNeighbors(typename SIPPGraph::vertex_descriptor _sippSource, size_t _rmTarg
     endIntervals = m_vertexIntervals[_rmTarget];
   }
   else {
-    endIntervals.push_back(Range<size_t>(0,MAX_INT));
+    endIntervals.push_back(Range<size_t>(0,MAX_UINT));
   }
 
   for(auto& inter : endIntervals) {

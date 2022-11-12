@@ -161,7 +161,7 @@ LowLevelPlanner(Node& _node, SemanticTask* _task) {
         continue;
 
       size_t startTime = FindStartTime(task, solved, endTimes);
-      if(startTime == MAX_INT)
+      if(startTime == MAX_UINT)
         continue;      
 
       startTimes[task] = startTime;
@@ -243,7 +243,7 @@ LowLevelPlanner(Node& _node, SemanticTask* _task) {
     for(auto t : unsolved) {
       
       size_t st = FindStartTime(t, solved, endTimes);
-      if(st == MAX_INT)
+      if(st == MAX_UINT)
         continue;
 
       // If the task is ready, move it to the pq
@@ -762,7 +762,7 @@ FindStartTime(SemanticTask* _task, std::set<SemanticTask*> _solved,
 
   // Check that task and all dependencies have been solved
   if(missingDep)
-    return MAX_INT;
+    return MAX_UINT;
 
   return startTime;
 }
@@ -815,7 +815,7 @@ ConstructSafeIntervals(std::vector<Range<size_t>>& _unsafeIntervals) {
 
   // Return infinite interval if there are no unsafe intervals
   if(_unsafeIntervals.empty())
-    return {Range<size_t>(0,MAX_INT)};
+    return {Range<size_t>(0,MAX_UINT)};
 
   // Merge unsafe intervals
   std::vector<Range<size_t>> unsafeIntervals = _unsafeIntervals;
@@ -896,7 +896,7 @@ ConstructSafeIntervals(std::vector<Range<size_t>>& _unsafeIntervals) {
     iter++;
   }
 
-  max = MAX_INT;
+  max = MAX_UINT;
   intervals.push_back(Range<size_t>(min,max));
 
   return intervals;

@@ -2,8 +2,8 @@
 
 #include "Coordinator.h"
 #include "ChildAgent.h"
-#include "PathFollowingAgent.h"
-#include "PlanningAgent.h"
+// #include "PathFollowingAgent.h"
+// #include "PlanningAgent.h"
 #include "Utilities/PMPLExceptions.h"
 #include "Utilities/XMLNode.h"
 
@@ -19,15 +19,16 @@ Factory(Robot* const _r, XMLNode& _node) {
 
   std::unique_ptr<Agent> output;
 
-  if(type == "pathfollowing")
-    output = std::unique_ptr<PathFollowingAgent>(
-        new PathFollowingAgent(_r, _node)
-    );
-  else if(type == "planning")
-    output = std::unique_ptr<PlanningAgent>(
-        new PlanningAgent(_r, _node)
-    );
-  else if(type == "coordinator")
+  // if(type == "pathfollowing")
+  //   output = std::unique_ptr<PathFollowingAgent>(
+  //       new PathFollowingAgent(_r, _node)
+  //   );
+  // else if(type == "planning")
+  //   output = std::unique_ptr<PlanningAgent>(
+  //       new PlanningAgent(_r, _node)
+  //   );
+  // else 
+  if(type == "coordinator")
     output = std::unique_ptr<Coordinator>(
         new Coordinator(_r, _node)
     );
@@ -36,7 +37,10 @@ Factory(Robot* const _r, XMLNode& _node) {
         new ChildAgent(_r, _node)
     );
   else
-    throw ParseException(_node.Where(), "Unknown agent type '" + type + "'.");
+    output = std::unique_ptr<Agent>(
+        new Agent(_r, _node)
+    );
+    // throw ParseException(_node.Where(), "Unknown agent type '" + type + "'.");
 
   // Read the debug flag.
   output->m_debug = _node.Read("debug", false, false, "Show debug messages.");

@@ -134,7 +134,7 @@ AddVertex(VertexType _vertex) {
 
   // Check if vertex exists already
   auto vid = GetVID(_vertex);
-  if(vid != MAX_INT)
+  if(vid != MAX_UINT)
     return vid;
 
   Vertex v;
@@ -192,7 +192,7 @@ GetVID(VertexType _vertex) const {
       return iter->first;
   }
 
-  return MAX_INT;
+  return MAX_UINT;
 }
     
 template <typename VertexType, typename HyperarcType>
@@ -297,7 +297,7 @@ GetHID(std::set<size_t> _head, std::set<size_t> _tail) {
     }
   }
 
-  return MAX_INT;
+  return MAX_UINT;
 }
 
 template <typename VertexType, typename HyperarcType>

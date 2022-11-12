@@ -1,5 +1,5 @@
 #include "StepFunction.h"
-#include "DefaultCoordinatorStepFunction.h"
+#include "PlanGroupPathStepFunction.h"
 #include "EmptyStepFunction.h"
 #include "FollowPath.h"
 
@@ -15,19 +15,19 @@ Factory(Agent* _agent, XMLNode& _node) {
 
   std::unique_ptr<StepFunction> output;
 
-  if(type == "defaultcoordinator") {
+  if(type == "plangrouppath") {
     Coordinator* c = static_cast<Coordinator*>(_agent);
     if(c) {
       output = std::unique_ptr<StepFunction>(
-          new DefaultCoordinatorStepFunction(c, _node)
+          new PlanGroupPathStepFunction(c, _node)
       );
     }
   }
-  else if(type == "followpath") {
-    output = std::unique_ptr<StepFunction>(
-      new FollowPath(_agent, _node)
-    );
-  }
+  // else if(type == "followpath") {
+  //   output = std::unique_ptr<StepFunction>(
+  //     new FollowPath(_agent, _node)
+  //   );
+  // }
   else if(type == "empty") {
     output = std::unique_ptr<StepFunction>(
       new EmptyStepFunction(_agent,_node)

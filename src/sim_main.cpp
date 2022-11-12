@@ -13,8 +13,8 @@ int
 main(int _argc, char** _argv) {
   try {
     const std::string flag = std::string(_argv[1]);
-    if(_argc < 3 || (flag != "-f" and flag != "-e" and flag != "-h" and flag != "-c"))
-      throw ParseException(WHERE, "Incorrect usage. Usage: {-f|-e|-h|-c} options.xml");
+    if(_argc < 3 || (flag != "-f" and flag != "-e" and flag != "-h" and flag != "-c" and flag != "-p"))
+      throw ParseException(WHERE, "Incorrect usage. Usage: {-f|-e|-h|-c|-p} options.xml");
 
     // Make problem object.
     std::shared_ptr<MPProblem> problem(new MPProblem(_argv[2]));
@@ -67,28 +67,44 @@ main(int _argc, char** _argv) {
 				problem->SetInitialCfg(r,initial);
       }
     }
-
+      
     // Make simulation object.
     const bool editMode = flag == "-e";
-		const bool hidden = flag == "-h";
     Simulation::Create(problem.get(), editMode);
     Simulation* simulation = Simulation::Get();
 
-		simulation->start();
-    // Make visualizer object.
-    QApplication app(_argc, _argv);
-    main_window window;
+    simulation->start();
 
-    // Set up the extra gui elements if we are in edit mode.
-    if(editMode)
-      SetupMainWindow(&window);
+    const bool persistentMode = flag == "-p";
+    if(persistentMode) {
+      const double dt = problem->GetEnvironment()->GetTimeRes();
+      while(true) {
+        for(size_t i = 0; i < problem->NumRobots(); ++i) {
+          if(!problem->GetRobot(i)->IsVirtual())
+            problem->GetRobot(i)->Step(dt);
+        }
+      }
+      // while(true) {
+      //   simulation->SimulationStep();
+      // }
+    } else {
+      const bool hidden = flag == "-h";
 
-    // Load the simulation into the visualizer and start it.
-    window.visualization(simulation);
-    if(!hidden)
-			window.show();
-    window.gl()->start();
-    app.exec();
+      // Make visualizer object.
+      QApplication app(_argc, _argv);
+      main_window window;
+
+      // Set up the extra gui elements if we are in edit mode.
+      if(editMode)
+        SetupMainWindow(&window);
+
+      // Load the simulation into the visualizer and start it.
+      window.visualization(simulation);
+      if(!hidden)
+        window.show();
+      window.gl()->start();
+      app.exec();
+    }
 
     // Clean up the simulation and problem when we are done.
     simulation->Uninitialize();

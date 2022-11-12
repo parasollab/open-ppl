@@ -1,7 +1,12 @@
 #ifndef _PMPL_CHILD_AGENT_H_
 #define _PMPL_CHILD_AGENT_H_
 
-#include "PathFollowingAgent.h"
+// #include "PathFollowingAgent.h"
+#include "Agent.h"
+
+#include "TMPLibrary/Solution/Plan.h"
+#include "ConfigurationSpace/Cfg.h"
+
 
 #include <atomic>
 #include <memory>
@@ -12,7 +17,7 @@
 
 class Coordinator;
 
-class ChildAgent : public PathFollowingAgent {
+class ChildAgent : public Agent {
   public :
     ///@name Construction
     ///@{
@@ -39,11 +44,11 @@ class ChildAgent : public PathFollowingAgent {
     ///@name Simulation Interface
     ///@{
 
-    virtual void Initialize() override;
+    // virtual void Initialize() override;
 
     virtual void Step(const double _dt) override;
 
-    virtual void Uninitialize() override;
+    // virtual void Uninitialize() override;
 
     ///@}
     ///@name Child Interface
@@ -57,47 +62,71 @@ class ChildAgent : public PathFollowingAgent {
     /// @param _parent The parent agent.
     void SetCoordinator(Coordinator* const _parent);
 
+    /// Returns this agent's m_solution pointer
+    std::vector<Cfg> GetPlan();
+
+    void SetPlan(std::vector<Cfg> _path);
+
+    // MPTask* GetTask();
+
+    // void SetTask(MPTask* const _task);
+
+
+
     ///@}
     ///@name Accessors
     ///@{
 
-    /// Returns this agent's m_solution pointer
-    MPSolution* GetMPSolution();
+    // MPSolution* GetMPSolution();
+
+    // MPLibrary* GetMPLibrary();
+
+    // void SetMPSolution(MPSolution* const _solution);
 
     ///@}
     ///@name Task Helpers
     ///@{
 
-    virtual bool SelectTask() override;
+    // virtual bool SelectTask() override;
 
     /// Evaluate the agent's progress on its current task.
     /// @return True if the current task should be continued, false otherwise.
-    virtual bool EvaluateTask();
+    // virtual bool EvaluateTask();
 
     /// Continue executing the agent's current task.
     /// @param _dt The step length.
-    virtual void ExecuteTask(const double _dt) override;
+    // virtual void ExecuteTask(const double _dt) override;
 
-    virtual void GeneratePlan() override;
+    // virtual void GeneratePlan() override;
 
-    virtual void ClearPlan() override;
+    // virtual void ClearPlan() override;
     ///@}
   private:
 
     ///@name Controller Helpers
     ///@{
 
-    virtual void ExecuteControls(const ControlSet& _c, const size_t _steps) override;
+    // virtual void ExecuteControls(const ControlSet& _c, const size_t _steps) override;
 
-    virtual void ExecuteControlsSimulation(const ControlSet& _c, const size_t _steps) override;
+    // virtual void ExecuteControlsSimulation(const ControlSet& _c, const size_t _steps) override;
 
-    virtual void ExecuteControlsHardware(const ControlSet& _c, const size_t _steps) override;
+    // virtual void ExecuteControlsHardware(const ControlSet& _c, const size_t _steps) override;
 
+    ///@}
     ///@name Internal State
     ///@{
 
     /// The parent group to which this agent belongs.
     Coordinator* m_coordinator{nullptr};
+
+    std::unique_ptr<MPLibrary> m_library;   ///< This agent's planning library.
+    std::unique_ptr<MPSolution> m_solution; ///< The current solution.
+
+    std::vector<Cfg> m_plan;
+
+    MPTask* m_task{nullptr};
+
+    bool m_initialized{false};
 
     /*std::queue<std::pair<size_t,ControlSet>> m_controlQueue;
 
@@ -107,11 +136,11 @@ class ChildAgent : public PathFollowingAgent {
 
     mutable std::mutex m_lock;   */
 
-    std::string m_controlChannel;
+    // std::string m_controlChannel;
 
-    ControlSet m_queuedControlSet;
-    size_t m_queuedSteps;
-    bool m_locked{true};
+    // ControlSet m_queuedControlSet;
+    // size_t m_queuedSteps;
+    // bool m_locked{true};
 
     Cfg m_lastCfg;
     ///@}

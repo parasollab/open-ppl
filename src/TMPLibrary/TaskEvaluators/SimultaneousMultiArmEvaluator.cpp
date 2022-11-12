@@ -216,7 +216,7 @@ ComputeGoalBiasHeuristic() {
   std::vector<size_t> goalVIDs;
   for(auto gm : goalModes) {
     auto goalVID = g->GetVID(gm);
-    if(goalVID != MAX_INT and goalVID != INVALID_VID)
+    if(goalVID != MAX_UINT and goalVID != INVALID_VID)
       goalVIDs.push_back(goalVID);
   }
 
@@ -318,11 +318,11 @@ Run(Plan* _plan) {
     auto qNear = Select(mode,history,nextStep);
     // - Qnew = Extend(Qnear,history,heuristic)
     auto qNew = Extend(qNear,history,nextStep);
-    if(qNew == MAX_INT)
+    if(qNew == MAX_UINT)
       continue;
     // - Qbest = rewire(Qnew)
     auto qBest = Rewire(qNew,qNear,history);
-    if(qBest == MAX_INT)
+    if(qBest == MAX_UINT)
       qBest = qNear;
 
     // Add Qnew to action extended graph and connect
@@ -449,7 +449,7 @@ SelectMode() {
     return std::make_pair(mode,hid);
   }
 
-  return std::make_pair(MAX_INT,MAX_INT);
+  return std::make_pair(MAX_UINT,MAX_UINT);
 }
 
 std::set<SimultaneousMultiArmEvaluator::VID>
@@ -548,7 +548,7 @@ SampleTransition(VID _source, VID _target) {
           passives.push_back(group);
 
         // Add group to state
-        state[group] = std::make_pair(nullptr,MAX_INT);
+        state[group] = std::make_pair(nullptr,MAX_UINT);
       }
 
       // Set relevant robots non virtual
@@ -567,7 +567,7 @@ SampleTransition(VID _source, VID _target) {
         for(auto group : passives) {
           auto rm = sg->GetGroupRoadmap(group);
           auto iter = rm->end();
-          size_t vid = MAX_INT;
+          size_t vid = MAX_UINT;
           while(iter == rm->end()) {
             vid = LRand() % rm->Size();
             iter = rm->find_vertex(vid);
@@ -728,7 +728,7 @@ ConnectToExistingRoadmap(Interaction* _interaction, State& _start, State& _end, 
     }
 
     auto vid = AddToRoadmap(gcfg);
-    if(vid != MAX_INT) {
+    if(vid != MAX_UINT) {
       startVertices.emplace_back(rm,vid);
     }
     else {
@@ -772,7 +772,7 @@ ConnectToExistingRoadmap(Interaction* _interaction, State& _start, State& _end, 
     }
 
     auto vid = AddToRoadmap(gcfg);
-    if(vid != MAX_INT) {
+    if(vid != MAX_UINT) {
       endVertices.emplace_back(rm,vid);
     }
     else {
@@ -863,7 +863,7 @@ AddToRoadmap(GroupCfgType _cfg) {
       std::cout << "Could not connect interaction to roadmap" << std::endl;
     }
     rm->DeleteVertex(vid);
-    return MAX_INT;
+    return MAX_UINT;
   }
 
   return vid;
@@ -903,7 +903,7 @@ CreateTensorProductVertex(const std::vector<GroupCfgType>& _cfgs) {
 
   for(auto cfg : individualCfgs) {
     auto robot = cfg.second.GetRobot();
-    if(cfg.first != MAX_INT)
+    if(cfg.first != MAX_UINT)
       tensorCfg.SetRobotCfg(group->GetGroupIndex(robot),cfg.first);
     else
       tensorCfg.SetRobotCfg(robot,std::move(cfg.second));
@@ -932,7 +932,7 @@ Select(size_t _modeID, size_t _history, std::unordered_map<Robot*,size_t> _heuri
   auto candidates = m_historyVertices[_history];
  
   double minDistance = MAX_DBL;
-  VID closest = MAX_INT;
+  VID closest = MAX_UINT;
  
   for(auto vid : candidates) {
     auto taskState = m_taskGraph->GetVertex(vid);
@@ -1168,7 +1168,7 @@ Extend(TID _qNear, size_t _history, std::unordered_map<Robot*,size_t> _heuristic
   }
 
   if(qNew == cfg)
-    return MAX_INT;
+    return MAX_UINT;
 
   // Connect qNew to qNear
   return ExtendTaskVertices(_qNear, qNew, _history);
@@ -1227,7 +1227,7 @@ ExtendTaskVertices(const TID& _source, const GroupCfgType& _target, size_t _hist
     return tid;
   }
 
-  return MAX_INT;
+  return MAX_UINT;
 }
 
     
@@ -1444,7 +1444,7 @@ Rewire(VID _qNew, VID _qNear, size_t _history) {
     
     // Check if edge is a valid transition
     //auto newVID = ExtendTaskVertices(tid, newCfg, _history);
-    //if(newVID == MAX_INT)
+    //if(newVID == MAX_UINT)
     //  continue;
     
     double distance = TensorProductGraphDistance(tid,_qNew);
@@ -1459,12 +1459,12 @@ Rewire(VID _qNew, VID _qNear, size_t _history) {
   // Sort neighbors by rewire distance
   std::sort(neighbors.begin(), neighbors.end());
 
-  size_t qBest = MAX_INT;
+  size_t qBest = MAX_UINT;
 
   for(auto pair : neighbors) {
     auto tid = pair.second;
     auto newVID = ExtendTaskVertices(tid, newCfg, _history);
-    if(newVID == MAX_INT)
+    if(newVID == MAX_UINT)
       continue;
 
     qBest = tid;
@@ -1488,7 +1488,7 @@ Rewire(VID _qNew, VID _qNear, size_t _history) {
 
       // Try to connect the vertices
       auto newVID = ExtendTaskVertices(tid, newCfg, _history);
-      if(newVID == MAX_INT)
+      if(newVID == MAX_UINT)
         continue;
 
       // Delete existing edge to kv.first
@@ -2163,7 +2163,7 @@ LowLevelPlanner(CBSNodeType& _node, Robot* _robot) {
       auto timestep = h->GetVertex(_ei->source()).second;
 
       auto edgeConstraint = std::make_pair(std::make_pair(source,target),timestep);
-      auto vertexConstraint = std::make_pair(std::make_pair(target,MAX_INT),timestep+1);
+      auto vertexConstraint = std::make_pair(std::make_pair(target,MAX_UINT),timestep+1);
 
       if(constraints.count(edgeConstraint) or constraints.count(vertexConstraint))
         return std::numeric_limits<double>::infinity();
@@ -2284,7 +2284,7 @@ ValidationFunction(CBSNodeType& _node) {
           //            << std::endl;
           //}
 
-          auto constraint = std::make_pair(std::make_pair(source1,MAX_INT),i);
+          auto constraint = std::make_pair(std::make_pair(source1,MAX_UINT),i);
           std::vector<std::pair<Robot*,CBSConstraint>> constraints;
           constraints.push_back(std::make_pair(object1,constraint));
           constraints.push_back(std::make_pair(object2,constraint));

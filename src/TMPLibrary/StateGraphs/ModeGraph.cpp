@@ -130,7 +130,7 @@ GenerateRepresentation(const State& _start) {
   // Grounded hypergraph
   GroundedVertex origin = std::make_pair(nullptr,0);
   auto originVID = m_groundedHypergraph.AddVertex(origin);
-  GroundedVertex goal = std::make_pair(nullptr,MAX_INT);
+  GroundedVertex goal = std::make_pair(nullptr,MAX_UINT);
   auto goalVID = m_groundedHypergraph.AddVertex(goal);
 
   std::set<VID> startVIDs;
@@ -151,7 +151,7 @@ GenerateRepresentation(const State& _start) {
 
     Transition fromOrigin;
     fromOrigin.cost = -1;
-    if(m_groundedHypergraph.GetHID(startVIDs,{originVID}) == MAX_INT)
+    if(m_groundedHypergraph.GetHID(startVIDs,{originVID}) == MAX_UINT)
       m_groundedHypergraph.AddHyperarc(startVIDs,{originVID},fromOrigin);
 
     //Transition toGoal;
@@ -214,7 +214,7 @@ GetModeOfGroundedVID(const VID& _vid) const {
     if(kv.second.count(_vid))
       return kv.first;
   }
-  return MAX_INT;
+  return MAX_UINT;
 }
 
 /*---------------------------- Helper Functions ------------------------------*/
@@ -462,7 +462,7 @@ ConfigureGoalSets(const size_t& _sink, std::set<VID>& _goalVIDs) {
   // Add transition from each set to the sink
   for(auto set : goalSets) {
     Transition toGoal;
-    if(m_groundedHypergraph.GetHID({_sink},set) == MAX_INT)
+    if(m_groundedHypergraph.GetHID({_sink},set) == MAX_UINT)
       m_groundedHypergraph.AddHyperarc({_sink},set,toGoal);
   } 
 }
@@ -536,7 +536,7 @@ SampleTransitions() {
 
     for(auto vid : hyperarc.tail) {
       auto mode = m_modeHypergraph.GetVertex(vid).property;
-      modeSet[mode->robotGroup] = std::make_pair(nullptr,MAX_INT);
+      modeSet[mode->robotGroup] = std::make_pair(nullptr,MAX_UINT);
       tailModeMap[mode->robotGroup] = mode;
 
       if(m_unactuatedModes.count(vid)) {
@@ -1090,7 +1090,7 @@ ApplyAction(Action* _action, std::set<std::vector<VID>>& _applied, std::vector<V
       // Check if mode meets formation requirements
       // Create state
       State state;
-      state[mode->robotGroup] = std::make_pair(nullptr,MAX_INT);
+      state[mode->robotGroup] = std::make_pair(nullptr,MAX_UINT);
       std::unordered_map<std::string,Robot*> roleMap;
       f->AssignRoles(roleMap,state);
       bool satisfied = mode->formations.empty();
@@ -1191,7 +1191,7 @@ ApplyAction(Action* _action, std::set<std::vector<VID>>& _applied, std::vector<V
       auto mode = m_modeHypergraph.GetVertexType(vid);
       auto formationCondition = initialFormationConditions[i];
       State state;
-      state[mode->robotGroup] = std::make_pair(nullptr,MAX_INT);
+      state[mode->robotGroup] = std::make_pair(nullptr,MAX_UINT);
       formationCondition->AssignRoles(roleMap,state);
     }*/
 
@@ -1231,7 +1231,7 @@ ApplyAction(Action* _action, std::set<std::vector<VID>>& _applied, std::vector<V
         // Construct role map for mode set
         std::unordered_map<std::string,Robot*> roleMap;
         State state;
-        state[mode->robotGroup] = std::make_pair(nullptr,MAX_INT);
+        state[mode->robotGroup] = std::make_pair(nullptr,MAX_UINT);
         formationCondition->AssignRoles(roleMap,state);
 
         // Create formation constraints from roleMap
@@ -1612,7 +1612,7 @@ SaveInteractionPaths(Interaction* _interaction, State& _start, State& _end,
         for(size_t i = 0; i < group->GetRobots().size(); i++) {
           auto oldVID = oldGcfg.GetVID(i);
 
-          if(oldVID != MAX_INT) {
+          if(oldVID != MAX_UINT) {
             newGcfg.SetRobotCfg(i,vertexMaps[i][oldVID]);
           }
           else {
@@ -1642,7 +1642,7 @@ SaveInteractionPaths(Interaction* _interaction, State& _start, State& _end,
           for(size_t i = 0; i < group->GetRobots().size(); i++) {
             auto oldEd = edgeDescriptors[i];
 
-            if(oldEd.source() != MAX_INT and oldEd.target() != MAX_INT) {
+            if(oldEd.source() != MAX_UINT and oldEd.target() != MAX_UINT) {
               auto source = vertexMaps[i][oldEd.source()];
               auto target = vertexMaps[i][oldEd.target()];
               GroupLocalPlanType::ED ed(source,target);
@@ -1738,7 +1738,7 @@ SaveInteractionPaths(Interaction* _interaction, State& _start, State& _end,
   }
 
   // Make sure transition does not already exist in graph
-  if(m_groundedHypergraph.GetHID(head,tail) == MAX_INT) {
+  if(m_groundedHypergraph.GetHID(head,tail) == MAX_UINT) {
     // Save transition in hypergraph
     m_groundedHypergraph.AddHyperarc(head,tail,transition);
   }
@@ -1788,7 +1788,7 @@ SaveInteractionPaths(Interaction* _interaction, State& _start, State& _end,
     reverse.cost = transition.cost;
 
     // Save reverse transition in hypergraph
-    if(m_groundedHypergraph.GetHID(tail,head) == MAX_INT) {
+    if(m_groundedHypergraph.GetHID(tail,head) == MAX_UINT) {
       // Save transition in hypergraph
       m_groundedHypergraph.AddHyperarc(tail,head,reverse);
     }
@@ -1816,7 +1816,7 @@ SaveInteractionPaths(Interaction* _interaction, State& _start, State& _end,
       // Add the group to the problem and solution
       RobotGroup* group = problem->AddRobotGroup(robots,groupLabel);
       m_solution->AddRobotGroup(group);
-      start[group] = std::make_pair(nullptr,MAX_INT);
+      start[group] = std::make_pair(nullptr,MAX_UINT);
     }
 
     // Collect start and goal cfgs
@@ -2014,7 +2014,7 @@ CanReach(const State& _state) {
     auto rm = kv.second.first;
     auto vid = kv.second.second;
     
-    if(rm and vid != MAX_INT) {
+    if(rm and vid != MAX_UINT) {
       auto gcfg = rm->GetVertex(vid);
       gcfg.ConfigureRobot();
     }

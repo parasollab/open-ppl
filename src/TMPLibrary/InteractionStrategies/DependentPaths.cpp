@@ -39,7 +39,7 @@ operator()(Interaction* _interaction, State& _state) {
 
   bool validStart = true;
   for(auto kv : _state) {
-    if(!kv.second.first or kv.second.second == MAX_INT) {
+    if(!kv.second.first or kv.second.second == MAX_UINT) {
       validStart = false;
       break;
     }

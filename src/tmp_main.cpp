@@ -26,8 +26,9 @@ main(int _argc, char** _argv) {
                                   << "for double-types, which is required for "
                                   << "pmpl to work properly.";
 
-  if(_argc != 3 || std::string(_argv[1]) != "-f")
-    throw ParseException(WHERE) << "Incorrect usage. Usage: -f options.xml";
+  const std::string flag = std::string(_argv[1]);
+  if(_argc != 3 || (flag != "-f"))
+    throw ParseException(WHERE) << "Incorrect usage. Usage: {-f} options.xml";
 
   // Get the XML file name from the command line.
   std::string xmlFile = _argv[2];
@@ -134,6 +135,7 @@ main(int _argc, char** _argv) {
       plan->GetStatClass()->PrintAllStats(osStat);
 		}
 	}
+
   // Release resources.
   delete problem;
   delete ppl;

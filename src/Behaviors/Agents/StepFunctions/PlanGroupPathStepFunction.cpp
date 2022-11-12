@@ -1,11 +1,9 @@
-#include "DefaultCoordinatorStepFunction.h"
+#include "PlanGroupPathStepFunction.h"
 
 #include "ConfigurationSpace/Cfg.h"
 
 #include "MPLibrary/MPSolution.h"
 
-#include "MPProblem/Constraints/BoundaryConstraint.h"
-#include "MPProblem/Constraints/CSpaceConstraint.h"
 #include "MPProblem/MPProblem.h"
 #include "MPProblem/MPTask.h"
 #include "MPProblem/TaskHierarchy/Decomposition.h"
@@ -14,20 +12,20 @@
 
 /*----------------------------- Construction -------------------------*/
 
-DefaultCoordinatorStepFunction::
-DefaultCoordinatorStepFunction(Coordinator* _coordinator, XMLNode& _node) :
+PlanGroupPathStepFunction::
+PlanGroupPathStepFunction(Coordinator* _coordinator, XMLNode& _node) :
              StepFunction(_coordinator, _node) {
 
   m_coordinator = static_cast<Coordinator*>(m_agent);
 }
 
-DefaultCoordinatorStepFunction::
-~DefaultCoordinatorStepFunction() { }
+PlanGroupPathStepFunction::
+~PlanGroupPathStepFunction() { }
 
 /*------------------------------- Interface --------------------------*/
 
 void
-DefaultCoordinatorStepFunction::
+PlanGroupPathStepFunction::
 StepAgent(double _dt) {
 
   if(HasPlan()) {
@@ -36,24 +34,12 @@ StepAgent(double _dt) {
   else if(HasProblem() and GetPlan()) {
     DistributePlan();
   }
-  
-  for(auto child : m_coordinator->GetChildAgents()) {
-    child->Agent::Step(_dt);
-  }
-  for(auto child : m_coordinator->GetChildAgents()) {
-    auto p = dynamic_cast<PathFollowingAgent*>(child);
-    auto path = p->GetPath();
-    if(path.size() > 0)
-      return;
-  }
-  std::cout << "All agents completed paths. Exiting program." << std::endl;
-  exit(0);
 }
 
 /*---------------------------- Helper Functions  ----------------------*/
 
 bool
-DefaultCoordinatorStepFunction::
+PlanGroupPathStepFunction::
 HasProblem() {
 
   // If we already have a set problem, return true
@@ -77,19 +63,19 @@ HasProblem() {
 }
 
 bool
-DefaultCoordinatorStepFunction::
+PlanGroupPathStepFunction::
 HasPlan() {
   return m_plan.get();
 }
 
 bool
-DefaultCoordinatorStepFunction::
+PlanGroupPathStepFunction::
 GetPlan() {
 
   auto robot = m_coordinator->GetRobot();
   auto problem = robot->GetMPProblem();
 
-	/// Use tmplibrary to get task assignments
+  // Use tmplibrary to get task assignments
   m_plan = std::shared_ptr<Plan>(new Plan());
   m_plan->SetCoordinator(m_coordinator);
 
@@ -116,54 +102,44 @@ GetPlan() {
 }
 
 void
-DefaultCoordinatorStepFunction::
+PlanGroupPathStepFunction::
 StepMemberAgents(double _dt) { }
 
 void
-DefaultCoordinatorStepFunction::
+PlanGroupPathStepFunction::
 DistributePlan() {
 
   auto childAgents = m_coordinator->GetChildAgents();
   //auto memberAgents = m_coordinator->GetMemberAgents();
 
   for(auto agent : childAgents) {
-    auto robot = agent->GetRobot();
-		auto allocs = m_plan->GetAllocations(robot);
-		std::vector<TaskSolution*> solutions;
+    auto allocs = m_plan->GetAllocations(agent->GetRobot());
+    std::vector<TaskSolution*> solutions;
 
-		//Temporary dummy task 
-		std::shared_ptr<MPTask> temp = std::shared_ptr<MPTask>(new MPTask(robot));
-		agent->SetTask(temp);	
+    //Temporary dummy task
+    std::shared_ptr<MPTask> temp = std::shared_ptr<MPTask>(new MPTask(agent->GetRobot()));
+    agent->SetTask(temp);
 
-		for(auto iter = allocs.begin(); iter != allocs.end(); iter++) {
-			auto sol = m_plan->GetTaskSolution(*iter);
-			solutions.push_back(sol);
-			auto mpSol = sol->GetMotionSolution();
+    for(auto iter = allocs.begin(); iter != allocs.end(); iter++) {
+      auto sol = m_plan->GetTaskSolution(*iter);
+      solutions.push_back(sol);
+      auto mpSol = sol->GetMotionSolution();
 
-			if(iter == allocs.begin()) {
-				agent->GetMPSolution()->SetRoadmap(agent->GetRobot(),mpSol->GetRoadmap(robot));
-				agent->GetMPSolution()->SetPath(agent->GetRobot(),mpSol->GetPath(robot));
-			}
-			else {
-				*(agent->GetMPSolution()->GetPath(robot)) += *(mpSol->GetPath(robot));
-			}
-		}
-		//auto& cfgs = agent->GetMPSolution()->GetPath(robot)->FullCfgs(m_tmpLibrary->GetMPLibrary());	
-		auto& cfgs = agent->GetMPSolution()->GetPath(robot)->Cfgs();	
-		agent->SetPlan(cfgs);
-
-    std::cout << "Plan for " << robot->GetLabel() << ": " << std::endl;
-    for(auto cfg : cfgs) {
-      std::cout << cfg.PrettyPrint() << std::endl;
+      if(iter == allocs.begin()) {
+        agent->GetMPSolution()->SetRoadmap(agent->GetRobot(),mpSol->GetRoadmap());
+        agent->GetMPSolution()->SetPath(agent->GetRobot(),mpSol->GetPath(agent->GetRobot()));
+      }
+      else {
+        *(agent->GetMPSolution()->GetPath(agent->GetRobot())) += *(mpSol->GetPath());
+      }
     }
-    std::cout << std::endl;
-
-		if(cfgs.empty())
-			continue;
-		auto goalCfg = cfgs.back();
-
+    auto& cfgs = agent->GetMPSolution()->GetPath()->Cfgs();
+    agent->SetPlan(cfgs);
+    if(cfgs.empty())
+      continue;
+    auto goalCfg = cfgs.back();
     std::unique_ptr<CSpaceConstraint> goal =
-      std::unique_ptr<CSpaceConstraint>(new CSpaceConstraint(robot, goalCfg));
+      std::unique_ptr<CSpaceConstraint>(new CSpaceConstraint(agent->GetRobot(), goalCfg));
     temp->AddGoalConstraint(std::move(goal));
   }
 }

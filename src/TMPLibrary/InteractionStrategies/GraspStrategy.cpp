@@ -471,7 +471,7 @@ AssignRoles(const State& _state, const std::vector<std::string>& _conditions) {
   // If no start state, filter out motion conditions
   bool validStart = true;
   for(auto kv : _state) {
-    if(!kv.second.first or kv.second.second == MAX_INT) {
+    if(!kv.second.first or kv.second.second == MAX_UINT) {
       validStart = false;
       break;
     }

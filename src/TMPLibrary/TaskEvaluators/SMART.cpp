@@ -73,12 +73,12 @@ Run(Plan* _plan) {
     auto direction = vertexPair.second;
 
     auto qNew = Extend(qNear,direction,modeID,historyID,heuristics.nextMode);
-    if(qNew >= MAX_INT)
+    if(qNew >= MAX_UINT)
       continue;
 
     auto qBest = Rewire(qNew,qNear,modeID,historyID);
 
-    if(qBest >= MAX_INT)
+    if(qBest >= MAX_UINT)
       qBest = qNear;
 
     bool foundGoal = CheckForModeSwitch(qNew);
@@ -140,7 +140,7 @@ CreateSMARTreeRoot() {
     }
 
     auto vid = rm->GetVID(gcfg);
-    if(vid >= MAX_INT) {
+    if(vid >= MAX_UINT) {
       throw RunTimeException(WHERE) << "Roadmap missing robot initial cfg.";
     }
 
@@ -177,7 +177,7 @@ CreateSMARTreeRoot() {
     }
 
     auto omgVID = omg->GetVID(info);
-    if(omgVID >= MAX_INT) {
+    if(omgVID >= MAX_UINT) {
       throw RunTimeException(WHERE) << "Failed to find object mode vertex for "
                                     << passive->GetLabel();
     }
@@ -223,8 +223,8 @@ SelectMode() {
   auto stats = plan->GetStatClass();
   MethodTimer mt(stats,this->GetNameAndLabel() + "::SelectMode");
 
-  size_t modeID = MAX_INT;
-  size_t historyID = MAX_INT;
+  size_t modeID = MAX_UINT;
+  size_t historyID = MAX_UINT;
 
   // With m_modeBias probability, return mode closest to goal
   if(DRand() < m_goalBias) {
@@ -266,7 +266,7 @@ SelectVertex(size_t _modeID, size_t _historyID, Mode _heuristic) {
 
   // Check if bias is valid for this history
   auto iter = m_historyVIDBias.find(_historyID);
-  if(iter != m_historyVIDBias.end() and iter->second != MAX_INT) {
+  if(iter != m_historyVIDBias.end() and iter->second != MAX_UINT) {
     //auto aeid = m_actionExtendedGraph->GetVertex(m_historyVIDBias.at(_historyID));
     return std::make_pair(m_historyVIDBias.at(_historyID),random);
   }
@@ -278,7 +278,7 @@ SelectVertex(size_t _modeID, size_t _historyID, Mode _heuristic) {
   auto candidates = m_historyVIDs[_historyID];
  
   double minDistance = MAX_DBL;
-  VID closest = MAX_INT;
+  VID closest = MAX_UINT;
 
   for(auto vid : candidates) {
     auto aeVertex = m_actionExtendedGraph->GetVertex(vid);
@@ -320,7 +320,7 @@ Extend(size_t _qNear, Direction _direction, size_t _modeID,
   auto stats = plan->GetStatClass();
   MethodTimer mt(stats,this->GetNameAndLabel() + "::Extend");
 
-  size_t qNew = MAX_INT;
+  size_t qNew = MAX_UINT;
   m_historyVIDBias[_historyID] = qNew;
 
   auto aeState = m_actionExtendedGraph->GetVertex(_qNear);
@@ -567,7 +567,7 @@ Rewire(size_t _qNew, size_t _qNear, size_t _modeID, size_t _historyID) {
   std::sort(neighbors.begin(), neighbors.end());
 
   // In order of best cost from source, check if there is a valid connection in the tensor product roadmap
-  size_t qBest = MAX_INT;
+  size_t qBest = MAX_UINT;
   
   for(auto pair : neighbors) {
     auto cand = pair.second;
@@ -648,7 +648,7 @@ ValidConnection(const Vertex& _source, const Vertex& _target) {
     auto grm = pair.first;
     auto vid = pair.second;
 
-    edges[grm] = std::make_pair(vid,MAX_INT);
+    edges[grm] = std::make_pair(vid,MAX_UINT);
   }
 
   for(auto pair : _target.cfgs) {
@@ -1248,7 +1248,7 @@ ComputeMAPFHeuristic(size_t _modeID) {
 
             OCMG::ModeInfo info(nullptr,nullptr,kv1.first);
             auto omgVID = omg->GetVID(info);
-            if(omgVID >= MAX_INT)
+            if(omgVID >= MAX_UINT)
               throw RunTimeException(WHERE) << "Failed to find matching goal terrain.";
 
             // Check if object already has a specified goal and make sure it does not conflict
@@ -1397,7 +1397,7 @@ LowLevelPlanner(CBSNodeType& _node, Robot* _robot) {
       auto timestep = h->GetVertex(_ei->source()).second + 1;
 
       /*auto edgeConstraint = std::make_pair(std::make_pair(source,target),timestep);
-      auto vertexConstraint = std::make_pair(std::make_pair(target,MAX_INT),timestep+1);
+      auto vertexConstraint = std::make_pair(std::make_pair(target,MAX_UINT),timestep+1);
 
       if(constraints.count(edgeConstraint) or constraints.count(vertexConstraint))
         return std::numeric_limits<double>::infinity();
@@ -1527,7 +1527,7 @@ ValidationFunction(CBSNodeType& _node) {
         auto p2 = s2 == t2 ? s2 : s2 == 0 ? 0 : s2 - 1;
         auto parent2 = path2[p2];
 
-        size_t conflictTimestep = MAX_INT;
+        size_t conflictTimestep = MAX_UINT;
 
         if(source1 == parent2) {
           conflictTimestep = p2;
@@ -1568,7 +1568,7 @@ ValidationFunction(CBSNodeType& _node) {
           //            << std::endl;
           //}
 
-          auto constraint = std::make_pair(std::make_pair(source1,MAX_INT),i);
+          auto constraint = std::make_pair(std::make_pair(source1,MAX_UINT),i);
           std::vector<std::pair<Robot*,CBSConstraint>> constraints;
           constraints.push_back(std::make_pair(object1,constraint));
           constraints.push_back(std::make_pair(object2,constraint));

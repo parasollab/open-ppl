@@ -374,7 +374,7 @@ ConstructSafeIntervals(std::vector<Range<size_t>>& _unsafeIntervals) {
 
   // Return infinite interval if there are no unsafe intervals
   if(_unsafeIntervals.empty())
-    return {Range<size_t>(0,MAX_INT)};
+    return {Range<size_t>(0,MAX_UINT)};
 
   // Merge unsafe intervals
   std::vector<Range<size_t>> unsafeIntervals = _unsafeIntervals;
@@ -455,7 +455,7 @@ ConstructSafeIntervals(std::vector<Range<size_t>>& _unsafeIntervals) {
     iter++;
   }
 
-  max = MAX_INT;
+  max = MAX_UINT;
   intervals.push_back(Range<size_t>(min,max));
 
   return intervals;

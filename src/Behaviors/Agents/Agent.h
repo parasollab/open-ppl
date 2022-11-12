@@ -7,6 +7,8 @@
 
 #include "MPProblem/Robot/Control.h"
 
+#include "MPLibrary/PMPL.h"
+
 class Cfg;
 class MPTask;
 class Robot;
@@ -29,6 +31,9 @@ class Agent {
 
     Robot* const m_robot;              ///< The robot that this agent controls.
 
+    std::unique_ptr<MPLibrary> m_library;   ///< This agent's planning library.
+    std::unique_ptr<MPSolution> m_solution; ///< The current solution.
+
     mutable bool m_initialized{false}; ///< Is the agent initialized?
 
     std::shared_ptr<MPTask> m_task;    ///< The task this agent is working on.
@@ -42,7 +47,7 @@ class Agent {
     std::string m_capability;
 
     ///< Step function to define agent behaviors.
-    std::unique_ptr<StepFunction> m_stepFunction;
+    std::vector<std::unique_ptr<StepFunction>> m_stepFunctions;
 
     ///@}
 
@@ -75,7 +80,7 @@ class Agent {
     /// we can copy an agent without knowing its type.
     /// @param _r The robot which this cloned agent will reason for.
     /// @return A copy of the agent.
-    virtual std::unique_ptr<Agent> Clone(Robot* const _r) const = 0;
+    virtual std::unique_ptr<Agent> Clone(Robot* const _r) const;
 
     virtual ~Agent();
 
@@ -111,7 +116,7 @@ class Agent {
 
     /// Set up the agent before running. Anything that needs to be done only once
     /// on first starting should go here.
-    virtual void Initialize() = 0;
+    virtual void Initialize();
 
     /// Decide what to do on each time step in the simulation. The agent should
     /// implement its decision by sending commands to the robot's controller.
@@ -120,7 +125,7 @@ class Agent {
 
     /// Tear down the agent. Release any resources and reset the object to its
     /// pre-initialize state.
-    virtual void Uninitialize() = 0;
+    virtual void Uninitialize();
 
     /// Find the smallest time interval which is an integer multiple of the
     /// problem time resolution and larger than the hardware time (if any).
@@ -132,7 +137,7 @@ class Agent {
     ///          it does not indicate the minimum distance between their hulls.
     /// @param _distance The distance threshold.
     /// @return The vector of Robots within the threshold.
-    std::vector<Agent*> ProximityCheck(const double _distance) const;
+    // std::vector<Agent*> ProximityCheck(const double _distance) const;
 
     ///@}
     ///@name Agent Control
@@ -155,20 +160,23 @@ class Agent {
     ///@{
 
     /// Get the type of agent
-    const std::string& GetCapability() const noexcept;
+    // const std::string& GetCapability() const noexcept;
 
-		///@}
+    /// Get the pointer to this agents solution object.
+    /// @return The MPSolution pointer.
+    MPSolution* GetMPSolution();
 
+    ///@}
   protected:
 
-    /// Instruct the agent to enqueue a command for gathering sensor readings.
-    void Localize();
+    // /// Instruct the agent to enqueue a command for gathering sensor readings.
+    // void Localize();
 
-    /// Is the agent waiting on sensor data?
-    bool IsLocalizing() const noexcept;
+    // /// Is the agent waiting on sensor data?
+    // bool IsLocalizing() const noexcept;
 
-    /// Estimate the state of the robot from the last localization data.
-    Cfg EstimateState();
+    // /// Estimate the state of the robot from the last localization data.
+    // Cfg EstimateState();
 
     /// Continue executing the last controls if time remains.
     /// @return True if time is left on the last controls, false if
@@ -185,12 +193,13 @@ class Agent {
     /// @param _c The controls to execute.
     virtual void ExecuteControlsSimulation(const ControlSet& _c, const size_t _steps);
 
-    /// Execute a set of controls on the hardware if present.
-    /// @param _c The controls to execute.
-    /// @param _steps The number of time steps to execute the control.
-    virtual void ExecuteControlsHardware(const ControlSet& _c, const size_t _steps);
+    // /// Execute a set of controls on the hardware if present.
+    // /// @param _c The controls to execute.
+    // /// @param _steps The number of time steps to execute the control.
+    // virtual void ExecuteControlsHardware(const ControlSet& _c, const size_t _steps);
 
     ///@}
+
   private:
 
     ///@name Disabled Functions
