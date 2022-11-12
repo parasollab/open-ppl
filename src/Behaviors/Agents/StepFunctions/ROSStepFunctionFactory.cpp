@@ -3,6 +3,8 @@
 #include "FollowPath.h"
 #include "ROSStepFunction.h"
 #include "ROSWorkstationNodeStepFunction.h"
+#include "EmptyStepFunction.h"
+
 
 #include <algorithm>
 #include <string>
@@ -37,6 +39,14 @@ Factory(Agent* _agent, XMLNode& _node) {
   //     new ROSStepFunction(_agent, _node)
   //   );
   // }
+  else if(type == "emptyc") {
+    Coordinator* c = static_cast<Coordinator*>(_agent);
+    if(c) {
+      output = std::unique_ptr<StepFunction>(
+        new EmptyStepFunction(c,_node)
+      );
+    }
+  }
   else if(type == "workstation") {
     int argc = 0;
     char* argv[255];

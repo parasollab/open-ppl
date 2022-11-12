@@ -15,7 +15,7 @@ ROSWorkstationNodeStepFunction(Agent* _agent, XMLNode& _node)
 
   m_timeUntilEmptySub = nh.subscribe("/estimated_time_to_empty", 1000, TimeToEmptyCallback);
  
-  m_receivepartsPublisher = nh.advertise<std_msgs::Int32>("/receive_parts", 1000);
+  m_receivepartsPublisher = nh.advertise<std_msgs::Int32>("/receive_parts", 1, true);
 
   ROSWorkstationNodeStepFunction::s_timeUntilEmpty = 0.0;
 }
@@ -26,11 +26,11 @@ ROSWorkstationNodeStepFunction::
 void
 ROSWorkstationNodeStepFunction::
 StepAgent(double _dt) {
-  ros::Rate rate(3);
+  ros::Rate rate(1);
   if(ros::ok())
     ros::spinOnce();
   
-  if(ROSWorkstationNodeStepFunction::s_timeUntilEmpty < 20.0) {
+  if(ROSWorkstationNodeStepFunction::s_timeUntilEmpty < 10.0) {
     std_msgs::Int32 msg;
     msg.data = 5;
     m_receivepartsPublisher.publish(msg);

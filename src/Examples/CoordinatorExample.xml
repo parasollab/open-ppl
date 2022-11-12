@@ -24,7 +24,7 @@
       <Agent type="coordinator" dmLabel="euclidean" debug="true"> 
         <Member label="member1"/>
         <Member label="member2"/>
-        <StepFunction type="plangrouppath" debug="true"/>
+        <StepFunction type="emptyc" debug="true"/>
       </Agent>
     </Robot>
 
