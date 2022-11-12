@@ -19,6 +19,7 @@ class TaskSolution {
     ///@{
 
     typedef MPSolutionType<MPTraits<Cfg,DefaultWeight<Cfg>>> MPSolution;
+    typedef PathType<MPTraits<Cfg,DefaultWeight<Cfg>>> Path;
 
     ///@}
     ///@name Construction
@@ -60,6 +61,12 @@ class TaskSolution {
     /// @return Solution.
     MPSolution* GetMotionSolution();
 
+    /// Get Path
+    Path* GetPath();
+
+    /// Set Path
+    void SetPath(std::unique_ptr<Path>&& _path);
+
     /// Set Start Time
     /// @param _startTime.
     void SetStartTime(double _startTime);
@@ -87,6 +94,8 @@ class TaskSolution {
     RobotGroup* m_robotGroup{nullptr};
 
     MPSolution* m_motionSolution{nullptr};
+
+    std::unique_ptr<Path> m_path;
 
     double m_startTime{0};
 

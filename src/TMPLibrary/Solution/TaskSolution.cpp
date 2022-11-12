@@ -55,6 +55,18 @@ GetMotionSolution() {
   return m_motionSolution;
 }
 
+TaskSolution::Path*
+TaskSolution::
+GetPath() {
+  return m_path.get();
+}
+
+void
+TaskSolution::
+SetPath(std::unique_ptr<Path>&& _path) {
+  m_path = std::move(_path);
+}
+
 void
 TaskSolution::
 SetStartTime(double _startTime) {

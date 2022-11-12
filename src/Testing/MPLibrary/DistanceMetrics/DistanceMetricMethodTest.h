@@ -278,7 +278,9 @@ DistanceMetricMethodTest<MPTraits>::
 GetGroupCfg() {
   auto group = this->GetMPProblem()->GetRobotGroups()[0].get();
   auto groupRoadmap = this->GetMPLibrary()->GetGroupRoadmap(group);
+
   GroupCfgType gcfg(groupRoadmap);
+
   return gcfg;
 }
 

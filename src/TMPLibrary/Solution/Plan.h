@@ -67,11 +67,11 @@ class Plan {
 
     /// Get Allocations
     /// @param _robot Robot.
-    std::list<SemanticTask*> GetAllocations(Robot* _robot);
+    std::vector<SemanticTask*> GetAllocations(Robot* _robot);
 
     /// Get Allocations
     /// @param _group Robot group.
-    std::list<SemanticTask*> GetAllocations(RobotGroup* _group);
+    std::vector<SemanticTask*> GetAllocations(RobotGroup* _group);
 
     /// Get Task Solutions
     const std::unordered_map<SemanticTask*,std::shared_ptr<TaskSolution>>& GetTaskSolutions();
@@ -121,9 +121,9 @@ class Plan {
 
     Decomposition* m_decomposition{nullptr};
 
-    std::unordered_map<Robot*,std::list<SemanticTask*>> m_allocations;
+    std::unordered_map<Robot*,std::vector<SemanticTask*>> m_allocations;
 
-    std::unordered_map<RobotGroup*,std::list<SemanticTask*>> m_groupAllocations;
+    std::unordered_map<RobotGroup*,std::vector<SemanticTask*>> m_groupAllocations;
 
     std::unordered_map<SemanticTask*,std::shared_ptr<TaskSolution>> m_taskSolutions;
 

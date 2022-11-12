@@ -64,10 +64,9 @@
         pointSelection="cspace" dmLabel="euclidean" stepSize="0.0"
         nShellsColl="0" nShellsFree="10" debug="false"/>
       <!--<GaussianSampler label="Gauss" vcLabel="rapid" d="0.2" dmLabel="euclidean"
-        useBBX="false"/>
-        nShellsColl="0" nShellsFree="1" debug="false"/>
+        useBBX="false"/-->
       <BridgeTestSampler label="Bridge" vcLabel="rapid" d="0.2"
-        dmLabel="euclidean" useBBX="true"/> -->
+        dmLabel="euclidean" useBBX="true"/>
     </Samplers>
 
     <LocalPlanners>
@@ -81,6 +80,7 @@
         vcLabel="rapid" maxDist="4." minDist=".01"/>
       <BasicExtender label="BESO" debug="false" dmLabel="euclidean"
         vcLabel="rapid" maxDist="10." minDist=".001" randomOrientation="false"/>
+<<<<<<< HEAD
 <<<<<<< HEAD
       <DiscreteExtender label="DiscreteExtender" lp="sl"/>
       <KinodynamicExtender label="KinoExtender" debug="false"
@@ -116,8 +116,6 @@
         <Extender label="TCSO" probability="0.1"/>
         <Extender label="TMAP" probability="0.1"/>
       </MixExtender>
-=======
->>>>>>> 57a3ceeac3d291c0a35cdfc4dfb0db05d8a85cf8
     </Extenders>
 
     <PathModifiers>

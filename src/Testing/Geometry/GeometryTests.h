@@ -33,7 +33,13 @@ class GeometryTests : public TestBaseObject {
     ///@}
 
   private:
+  
+    ///@name Internal State
+    ///@{
+
     vector<TestBaseObject*>* m_tests;
+
+    ///@}
 };
 
 /*--------------------------- Construction ---------------------------*/

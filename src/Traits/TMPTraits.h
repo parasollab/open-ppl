@@ -5,9 +5,10 @@
 
 // TMPStrategyMethods to include
 #include "TMPLibrary/TMPStrategies/BasicHCR.h"
-#include "TMPLibrary/TMPStrategies/NextBestSearch.h"
-#include "TMPLibrary/TMPStrategies/SimpleMotionMethod.h"
 #include "TMPLibrary/TMPStrategies/BasicTMPStrategyMethod.h"
+#include "TMPLibrary/TMPStrategies/NextBestSearch.h"
+#include "TMPLibrary/TMPStrategies/SimpleTaskAllocationMethod.h"
+#include "TMPLibrary/TMPStrategies/SimpleMotionMethod.h"
 
 // PoIPlacementMethods to include
 
@@ -21,7 +22,9 @@
 
 // TaskDecomposers to include
 
-// TaskAllocators to include 
+// TaskAllocators to include
+#include "TMPLibrary/TaskAllocators/GreedyAllocator.h" 
+#include "TMPLibrary/TaskAllocators/SmartAllocator.h" 
 
 // StateGraphs to include
 #include "TMPLibrary/StateGraphs/CombinedRoadmap.h"
@@ -52,7 +55,8 @@ struct TMPTraits {
     BasicHCR,
     BasicTMPStrategyMethod,
     NextBestSearch,
-		SimpleMotionMethod
+		SimpleMotionMethod,
+		SimpleTaskAllocationMethod
       > TMPStrategyMethodList;
 
   //types of points of interest placement methods available in our world
@@ -75,6 +79,8 @@ struct TMPTraits {
 
   //types of task allocators available in our world
   typedef boost::mpl::list<
+    GreedyAllocator,
+    SmartAllocator
       > TaskAllocatorMethodList;
 
 	typedef boost::mpl::list<

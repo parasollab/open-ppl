@@ -232,6 +232,7 @@ Sampler(GroupCfgType& _cfg, const Boundary* const _boundary,
   auto dm = this->GetDistanceMetric(m_dmLabel); 
   auto groupRoadmap = this->GetGroupRoadmap();
   bool generated = false;
+
   GroupCfgType incrementors = _cfg;
 
   if(this->m_debug)
@@ -335,6 +336,7 @@ Sampler(GroupCfgType& _cfg, const BoundaryMap& _boundaryMap,
   auto dm = this->GetDistanceMetric(m_dmLabel); 
   auto groupRoadmap = this->GetGroupRoadmap();
   bool generated = false;
+
   GroupCfgType incrementors = _cfg;
 
   if(this->m_debug)

@@ -939,8 +939,9 @@ MoveStateToLocalSolution(Interaction* _interaction, State& _state) {
       grm->AddFormation(form,true);
     }
 
-    gcfg.SetGroupRoadmap(grm);
-    vid = grm->AddVertex(gcfg);
+    auto copy = gcfg;
+    copy.SetGroupRoadmap(grm);
+    vid = grm->AddVertex(copy);
 
     // Update values in the state
     kv.second = std::make_pair(grm,vid);

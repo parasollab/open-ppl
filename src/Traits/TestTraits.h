@@ -39,6 +39,7 @@
 #include "Testing/MPLibrary/Samplers/BridgeTestSamplerTest.h"
 #include "Testing/MPLibrary/Samplers/ObstacleBasedSamplerTest.h"
 #include "Testing/MPLibrary/Samplers/UniformRandomSamplerTest.h"
+#include "Testing/MPLibrary/Samplers/BridgeTestSamplerTest.h"
 
 //local planner includes
 #include "Testing/MPLibrary/LocalPlanners/StraightLineTest.h"
@@ -105,6 +106,7 @@ struct MPTraits {
   typedef GroupRoadmap<GroupCfgType, GroupWeightType>    GroupRoadmapType;
   typedef GroupPath<MPTraits>                            GroupPathType;
 
+
   //types of distance metrics available in our world
   typedef boost::mpl::list<
       ManhattanDistanceTest<MPTraits>,
@@ -134,7 +136,7 @@ struct MPTraits {
       ObstacleBasedSamplerTest<MPTraits>,
       UniformRandomSamplerTest<MPTraits>
       > SamplerMethodList;
-
+  
   //types of local planners available in our world
   typedef boost::mpl::list<
     // StraightLine<MPTraits>
