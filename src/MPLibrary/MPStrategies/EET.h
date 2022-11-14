@@ -5,6 +5,7 @@
 // #include "MPProblem/Constraints/Constraint.h"
 // #include "Utilities/XMLNode.h"
 // #include "ConfigurationSpace/GenericStateGraph.h"
+#include "Geometry/Boundaries/CSpaceBoundingSphere.h"
 
 // #include <iomanip>
 // #include <iterator>
@@ -14,12 +15,15 @@
 #include <queue>
 
 
-/* HYPERPARAMETER NOTES THAT ANANYA NEEDS TO MOVE BUT IS
-TOO HAPPY TO AT THE MOMENT
+/* HYPERPARAMETER NOTES THAT ANANYA NEEDS TO MOVE 
 
-1. THE MINIMUM RADIUS IS HIGHLY DEPENDENT ON THE CLEARANCE OF THE AREA. LOWER CLEARANCE, YOU NEED TO STEP DOWN THE MIN RADIUS BY AN ORDER OF MAGNITUDE OR SO. 
-2. THE MINIMUM RADIUS IS HIGHLY FINNICKY. IN ONE TEST, MIN RADIUS 0.1 WAS TOO BIG, 0.01 TOOK FOREVER (TOO SMALL) AND 0.05 WAS JUST RIGHT
-3. WHEN CHANGING MIN RADIUS YOU ALSO NEED TO CHANGE NUM SAMPLES TAKEN ON SPHERE. RADIUS INCREASES, NUM POINTS SHOULD INCREASE (I THINK)
+1. THE MINIMUM RADIUS IS HIGHLY DEPENDENT ON THE CLEARANCE OF
+ THE AREA. LOWER CLEARANCE, YOU NEED TO STEP DOWN THE MIN RADIUS
+  BY AN ORDER OF MAGNITUDE OR SO. 
+2. THE MINIMUM RADIUS IS HIGHLY FINNICKY. IN ONE TEST, MIN RADIUS
+ 0.1 WAS TOO BIG, 0.01 TOOK FOREVER (TOO SMALL) AND 0.05 WAS JUST RIGHT
+3. WHEN CHANGING MIN RADIUS YOU ALSO NEED TO CHANGE NUM SAMPLES 
+TAKEN ON SPHERE. RADIUS INCREASES, NUM POINTS SHOULD INCREASE (I THINK)
 
 */
 
@@ -51,16 +55,23 @@ class EET : public BasicRRTStrategy<MPTraits> {
     double DistanceToObstacles(Point _p);
     double Distance(Point _p1, Point _p2);
 
+    // overrides of BasicRRT functions
+    virtual CfgType SelectTarget() override;    
+    virtual VID ExpandTree(const VID _nearestVID, const CfgType& _target) override;
+
     
-    // double explore_exploit_bias{0};  
+    // Start and goal points (not cfgs)
+    // Point pStart;
+    Point pGoal;
+    VID startVID;
+
+  
     int m_nSphereSamples{100};
     double m_minSphereRadius{0.001};
-
-    // Start and goal points (not cfgs)
-    Point pStart;
-    std::vector<Point> pGoals;
-
+    double m_defaultExploreExploit{1./3.}; // "gamma"
     std::string m_samplerLabel{BasicRRTStrategy<MPTraits>::m_samplerLabel};
+
+
 
     struct Sphere{
       Point center;
@@ -98,7 +109,7 @@ class EET : public BasicRRTStrategy<MPTraits> {
       }
 
       bool operator!=(const Sphere& _other) const {
-        return !(this == _other);
+        return !(*this == _other);
       }
 
       friend std::ostream& operator<<(std::ostream& _os, const Sphere& _vertex) {
@@ -124,8 +135,17 @@ class EET : public BasicRRTStrategy<MPTraits> {
 
     // For WAVEFRONT expansion.
     Sphere InsertSphereIntoPQ(Point pCenter, 
+                              Point pGoal,
                               std::priority_queue<Sphere>& q, 
                               VID parentVID);
+
+    Sphere GetParentSphere(Sphere _s);
+
+    Sphere goalSphere; // The sphere that contains the goal. 
+    Sphere currentSphere; // The sphere we are currently investigating. 
+    double exploreExploitBias; // "sigma" 
+    double controlManipulation{0.01}; // "alpha". Default value provided in paper.
+    double pGoalState{0.5}; // "rho". Default value provided in paper. 
 };
 
 /*---------------------------------------------------------------------------*/
@@ -146,6 +166,9 @@ EET(XMLNode& _node) : BasicRRTStrategy<MPTraits>(_node) {
   m_minSphereRadius = _node.Read("minSphereRadius", false, m_minSphereRadius, 
                                 0., std::numeric_limits<double>::max(),
       "Minimum sphere radius for sphere growth.");
+  m_defaultExploreExploit = _node.Read("defaultExploreExploit", false, m_defaultExploreExploit, 
+                                0., 1.,
+      "Default explore/exploit bias. ");
 }
 
 
@@ -154,19 +177,19 @@ template <typename MPTraits>
 void
 EET<MPTraits>::
 Initialize() {
-  // Override some basics
+  // Override some basics. 
   this->m_growGoals = false;
+
+  // Set up variables. 
+  exploreExploitBias = m_defaultExploreExploit;
 
   // Set start, goals, etc
   BasicRRTStrategy<MPTraits>::Initialize();
 
   //compute sphere tree
   Wavefront();
-
   wavefrontExpansion.Write("wavefront", this->GetMPProblem()->GetEnvironment());
-  // take first sphere
-  // Sphere s = 
-
+  currentSphere = wavefrontRoot;
 }
 
 
@@ -174,9 +197,56 @@ template <typename MPTraits>
 void
 EET<MPTraits>::
 Iterate() {
-  // Sample new workspace frame
+  auto rdmp = this->GetRoadmap();
 
-  // select nearest vertex in tree
+  // sample a sphere. 
+  const CfgType target = this->SelectTarget();
+
+  // find nearest neighbor and expand tree towards target. 
+  // if expansion was successful, add to rdmp. 
+  // nearest neighbor should not be goal vertex. 
+  const VID nearestVID = this->FindNearestNeighbor(target, &rdmp->GetAllVIDs());
+  const VID newVID = this->ExpandTree(nearestVID, target);
+
+  // adjust hyperparameters
+  if (newVID != INVALID_VID) { // expansion successful. 
+    if (this->m_debug){
+      std::cout << "This expansion was successful." << std::endl;
+    }
+
+    Point newPoint = rdmp->GetVertex(newVID).GetPoint();
+
+    exploreExploitBias *= (1 - controlManipulation);
+
+    Sphere iterationSphere = goalSphere;
+    std::vector<Sphere> spheresSeen;
+    while (iterationSphere != currentSphere) {
+      Point iterationSphereCenter = iterationSphere.center;
+
+      if (Distance(iterationSphereCenter, newPoint) < iterationSphere.radius) {
+        currentSphere = spheresSeen.back();
+        exploreExploitBias = m_defaultExploreExploit;
+        if (this->m_debug) {
+          std::cout << "New \"current\" Sphere has VID: " << currentSphere.wavefrontVID << std::endl;
+        }
+        break;
+      } 
+
+      // advance sphere to parent. 
+      spheresSeen.push_back(iterationSphere);
+      iterationSphere = GetParentSphere(iterationSphere);
+    }
+  
+    // This is not in the pseudocode but is necessary for our implementation.
+    this->TryGoalExtension(newVID);
+
+  } else { // expansion unsuccessful. 
+    exploreExploitBias *= (1 + controlManipulation);
+  }
+
+  if (exploreExploitBias > 1) {
+    currentSphere = GetParentSphere(currentSphere);
+  }
 }
 
 /*----------------------------------------------------------------------------*/
@@ -189,22 +259,30 @@ EET<MPTraits>::
 Wavefront() {
   auto rdmp = this->GetRoadmap();
 
+  // Apparently, GenerateStart and GenerateGoals will not re-generate new S&G.
+
   // Get start point. 
   const VID startVID = this->GenerateStart(m_samplerLabel);
   CfgType& startCfg = rdmp->GetVertex(startVID);
-  pStart = startCfg.GetPoint();
+  Point pStart = startCfg.GetPoint();
+  this->startVID = startVID;
 
-  // Get goal points. 
+  // Get goal point. 
   std::vector<VID> goals = this->GenerateGoals(m_samplerLabel);
-  for (VID goal : goals){
-    Point pGoal = rdmp->GetVertex(goal).GetPoint();
-    pGoals.push_back(pGoal);
+  pGoal = rdmp->GetVertex(goals[0]).GetPoint();
+  for (VID goal : goals) { // We don't want to grow the goals. Hence remove them from rdmp.
+    rdmp->DeleteVertex(goal);
   }
+  // this->goalVID = goals[0];
+  // for (VID goal : goals){
+  //   Point pGoal = rdmp->GetVertex(goal).GetPoint();
+  //   pGoals.push_back(pGoal);
+  // }
 
   // Root the WE. 
   std::priority_queue<Sphere> sphereQueue;
-  InsertSphereIntoPQ(pStart, sphereQueue, INVALID_VID);
-  wavefrontRoot = sphereQueue.top();
+  Sphere root = InsertSphereIntoPQ(pStart, pGoal, sphereQueue, INVALID_VID);
+  wavefrontRoot = root;
 
   // in-loop variables
   std::set<int> goalsReached;
@@ -212,9 +290,9 @@ Wavefront() {
   // Grow WE! 
   while (!sphereQueue.empty()) {
     // if we've reached all the goals, we are done. 
-    if (goalsReached.size() == pGoals.size()) {
-      break;
-    }
+    // if (goalsReached.size() == pGoals.size()) {
+    //   break;
+    // }
 
 
     Sphere s = sphereQueue.top();
@@ -231,7 +309,7 @@ Wavefront() {
                               << s.center[2] << " " 
                         << "with radius " << s.radius
                         << " priority: " << s.priority 
-                << "Added to WE." << std::endl 
+                << " Added to WE." << std::endl 
                 << "   (There are " << sphereQueue.size() << " elments in the queue)."
                 << std::endl;
     }
@@ -252,21 +330,27 @@ Wavefront() {
     }
 
     // If we are within a goal region, we are done.
-    bool inGoalRegion = false;
-    for (size_t i=0; i < pGoals.size(); i++) { 
-      auto pGoal = pGoals[i];
+    // bool inGoalRegion = false;
+    // for (size_t i=0; i < pGoals.size(); i++) { 
+      // auto pGoal = pGoals[i];
       if (Distance(pGoal, s.center) < s.radius) {
-        inGoalRegion = true;
-        goalsReached.insert(i);
+        // inGoalRegion = true;
+        // goalsReached.insert(i);
+
+        // if (!goalsReached.contains(i)) { // keep track of goal spheres
+        //   goalSphere.push_back(s);
+        // }
+
+        goalSphere = s;
         if (this->m_debug) {
           std::cout << "   This sphere contains the goal region." << std::endl;
         }
         break;
       }
-    }
-    if (inGoalRegion) {
-      continue;
-    }
+    // }
+    // if (inGoalRegion) {
+    //   continue;
+    // }
 
     // Sample n points on sphere surface. 
     PointConstruction<MPTraits> _p;
@@ -282,7 +366,7 @@ Wavefront() {
     for (Point p_i : samples) {
       // check which sphere in tree to attach this one to. 
 
-      // not in pseudocode, but don't want to insert 
+      // not in pseudocode, but we don't want to insert 
       // the same sphere into queue so many times. Priority will be the same. 
       // TODO: is sphereAddedToQueue bad? making path longer?
       bool sphereAddedToQueue = false; 
@@ -291,7 +375,7 @@ Wavefront() {
 
         // outside existing spheres
         if (Distance(p_i, sphere.center) < sphere.radius) {
-          InsertSphereIntoPQ(p_i, sphereQueue, sphereVID);
+          InsertSphereIntoPQ(p_i, pGoal, sphereQueue, sphereVID);
           sphereAddedToQueue = true;
         }
 
@@ -309,7 +393,6 @@ Wavefront() {
 
   return;
 }
-
 
 //TODO ANANYA: FIGURE OUT WHY THIS SOMETIMES RETURNS A NEGATIVE NUMBER. 
 template<class MPTraits>
@@ -356,8 +439,7 @@ DistanceToObstacles(Point _p){
 template <class MPTraits>
 typename EET<MPTraits>::Sphere
 EET<MPTraits>::
-InsertSphereIntoPQ(Point pCenter, std::priority_queue<Sphere>& q, VID parentVID) {
-
+InsertSphereIntoPQ(Point pCenter, Point pGoal, std::priority_queue<Sphere>& q, VID parentVID) {
   double radius = DistanceToObstacles(pCenter); // radius. 
   
   // Throw out spheres that are too small.. 
@@ -370,16 +452,16 @@ InsertSphereIntoPQ(Point pCenter, std::priority_queue<Sphere>& q, VID parentVID)
   // We're probably never going to run this with multiple goals anyway
 
   double min_priority = std::numeric_limits<int>::max();
-  for (Point pGoal : pGoals) {
+  // for (Point pGoal : pGoals) {
     // calculate the difference between p_goal and p_other_center
     double distance = Distance(pGoal, pCenter);
 
-    double priority_value = distance - radius;
+    double priority_value = fabs(distance - radius);
 
     if (priority_value < min_priority) {
       min_priority = priority_value;
     }
-  }
+  // }
 
   Sphere s(pCenter, radius, min_priority, parentVID);
   if (this->m_debug) {
@@ -395,6 +477,69 @@ InsertSphereIntoPQ(Point pCenter, std::priority_queue<Sphere>& q, VID parentVID)
   q.push(s);
 
   return s;
+}
+
+template <typename MPTraits>
+typename EET<MPTraits>::Sphere
+EET<MPTraits>::
+GetParentSphere(Sphere _s) {
+  VID realParentVID = _s.parentVID;
+  if (realParentVID == INVALID_VID) {
+    return _s;
+  }
+  return wavefrontExpansionSpheres[realParentVID];
+}
+
+/*-ACTUAL ALGORITHM-----------------------------------------------------------*/
+template <class MPTraits>
+typename MPTraits::CfgType
+EET<MPTraits>::
+SelectTarget() {
+  CfgType target(this->GetTask()->GetRobot());
+  const Boundary* b;
+
+  Point _center = currentSphere.center;
+  std::vector<double> boundary_center{_center[0], _center[1], _center[2]};
+  double boundary_radius = currentSphere.radius * exploreExploitBias;
+  CSpaceBoundingSphere samplingBoundary(boundary_center, boundary_radius);
+  b = &samplingBoundary;
+
+  if (currentSphere == goalSphere && DRand() < pGoalState) {
+    // // return goal cfg. 
+    // return this->GetRoadmap()->GetVertex(goalVID);
+
+    // return something within goal boundary. 
+    auto& goalConstraints = this->GetTask()->GetGoalConstraints();
+    auto goalBoundary = goalConstraints[0]->GetBoundary();
+    b = goalBoundary;
+  } 
+
+  // sample inside boundary. 
+  std::vector<CfgType> samples;
+  auto s = this->GetSampler(m_samplerLabel);
+  s->Sample(1, 100, b, std::back_inserter(samples));
+  target = samples.front();
+
+  if(this->m_debug) {
+    std::cout << "\t" << target.PrettyPrint() << std::endl;
+  }
+
+  return target;
+  
+}
+
+template<class MPTraits>
+typename EET<MPTraits>::VID
+EET<MPTraits>::
+ExpandTree(const VID _nearestVID, const CfgType& _target) {
+  // Literally just copied from BasicRRTStrategy's ExpandTree
+  if(this->m_debug)
+    std::cout << "Trying expansion from node " << _nearestVID << " "
+         << this->GetRoadmap()->GetVertex(_nearestVID).PrettyPrint()
+         << std::endl;
+
+  // Try to extend from the _nearestVID to _target
+  return this->Extend(_nearestVID, _target);
 }
 
 /*----------------------------------------------------------------------------*/
