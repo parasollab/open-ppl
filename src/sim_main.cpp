@@ -80,7 +80,7 @@ main(int _argc, char** _argv) {
       const double dt = problem->GetEnvironment()->GetTimeRes();
       while(true) {
         for(size_t i = 0; i < problem->NumRobots(); ++i) {
-          if(!problem->GetRobot(i)->IsVirtual())
+          //if(!problem->GetRobot(i)->IsVirtual())
             problem->GetRobot(i)->Step(dt);
         }
       }

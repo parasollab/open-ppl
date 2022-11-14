@@ -1,6 +1,7 @@
 #include "StepFunction.h"
 #include "PlanGroupPathStepFunction.h"
 #include "FollowPath.h"
+#include "ROSFactoryAllocation.h"
 #include "ROSStepFunction.h"
 #include "ROSWorkstationNodeStepFunction.h"
 #include "EmptyStepFunction.h"
@@ -53,6 +54,14 @@ Factory(Agent* _agent, XMLNode& _node) {
     ros::init(argc,argv,"ppl_" + _agent->GetRobot()->GetLabel());
     output = std::unique_ptr<StepFunction>(
       new ROSWorkstationNodeStepFunction(_agent, _node)
+    );
+  }
+  else if(type == "factoryallocation") {
+    int argc = 0;
+    char* argv[255];
+    ros::init(argc,argv,"ppl_" + _agent->GetRobot()->GetLabel());
+    output = std::unique_ptr<StepFunction>(
+      new ROSFactoryAllocation(_agent, _node)
     );
   }
   else {
