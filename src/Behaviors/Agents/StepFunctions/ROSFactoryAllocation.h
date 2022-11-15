@@ -24,6 +24,8 @@ class ROSFactoryAllocation : public StepFunction {
       std::string label;
       std::vector<double> location;
       std::string topic;
+      double threshold;
+      size_t priority{MAX_UINT};
     };
 
     ///@}
@@ -53,9 +55,11 @@ class ROSFactoryAllocation : public StepFunction {
 
     void AssignTask(std::string _robot, std::string _label, std::vector<double> _location);
     
-    std::unique_ptr<Decomposition> BuildDecomposition();
+    std::unique_ptr<Decomposition> BuildDecomposition(std::vector<std::string> _labels);
   
     void PlanAllocations(Decomposition* _decomp);
+
+    void DistributeTasks();
 
     ///@}
     ///@name ROS Interface
@@ -67,9 +71,9 @@ class ROSFactoryAllocation : public StepFunction {
 
     std::map<std::string,TaskPoint> m_taskPoints;
 
-    std::map<std::string,double> m_timeRemaining;
+    std::map<std::string,double> m_countdown;
 
-    std::map<std::string,ros::Subscriber> m_timeRemainingSubs;
+    std::map<std::string,ros::Subscriber> m_countdownSubs;
 
     std::map<std::string,ros::Publisher> m_taskQueuePubs;
 
@@ -80,6 +84,10 @@ class ROSFactoryAllocation : public StepFunction {
     double m_timeThreshold;
 
     std::set<std::string> m_allocated;
+
+    std::vector<double> m_depot;
+
+    bool m_planning{false};
 
     ///@}
 

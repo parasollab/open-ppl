@@ -45,8 +45,6 @@ class TaskAllocatorMethod : public TMPBaseObject {
 
     bool m_clearAfterInitializing{false};
 
-
-
     ///@}
 };
 

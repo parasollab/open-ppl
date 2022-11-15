@@ -71,9 +71,9 @@ SemanticTask(std::string _label, SemanticTask* _parent, Decomposition* _decomp,
 	if(m_parent) {
 		m_parent->AddSubtask(this);
 	}
-	if(_decomp and _motionTask.get()) {
-		_decomp->AddMotionTask(this);
-	}
+	//if(_decomp and _motionTask.get()) {
+	//	_decomp->AddMotionTask(this);
+	//}
 }
 
 SemanticTask::
@@ -91,9 +91,9 @@ SemanticTask(std::string _label, SemanticTask* _parent, Decomposition* _decomp,
 	if(m_parent) {
 		m_parent->AddSubtask(this);
 	}
-	if(_decomp and _groupMotionTask.get()) {
-		_decomp->AddGroupMotionTask(this);
-	}
+	//if(_decomp and _groupMotionTask.get()) {
+	//	_decomp->AddGroupMotionTask(this);
+	//}
 }
 
 SemanticTask::
@@ -107,9 +107,9 @@ SemanticTask(SemanticTask* _parent, Decomposition* _decomp,
 		m_parent->AddSubtask(this);
 		m_label = _parent->GetLabel() + "_" + std::to_string(_parent->GetSubtasks().size());
 	}
-	if(_decomp) {
-		_decomp->AddMotionTask(this);
-	}
+	//if(_decomp) {
+	//	_decomp->AddMotionTask(this);
+	//}
 }
 
 SemanticTask::
@@ -123,9 +123,9 @@ SemanticTask(SemanticTask* _parent, Decomposition* _decomp,
 		m_parent->AddSubtask(this);
 		m_label = _parent->GetLabel() + "_" + std::to_string(_parent->GetSubtasks().size());
 	}
-	if(_decomp) {
-		_decomp->AddGroupMotionTask(this);
-	}
+	//if(_decomp) {
+	//	_decomp->AddGroupMotionTask(this);
+	//}
 }
 
 SemanticTask::
@@ -141,9 +141,9 @@ SemanticTask(std::string _label, SemanticTask* _parent, Decomposition* _decomp,
 		if(_label == "")
 			m_label = _parent->GetLabel() + "_" + std::to_string(_parent->GetSubtasks().size());
 	}
-	if(_decomp) {
-		_decomp->AddMotionTask(this);
-	}
+	//if(_decomp) {
+	//	_decomp->AddMotionTask(this);
+	//}
 }
 
 SemanticTask::
@@ -157,9 +157,9 @@ SemanticTask(std::string _label, SemanticTask* _parent, Decomposition* _decomp,
 		if(_label == "")
 			m_label = _parent->GetLabel() + "_" + std::to_string(_parent->GetSubtasks().size());
 	}
-	if(_decomp) {
-		_decomp->AddGroupMotionTask(this);
-	}
+	//if(_decomp) {
+	//	_decomp->AddGroupMotionTask(this);
+	//}
 }
 
 SemanticTask::

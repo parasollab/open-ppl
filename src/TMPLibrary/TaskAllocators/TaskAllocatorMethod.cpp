@@ -7,6 +7,9 @@
 
 TaskAllocatorMethod::
 TaskAllocatorMethod(XMLNode& _node) : TMPBaseObject(_node) {
+  m_clearAfterInitializing = _node.Read("reset",false,m_clearAfterInitializing,
+      "Flag to reset all existing allocations after initializing.");
+
 }
 
 void

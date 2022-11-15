@@ -21,9 +21,6 @@ GreedyAllocator(XMLNode& _node) : TaskAllocatorMethod(_node) {
   // TODO::Parse xml node
   m_singleSolver = _node.Read("singleAgentSolver", false, "BasicPRM", "Provide single agent solver label.");
 
-  m_clearAfterInitializing = _node.Read("reset",false,m_clearAfterInitializing,
-      "Flag to reset all existing allocations after initializing.");
-
 }
 
 
