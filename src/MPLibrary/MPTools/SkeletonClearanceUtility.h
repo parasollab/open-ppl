@@ -88,8 +88,6 @@ SkeletonClearanceUtility<MPTraits>::
 operator()(WorkspaceSkeleton& _skeleton) const {
   MethodTimer mt(this->GetStatClass(), "SkeletonClearanceUtility");
 
-  // auto g = _skeleton.GetGraph();
-
   if(this->m_debug)
     std::cout << "Skeleton has " << _skeleton.get_num_vertices() << " vertices "
               << "and " << _skeleton.get_num_edges() << " edges."
@@ -133,8 +131,6 @@ void
 SkeletonClearanceUtility<MPTraits>::
 HackFix(WorkspaceSkeleton& _skeleton) const {
   MethodTimer mt(this->GetStatClass(), "SkeletonClearanceUtility::HackFix");
-
-  // auto g = _skeleton.GetGraph();
 
   if(this->m_debug)
     std::cout << "Skeleton has " << _skeleton.get_num_vertices() << " vertices "

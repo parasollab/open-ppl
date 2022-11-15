@@ -78,6 +78,8 @@ class GroupRoadmap final : public CompositeGraph<Vertex, Edge> {
 
     /// Get the set of currently active formations.
     std::unordered_set<Formation*> GetActiveFormations();
+
+    ///@}
     ///@name Modifiers
     ///@{
 

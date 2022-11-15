@@ -341,7 +341,6 @@ GetMesoSkeleton() {
     }
 
     // Return the annotated skeleton
-    // m_skeleton.SetGraph(g);
     m_skeleton = *g;
     // Set witnesses as annotation to the skeleton
     m_annotation = AnnotationType(&m_skeleton);

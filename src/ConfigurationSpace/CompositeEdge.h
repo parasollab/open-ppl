@@ -416,6 +416,7 @@ operator<<(std::ostream& _os, const CompositeEdge<GraphType>& _w) {
   return _os;
 }
 
+/*-------------------------- Individual Local Plans --------------------------*/
 
 template <typename GraphType>
 void

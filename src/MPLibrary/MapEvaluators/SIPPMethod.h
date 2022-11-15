@@ -815,7 +815,7 @@ InitializeCostToGo(const vector<size_t> _goals) {
   }
 }
 
-template <typename MPTraits>
+template<typename MPTraits>
 void
 SIPPMethod<MPTraits>::
 SetEdgeIntervals(EdgeIntervalMap _edgeIntervals) {
@@ -828,7 +828,6 @@ SIPPMethod<MPTraits>::
 SetVertexIntervals(VertexIntervalMap _vertexIntervals) {
   m_vertexIntervals = _vertexIntervals;
 }
-
 
 template <typename MPTraits>
 bool

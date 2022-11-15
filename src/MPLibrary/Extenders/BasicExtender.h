@@ -192,8 +192,6 @@ Extend(const GroupCfgType& _start, const GroupCfgType& _end, GroupCfgType& _new,
        GroupLPOutput<MPTraits>& _lp, const RobotFormation& _robotIndexes) {
   Environment* env = this->GetEnvironment();
 
-  //_lp.SetLPLabel(this->GetLabel());
-  //_lp.SetActiveRobots(_robotIndexes);
 
   return Expand(_start, _end, _new, this->m_maxDist, _lp,
       env->GetPositionRes(), env->GetOrientationRes(), _robotIndexes);
@@ -207,9 +205,6 @@ Extend(const GroupCfgType& _start, const GroupCfgType& _end, GroupCfgType& _new,
     GroupLPOutput<MPTraits>& _lp, CDInfo& _cdInfo,
     const RobotFormation& _robotIndexes) {
   Environment* env = this->GetEnvironment();
-
-  //_lp.SetLPLabel(this->GetLabel());
-  //_lp.SetActiveRobots(_robotIndexes);
 
   _cdInfo.ResetVars(_cdInfo.m_retAllInfo);
 
@@ -340,7 +335,6 @@ Expand(const GroupCfgType& _start, const GroupCfgType& _end,
 
   GroupCfgType tick = _start;
   GroupCfgType previous = _start;
-
   GroupCfgType oneStep = _start; // The placeholder for computing steps of angles.
 
   int nTicks;
@@ -351,7 +345,6 @@ Expand(const GroupCfgType& _start, const GroupCfgType& _end,
   // (Though the nTicks calculation is coupled with all moving robots).
   incr.FindIncrement(_start, _end, &nTicks, _posRes, _oriRes);
   const GroupCfgType incrUntouched = incr;
-
 
   // Move out from start towards dir, bounded by number of ticks allowed at a
   // given resolution and the distance _delta: the maximum distance to grow

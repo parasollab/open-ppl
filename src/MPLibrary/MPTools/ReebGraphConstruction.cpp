@@ -88,7 +88,6 @@ GetSkeleton() {
   }
 
   // WorkspaceSkeleton skeleton;
-  // skeleton.SetGraph(g);
   if(!m_params.filename.empty() && m_params.write)
     skeleton->Write("skeleton_" + m_params.filename);
   return *skeleton;

@@ -40,9 +40,9 @@ class PropertyMap {
     ///@{
 
     /// Graph type is a directed multiedge graph of points and paths.
-    typedef WorkspaceSkeleton  GraphType;
-    typedef WorkspaceSkeleton::VD         VD;
-    typedef WorkspaceSkeleton::ED         ED;
+    typedef WorkspaceSkeleton                    GraphType;
+    typedef WorkspaceSkeleton::VD                VD;
+    typedef WorkspaceSkeleton::ED                ED;
     typedef typename GraphType::vertex_iterator        vertex_iterator;
     typedef typename GraphType::adj_edge_iterator      adj_edge_iterator;
 

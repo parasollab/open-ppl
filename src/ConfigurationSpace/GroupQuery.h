@@ -175,7 +175,11 @@ operator()() {
     }
 
     // Get the start VID for this subquery.
+<<<<<<< HEAD
     VID start = MAX_INT;
+=======
+    VID start = SIZE_MAX;
+>>>>>>> bd097ea35a3c94b977728f73c65ee41c25d9c301
     if(!path->Empty()) {
       path->VIDs().back();
     }
@@ -188,7 +192,11 @@ operator()() {
       }
     }
 
+<<<<<<< HEAD
     if(start == MAX_INT)
+=======
+    if(start == SIZE_MAX)
+>>>>>>> bd097ea35a3c94b977728f73c65ee41c25d9c301
       throw RunTimeException(WHERE) << "No VIDs located for start.";
 
     // Get the goal VIDs for this subquery.

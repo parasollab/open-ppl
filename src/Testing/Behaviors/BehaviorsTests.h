@@ -31,7 +31,7 @@ class BehaviorsTests : public TestBaseObject {
     virtual TestResult RunTest() override;
 
     ///@}
-  
+
   private:
 
     ///@name Test objects
@@ -103,7 +103,7 @@ RunTest() {
   passed = passed and result.first;
   message = message + result.second;
 
-  message = message + "\nCOMPLETED BEHAVIORS TESTS\n"
+  message = message + "\nCOMPLETED Behaviors TESTS\n"
                       "Total: " + std::to_string(total) + "\n"
                       "Passed: " + std::to_string(numPassed) + "\n"
                       "Failed: " + std::to_string(total - numPassed) + "\n\n";

@@ -353,25 +353,6 @@ StaticPathWeight(typename GroupRoadmapType::adj_edge_iterator& _ei,
     const double _sourceDistance, const double _targetDistance) const {
   const double edgeWeight  = _ei->property().GetWeight(),
                newDistance = _sourceDistance + edgeWeight;
-
-  /*
-  // Vertify that path constraints are satisfied
-  auto gt = this->GetGroupTask();
-  for(auto task = gt->begin(); task != gt->end(); task++) {
-    auto& pathConstraints = task->GetPathConstraints();
-    if(pathConstraints.empty())
-      continue;
-
-    auto grm = this->GetGroupRoadmap(gt->GetRobotGroup());
-    auto target = grm->GetVertex(_ei->target()).GetRobotCfg(task->GetRobot());
-
-    for(auto& c : pathConstraints) {
-      if(!c->Satisfied(target))
-        return std::numeric_limits<double>::infinity();
-    }
-  }
-  */
-
   return newDistance;
 }
 
@@ -381,24 +362,6 @@ double
 GroupQuery<MPTraits>::
 DynamicPathWeight(typename GroupRoadmapType::adj_edge_iterator& _ei,
     const double _sourceDistance, const double _targetDistance) const {
-
-  /*
-  // Vertify that path constraints are satisfied
-  auto gt = this->GetGroupTask();
-  for(auto task = gt->begin(); task != gt->end(); task++) {
-    auto& pathConstraints = task->GetPathConstraints();
-    if(pathConstraints.empty())
-      continue;
-
-    auto grm = this->GetGroupRoadmap(gt->GetRobotGroup());
-    auto target = grm->GetVertex(_ei->target()).GetRobotCfg(task->GetRobot());
-
-    for(auto& c : pathConstraints) {
-      if(!c->Satisfied(target))
-        return std::numeric_limits<double>::infinity();
-    }
-  }
-  */
 
   // Get edge variables
   auto edge = _ei->property();

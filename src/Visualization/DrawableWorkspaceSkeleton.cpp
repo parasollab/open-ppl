@@ -20,7 +20,6 @@ build() {
   glDisable(GL_LIGHTING);
   glColor4fv(m_color);
 
-  // auto& graph = m_skeleton->GetGraph();
 
   // Draw each vertex.
   glPointSize(6);

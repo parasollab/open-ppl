@@ -347,6 +347,8 @@ TimeSteps() const {
   if(m_timestepsCached)
     return m_timesteps;
 
+  m_timestepsCached = true;
+
   if(m_vids.empty())
     return 0;
 

@@ -277,10 +277,6 @@ FullCfgs(MPLibrary* const _lib) const {
               target = *(it + 1);
     //const auto& edge = m_roadmap->GetEdge(source, target);
 
-    // Insert intermediates between vertices. For assembly planning (skip edge):
-    // don't reconstruct the edge when it's for a part that has been placed off
-    // to the side, just use the two cfgs. This edge will just be (start, end).
-    //if(!edge.SkipEdge()) {
     if(true) {
       auto e = m_roadmap->GetEdge(source,target);
       auto edge = !e.GetIntermediates().empty() ? e.GetIntermediates()

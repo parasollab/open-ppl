@@ -334,6 +334,7 @@ class GroupCfg final : public CompositeState<GraphType> {
     /// Initialize the set of formations this cfg is subject to.
     void InitializeFormations() noexcept;
 
+    /// Initialize the set of local configurations if not already done.
     virtual void InitializeLocalCfgs() noexcept override;
 
     std::unordered_set<Formation*> m_formations; ///<Formations contained in the group Cfg.
@@ -594,78 +595,6 @@ WithinResolution(const GroupCfg& _cfg, const double _posRes,
 }
 
 /*------------------------------DOF Modifiers---------------------------------*/
-
-/*template <typename GraphType>
-void
-GroupCfg<GraphType>::
-RotateFormationAboutLeader(const Formation& _robotList,
-    const mathtool::Orientation& _rotation, const bool _debug) {
-  /// Note: Currently assumes all robots just have ONE body. The case of multi-
-  /// bodied robots would need to be specially handled (right now it should just
-  /// be split into multiple robots if a group is needed).
-
-  /// @todo We can probably compute this without having to configure the models
-  ///       (which cost a lot of transformations).
-  ConfigureRobot(); // Configure all individual cfgs.
-
-  const size_t leaderIndex = _robotList[0];
-
-  // Get transformation of leader before rotation:
-  const IndividualCfg& leaderCfg = this->GetRobotCfg(leaderIndex);
-
-  // TODO update this to handle multiple bodies per robot.
-  // Use the multibody's body 0, since we assume each MB just has a single body.
-  mathtool::Transformation initialLeaderTransform = leaderCfg.GetMultiBody()->
-                                           GetBody(0)->GetWorldTransformation();
-
-  const mathtool::Transformation rotation(mathtool::Vector3d(0,0,0), _rotation);
-
-  if(_debug)
-    std::cout << "Rotating bodies " << _robotList << " with rotation = "
-              << rotation << std::endl;
-
-  // The transform to be applied to all parts (including the first one). We
-  // move the part to its relative world position with A at the world origin,
-  // then the rotation is applied, and we return the part to its relative
-  // position from A.
-  const mathtool::Transformation transform = initialLeaderTransform * rotation;
-
-  ApplyTransformationForRobots(_robotList, transform, initialLeaderTransform);
-}
-
-
-template <typename GraphType>
-void
-GroupCfg<GraphType>::
-ApplyTransformationForRobots(const Formation& _robotList,
-    const mathtool::Transformation& _transform,
-    const mathtool::Transformation& _relativeTransform) {
-  //Compute each robot's needed transformation and set dofs in cfg.
-  for (const size_t robotIndex : _robotList) {
-    const IndividualCfg& robotCfg = this->GetRobotCfg(robotIndex);
-
-    /// @todo Generalize this to handle robots with more than one body.
-    if(robotCfg.GetMultiBody()->GetNumBodies() > 1)
-      throw RunTimeException(WHERE) << "Multiple bodies not supported!";
-
-    // Retrieve current position and rotation of robot:
-    const mathtool::Transformation& initialRobotTransform =
-                  robotCfg.GetMultiBody()->GetBody(0)->GetWorldTransformation();
-
-    // From right to left: apply the inverse relative transform to the initial
-    // robot transform (puts the robot into the desired frame). Then apply
-    // the transform given.
-    const mathtool::Transformation newTransformation =   _transform *
-                                                       (-_relativeTransform) *
-                                                         initialRobotTransform;
-
-    // Extract the transformation. Note: This is assuming 6 DOFs!
-    const std::vector<double>& transformed = newTransformation.GetCfg();
-
-    OverwriteDofsForRobots(transformed, {robotIndex});
-  }
-}*/
-
 
 template <typename GraphType>
 void

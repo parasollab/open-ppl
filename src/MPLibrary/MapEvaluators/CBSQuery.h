@@ -157,8 +157,6 @@ class CBSQuery : public MapEvaluatorMethod<MPTraits> {
 
     ///@}
 
-    ///@}
-
 };
 
 template <typename MPTraits>

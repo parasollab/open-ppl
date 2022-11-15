@@ -229,14 +229,6 @@ IsConnected(const GroupCfgType& _c1, const GroupCfgType& _c2, GroupCfgType& _col
   auto vc = this->GetValidityChecker(m_vcLabel);
   auto groupMap = _c1.GetGroupRoadmap();
 
-  //TODO::Make sure this really is not needed anymore
-  // Determine whether multiple robots are moving and whether this is a
-  // formation rotation (rotation about some leader robot).
-  //const bool multipleParts = _robotIndexes.size() > 1;
-  //const bool isRotational = _c1.OriDOF() > 0;
-  //const bool formationRotation = multipleParts && isRotational;
-  //const size_t leaderRobotIndex = _robotIndexes.empty() ? size_t(-1)
-  //                                                      : _robotIndexes[0];
 
   // Will find all the straight-line increments for each robot independently.
   // (Though the numSteps calculation is coupled with all moving robots).
@@ -246,20 +238,6 @@ IsConnected(const GroupCfgType& _c1, const GroupCfgType& _c2, GroupCfgType& _col
 
   const GroupCfgType originalIncrement = increment;
 
-  //TODO::Make sure this really is not needed anymore
-  /*
-  // Set up increment for all translating bodies, should there be more than one.
-  if(multipleParts) {
-    // Remove the rotational bits, as increment should only do the translation
-    // and then RotateRobotFormationAboutLeader() will handle all rotations:
-    increment = GroupCfgType(groupMap, true);
-
-    // Overwrite all positional dofs from the leader's cfg for all active robots
-    increment.OverwriteDofsForRobots(
-        originalIncrement.GetRobotCfg(leaderRobotIndex).GetLinearPosition(),
-        _robotIndexes);
-  }
-  */
 
   bool connected = true;
   int cdCounter = 0;
@@ -269,46 +247,6 @@ IsConnected(const GroupCfgType& _c1, const GroupCfgType& _c2, GroupCfgType& _col
   for(int i = 1; i < numSteps; ++i) {
     previousStep = currentStep;
     currentStep += increment;
-
-    //TODO::Make sure this really is not needed anymore
-    /*
-    // Handle rotation of a formation. We will determine the rotation applied to
-    // the leader robot and cause the others to rotate about it, maintaining
-    // their realtive formation
-    if(formationRotation) {
-      /// @todo This can likely be optimized. For one, only one Configure call
-      ///       should be necessary here. Also a lot of the group Cfgs here
-      ///       could be made individual if using the leader, then using
-      ///       Configure on that.
-
-      // Advance the leader currentStep by the original increment (we will only use
-      // data which is set in the leader body).
-      leaderStep += originalIncrement;
-
-      // Find the previousStep transformation of the leader robot's base.
-      previousStep.ConfigureRobot();
-      //TODO::Add this back in with updated formation support.
-      //mathtool::Transformation initialTransform =
-      //    previousStep.GetRobot(leaderRobotIndex)->GetMultiBody()->GetBase()->
-      //    GetWorldTransformation();
-
-      // Find the new transformation of the leader robot's base.
-      leaderStep.ConfigureRobot();
-      //TODO::Add this back in with updated formation support.
-      //mathtool::Transformation finalTransform =
-      //    leaderStep.GetRobot(leaderRobotIndex)->GetMultiBody()->GetBase()->
-      //    GetWorldTransformation();
-
-      // Find the relative transformation of the leader robot's base. This holds
-      // the rotation to be applied to currentStep, which only increments
-      // position in this case.
-      //TODO::Update this to new Formation representation.
-      throw RunTimeException(WHERE) << "Not currently supported.";
-      //mathtool::Transformation delta = -initialTransform * finalTransform;
-      //currentStep.RotateRobotFormationAboutLeader(_robotIndexes, delta.rotation(),
-      //    this->m_debug);
-    }
-    */
 
     // Check collision if requested.
     if(_checkCollision) {
