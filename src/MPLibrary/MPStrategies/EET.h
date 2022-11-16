@@ -69,6 +69,7 @@ class EET : public BasicRRTStrategy<MPTraits> {
     int m_nSphereSamples{100};
     double m_minSphereRadius{0.001};
     double m_defaultExploreExploit{1./3.}; // "gamma"
+    double m_wavefrontExplorationBias{0.1};
     std::string m_samplerLabel{BasicRRTStrategy<MPTraits>::m_samplerLabel};
 
 
@@ -169,6 +170,8 @@ EET(XMLNode& _node) : BasicRRTStrategy<MPTraits>(_node) {
   m_defaultExploreExploit = _node.Read("defaultExploreExploit", false, m_defaultExploreExploit, 
                                 0., 1.,
       "Default explore/exploit bias. ");
+  m_wavefrontExplorationBias = _node.Read("wavefrontExplore", false, m_wavefrontExplorationBias, 
+                                0., 1., "Wavefront exploration bias");
 }
 
 
@@ -188,7 +191,7 @@ Initialize() {
 
   //compute sphere tree
   Wavefront();
-  wavefrontExpansion.Write("wavefront", this->GetMPProblem()->GetEnvironment());
+  // wavefrontExpansion.Write("wavefront", this->GetMPProblem()->GetEnvironment());
   currentSphere = wavefrontRoot;
 }
 
@@ -267,7 +270,7 @@ Wavefront() {
   Point pStart = startCfg.GetPoint();
   this->startVID = startVID;
 
-  // Get goal point. 
+  // Get goal point. I don't know any other way to do this.
   std::vector<VID> goals = this->GenerateGoals(m_samplerLabel);
   pGoal = rdmp->GetVertex(goals[0]).GetPoint();
   for (VID goal : goals) { // We don't want to grow the goals. Hence remove them from rdmp.
@@ -293,7 +296,6 @@ Wavefront() {
     // if (goalsReached.size() == pGoals.size()) {
     //   break;
     // }
-
 
     Sphere s = sphereQueue.top();
     sphereQueue.pop();
@@ -451,17 +453,26 @@ InsertSphereIntoPQ(Point pCenter, Point pGoal, std::priority_queue<Sphere>& q, V
   // If multiple goals, use the min distance i guess
   // We're probably never going to run this with multiple goals anyway
 
-  double min_priority = std::numeric_limits<int>::max();
+  double best_distance = std::numeric_limits<int>::max();
   // for (Point pGoal : pGoals) {
     // calculate the difference between p_goal and p_other_center
-    double distance = Distance(pGoal, pCenter);
+    double distance = fabs(Distance(pGoal, pCenter) - radius);
 
-    double priority_value = fabs(distance - radius);
-
-    if (priority_value < min_priority) {
-      min_priority = priority_value;
+    if (distance < best_distance) {
+      best_distance = distance;
     }
   // }
+
+  /* The below functionality is not implemented in the paper's pseudocode. 
+  Using priority = distance to goal is not a perfect measure because we
+  are moving solely in the direction of the goal. This is not necessarily 
+  the best option - especially in cluttered environments. 
+  Wavefront Expansion should have some extra exploration factor. 
+  Hence the following adjustment. 
+  */
+  min_priority = ((1-m_wavefrontExplorationBias) * distance) +
+                  (m_wavefrontExplortionBias * distance * exp(DRand()));
+
 
   Sphere s(pCenter, radius, min_priority, parentVID);
   if (this->m_debug) {
@@ -505,10 +516,7 @@ SelectTarget() {
   b = &samplingBoundary;
 
   if (currentSphere == goalSphere && DRand() < pGoalState) {
-    // // return goal cfg. 
-    // return this->GetRoadmap()->GetVertex(goalVID);
-
-    // return something within goal boundary. 
+    // return a sample within goal boundary. (not necessarily exact goal configuration, like in the pseudocode.)
     auto& goalConstraints = this->GetTask()->GetGoalConstraints();
     auto goalBoundary = goalConstraints[0]->GetBoundary();
     b = goalBoundary;
