@@ -470,8 +470,8 @@ InsertSphereIntoPQ(Point pCenter, Point pGoal, std::priority_queue<Sphere>& q, V
   Wavefront Expansion should have some extra exploration factor. 
   Hence the following adjustment. 
   */
-  min_priority = ((1-m_wavefrontExplorationBias) * distance) +
-                  (m_wavefrontExplortionBias * distance * exp(DRand()));
+  double min_priority = ((1-m_wavefrontExplorationBias) * distance) +
+                  (m_wavefrontExplorationBias * distance * exp(DRand()));
 
 
   Sphere s(pCenter, radius, min_priority, parentVID);
