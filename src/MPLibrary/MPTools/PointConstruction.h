@@ -94,7 +94,7 @@ SampleSphereSurface(Vector<double, D> center, Vector<double, D> bounds) {
 
     double normal_samples[D];
     for (size_t i = 0; i < D; i++) {
-        normal_samples[i] = NormalDistribution(0, 1);
+        normal_samples[i] = GaussianDistribution(0, 1);
     }
     Vector<double, D> samples(normal_samples);
     if (this->m_debug) {
@@ -106,35 +106,6 @@ SampleSphereSurface(Vector<double, D> center, Vector<double, D> bounds) {
     samples += center;
     return samples;
 }
-
-template <typename MPTraits> 
-double 
-PointConstruction<MPTraits>::
-NormalDistribution(double mean, double variance) {
-    double std = sqrt(variance);
-
-    // Given a number x between 0 and 1, calculate the number n for which
-    // p(N < n) = x. 
-    // Basically, inverse CDF. yay! 
-
-    // CDF = 0.5 * erf( (x-mu) / (sigma*sqrt(2)) )
-    // I simply refuse to write an inverse ERF. We will do this by brute force. 
-    double probability = DRand();
-
-    // std::cout << probability << " ";
-
-    double resolution = 0.001;
-    double x = mean - (4*std); // start 4 stds out
-    while (probability >= 0.5 * (1+erf((x-mean)/(std * sqrt(2))))) {
-        x += resolution;
-        // std::cout << x << std::endl;
-    }
-    // std::cout << x << std::endl;
-    return x;
-
-}
-
-
 
 
 #endif
