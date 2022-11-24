@@ -111,18 +111,29 @@ template <typename MPTraits>
 double 
 PointConstruction<MPTraits>::
 NormalDistribution(double mean, double variance) {
-    // TODO move to somewhere else
     double std = sqrt(variance);
-    
-    int nStandardDeviations = 4;
-    double x = (DRand() * 2*nStandardDeviations*std) - (nStandardDeviations*std); // up to 3 standard deviations away
 
-    double constant = 1/(std * sqrt(2*PI));
-    double exponent = -0.5 * ((x-mean)*(x-mean)) / variance;
+    // Given a number x between 0 and 1, calculate the number n for which
+    // p(N < n) = x. 
+    // Basically, inverse CDF. yay! 
 
-    // std::cout << x << " " << constant * exp(exponent) << std::endl;
-    return constant * exp(exponent);
+    // CDF = 0.5 * erf( (x-mu) / (sigma*sqrt(2)) )
+    // I simply refuse to write an inverse ERF. We will do this by brute force. 
+    double probability = DRand();
+
+    // std::cout << probability << " ";
+
+    double resolution = 0.001;
+    double x = mean - (4*std); // start 4 stds out
+    while (probability >= 0.5 * (1+erf((x-mean)/(std * sqrt(2))))) {
+        x += resolution;
+        // std::cout << x << std::endl;
+    }
+    // std::cout << x << std::endl;
+    return x;
+
 }
+
 
 
 
