@@ -145,8 +145,10 @@ class EET : public BasicRRTStrategy<MPTraits> {
     Sphere goalSphere; // The sphere that contains the goal. 
     Sphere currentSphere; // The sphere we are currently investigating. 
     double exploreExploitBias; // "sigma" 
-    double controlManipulation{0.01}; // "alpha". Default value provided in paper.
+    double m_controlManipulation{0.01}; // "alpha". Default value provided in paper.
     double pGoalState{0.5}; // "rho". Default value provided in paper. 
+
+    bool threeD{true};
 };
 
 /*---------------------------------------------------------------------------*/
@@ -172,6 +174,8 @@ EET(XMLNode& _node) : BasicRRTStrategy<MPTraits>(_node) {
       "Default explore/exploit bias. ");
   m_wavefrontExplorationBias = _node.Read("wavefrontExplore", false, m_wavefrontExplorationBias, 
                                 0., 1., "Wavefront exploration bias");
+  m_controlManipulation = _node.Read("controlManipulation", false, m_controlManipulation, 
+                                0., 1., "How much exploration grows/shirnks based on sampling success"); // TODO THIS IS A GROSS NAME
 }
 
 
@@ -180,6 +184,10 @@ template <typename MPTraits>
 void
 EET<MPTraits>::
 Initialize() {
+  // set the dimension
+  threeD = this->GetTask()->GetRobot()->GetMultiBody()->GetBaseType()
+                   == Body::Type::Volumetric;
+
   // Override some basics. 
   this->m_growGoals = false;
 
@@ -219,11 +227,12 @@ Iterate() {
 
     Point newPoint = rdmp->GetVertex(newVID).GetPoint();
 
-    exploreExploitBias *= (1 - controlManipulation);
+    exploreExploitBias *= (1 - m_controlManipulation);
 
     Sphere iterationSphere = goalSphere;
     std::vector<Sphere> spheresSeen;
     while (iterationSphere != currentSphere) {
+      spheresSeen.push_back(iterationSphere);
       Point iterationSphereCenter = iterationSphere.center;
 
       if (Distance(iterationSphereCenter, newPoint) < iterationSphere.radius) {
@@ -236,7 +245,6 @@ Iterate() {
       } 
 
       // advance sphere to parent. 
-      spheresSeen.push_back(iterationSphere);
       iterationSphere = GetParentSphere(iterationSphere);
     }
   
@@ -244,9 +252,10 @@ Iterate() {
     this->TryGoalExtension(newVID);
 
   } else { // expansion unsuccessful. 
-    exploreExploitBias *= (1 + controlManipulation);
+    exploreExploitBias *= (1 + m_controlManipulation);
   }
 
+  std::cout << exploreExploitBias << std::endl;
   if (exploreExploitBias > 1) {
     currentSphere = GetParentSphere(currentSphere);
   }
@@ -357,7 +366,14 @@ Wavefront() {
     // Sample n points on sphere surface. 
     PointConstruction<MPTraits> _p;
     std::vector<Point> samples;
-    samples = _p.SampleSphereSurface(s.center, s.radius, m_nSphereSamples);
+    if (!threeD) {
+      mathtool::Vector3d radius({s.radius, s.radius, 0});
+      samples = _p.SampleSphereSurface(s.center, 
+                                       radius,
+                                       m_nSphereSamples);
+    } else {
+      samples = _p.SampleSphereSurface(s.center, s.radius, m_nSphereSamples);
+    } 
     if (this->m_debug){
       std::cout << "   sampled " << samples.size() 
                 << " samples on the surface of sphere with VID " << sVID 
