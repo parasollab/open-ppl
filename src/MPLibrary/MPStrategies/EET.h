@@ -222,6 +222,10 @@ Iterate() {
   // if expansion was successful, add to rdmp. 
   // nearest neighbor should not be goal vertex. 
   const VID nearestVID = this->FindNearestNeighbor(target, &rdmp->GetAllVIDs());
+  // Sometimes, here you will get a "failed to find nearest neighbor" on iteration 1. 
+  // If your point is the same as the start point, you are just unlucky. 
+  // Pick a different seed. 
+
   const VID newVID = this->ExpandTree(nearestVID, target);
 
   // adjust hyperparameters
@@ -237,17 +241,20 @@ Iterate() {
     Sphere iterationSphere = goalSphere;
     std::vector<Sphere> spheresSeen;
     while (iterationSphere != currentSphere) {
-      spheresSeen.push_back(iterationSphere);
       Point iterationSphereCenter = iterationSphere.center;
 
       if (Distance(iterationSphereCenter, newPoint) < iterationSphere.radius) {
-        currentSphere = spheresSeen.back();
+        if (spheresSeen.size() > 0) { // We are in the goal sphere. There's no child sphere to go. 
+          // Technically the rest of this iteration doesn't matter because RRT's gonna end here. 
+          currentSphere = spheresSeen.back();
+        }
         exploreExploitBias = m_defaultExploreExploit;
         if (this->m_debug) {
           std::cout << "New \"current\" Sphere has VID: " << currentSphere.wavefrontVID << std::endl;
         }
         break;
       } 
+      spheresSeen.push_back(iterationSphere);
 
       // advance sphere to parent. 
       iterationSphere = GetParentSphere(iterationSphere);
@@ -484,15 +491,24 @@ InsertSphereIntoPQ(Point pCenter, Point pGoal, std::priority_queue<Sphere>& q, V
     }
   // }
 
-  /* The below functionality is not implemented in the paper's pseudocode. 
-  Using priority = distance to goal is not a perfect measure because we
+  /* The below few lines is not implemented in the paper's pseudocode. 
+  Using priority = [distance to goal] is not a perfect measure because we
   are moving solely in the direction of the goal. This is not necessarily 
   the best option - especially in cluttered environments. 
   Wavefront Expansion should have some extra exploration factor. 
   Hence the following adjustment. 
   */
-  double min_priority = ((1-m_wavefrontExplorationBias) * distance) +
-                  (m_wavefrontExplorationBias * distance * exp(DRand()));
+  double min_priority;
+  if (m_wavefrontExplorationBias == 0) {
+    min_priority = distance; // I'm p sure this isn't necessary 
+    // but I don't have the patience to try it out without
+  } else {
+    double std = m_wavefrontExplorationBias * distance / 4.;
+    min_priority = GaussianDistribution(distance, std);
+  }
+  
+  //((1-m_wavefrontExplorationBias) * distance) +
+  //                (m_wavefrontExplorationBias * distance * ((DRand()*2)-1));
 
 
   Sphere s(pCenter, radius, min_priority, parentVID);
@@ -559,11 +575,13 @@ SelectTarget() {
 
   // TEMPORARY JANK SOLUTION TILL I CAN FIGURE OUT HOW TO CONTROL GAUSSIANSAMPLER
   GaussianSampler<MPTraits>* gs = (GaussianSampler<MPTraits>*) this->GetSampler(m_gaussianSamplerLabel);
-  gs->ReturnGeneratedPointOnly(true);
+  gs->ReturnNewSamplesOnly(true);
   gs->ChangeGaussianParams(0, currentSphere.radius * exploreExploitBias);
   std::vector<CfgType> samples, collisions;
-  gs->Sampler(centerCfg, this->GetEnvironment()->GetBoundary(), samples, collisions);
+  while (!samples.size()) {
+    gs->Sampler(centerCfg, this->GetEnvironment()->GetBoundary(), samples, collisions);
     // gs->Sample(1, 100, this->GetEnvironment()->GetBoundary(), std::back_inserter(samples));
+  }
   target = samples.front();
 
   if(this->m_debug) {
