@@ -40,6 +40,7 @@
 #include "MPLibrary/Samplers/BridgeTestSampler.h"
 #include "MPLibrary/Samplers/ObstacleBasedSampler.h"
 #include "MPLibrary/Samplers/UniformRandomSampler.h"
+#include "MPLibrary/Samplers/GaussianSampler.h"
 
 //local planner includes
 #include "MPLibrary/LocalPlanners/StraightLine.h"
@@ -145,7 +146,8 @@ struct MPTraits {
   typedef boost::mpl::list<
     BridgeTestSampler<MPTraits>,
     ObstacleBasedSampler<MPTraits>,
-    UniformRandomSampler<MPTraits>
+    UniformRandomSampler<MPTraits>, 
+    GaussianSampler<MPTraits>
       > SamplerMethodList;
 
   //types of local planners available in our world
