@@ -126,9 +126,6 @@ class EET : public BasicRRTStrategy<MPTraits> {
       }
     };
 
-    // Sphere-related operator functions.
-    Sphere GetParentSphere(Sphere _s);
-
     /* WAVEFRONT expansion structures. */
     // Tree for actual WAVEFRONT expansion. 
     GenericStateGraph<Sphere, std::vector<Sphere>> wavefrontExpansion;
@@ -170,19 +167,23 @@ EET<MPTraits>::
 EET(XMLNode& _node) : BasicRRTStrategy<MPTraits>(_node) {
   this->SetName("EET");
 
-  m_gaussianSamplerLabel = _node.Read("gaussSamplerLabel", true, "", "Gaussian Sampler Label");
+  m_gaussianSamplerLabel = _node.Read("gaussSamplerLabel", true, "", 
+                                      "Gaussian Sampler Label");
   m_nSphereSamples = _node.Read("nSphereSamples", false, m_nSphereSamples, 
                                 0, std::numeric_limits<int>::max(),
       "Number of samples on the sphere, for Wavefront Expansion.");
   m_minSphereRadius = _node.Read("minSphereRadius", false, m_minSphereRadius, 
                                 0., std::numeric_limits<double>::max(),
       "Minimum sphere radius for sphere growth.");
-  m_defaultExploreExploit = _node.Read("defaultExploreExploit", false, m_defaultExploreExploit, 
+  m_defaultExploreExploit = _node.Read("defaultExploreExploit", false, 
+                                m_defaultExploreExploit, 
                                 0., 1., "Default explore/exploit bias. ");
-  m_wavefrontExplorationBias = _node.Read("wavefrontExplore", false, m_wavefrontExplorationBias, 
+  m_wavefrontExplorationBias = _node.Read("wavefrontExplore", false, 
+                                m_wavefrontExplorationBias, 
                                 0., 1., "Wavefront exploration bias");
   m_controlManipulation = _node.Read("controlManipulation", false, m_controlManipulation, 
-                                0., 1., "How much exploration grows/shirnks based on sampling success"); 
+                           0., 1., 
+                          "How much exploration grows/shrinks based on sampling success"); 
                                 // TODO THIS IS A GROSS NAME
 }
 
@@ -243,33 +244,29 @@ Iterate() {
     // Then, advance. 
     std::vector<Sphere> spheresSeen;
     VID iterationSphereVID = goalSphere.wavefrontVID;
-    while (iterationSphereVID != INVALID_VID) {
+    while (iterationSphereVID != INVALID_VID) { // from goal to root.
       auto iterationSphere = wavefrontExpansionSpheres[iterationSphereVID];
       Point iterationSphereCenter = iterationSphere.center;
 
-      std::cout << iterationSphereVID << std::endl;
-
       if (Distance(iterationSphereCenter, newPoint) < iterationSphere.radius) {
         if (this->m_debug) {
-          std::cout << "This sample is in sphere " << iterationSphere.wavefrontVID << std::endl;
-          std::cout << spheresSeen.size() << std::endl;
+          std::cout << "This sample is in sphere " 
+                    << iterationSphere.wavefrontVID << std::endl;
         }
 
-        if (spheresSeen.size() > 0) { // We are not in the goal sphere. 
-          currentSphere = spheresSeen.back(); // set our new "current" to the child sphere.
-        } else {
-          currentSphere = iterationSphere;
-        }
+        // Update current sphere (SS.size() = 0 means goal sphere) and explore params
+        currentSphere = spheresSeen.size() == 0 ? iterationSphere : spheresSeen.back();
         exploreExploitBias = m_defaultExploreExploit;
 
         if (this->m_debug) {
-          std::cout << "New \"current\" Sphere has VID: " << currentSphere.wavefrontVID << std::endl;
+          std::cout << "New \"current\" Sphere has VID: " 
+                    << currentSphere.wavefrontVID << std::endl;
         }
         break;
       } 
-      spheresSeen.push_back(iterationSphere);
 
-      // advance sphere to parent. 
+      // sphere advancement operations.
+      spheresSeen.push_back(iterationSphere);
       iterationSphereVID = iterationSphere.parentVID;
     }
   
@@ -280,8 +277,10 @@ Iterate() {
     exploreExploitBias *= (1 + m_controlManipulation);
   }
 
-  if (exploreExploitBias > 1) {
+
+  if (exploreExploitBias > 1) { // Backtrack to previous sphere.
     currentSphere = wavefrontExpansionSpheres[currentSphere.parentVID];
+    exploreExploitBias = m_defaultExploreExploit;
   }
 }
 
@@ -309,11 +308,6 @@ Wavefront() {
   for (VID goal : goals) { // We don't want to grow the goals. Hence remove them from rdmp.
     rdmp->DeleteVertex(goal);
   }
-  // this->goalVID = goals[0];
-  // for (VID goal : goals){
-  //   Point pGoal = rdmp->GetVertex(goal).GetPoint();
-  //   pGoals.push_back(pGoal);
-  // }
 
   // Root the WE. 
   std::priority_queue<Sphere> sphereQueue;
@@ -325,14 +319,9 @@ Wavefront() {
 
   // Grow WE! 
   while (!sphereQueue.empty()) {
-    // if we've reached all the goals, we are done. 
-    // if (goalsReached.size() == pGoals.size()) {
-    //   break;
-    // }
-
     Sphere s = sphereQueue.top();
     sphereQueue.pop();
-
+std::cout << wavefrontRoot.wavefrontVID << std::endl; // ANANYA DELETE
     // add sphere to WE
     VID sVID = wavefrontExpansion.AddVertex(s);
     s.wavefrontVID = sVID;
@@ -361,40 +350,27 @@ Wavefront() {
           std::cout << " " << v;
         }
         std::cout << " " << std::endl;
-      } else {std::cout << "parentVID invalid. This is likely the root node. " << std::endl;}
+      } else {
+        std::cout << "parentVID invalid. This is likely the root node." << std::endl;
+      }
     }
 
     // If we are within a goal region, we are done.
-    // bool inGoalRegion = false;
-    // for (size_t i=0; i < pGoals.size(); i++) { 
-      // auto pGoal = pGoals[i];
-      if (Distance(pGoal, s.center) < s.radius) {
-        // inGoalRegion = true;
-        // goalsReached.insert(i);
-
-        // if (!goalsReached.contains(i)) { // keep track of goal spheres
-        //   goalSphere.push_back(s);
-        // }
-
-        goalSphere = s;
-        if (this->m_debug) {
-          std::cout << "   Sphere " << s.wavefrontVID << ". This sphere contains the goal region." << std::endl;
-        }
-        break;
+    if (Distance(pGoal, s.center) < s.radius) {
+      goalSphere = s;
+      if (this->m_debug) {
+        std::cout << "   Sphere " << s.wavefrontVID 
+                  << ". This sphere contains the goal region." << std::endl;
       }
-    // }
-    // if (inGoalRegion) {
-    //   continue;
-    // }
+      break;
+    }
 
     // Sample n points on sphere surface. 
     PointConstruction<MPTraits> _p;
     std::vector<Point> samples;
     if (!threeD) {
       mathtool::Vector3d radius({s.radius, s.radius, 0});
-      samples = _p.SampleSphereSurface(s.center, 
-                                       radius,
-                                       m_nSphereSamples);
+      samples = _p.SampleSphereSurface(s.center, radius, m_nSphereSamples);
     } else {
       samples = _p.SampleSphereSurface(s.center, s.radius, m_nSphereSamples);
     } 
@@ -410,7 +386,6 @@ Wavefront() {
 
       // not in pseudocode, but we don't want to insert 
       // the same sphere into queue so many times. Priority will be the same. 
-      // TODO: is sphereAddedToQueue bad? making path longer?
       bool sphereAddedToQueue = false; 
       for (auto sphereVID : wavefrontExpansion.GetAllVIDs()) {
         Sphere sphere = wavefrontExpansionSpheres[sphereVID];
@@ -423,7 +398,7 @@ Wavefront() {
 
         if (sphereAddedToQueue) { break; }
       }
-    } // sphere diameter for all pts
+    } // calculate sphere diameter for all pts for loop
 
   } // tree growth while loop
 
@@ -436,7 +411,6 @@ Wavefront() {
   return;
 }
 
-//TODO ANANYA: FIGURE OUT WHY THIS SOMETIMES RETURNS A NEGATIVE NUMBER. 
 template<class MPTraits>
 double 
 EET<MPTraits>::
@@ -455,7 +429,7 @@ template<class MPTraits>
 double
 EET<MPTraits>::
 DistanceToObstacles(Point _p){ 
-  // This whole function is shamelessly copied from Workspace/ClearceMap.h
+  // This whole function is shamelessly copied from Workspace/ClearanceMap.h
   // (And slightly modified, but not much.)
   
   auto boundary = this->GetEnvironment()->GetBoundary();
@@ -490,18 +464,7 @@ InsertSphereIntoPQ(Point pCenter, VID parentVID, std::priority_queue<Sphere>& q)
   }
 
   // Calculate the priority for this point
-  // If multiple goals, use the min distance i guess
-  // We're probably never going to run this with multiple goals anyway
-
-  double best_distance = std::numeric_limits<int>::max();
-  // for (Point pGoal : pGoals) {
-    // calculate the difference between p_goal and p_other_center
-    double distance = fabs(Distance(pGoal, pCenter) - radius);
-
-    if (distance < best_distance) {
-      best_distance = distance;
-    }
-  // }
+  double distance = fabs(Distance(pGoal, pCenter) - radius);
 
   /* The below few lines is not implemented in the paper's pseudocode. 
   Using priority = [distance to goal] is not a perfect measure because we
@@ -537,17 +500,6 @@ InsertSphereIntoPQ(Point pCenter, VID parentVID, std::priority_queue<Sphere>& q)
   q.push(s);
 
   return s;
-}
-
-template <typename MPTraits>
-typename EET<MPTraits>::Sphere
-EET<MPTraits>::
-GetParentSphere(Sphere _s) {
-  VID realParentVID = _s.parentVID;
-  if (realParentVID == INVALID_VID) {
-    return _s;
-  }
-  return wavefrontExpansionSpheres[realParentVID];
 }
 
 /*-ACTUAL ALGORITHM-----------------------------------------------------------*/
