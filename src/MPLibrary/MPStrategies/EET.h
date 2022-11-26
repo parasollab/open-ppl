@@ -6,6 +6,7 @@
 // #include "Utilities/XMLNode.h"
 // #include "ConfigurationSpace/GenericStateGraph.h"
 #include "Geometry/Boundaries/CSpaceBoundingSphere.h"
+#include "MPLibrary/Samplers/GaussianSampler.h"
 
 // #include <iomanip>
 // #include <iterator>
@@ -71,6 +72,8 @@ class EET : public BasicRRTStrategy<MPTraits> {
     double m_defaultExploreExploit{1./3.}; // "gamma"
     double m_wavefrontExplorationBias{0.1};
     std::string m_samplerLabel{BasicRRTStrategy<MPTraits>::m_samplerLabel};
+    std::string m_gaussianSamplerLabel;
+
 
 
 
@@ -162,6 +165,8 @@ template <typename MPTraits>
 EET<MPTraits>::
 EET(XMLNode& _node) : BasicRRTStrategy<MPTraits>(_node) {
   this->SetName("EET");
+
+  m_gaussianSamplerLabel = _node.Read("gaussSamplerLabel", true, "", "Gaussian Sampler Label");
 
   m_nSphereSamples = _node.Read("nSphereSamples", false, m_nSphereSamples, 
                                 0, std::numeric_limits<int>::max(),
@@ -522,32 +527,48 @@ template <class MPTraits>
 typename MPTraits::CfgType
 EET<MPTraits>::
 SelectTarget() {
-  CfgType target(this->GetTask()->GetRobot());
-  const Boundary* b;
-
-  Point _center = currentSphere.center;
-  std::vector<double> boundary_center{_center[0], _center[1], _center[2]};
-  double boundary_radius = currentSphere.radius * exploreExploitBias;
-  CSpaceBoundingSphere samplingBoundary(boundary_center, boundary_radius);
-  b = &samplingBoundary;
+  auto robot = this->GetTask()->GetRobot();
+  CfgType target(robot);
 
   if (currentSphere == goalSphere && DRand() < pGoalState) {
     // return a sample within goal boundary. (not necessarily exact goal configuration, like in the pseudocode.)
     auto& goalConstraints = this->GetTask()->GetGoalConstraints();
     auto goalBoundary = goalConstraints[0]->GetBoundary();
-    b = goalBoundary;
+    const Boundary* b = goalBoundary;
+
+    // sample inside boundary. 
+    std::vector<CfgType> samples;
+    auto s = this->GetSampler(m_samplerLabel);
+    s->Sample(1, 100, b, std::back_inserter(samples));
+    target = samples.front();
+
+    if(this->m_debug) {
+      std::cout << "\t" << target.PrettyPrint() << std::endl;
+    }
+
+    return target;
   } 
 
-  // sample inside boundary. 
-  std::vector<CfgType> samples;
-  auto s = this->GetSampler(m_samplerLabel);
-  s->Sample(1, 100, b, std::back_inserter(samples));
+  // Point _center = currentSphere.center;
+  // std::vector<double> boundary_center{_center[0], _center[1], _center[2]};
+  // double boundary_radius = currentSphere.radius * exploreExploitBias;
+  // CSpaceBoundingSphere samplingBoundary(boundary_center, boundary_radius);
+  // b = &samplingBoundary;
+
+  CfgType centerCfg(currentSphere.center, robot);
+
+  // TEMPORARY JANK SOLUTION TILL I CAN FIGURE OUT HOW TO CONTROL GAUSSIANSAMPLER
+  GaussianSampler<MPTraits>* gs = (GaussianSampler<MPTraits>*) this->GetSampler(m_gaussianSamplerLabel);
+  gs->ReturnGeneratedPointOnly(true);
+  gs->ChangeGaussianParams(0, currentSphere.radius * exploreExploitBias);
+  std::vector<CfgType> samples, collisions;
+  gs->Sampler(centerCfg, this->GetEnvironment()->GetBoundary(), samples, collisions);
+    // gs->Sample(1, 100, this->GetEnvironment()->GetBoundary(), std::back_inserter(samples));
   target = samples.front();
 
   if(this->m_debug) {
     std::cout << "\t" << target.PrettyPrint() << std::endl;
   }
-
   return target;
   
 }
