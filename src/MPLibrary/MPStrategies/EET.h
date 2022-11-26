@@ -311,8 +311,7 @@ Wavefront() {
 
   // Root the WE. 
   std::priority_queue<Sphere> sphereQueue;
-  Sphere root = InsertSphereIntoPQ(pStart, INVALID_VID, sphereQueue);
-  wavefrontRoot = root;
+  InsertSphereIntoPQ(pStart, INVALID_VID, sphereQueue);
 
   // in-loop variables
   std::set<int> goalsReached;
@@ -321,7 +320,6 @@ Wavefront() {
   while (!sphereQueue.empty()) {
     Sphere s = sphereQueue.top();
     sphereQueue.pop();
-std::cout << wavefrontRoot.wavefrontVID << std::endl; // ANANYA DELETE
     // add sphere to WE
     VID sVID = wavefrontExpansion.AddVertex(s);
     s.wavefrontVID = sVID;
@@ -336,6 +334,9 @@ std::cout << wavefrontRoot.wavefrontVID << std::endl; // ANANYA DELETE
                 << " Added to WE." << std::endl 
                 << "   (There are " << sphereQueue.size() << " elments in the queue)."
                 << std::endl;
+    }
+    if (wavefrontRoot.isEmpty()){
+      wavefrontRoot = s;
     }
 
     // add edge to WE
