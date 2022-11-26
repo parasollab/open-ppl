@@ -1,10 +1,10 @@
 Roadmap Statistics:
 
-  Number of Nodes: 21
-  Number of Edges: 20
+  Number of Nodes: 19
+  Number of Edges: 18
 
   There are 1 connected components:
-    CC[0]: 21 (vid 0)
+    CC[0]: 19 (vid 0)
 
 
 Sampler Statistics                                            Attempts Successes
@@ -16,36 +16,36 @@ Sampler Statistics                                            Attempts Successes
 
 Collision Detection Calls                                                  Count
 
-  BasicExtender::Expand                                                     2040
-  GaussianSampler::Gauss::SampleImpl()                                       150
-  Obtain clearance map                                                       301
+  BasicExtender::Expand                                                     1852
+  GaussianSampler::Gauss::SampleImpl()                                        36
+  Obtain clearance map                                                       351
   UniformRandomSampler::UniformRandomFree::Sampler                             3
-  All Collision Detectors                                                   2494
+  All Collision Detectors                                                   2242
 
 
 Other Statistics                                                           Value
 
-  EET::EET::Extend                                                            72
+  EET::EET::Extend                                                            18
   Graph Search                                                                 1
   QueryMethod::Query::FoundPath                                                1
 
 
 Clock Name                                                        Time (Seconds)
 
-  BruteForceNF::Nearest::FindNeighbors                                    0.0108
+  BruteForceNF::Nearest::FindNeighbors                                         0
   CCTracker::AddEdge                                                           0
   CCTracker::AddVertex                                                         0
   CCTracker::DeleteVertex                                                      0
   EET::EET::AddEdge                                                            0
   EET::EET::AddNode                                                            0
-  EET::EET::EvaluateMap                                                  0.00469
-  EET::EET::Extend                                                          0.04
-  EET::EET::FindNearestNeighbor                                           0.0108
+  EET::EET::EvaluateMap                                                        0
+  EET::EET::Extend                                                         0.032
+  EET::EET::FindNearestNeighbor                                                0
   EET::EET::GenerateGoals                                                      0
   EET::EET::GenerateStart                                                      0
-  EET::EET::InitAndRun                                                    0.0905
-  EET::EET::Initialize                                                    0.0267
-  EET::EET::Run                                                           0.0639
+  EET::EET::InitAndRun                                                     0.062
+  EET::EET::Initialize                                                     0.026
+  EET::EET::Run                                                            0.036
   EET::EET::TryGoalExtension                                               0.008
   MPLibrary::Initialize                                                        0
   QueryMethod::GeneratePath                                                    0
