@@ -1,0 +1,55 @@
+Roadmap Statistics:
+
+  Number of Nodes: 23
+  Number of Edges: 22
+
+  There are 1 connected components:
+    CC[0]: 23 (vid 0)
+
+
+Sampler Statistics                                            Attempts Successes
+
+  UniformRandomSampler::UniformRandom                               34        34
+  UniformRandomSampler::UniformRandomFree                            3         3
+  All Samplers                                                      37        37
+  Success Rate: 100%
+
+
+Collision Detection Calls                                                  Count
+
+  BasicExtender::Expand                                                     3148
+  GaussianSampler::Gauss::SampleImpl()                                        76
+  Obtain clearance map                                                       251
+  UniformRandomSampler::UniformRandomFree::Sampler                             3
+  All Collision Detectors                                                   3478
+
+
+Other Statistics                                                           Value
+
+  EET::EET::Extend                                                            71
+  Graph Search                                                                 1
+  QueryMethod::Query::FoundPath                                                1
+
+
+Clock Name                                                        Time (Seconds)
+
+  BruteForceNF::Nearest::FindNeighbors                                     0.004
+  CCTracker::AddEdge                                                           0
+  CCTracker::AddVertex                                                         0
+  CCTracker::DeleteVertex                                                      0
+  EET::EET::AddEdge                                                        0.004
+  EET::EET::AddNode                                                            0
+  EET::EET::EvaluateMap                                                    0.004
+  EET::EET::Extend                                                        0.0559
+  EET::EET::FindNearestNeighbor                                            0.008
+  EET::EET::GenerateGoals                                                      0
+  EET::EET::GenerateStart                                                      0
+  EET::EET::InitAndRun                                                     0.119
+  EET::EET::Initialize                                                    0.0313
+  EET::EET::Run                                                           0.0879
+  EET::EET::TryGoalExtension                                               0.012
+  MPLibrary::Initialize                                                        0
+  QueryMethod::GeneratePath                                                    0
+  QueryMethod::Query                                                       0.004
+  UniformRandomSampler::UniformRandom::Sample                                  0
+  UniformRandomSampler::UniformRandomFree::Sample                              0
