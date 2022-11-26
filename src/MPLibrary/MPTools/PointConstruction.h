@@ -24,9 +24,11 @@ class PointConstruction : public MPBaseObject<MPTraits> {
         template <size_t D>
             Vector<double, D> SampleSphereSurface(
                 Vector<double, D> center, Vector<double, D> bounds);
+
         template <size_t D>
             std::vector<Vector<double, D>> SampleSphereSurface(
                 Vector<double, D> center, Vector<double, D> bounds, int nsamples); 
+
         template <size_t D>
             std::vector<Vector<double, D>> SampleSphereSurface(
                 Vector<double, D> center, double bounds, int nsamples); 
@@ -58,10 +60,7 @@ template <typename MPTraits>
 template <size_t D>
 std::vector<Vector<double, D>> 
 PointConstruction<MPTraits>::
-SampleSphereSurface(Vector<double, D> center, 
-                    double bounds, 
-                    int nsamples) {
-
+SampleSphereSurface(Vector<double, D> center, double bounds, int nsamples) {
     double b[D];
     for (size_t i = 0; i<D; i++) { b[i] = bounds; }
     Vector<double, D> _bounds(b);
@@ -72,10 +71,7 @@ template <typename MPTraits>
 template <size_t D>
 std::vector<Vector<double, D>> 
 PointConstruction<MPTraits>::
-SampleSphereSurface(Vector<double, D> center, 
-                    Vector<double, D> bounds, 
-                    int nsamples) {
-
+SampleSphereSurface(Vector<double, D> center, Vector<double, D> bounds, int nsamples) {
     std::vector<Vector<double, D>> samples;
     for (int i = 0; i < nsamples; i++) {
         samples.push_back(SampleSphereSurface(center, bounds));
@@ -101,6 +97,10 @@ SampleSphereSurface(Vector<double, D> center, Vector<double, D> bounds) {
         std::cout << "Normal distribution sample: " << normal_samples << std::endl;
     }
 
+    // elementwiseMultiply both before and after normalization is intentional move. 
+    // if one of our bounds is 0, this becomes a (n-1)-d object. 
+    // And that affects our calcuations. 
+    // samples = samples.elementwiseMultiply(bounds); 
     samples = samples.selfNormalize();
     samples = samples.elementwiseMultiply(bounds);
     samples += center;
