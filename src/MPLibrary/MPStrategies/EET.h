@@ -207,8 +207,9 @@ Initialize() {
 
   //compute sphere tree
   Wavefront();
-  // wavefrontExpansion.Write("wavefront", this->GetMPProblem()->GetEnvironment());
   currentSphere = wavefrontRoot;
+
+  wavefrontExpansion.Write("wavefront", this->GetMPProblem()->GetEnvironment());
 }
 
 
@@ -237,16 +238,30 @@ Iterate() {
 
     exploreExploitBias *= (1 - m_controlManipulation);
 
-    Sphere iterationSphere = goalSphere;
+    // Iterate through the spheres from goal to root, 
+    // figure out the farthest sphere that this sample is in. 
+    // Then, advance. 
     std::vector<Sphere> spheresSeen;
-    while (iterationSphere != currentSphere) {
+    VID iterationSphereVID = goalSphere.wavefrontVID;
+    while (iterationSphereVID != INVALID_VID) {
+      auto iterationSphere = wavefrontExpansionSpheres[iterationSphereVID];
       Point iterationSphereCenter = iterationSphere.center;
 
+      std::cout << iterationSphereVID << std::endl;
+
       if (Distance(iterationSphereCenter, newPoint) < iterationSphere.radius) {
-        if (spheresSeen.size() > 0) { // We are in the goal sphere. There's no child sphere to go. 
-          currentSphere = spheresSeen.back();
+        if (this->m_debug) {
+          std::cout << "This sample is in sphere " << iterationSphere.wavefrontVID << std::endl;
+          std::cout << spheresSeen.size() << std::endl;
+        }
+
+        if (spheresSeen.size() > 0) { // We are not in the goal sphere. 
+          currentSphere = spheresSeen.back(); // set our new "current" to the child sphere.
+        } else {
+          currentSphere = iterationSphere;
         }
         exploreExploitBias = m_defaultExploreExploit;
+
         if (this->m_debug) {
           std::cout << "New \"current\" Sphere has VID: " << currentSphere.wavefrontVID << std::endl;
         }
@@ -255,7 +270,7 @@ Iterate() {
       spheresSeen.push_back(iterationSphere);
 
       // advance sphere to parent. 
-      iterationSphere = GetParentSphere(iterationSphere);
+      iterationSphereVID = iterationSphere.parentVID;
     }
   
     // This is not in the pseudocode but is necessary for our implementation.
@@ -265,9 +280,8 @@ Iterate() {
     exploreExploitBias *= (1 + m_controlManipulation);
   }
 
-  std::cout << exploreExploitBias << std::endl;
   if (exploreExploitBias > 1) {
-    currentSphere = GetParentSphere(currentSphere);
+    currentSphere = wavefrontExpansionSpheres[currentSphere.parentVID];
   }
 }
 
@@ -364,7 +378,7 @@ Wavefront() {
 
         goalSphere = s;
         if (this->m_debug) {
-          std::cout << "   This sphere contains the goal region." << std::endl;
+          std::cout << "   Sphere " << s.wavefrontVID << ". This sphere contains the goal region." << std::endl;
         }
         break;
       }
@@ -545,6 +559,9 @@ SelectTarget() {
   CfgType target(robot);
 
   if (currentSphere == goalSphere && DRand() < m_pGoalState) {
+    if (this->m_debug) {
+      std::cout << "Current sphere is the goal sphere, and random number lets us choose goal config." << std::endl;
+    }
     // return a sample within goal boundary. (not necessarily exact goal configuration, like in the pseudocode.)
     auto& goalConstraints = this->GetTask()->GetGoalConstraints();
     auto goalBoundary = goalConstraints[0]->GetBoundary();
