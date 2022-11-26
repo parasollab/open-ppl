@@ -29,7 +29,7 @@ class GaussianSampler : public SamplerMethod<MPTraits> {
         vector<CfgType>& _result, vector<CfgType>& _collision);
 
     void ChangeGaussianParams(double newMean, double newStd);
-    void ReturnGeneratedPointOnly(bool setting);
+    void ReturnNewSamplesOnly(bool setting);
 
   private:
     double m_d;  //Gaussian d-value obtained from distribution
@@ -39,7 +39,7 @@ class GaussianSampler : public SamplerMethod<MPTraits> {
     // For if we wish to internally override mean and standard deviation:
     double mean;
     double std;
-    bool generatedPointOnly{false}; // When doing sampling, it's OK if both center & outer sample are valid.
+    bool newSamplesOnly{false}; // When doing sampling, it's OK if both center & outer sample are valid.
 };
 
 template <typename MPTraits>
@@ -162,6 +162,17 @@ Sampler(CfgType& _cfg, const Boundary* const _boundary,
       VDComment("GaussianSampler::Cfg2 is invalid.");
   }
 
+  // Check what sort of samples we want. 
+  if (newSamplesOnly && cfg2Free) {
+	  _result.push_back(cfg2);
+	
+    if(this->m_debug) {
+      cout << "Generated::" << cfg2 << endl; //May be repetitive..
+      VDComment("GaussianSampling::Successful");
+    }
+    return true;
+  } else if (newSamplesOnly) {return false;}
+
   //If validities are different, retain the free node
   if(cfg1Free != cfg2Free) {
     CfgType gen = cfg1Free ? cfg1 : cfg2;
@@ -175,16 +186,7 @@ Sampler(CfgType& _cfg, const Boundary* const _boundary,
     }
 
     return true;
-  } else if (cfg2Free && generatedPointOnly) {
-	  _result.push_back(cfg2);
-	
-    if(this->m_debug) {
-      cout << "Generated::" << cfg2 << endl; //May be repetitive..
-      VDComment("GaussianSampling::Successful");
-    }
-
-    return true;
-  }
+  } 
   return false;
 }
 
@@ -204,8 +206,8 @@ ChangeGaussianParams(double newMean, double newStd) {
 template <typename MPTraits>
 void 
 GaussianSampler<MPTraits>::
-ReturnGeneratedPointOnly(bool setting) {
-  generatedPointOnly = setting;
+ReturnNewSamplesOnly(bool setting) {
+  newSamplesOnly = setting;
 }
 
 

@@ -498,17 +498,16 @@ InsertSphereIntoPQ(Point pCenter, Point pGoal, std::priority_queue<Sphere>& q, V
   Wavefront Expansion should have some extra exploration factor. 
   Hence the following adjustment. 
   */
-  double min_priority;
-  if (m_wavefrontExplorationBias == 0) {
-    min_priority = distance; // I'm p sure this isn't necessary 
-    // but I don't have the patience to try it out without
-  } else {
-    double std = m_wavefrontExplorationBias * distance / 4.;
-    min_priority = GaussianDistribution(distance, std);
-  }
+  // double min_priority;
+  // if (m_wavefrontExplorationBias == 0 || parentVID == INVALID_VID) {
+  //   min_priority = distance; // I'm p sure this isn't necessary but I don't have the patience to try it out without
+  // } else {
+  //   double std = m_wavefrontExplorationBias * distance / 4.;
+  //   min_priority = GaussianDistribution(distance, std);
+  // }
   
-  //((1-m_wavefrontExplorationBias) * distance) +
-  //                (m_wavefrontExplorationBias * distance * ((DRand()*2)-1));
+  double min_priority = ((1-m_wavefrontExplorationBias) * distance) +
+                 (m_wavefrontExplorationBias * distance * ((DRand()*2)-1));
 
 
   Sphere s(pCenter, radius, min_priority, parentVID);
@@ -519,6 +518,7 @@ InsertSphereIntoPQ(Point pCenter, Point pGoal, std::priority_queue<Sphere>& q, V
                         << s.center[2] << " " 
                   << "with radius " << s.radius
               << " and priority " << s.priority
+              << " (actual distance=)" << distance 
                << std::endl;
   }
 
