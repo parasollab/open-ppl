@@ -1,18 +1,11 @@
 #ifndef PMPL_EET_H_
 #define PMPL_EET_H_
 
-// #include "MPStrategyMethod.h"
-// #include "MPProblem/Constraints/Constraint.h"
-// #include "Utilities/XMLNode.h"
-// #include "ConfigurationSpace/GenericStateGraph.h"
 #include "Geometry/Boundaries/CSpaceBoundingSphere.h"
 #include "MPLibrary/Samplers/GaussianSampler.h"
 
-// #include <iomanip>
-// #include <iterator>
 #include <string>
 #include <set>
-// #include <vector>
 #include <queue>
 
 
@@ -62,21 +55,22 @@ class EET : public BasicRRTStrategy<MPTraits> {
 
     
     // Start and goal points (not cfgs)
-    // Point pStart;
     Point pGoal;
     VID startVID;
-
   
-    int m_nSphereSamples{100};
+    // Algorithm parameters (taken from XML or hard-defaulted here). 
+    int m_nSphereSamples{20};
     double m_minSphereRadius{0.001};
-    double m_defaultExploreExploit{1./3.}; // "gamma"
+    double m_defaultExploreExploit{1./3.}; // "gamma". Default value provided in paper.
     double m_wavefrontExplorationBias{0.1};
+    double m_controlManipulation{0.01}; // "alpha". Default value provided in paper.
+    double m_pGoalState{0.5}; // "rho". Default value provided in paper. 
+
+    // Saved labels from XML.
     std::string m_samplerLabel{BasicRRTStrategy<MPTraits>::m_samplerLabel};
     std::string m_gaussianSamplerLabel;
 
-
-
-
+    // Data structure Sphere, for wavefront expansion and guidance. 
     struct Sphere{
       Point center;
       double radius;
@@ -86,7 +80,7 @@ class EET : public BasicRRTStrategy<MPTraits> {
 
       Sphere(const Point _center, double _radius, double _priority, VID _parentVID)
       : center(_center), radius(_radius), priority(_priority), parentVID(_parentVID) {
-        // Priority=distance to goal. 
+        // Priority=distance to goal(ish). Always > 0.  
         // So we want the lower numbers to be processed first. 
         priority *= -1; 
       }
@@ -99,13 +93,16 @@ class EET : public BasicRRTStrategy<MPTraits> {
         center = Point();
       }
 
+      // Is this sphere some sort of dumb object?
       bool isEmpty() {
         return radius == 0 
             && priority == 0
             && wavefrontVID == INVALID_VID
-            && parentVID == INVALID_VID;
+            && parentVID == INVALID_VID
+            && center == Point();
       }
 
+      /* The below three are required for us to use GenericStateGraph. */
       bool operator==(const Sphere& _other) const {
         return center == _other.center 
             && radius == _other.radius 
@@ -123,34 +120,41 @@ class EET : public BasicRRTStrategy<MPTraits> {
         return _os;
       }
 
+      /* For pqueue. */
       bool operator < (const Sphere& rhs) const {
         return priority < rhs.priority;
       }
     };
 
+    // Sphere-related operator functions.
+    Sphere GetParentSphere(Sphere _s);
+
+    /* WAVEFRONT expansion structures. */
     // Tree for actual WAVEFRONT expansion. 
     GenericStateGraph<Sphere, std::vector<Sphere>> wavefrontExpansion;
-    // Keep track of the spheres and their VIDs. 
+    // Keep track of the spheres and their VIDs in the above graph. 
     std::unordered_map<VID, Sphere> wavefrontExpansionSpheres;
     // Root of the Wavefront. 
     Sphere wavefrontRoot;
 
   private:
 
-    // For WAVEFRONT expansion.
+    /// For WAVEFRONT expansion. Insert a sphere into the priority queue q. 
+    /// @param pCenter Center point of the new sphere.
+    /// @param parentVID Sphere's parent VID.
+    /// @param q Queue to insert. 
+    /// @returns The sphere inserted. 
     Sphere InsertSphereIntoPQ(Point pCenter, 
-                              Point pGoal,
-                              std::priority_queue<Sphere>& q, 
-                              VID parentVID);
-
-    Sphere GetParentSphere(Sphere _s);
+                              VID parentVID,
+                              std::priority_queue<Sphere>& q);
 
     Sphere goalSphere; // The sphere that contains the goal. 
-    Sphere currentSphere; // The sphere we are currently investigating. 
-    double exploreExploitBias; // "sigma" 
-    double m_controlManipulation{0.01}; // "alpha". Default value provided in paper.
-    double pGoalState{0.5}; // "rho". Default value provided in paper. 
+    Sphere currentSphere; // The sphere we are currently investigating. (In Iterate())
 
+    // More (mutable) algorithm parameters. 
+    double exploreExploitBias; // "sigma" 
+
+    // Is environment 3D?
     bool threeD{true};
 };
 
@@ -167,7 +171,6 @@ EET(XMLNode& _node) : BasicRRTStrategy<MPTraits>(_node) {
   this->SetName("EET");
 
   m_gaussianSamplerLabel = _node.Read("gaussSamplerLabel", true, "", "Gaussian Sampler Label");
-
   m_nSphereSamples = _node.Read("nSphereSamples", false, m_nSphereSamples, 
                                 0, std::numeric_limits<int>::max(),
       "Number of samples on the sphere, for Wavefront Expansion.");
@@ -175,12 +178,12 @@ EET(XMLNode& _node) : BasicRRTStrategy<MPTraits>(_node) {
                                 0., std::numeric_limits<double>::max(),
       "Minimum sphere radius for sphere growth.");
   m_defaultExploreExploit = _node.Read("defaultExploreExploit", false, m_defaultExploreExploit, 
-                                0., 1.,
-      "Default explore/exploit bias. ");
+                                0., 1., "Default explore/exploit bias. ");
   m_wavefrontExplorationBias = _node.Read("wavefrontExplore", false, m_wavefrontExplorationBias, 
                                 0., 1., "Wavefront exploration bias");
   m_controlManipulation = _node.Read("controlManipulation", false, m_controlManipulation, 
-                                0., 1., "How much exploration grows/shirnks based on sampling success"); // TODO THIS IS A GROSS NAME
+                                0., 1., "How much exploration grows/shirnks based on sampling success"); 
+                                // TODO THIS IS A GROSS NAME
 }
 
 
@@ -222,10 +225,6 @@ Iterate() {
   // if expansion was successful, add to rdmp. 
   // nearest neighbor should not be goal vertex. 
   const VID nearestVID = this->FindNearestNeighbor(target, &rdmp->GetAllVIDs());
-  // Sometimes, here you will get a "failed to find nearest neighbor" on iteration 1. 
-  // If your point is the same as the start point, you are just unlucky. 
-  // Pick a different seed. 
-
   const VID newVID = this->ExpandTree(nearestVID, target);
 
   // adjust hyperparameters
@@ -245,7 +244,6 @@ Iterate() {
 
       if (Distance(iterationSphereCenter, newPoint) < iterationSphere.radius) {
         if (spheresSeen.size() > 0) { // We are in the goal sphere. There's no child sphere to go. 
-          // Technically the rest of this iteration doesn't matter because RRT's gonna end here. 
           currentSphere = spheresSeen.back();
         }
         exploreExploitBias = m_defaultExploreExploit;
@@ -305,7 +303,7 @@ Wavefront() {
 
   // Root the WE. 
   std::priority_queue<Sphere> sphereQueue;
-  Sphere root = InsertSphereIntoPQ(pStart, pGoal, sphereQueue, INVALID_VID);
+  Sphere root = InsertSphereIntoPQ(pStart, INVALID_VID, sphereQueue);
   wavefrontRoot = root;
 
   // in-loop variables
@@ -405,7 +403,7 @@ Wavefront() {
 
         // outside existing spheres
         if (Distance(p_i, sphere.center) < sphere.radius) {
-          InsertSphereIntoPQ(p_i, pGoal, sphereQueue, sphereVID);
+          InsertSphereIntoPQ(p_i, sphereVID, sphereQueue);
           sphereAddedToQueue = true;
         }
 
@@ -469,7 +467,7 @@ DistanceToObstacles(Point _p){
 template <class MPTraits>
 typename EET<MPTraits>::Sphere
 EET<MPTraits>::
-InsertSphereIntoPQ(Point pCenter, Point pGoal, std::priority_queue<Sphere>& q, VID parentVID) {
+InsertSphereIntoPQ(Point pCenter, VID parentVID, std::priority_queue<Sphere>& q) {
   double radius = DistanceToObstacles(pCenter); // radius. 
   
   // Throw out spheres that are too small.. 
@@ -546,7 +544,7 @@ SelectTarget() {
   auto robot = this->GetTask()->GetRobot();
   CfgType target(robot);
 
-  if (currentSphere == goalSphere && DRand() < pGoalState) {
+  if (currentSphere == goalSphere && DRand() < m_pGoalState) {
     // return a sample within goal boundary. (not necessarily exact goal configuration, like in the pseudocode.)
     auto& goalConstraints = this->GetTask()->GetGoalConstraints();
     auto goalBoundary = goalConstraints[0]->GetBoundary();
