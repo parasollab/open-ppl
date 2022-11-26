@@ -28,10 +28,18 @@ class GaussianSampler : public SamplerMethod<MPTraits> {
     virtual bool Sampler(CfgType& _cfg, const Boundary* const _boundary,
         vector<CfgType>& _result, vector<CfgType>& _collision);
 
+    void ChangeGaussianParams(double newMean, double newStd);
+    void ReturnGeneratedPointOnly(bool setting);
+
   private:
     double m_d;  //Gaussian d-value obtained from distribution
     bool m_useBoundary;  //Use Bbox as an obstacle?
     string m_vcLabel, m_dmLabel;
+
+    // For if we wish to internally override mean and standard deviation:
+    double mean;
+    double std;
+    bool generatedPointOnly{false}; // When doing sampling, it's OK if both center & outer sample are valid.
 };
 
 template <typename MPTraits>
@@ -60,6 +68,10 @@ ParseXML(XMLNode& _node) {
       "Use bounding box as obstacle");
   m_vcLabel = _node.Read("vcLabel", true, "", "Validity Test Method");
   m_dmLabel =_node.Read("dmLabel", true, "default", "Distance Metric Method");
+
+  // Set mean and standar deviation separately
+  mean = m_d;
+  std = m_d;
 }
 
 //Display values of class variables at calling time
@@ -68,7 +80,9 @@ void
 GaussianSampler<MPTraits>::
 Print(ostream& _os) const {
   SamplerMethod<MPTraits>::Print(_os);
-  _os << "\td = " << m_d << endl;
+  // _os << "\td = " << m_d << endl;
+  _os << "\tmean = " << mean << endl;
+  _os << "\tstandard dev = " << std << endl;
   _os << "\tuseBoundary = " << m_useBoundary << endl;
   _os << "\tvcLabel = " << m_vcLabel << endl;
   _os << "\tdmLabel = " << m_dmLabel << endl;
@@ -79,7 +93,6 @@ bool
 GaussianSampler<MPTraits>::
 Sampler(CfgType& _cfg, const Boundary* const _boundary,
     vector<CfgType>& _result, vector<CfgType>& _collision) {
-
   const std::string callee = this->GetNameAndLabel() + "::SampleImpl()";
   auto vc = this->GetValidityChecker(m_vcLabel);
   auto dm = this->GetDistanceMetric(m_dmLabel);
@@ -123,14 +136,14 @@ Sampler(CfgType& _cfg, const Boundary* const _boundary,
   bool cfg2Free;
   if(!m_useBoundary) {
     do {
-      incr.GetRandomRay(fabs(GaussianDistribution(fabs(m_d), fabs(m_d))), dm);
+      incr.GetRandomRay(fabs(GaussianDistribution(fabs(mean), fabs(std))), dm);
       cfg2 = cfg1 + incr;
     } while(!cfg2.InBounds(_boundary));
 
     cfg2Free = vc->IsValid(cfg2, callee);
   }
   else {
-    incr.GetRandomRay(fabs(GaussianDistribution(fabs(m_d), fabs(m_d))), dm);
+    incr.GetRandomRay(fabs(GaussianDistribution(fabs(mean), fabs(std))), dm);
     cfg2 = cfg1 + incr;
 
     cfg2Free = cfg2.InBounds(_boundary) &&
@@ -162,9 +175,39 @@ Sampler(CfgType& _cfg, const Boundary* const _boundary,
     }
 
     return true;
+  } else if (cfg2Free && generatedPointOnly) {
+	  _result.push_back(cfg2);
+	
+    if(this->m_debug) {
+      cout << "Generated::" << cfg2 << endl; //May be repetitive..
+      VDComment("GaussianSampling::Successful");
+    }
+
+    return true;
   }
   return false;
 }
+
+template <typename MPTraits>
+void
+GaussianSampler<MPTraits>::
+ChangeGaussianParams(double newMean, double newStd) {
+  this->mean = newMean;
+  this->std = newStd;
+
+  if (this->m_debug) {
+    cout << "Changing Gaussian Sampler's mean to " << this->mean
+        << "and std to " << this->std << endl;
+  }
+}
+
+template <typename MPTraits>
+void 
+GaussianSampler<MPTraits>::
+ReturnGeneratedPointOnly(bool setting) {
+  generatedPointOnly = setting;
+}
+
 
 #endif
 
