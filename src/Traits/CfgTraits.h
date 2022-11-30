@@ -40,6 +40,7 @@
 #include "MPLibrary/Samplers/BridgeTestSampler.h"
 #include "MPLibrary/Samplers/ObstacleBasedSampler.h"
 #include "MPLibrary/Samplers/UniformRandomSampler.h"
+#include "MPLibrary/Samplers/GaussianSampler.h"
 
 //local planner includes
 #include "MPLibrary/LocalPlanners/StraightLine.h"
@@ -73,6 +74,7 @@
 //mp strategies includes
 #include "MPLibrary/MPStrategies/AdaptiveRRT.h"
 #include "MPLibrary/MPStrategies/GroupPRM.h"
+#include "MPLibrary/MPStrategies/EET.h"
 #include "MPLibrary/MPStrategies/BasicPRM.h"
 #include "MPLibrary/MPStrategies/BasicRRTStrategy.h"
 #include "MPLibrary/MPStrategies/DynamicRegionRRT.h"
@@ -144,7 +146,8 @@ struct MPTraits {
   typedef boost::mpl::list<
     BridgeTestSampler<MPTraits>,
     ObstacleBasedSampler<MPTraits>,
-    UniformRandomSampler<MPTraits>
+    UniformRandomSampler<MPTraits>, 
+    GaussianSampler<MPTraits>
       > SamplerMethodList;
 
   //types of local planners available in our world
@@ -198,6 +201,7 @@ struct MPTraits {
     BasicRRTStrategy<MPTraits>,
     DynamicRegionRRT<MPTraits>,
     DynamicRegionsPRM<MPTraits>,
+    EET<MPTraits>,
     GroupDecoupledStrategy<MPTraits>,
     GroupStrategyMethod<MPTraits>,
     TogglePRMStrategy<MPTraits>,

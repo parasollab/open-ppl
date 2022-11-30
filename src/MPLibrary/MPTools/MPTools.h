@@ -16,6 +16,7 @@
 #include "TRPTool.h"
 #include "ReachabilityUtil.h"
 #include "MPLibrary/MPTools/LKHSearch.h"
+#include "PointConstruction.h"
 //#include "MPLibrary/LearningModels/SVMModel.h"
 
 
@@ -68,6 +69,7 @@ class MPToolsType final {
   LabelMap<LKHSearch>                m_lkhSearchTools;
   LabelMap<TRPTool>                  m_trpTools;
   LabelMap<ReachabilityUtil>         m_reachabilityUtils;
+  LabelMap<PointConstruction>        m_pointConstruction;
 
   std::unordered_map<std::string, TetGenDecomposition> m_tetgens;
   std::unordered_map<std::string, const WorkspaceDecomposition*> m_decompositions;
@@ -247,6 +249,20 @@ class MPToolsType final {
 
     ///}
 
+    ///@{
+
+    /// Get a Point Construction
+    /// @param _label The label of the decomposition to use.
+    PointConstruction<MPTraits>* GetPointConstruction(const std::string& _label) const;
+
+    /// Set a Point Construction  by label.
+    /// @param _label The label for this utility
+    /// @param _decomposition the point construction
+    void SetPointConstruction(const std::string& _label,
+        PointConstruction<MPTraits>* _util);
+
+    ///}
+
   private:
 
     ///@name Helpers
@@ -412,6 +428,11 @@ ParseXML(XMLNode& _node) {
       auto util = new ReachabilityUtil<MPTraits>(child);
       SetReachabilityUtil(util->GetLabel(), util);
     }
+    
+    else if(child.Name() == "PointConstruction") {
+      auto util = new PointConstruction<MPTraits>(child);
+      SetPointConstruction(util->GetLabel(), util);
+    }
   }
 }
 
@@ -437,6 +458,8 @@ Initialize() {
   //for(auto& pair : m_trpTools)
   //  pair.second->Initialize();
   for(auto& pair : m_reachabilityUtils)
+    pair.second->Initialize();
+  for(auto& pair : m_pointConstruction)
     pair.second->Initialize();
 }
 
@@ -470,6 +493,8 @@ MPToolsType<MPTraits>::
   for(auto& pair : m_trpTools)
     delete pair.second;
   for(auto& pair : m_reachabilityUtils)
+    delete pair.second;
+  for(auto& pair : m_pointConstruction) 
     delete pair.second;
 }
 
@@ -662,6 +687,27 @@ SetReachabilityUtil(const std::string& _label,
     ReachabilityUtil<MPTraits>* _util) {
   SetUtility(_label, _util, m_reachabilityUtils);
 }
+
+
+
+/*----------------------------- Point Construction -------------------------------*/
+
+template <typename MPTraits>
+PointConstruction<MPTraits>*
+MPToolsType<MPTraits>::
+GetPointConstruction(const std::string& _label) const {
+  return GetUtility(_label, m_pointConstruction);
+}
+
+
+template <typename MPTraits>
+void
+MPToolsType<MPTraits>::
+SetPointConstruction(const std::string& _label,
+    PointConstruction<MPTraits>* _util) {
+  SetUtility(_label, _util, m_pointConstruction);
+}
+
 
 /*---------------------------------- Helpers ---------------------------------*/
 
