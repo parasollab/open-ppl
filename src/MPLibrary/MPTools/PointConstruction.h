@@ -36,6 +36,11 @@ class PointConstruction : public MPBaseObject<MPTraits> {
         /// Sample in a normal distribution. 
         /// TODO: Move this somewhere else. 
         double NormalDistribution(double mean, double variance);
+    
+    private:
+        template<size_t D>
+            Vector<double, D> ElementwiseMultiply(
+                Vector<double, D> a, Vector<double, D> b);
 };
 
 template <typename MPTraits>
@@ -102,10 +107,21 @@ SampleSphereSurface(Vector<double, D> center, Vector<double, D> bounds) {
     // And that affects our calcuations. 
     // samples = samples.elementwiseMultiply(bounds); 
     samples = samples.selfNormalize();
-    samples = samples.elementwiseMultiply(bounds);
+    samples = ElementwiseMultiply(samples, bounds);
     samples += center;
     return samples;
 }
 
+template <typename MPTraits> 
+template <size_t D>
+Vector<double, D>
+PointConstruction<MPTraits>::
+ElementwiseMultiply(Vector<double, D> a, Vector<double, D> b) {
+    Vector<double, D> multiplied;
+    for (size_t i = 0; i < D; i++) {
+        multiplied[i] = a[i] * b[i];
+    }
+    return multiplied;
+}
 
 #endif
