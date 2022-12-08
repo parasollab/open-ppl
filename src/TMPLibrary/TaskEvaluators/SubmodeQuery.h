@@ -3,6 +3,7 @@
 
 #include "TaskEvaluatorMethod.h"
 
+#include "TMPLibrary/StateGraphs/GroundedHypergraph.h"
 #include "TMPLibrary/StateGraphs/ModeGraph.h"
 
 #include "Utilities/Hypergraph.h"
@@ -15,12 +16,11 @@ class SubmodeQuery : public TaskEvaluatorMethod {
     ///@name Local Types
     ///@{
 
-    typedef ModeGraph::GroundedVertex         GroundedVertex;
-    typedef ModeGraph::GroundedHypergraph     GroundedHypergraph;
-    typedef ModeGraph::ModeHypergraph         ModeHypergraph;
+    typedef GroundedHypergraph::Vertex                 GroundedVertex;
+    typedef ModeGraph::ModeHypergraph                  ModeHypergraph;
 
-    typedef std::set<size_t>                  ActionHistory;
-    typedef std::pair<std::set<size_t>,ActionHistory> PartiallyGroundedHyperarc;
+    typedef std::set<size_t>                           ActionHistory;
+    typedef std::pair<std::set<size_t>,ActionHistory>  PartiallyGroundedHyperarc;
     typedef std::pair<bool,size_t> HPElem;
     
     struct ActionExtendedVertex {

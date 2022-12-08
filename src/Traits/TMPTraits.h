@@ -28,6 +28,7 @@
 
 // StateGraphs to include
 #include "TMPLibrary/StateGraphs/CombinedRoadmap.h"
+#include "TMPLibrary/StateGraphs/GroundedHypergraph.h"
 #include "TMPLibrary/StateGraphs/ModeGraph.h"
 #include "TMPLibrary/StateGraphs/ObjectCentricModeGraph.h"
 #include "TMPLibrary/StateGraphs/OCMG.h"
@@ -85,6 +86,7 @@ struct TMPTraits {
 
 	typedef boost::mpl::list<
     CombinedRoadmap,
+    GroundedHypergraph,
     ModeGraph,
     ObjectCentricModeGraph,
     OCMG

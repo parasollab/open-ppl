@@ -15,6 +15,8 @@
 #include "TMPLibrary/InteractionStrategies/InteractionStrategyMethod.h"
 #include "TMPLibrary/Solution/Plan.h"
 
+#include "GroundedHypergraph.h"
+
 #include <set>
 
 /*------------------------------ Construction --------------------------------*/
@@ -51,6 +53,8 @@ ModeGraph(XMLNode& _node) : StateGraph(_node) {
 
   m_writeHypergraphs = _node.Read("writeHypergraphs",false,m_writeHypergraphs,
                       "Flag to write hypergraphs to output files.");
+
+  m_GH = _node.Read("GH",false,"GH","Label for grounded hypergraph.");
 }
 
 ModeGraph::
@@ -189,9 +193,9 @@ GetModeHypergraph() {
   return m_modeHypergraph;
 }
 
-ModeGraph::GroundedHypergraph&
+ModeGraph::GroundedHypergraphLocal&
 ModeGraph::
-GetGroundedHypergraph() {
+GetGroundedHypergraphLocal() {
   return m_groundedHypergraph;
 }
 
@@ -857,8 +861,10 @@ ConnectTransitions() {
   auto stats = plan->GetStatClass();
   MethodTimer* mt = new MethodTimer(stats,this->GetNameAndLabel() + "::ConnectTransitions");
 
-  auto lib = this->GetMPLibrary();
+  //auto lib = this->GetMPLibrary();
   auto prob = this->GetMPProblem();
+
+  auto gh = dynamic_cast<GroundedHypergraph*>(this->GetStateGraph(m_GH).get());
 
   // Set robots virtual
   for(const auto& robot : prob->GetRobots()) {
@@ -872,6 +878,13 @@ ConnectTransitions() {
       continue;
 
     auto mode = m_modeHypergraph.GetVertexType(kv1.first);
+    std::vector<size_t> temp;
+    for(auto vid : m_modeGroundedVertices[kv1.first]) {
+      temp.push_back(vid);
+    }
+    gh->ConnectAllTransitions(temp,mode->constraints);
+
+    /*
 
     for(auto vid1 : m_modeGroundedVertices[kv1.first]) {
 
@@ -1016,6 +1029,9 @@ ConnectTransitions() {
     if(this->GetPlan()->GetCoordinator()->GetRobot() == robot.get())
       continue;
     robot->SetVirtual(false);
+  }
+
+  */
   }
 
   delete mt;
@@ -1726,13 +1742,13 @@ SaveInteractionPaths(Interaction* _interaction, State& _start, State& _end,
   }
 
   // Add the start state to the grounded vertices graph
-  auto tail = AddStateToGroundedHypergraph(start,_startModeMap);
+  auto tail = AddStateToGroundedHypergraphLocal(start,_startModeMap);
   for(auto v : tail) {
     m_exitVertices.insert(v);
   }
 
   // Add the end state to the grounded vertices graph
-  auto head = AddStateToGroundedHypergraph(end,_endModeMap);
+  auto head = AddStateToGroundedHypergraphLocal(end,_endModeMap);
   for(auto v : head) {
     m_entryVertices.insert(v);
   }
@@ -1858,7 +1874,7 @@ SaveInteractionPaths(Interaction* _interaction, State& _start, State& _end,
     }
 
     // Add the start state to the grounded vertices graph
-    auto head = AddStateToGroundedHypergraph(start,_startModeMap);
+    auto head = AddStateToGroundedHypergraphLocal(start,_startModeMap);
 
     // Check if this is the first stage or not
     if(!tail.empty()) {
@@ -1878,7 +1894,7 @@ SaveInteractionPaths(Interaction* _interaction, State& _start, State& _end,
   }
 
   // Add final end state to grounded hypergraph
-  auto head = AddStateToGroundedHypergraph(_end,_startModeMap);
+  auto head = AddStateToGroundedHypergraphLocal(_end,_startModeMap);
   m_groundedHypergraph.AddHyperarc(head,tail,transition);
   */
 }
@@ -1972,7 +1988,7 @@ AddMode(Mode* _mode) {
 
 std::set<ModeGraph::VID>
 ModeGraph::
-AddStateToGroundedHypergraph(const State& _state, std::unordered_map<RobotGroup*,Mode*> _modeMap) {
+AddStateToGroundedHypergraphLocal(const State& _state, std::unordered_map<RobotGroup*,Mode*> _modeMap) {
 
   std::set<VID> vids;
 
@@ -2069,9 +2085,9 @@ ContainsSolution(std::set<VID>& _startVIDs) {
   auto g = m_groundedHypergraph.GetReverseGraph();
 
   // Setup dijkstra functions
-  SSSPTerminationCriterion<ModeGraph::GroundedHypergraph::GraphType> termination(
-    [this](typename ModeGraph::GroundedHypergraph::GraphType::vertex_iterator& _vi,
-           const SSSPOutput<typename ModeGraph::GroundedHypergraph::GraphType>& _sssp) {
+  SSSPTerminationCriterion<ModeGraph::GroundedHypergraphLocal::GraphType> termination(
+    [this](typename ModeGraph::GroundedHypergraphLocal::GraphType::vertex_iterator& _vi,
+           const SSSPOutput<typename ModeGraph::GroundedHypergraphLocal::GraphType>& _sssp) {
     const auto& vertex = _vi->property();
     auto grm = vertex.first;
     if(!grm)
@@ -2087,8 +2103,8 @@ ContainsSolution(std::set<VID>& _startVIDs) {
     return SSSPTermination::EndBranch;
   });
 
-  SSSPPathWeightFunction<ModeGraph::GroundedHypergraph::GraphType> weight(
-    [this,g](typename ModeGraph::GroundedHypergraph::GraphType::adj_edge_iterator& _ei,
+  SSSPPathWeightFunction<ModeGraph::GroundedHypergraphLocal::GraphType> weight(
+    [this,g](typename ModeGraph::GroundedHypergraphLocal::GraphType::adj_edge_iterator& _ei,
            const double _sourceDistance,
            const double _targetDistance) {
 
@@ -2171,15 +2187,15 @@ operator<<(ostream& _os, const ModeGraph::ReversibleAction _ra) {
   return _os;
 }
 
-istream&
-operator>>(istream& _is, const ModeGraph::GroundedVertex _vertex) {
-  return _is;
-}
+//istream&
+//operator>>(istream& _is, const ModeGraph::GroundedVertex _vertex) {
+//  return _is;
+//}
 
-ostream&
-operator<<(ostream& _os, const ModeGraph::GroundedVertex _vertex) {
-  return _os;
-}
+//ostream&
+//operator<<(ostream& _os, const ModeGraph::GroundedVertex _vertex) {
+//  return _os;
+//}
 
 istream&
 operator>>(istream& _is, const ModeGraph::Transition _t) {

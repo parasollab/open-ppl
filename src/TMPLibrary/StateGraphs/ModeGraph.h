@@ -73,7 +73,7 @@ class ModeGraph : public StateGraph {
 
     };
 
-    typedef Hypergraph<GroundedVertex,Transition>           GroundedHypergraph;
+    typedef Hypergraph<GroundedVertex,Transition>           GroundedHypergraphLocal;
     typedef Action::State                                   State;
 
 
@@ -101,7 +101,7 @@ class ModeGraph : public StateGraph {
 
     ModeHypergraph& GetModeHypergraph();
 
-    GroundedHypergraph& GetGroundedHypergraph();
+    GroundedHypergraphLocal& GetGroundedHypergraphLocal();
 
     GroupRoadmapType* GetGroupRoadmap(RobotGroup* _group);
 
@@ -158,7 +158,7 @@ class ModeGraph : public StateGraph {
 
     VID AddMode(Mode* _mode);
 
-    std::set<VID> AddStateToGroundedHypergraph(const State& _state, std::unordered_map<RobotGroup*,Mode*> _modeMap);
+    std::set<VID> AddStateToGroundedHypergraphLocal(const State& _state, std::unordered_map<RobotGroup*,Mode*> _modeMap);
 
     bool CanReach(const State& _state);
 
@@ -172,7 +172,7 @@ class ModeGraph : public StateGraph {
 
     ModeHypergraph m_modeHypergraph;
 
-    GroundedHypergraph m_groundedHypergraph;
+    GroundedHypergraphLocal m_groundedHypergraph;
 
     std::unique_ptr<MPSolution> m_solution;
 
@@ -211,6 +211,9 @@ class ModeGraph : public StateGraph {
 
     bool m_writeHypergraphs{false};
 
+    // TEMP TO GET SEPARATE GROUNDED HYPERGRAPH
+    std::string m_GH;
+
     ///@}
 
 };
@@ -221,8 +224,8 @@ std::istream& operator>>(std::istream& _is, const ModeGraph::Mode* _mode);
 std::ostream& operator<<(std::ostream& _os, const ModeGraph::ReversibleAction _ra);
 std::istream& operator>>(std::istream& _is, const ModeGraph::ReversibleAction _ra);
 
-std::ostream& operator<<(std::ostream& _os, const ModeGraph::GroundedVertex _vertex);
-std::istream& operator>>(std::istream& _is, const ModeGraph::GroundedVertex _vertex);
+//std::ostream& operator<<(std::ostream& _os, const ModeGraph::GroundedVertex _vertex);
+//std::istream& operator>>(std::istream& _is, const ModeGraph::GroundedVertex _vertex);
 
 std::ostream& operator<<(std::ostream& _os, const ModeGraph::Transition _t);
 std::istream& operator>>(std::istream& _is, const ModeGraph::Transition _t);

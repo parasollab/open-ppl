@@ -527,6 +527,7 @@ TASK_SRCS := \
 	TMPLibrary/Solution/Plan.cpp \
 	TMPLibrary/Solution/TaskSolution.cpp \
   TMPLibrary/StateGraphs/CombinedRoadmap.cpp \
+  TMPLibrary/StateGraphs/GroundedHypergraph.cpp \
   TMPLibrary/StateGraphs/ModeGraph.cpp \
   TMPLibrary/StateGraphs/ObjectCentricModeGraph.cpp \
   TMPLibrary/StateGraphs/OCMG.cpp \

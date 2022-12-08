@@ -141,8 +141,8 @@ ConvertToPlan(Plan* _plan) {
   auto stats = plan->GetStatClass();
   MethodTimer mt(stats,this->GetNameAndLabel() + "::ConvertToPlan");
 
-  auto mg = dynamic_cast<ModeGraph*>(this->GetStateGraph(m_sgLabel).get());
-  auto& gh = mg->GetGroundedHypergraph();
+  auto gh = dynamic_cast<GroundedHypergraph*>(this->GetStateGraph(m_sgLabel).get());
+  //auto& gh = mg->GetGroundedHypergraph();
 
   auto last = m_goalVID;
  
@@ -175,7 +175,7 @@ ConvertToPlan(Plan* _plan) {
     std::cout << "End points" << std::endl;
     for(auto vid : vids) {
       auto v = m_actionExtendedHypergraph.GetVertexType(vid).groundedVID;
-      auto vertex = mg->GetGroundedHypergraph().GetVertexType(v);
+      auto vertex = gh->GetVertex(v);
       auto grm = vertex.first;
       if(!grm)
         continue;
@@ -190,7 +190,7 @@ ConvertToPlan(Plan* _plan) {
     for(auto hid : hids) {
      
       auto h = m_actionExtendedHypergraph.GetHyperarcType(hid); 
-      auto groundedHA = gh.GetHyperarcType(h);
+      auto groundedHA = gh->GetTransition(h);
       auto hyperarcWeight = groundedHA.cost;
 
       std::cout << hid << ":" << h << " : " << hyperarcWeight << std::endl;
@@ -210,7 +210,7 @@ ConvertToPlan(Plan* _plan) {
   auto hyperarc = m_actionExtendedHypergraph.GetHyperarc(0);
   for(auto vid : hyperarc.head) {
     auto aev = m_actionExtendedHypergraph.GetVertexType(vid);
-    auto vertex = gh.GetVertexType(aev.groundedVID);
+    auto vertex = gh->GetVertex(aev.groundedVID);
     auto grm = vertex.first;
     auto group = grm->GetGroup();
     auto gcfg = grm->GetVertex(vertex.second);
@@ -247,7 +247,7 @@ ConvertToPlan(Plan* _plan) {
 
     // Get grounded hypergraph hyperarc
     auto aeh = m_actionExtendedHypergraph.GetHyperarc(elem.second);
-    auto hyperarc = gh.GetHyperarcType(aeh.property);
+    auto hyperarc = gh->GetTransition(aeh.property);
 
 
     // Grab tasks of preceeding hyperarcs
@@ -507,14 +507,14 @@ ComputeHeuristicValues() {
   // Run a dijkstra search backwards through hypergraph as if it was a graph
 
   // Get graph representation grounded hypergraph
-  auto mg = dynamic_cast<ModeGraph*>(this->GetStateGraph(m_sgLabel).get());
-  auto& gh = mg->GetGroundedHypergraph();
-  auto g = gh.GetReverseGraph();
+  auto gh = dynamic_cast<GroundedHypergraph*>(this->GetStateGraph(m_sgLabel).get());
+  //auto& gh = mg->GetGroundedHypergraph();
+  auto g = gh->GetReverseGraph();
 
   // Setup dijkstra functions
-  SSSPTerminationCriterion<ModeGraph::GroundedHypergraph::GraphType> termination(
-    [this](typename ModeGraph::GroundedHypergraph::GraphType::vertex_iterator& _vi,
-           const SSSPOutput<typename ModeGraph::GroundedHypergraph::GraphType>& _sssp) {
+  SSSPTerminationCriterion<GroundedHypergraph::GH::GraphType> termination(
+    [this](typename GroundedHypergraph::GH::GraphType::vertex_iterator& _vi,
+           const SSSPOutput<typename GroundedHypergraph::GH::GraphType>& _sssp) {
     const auto& vertex = _vi->property();
     auto grm = vertex.first;
     if(!grm)
@@ -530,8 +530,8 @@ ComputeHeuristicValues() {
     return SSSPTermination::EndBranch;
   });
 
-  SSSPPathWeightFunction<ModeGraph::GroundedHypergraph::GraphType> weight(
-    [this,g](typename ModeGraph::GroundedHypergraph::GraphType::adj_edge_iterator& _ei,
+  SSSPPathWeightFunction<GroundedHypergraph::GH::GraphType> weight(
+    [this,g](typename GroundedHypergraph::GH::GraphType::adj_edge_iterator& _ei,
            const double _sourceDistance,
            const double _targetDistance) {
 
@@ -680,14 +680,11 @@ HyperpathPathWeightFunction(
 
   double hyperarcWeight = 0;
 
-  auto mg = dynamic_cast<ModeGraph*>(this->GetStateGraph(m_sgLabel).get());
-  auto& gh = mg->GetGroundedHypergraph();
-  auto groundedHA = gh.GetHyperarcType(_hyperarc.property);
+  auto gh = dynamic_cast<GroundedHypergraph*>(this->GetStateGraph(m_sgLabel).get());
+  //auto& gh = mg->GetGroundedHypergraph();
+  auto groundedHA = gh->GetTransition(_hyperarc.property);
   
-  //TODO::DECIDE IF WE WANT THIS
   hyperarcWeight = groundedHA.cost;
-  //hyperarcWeight = std::max(0.,groundedHA.cost-1);
-  //hyperarcWeight = std::min(1.,groundedHA.cost);
 
   double tailWeight = -1 * MAX_DBL;
 
@@ -707,7 +704,8 @@ SubmodeQuery::
 HyperpathForwardStar(const size_t& _vid, ActionExtendedHypergraph* _h) {
  
   auto mg = dynamic_cast<ModeGraph*>(this->GetStateGraph(m_sgLabel).get());
-  auto& gh = mg->GetGroundedHypergraph();
+  auto gh = dynamic_cast<GroundedHypergraph*>(this->GetStateGraph(m_sgLabel).get());
+  //auto& gh = mg->GetGroundedHypergraph();
 
   auto aev = _h->GetVertexType(_vid);
   auto groundedVID = aev.groundedVID;
@@ -770,9 +768,9 @@ HyperpathForwardStar(const size_t& _vid, ActionExtendedHypergraph* _h) {
 
   // Build partially grounded hyperarcs
   // Grab forward star in grounded hypergraph
-  for(auto hid : gh.GetOutgoingHyperarcs(groundedVID)) {
+  for(auto hid : gh->GetOutgoingHyperarcs(groundedVID)) {
 
-    auto head = gh.GetHyperarc(hid).head;
+    auto head = gh->GetHyperarc(hid).head;
 
     //if(head.count(1))
     //  std::cout << "HAS SEEN THE GOAL!!!" << std::endl;
@@ -850,7 +848,7 @@ HyperpathForwardStar(const size_t& _vid, ActionExtendedHypergraph* _h) {
       newPGH.insert(_vid);
 
       // Check if it is fully grounded
-      if(newPGH.size() != gh.GetHyperarc(hid).tail.size()) {
+      if(newPGH.size() != gh->GetHyperarc(hid).tail.size()) {
         // If not, add to set and continue
         newPartiallyGroundedHyperarcs.push_back(std::make_pair(newPGH,compositeHistory));
         continue;
@@ -861,7 +859,7 @@ HyperpathForwardStar(const size_t& _vid, ActionExtendedHypergraph* _h) {
       // Construct head set
       std::set<size_t> head;
       
-      for(auto v : gh.GetHyperarc(hid).head) {
+      for(auto v : gh->GetHyperarc(hid).head) {
         ActionExtendedVertex vertex;
         vertex.groundedVID = v;
 
@@ -899,7 +897,8 @@ SubmodeQuery::
 HyperpathHeuristic(const size_t& _target) {
 
   auto mg = dynamic_cast<ModeGraph*>(this->GetStateGraph(m_sgLabel).get());
-  auto& gh = mg->GetGroundedHypergraph();
+  auto gh = dynamic_cast<GroundedHypergraph*>(this->GetStateGraph(m_sgLabel).get());
+  //auto& gh = mg->GetGroundedHypergraph();
 
   auto aev = m_actionExtendedHypergraph.GetVertexType(_target);
   auto vid = aev.groundedVID;
@@ -910,7 +909,7 @@ HyperpathHeuristic(const size_t& _target) {
   //  std::cout << "HEURISTIC ON GOAL" << std::endl;
 
   //TODO::Decide if this is what we want
-  auto grm = gh.GetVertexType(vid).first;
+  auto grm = gh->GetVertex(vid).first;
   if(!grm) {
     m_searchTimeHeuristicMap[_target] = m_costToGoMap[vid];
     return m_costToGoMap[_target];
@@ -933,7 +932,7 @@ HyperpathHeuristic(const size_t& _target) {
   auto incoming = *(incomings.begin());
   auto incomingArc = m_actionExtendedHypergraph.GetHyperarc(incoming);
   auto parent = *(incomingArc.tail.begin());
-  auto hyperarc = gh.GetHyperarcType(incomingArc.property);
+  auto hyperarc = gh->GetTransition(incomingArc.property);
   // TODO::Adjust for proper trajectory cost
   double heuristic = m_searchTimeHeuristicMap[parent] - hyperarc.cost;
   //double heuristic = m_searchTimeHeuristicMap[parent] - 1;
@@ -956,12 +955,12 @@ HyperpathHeuristic(const size_t& _target) {
   // As an exit vertex, we only have one outgoing hyperarc in the action extended hypergraph
   // Compute max heuristic from child nodes
 
-  auto outgoings = gh.GetOutgoingHyperarcs(vid);
+  auto outgoings = gh->GetOutgoingHyperarcs(vid);
   size_t outgoing = MAX_UINT;
   
   // Find outgoing hyperarc that exits the mode
   for(auto hid : outgoings) {
-    auto ha = gh.GetHyperarc(hid);
+    auto ha = gh->GetHyperarc(hid);
     for(auto v : ha.head) {
       auto m = mg->GetModeOfGroundedVID(v);
       if(m != targetMode) {
@@ -973,7 +972,7 @@ HyperpathHeuristic(const size_t& _target) {
       break;
   }
 
-  auto outgoingArc = gh.GetHyperarc(outgoing);
+  auto outgoingArc = gh->GetHyperarc(outgoing);
 
   double cost2go = 0;
   for(auto child : outgoingArc.head) {
