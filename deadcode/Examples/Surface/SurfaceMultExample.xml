@@ -1,0 +1,47 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<MotionPlanning>
+  <MPProblem>
+    <Environment input_env="thispatch.env">
+      <robot Cfg_name="SS_surface_mult" num_joints="0" pos_dof="3" dofs="3">
+        <boundary type="bbox" translational_scale="1">
+          <parameter id="0" label="x" type="translational" min="-1280" max="1285" />
+          <parameter id="1" label="y" type="translational" min="-1" max="80" />
+          <parameter id="2" label="z" type="translational" min="-1260" max="1285" />
+        </boundary>
+      </robot>
+    </Environment>
+
+    <DistanceMetrics>
+      <Euclidean label="Euclidean"/>
+    </DistanceMetrics>
+
+    <ValidityCheckers>
+      <CollisionDetection label="rapid" method="RAPID" />
+      <SSSurfaceValidity label="sv" vc_method="rapid"/>
+    </ValidityCheckers>
+
+    <MapEvaluators>
+      <ConditionalEvaluator label="NodesEval" metric_method="NumNodes" value="100" operator=">=" />
+    </MapEvaluators>
+
+    <MPStrategies>
+     <!-- ParkingLot -->
+     <LocalManeuveringStrategy label="LocalManeuveringStrategy" delta="0.05"
+      numRoots="1" maxnumticks="10" vc="sv" query="SurfaceMult.query" path="out.path" goalreachdistance="5"
+      goalreachorientation="0.18" gbpath="out2.gbpath" plantype="Deadlock2"
+      guidepath="guide_path.txt" guidepathsubgoal="8" maxnumiter="300" maxStartTime="50"
+      forwardPullOutDistMin="1.25" forwardPullOutDistMax="6.0" forwardReqAngle="0.52536"
+      forwardPullOutTurnDistMin="10.0" forwardPullOutTurnDistMax="22.5" forwardPullOutSteerMin="0.10" forwardPullOutSteerMax="0.15"
+      backPullOutDistMin="3.75" backPullOutDistMax="8.75" backPullOutTurnDistMin="10.0" backPullOutTurnDistMax="15.0"
+      backTowardGoalDistMin="0.25" backTowardGoalDistMax="7.75" backPullOutTurnSteerMin="0.05" backPullOutTurnSteerMax="0.20"
+      deadlock1TurnDistMin="3.75" deadlock1TurnDistMax="7.50" deadlock1TowardGoalDistMin="2.5"
+      deadlock1TowardGoalDistMax="12.25" deadlock1TurnSteerMin="0.05" deadlock1TurnSteerMax="0.20"
+      deadlock2DistMin="12.5" deadlock2DistMax="22.5" deadlock2Divisor="0.5" pullInForwardProbability="0.75"
+      pullInNormalBackwardProbability="0.8" pullInSteerMin="0.10">
+    <evaluation_method Method="NodesEval"/>
+    </LocalManeuveringStrategy>
+    </MPStrategies>
+
+    <Solver mpStrategyLabel="LocalManeuveringStrategy" seed="1234567" baseFilename="Basic" vizmoDebug="false"/>
+  </MPProblem>
+</MotionPlanning>
