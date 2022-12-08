@@ -1,0 +1,60 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<MotionPlanning warnings="true" warningsAsErrors="true">
+  <MPProblem>
+
+    <Environment filename="building2.env"/>
+
+    <DistanceMetrics>
+      <Euclidean label="euclidean"/>
+      <!--<scaledEuclidean label= "scaledEuclidean" scale ="0.5"/>-->
+    </DistanceMetrics>
+
+    <ValidityCheckers>
+      <CollisionDetection label="rapid" method="RAPID"/>
+      <CollisionDetection label="pqp" method="PQP"/>
+      <!--<NodeClearanceValidity label="nc" delta="8.0" dmMethod="euclidean" nfMethod="BFNF"/>-->
+      <SurfaceValidity label="sv" vc_method="pqp"/>
+    </ValidityCheckers>
+
+    <NeighborhoodFinders>
+      <BruteForceNF label="BFNF" k="10" dmLabel="euclidean"/>
+    </NeighborhoodFinders>
+
+    <Samplers>
+      <SurfaceSampler label="SurfaceRandomFree" vcMethod="sv" debug="false" attempts="2500" closeDist="1.0"/>
+    </Samplers>
+
+    <LocalPlanners>
+      <SurfaceLP label="surfacelp" vcLabel="sv"/>
+    </LocalPlanners>
+
+    <Connectors>
+      <ConnectNeighboringSurfaces label="SurfaceConnect" nfLabel="BFNF" k="10" lpLabel="surfacelp" debug="false"/>
+      <NeighborhoodConnector label="Closest" nfLabel="BFNF" checkIfSameCC="false" lpLabel="surfacelp" debug="false"/>
+    </Connectors>
+
+    <Metrics>
+      <NumNodesMetric label="NumNodes"/>
+    </Metrics>
+
+    <MapEvaluators>
+      <ConditionalEvaluator label="NodesEval" metric_method="NumNodes" value="200" operator=">=" />
+      <ConditionalEvaluator label="EdgesEval" metric_method="NumEdges" value="1000" operator=">" />
+    </MapEvaluators>
+
+
+    <MPStrategies>
+
+      <BasicPRM label="BasicPRM1" startAt="connecting">
+        <Sampler method="SurfaceRandomFree" number="1" attempts="4000"/>
+        <Connector method="SurfaceConnect"/>
+        <Connector method="Closest"/>
+        <Evaluator method="NodesEval"/>
+      </BasicPRM>
+
+    </MPStrategies>
+
+    <Solver mpStrategyLabel="BasicPRM1" seed="1234567" baseFilename="Basic" vizmoDebug="false"/>
+
+  </MPProblem>
+</MotionPlanning>

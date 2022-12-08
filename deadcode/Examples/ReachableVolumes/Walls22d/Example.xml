@@ -1,0 +1,98 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<MotionPlanning>
+  <MPProblem>
+
+    <!-- Example input, resolution defaults computed automatically. Can set
+         through environment.-->
+    <!--Environment filename=grid.env" positionRes="0.10"
+         positionResFactor="0.2" orientationRes="0.20"/-->
+    <Environment filename="walls5.env"/>
+
+    <DistanceMetrics>
+      <Euclidean label="euclidean"/>
+      <ScaledEuclidean label= "scaledEuclidean" scale ="0.2"/>
+      <RMSD label="rmsd"/>
+    </DistanceMetrics>
+
+    <ValidityCheckers>
+      <CollisionDetection label="rapid" method="RAPID" ignore_i_adjacent_nodes=4 ignore_i_adjacent_links=4/>
+      <CollisionDetection label="pqp" method="PQP" ignore_i_adjacent_nodes=4 ignore_i_adjacent_links=4/>
+
+      <CollisionDetection label="pqp_solid" method="PQP_SOLID"ignore_i_adjacent_nodes=4 ignore_i_adjacent_links=4 />
+      <NodeClearanceValidity label="nc" delta="0.3" dmLabel="euclidean" nfLabel="Nearest"/>
+      <NegateValidity label="nv" vcLabel="rapid"/>
+      <MedialAxisClearance label="mac" maClearance="0.5" vcLabel="pqp" dmLabel="euclidean"
+        clearanceType="exact" penetrationType="exact" useBBX="true" positional="true"
+        epsilon="0.01" historyLength="5"/>
+      <ComposeValidity label="cv" operator="AND">
+        <ValidityChecker label="pqp"/>
+        <ValidityChecker label="mac"/>
+      </ComposeValidity>
+      <AlwaysTrueValidity label="alwaysTrue"/>
+      <ObstacleClearance label="oc" obstClearance="2.5" vcLabel="pqp_solid" dmLabel="euclidean"
+        clearanceType="exact" penetrationType="exact" useBBX="true" positional="true"/>
+    </ValidityCheckers>
+
+    <NeighborhoodFinders>
+      <BruteForceNF label="BFNF" dmLabel="scaledEuclidean" unconnected="false" k="1" recordKeep="true"/>
+      <BruteForceNF label="BFNF5" dmLabel="scaledEuclidean" unconnected="false" k="5" recordKeep="true"/>
+      <BruteForceNF label="Nearest" dmLabel="euclidean" unconnected="false" k="1"/>
+      <BruteForceNF label="BFNFAll" dmLabel="euclidean" k="0"/>
+    </NeighborhoodFinders>
+
+    <Samplers>
+      <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
+      <UniformRandomSampler label="UniformRandomFree" vcLabel="pqp_solid"/>
+    </Samplers>
+
+    <LocalPlanners>
+      <StraightLine label="sl" binaryEvaluation="true" vcLabel="pqp_solid" recordKeep="true"/>
+      <StraightLine label="slAlwaysTrue" binaryEvaluation="true" vcLabel="alwaysTrue"/>
+      <RotateAtS label="ras" binaryEvaluation="true" vcLabel="pqp_solid" s="0.5" saveIntermediates="false"/>
+      <TransformAtS label="tas" binaryEvaluation="true" vcLabel="rapid" s="0.5" saveIntermediates="false"/>
+    </LocalPlanners>
+
+    <Connectors>
+      <CCsConnector label="ConnectCCs" nfLabel="BFNF" lpLabel="sl" k="5" smallcc="5"/>
+      <!--ClosestVE label="ClosestVE" kClosest="1" nf="BFNF" lp_method="sl"/-->
+      <NeighborhoodConnector label="Closest" nfLabel="BFNF" lpLabel="sl" debug="false"/>
+      <NeighborhoodConnector label="Closest5" nfLabel="BFNF5" lpLabel="sl" debug="false"/>
+    </Connectors>
+
+    <Metrics>
+      <NumNodesMetric label="NumNodes"/>
+      <NumEdgesMetric label="NumEdges"/>
+      <TimeMetric label="TimeInSec"/>
+    </Metrics>
+
+    <MapEvaluators>
+      <Query label="Query" queryFile="walls.query" pathFile="RVRRT.12500.Query.DRV-7.DTR-_DTR_.DRO-_DRO_.TS-RootFirst.PD-WorkspaceDir.RPOL-Random.PMET-MostDistantJoint" lpLabel="ras" debug="false">
+        <NodeConnectionMethod method="Closest"/>
+        <SmoothConnectionMethod method="AllToAll"/>
+      </Query>
+      <PrintMapEvaluation label="PrintMap" base_name="Basic"/>
+      <ConditionalEvaluator label="NodesEval" metric_method="NumNodes" value="12500" operator=">=" />
+      <ComposeEvaluator label="Com1" operator="or">
+        <Evaluator label="NodesEval"/>
+        <Evaluator label="Query"/>
+      </ComposeEvaluator>
+    </MapEvaluators>
+
+
+    <MPStrategies>
+      <BasicPRM label="BasicPRM1">
+        <node_generation_method Method="UniformRandomFree" Number="10" Attempts="10"/>
+        <node_connection_method Method="Closest"/>
+        <evaluation_method Method="NodesEval"/>
+      </BasicPRM>
+
+      <ReachableVolumeRRT label="RVRRT" delta=".5" minDist="0.001"
+        numRoots="1" m="1" growthFocus="0" lpLabel="ras" dmLabel="scaledEuclidean" extenderLabel=""
+        nfLabel="Nearest" vcLabel="pqp_solid" query="walls.query" connectorLabel="Closest" gtype="UNDIRECTED_GRAPH" chainFile="Chain.tree" deltaRV="7" s=".9" s_rot=".9" treeStructure="RootFirst" perturbDir = "WorkspaceDir" repositionPolicy = "Random" jointPerturbMethod = "MostDistantJoint" growGoals="false">
+        <Evaluator label="NodesEval"/>
+      </ReachableVolumeRRT>
+
+    </MPStrategies>
+    <Solver mpStrategyLabel="RVRRT" seed="111111"  baseFilename="RVRRT_Map" vizmoDebug="false"/>
+  </MPProblem>
+</MotionPlanning>
