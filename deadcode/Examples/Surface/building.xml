@@ -1,0 +1,67 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<MotionPlanning>
+  <MPProblem>
+
+    <Environment filename="building.env"/>
+
+    <DistanceMetrics>
+      <Euclidean label="euclidean"/>
+      <!--<scaledEuclidean label= "scaledEuclidean" scale ="0.5"/>-->
+    </DistanceMetrics>
+
+    <ValidityCheckers>
+      <CollisionDetection label="rapid" method="RAPID"/>
+      <CollisionDetection label="pqp" method="PQP"/>
+      <!--<NodeClearanceValidity label="nc" delta="8.0" dmMethod="euclidean" nfMethod="BFNF"/>-->
+      <SurfaceValidity label="sv" vc_method="pqp"/>
+    </ValidityCheckers>
+
+    <NeighborhoodFinders>
+      <BruteForceNF label="BFNF" dmLabel="euclidean"/>
+    </NeighborhoodFinders>
+
+    <Samplers>
+      <SurfaceSampler label="SurfaceRandomFree" vcMethod="sv" debug="false" attempts="500" closeDist="2.0"/>
+    </Samplers>
+
+    <LocalPlanners>
+      <SurfaceLP label="surfacelp" length="0" binary_search="0" vcLabel="sv"/>
+    </LocalPlanners>
+
+    <Connectors>
+      <ConnectNeighboringSurfaces label="SurfaceConnect" nf="BFNF" k="10" CheckIfSameCC="false" lp_method="surfacelp" debug="false"/>
+      <NeighborhoodConnector label="Closest" nf="BFNF" k="10" CheckIfSameCC="false" lp_method="surfacelp" debug="false"/>
+    </Connectors>
+
+    <Metrics>
+      <NumNodesMetric label="NumNodes"/>
+      <NumEdgesMetric label="NumEdges"/>
+      <TimeMetric label="TimeInSec"/>
+    </Metrics>
+
+    <MapEvaluators>
+      <ConditionalEvaluator label="NodesEval" metric_method="NumNodes" value="200" operator=">=" />
+      <ConditionalEvaluator label="EdgesEval" metric_method="NumEdges" value="1000" operator=">" />
+    </MapEvaluators>
+
+
+    <MPStrategies>
+
+      <BasicPRM label="BasicPRM1" startAt="node connection">
+        <!--<node_generation_method Method="UniformRandomFree" Number="10" Attempts="10"/>-->
+        <node_generation_method Method="SurfaceRandomFree" Number="1" Attempts="2000"/>
+        <node_connection_method Method="SurfaceConnect"/>
+        <node_connection_method Method="Closest"/>
+        <!--component_connection_method Method="ConnectCCs"/-->
+        <evaluation_method Method="NodesEval"/>
+      </BasicPRM>
+
+
+
+
+    </MPStrategies>
+
+    <Solver mpStrategyLabel="BasicPRM1" seed="1234567" baseFilename="Basic" vizmoDebug="false"/>
+
+  </MPProblem>
+</MotionPlanning>
