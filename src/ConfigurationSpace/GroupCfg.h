@@ -332,7 +332,7 @@ class GroupCfg final : public CompositeState<GraphType> {
     ///@{
 
     /// Initialize the set of formations this cfg is subject to.
-    void InitializeFormations() noexcept;
+    void InitializeFormations(GroupRoadmapType* const& _groupMap) noexcept;
 
     /// Initialize the set of local configurations if not already done.
     virtual void InitializeLocalCfgs() noexcept override;
@@ -349,7 +349,7 @@ GroupCfg(GroupRoadmapType* const& _groupMap)
   if(!_groupMap)
     return;
 
-  m_formations = _groupMap->GetActiveFormations();
+  InitializeFormations(_groupMap);
 }
 
 template <typename GraphType>
@@ -443,11 +443,59 @@ operator+=(const GroupCfg& _other) {
   if(this->m_group != _other.m_group)
     throw RunTimeException(WHERE, "Cannot add GroupCfgs with different groups!");
 
+  // Also ensure that the same formations exists.
+  if(this->m_formations.size() != _other.m_formations.size())
+    throw RunTimeException(WHERE) << "Cannot add GroupCfgs with different formations.";
+
+  for(auto f1 : this->m_formations) {
+    bool match = false;
+    for(auto f2 : _other.m_formations) {
+      if(*f1 == *f2) {
+        match = true;
+        break;
+      }
+    }
+    if(!match)
+      throw RunTimeException(WHERE) << "Cannot add GroupCfgs with different formations.";
+  }
+
+  // First add the formation dofs.
+  std::set<size_t> checked;
+
+  for(auto formation : this->m_formations) {
+    std::vector<Cfg> cfgs;
+    std::vector<Cfg> otherCfgs;
+
+    for(auto robot : formation->GetRobots()) {
+      cfgs.push_back(this->GetRobotCfg(robot));
+      otherCfgs.push_back(_other.GetRobotCfg(robot));
+    }
+
+    auto dofs = formation->ConvertToFormationDOF(cfgs);
+    auto otherDofs = formation->ConvertToFormationDOF(otherCfgs);
+
+
+    for(size_t i = 0; i < dofs.size(); i++) {
+      dofs[i] = dofs[i] + otherDofs[i];
+    }
+
+    cfgs = formation->ConvertToIndividualCfgs(dofs);
+
+    for(auto cfg : cfgs) {
+      const size_t index = this->m_groupMap->GetGroup()->GetGroupIndex(cfg.GetRobot());
+      auto copy = cfg;
+      this->SetRobotCfg(index,std::move(copy));
+      checked.insert(index);
+    }
+  }
+
   // We will be using the local cfgs, as we don't want to require any cfgs that
   // use this operator to have to add cfgs to roadmaps.
-  for(size_t i = 0; i < this->GetNumRobots(); ++i)
+  for(size_t i = 0; i < this->GetNumRobots(); ++i) {
+    if(checked.count(i))
+      continue;
     this->SetRobotCfg(i, this->GetRobotCfg(i) + _other.GetRobotCfg(i));
-
+  }
   return *this;
 }
 
@@ -788,6 +836,22 @@ GetRandomGroupCfg(const Boundary* const _b) {
   }
   InitializeLocalCfgs();
 
+  for(auto formation : m_formations) {
+    auto cfgs = formation->GetRandomFormationCfg(_b);
+    for(auto cfg : cfgs) {
+
+      // Grab robot from cfg
+      auto robot = cfg.GetRobot();
+
+      // Save cfg to local cfgs
+      auto index = group->GetGroupIndex(robot);
+      this->m_localCfgs[index] = cfg;
+
+      // Mark this robot as complete
+      found.insert(robot);
+    }
+  }
+
   auto robots = group->GetRobots();
   for(size_t i = 0; i < robots.size(); i++) {
     auto robot = robots[i];
@@ -877,6 +941,14 @@ InitializeLocalCfgs() noexcept {
 
   for(size_t i = 0; i < numRobots; ++i)
     this->m_localCfgs[i] = IndividualCfg(this->GetRobot(i));
+}
+
+
+template <typename GraphType>
+void
+GroupCfg<GraphType>::
+InitializeFormations(GroupRoadmapType* const& _groupMap) noexcept {
+  m_formations = _groupMap->GetActiveFormations();
 }
 
 /*----------------------------------------------------------------------------*/

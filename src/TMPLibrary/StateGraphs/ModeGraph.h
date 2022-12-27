@@ -105,7 +105,7 @@ class ModeGraph : public StateGraph {
 
     GroupRoadmapType* GetGroupRoadmap(RobotGroup* _group);
 
-    MPSolution* GetMPSolution();
+    //MPSolution* GetMPSolution();
   
     VID GetModeOfGroundedVID(const VID& _vid) const;
 
@@ -174,7 +174,7 @@ class ModeGraph : public StateGraph {
 
     GroundedHypergraphLocal m_groundedHypergraph;
 
-    std::unique_ptr<MPSolution> m_solution;
+    //std::unique_ptr<MPSolution> m_solution;
 
     // Additional info
 

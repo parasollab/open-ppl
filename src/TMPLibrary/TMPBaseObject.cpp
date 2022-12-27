@@ -1,6 +1,7 @@
 #include "TMPBaseObject.h"
 
 #include "MPProblem/MPProblem.h"
+#include "TMPLibrary/Solution/Plan.h"
 #include "TMPLibrary/TMPLibrary.h"
 
 /*-------------------------------- Construction ------------------------------*/
@@ -131,4 +132,10 @@ TMPBaseObject::StateGraphPointer
 TMPBaseObject::
 GetStateGraph(const std::string& _label) const noexcept {
   return m_tmpLibrary->GetStateGraph(_label);
+}
+    
+MPSolution*
+TMPBaseObject::
+GetMPSolution() const noexcept {
+  return GetPlan()->GetMPSolution();
 }

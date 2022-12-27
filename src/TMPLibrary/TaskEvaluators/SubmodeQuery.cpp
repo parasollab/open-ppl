@@ -24,6 +24,10 @@ SubmodeQuery(XMLNode& _node) : TaskEvaluatorMethod(_node) {
 
   m_writeHypergraph = _node.Read("writeHypergraph",false,m_writeHypergraph,
                       "Flag to write hypergraphs to output files.");
+
+  m_mgLabel = _node.Read("mgLabel",true,"","Mode Graph Label");
+
+  m_ghLabel = _node.Read("ghLabel",true,"","Grounded Hypergraph Label.");
 }
 
 SubmodeQuery::
@@ -141,7 +145,7 @@ ConvertToPlan(Plan* _plan) {
   auto stats = plan->GetStatClass();
   MethodTimer mt(stats,this->GetNameAndLabel() + "::ConvertToPlan");
 
-  auto gh = dynamic_cast<GroundedHypergraph*>(this->GetStateGraph(m_sgLabel).get());
+  auto gh = dynamic_cast<GroundedHypergraph*>(this->GetStateGraph(m_ghLabel).get());
   //auto& gh = mg->GetGroundedHypergraph();
 
   auto last = m_goalVID;
@@ -225,9 +229,10 @@ ConvertToPlan(Plan* _plan) {
       task->AddTask(t);
     }
     const std::string label = group->GetLabel()+ ":InitialPath"; 
-    auto st = new SemanticTask(label,top.get(),decomp,
-        SemanticTask::SubtaskRelation::AND,false,true,task);
-    initialTasks[group] = std::make_pair(false,st);
+    auto st = std::shared_ptr<SemanticTask>(new SemanticTask(label,top.get(),decomp,
+        SemanticTask::SubtaskRelation::AND,false,true,task));
+    decomp->AddTask(st);
+    initialTasks[group] = std::make_pair(false,st.get());
   }
 
   // Save last set of tasks in each hyperarc
@@ -294,8 +299,9 @@ ConvertToPlan(Plan* _plan) {
                             + "stage-" + std::to_string(counter) + ":"
                             + groupTask->GetRobotGroup()->GetLabel() + ":"
                             + groupTask->GetLabel();
-        auto task = new SemanticTask(label,top.get(),decomp,
-                 SemanticTask::SubtaskRelation::AND,false,true,groupTask);
+        auto task = std::shared_ptr<SemanticTask>(new SemanticTask(label,top.get(),decomp,
+                 SemanticTask::SubtaskRelation::AND,false,true,groupTask));
+        decomp->AddTask(task);
 
         if(m_debug) {
           std::cout << "Creating task: " << task->GetLabel() << std::endl;
@@ -305,7 +311,7 @@ ConvertToPlan(Plan* _plan) {
           task->AddFormation(f);
         }
 
-        currentStage.push_back(task);
+        currentStage.push_back(task.get());
 
         if(m_debug) {
           std::cout << "With dependencies:" << std::endl;
@@ -507,7 +513,7 @@ ComputeHeuristicValues() {
   // Run a dijkstra search backwards through hypergraph as if it was a graph
 
   // Get graph representation grounded hypergraph
-  auto gh = dynamic_cast<GroundedHypergraph*>(this->GetStateGraph(m_sgLabel).get());
+  auto gh = dynamic_cast<GroundedHypergraph*>(this->GetStateGraph(m_ghLabel).get());
   //auto& gh = mg->GetGroundedHypergraph();
   auto g = gh->GetReverseGraph();
 
@@ -680,7 +686,7 @@ HyperpathPathWeightFunction(
 
   double hyperarcWeight = 0;
 
-  auto gh = dynamic_cast<GroundedHypergraph*>(this->GetStateGraph(m_sgLabel).get());
+  auto gh = dynamic_cast<GroundedHypergraph*>(this->GetStateGraph(m_ghLabel).get());
   //auto& gh = mg->GetGroundedHypergraph();
   auto groundedHA = gh->GetTransition(_hyperarc.property);
   
@@ -703,8 +709,8 @@ std::set<size_t>
 SubmodeQuery::
 HyperpathForwardStar(const size_t& _vid, ActionExtendedHypergraph* _h) {
  
-  auto mg = dynamic_cast<ModeGraph*>(this->GetStateGraph(m_sgLabel).get());
-  auto gh = dynamic_cast<GroundedHypergraph*>(this->GetStateGraph(m_sgLabel).get());
+  auto mg = dynamic_cast<ModeGraph*>(this->GetStateGraph(m_mgLabel).get());
+  auto gh = dynamic_cast<GroundedHypergraph*>(this->GetStateGraph(m_ghLabel).get());
   //auto& gh = mg->GetGroundedHypergraph();
 
   auto aev = _h->GetVertexType(_vid);
@@ -896,19 +902,13 @@ double
 SubmodeQuery::
 HyperpathHeuristic(const size_t& _target) {
 
-  auto mg = dynamic_cast<ModeGraph*>(this->GetStateGraph(m_sgLabel).get());
-  auto gh = dynamic_cast<GroundedHypergraph*>(this->GetStateGraph(m_sgLabel).get());
+  auto mg = dynamic_cast<ModeGraph*>(this->GetStateGraph(m_mgLabel).get());
+  auto gh = dynamic_cast<GroundedHypergraph*>(this->GetStateGraph(m_ghLabel).get());
   //auto& gh = mg->GetGroundedHypergraph();
 
   auto aev = m_actionExtendedHypergraph.GetVertexType(_target);
   auto vid = aev.groundedVID;
 
-  //if(vid == 3 or vid == 5 or vid == 7 or vid == 9)
-  //  std::cout << "HEURISTIC ON GOAL VERTICES" << std::endl;
-  //if(vid == 1)
-  //  std::cout << "HEURISTIC ON GOAL" << std::endl;
-
-  //TODO::Decide if this is what we want
   auto grm = gh->GetVertex(vid).first;
   if(!grm) {
     m_searchTimeHeuristicMap[_target] = m_costToGoMap[vid];
@@ -971,6 +971,9 @@ HyperpathHeuristic(const size_t& _target) {
     if(outgoing != MAX_UINT)
       break;
   }
+
+  if(outgoing == MAX_UINT)
+    return std::numeric_limits<double>::infinity();
 
   auto outgoingArc = gh->GetHyperarc(outgoing);
 

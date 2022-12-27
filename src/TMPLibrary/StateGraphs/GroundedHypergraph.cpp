@@ -15,6 +15,8 @@ GroundedHypergraph::
 GroundedHypergraph(XMLNode& _node) : StateGraph(_node) {
   this->SetName("GroundedHypergraph");
 
+  m_queryStrategy = _node.Read("queryStrategy",true,"",
+                      "MPStrategy label to query roadaps.");
 }
 
 GroundedHypergraph::
@@ -25,7 +27,7 @@ GroundedHypergraph::
 void
 GroundedHypergraph::
 Initialize() {
-
+  m_hypergraph = std::unique_ptr<GH>(new GH());
 }
 
 void
@@ -93,7 +95,7 @@ ConnectTransition(const VID& _tail, const VID& _head, const PathConstraints& _pa
 
   // Set active formation constraints
   //auto formations = mode->formations;
-  //auto grm = m_solution->GetGroupRoadmap(group);
+  //auto grm = this->GetMPSolution()->GetGroupRoadmap(group);
   //grm->SetAllFormationsInactive();
   //for(auto f : formations) {
   //  grm->SetFormationActive(f);
@@ -114,7 +116,7 @@ ConnectTransition(const VID& _tail, const VID& _head, const PathConstraints& _pa
 
   // Query path for task
   lib->SetPreserveHooks(true);
-  lib->Solve(prob,groupTask.get(),m_solution.get(),m_queryStrategy, LRand(), 
+  lib->Solve(prob,groupTask.get(),this->GetMPSolution(),m_queryStrategy, LRand(), 
       "Query transition path");
   lib->SetPreserveHooks(false);
 
@@ -126,7 +128,7 @@ ConnectTransition(const VID& _tail, const VID& _head, const PathConstraints& _pa
   //}
 
   // Extract cost of path from solution
-  auto path = m_solution->GetGroupPath(groupTask->GetRobotGroup());
+  auto path = this->GetMPSolution()->GetGroupPath(groupTask->GetRobotGroup());
 
   if(m_debug and !path->Empty()) {
     std::cout << "Path for transition: " << _tail << " -> " << _head << std::endl;
@@ -179,7 +181,7 @@ ConnectAllTransitions(const std::vector<VID>& _vertices, const PathConstraints& 
 
   // For each actuated mode in the mode hypergraph, attempt to connect grounded transition samples
   for(size_t i = 0; i < _vertices.size(); i++) {
-    for(size_t j = (_bidirectional) ? i : 0; i < _vertices.size(); j++) {
+    for(size_t j = (_bidirectional) ? i : 0; j < _vertices.size(); j++) {
 
       auto vid1 = _vertices[i];
       auto vid2 = _vertices[j];
@@ -257,6 +259,12 @@ GetHyperarc(const HID& _hid) {
   return m_hypergraph->GetHyperarc(_hid);
 }
 
+GroundedHypergraph::HID
+GroundedHypergraph::
+GetHID(const std::set<VID>& _tail, const std::set<VID>& _head) {
+  return m_hypergraph->GetHID(_head,_tail);
+}
+
 GroundedHypergraph::Transition
 GroundedHypergraph::
 GetTransition(const HID& _hid) {
@@ -283,6 +291,12 @@ GroundedHypergraph::GH::GraphType*
 GroundedHypergraph::
 GetReverseGraph() {
   return m_hypergraph->GetReverseGraph();
+}
+
+void
+GroundedHypergraph::
+Print() {
+  m_hypergraph->Print();
 }
 
 /*---------------------------- Helper Functions ------------------------------*/

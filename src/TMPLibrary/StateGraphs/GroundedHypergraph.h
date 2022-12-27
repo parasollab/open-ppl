@@ -114,11 +114,15 @@ class GroundedHypergraph : public StateGraph {
 
     GH::Hyperarc GetHyperarc(const HID& _hid);
 
+    HID GetHID(const std::set<VID>& _tail, const std::set<VID>& _head);
+
     Transition GetTransition(const HID& _hid);
 
     Transition GetTransition(const std::set<VID>& _tail, const std::set<VID>& _head);
 
     const std::set<HID> GetOutgoingHyperarcs(const VID& _vid);
+
+    void Print();
 
     ///@}
     ///@name Miscellaneous Accessors
@@ -139,7 +143,7 @@ class GroundedHypergraph : public StateGraph {
     ///@name Internal State
     ///@{
 
-    std::unique_ptr<MPSolution> m_solution;
+    //std::unique_ptr<MPSolution> m_solution;
 
     std::unique_ptr<GH> m_hypergraph;
 

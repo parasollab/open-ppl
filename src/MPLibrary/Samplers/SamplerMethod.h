@@ -551,10 +551,28 @@ Sample(size_t _numNodes, size_t _maxAttempts, const BoundaryMap& _boundaryMap,
   for(size_t i = 0; i < _numNodes; ++i) {
     for(size_t attempts = 0; attempts < _maxAttempts; ++attempts) {
 
+      // First get cfgs for robots in a formation
+      std::set<Robot*> used;
+      for(auto formation : this->GetGroupRoadmap()->GetActiveFormations()) {
+        auto boundary = _boundaryMap.count(formation->GetLeader()) ? _boundaryMap.at(formation->GetLeader())
+                                                  : envBoundary;
+
+        auto cfgs = formation->GetRandomFormationCfg(boundary);
+        for(auto c : cfgs) {
+          auto robot = c.GetRobot();
+          used.insert(robot);
+          cfg.SetRobotCfg(robot,std::move(c));
+        }
+      }
+
       // Generate a random configuration for each robot.
       for(size_t i = 0; i < cfg.GetNumRobots(); ++i) {
-        // Determine the boundary to use.
+        // Check if robot already has cfg from formation sample
         auto robot = cfg.GetRobot(i);
+        if(used.count(robot))
+          continue;
+
+        // Determine the boundary to use.
         auto boundary = _boundaryMap.count(robot) ? _boundaryMap.at(robot)
                                                   : envBoundary;
         Cfg individualCfg(robot);

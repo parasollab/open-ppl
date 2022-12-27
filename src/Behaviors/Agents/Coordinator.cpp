@@ -42,6 +42,9 @@ Coordinator(Robot* const _r, XMLNode& _node) : Agent(_r, _node) {
           "The label of the member robot.");
       m_memberLabels.push_back(memberLabel);
     }
+    else if(child.Name() == "InitialGroup") {
+      ParseInitialGroup(child);
+    }
   }
 
   m_dmLabel = _node.Read("dmLabel", true, "", "Distance metric for checking "

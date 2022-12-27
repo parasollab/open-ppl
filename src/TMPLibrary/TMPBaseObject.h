@@ -55,6 +55,7 @@ class TMPBaseObject {
     typedef GroupRoadmap<GroupCfgType,GroupLocalPlanType> GroupRoadmapType;
 
     typedef typename MPTraits<Cfg>::MPLibrary             MPLibrary;
+    typedef typename MPTraits<Cfg>::MPSolution            MPSolution;
 
     ///@}
     ///@name Method Set Types
@@ -176,6 +177,9 @@ class TMPBaseObject {
 
     /// Get the underlying StateGraph
     StateGraphPointer GetStateGraph(const std::string&) const noexcept;
+
+    /// Get the library's mp solution object
+    MPSolution* GetMPSolution() const noexcept;
 
     ///@}
   protected:

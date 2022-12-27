@@ -65,6 +65,8 @@ ModeGraph::
 void
 ModeGraph::
 Initialize() {
+  auto gh = dynamic_cast<GroundedHypergraph*>(this->GetStateGraph(m_GH).get());
+  gh->Initialize();
 
   auto problem = this->GetMPProblem();
 
@@ -74,7 +76,7 @@ Initialize() {
 
   // Initialize MPSolution
   auto c = this->GetPlan()->GetCoordinator();
-  m_solution = std::unique_ptr<MPSolution>(new MPSolution(c->GetRobot()));
+  //this->GetMPSolution() = std::unique_ptr<MPSolution>(new MPSolution(c->GetRobot()));
 
   // Construct initial state from coordinator
   State start;
@@ -85,12 +87,12 @@ Initialize() {
 
     // Add individual robots to MPSolution
     for(auto& r : group->GetRobots()) {
-      m_solution->AddRobot(r);
+      this->GetMPSolution()->AddRobot(r);
     }
 
     // Create new group roadmaps in MPSolution
-    m_solution->AddRobotGroup(group);
-    auto grm = m_solution->GetGroupRoadmap(group);
+    this->GetMPSolution()->AddRobotGroup(group);
+    auto grm = this->GetMPSolution()->GetGroupRoadmap(group);
 
     // Add the initial formation to the roadmap and set it active
     if(formation) {
@@ -103,7 +105,7 @@ Initialize() {
 
     // Add initial cfg to individual roadmaps
     for(auto& r : group->GetRobots()) {
-      auto rm = m_solution->GetRoadmap(r);
+      auto rm = this->GetMPSolution()->GetRoadmap(r);
       auto cfg = problem->GetInitialCfg(r);
       auto vid = rm->AddVertex(cfg);
 
@@ -132,10 +134,11 @@ GenerateRepresentation(const State& _start) {
   GenerateModeHypergraph(initialModes);
   
   // Grounded hypergraph
+  auto gh = dynamic_cast<GroundedHypergraph*>(this->GetStateGraph(m_GH).get());
   GroundedVertex origin = std::make_pair(nullptr,0);
-  auto originVID = m_groundedHypergraph.AddVertex(origin);
+  auto originVID = gh->AddVertex(origin);
   GroundedVertex goal = std::make_pair(nullptr,MAX_UINT);
-  auto goalVID = m_groundedHypergraph.AddVertex(goal);
+  auto goalVID = gh->AddVertex(goal);
 
   std::set<VID> startVIDs;
   std::set<VID> goalVIDs;
@@ -153,10 +156,11 @@ GenerateRepresentation(const State& _start) {
     GenerateRoadmaps(_start,startVIDs,goalVIDs);
     ConnectTransitions();
 
-    Transition fromOrigin;
+    GroundedHypergraph::Transition fromOrigin;
     fromOrigin.cost = -1;
-    if(m_groundedHypergraph.GetHID(startVIDs,{originVID}) == MAX_UINT)
-      m_groundedHypergraph.AddHyperarc(startVIDs,{originVID},fromOrigin);
+    //if(m_groundedHypergraph.GetHID(startVIDs,{originVID}) == MAX_UINT)
+    if(gh->GetHID({originVID},startVIDs) == MAX_UINT)
+      gh->AddTransition({originVID},startVIDs,fromOrigin);
 
     //Transition toGoal;
     //m_groundedHypergraph.AddHyperarc({goalVID},goalVIDs,toGoal);
@@ -168,20 +172,20 @@ GenerateRepresentation(const State& _start) {
     std::cout << "MODE HYPERGRAPH" << std::endl;
     m_modeHypergraph.Print();
     std::cout << "GROUNDED HYPERGRAPH" << std::endl;
-    m_groundedHypergraph.Print();
+    gh->Print();
     std::cout << "GROUNDED HYPERARC COSTS" << std::endl;
-    for(auto kv : m_groundedHypergraph.GetHyperarcMap()) {
+    /*for(auto kv : m_groundedHypergraph.GetHyperarcMap()) {
       auto hid = kv.first;
       auto hyperarc = kv.second;
       std::cout << hid << " : " << hyperarc.property.cost << std::endl;
-    }
+    }*/
   }
 
   if(m_writeHypergraphs) {
     std::string base = this->GetMPProblem()->GetBaseFilename();
 
     m_modeHypergraph.Print(base + "-mode-hypergraph.hyp");
-    m_groundedHypergraph.Print(base + "-grounded-hypergraph.hyp");
+    //m_groundedHypergraph.Print(base + "-grounded-hypergraph.hyp");
   }
 }
 
@@ -202,14 +206,14 @@ GetGroundedHypergraphLocal() {
 ModeGraph::GroupRoadmapType*
 ModeGraph::
 GetGroupRoadmap(RobotGroup* _group) {
-  return m_solution->GetGroupRoadmap(_group);
+  return this->GetMPSolution()->GetGroupRoadmap(_group);
 }
 
-MPSolution* 
+/*MPSolution* 
 ModeGraph::
 GetMPSolution() {
-  return m_solution.get();
-}
+  return this->GetMPSolution().get();
+}*/
     
 ModeGraph::VID 
 ModeGraph::
@@ -298,7 +302,8 @@ SampleNonActuatedCfgs(const State& _start, std::set<VID>& _startVIDs, std::set<V
   auto lib = this->GetMPLibrary();
   auto uaSM = lib->GetSampler(m_unactuatedSM);
   auto qSM = lib->GetSampler(m_querySM);
-  lib->SetMPSolution(m_solution.get());
+  lib->SetMPSolution(this->GetMPSolution());
+  auto gh = dynamic_cast<GroundedHypergraph*>(this->GetStateGraph(m_GH).get());
 
   // Set all robots and objects to virtual
   auto c = this->GetPlan()->GetCoordinator();
@@ -331,8 +336,8 @@ SampleNonActuatedCfgs(const State& _start, std::set<VID>& _startVIDs, std::set<V
     m_unactuatedModes.insert(kv.first);
 
     // Ensure robot group is in the mp solution
-    m_solution->AddRobotGroup(mode->robotGroup);
-    auto grm = m_solution->GetGroupRoadmap(mode->robotGroup);
+    this->GetMPSolution()->AddRobotGroup(mode->robotGroup);
+    auto grm = this->GetMPSolution()->GetGroupRoadmap(mode->robotGroup);
 
     // Configure MPLibrary
     GroupTask gt(mode->robotGroup);
@@ -350,7 +355,7 @@ SampleNonActuatedCfgs(const State& _start, std::set<VID>& _startVIDs, std::set<V
       auto vid = grm->AddVertex(gcfg);
       GroundedVertex gv = std::make_pair(grm,vid);
 
-      auto groundedVID = m_groundedHypergraph.AddVertex(gv);
+      auto groundedVID = gh->AddVertex(gv);
       m_modeGroundedVertices[kv.first].insert(groundedVID);
       _startVIDs.insert(groundedVID);
       m_entryVertices.insert(groundedVID);
@@ -384,7 +389,7 @@ SampleNonActuatedCfgs(const State& _start, std::set<VID>& _startVIDs, std::set<V
       auto vid = grm->AddVertex(gcfg);
       auto gv = std::make_pair(grm,vid);
 
-      auto groundedVID = m_groundedHypergraph.AddVertex(gv);
+      auto groundedVID = gh->AddVertex(gv);
       m_modeGroundedVertices[kv.first].insert(groundedVID);
       _goalVIDs.insert(groundedVID);
       m_exitVertices.insert(groundedVID);
@@ -403,7 +408,7 @@ SampleNonActuatedCfgs(const State& _start, std::set<VID>& _startVIDs, std::set<V
       auto vid = grm->AddVertex(gcfg);
       auto gv = std::make_pair(grm,vid);
 
-      auto groundedVID = m_groundedHypergraph.AddVertex(gv);
+      auto groundedVID = gh->AddVertex(gv);
       m_modeGroundedVertices[kv.first].insert(groundedVID);
       m_entryVertices.insert(groundedVID);
       m_exitVertices.insert(groundedVID);
@@ -425,6 +430,7 @@ ConfigureGoalSets(const size_t& _sink, std::set<VID>& _goalVIDs) {
  
   // TODO::Find sets of valid goals to solve decomposition
   std::vector<std::set<VID>> goalSets;
+  auto gh = dynamic_cast<GroundedHypergraph*>(this->GetStateGraph(m_GH).get());
 
   // TODO::Compile sets of completed tasks that satisfy the decomposition
   // Currently assume one depth of OR values 
@@ -465,9 +471,12 @@ ConfigureGoalSets(const size_t& _sink, std::set<VID>& _goalVIDs) {
 
   // Add transition from each set to the sink
   for(auto set : goalSets) {
-    Transition toGoal;
-    if(m_groundedHypergraph.GetHID({_sink},set) == MAX_UINT)
-      m_groundedHypergraph.AddHyperarc({_sink},set,toGoal);
+    GroundedHypergraph::Transition toGoal;
+    //if(m_groundedHypergraph.GetHID({_sink},set) == MAX_UINT)
+    if(gh->GetHID(set,{_sink}) == MAX_UINT) {
+      gh->AddTransition(set,{_sink},toGoal);
+      //m_groundedHypergraph.AddHyperarc({_sink},set,toGoal);
+    }
   } 
 }
 
@@ -510,6 +519,7 @@ SampleTransitions() {
   auto plan = this->GetPlan();
   auto stats = plan->GetStatClass();
   MethodTimer mt(stats,this->GetNameAndLabel() + "::SampleTransitions");
+  auto gh = dynamic_cast<GroundedHypergraph*>(this->GetStateGraph(m_GH).get());
 
   // Set all robots and objects to virtual
   auto c = this->GetPlan()->GetCoordinator();
@@ -580,7 +590,8 @@ SampleTransitions() {
       //for(auto gv : m_modeGroundedVertices[unactuatedVID]) {
       for(auto iter = groundedVertices.begin(); iter != groundedVertices.end(); iter++) {
         // Get grounded vertex
-        auto groundedVertex = m_groundedHypergraph.GetVertexType(*iter);
+        //auto groundedVertex = m_groundedHypergraph.GetVertexType(*iter);
+        auto groundedVertex = gh->GetVertex(*iter);
 
         auto startSet = modeSet;
         startSet[unactuatedGroup] = groundedVertex;
@@ -688,7 +699,9 @@ GenerateRoadmaps(const State& _start, std::set<VID>& _startVIDs, std::set<VID>& 
   auto lib = this->GetMPLibrary();
   auto prob = this->GetMPProblem();
   auto qSM = lib->GetSampler(m_querySM);
-  lib->SetMPSolution(m_solution.get());
+  lib->SetMPSolution(this->GetMPSolution());
+
+  auto gh = dynamic_cast<GroundedHypergraph*>(this->GetStateGraph(m_GH).get());
 
   // Set all robots to virtual
   for(auto pair : c->GetInitialRobotGroups()) {
@@ -704,7 +717,7 @@ GenerateRoadmaps(const State& _start, std::set<VID>& _startVIDs, std::set<VID>& 
     if(m_unactuatedModes.count(kv.first))
       continue;
 
-    auto grm = m_solution->GetGroupRoadmap(mode->robotGroup);
+    auto grm = this->GetMPSolution()->GetGroupRoadmap(mode->robotGroup);
 
     // Check if mode is in the start state
     auto iter = _start.find(mode->robotGroup);
@@ -719,7 +732,7 @@ GenerateRoadmaps(const State& _start, std::set<VID>& _startVIDs, std::set<VID>& 
       auto vid = grm->AddVertex(gcfg);
       GroundedVertex gv = std::make_pair(grm,vid);
 
-      auto groundedVID = m_groundedHypergraph.AddVertex(gv);
+      auto groundedVID = gh->AddVertex(gv);
       m_modeGroundedVertices[kv.first].insert(groundedVID);
       _startVIDs.insert(groundedVID);
       m_entryVertices.insert(groundedVID);
@@ -753,7 +766,8 @@ GenerateRoadmaps(const State& _start, std::set<VID>& _startVIDs, std::set<VID>& 
       auto vid = grm->AddVertex(gcfg);
       auto gv = std::make_pair(grm,vid);
 
-      auto groundedVID = m_groundedHypergraph.AddVertex(gv);
+      //auto groundedVID = m_groundedHypergraph.AddVertex(gv);
+      auto groundedVID = gh->AddVertex(gv);
       m_modeGroundedVertices[kv.first].insert(groundedVID);
       _goalVIDs.insert(groundedVID);
       m_exitVertices.insert(groundedVID);
@@ -766,7 +780,7 @@ GenerateRoadmaps(const State& _start, std::set<VID>& _startVIDs, std::set<VID>& 
     auto vid = kv.second.second;
     auto gcfg = grm->GetVertex(vid);
 
-    auto newGrm = m_solution->GetGroupRoadmap(group);
+    auto newGrm = this->GetMPSolution()->GetGroupRoadmap(group);
     auto newGcfg = gcfg.SetGroupRoadmap(newGrm);
     newGrm->AddVertex(newGcfg);
   }*/
@@ -814,7 +828,7 @@ GenerateRoadmaps(const State& _start, std::set<VID>& _startVIDs, std::set<VID>& 
 
     // Set active formation constraints
     auto formations = mode->formations;
-    auto grm = m_solution->GetGroupRoadmap(mode->robotGroup);
+    auto grm = this->GetMPSolution()->GetGroupRoadmap(mode->robotGroup);
     grm->SetAllFormationsInactive();
     for(auto f : formations) {
       grm->SetFormationActive(f);
@@ -827,7 +841,7 @@ GenerateRoadmaps(const State& _start, std::set<VID>& _startVIDs, std::set<VID>& 
 
     // Call the MPLibrary solve function to expand the roadmap
     lib->SetPreserveHooks(true);
-    lib->Solve(prob,task,m_solution.get(),m_expansionStrategy, LRand(), 
+    lib->Solve(prob,task,this->GetMPSolution(),m_expansionStrategy, LRand(), 
             "ExpandModeRoadmap");
     lib->SetPreserveHooks(false);
 
@@ -958,7 +972,7 @@ ConnectTransitions() {
 
         // Set active formation constraints
         auto formations = mode->formations;
-        auto grm = m_solution->GetGroupRoadmap(group);
+        auto grm = this->GetMPSolution()->GetGroupRoadmap(group);
         grm->SetAllFormationsInactive();
         for(auto f : formations) {
           grm->SetFormationActive(f);
@@ -979,7 +993,7 @@ ConnectTransitions() {
 
         // Query path for task
         lib->SetPreserveHooks(true);
-        lib->Solve(prob,groupTask.get(),m_solution.get(),m_queryStrategy, LRand(), 
+        lib->Solve(prob,groupTask.get(),this->GetMPSolution().get(),m_queryStrategy, LRand(), 
             "Query transition path");
         lib->SetPreserveHooks(false);
 
@@ -991,7 +1005,7 @@ ConnectTransitions() {
         }
 
         // Extract cost of path from solution
-        auto path = m_solution->GetGroupPath(groupTask->GetRobotGroup());
+        auto path = this->GetMPSolution()->GetGroupPath(groupTask->GetRobotGroup());
 
         if(m_debug and !path->Empty()) {
           std::cout << "Path for transition: " << vid1 << " -> " << vid2 << std::endl;
@@ -1442,7 +1456,7 @@ CollectModeCombinations(const std::vector<std::vector<Robot*>>& _possibleModeAss
       // Add the group to the problem and solution
       auto problem = this->GetMPProblem();
       auto group = problem->AddRobotGroup(_partial,groupLabel);
-      m_solution->AddRobotGroup(group);
+      this->GetMPSolution()->AddRobotGroup(group);
       
       //TODO::Figure out how to construct other features of the mode
       Mode* mode = new Mode();
@@ -1491,7 +1505,7 @@ SaveInteractionPaths(Interaction* _interaction, State& _start, State& _end,
   State end = _end;
 
 
-  Transition transition;
+  GroundedHypergraph::Transition transition;
 
   // Collect set of individual paths
   for(size_t i = 1; i < stages.size(); i++) {
@@ -1511,7 +1525,7 @@ SaveInteractionPaths(Interaction* _interaction, State& _start, State& _end,
       const auto& cfgs = path->Cfgs();
   
       auto robot = path->GetRobot();
-      /*auto rm = m_solution->GetRoadmap(robot);
+      /*auto rm = this->GetMPSolution()->GetRoadmap(robot);
 
       auto startVID = grm->AddVertex(cfgs.front());
       auto goalVID = grm->AddVertex(cfgs.back());
@@ -1550,10 +1564,10 @@ SaveInteractionPaths(Interaction* _interaction, State& _start, State& _end,
     /*// Add an edge in the underlying group roadmaps for these paths
     for(auto task : tasks) {
       auto group = task->GetRobotGroup();
-      auto grm = m_solution->GetGroupRoadmap(group);
+      auto grm = this->GetMPSolution()->GetGroupRoadmap(group);
       if(!grm) {
-        m_solution->AddRobotGroup(group); 
-        grm = m_solution->GetGroupRoadmap(group);
+        this->GetMPSolution()->AddRobotGroup(group); 
+        grm = this->GetMPSolution()->GetGroupRoadmap(group);
       }
 
       GroupCfgType start(grm);
@@ -1582,7 +1596,7 @@ SaveInteractionPaths(Interaction* _interaction, State& _start, State& _end,
 
       // Copy individual robot roadmaps
       for(auto robot : group->GetRobots()) {
-        auto localRM = m_solution->GetRoadmap(robot);
+        auto localRM = this->GetMPSolution()->GetRoadmap(robot);
         auto interRM = toStageSolution->GetRoadmap(robot);
 
         vertexMaps.push_back({});
@@ -1608,7 +1622,7 @@ SaveInteractionPaths(Interaction* _interaction, State& _start, State& _end,
       }
 
       // Copy group roadmaps
-      auto localGrm = m_solution->GetGroupRoadmap(group);
+      auto localGrm = this->GetMPSolution()->GetGroupRoadmap(group);
       auto interGrm = toStageSolution->GetGroupRoadmap(group);
     
       std::unordered_map<size_t,size_t> groupVertexMap;
@@ -1702,7 +1716,7 @@ SaveInteractionPaths(Interaction* _interaction, State& _start, State& _end,
   // Update start state
   for(auto kv : start) {
     auto group = kv.first;
-    auto grm = m_solution->GetGroupRoadmap(group);
+    auto grm = this->GetMPSolution()->GetGroupRoadmap(group);
     // Set mode formations
     grm->SetAllFormationsInactive();
     for(auto f : _startModeMap[group]->formations) {
@@ -1723,7 +1737,7 @@ SaveInteractionPaths(Interaction* _interaction, State& _start, State& _end,
   // Update end state 
   for(auto kv : end) {
     auto group = kv.first;
-    auto grm = m_solution->GetGroupRoadmap(group);
+    auto grm = this->GetMPSolution()->GetGroupRoadmap(group);
     // Set mode formations
     grm->SetAllFormationsInactive();
     for(auto f : _endModeMap[group]->formations) {
@@ -1754,9 +1768,10 @@ SaveInteractionPaths(Interaction* _interaction, State& _start, State& _end,
   }
 
   // Make sure transition does not already exist in graph
-  if(m_groundedHypergraph.GetHID(head,tail) == MAX_UINT) {
+  auto gh = dynamic_cast<GroundedHypergraph*>(this->GetStateGraph(m_GH).get());
+  if(gh->GetHID(tail,head) == MAX_UINT) {
     // Save transition in hypergraph
-    m_groundedHypergraph.AddHyperarc(head,tail,transition);
+    gh->AddTransition(tail,head,transition);
   }
 
   if(_interaction->IsReversible()) {
@@ -1768,7 +1783,7 @@ SaveInteractionPaths(Interaction* _interaction, State& _start, State& _end,
       m_exitVertices.insert(v);
     }
 
-    Transition reverse;
+    GroundedHypergraph::Transition reverse;
 
     // Reverse explicit paths
     for(auto kv : transition.explicitPaths) {
@@ -1804,9 +1819,10 @@ SaveInteractionPaths(Interaction* _interaction, State& _start, State& _end,
     reverse.cost = transition.cost;
 
     // Save reverse transition in hypergraph
-    if(m_groundedHypergraph.GetHID(tail,head) == MAX_UINT) {
+    if(gh->GetHID(head,tail) == MAX_UINT) {
       // Save transition in hypergraph
-      m_groundedHypergraph.AddHyperarc(tail,head,reverse);
+      //m_groundedHypergraph.AddHyperarc(tail,head,reverse);
+      gh->AddTransition(head,tail,reverse);
     }
   }
 
@@ -1831,7 +1847,7 @@ SaveInteractionPaths(Interaction* _interaction, State& _start, State& _end,
 
       // Add the group to the problem and solution
       RobotGroup* group = problem->AddRobotGroup(robots,groupLabel);
-      m_solution->AddRobotGroup(group);
+      this->GetMPSolution()->AddRobotGroup(group);
       start[group] = std::make_pair(nullptr,MAX_UINT);
     }
 
@@ -1858,7 +1874,7 @@ SaveInteractionPaths(Interaction* _interaction, State& _start, State& _end,
     // Update start state to hold discovered vertices
     for(auto& kv : start) {
       auto group = kv.first;
-      auto grm = m_solution->GetGroupRoadmap(group);
+      auto grm = this->GetMPSolution()->GetGroupRoadmap(group);
       GroupCfgType gcfg(grm);
 
       for(auto robot : group->GetRobots()) {
@@ -1990,13 +2006,14 @@ std::set<ModeGraph::VID>
 ModeGraph::
 AddStateToGroundedHypergraphLocal(const State& _state, std::unordered_map<RobotGroup*,Mode*> _modeMap) {
 
+  auto gh = dynamic_cast<GroundedHypergraph*>(this->GetStateGraph(m_GH).get());
   std::set<VID> vids;
 
   for(const auto& kv : _state) {
     auto mode = _modeMap[kv.first];
     auto mvid = m_modeHypergraph.GetVID(mode);
 
-    auto gvid = m_groundedHypergraph.AddVertex(kv.second);
+    auto gvid = gh->AddVertex(kv.second);
     m_modeGroundedVertices[mvid].insert(gvid);
 
     // Check if grounded vertex violates mode
@@ -2082,12 +2099,13 @@ ContainsSolution(std::set<VID>& _startVIDs) {
   // Run a dijkstra search backwards through hypergraph as if it was a graph
 
   // Get graph representation grounded hypergraph
-  auto g = m_groundedHypergraph.GetReverseGraph();
+  auto gh = dynamic_cast<GroundedHypergraph*>(this->GetStateGraph(m_GH).get());
+  auto g = gh->GetReverseGraph();
 
   // Setup dijkstra functions
-  SSSPTerminationCriterion<ModeGraph::GroundedHypergraphLocal::GraphType> termination(
-    [this](typename ModeGraph::GroundedHypergraphLocal::GraphType::vertex_iterator& _vi,
-           const SSSPOutput<typename ModeGraph::GroundedHypergraphLocal::GraphType>& _sssp) {
+  SSSPTerminationCriterion<GroundedHypergraph::GH::GraphType> termination(
+    [this](typename GroundedHypergraph::GH::GraphType::vertex_iterator& _vi,
+           const SSSPOutput<typename GroundedHypergraph::GH::GraphType>& _sssp) {
     const auto& vertex = _vi->property();
     auto grm = vertex.first;
     if(!grm)
@@ -2103,8 +2121,8 @@ ContainsSolution(std::set<VID>& _startVIDs) {
     return SSSPTermination::EndBranch;
   });
 
-  SSSPPathWeightFunction<ModeGraph::GroundedHypergraphLocal::GraphType> weight(
-    [this,g](typename ModeGraph::GroundedHypergraphLocal::GraphType::adj_edge_iterator& _ei,
+  SSSPPathWeightFunction<GroundedHypergraph::GH::GraphType> weight(
+    [this,g](typename GroundedHypergraph::GH::GraphType::adj_edge_iterator& _ei,
            const double _sourceDistance,
            const double _targetDistance) {
 
@@ -2143,7 +2161,7 @@ ContainsSolution(std::set<VID>& _startVIDs) {
   // Ensure each object start vertex can reach the sink
   for(auto v : _startVIDs) {
 
-    auto vertex = m_groundedHypergraph.GetVertexType(v);
+    auto vertex = gh->GetVertex(v);
     auto group = vertex.first->GetGroup();
     bool passive = false;
 

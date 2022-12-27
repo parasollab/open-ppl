@@ -6,6 +6,8 @@
 #include <vector>
 #include <unordered_map>
 
+#include "Traits/CfgTraits.h"
+
 class Coordinator;
 class Decomposition;
 class MPProblem;
@@ -17,6 +19,12 @@ class TaskSolution;
 
 class Plan {
   public:
+    ///@name Motion Planning Types
+    ///@}
+
+    typedef typename MPTraits<Cfg>::MPSolution            MPSolution;
+
+    ///@}
     ///@name Construction
     ///@{
 
@@ -96,6 +104,9 @@ class Plan {
     /// Get MPProblem
     MPProblem* GetMPProblem();
 
+    /// Get MPSolution
+    MPSolution* GetMPSolution();
+
     double GetCost() const;
 
     void SetCost(const double& _cost);
@@ -130,6 +141,8 @@ class Plan {
     std::unique_ptr<StatClass> m_statClass;
 
     MPProblem* m_problem{nullptr};
+
+    std::unique_ptr<MPSolution> m_mpSolution;
 
     double m_cost;
 

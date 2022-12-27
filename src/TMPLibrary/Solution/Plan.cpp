@@ -1,6 +1,7 @@
 #include "Plan.h"
 
 #include "Behaviors/Agents/Coordinator.h"
+#include "MPLibrary/MPSolution.h"
 #include "MPProblem/MPProblem.h"
 #include "MPProblem/Robot/Robot.h"
 #include "MPProblem/RobotGroup/RobotGroup.h"
@@ -17,7 +18,7 @@ Plan() {
 }
 
 Plan::
-~Plan() {}
+~Plan() { }
 /*---------------------------- Accessors -------------------------------*/
 
 /// Coordinator
@@ -25,6 +26,8 @@ void
 Plan::
 SetCoordinator(Coordinator* _coordinator) {
   m_coordinator = _coordinator;
+  m_mpSolution = std::unique_ptr<MPSolution>(
+      new MPSolution(_coordinator->GetRobot()));
 }
 
 Coordinator*
@@ -160,6 +163,12 @@ MPProblem*
 Plan::
 GetMPProblem() {
   return m_problem;
+}
+
+MPSolution*
+Plan::
+GetMPSolution() {
+  return m_mpSolution.get();
 }
 
 double
