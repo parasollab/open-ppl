@@ -50,7 +50,7 @@ class CompositeState {
     /// Construct a composite state.
     /// @param _group The robot group to which this state belongs if it is not
     ///               in a graph.
-    explicit CompositeState(RobotGroup* const _group);
+    explicit CompositeState(RobotGroup* const _group, GraphType* const _individualGraph=nullptr);
 
     ///@}
     ///@name Equality
@@ -184,6 +184,8 @@ class CompositeState {
 
     RobotGroup* m_group{nullptr}; ///< The robot group for this state.
 
+    GraphType* m_individualGraph{nullptr};
+
     VIDSet m_vids;   ///< The individual VIDs in this aggregate state.
 
     std::vector<CfgType> m_localCfgs; ///< Individual states not in a map.
@@ -218,7 +220,8 @@ CompositeState(GroupGraphType* const _groupGraph) : m_groupMap(_groupGraph) {
 
 template <typename GraphType>
 CompositeState<GraphType>::
-CompositeState(RobotGroup* const _group) : m_group(_group) {
+CompositeState(RobotGroup* const _group, GraphType* const _individualGraph) 
+  : m_group(_group), m_individualGraph(_individualGraph) {
   // Set the VID list to all invalid.
   m_vids.resize(GetNumRobots(), INVALID_VID);
 
@@ -238,7 +241,7 @@ operator==(const CompositeState<GraphType>& _other) const noexcept {
     return false;
 
   // If _other is from another graph, these are not the same.
-  if(m_groupMap != _other.m_groupMap)
+  if(m_groupMap != _other.m_groupMap || m_individualGraph != _other.m_individualGraph)
     return false;
 
   // Else, compare VIDs if both are valid, or by-value other wise.
@@ -341,7 +344,7 @@ template <typename GraphType>
 typename CompositeState<GraphType>::VID
 CompositeState<GraphType>::
 GetVID(Robot* const _robot) const {
-  const size_t index = m_groupMap->GetGroup()->GetGroupIndex(_robot);
+  const size_t index = m_group->GetGroupIndex(_robot);
   return GetVID(index);
 }
 
@@ -358,10 +361,10 @@ template <typename GraphType>
 void
 CompositeState<GraphType>::
 SetRobotCfg(Robot* const _robot, const VID _vid) {
-  if(!m_groupMap)
-    throw RunTimeException(WHERE) << "Can't set a VID without a composite graph.";
+  if(!m_groupMap and !m_individualGraph)
+    throw RunTimeException(WHERE) << "Can't set a VID without a graph.";
 
-  const size_t index = m_groupMap->GetGroup()->GetGroupIndex(_robot);
+  const size_t index = m_group->GetGroupIndex(_robot);
   SetRobotCfg(index, _vid);
 }
 
@@ -370,8 +373,8 @@ template <typename GraphType>
 void
 CompositeState<GraphType>::
 SetRobotCfg(const size_t _index, const VID _vid) {
-  if(!m_groupMap)
-    throw RunTimeException(WHERE) << "Can't set a VID without a composite graph.";
+  if(!m_groupMap and !m_individualGraph)
+    throw RunTimeException(WHERE) << "Can't set a VID without a graph.";
 
   VerifyIndex(_index);
   m_vids[_index] = _vid;
@@ -422,9 +425,12 @@ GetRobotCfg(const size_t _index) {
   VerifyIndex(_index);
 
   const VID vid = GetVID(_index);
-  if(vid != INVALID_VID)
+  if(vid != INVALID_VID) {
+    if (!m_groupMap) 
+      return m_individualGraph->GetVertex(vid);
+
     return m_groupMap->GetIndividualGraph(_index)->GetVertex(vid);
-  else {
+  } else {
     InitializeLocalCfgs();
     return m_localCfgs[_index];
   }
@@ -449,8 +455,12 @@ GetRobotCfg(const size_t _index) const {
   // If we have a valid VID for this robot, fetch its state from its
   // individual graph.
   const VID vid = GetVID(_index);
-  if(vid != INVALID_VID)
+  if(vid != INVALID_VID) {
+    if (!m_groupMap)
+        return m_individualGraph->GetVertex(vid);
+
     return m_groupMap->GetIndividualGraph(_index)->GetVertex(vid);
+  }
   
   try {
     return m_localCfgs.at(_index);

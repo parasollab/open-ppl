@@ -147,7 +147,7 @@ class GroupRRTStrategy : public GroupStrategyMethod<MPTraits> {
     /// @param _newCfg The new configuration to add.
     /// @return A pair with the added VID and a bool indicating whether the new
     ///         node was already in the map.
-    virtual std::pair<VID, bool> AddNode(const GroupCfgType& _newCfg);
+    virtual std::pair<VID, bool> AddNode(GroupCfgType& _newCfg);
 
     /// Add a new edge to the roadmap.
     /// @param _source The source node.
@@ -164,14 +164,14 @@ class GroupRRTStrategy : public GroupStrategyMethod<MPTraits> {
     /// the extender's range.
     /// @param _newVID The VID of a newly extended configuration.
     /// @note This only applies when not growing goals.
-    void TryGoalExtension(const VID _newVID);
+    virtual void TryGoalExtension(const VID _newVID);
 
     /// Try to extend a new configuration toward a specific goal region. No-op
     /// if the goal is outside the extender's range.
     /// @param _newVID The VID of a newly extended configuration.
     /// @param _boundary The goal boundary.
     /// @note This only applies when not growing goals.
-    void TryGoalExtension(const VID _newVID, std::unordered_map<Robot*,const Boundary* const> _boundaryMap);
+    virtual void TryGoalExtension(const VID _newVID, std::unordered_map<Robot*,const Boundary* const> _boundaryMap);
 
     ///@}
     ///@name Tree Helpers
@@ -677,7 +677,7 @@ Extend(const VID _nearVID, const GroupCfgType& _target, const bool _requireNew) 
 template <typename MPTraits>
 std::pair<typename GroupRRTStrategy<MPTraits>::VID, bool>
 GroupRRTStrategy<MPTraits>::
-AddNode(const GroupCfgType& _newCfg) {
+AddNode(GroupCfgType& _newCfg) {
   MethodTimer mt(this->GetStatClass(), this->GetNameAndLabel() + "::AddNode");
 
   auto g = this->GetGroupRoadmap();

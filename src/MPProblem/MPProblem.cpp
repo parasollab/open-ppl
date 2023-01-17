@@ -350,8 +350,10 @@ GetTasks(Robot* const _robot) const noexcept {
 std::vector<std::shared_ptr<GroupTask>>
 MPProblem::
 GetTasks(RobotGroup* const _group) const noexcept {
-  const auto& tasks = m_groupTaskMap.at(_group);
+  if(!m_groupTaskMap.count(_group))
+    return std::vector<std::shared_ptr<GroupTask>>();
 
+  const auto& tasks = m_groupTaskMap.at(_group);
   std::vector<std::shared_ptr<GroupTask>> output;
 
   for(const auto& task : tasks)
@@ -368,6 +370,12 @@ AddTask(std::unique_ptr<MPTask>&& _task) {
   m_taskMap[robot].push_back(std::move(_task));
 }
 
+void
+MPProblem::
+AddTask(std::unique_ptr<GroupTask>&& _task) {
+  auto group = _task->GetRobotGroup();
+  m_groupTaskMap[group].push_back(std::move(_task));
+}
 
 void
 MPProblem::

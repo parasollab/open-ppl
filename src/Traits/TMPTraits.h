@@ -9,6 +9,7 @@
 #include "TMPLibrary/TMPStrategies/NextBestSearch.h"
 #include "TMPLibrary/TMPStrategies/SimpleTaskAllocationMethod.h"
 #include "TMPLibrary/TMPStrategies/SimpleMotionMethod.h"
+#include "TMPLibrary/TMPStrategies/WoDaSH.h"
 
 // PoIPlacementMethods to include
 
@@ -57,7 +58,8 @@ struct TMPTraits {
     BasicTMPStrategyMethod,
     NextBestSearch,
 		SimpleMotionMethod,
-		SimpleTaskAllocationMethod
+		SimpleTaskAllocationMethod,
+    WoDaSH
       > TMPStrategyMethodList;
 
   //types of points of interest placement methods available in our world

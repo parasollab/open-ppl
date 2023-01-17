@@ -16,15 +16,15 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// A HypergraphWorkspaceSkeleton is an aggregate of workspace skeletons
 ////////////////////////////////////////////////////////////////////////////////
-template <typename Vertex, typename Hyperarc>
-class HypergraphWorkspaceSkeleton : public Hypergraph<Vertex, Hyperarc> {
+template <typename VertexType, typename HyperarcType>
+class HypergraphWorkspaceSkeleton : public Hypergraph<VertexType, HyperarcType> {
 
   public:
 
     ///@name Local Types
     ///@{
 
-    typedef Hypergraph<Vertex, Hyperarc> BaseType;
+    typedef Hypergraph<VertexType, HyperarcType> BaseType;
     typedef size_t  VD;
     // typedef typename BaseType::VI   VI;
     // typedef typename BaseType::EI   EI;
@@ -51,6 +51,14 @@ class HypergraphWorkspaceSkeleton : public Hypergraph<Vertex, Hyperarc> {
 
     HypergraphWorkspaceSkeleton(RobotGroup* const _g, WorkspaceSkeletonSet _skeletons);
 
+    HypergraphWorkspaceSkeleton(RobotGroup* const _g, WorkspaceSkeleton* _skeleton);
+
+    ///@}
+    ///@name Accessors
+    ///@{
+
+    WorkspaceSkeleton* GetIndividualSkeleton(Robot* _robot);
+
     ///@}
     ///@name Locators
     ///@{
@@ -66,11 +74,8 @@ class HypergraphWorkspaceSkeleton : public Hypergraph<Vertex, Hyperarc> {
     ///@{
 
     // Override this to add intermediates
-    size_t AddHyperarc(std::set<size_t> _head, std::set<size_t> _tail,
-                       Hyperarc _hyperarc, bool _overWrite = false) override;
-
-    /// Overriding to suppress output
-    virtual VD AddVertex(const Vertex& _v) noexcept override;
+    virtual size_t AddHyperarc(std::set<size_t> _head, std::set<size_t> _tail,
+                       HyperarcType _hyperarc, bool _overWrite = false) override;
 
     void RefineEdges(double _maxLength);
 
@@ -84,22 +89,22 @@ class HypergraphWorkspaceSkeleton : public Hypergraph<Vertex, Hyperarc> {
 
     RobotGroup* m_fullGroup{nullptr};
 
-    std::map<Robot*, WorkspaceSkeleton> m_skeletons;
+    std::map<Robot*, WorkspaceSkeleton*> m_skeletons;
 
     ///@}
 };
 
 /*------------------------------- Construction -------------------------------*/
 
-template <typename Vertex, typename Hyperarc>
-HypergraphWorkspaceSkeleton<Vertex, Hyperarc>::
+template <typename VertexType, typename HyperarcType>
+HypergraphWorkspaceSkeleton<VertexType, HyperarcType>::
 HypergraphWorkspaceSkeleton() :
-  Hypergraph<Vertex, Hyperarc>() {}
+  Hypergraph<VertexType, HyperarcType>() {}
 
-template <typename Vertex, typename Hyperarc>
-HypergraphWorkspaceSkeleton<Vertex, Hyperarc>::
+template <typename VertexType, typename HyperarcType>
+HypergraphWorkspaceSkeleton<VertexType, HyperarcType>::
 HypergraphWorkspaceSkeleton(RobotGroup* const _g, WorkspaceSkeletonSet _skeletons) :
-  m_fullGroup(_g), Hypergraph<Vertex, Hyperarc>() {
+  Hypergraph<VertexType, HyperarcType>(), m_fullGroup(_g) {
 
   auto robots = _g->GetRobots();
   for(size_t i = 0; i < robots.size(); i++) {
@@ -107,12 +112,32 @@ HypergraphWorkspaceSkeleton(RobotGroup* const _g, WorkspaceSkeletonSet _skeleton
   }
 }
 
+template <typename VertexType, typename HyperarcType>
+HypergraphWorkspaceSkeleton<VertexType, HyperarcType>::
+HypergraphWorkspaceSkeleton(RobotGroup* const _g, WorkspaceSkeleton* _skeleton) :
+  Hypergraph<VertexType, HyperarcType>(), m_fullGroup(_g) {
+
+  auto robots = _g->GetRobots();
+  for(size_t i = 0; i < robots.size(); i++) {
+    m_skeletons.emplace(std::make_pair(robots[i], _skeleton));
+  }
+}
+
+/*-------------------------------- Accessors ---------------------------------*/
+
+template <typename VertexType, typename HyperarcType>
+WorkspaceSkeleton*
+HypergraphWorkspaceSkeleton<VertexType, HyperarcType>::
+GetIndividualSkeleton(Robot* _robot) {
+  return m_skeletons.at(_robot);
+}
+
 /*--------------------------------- Locators ---------------------------------*/
 
 ///@todo need merging rules for this
-// template <typename Vertex, typename Hyperarc>
-// typename HypergraphWorkspaceSkeleton<Vertex, Hyperarc>::vertex_iterator
-// HypergraphWorkspaceSkeleton<Vertex, Hyperarc>::
+// template <typename VertexType, typename HyperarcType>
+// typename HypergraphWorkspaceSkeleton<VertexType, HyperarcType>::vertex_iterator
+// HypergraphWorkspaceSkeleton<VertexType, HyperarcType>::
 // FindNearestVertex(const PointSet& _targets) {
 //   double closestDistance = std::numeric_limits<double>::max();
 //   vertex_iterator closestVI;
@@ -132,41 +157,41 @@ HypergraphWorkspaceSkeleton(RobotGroup* const _g, WorkspaceSkeletonSet _skeleton
 
 /*-------------------------------- Modifiers ---------------------------------*/
 
-template <typename Vertex, typename Hyperarc>
+template <typename VertexType, typename HyperarcType>
 void
-HypergraphWorkspaceSkeleton<Vertex, Hyperarc>::
+HypergraphWorkspaceSkeleton<VertexType, HyperarcType>::
 RefineEdges(double _maxLength) {
 
   for (auto skeleton : m_skeletons) {
-    skeleton.second.RefineEdges(_maxLength);
+    skeleton.second->RefineEdges(_maxLength);
   }
 }
 
 
-template <typename Vertex, typename Hyperarc>
+template <typename VertexType, typename HyperarcType>
 void
-HypergraphWorkspaceSkeleton<Vertex, Hyperarc>::
+HypergraphWorkspaceSkeleton<VertexType, HyperarcType>::
 DoubleEdges() {
 
   for (auto skeleton : m_skeletons) {
-    skeleton.second.DoubleEdges();
+    skeleton.second->DoubleEdges();
   }
 }
 
 /*----------------------------------------------------------------------------*/
 
-template <typename Vertex, typename Hyperarc>
+template <typename VertexType, typename HyperarcType>
 size_t 
-HypergraphWorkspaceSkeleton<Vertex,Hyperarc>::
+HypergraphWorkspaceSkeleton<VertexType,HyperarcType>::
 AddHyperarc(std::set<size_t> _head, std::set<size_t> _tail,
-            Hyperarc _hyperarc, bool _overWrite) {
+            HyperarcType _hyperarc, bool _overWrite) {
   if(_head == _tail)
     throw RunTimeException(WHERE) << "Tried to add hyperarc between same head/tail "
                                   << _head << ".";
 
   // We need to adjust hyperarc, but we still want to override the base class
   // function, so make a local copy of the edge.
-  Hyperarc edge = _hyperarc;
+  HyperarcType edge = _hyperarc;
 
   // working on this -- need the hyperarcs to be composite edges, vertices to be composite vertices
   // Vector of edge descriptors, which are edges already in individual roadmaps
@@ -179,7 +204,7 @@ AddHyperarc(std::set<size_t> _head, std::set<size_t> _tail,
 
   for(auto hid : _head) {
     auto cState = this->GetVertexType(hid);
-    auto hRobots = cState.GetGroup();
+    auto hRobots = cState.GetGroup()->GetRobots();
     for(auto robot : hRobots) {
       if(startVIDs.count(robot))
         throw RunTimeException(WHERE) << "Tried to add multiple edges for " 
@@ -191,7 +216,7 @@ AddHyperarc(std::set<size_t> _head, std::set<size_t> _tail,
 
   for(auto hid : _tail) {
     auto cState = this->GetVertexType(hid);
-    auto hRobots = cState.GetGroup();
+    auto hRobots = cState.GetGroup()->GetRobots();
     for(auto robot : hRobots) {
       if(targetVIDs.count(robot))
         throw RunTimeException(WHERE) << "Tried to add multiple edges for " 
@@ -201,7 +226,6 @@ AddHyperarc(std::set<size_t> _head, std::set<size_t> _tail,
   }
 
   // First, make sure all the local edges are in the individual roadmaps.
-  ///@todo rework this to get start and targets from composite vids in head/tail then loop through and check
   auto robots = edge.GetGroup()->GetRobots();
   for(size_t i = 0; i < robots.size(); ++i) {
     auto roadmap = m_skeletons.at(robots[i]);
@@ -213,6 +237,7 @@ AddHyperarc(std::set<size_t> _head, std::set<size_t> _tail,
     // number of these that occur so that we can ensure SOME robot(s) moved.
     if(individualSourceVID == individualTargetVID) {
       ++numInactiveRobots;
+      continue;
     }
 
     // Assert that the individual vertices exist.
@@ -253,57 +278,59 @@ AddHyperarc(std::set<size_t> _head, std::set<size_t> _tail,
                                       << roadmap->GetRobot()->GetLabel() << ".";
   }
 
-  if(numInactiveRobots >= this->GetNumRobots())
-    throw RunTimeException(WHERE) << "No robots were moved in this edge!";
+  if(numInactiveRobots == edge.GetNumRobots())
+    return BaseType::AddHyperarc(_head, _tail, edge, _overWrite);
 
   // Add Intermediates
   // Find the length of each individual edge and the maximum length
   // Intermediate length is five times the average robot diameter
-  double diam = 0;
-  for(auto robot : robots)
-    diam += robot->GetMultiBody()->GetBoundingSphereRadius() * 2;
-  double intLength = (diam / robots.size()) * 5;
+  if(!edge.GetNumIntermediates()) {
+    double diam = 0;
+    for(auto robot : robots)
+      diam += robot->GetMultiBody()->GetBoundingSphereRadius() * 2;
+    double intLength = (diam / robots.size()) * 5;
 
-  std::vector<Point3d> starts;
-  std::vector<Point3d> displacements;
-  double maxDist = 0;
-  for(size_t i = 0; i < robots.size(); ++i) {
-    auto start = m_skeletons.at(robots[i])->find_vertex(edgeDescriptors[i].source());
-    auto target = m_skeletons.at(robots[i])->find_vertex(edgeDescriptors[i].target());
-    starts.push_back(start->property());
+    std::vector<Point3d> starts;
+    std::vector<Point3d> displacements;
+    double maxDist = 0;
+    for(size_t i = 0; i < robots.size(); ++i) {
+      auto start = m_skeletons.at(robots[i])->find_vertex(edgeDescriptors[i].source());
+      auto target = m_skeletons.at(robots[i])->find_vertex(edgeDescriptors[i].target());
+      starts.push_back(start->property());
 
-    auto disp = target->property() - start->property();
-    const auto dist = (disp).norm();
+      auto disp = target->property() - start->property();
+      const auto dist = (disp).norm();
 
-    if(dist < intLength)
-      displacements.push_back({0., 0., 0.});
-    else
-      displacements.push_back(disp);
-    
-    if(dist > maxDist)
-      maxDist = dist;
-  }
-
-  // Find the number of composite edge intermediates
-  std::vector<Vertex> inters;
-  int numInter = (int)ceil(maxDist/intLength);
-
-  // Set the intermediate values along the edge
-  for(int i = 0; i <= numInter; ++i){
-    Vertex v = Vertex(this);
-
-    for(size_t r = 0; r < robots.size(); r++) {
-      Point3d d = {i * displacements[r][0]/numInter, 
-                   i * displacements[r][1]/numInter,
-                   i * displacements[r][2]/numInter};
-      v.SetRobotCfg(r, starts[r] + d);
+      if(dist < intLength)
+        displacements.push_back({0., 0., 0.});
+      else
+        displacements.push_back(disp);
+      
+      if(dist > maxDist)
+        maxDist = dist;
     }
 
-    inters.push_back(v);
-  }
+    // Find the number of composite edge intermediates
+    std::vector<VertexType> inters;
+    int numInter = (int)ceil(maxDist/intLength);
 
-  // Set the intermediates
-  edge.SetIntermediates(inters);
+    // Set the intermediate values along the edge
+    for(int i = 0; i <= numInter; ++i){
+      VertexType v = VertexType(edge.GetGroup());
+
+      for(size_t r = 0; r < robots.size(); r++) {
+        Point3d d = {i * displacements[r][0]/numInter, 
+                    i * displacements[r][1]/numInter,
+                    i * displacements[r][2]/numInter};
+        v.SetRobotCfg(r, starts[r] + d);
+      }
+
+      inters.push_back(v);
+    }
+
+    // Set the intermediates
+    edge.SetIntermediates(inters);
+  }
 
   return BaseType::AddHyperarc(_head, _tail, edge, _overWrite);
 }

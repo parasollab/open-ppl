@@ -46,6 +46,8 @@ class MPStrategyMethod : public MPBaseObject<MPTraits> {
     typedef typename MPTraits::RoadmapType RoadmapType;
     typedef typename RoadmapType::VID      VID;
 
+    typedef typename MPTraits::CompositeSkeletonEdge CompositeSkeletonEdge;
+
     ///@}
     ///@name Construction
     ///@{
@@ -78,19 +80,8 @@ class MPStrategyMethod : public MPBaseObject<MPTraits> {
     /// @param _enable True to enable, false to disable.
     void EnableOutputFiles(const bool _enable = true);
 
-    ///@}
-
-  protected:
-
-    ///@name Helpers
-    ///@{
-
-    virtual void Run();            ///< Call Iterate until EvaluateMap is true.
-    virtual bool EvaluateMap();    ///< Check if we satisfied all map evaluators.
-    virtual void Iterate() {}      ///< Execute one iteration of the strategy.
-    virtual void Finalize();       ///< Clean-up and output results.
-
-    virtual void ClearRoadmap();   ///< Pre-clear the roadmap(s) if requested.
+    // Temporary hack for WoDaSH - will be removed soon
+    virtual void GroundEdge(const CompositeSkeletonEdge _edge) {};
 
     ///@}
     ///@name Start/Goal Generation
@@ -114,6 +105,20 @@ class MPStrategyMethod : public MPBaseObject<MPTraits> {
     ///       group strategies (all VID types are typedefs for size_t).
     virtual std::vector<size_t> GenerateGoals(
         const std::string& _samplerLabel = "");
+
+    ///@}
+
+  protected:
+
+    ///@name Helpers
+    ///@{
+
+    virtual void Run();            ///< Call Iterate until EvaluateMap is true.
+    virtual bool EvaluateMap();    ///< Check if we satisfied all map evaluators.
+    virtual void Iterate() {}      ///< Execute one iteration of the strategy.
+    virtual void Finalize();       ///< Clean-up and output results.
+
+    virtual void ClearRoadmap();   ///< Pre-clear the roadmap(s) if requested.
 
     ///@}
     ///@name Internal State

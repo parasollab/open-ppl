@@ -355,17 +355,17 @@ ReadAnnotation(const std::string& _file) {
 /*------------------ Clearance annotated skeleton ------------------------*/
 
 /// Function to generate the annotated clearance skeleton
-template <typename MPTraits>
+template <typename MPLibrary>
 PropertyMap<vector<double>,double>*
-ClearanceAnnotatedSkeleton(MPBaseObject<MPTraits>* _mp, WorkspaceSkeleton* _ws,
+ClearanceAnnotatedSkeleton(MPLibrary* const _lib, WorkspaceSkeleton* _ws,
        bool _boundary = true) {
-  typedef typename MPTraits::CfgType CfgType;
+  typedef Cfg CfgType;
   auto clearanceMap = new PropertyMap<vector<double>,double>(_ws);
 
-  auto boundary = _mp->GetEnvironment()->GetBoundary();
-  auto vc = _mp->GetValidityChecker("pqp_solid");
+  auto boundary = _lib->GetMPProblem()->GetEnvironment()->GetBoundary();
+  auto vc = _lib->GetValidityChecker("pqp_solid");
 
-  auto pointRobot = _mp->GetMPProblem()->GetRobot("point");
+  auto pointRobot = _lib->GetMPProblem()->GetRobot("point");
 
   // Function to compute clearance for input point _p.
   auto getClearance = [&](const Point3d& _p) -> double {

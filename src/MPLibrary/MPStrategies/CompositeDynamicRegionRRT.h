@@ -83,8 +83,9 @@ class CompositeDynamicRegionRRT : virtual public GroupRRTStrategy<MPTraits> {
 
       ///@name Internal State
       ///@{
-
-      SkeletonEdgeIterator edgeIterator; ///< Iterator to region's edge.
+      
+      SkeletonEdgeIterator edgeIterator;
+      CompositeSkeletonEdge edge;
 
       size_t edgeIndex{0};   ///< Which edge point are we at?
       double attempts{1};    ///< Number of attempts to extend into this region.
@@ -96,10 +97,15 @@ class CompositeDynamicRegionRRT : virtual public GroupRRTStrategy<MPTraits> {
 
       ///@}
 
-      SamplingRegion(const SkeletonEdgeIterator& _eit, const double _cost) : 
-            edgeIterator(_eit), cost(_cost) {
-        auto ei = _eit;
-        activeRobots = ei->property().GetActiveRobots();
+      SamplingRegion(SkeletonEdgeIterator& _eit, const double _cost) : 
+          edgeIterator(_eit), cost(_cost) {
+        edge = _eit->property();
+        activeRobots = edge.GetActiveRobots();
+      }
+
+      SamplingRegion(const CompositeSkeletonEdge _edge, const double _cost) : 
+            edge(_edge), cost(_cost) {
+        activeRobots = _edge.GetActiveRobots();
       }
 
       /// Track the success rate of extending into this region.
@@ -126,7 +132,7 @@ class CompositeDynamicRegionRRT : virtual public GroupRRTStrategy<MPTraits> {
       /// Get the center of this region.
       const VectorMap GetCenter() const noexcept {
         VectorMap center;
-        auto compState = (*edgeIterator).property().GetIntermediates()[edgeIndex];
+        auto compState = edge.GetIntermediates()[edgeIndex];
 
         for(auto r : compState.GetRobots()) {
           center.insert(std::pair<Robot*, Vector3d>(r, compState.GetRobotCfg(r)));
@@ -137,7 +143,7 @@ class CompositeDynamicRegionRRT : virtual public GroupRRTStrategy<MPTraits> {
 
       /// Check if this region is at the last point on its skeleton edge.
       bool LastPoint() const noexcept {
-        return edgeIndex == (*edgeIterator).property().GetNumIntermediates() - 1;
+        return edgeIndex == edge.GetNumIntermediates() - 1;
       }
 
       /// Advance this region to the next skeleton edge point.
@@ -148,7 +154,7 @@ class CompositeDynamicRegionRRT : virtual public GroupRRTStrategy<MPTraits> {
       /// Assignment operator
       SamplingRegion& operator=(const SamplingRegion& _region) {
         if(this != &_region) {
-          edgeIterator = _region.edgeIterator;
+          edge == _region.edge;
           edgeIndex = _region.edgeIndex;
           attempts = _region.attempts;
           successes = _region.successes;
@@ -164,13 +170,13 @@ class CompositeDynamicRegionRRT : virtual public GroupRRTStrategy<MPTraits> {
         // const bool att = attempts == _region.attempts;
         // const bool succ = successes == _region.successes;
         // return eit and idx and att and succ;
-        return edgeIterator == _region.edgeIterator;
+        return edge == _region.edge;
       }
 
     };
 
     ///@}
-    ///@ Construction
+    ///@name Construction
     ///@{
 
     CompositeDynamicRegionRRT();
@@ -184,6 +190,12 @@ class CompositeDynamicRegionRRT : virtual public GroupRRTStrategy<MPTraits> {
     ///@{
 
     virtual void Print(std::ostream& _os) const override;
+
+    ///@}
+    ///@name Hack for WoDaSH
+    ///@{
+
+    virtual void GroundEdge(const CompositeSkeletonEdge _edge) override;
 
     ///@}
 
@@ -205,7 +217,7 @@ class CompositeDynamicRegionRRT : virtual public GroupRRTStrategy<MPTraits> {
     /// @param _newCfg The new configuration to add.
     /// @return A pair with the added VID and a bool indicating whether the new
     ///         node was already in the map.
-    virtual std::pair<VID, bool> AddNode(const GroupCfgType& _newCfg) override;
+    virtual std::pair<VID, bool> AddNode(GroupCfgType& _newCfg) override;
     // virtual std::pair<VID, bool> AddNode(const CfgType& _newCfg) override;
 
     ///@}
@@ -249,7 +261,7 @@ class CompositeDynamicRegionRRT : virtual public GroupRRTStrategy<MPTraits> {
     /// Calculate the velocity bias along a region's skeleton edge.
     /// @param _region The region whose skeleton edge to bias the velocity along.
     /// @return The velocity bias.
-    // const Vector3d GetVelocityBias(SamplingRegion* _region);
+    std::vector<Vector3d> GetVelocityBias(SamplingRegion* _region);
 
     /// Determine if a region is touching a configuration.
     /// @param _cfg The configuration.
@@ -268,13 +280,6 @@ class CompositeDynamicRegionRRT : virtual public GroupRRTStrategy<MPTraits> {
     /// Build topological skeleton
     void BuildSkeleton();
 
-    /// Heuristic function for composite region selection.
-    /// Calls Dijkstra's from goal vertex to find shortest path to all
-    /// vertices in individual skeletons.
-    double RegionSelectionHeuristic(const CompositeSkeletonType* _g,
-                                    SkeletonVertexDescriptor _source,
-                                    SkeletonVertexDescriptor _target);
-
     /// Select a region based on weighted success probabilities
     /// @return The sampling region to be expanded
     const size_t SelectSamplingRegion();
@@ -283,12 +288,11 @@ class CompositeDynamicRegionRRT : virtual public GroupRRTStrategy<MPTraits> {
     /// @return Probabilities based on extension success
     std::vector<double> ComputeProbabilities();
 
-    // TODO:: (MUCH LATER - Make a group cfg version)
     /// Bias the velocity of a sample along a direction perscribed by
     /// the region.
     /// @param _cfg The sample to bias.
     /// @param _region The region from which _cfg was sampled.
-    // void BiasVelocity(CfgType& _cfg, SamplingRegion* _region);
+    void BiasVelocity(GroupCfgType& _cfg, SamplingRegion* _region);
 
     /// Check if q_new is close enough to an unvisited skeleton vertex to create
     /// new regions on the outgoing edges of that vertex. If so, create those
@@ -351,8 +355,8 @@ class CompositeDynamicRegionRRT : virtual public GroupRRTStrategy<MPTraits> {
     std::string m_decompositionLabel; ///< The workspace decomposition label.
     std::string m_scuLabel;           ///< The skeleton clearance utility label.
 
-    // bool m_velocityBiasing{false};    ///< Use velocity biasing?
-    // double m_velocityAlignment{.1};   ///< Strength of velocity biasing.
+    bool m_velocityBiasing{false};    ///< Use velocity biasing?
+    double m_velocityAlignment{.1};   ///< Strength of velocity biasing.
 
     bool m_initialized{false};    ///< Have auxiliary structures been initialized?
 
@@ -404,7 +408,9 @@ class CompositeDynamicRegionRRT : virtual public GroupRRTStrategy<MPTraits> {
     /// of its bounding sphere penetrates into the region.
     double m_penetrationFactor{1};
 
-    bool m_shortcutCD{false};
+    bool m_abortOnFail{true};
+
+    bool m_groundEdge{false}; // Is this object only used to ground one edge?
 
     ///@}
 };
@@ -440,12 +446,12 @@ CompositeDynamicRegionRRT(XMLNode& _node) : GroupRRTStrategy<MPTraits>(_node) {
   m_scuLabel = _node.Read("scuLabel", false, "", "The skeleton clearance utility "
       "to use. If not specified, we use the hack-fix from wafr16.");
 
-  // m_velocityBiasing = _node.Read("velocityBiasing", false, m_velocityBiasing,
-  //     "Bias nonholonomic samples along the skeleton?");
+  m_velocityBiasing = _node.Read("velocityBiasing", false, m_velocityBiasing,
+      "Bias nonholonomic samples along the skeleton?");
 
-  // m_velocityAlignment = _node.Read("velocityAlignment", false,
-  //     m_velocityAlignment, -1., .99,
-  //     "Minimum dot product for sampled velocity and biasing direction.");
+  m_velocityAlignment = _node.Read("velocityAlignment", false,
+      m_velocityAlignment, -1., .99,
+      "Minimum dot product for sampled velocity and biasing direction.");
 
   m_explore = _node.Read("explore", true, m_explore, 0., 1.,
       "Weight of explore vs. exploit in region selection probabilities");
@@ -468,7 +474,7 @@ CompositeDynamicRegionRRT(XMLNode& _node) : GroupRRTStrategy<MPTraits>(_node) {
       m_penetrationFactor, std::numeric_limits<double>::min(), 1.,
       "Fraction of bounding sphere penetration that is considered touching");
 
-  m_shortcutCD = _node.Read("shortcutCD", false, true, "Shortcut collision detection?");
+  m_abortOnFail = _node.Read("abortOnFail", false, true, "Abort when all edges fail?");
 }
 
 /*--------------------------- MPBaseObject Overrides -------------------------*/
@@ -486,8 +492,8 @@ CompositeDynamicRegionRRT<MPTraits>::Print(std::ostream& _os) const {
   if(!m_scuLabel.empty())
     _os << "\tSkeleton Clearance Utility:" << m_scuLabel << std::endl;
 
-  // _os << "\tVelocity Biasing: " << m_velocityBiasing << std::endl;
-  // _os << "\tVelocity Alignment: " << m_velocityAlignment << std::endl;
+  _os << "\tVelocity Biasing: " << m_velocityBiasing << std::endl;
+  _os << "\tVelocity Alignment: " << m_velocityAlignment << std::endl;
 
   _os << "\tMaximum Number of Regions: " << m_maxRegions << std::endl;
   _os << "\tMaximum Number of Edges per Vertex: " << m_maxEdges << std::endl;
@@ -495,7 +501,7 @@ CompositeDynamicRegionRRT<MPTraits>::Print(std::ostream& _os) const {
   _os << "\tRegion Factor: " << m_regionFactor << std::endl;
   _os << "\tPenetration Factor: " << m_penetrationFactor << std::endl;
   _os << "\tExploration Factor: " << m_explore << std::endl;
-  _os << "\tShortcut Collision Detection: " << m_shortcutCD << std::endl;
+  _os << "\tAbort on Edge Failure: " << m_abortOnFail << std::endl;
 }
 
 /*---------------------------- MPStrategy Overrides --------------------------*/
@@ -518,17 +524,20 @@ CompositeDynamicRegionRRT<MPTraits>::Initialize(){
   if(this->m_goalDmLabel.empty())
     throw RunTimeException(WHERE) << "Goal distance metric label is required.";
 
-  // Disable velocity biasing if the robot is holonomic.
-  // m_velocityBiasing &= this->GetTask()->GetRobot()->IsNonholonomic();
-
   auto groupTask = this->GetGroupTask();
 
+  // Disable velocity biasing if a robot is holonomic. TODO make it possible to have some (not all) nh
   for(auto& task : *groupTask) {
     auto robot = task.GetRobot();
+    m_velocityBiasing &= robot->IsNonholonomic();
+
     const double robotRadius = robot->GetMultiBody()->
                                GetBoundingSphereRadius() * m_regionFactor;
     m_regionRadius.insert(std::pair<Robot*, const double>(robot, robotRadius));
   }
+
+  if(this->m_debug)
+    std::cout << "Velocity biasing: " << m_velocityBiasing << std::endl;
 
   // Initialize the skeleton and regions.
   if(!m_initialized) {
@@ -620,37 +629,34 @@ SelectTarget() {
   GroupCfgType gcfg(grm);
 
   // Iterate through all regions to see if max sample fails has been exceeded.
-  std::vector<SkeletonVertexDescriptor> replaceVertices;
+  int numReplace = 0;
   for(auto iter = m_regions.begin(); iter != m_regions.end(); ) {
-    auto eit = iter->edgeIterator;
     auto fails = iter->attempts - iter->successes;
 
     if(fails > m_maxSampleFails) {
       if(this->m_debug)
-        std::cout << "Exceeded maximum number of failures. Deleting region on edge from "
-                  << eit->source() << " to "
-                  << eit->target() << std::endl;
+        std::cout << "Exceeded maximum number of failures. Deleting region." << std::endl;
 
       iter = m_regions.erase(iter);
-      replaceVertices.push_back(eit->source());
+      numReplace++;
     } else 
       ++iter;
   }
 
   // Construct replacement regions for any that failed too many times.
-  for(auto v : replaceVertices) {
+  for(auto i = 0; i < numReplace; i++) {
     if(this->m_debug)
-      std::cout << "Replacing region for target VID " << v << std::endl;
+      std::cout << "Replacing region..." << std::endl;
     NextBestRegion();
   }
 
   bool notFound = true;
   while(notFound) {
     notFound = false;
-    // Select a region for sample generation (null indicates sample from whole env.)
+    // Select a region for sample generation
     size_t regionIdx = SelectSamplingRegion();
 
-    if(regionIdx > m_regions.size() - 1) {
+    if((int)regionIdx > (int)m_regions.size() - 1) {
       m_lastRegionIdx = -1;
       gcfg = Sample(this->GetEnvironment()->GetBoundary());
     } else {
@@ -675,7 +681,7 @@ SelectTarget() {
 template <typename MPTraits>
 std::pair<typename CompositeDynamicRegionRRT<MPTraits>::VID, bool>
 CompositeDynamicRegionRRT<MPTraits>::
-AddNode(const GroupCfgType& _newCfg) {
+AddNode(GroupCfgType& _newCfg) {
   MethodTimer mt(this->GetStatClass(), this->GetNameAndLabel() + "::AddNode");
 
   auto g = this->GetGroupRoadmap();
@@ -724,10 +730,10 @@ std::pair<bool, typename MPTraits::GroupCfgType>
 CompositeDynamicRegionRRT<MPTraits>::
 Sample(SamplingRegion* _region) {
   if (this->m_debug) {
-    std::cout << "\tSampling from region with center at on edge "
-              << _region->edgeIterator->id() << " (intermediate "
+    std::cout << "\tSampling from region"
+              << " (intermediate "
               << _region->edgeIndex << "/"
-              << _region->edgeIterator->property().GetNumIntermediates()
+              << _region->edge.GetNumIntermediates()
               << "), success rate so far "
               << _region->successes << " / " << _region->attempts
               << ", using sampler '" << this->m_samplerLabel << "'." << std::endl;
@@ -759,20 +765,10 @@ Sample(SamplingRegion* _region) {
   std::vector<GroupCfgType> samples, collision;
   int tries = 0;
 
-  if(m_shortcutCD) {
-    // Get the map of adjacent robots
-    const auto adjMap = GetAdjacentRobots(center);
-    while(tries < 10 and samples.empty()) {
-      ++tries;
-      s->Sample(1, 100, boundMap, std::back_inserter(samples),
-        std::back_inserter(collision), adjMap);
-    }
-  } else {
-    while(tries < 10 and samples.empty()) {
-      ++tries;
-      s->Sample(1, 100, boundMap, std::back_inserter(samples),
-        std::back_inserter(collision));
-    }
+  while(tries < 10 and samples.empty()) {
+    ++tries;
+    s->Sample(1, 100, boundMap, std::back_inserter(samples),
+      std::back_inserter(collision));
   }
 
   if(samples.empty()) {
@@ -780,6 +776,9 @@ Sample(SamplingRegion* _region) {
   }
 
   auto& target = samples.front();
+
+  if(m_velocityBiasing)
+    BiasVelocity(target, _region);
 
   if(this->m_debug)
     std::cout << "\t" << target.PrettyPrint() << std::endl;
@@ -1053,6 +1052,10 @@ ComputeProbabilities() {
   //   makespans.push_back(maxDist);
   // }
 
+  if(m_regions.size() < 1) {
+    return {1.0};
+  }
+
   // Find the maximum cost
   double maxMakespan = 0.;
   for(auto r : m_regions) {
@@ -1086,6 +1089,120 @@ ComputeProbabilities() {
   probabilities.emplace_back(explore);
 
   return probabilities;
+}
+
+
+template <typename MPTraits>
+std::vector<Vector3d>
+CompositeDynamicRegionRRT<MPTraits>::
+GetVelocityBias(SamplingRegion* _region) {
+  // Get the region data.
+  const size_t index = _region->edgeIndex;
+
+  // Find the skeleton edge path the region is traversing.
+  auto reit = _region->edgeIterator;
+  const auto& path = reit->property().GetIntermediates();
+
+  // Helper to make the biasing direction and print debug info.
+  auto makeBias = [&](const Vector3d& _start, const Vector3d& _end) {
+    if(this->m_debug)
+      std::cout << "Computed velocity bias: " << (_end - _start).normalize()
+                << "\n\tStart: " << _start
+                << "\n\tEnd:   " << _end
+                << std::endl;
+    return (_end - _start).normalize();
+  };
+
+  // If there is at least one valid path point after the current path index,
+  // then return the direction to the next point.
+  if(index < path.size() - 1) {
+    if(this->m_debug)
+      std::cout << "Biasing velocity along next path step"
+                << "\n\tPath index: " << index
+                << "\n\tPath size:  " << path.size()
+                << std::endl;
+    
+    std::vector<Vector3d> biases;
+    auto robots = reit->property().GetGroup()->GetRobots();
+    for(size_t i = 0; i < robots.size(); i++) {
+      auto start = path[index].GetRobotCfg(i);
+      auto end = path[index+1].GetRobotCfg(i);
+      
+      auto bias = makeBias(start, end);
+      biases.push_back(bias);
+    }
+    return biases;
+  }
+
+  // Otherwise, the region has reached a skeleton vertex.
+  // auto targetVD = reit->target();
+  // auto vertex = m_skeleton.FindVertex(targetVD);
+
+  // If the vertex has no outgoing edges, this is the end of the skeleton. In
+  // that case, use the previous biasing direction. All paths have at least two
+  // points so this is safe.
+  // if(vertex->size() == 0) {
+    if(this->m_debug)
+      std::cout << "Biasing velocity along previous path step"
+                << "\n\tPath index: " << index
+                << "\n\tPath size:  " << path.size()
+                << std::endl;
+    
+    std::vector<Vector3d> biases;
+    auto robots = reit->property().GetGroup()->GetRobots();
+    for(size_t i = 0; i < robots.size(); i++) {
+      auto start = path[index-1].GetRobotCfg(i);
+      auto end = path[index].GetRobotCfg(i);
+      
+      auto bias = makeBias(start, end);
+      biases.push_back(bias);
+    }
+    return biases;
+  // }
+
+  // TODO can't do this because we haven't constructed outgoing yet
+  // Otherwise, randomly select an outgoing and use it's next point.
+  // auto eit = vertex->begin();
+  // const size_t nextEdgeIndex = LRand() % vertex->size();
+  // std::advance(eit, nextEdgeIndex);
+  // if(this->m_debug)
+  //   std::cout << "Biasing velocity along next edge (index " << nextEdgeIndex
+  //             << ")\n\tPath index: " << index
+  //             << "\n\tPath size:  " << path.size()
+  //             << "\n\tNext edge path size: " << eit->property().size()
+  //             << std::endl;
+  // return makeBias(path[index], eit->property()[1]);
+}
+
+
+template <typename MPTraits>
+void
+CompositeDynamicRegionRRT<MPTraits>::
+BiasVelocity(GroupCfgType& _gcfg, SamplingRegion* _region) {
+  MethodTimer mt(this->GetStatClass(), this->GetNameAndLabel() + "::BiasVelocity");
+
+  // Get the bias for the region.
+  auto biases = GetVelocityBias(_region);
+  
+  // Resample the Cfg until its linear velocity aims relatively along the
+  // biasing direction.
+  auto robots = _gcfg.GetGroup()->GetRobots();
+  for(size_t i = 0; i < robots.size(); i++) {
+    auto bias = biases.at(i);
+    Vector3d velocity;
+    do {
+      auto& cfg = _gcfg.GetRobotCfg(robots[i]);
+      cfg.GetRandomVelocity();
+      velocity = cfg.GetLinearVelocity().normalize();
+      if(this->m_debug)
+        std::cout << "\tRobot: " << robots[i]->GetLabel()
+                  << "\n\tSampled velocity direction: " << velocity
+                  << "\n\t\tDot product with bias: " << velocity * bias
+                  << (velocity * bias < m_velocityAlignment ? " < " : " >= ")
+                  << m_velocityAlignment
+                  << std::endl;
+    } while(velocity * bias < m_velocityAlignment);
+  }
 }
 
 
@@ -1866,8 +1983,10 @@ void
 CompositeDynamicRegionRRT<MPTraits>::
 NextBestRegion() {
   // If there are no remaining edges, then throw exception
-  if(m_edgeQueue.size() < 1)
+  if(m_abortOnFail and m_edgeQueue.size() < 1)
     throw RunTimeException(WHERE) << "Ran out of new regions to create. Aborting";
+  else if(m_edgeQueue.size() < 1)
+    return;
 
   // Get the next lowest cost edge from the queue
   auto eidIter = m_edgeQueue.begin();
@@ -1904,21 +2023,27 @@ AdvanceRegions(const GroupCfgType& _cfg) {
   // Keep track of edge iterators that need to be replaced
   std::queue<SkeletonVertexDescriptor> replaceVertices;
 
-  // Only check sibling regions to the one we just advanced
-  SkeletonVertexDescriptor sourceVID = m_regions[m_lastRegionIdx].edgeIterator->source();
-
   // Iterate through all existing regions to see which should be advanced.
   for(auto iter = m_regions.begin(); iter != m_regions.end(); ) {
 
-    if(iter->edgeIterator->source() != sourceVID) {
-      ++iter;
-      continue;
+    if(!m_groundEdge) {
+      // Only check sibling regions to the one we just advanced
+      auto sourceVID = m_regions[m_lastRegionIdx].edgeIterator->source();
+      if(iter->edgeIterator->source() != sourceVID) {
+        ++iter;
+        continue;
+      }
     }
 
     // Advance this region until the robot at _cfg is no longer touching it.
     if(!AdvanceRegionToCompletion(_cfg, &(*iter))) {
       ++iter;
       continue;
+    }
+
+    if(m_groundEdge) {
+      m_regions.erase(iter);
+      return;
     }
 
     // We have reached the end of this region's edge. Delete it and save the
@@ -1991,8 +2116,7 @@ bool
 CompositeDynamicRegionRRT<MPTraits>::
 AdvanceRegionToCompletion(const GroupCfgType& _cfg, SamplingRegion* _region) {
   // Find the edge path this region is traversing.
-  auto eit = _region->edgeIterator;
-  const auto path = eit->property().GetIntermediates();
+  const auto path = _region->edge.GetIntermediates();
   size_t& i = _region->edgeIndex;
 
   if(this->m_debug)
@@ -2054,6 +2178,36 @@ GetAdjacentRobots(const VectorMap _centers) {
   }
 
   return robotMap;
+}
+
+
+template <typename MPTraits>
+void
+CompositeDynamicRegionRRT<MPTraits>::
+GroundEdge(const CompositeSkeletonEdge _edge){
+  MethodTimer mt(this->GetStatClass(), this->GetNameAndLabel() + "::GroundEdge");
+
+  m_groundEdge = true;
+  m_regions.clear();
+
+  // Get region radii.
+  auto groupTask = this->GetGroupTask();
+
+  // Disable velocity biasing if a robot is holonomic.
+  for(auto& task : *groupTask) {
+    auto robot = task.GetRobot();
+    m_velocityBiasing &= robot->IsNonholonomic();
+
+    const double robotRadius = robot->GetMultiBody()->
+                               GetBoundingSphereRadius() * m_regionFactor;
+    m_regionRadius.insert(std::pair<Robot*, const double>(robot, robotRadius));
+  }
+
+  auto region = SamplingRegion(_edge, 1.0);
+  m_regions.push_back(region);
+
+  while(m_regions.size())
+    this->Iterate();
 }
 
 #endif

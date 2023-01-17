@@ -549,6 +549,7 @@ TASK_SRCS := \
   TMPLibrary/TMPStrategies/NextBestSearch.cpp \
 	TMPLibrary/TMPStrategies/SimpleMotionMethod.cpp \
 	TMPLibrary/TMPStrategies/SimpleTaskAllocationMethod.cpp \
+  TMPLibrary/TMPStrategies/WoDaSH.cpp \
 	TMPLibrary/TMPStrategies/TMPStrategyMethod.cpp \
   TMPLibrary/TMPTools/TMPTools.cpp \
   Behaviors/Agents/AgentFactory_sim.cpp \

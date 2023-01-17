@@ -43,7 +43,7 @@ class Hypergraph {
     ///@name Vertex Accessor Functions
     ///@{
 
-    size_t AddVertex(VertexType _vertex);
+    virtual size_t AddVertex(VertexType _vertex);
 
     Vertex& GetVertex(size_t _vid);
 
@@ -59,7 +59,7 @@ class Hypergraph {
     ///@name Hyperarc Accessor Functions
     ///@{
 
-    size_t AddHyperarc(std::set<size_t> _head, std::set<size_t> _tail,
+    virtual size_t AddHyperarc(std::set<size_t> _head, std::set<size_t> _tail,
                        HyperarcType _hyperarc, bool _overWrite = false);
 
     Hyperarc& GetHyperarc(size_t _hid);

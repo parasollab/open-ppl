@@ -158,6 +158,11 @@ class MPProblem
     /// @param _task The new task.
     void AddTask(std::unique_ptr<MPTask>&& _task);
 
+    /// Add a task to the problem. The assigned robot group will be taken from 
+    /// the group task object.
+    /// @param _task The new task.
+    void AddTask(std::unique_ptr<GroupTask>&& _task);
+
     /// Reassign a task to another robot.
     /// @param _task The task to reassign.
     /// @param _newOwner The new robot assigned to _task.
