@@ -1,8 +1,12 @@
 #include "WoDaSH.h"
 
+#include "MPLibrary/MapEvaluators/MapEvaluatorMethod.h"
 #include "MPLibrary/MPSolution.h"
 
+#include "MPProblem/Constraints/CSpaceConstraint.h"
 #include "MPProblem/GroupTask.h"
+#include "MPProblem/TaskHierarchy/Decomposition.h"
+#include "MPProblem/TaskHierarchy/SemanticTask.h"
 
 #include "TMPLibrary/ActionSpace/Action.h"
 #include "TMPLibrary/ActionSpace/ActionSpace.h"
@@ -12,6 +16,7 @@
 #include "TMPLibrary/ActionSpace/ProximityCondition.h"
 #include "TMPLibrary/InteractionStrategies/InteractionStrategyMethod.h"
 #include "TMPLibrary/StateGraphs/GroundedHypergraph.h"
+#include "TMPLibrary/Solution/Plan.h"
 #include "TMPLibrary/TaskEvaluators/TaskEvaluatorMethod.h"
 
 #include "MPLibrary/MPStrategies/CompositeDynamicRegionRRT.h"
@@ -68,6 +73,9 @@ WoDaSH(XMLNode& _node) : TMPStrategyMethod(_node) {
       m_penetrationFactor, std::numeric_limits<double>::min(), 1.,
       "Fraction of bounding sphere penetration that is considered touching");
 
+  m_edgeQueryLabel = _node.Read("edgeQuery",true,"",
+      "Label of the query method to extract paths alongs grounded edges.");
+
   m_groundedHypergraphLabel = _node.Read("groundedHypergraph",true,"",
       "Label of the grounded hypergraph to use.");
 
@@ -83,6 +91,14 @@ WoDaSH::
 void
 WoDaSH::
 Initialize() {
+
+  {
+    auto plan = this->GetPlan();
+    auto decomp = plan->GetDecomposition();
+    auto st = decomp->GetGroupMotionTasks()[0];
+    auto groupTask = st->GetGroupMotionTask();
+    this->GetMPLibrary()->SetGroupTask(groupTask.get());
+  }
 
   // TODO actually use this (for now just using global)
   if(!(m_replanMethod == "global" or m_replanMethod == "resume" or m_replanMethod == "lazy"))
@@ -932,6 +948,32 @@ GroundHyperskeleton() {
     }
     
     m_endReps[hid] = std::make_pair(grm, lastVID);
+
+    // Convert vids into a task and path to save in grounded hypergraph
+
+    // Configure group task
+    auto task = std::shared_ptr<GroupTask>(new GroupTask(grm->GetGroup()));
+    auto startGcfg = grm->GetVertex(startVID);
+    auto endGcfg = grm->GetVertex(lastVID);
+    for(auto robot : grm->GetGroup()->GetRobots()) {
+      MPTask t(robot);
+      t.SetStartConstraint(std::move(std::unique_ptr<CSpaceConstraint>(
+          new CSpaceConstraint(robot,startGcfg.GetRobotCfg(robot)))));
+      t.AddGoalConstraint(std::move(std::unique_ptr<CSpaceConstraint>(
+          new CSpaceConstraint(robot,endGcfg.GetRobotCfg(robot)))));
+      task->AddTask(t);
+    }
+
+    // Solve for the task
+    this->GetMPLibrary()->SetGroupTask(task.get());
+    auto q = this->GetMPLibrary()->GetMapEvaluator(m_edgeQueryLabel);
+    if((*q)())
+      throw RunTimeException(WHERE) << "Falsely reported this edge as grounded.";
+
+    // Save grounded edge
+    auto path = this->GetMPLibrary()->GetGroupPath(grm->GetGroup());
+    
+    AddTransitionToGroundedHypergraph(hyperarc.tail,hyperarc.head,path,task);
   }
 
   this->GetMPLibrary()->SetGroupTask(originalTask);

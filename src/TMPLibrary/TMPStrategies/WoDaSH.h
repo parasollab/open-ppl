@@ -148,6 +148,7 @@ class WoDaSH : public TMPStrategyMethod {
     std::string m_skeletonType{"reeb"};    ///< Type of skeleton to build.
     std::string m_decompositionLabel;      ///< The workspace decomposition label.
     std::string m_scuLabel;                ///< The skeleton clearance utility label.
+    std::string m_edgeQueryLabel;          ///< The query method to extract paths along grounded edges.
     std::string m_groundedHypergraphLabel; ///< The grounded hypergraph label
     std::string m_queryLabel;              ///< The hypergraph query label
 
