@@ -4,7 +4,8 @@
 #include "TMPStrategyMethod.h"
 
 #include "TMPLibrary/ActionSpace/Condition.h"
-#include "TMPLibrary/StateGraphs/CombinedRoadmap.h"
+
+#include "Traits/CfgTraits.h"
 
 #include "Workspace/WorkspaceSkeleton.h"
 #include "Workspace/HypergraphWorkspaceSkeleton.h"
@@ -17,10 +18,11 @@ class WoDaSH : public TMPStrategyMethod {
     ///@name Local Types
     ///@{
 
-    typedef Cfg                                      CfgType;
-    typedef typename TMPBaseObject::GroupCfgType     GroupCfgType;
-    typedef typename TMPBaseObject::GroupRoadmapType GroupRoadmapType;
-    typedef size_t                                   VID;
+    typedef Cfg                                       CfgType;
+    typedef typename TMPBaseObject::GroupCfgType      GroupCfgType;
+    typedef typename TMPBaseObject::GroupRoadmapType  GroupRoadmapType;
+    typedef typename MPTraits<CfgType>::GroupPathType GroupPathType;
+    typedef size_t                                    VID;
     
     typedef typename std::map<Robot*, VID>      VIDMap;
     typedef std::vector<Point3d>                PointSet;
@@ -28,9 +30,6 @@ class WoDaSH : public TMPStrategyMethod {
     typedef std::map<Robot*, Vector3d>          VectorMap;
 
     typedef Condition::State                 State;
-    typedef CombinedRoadmap::SemanticRoadmap SemanticRoadmap;
-    typedef CombinedRoadmap::CompositeSemanticRoadmap 
-            CompositeSemanticRoadmap;
     typedef std::set<std::string>            RoleSet;
 
     ///@}
@@ -127,6 +126,9 @@ class WoDaSH : public TMPStrategyMethod {
 
     RobotGroup* AddGroup(std::vector<Robot*> _robots);
 
+    HID AddTransitionToGroundedHypergraph(std::set<VID> _tail, std::set<VID> _head, 
+      GroupPathType* _path, std::shared_ptr<GroupTask> _task);
+
     ///@}
     ///@name Internal State
     ///@{
@@ -141,12 +143,16 @@ class WoDaSH : public TMPStrategyMethod {
     std::unordered_map<Robot*, MPTask*> m_taskMap;
 
     WorkspaceSkeleton m_indSkeleton;
-    std::string m_skeletonFilename;  ///< The output file for the skeleton graph
-    std::string m_skeletonIO;        ///< Option to read or write the skeleton
-    std::string m_skeletonType{"reeb"}; ///< Type of skeleton to build.
-    std::string m_decompositionLabel; ///< The workspace decomposition label.
-    std::string m_scuLabel;           ///< The skeleton clearance utility label.
-    std::map<Robot*, PropertyMap<std::vector<double>,double>*> m_annotationMap; ///< Skeleton clearance annotations
+    std::string m_skeletonFilename;        ///< The output file for the skeleton graph
+    std::string m_skeletonIO;              ///< Option to read or write the skeleton
+    std::string m_skeletonType{"reeb"};    ///< Type of skeleton to build.
+    std::string m_decompositionLabel;      ///< The workspace decomposition label.
+    std::string m_scuLabel;                ///< The skeleton clearance utility label.
+    std::string m_groundedHypergraphLabel; ///< The grounded hypergraph label
+    std::string m_queryLabel;              ///< The hypergraph query label
+
+    /// Skeleton clearance annotations
+    std::map<Robot*, PropertyMap<std::vector<double>,double>*> m_annotationMap; 
 
     std::unique_ptr<HypergraphSkeletonType> m_skeleton;
     std::unordered_map<size_t, std::unordered_map<Robot*, HID>> m_hidPaths;
@@ -159,6 +165,7 @@ class WoDaSH : public TMPStrategyMethod {
     std::unordered_set<HID> m_origStart;
     std::unordered_set<HID> m_origTarget;
 
+    // TODO::Think about if we will ever have more than one grounded instance of a WHS vertex
     // Start and end VIDs for each hyperskeleton hyperarc
     std::unordered_map<HID, std::pair<GroupRoadmapType*, VID>> m_startReps;
     std::unordered_map<HID, std::pair<GroupRoadmapType*, VID>> m_endReps;
@@ -183,6 +190,9 @@ class WoDaSH : public TMPStrategyMethod {
 
     // Constraints from hyperarcs that failed to ground
     std::unordered_map<std::pair<VID, VID>, RobotGroup*> m_failedEdges;
+
+    // Map from workspace hyper-skeleton VID to all grounded instances of itself
+    std::unordered_map<VID,std::unordered_set<VID>> m_vertexGroundingMap;
 
     ///@}
 };

@@ -11,7 +11,7 @@
 #include "TMPLibrary/ActionSpace/MotionCondition.h"
 #include "TMPLibrary/ActionSpace/ProximityCondition.h"
 #include "TMPLibrary/InteractionStrategies/InteractionStrategyMethod.h"
-#include "TMPLibrary/StateGraphs/CombinedRoadmap.h"
+#include "TMPLibrary/StateGraphs/GroundedHypergraph.h"
 #include "TMPLibrary/TaskEvaluators/TaskEvaluatorMethod.h"
 
 #include "MPLibrary/MPStrategies/CompositeDynamicRegionRRT.h"
@@ -67,6 +67,12 @@ WoDaSH(XMLNode& _node) : TMPStrategyMethod(_node) {
   m_penetrationFactor = _node.Read("penetration", true,
       m_penetrationFactor, std::numeric_limits<double>::min(), 1.,
       "Fraction of bounding sphere penetration that is considered touching");
+
+  m_groundedHypergraphLabel = _node.Read("groundedHypergraph",true,"",
+      "Label of the grounded hypergraph to use.");
+
+  m_queryLabel = _node.Read("queryLabel",true,"",
+      "Label of the hypergraph query method to use.");
 }
 
 WoDaSH::
@@ -1188,6 +1194,9 @@ ConnectToSkeleton() {
 bool
 WoDaSH::
 SampleTrajectories() {
+
+  // TODO::Add caching for repeated queries
+
   // First, merge together groups going into the same skeleton vertex
   // auto wholeGroup = this->GetMPLibrary()->GetGroupTask()->GetRobotGroup();
   for(auto hid : m_mergeTraj) {
@@ -1196,6 +1205,7 @@ SampleTrajectories() {
     auto group = cedge.GetGroup();
     auto grm = this->GetMPLibrary()->GetMPSolution()->GetGroupRoadmap(group);
 
+    // TODO::Flip head and tail
     auto start = GroupCfgType(grm);
     for(auto v : hyp.head) {
       auto ihs = m_skeleton->GetIncomingHyperarcs(v);
@@ -1235,6 +1245,7 @@ SampleTrajectories() {
 
     // Check if there is a split afterward or if all robots go to the same edge
     auto tail = *hyp.tail.begin();
+    // TODO::Remove assumption that there is always one outgoing hyperarc
     auto ohs = *(m_skeleton->GetOutgoingHyperarcs(tail).begin());
     GroupCfgType target;
 
@@ -1251,7 +1262,7 @@ SampleTrajectories() {
 
     // Plan a path between the start and target
     // TODO put this into a grounded hypergraph
-    auto task = new GroupTask(group);
+    auto task = std::shared_ptr<GroupTask>(new GroupTask(group));
     for(auto r : group->GetRobots()) {
       auto t = MPTask(r);
 
@@ -1270,16 +1281,19 @@ SampleTrajectories() {
       task->AddTask(t);
     } 
 
-    this->GetMPLibrary()->Solve(this->GetMPProblem(), task, 
-        this->GetMPSolution(), m_trajStrategy, LRand(), "SampleTrajectories");
-    delete task;
+    this->GetMPLibrary()->Solve(this->GetMPProblem(), task.get(), 
+        this->GetMPSolution(), m_trajStrategy, LRand(),
+        this->GetNameAndLabel()+"::SampleTrajectories");
+    //delete task;
 
     // Check if the plan was successful
-    auto path = this->GetMPSolution()->GetGroupPath(group)->VIDs();
-    if(!path.size())
+    auto path = this->GetMPSolution()->GetGroupPath(group);
+    if(!path->VIDs().size())
       return false;
 
     // TODO extract path from solution
+
+    AddTransitionToGroundedHypergraph(hyp.tail,hyp.head,path,task);
   }
 
   // Next, split apart groups going onto different skeleton edges
@@ -1312,7 +1326,7 @@ SampleTrajectories() {
 
     // Plan a path between the start and target
     // TODO put this into a grounded hypergraph
-    auto task = new GroupTask(group);
+    auto task = std::shared_ptr<GroupTask>(new GroupTask(group));
     for(auto r : group->GetRobots()) {
       auto t = MPTask(r);
 
@@ -1329,16 +1343,18 @@ SampleTrajectories() {
       task->AddTask(t);
     } 
 
-    this->GetMPLibrary()->Solve(this->GetMPProblem(), task, 
+    this->GetMPLibrary()->Solve(this->GetMPProblem(), task.get(), 
         this->GetMPSolution(), m_trajStrategy, LRand(), "SampleTrajectories");
-    delete task;
+    //delete task;
 
     // Check if the plan was successful
-    auto path = this->GetMPSolution()->GetGroupPath(group)->VIDs();
-    if(!path.size())
+    auto path = this->GetMPSolution()->GetGroupPath(group);
+    if(!path->VIDs().size())
       return false;
 
     // TODO extract path from solution
+    AddTransitionToGroundedHypergraph(hyp.tail,hyp.head,path,task);
+
   }
 
   return true;
@@ -1365,4 +1381,39 @@ AddGroup(std::vector<Robot*> _robots) {
   return group;
 }
 
+WoDaSH::HID
+WoDaSH::
+AddTransitionToGroundedHypergraph(std::set<VID> _tail, std::set<VID> _head,
+  GroupPathType* _path, std::shared_ptr<GroupTask> _task) {
+
+  auto gh = dynamic_cast<GroundedHypergraph*>(this->GetStateGraph(m_groundedHypergraphLabel).get());
+
+  // Add vertices and path to grounded hypergraph
+  // Add vertices
+  std::set<VID> groundedTail;
+  std::set<VID> groundedHead;
+
+  for(auto v : _tail) {
+    auto vertex = m_startReps[v];
+    auto gVID = gh->AddVertex(vertex);
+    groundedTail.insert(gVID);
+  }
+
+  for(auto v : _head) {
+    auto vertex = m_endReps[v];
+    auto gVID = gh->AddVertex(vertex);
+    groundedHead.insert(gVID);
+  }
+
+  // Add hyperarc
+  GroundedHypergraph::Transition transition;
+  transition.taskSet = {{_task}};
+  // Decide if cost is length or timesteps
+  auto pathCost = _path->TimeSteps();
+  auto pathStart = _path->VIDs().front();
+  auto pathEnd = _path->VIDs().back();
+  transition.compositeImplicitPath = std::make_pair(pathStart,pathEnd);
+  transition.cost = pathCost;
+  return gh->AddTransition(groundedTail,groundedHead,transition);
+}
 /*------------------------------------------------------------*/
