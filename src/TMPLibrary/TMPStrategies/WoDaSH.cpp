@@ -745,7 +745,7 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
       // Construct the corresponding hyperskeleton vertices and edges
       auto svid = m_skeleton->AddVertex(svertex);
       auto tvid = m_skeleton->AddVertex(tvertex);
-      auto hid = m_skeleton->AddHyperarc({svid}, {tvid}, cedge);
+      auto hid = m_skeleton->AddHyperarc({tvid}, {svid}, cedge);
       m_groundHIDs.insert(hid);
       if(t == 0)
         m_origStart.insert(hid);
@@ -803,7 +803,7 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
       }
       auto cgroup = m_skeleton->GetVertexType(svertex).GetGroup();
       auto cedge = CompositeSkeletonEdge(cgroup, &m_indSkeleton);
-      m_skeleton->AddHyperarc({svertex}, tvids, cedge);
+      m_skeleton->AddHyperarc(tvids, {svertex}, cedge);
     }
 
     // Merge groups going into the same vertex ("coupling" hyperarcs - sample 
@@ -843,7 +843,7 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
         tvertex.SetRobotCfg(robot, skelVID);
       
       auto tvid = m_skeleton->AddVertex(tvertex);
-      auto hid = m_skeleton->AddHyperarc(predVIDs, {tvid}, cedge);
+      auto hid = m_skeleton->AddHyperarc({tvid}, predVIDs, cedge);
       m_mergeTraj.insert(hid);
       mergedVIDs[skelVID] = tvid;
     }
@@ -869,7 +869,7 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
         auto thid = m_hidPaths[t+1][robots[0]];
         auto tvid = *(m_skeleton->GetHyperarc(thid).head.begin());
         auto cedge = CompositeSkeletonEdge(scvertex.GetGroup(), &m_indSkeleton);
-        m_skeleton->AddHyperarc({iter.second}, {tvid}, cedge);
+        m_skeleton->AddHyperarc({tvid}, {iter.second}, cedge);
         continue;
       }
 
@@ -882,7 +882,7 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
         }
       }
       auto cedge = CompositeSkeletonEdge(scvertex.GetGroup(), &m_indSkeleton);
-      auto hid = m_skeleton->AddHyperarc({iter.second}, tvids, cedge);
+      auto hid = m_skeleton->AddHyperarc(tvids, {iter.second}, cedge);
       m_splitTraj.insert(hid);
     }
   }
@@ -900,8 +900,8 @@ GroundHyperskeleton() {
     auto& hyperarc = m_skeleton->GetHyperarc(hid);
     auto& cedge = hyperarc.property;
 
-    auto svid = *(hyperarc.head.begin());
-    auto tvid = *(hyperarc.tail.begin());
+    auto svid = *(hyperarc.tail.begin());
+    auto tvid = *(hyperarc.head.begin());
 
     auto svertex = m_skeleton->GetVertexType(svid);
     auto tvertex = m_skeleton->GetVertexType(tvid);
@@ -1205,9 +1205,8 @@ SampleTrajectories() {
     auto group = cedge.GetGroup();
     auto grm = this->GetMPLibrary()->GetMPSolution()->GetGroupRoadmap(group);
 
-    // TODO::Flip head and tail
     auto start = GroupCfgType(grm);
-    for(auto v : hyp.head) {
+    for(auto v : hyp.tail) {
       auto ihs = m_skeleton->GetIncomingHyperarcs(v);
       if(ihs.size() > 1)
         // Can get from m_groundHIDs (current set of working hyperarcs)
@@ -1231,8 +1230,8 @@ SampleTrajectories() {
 
       } else {
         // Came from a nop edge, need to go one step further back
-        auto nopHead = *(m_skeleton->GetHyperarc(ih).head.begin());
-        auto iih = m_skeleton->GetIncomingHyperarcs(nopHead);
+        auto nopTail = *(m_skeleton->GetHyperarc(ih).tail.begin());
+        auto iih = m_skeleton->GetIncomingHyperarcs(nopTail);
         if(iih.size() > 1)
           throw RunTimeException(WHERE) << "More than one incoming hyperarc to nop. I'll deal with this soon.";
         
@@ -1244,9 +1243,9 @@ SampleTrajectories() {
     }
 
     // Check if there is a split afterward or if all robots go to the same edge
-    auto tail = *hyp.tail.begin();
+    auto head = *hyp.head.begin();
     // TODO::Remove assumption that there is always one outgoing hyperarc
-    auto ohs = *(m_skeleton->GetOutgoingHyperarcs(tail).begin());
+    auto ohs = *(m_skeleton->GetOutgoingHyperarcs(head).begin());
     GroupCfgType target;
 
     if(m_startReps.count(ohs)) {
@@ -1255,7 +1254,7 @@ SampleTrajectories() {
       target = rep.first->GetVertex(rep.second);
     } else {
       // Sample from around the skeleton vertex
-      auto vid = SpawnVertex(grm, m_skeleton->GetVertexType(tail));
+      auto vid = SpawnVertex(grm, m_skeleton->GetVertexType(head));
       target = grm->GetVertex(vid);
       m_endReps[hid] = std::make_pair(grm, vid);
     }
@@ -1303,13 +1302,13 @@ SampleTrajectories() {
     auto group = cedge.GetGroup();
     auto grm = this->GetMPLibrary()->GetMPSolution()->GetGroupRoadmap(group);
 
-    auto head = *hyp.head.begin();
-    auto ihs = *(m_skeleton->GetIncomingHyperarcs(head).begin());
+    auto tail = *hyp.tail.begin();
+    auto ihs = *(m_skeleton->GetIncomingHyperarcs(tail).begin());
     auto rep = m_endReps.at(ihs);
     auto start = rep.first->GetVertex(rep.second);
 
     auto target = GroupCfgType(grm);
-    for(auto v : hyp.tail) {
+    for(auto v : hyp.head) {
       auto ohs = m_skeleton->GetOutgoingHyperarcs(v);
 
       if(ohs.size() > 1)
