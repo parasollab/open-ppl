@@ -43,8 +43,8 @@ class PropertyMap {
     ///@{
 
     /// Graph type is a directed multiedge graph of points and paths.
-    typedef WorkspaceSkeleton::GraphType  GraphType;
-    typedef WorkspaceSkeleton::VD               VD;
+    typedef WorkspaceSkeleton                    GraphType;
+    typedef WorkspaceSkeleton::VD                VD;
     typedef WorkspaceSkeleton::ED                ED;
     typedef typename GraphType::vertex_iterator        vertex_iterator;
     typedef typename GraphType::adj_edge_iterator      adj_edge_iterator;
@@ -160,15 +160,13 @@ template<typename EdgeProperty, typename VertexProperty>
 WorkspaceSkeleton*
 PropertyMap<EdgeProperty, VertexProperty>::
 GetVertexFilteredSkeleton(VertexFilterFunction&& _f)  {
-  auto graph = m_skeleton->GetGraph();
 
   for(auto mit = m_vertexMap.begin();
 	mit != m_vertexMap.end(); ++mit) {
     if(_f(mit->second)) {
-      graph.delete_vertex(mit->first);
+      m_skeleton->delete_vertex(mit->first);
     }
   }
-  m_skeleton->SetGraph(graph);
 
   return m_skeleton;
 }
@@ -177,15 +175,13 @@ template<typename EdgeProperty, typename VertexProperty>
 WorkspaceSkeleton*
 PropertyMap<EdgeProperty, VertexProperty>::
 GetEdgeFilteredSkeleton(EdgeFilterFunction&& _f)  {
-  auto graph = m_skeleton->GetGraph();
 
   for(auto mit = m_edgeMap.begin();
 	mit != m_edgeMap.end(); ++mit)  {
     if(_f(mit->second))  {
-      graph.delete_edge(mit->first);
+      m_skeleton->delete_edge(mit->first);
     }
   }
-  m_skeleton->SetGraph(graph);
 
   return m_skeleton;
 }
@@ -200,7 +196,7 @@ ClearanceAnnotatedSkeleton(MPBaseObject<MPTraits>* _mp, WorkspaceSkeleton* _ws,
   typedef typename MPTraits::CfgType CfgType;
   auto clearanceMap = new PropertyMap<vector<double>,double>(_ws);
 
-  auto g = _ws->GetGraph();
+  auto g = _ws;
   auto boundary = _mp->GetEnvironment()->GetBoundary();
   auto vc = _mp->GetValidityChecker("pqp_solid");
 
@@ -226,12 +222,12 @@ ClearanceAnnotatedSkeleton(MPBaseObject<MPTraits>* _mp, WorkspaceSkeleton* _ws,
   };
 
   // Graph vertices clearance.
-  for(auto vit = g.begin(); vit != g.end(); ++vit)
+  for(auto vit = g->begin(); vit != g->end(); ++vit)
     clearanceMap->SetVertexProperty(vit->descriptor(),
         getClearance(vit->property()));
 
   // Graph edges clearance.
-  for(auto eit = g.edges_begin(); eit != g.edges_end(); ++eit)	{
+  for(auto eit = g->edges_begin(); eit != g->edges_end(); ++eit)	{
     vector<double> clearances;
     for(auto pit = eit->property().begin(); pit < eit->property().end(); ++pit)
       clearances.push_back(getClearance(*pit));

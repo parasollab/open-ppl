@@ -112,6 +112,7 @@ class GenericStateGraph: public
     ///@name Construction
     ///@{
 
+    GenericStateGraph();
     GenericStateGraph(Robot* const _r);
 
     ///@}
@@ -461,6 +462,10 @@ class GenericStateGraph: public
 };
 
 /*------------------------------- Construction -------------------------------*/
+
+template <typename Vertex, typename Edge>
+GenericStateGraph<Vertex, Edge>::
+GenericStateGraph() { }
 
 template <typename Vertex, typename Edge>
 GenericStateGraph<Vertex, Edge>::

@@ -225,15 +225,13 @@ GetSkeleton() {
     cout << "MeanCurvatureSkeleton3D::GetSkeleton()" << endl;
 
   if(m_params.ioType != "read") {
-    typedef WorkspaceSkeleton::GraphType Graph;
-    Graph g;
     // Map stores already inserted vertices in the graph
-    map<MCVD, typename Graph::vertex_descriptor> vertexMap;
+    map<MCVD, typename WorkspaceSkeleton::vertex_descriptor> vertexMap;
     // Segment the graph as set of polylines
     vector<vector<MCVD>> plines;
     ToPolyLines(plines);
-    vector<pair<typename Graph::vertex_descriptor, WitnessType>> vertexWitnesses;
-    vector<pair<typename Graph::edge_descriptor, vector<WitnessType>>> edgeWitnesses;
+    vector<pair<typename WorkspaceSkeleton::vertex_descriptor, WitnessType>> vertexWitnesses;
+    vector<pair<typename WorkspaceSkeleton::edge_descriptor, vector<WitnessType>>> edgeWitnesses;
     // For each polyline - create an edge
     for(auto pline : plines){
       // Get the two end points
@@ -241,14 +239,17 @@ GetSkeleton() {
       epts[0] = pline.front();
       epts[1] = pline.back();
       // vertex descriptors of end points
-      Graph::vertex_descriptor vd[2];
+      WorkspaceSkeleton::vertex_descriptor vd[2];
       // For each end point create a vertex if not already in the graph
       for(size_t i = 0; i < 2; ++i) {
         auto findPt = vertexMap.find(epts[i]);
         // If end point not already in the graph - add vertex
         if(findPt == vertexMap.end()) {
-          size_t deg = degree(epts[i], m_mcs); if(deg > 6 ) cout<<"degree"<<deg<<endl;
-          vd[i] = g.add_vertex(ToPMPLPoint3d(Point(epts[i])));
+          size_t deg = degree(epts[i], m_mcs); 
+          if(deg > 6 ) 
+            cout<<"degree"<<deg<<endl;
+
+          vd[i] = m_skeleton.AddVertex(ToPMPLPoint3d(Point(epts[i])));
           vertexMap.insert(make_pair(epts[i],vd[i]));
           // Store the witness points for the vertex
           vertexWitnesses.push_back(make_pair(vd[i], WitnessType()));
@@ -265,11 +266,10 @@ GetSkeleton() {
         // Get the witnesses for the intermediate points in the edge
         GetWitnesses(pline[i], intermediateWitnesses[i]);
       }
-      auto ed = g.add_edge(vd[0], vd[1], intermediates);
+      auto ed = m_skeleton.AddEdge(vd[0], vd[1], intermediates);
       // Store the witnesses of the edge points
       edgeWitnesses.push_back(make_pair(ed, intermediateWitnesses));
     }
-    m_skeleton.SetGraph(g);
     // Set witnesses as annotation to the skeleton
     m_annotation = AnnotationType(&m_skeleton);
     for(auto vwitness : vertexWitnesses)
@@ -291,17 +291,15 @@ GetMesoSkeleton() {
     cout << "MeanCurvatureSkeleton3D::GetMesoSkeleton()" << endl;
 
   if(m_params.ioType != "read") {
-    typedef WorkspaceSkeleton::GraphType Graph;
-    Graph g;
-    vector<pair<typename Graph::vertex_descriptor, WitnessType>> vertexWitnesses;
-    vector<pair<typename Graph::edge_descriptor, vector<WitnessType>>> edgeWitnesses;
+    vector<pair<typename WorkspaceSkeleton::vertex_descriptor, WitnessType>> vertexWitnesses;
+    vector<pair<typename WorkspaceSkeleton::edge_descriptor, vector<WitnessType>>> edgeWitnesses;
     // Map stores already inserted vertices in the graph
     typedef Skeletonization::vertex_descriptor VD;
-    map<VD, typename Graph::vertex_descriptor> vertexMap;
+    map<VD, typename WorkspaceSkeleton::vertex_descriptor> vertexMap;
 
     // Get all vertices
     BOOST_FOREACH(VD vd, vertices(m_meso)){
-      auto svd = g.add_vertex(ToPMPLPoint3d(vd->point()));
+      auto svd = m_skeleton.AddVertex(ToPMPLPoint3d(vd->point()));
       vertexMap.insert(make_pair(vd,svd));
       // Store the witness points for the vertex
       vertexWitnesses.push_back(make_pair(svd, WitnessType()));
@@ -314,7 +312,7 @@ GetMesoSkeleton() {
     typedef Skeletonization::halfedge_descriptor HD;
 
     BOOST_FOREACH(ED ed, edges(m_meso)) {
-      Graph::vertex_descriptor vd[2];
+      WorkspaceSkeleton::vertex_descriptor vd[2];
       VD src = source(ed, m_meso);
       auto findvd = vertexMap.find(src);
       if(findvd == vertexMap.end())
@@ -337,13 +335,11 @@ GetMesoSkeleton() {
       // Get the witnesses for the intermediate points in the edge
       GetWitnesses(tgt, intermediateWitnesses[1]);
 
-      auto sed = g.add_edge(vd[0], vd[1], intermediates);
+      auto sed = m_skeleton.AddEdge(vd[0], vd[1], intermediates);
       // Store the witnesses of the edge points
       edgeWitnesses.push_back(make_pair(sed, intermediateWitnesses));
     }
 
-    // Return the annotated skeleton
-    m_skeleton.SetGraph(g);
     // Set witnesses as annotation to the skeleton
     m_annotation = AnnotationType(&m_skeleton);
     for(auto vwitness : vertexWitnesses)

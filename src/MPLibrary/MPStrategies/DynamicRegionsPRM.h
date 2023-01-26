@@ -569,7 +569,7 @@ Initialize() {
     size_t regionCount = 0;
 
     // Check each skeleton node to see if expansion regions should be created.
-    auto& skeletonGraph = m_skeleton.GetGraph();
+    auto& skeletonGraph = m_skeleton;
     for(auto iter = skeletonGraph.begin(); iter != skeletonGraph.end(); ++iter) {
       if(this->m_debug)
         std::cout << "\tVertex " << iter->descriptor()
@@ -806,7 +806,7 @@ CheckReachedRegion(const VID _query, const VertexSet& _component) {
       this->GetNameAndLabel() + "::CheckReachedRegion");
   auto r = this->GetRoadmap();
   const CfgType& cfg = r->GetVertex(_query);
-  auto& skeletonGraph = m_skeleton.GetGraph();
+  auto& skeletonGraph = m_skeleton;
 
   for(auto vi = skeletonGraph.begin(); vi != skeletonGraph.end(); ++vi) {
     // Check if _query is in this region.
@@ -2115,7 +2115,7 @@ BuildSkeleton() {
 
 
   if(this->m_debug) {
-    auto& g = m_skeleton.GetGraph();
+    auto& g = m_skeleton;
     std::cout << "The skeleton has " << g.get_num_vertices() << " vertices and "
               << g.get_num_edges() << " edges."
               << std::endl;

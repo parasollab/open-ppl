@@ -82,6 +82,14 @@ struct Range final {
     return min == _other.min && max == _other.max;
   }
 
+  /// This only for placing in sets
+  bool operator<(const Range<T>& _other) const {
+    if(min != _other.min)
+      return min < _other.min;
+
+    return max < _other.max;
+  }
+
   ///@}
   ///@name Modifiers
   ///@{
@@ -155,8 +163,17 @@ inline
 bool
 Range<T>::
 Contains(const U& _val, const double _tolerance) const noexcept {
-  return (min - std::abs(min) * _tolerance) <= _val
-     and _val <= (max + std::abs(max) * _tolerance);
+  // James: Tolerance is causing issues with abs compilation.
+  // There is also an imbalance with the amount of tolerance at either end of the 
+  // range with this implementation.
+  // An alternative is to just offer tolerance as a constant amount to extend the
+  // range in either direction "min - _tolernace, max  + _tolerance".
+
+  //return (min - std::abs(min) * _tolerance) <= _val
+  //   and _val <= (max + std::abs(max) * _tolerance);
+
+  return min <= _val and _val <= max;
+
 }
 
 
@@ -251,6 +268,7 @@ operator>>(std::istream& _is, Range<T>& _r) {
   char delim;
   return _is >> _r.min >> std::skipws >> delim >> _r.max;
 }
+
 
 /*----------------------------------------------------------------------------*/
 

@@ -3,6 +3,13 @@
 #include <containers/sequential/graph/algorithms/graph_input_output.h>
 
 #include "nonstd/io.h"
+
+
+/*------------------------------- Construction -------------------------------*/
+
+WorkspaceSkeleton::
+WorkspaceSkeleton() : GenericStateGraph(nullptr) { }
+
 /*--------------------------------- Locators ---------------------------------*/
 
 WorkspaceSkeleton::vertex_iterator
@@ -11,7 +18,7 @@ FindNearestVertex(const mathtool::Point3d& _target) {
   double closestDistance = std::numeric_limits<double>::max();
   vertex_iterator closestVI;
 
-  for(auto vit = m_graph.begin(); vit != m_graph.end(); ++vit) {
+  for(auto vit = this->begin(); vit != this->end(); ++vit) {
     const double distance = (vit->property() - _target).norm();
     if(distance < closestDistance) {
       closestDistance = distance;
@@ -21,17 +28,11 @@ FindNearestVertex(const mathtool::Point3d& _target) {
   return closestVI;
 }
 
-WorkspaceSkeleton::vertex_iterator
-WorkspaceSkeleton::
-find_vertex(WorkspaceSkeleton::VD _vd){
-  return m_graph.find_vertex(_vd);
-}
-
 
 WorkspaceSkeleton::vertex_iterator
 WorkspaceSkeleton::
 FindVertex(const VD _vertexDescriptor) {
-  return m_graph.find_vertex(_vertexDescriptor);
+  return this->find_vertex(_vertexDescriptor);
 }
 
 
@@ -40,39 +41,11 @@ WorkspaceSkeleton::
 FindEdge(const ED& _ed) {
   vertex_iterator vit;
   adj_edge_iterator eit;
-  if(!m_graph.find_edge(_ed, vit, eit))
+  if(!this->find_edge(_ed, vit, eit))
     throw RunTimeException(WHERE) << "Requested non-existing edge ("
                                   << _ed.id() << "|" << _ed.source()
                                   << "," << _ed.target() << ")";
   return eit;
-}
-
-
-std::vector<WorkspaceSkeleton::adj_edge_iterator>
-WorkspaceSkeleton::
-FindInboundEdges(const VD& _vertexDescriptor) {
-  return FindInboundEdges(m_graph.find_vertex(_vertexDescriptor));
-}
-
-
-std::vector<WorkspaceSkeleton::adj_edge_iterator>
-WorkspaceSkeleton::
-FindInboundEdges(const vertex_iterator& _vertexIter) {
-  std::vector<adj_edge_iterator> inEdges;
-
-  // stapl's directed_preds_graph only tells us the predecessors; it doesn't let
-  // us iterate over inbound edges. Because we have multi-edges, finding all
-  // inbound edges thus requires that we iterate over all out-bound edges of the
-  // predecessors and collect their iterators.
-  const std::vector<VD>& predecessors = _vertexIter->predecessors();
-  for(const auto pred : predecessors) {
-    auto predIter = m_graph.find_vertex(pred);
-    for(auto eit = predIter->begin(); eit != predIter->end(); ++eit)
-      if(eit->target() == _vertexIter->descriptor())
-        inEdges.push_back(eit);
-  }
-
-  return inEdges;
 }
 
 /*--------------------------------- Modifiers --------------------------------*/
@@ -80,7 +53,7 @@ FindInboundEdges(const vertex_iterator& _vertexIter) {
 WorkspaceSkeleton
 WorkspaceSkeleton::
 Direct(const mathtool::Point3d& _start) {
-  GraphType skeletonGraph;
+  WorkspaceSkeleton* skeleton = new WorkspaceSkeleton();
 
   // Define coloring for the breadth-first direction algorithm.
   enum Color {
@@ -92,8 +65,8 @@ Direct(const mathtool::Point3d& _start) {
 
   // Copy nodes into the new directed skeleton, preserving the descriptors.
   // Also mark each node as undiscovered.
-  for(auto vit = m_graph.begin(); vit != m_graph.end(); ++vit) {
-    skeletonGraph.add_vertex(vit->descriptor(), vit->property());
+  for(auto vit = this->begin(); vit != this->end(); ++vit) {
+    skeleton->AddVertex(vit->descriptor(), vit->property());
     visited[vit->descriptor()] = White;
   }
 
@@ -119,7 +92,7 @@ Direct(const mathtool::Point3d& _start) {
     q.pop();
     visited[current] = Black;
 
-    auto currentIter = m_graph.find_vertex(current);
+    auto currentIter = this->find_vertex(current);
 
     // Copy edges leaving the current vertex, and mark their targets as
     // discovered.
@@ -133,7 +106,7 @@ Direct(const mathtool::Point3d& _start) {
         case Gray:
           // Node was previously discovered but hasn't been visited yet. Copy
           // the path from current to target into the directed skeleton.
-          skeletonGraph.add_edge(eit->descriptor(), eit->property());
+          skeleton->AddEdge(eit->descriptor(), eit->property());
           break;
         default:
           // Target node was previously visited. We don't copy the edge because
@@ -145,7 +118,7 @@ Direct(const mathtool::Point3d& _start) {
 
     // Copy edges inbound on the current vertex, and mark their sources as
     // discovered.
-    const auto inEdges = FindInboundEdges(currentIter);
+    const auto inEdges = FindInboundEdges(current);
     for(auto pit : inEdges) {
       VD source = pit->source();
       switch(visited.at(source)) {
@@ -159,7 +132,7 @@ Direct(const mathtool::Point3d& _start) {
             // Copy the reversed edge (from source to current) into the
             // directed skeleton.
             const std::vector<mathtool::Point3d>& path = pit->property();
-            skeletonGraph.add_edge(ED(current, source),
+            skeleton->AddEdge(ED(current, source),
                 std::vector<mathtool::Point3d>(path.rbegin(), path.rend()));
             break;
           }
@@ -172,10 +145,8 @@ Direct(const mathtool::Point3d& _start) {
     }
   }
 
-  WorkspaceSkeleton skeleton;
-  skeleton.SetGraph(skeletonGraph);
-  skeleton.m_start = closest;
-  return skeleton;
+  skeleton->m_start = closest;
+  return *skeleton;
 }
 
 
@@ -201,10 +172,7 @@ Prune(const mathtool::Point3d& _goal) {
               << std::endl;
 
   // Initialize a list of vertices to prune with every vertex in the graph.
-  std::vector<VD> toPrune;
-  toPrune.reserve(m_graph.get_num_vertices());
-  for(const auto& v : m_graph)
-    toPrune.push_back(v.descriptor());
+  BaseType::VertexSet toPrune = this->m_allVIDs;
 
   // Remove vertices from the prune list by starting from the goal and working
   // backwards up the incoming edges. Don't prune any vertex that is an ancestor
@@ -225,14 +193,16 @@ Prune(const mathtool::Point3d& _goal) {
     // if not found, just keep it there
 
     // the backtrack BFS logic
-    for(auto ancestor : m_graph.find_vertex(current)->predecessors())
+    // for(auto ancestor : this->find_vertex(current)->predecessors())
+    auto predecessors = this->m_predecessors.find(current);
+    for(auto ancestor : predecessors->second)
       q.push(ancestor);
   } while(!q.empty());
 
   // Remove the vertices we aren't keeping.
   for(auto vd : toPrune)
-    if(m_graph.find_vertex(vd) != m_graph.end())
-      m_graph.delete_vertex(vd);
+    if(this->find_vertex(vd) != this->end())
+      this->DeleteVertex(vd);
 
   if(m_debug)
     std::cout << "\tPruned " << toPrune.size() << " vertices."
@@ -246,9 +216,9 @@ RefineEdges(double _maxLength){
   //std::vector<WorkspaceSkeleton::ED> originalEdges;
   //for(auto vi = m_graph.begin(); vi != m_graph.end(); vi++){
     //for(auto ei = vi->begin(); ei != vi->end(); ei++){
-    for(auto ei = m_graph.edges_begin(); ei != m_graph.edges_end(); ei++){
-      auto source = m_graph.find_vertex(ei->source())->property();
-      auto target = m_graph.find_vertex(ei->target())->property();
+    for(auto ei = this->edges_begin(); ei != this->edges_end(); ei++){
+      auto source = this->find_vertex(ei->source())->property();
+      auto target = this->find_vertex(ei->target())->property();
       //original_edges.emplace_back(source,target);
       //if(target[2] != 0 or source[2] != 0)
       //  continue; //This is a hack because invalid edges are being examined
@@ -256,7 +226,7 @@ RefineEdges(double _maxLength){
       if(distance < _maxLength)
         continue;
       //size_t divisions = (size_t)std::ceil(distance/_maxLength);
-      std::vector<Point3d> newVertices = {m_graph.find_vertex(ei->source())->property()};
+      std::vector<Point3d> newVertices = {this->find_vertex(ei->source())->property()};
       auto& intermediates = ei->property();
       double currentDistance = 0;
       for(size_t i = 1; i < intermediates.size(); i++){
@@ -268,7 +238,7 @@ RefineEdges(double _maxLength){
           currentDistance = step;
         }
       }
-      newVertices.push_back(m_graph.find_vertex(ei->target())->property());
+      newVertices.push_back(this->find_vertex(ei->target())->property());
       refinedVertices.push_back(newVertices);
     }
   //}
@@ -277,13 +247,13 @@ RefineEdges(double _maxLength){
     size_t vd1 = firstVID;
     size_t vd2 = firstVID;
     for(size_t i = 1; i < edge.size()-1; i++){
-      vd2 = m_graph.add_vertex(edge[i]);
-      m_graph.add_edge(vd1,vd2);
+      vd2 = this->AddVertex(edge[i]);
+      this->AddEdge(vd1,vd2);
       vd1 = vd2;;
     }
     size_t lastVID = FindNearestVertex(edge.back())->descriptor();
-    m_graph.add_edge(vd2,lastVID);
-    m_graph.delete_edge(firstVID,lastVID);
+    this->AddEdge(vd2,lastVID);
+    this->DeleteEdge(firstVID,lastVID);
   }
 }
 
@@ -291,50 +261,30 @@ RefineEdges(double _maxLength){
 void
 WorkspaceSkeleton::
 DoubleEdges() {
-  for(auto vi = m_graph.begin(); vi != m_graph.end(); ++vi) {
+  // Edge descriptors and paths to add
+  std::vector<ED> eds;
+  std::vector<EdgeType> paths;
+
+  for(auto vi = this->begin(); vi != this->end(); ++vi) {
     for(auto ei = vi->begin(); ei != vi->end(); ++ei) {
       // Make a reverse descriptor.
       ED reverseEd = reverse(ei->descriptor());
 
-      // If it already exists in the graph, then this edge was added here by
-      // reversing an original edge. Skip.
-      vertex_iterator vit;
-      adj_edge_iterator eit;
-      const bool exists = m_graph.find_edge(reverseEd, vit, eit);
-      if(exists)
+      // Skip edges that already exist
+      if(this->IsEdge(reverseEd.source(), reverseEd.target()))
         continue;
 
       // Get the path and make a reversed copy.
       auto path = ei->property();
       std::reverse(path.begin(), path.end());
 
-      // Add an edge in reverse orientation with the same edge ID.
-      add_internal_edge(m_graph, reverseEd, path);
+      eds.push_back(reverseEd);
+      paths.push_back(path);
     }
   }
-}
 
-
-/*--------------------------- Setters & Getters ------------------------------*/
-
-void
-WorkspaceSkeleton::
-SetGraph(GraphType& _graph) noexcept {
-  this->m_graph = _graph;
-}
-
-
-WorkspaceSkeleton::GraphType&
-WorkspaceSkeleton::
-GetGraph() noexcept {
-  return m_graph;
-}
-
-
-const WorkspaceSkeleton::GraphType&
-WorkspaceSkeleton::
-GetGraph() const noexcept {
-  return m_graph;
+  for(size_t i = 0; i < eds.size(); ++i)
+    this->AddEdge(eds.at(i), paths.at(i));
 }
 
 /*------------------------------------- I/O helpers ---------------------------------*/
@@ -344,12 +294,12 @@ WorkspaceSkeleton::
 Write(const std::string& _file) {
   std::ofstream ofs(_file);
 
-  ofs << m_graph.get_num_vertices() << " " << m_graph.get_num_edges() << std::endl;
+  ofs << this->get_num_vertices() << " " << this->get_num_edges() << std::endl;
 
-  for(auto vit = m_graph.begin(); vit != m_graph.end(); ++vit)
+  for(auto vit = this->begin(); vit != this->end(); ++vit)
     ofs << vit->descriptor() << " " << vit->property() << std::endl;
 
-  for(auto eit = m_graph.edges_begin(); eit != m_graph.edges_end(); ++eit)	{
+  for(auto eit = this->edges_begin(); eit != this->edges_end(); ++eit)	{
     ofs << eit->source() << " " << eit->target() << " ";
     auto prop = eit->property();
     ofs << prop.size() << " ";
@@ -373,7 +323,7 @@ Read(const std::string& _file) {
     size_t id;
     Point3d data;
     ifs >> id >> data;
-    m_graph.add_vertex(data);
+    this->AddVertex(data);
   }
 
   for(size_t eit = 0; eit != nEdges; ++eit) {
@@ -385,7 +335,7 @@ Read(const std::string& _file) {
       ifs >> prop;
       edgeProperty.push_back(prop);
     }
-    m_graph.add_edge(source, target, edgeProperty);
+    this->AddEdge(source, target, edgeProperty);
     edgeProperty.clear();
   }
 }
