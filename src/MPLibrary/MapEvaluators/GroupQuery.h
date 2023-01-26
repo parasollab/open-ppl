@@ -187,7 +187,7 @@ operator()() {
       }
     }
 
-    if(start == MAX_INT)
+    if(start == MAX_UINT)
       throw RunTimeException(WHERE) << "No VIDs located for start.";
 
     // Get the goal VIDs for this subquery.
