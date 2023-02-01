@@ -7,12 +7,8 @@ This file lists the package dependencies for PMPL and how to install them.
 ## Requirements
 Required Packages:
 - build-essential
-- libboost-all-dev
 - make
 - cmake
-- libmpfr-dev
-- libeigen3-dev
-- qt4-default
 
 It is recommended to update programs on your system before continuing. However,
 this can sometimes break certain programs that require a specific package
@@ -27,17 +23,10 @@ sudo apt-get upgrade
 To install the required packages, run the following commands:
 ```
 sudo apt-get update
-sudo apt-get install build-essential libboost-all-dev make cmake libmpfr-dev libeigen3-dev
+sudo apt-get install build-essential make cmake libmpfr-dev
 ```
 
-PMPL uses an old version of qt4 that is not available on the standard
-repositories. Please run the following commands to install qt4:
-```
-sudo add-apt-repository -y ppa:rock-core/qt4
-sudo apt-get update
-sudo apt-get install -y qt4-default
-```
-
+**TODO** QT6 Step
 
 <!--
 ## Migration from SVN
@@ -58,7 +47,7 @@ In addition to the dedicated utilities, PMPL requires several other libraries:
 - bash (for testing script)
 - CGAL v4.6 - 4.11
 - OpenCV (for marker detection only)
-- Qt4 (for simulator only)
+- Qt6 (for simulator only)
 
 **TODO**: Determine supported versions for each utility.
 
@@ -78,16 +67,25 @@ In addition to the dedicated utilities, PMPL requires several other libraries:
 -->
 ## Build
 
-To build the traditional PPL executable, go to `src` and run `make pmpl`.
+**TODO** Update Build Instructions
 
-To build the simulator, go to `src` and run `make sim`.
+### CGAL Runtime Error
+There is currently a bug in the CGAL library which causes a runtime assertion in pmpl.  In order to work around this, after cmake has been configured and vcpkg has downloaded the CGAL library, you will need to comment out lines 171 and 172 of  the file 
+build/vcpkg_installed/x64-linux/include/CGAL/Interval_nt.h, which read as follows:
+```
+    CGAL_assertion_msg( (!is_valid(i)) || (!is_valid(s)) || (!(i>s)),
+              "Variable used before being initialized (or CGAL bug)");
+```
 
-<!--
-## Usage
+### Docker
+In order to build in a docker container, first clone this repository to your Docker host system.  In the top level directory of the cloned repository, execute the following commands
+```
+    docker build -t pmpl-build .
+    docker run -it pmpl-build 
+```
 
-**TODO**: Document the various ways to invoke the program.
--->
+The executable built resides in /pmp/build/pmpl_exec
 
 ## Tests
 
-To run the tests, go to `src/Test` and run `tests.py`.
+**TODO** Update Test Instructions
