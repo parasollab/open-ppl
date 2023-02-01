@@ -1,0 +1,263 @@
+				User Manual
+				===========
+
+Introduction:
+============
+
+XML documents may be viewed as tree with the tags forming the nodes. Xpath notation 
+is used to reach the tags of XML documents based on the information provided in the 
+expression. For e.g. the Xpath expression /a/b/c points to the node "c" of the tree. 
+The tree is rooted at "a" and has "b" as one of its children which in turn has 
+node "c" as its child.
+
+The Xpath expression may point to a single node or a set of nodes satisfying the 
+condition. So, every Xpath expression represents a set of nodes. Arithmetic
+operation on two Xpath expressions such as xpathA + xpathB represents a new set 
+of all a+b such that 'a' belongs to xpathA and 'b' belongs to xpathB. When xpathA 
+and xpathB have one element, the operators have their usual meaning.
+
+By using all operators and functions that you define, you can check all the properties
+that we need to without having to write any loops.		
+
+
+Notations available for user:
+============================
+
+a) Xpath_expr Op constant
+
+   where Op = any arithmetic operator 
+
+   Use: For comparing a tag value to a known value
+
+b) Xpath_expr Op Xpath_expr
+
+   where Op: arithmetic operator or SUBSET_OF
+
+   Use: For comparing values or "set of values" of two Xpath Xprs
+
+c) Xpath_expr = {oprnd1, oprnd2, oprnd3,......,oprndN} 
+   
+   where oprnd* may be constants or Xpath_exprs
+
+   Use: For comparing the LHS result with the set of values on RHS
+   
+d) Xpath_expr = RANGE (type, start, end)
+   
+   where     type: data type of the range
+         start, end: the initial and final values of the range
+
+   Use: The set of values in LHS should be in the range specified in RHS
+
+e) Function (Xpath_expr) Op Xpath_expr
+   
+   where Function = COUNT
+
+   Use: For comparisons based on tag count
+   
+
+f) Function (Xpath_expr)
+   
+   where Function = UNIQUE
+
+   Use: To check if the set of values returned by the expression is unique
+
+g) Function (Xpath_expr)
+
+   where Function = MAX, MIN, SUM
+
+   Use: Returns the max, min, sum of the set of values.
+
+h) Xpath_expr[i]: To refer to all the tags of a particular kind
+   Xpath_expr[constant]: To refer to a single tag from a set of similar tags
+
+   Example: The expression /expr1[i]/expr2[j]/expr3[k] is equivalent to
+	    for i=1..count(expr1)
+		for (j=1..count(expr1[i]\expr2)
+		    for (k=1..count(expr1[i]\expr2[j]\expr3)
+			FUNCTION (/expr1[i]/expr2[j]/expr3[k])
+		    next
+                next
+            next
+
+i) U: union operator
+   Example: {s1} U {s2} results in {s1, s2}
+
+
+
+Application of above rules to the checks identified:
+===================================================
+
+1. Check:
+Aggregation_type is either PLANE_BASED, ROW_BASED, CELL_BASED, NIL_AGG
+
+User specification:
+/prototype/common/aggregation_type SUBSET_OF 
+				{PLANE_BASED, ROW_BASED, CELL_BASED, NIL_AGG}
+
+2. Check:
+Partition type must be one of NIL_PAR, KBA, HYB, VOL, OTHER
+
+User specification:
+/prototype/common/partition_type SUBSET_OF
+				{PLANE_BASED, ROW_BASED, CELL_BASED, NIL_AGG}
+
+3. Check:
+The number of energy groups must be equal to ngroups.int
+
+User specification:
+COUNT (/prototype/energy_groups/energy_group) = 
+       /prototype/common/ngroups.int
+
+4. Check:
+The energy_group group_id's should go from 1 to ngroups.int .
+
+User specification:
+/prototype/energy_groups/energy_group/group_id 
+           = RANGE (int, 1, /prototype/common/ngroups.int)
+
+5. Check:
+Number of energy sets must be less than ngroups.int
+
+User specification:
+COUNT (/prototype/groupsets/energy_set) <= /prototype/common/ngroups.int
+
+6. Check:
+Groupsets: every number between 0 and ngroups-1 must be in set_include for some energy set
+
+User Specification:
+/prototype/groupsets/energy_set/set_include 
+         = RANGE (int, 0, /prototype/common/ngroups.int - 1)
+
+7. Check:
+For every energy set, all nums between 0 and (quad_order*(quad_order + 2)) -1 appears in one set/set_include,
+
+User specification:
+/prototype/groupsets/energy_set/set/set_include 
+= RANGE (int, 0, (/prototype/groupsets/energy_sets/quad_info/quad_order.int *
+(/prototype/groupsets/energy_sets/quad_info/quad_order.int + 2))-1)
+
+8. Check:
+For every dimension, the divisions are disjoint, but their union is connected.
+
+User specification:
+(/prototype/dimension[i]/dim.division/dim.division.start.fp  U 
+MAX (/prototype/dimension[i]/dim.division/dim.division.end.fp)) 
+	= (/prototype/dimension[i]/dim.division/dim.division.end.fp  U
+	    MIN (/prototype/dimension[i]/dim.division/dim.division.start.fp))
+
+9. Check:
+The numbers 1 2 and 3 are dimension.id for some dimension.
+
+User specification:
+/prototype/dimension/dimension.id =  {1, 2, 3}
+
+10. Check:
+For every isotope, clide number is unique.
+
+User specification:
+UNIQUE (/prototype/isotope_def[i]/isotope_def.clide.int)
+
+
+11. Check:
+For every isotope, one isotope_def.group per energy group.
+
+User specification:
+COUNT (/prototype/isotope_def[i]/isotope_def.group) 
+       = COUNT (/prototype/energy_groups/energy_group)
+
+
+12. Check:
+For every isotope_def.group, (2*iscat+ 1)  isotope_def.sigs per isotope_def.group
+
+User specification:
+COUNT (/prototype/isotope_def[i]/isotope_def.group[i]/isotope_def.sigs) 
+       = 2*(/prototype/common/iscat.int) + 1
+
+
+13. Check:
+For every isotope_def.sigs, one isotope_def.sigs.fp per energy group.
+
+
+User specification:
+COUNT (/prototype/isotope_def/isotope_def.group/isotope_def.sigs[i]/
+                isotope_def.sigs.fp) = COUNT (/prototype/energy_groups/energy_group)
+
+
+14. Check:
+For each material def, all material_def.isotop.intensity.fp must add up to 1.0
+
+User specification:
+SUM (/prototype/material_def[i]/material_def.isotop/
+       material_def.isotop.intensity.fp) = 1.0
+
+15. Check:
+All material_reg.material.str must be also in material_def/material_def.name
+
+User specification:
+/prototype/regions/regions-material_region/material_reg.material.str 
+SUBSET_OF /prototype/material_def/material_def.name
+
+16. Check:
+All bound_type must be either INCIDENT_ISOTROPIC or VACUUM.
+
+User Specification:
+/prototype/boundary_info/left_bound/bound_type 
+       SUBSET_OF {INCIDENT_ISOTROPIC, VACUUM}
+
+																
+
+a). Check:
+total number of cells in each direction (xyz) can be evenly divided by
+number of processors
+specified in that direction when partition_type is OTHER
+
+ IF ((/prototype/common/partition_type) == OTHER )  THEN
+COUNT
+((/prototype/dimension[i]/dim.division/dim.division.cells/dim.division.cells
+.int)%
+(partition_params/partition_params.partition_x)) = 0
+
+b). Check:
+total number of cells in each processor (the above divided results) in 
+each
+direction can
+be evenly divided by aggregation factor in each direction when
+partition_type is OTHER and
+aggregation_type is PLANE_BASED.
+
+IF ((/prototype/common/partition_type) = OTHER ) AND
+((/prototype/common/aggregation_type) = PLANE_BASED ) THEN_CHECKy
+
+COUNT
+((((/prototype/dimension[i]/dim.division/dim.division.cells/dim.division.cel
+ls.int) /
+(partition_params/partition_params.partition_x))) %
+(/prototype/common/aggregation_factor_x) ) = 0
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,13 @@
+http://sourceforge.net/projects/ibmquestdatagen/files/latest/download
+
+http://www.cs.loyola.edu/~cgiannel/assoc_gen.html
+
+At the command-line enter: executable_filename lit -ascii -ntrans XX -tlen YY -nitems ZZ > TXXLYYNZZ.data. XX x 1000 transactions will be produced involving YY average number of items per transaction, drawn from ZZ x 1000 total number of items. The output will be written to file TXXLYYNZZ.data. Each line of the file is a transaction. The items in each transaction are represented by item numbers and are separated by spaces. Some additional files will be generated. These can be ignored. To get command-line help, executable_filename lit help. 
+
+lit -ascii -ntrans 10 -tlen 3 -nitems 3 > TXXLYYNZZ.txt
+
+lit -ascii -ntrans 10 -tlen 10 -nitems 1 > TXXLYYNZZ.txt
+
+lit -ascii -ntrans 100 -tlen 10 -nitems 20 > TXXLYYNZZ.txt
+
+lit > TXXLYYNZZ.data

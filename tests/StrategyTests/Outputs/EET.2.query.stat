@@ -1,0 +1,53 @@
+Roadmap Statistics:
+
+  Number of Nodes: 11
+  Number of Edges: 10
+
+  There are 1 connected components:
+    CC[0]: 11 (vid 0)
+
+
+Sampler Statistics                                            Attempts Successes
+
+  UniformRandomSampler::UniformRandomFree                            3         3
+  All Samplers                                                       3         3
+  Success Rate: 100%
+
+
+Collision Detection Calls                                                  Count
+
+  BasicExtender::Expand                                                     1815
+  GaussianSampler::Gauss::SampleImpl()                                        36
+  Obtain clearance map                                                       351
+  UniformRandomSampler::UniformRandomFree::Sampler                             3
+  All Collision Detectors                                                   2205
+
+
+Other Statistics                                                           Value
+
+  EET::EET::Extend                                                            17
+  Graph Search                                                                 1
+  QueryMethod::Query::FoundPath                                                1
+
+
+Clock Name                                                        Time (Seconds)
+
+  BruteForceNF::Nearest::FindNeighbors                                         0
+  CCTracker::AddEdge                                                           0
+  CCTracker::AddVertex                                                         0
+  CCTracker::DeleteVertex                                                      0
+  EET::EET::AddEdge                                                            0
+  EET::EET::AddNode                                                            0
+  EET::EET::EvaluateMap                                                        0
+  EET::EET::Extend                                                        0.0274
+  EET::EET::FindNearestNeighbor                                                0
+  EET::EET::GenerateGoals                                                      0
+  EET::EET::GenerateStart                                                      0
+  EET::EET::InitAndRun                                                    0.0539
+  EET::EET::Initialize                                                    0.0265
+  EET::EET::Run                                                           0.0274
+  EET::EET::TryGoalExtension                                               0.004
+  MPLibrary::Initialize                                                        0
+  QueryMethod::GeneratePath                                                    0
+  QueryMethod::Query                                                           0
+  UniformRandomSampler::UniformRandomFree::Sample                              0

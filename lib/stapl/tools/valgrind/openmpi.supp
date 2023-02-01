@@ -1,0 +1,122 @@
+# Copyright (c) 2000-2009, Texas Engineering Experiment Station (TEES), a
+# component of the Texas A&M University System.
+#
+# All rights reserved.
+#
+# The information and source code contained herein is the exclusive
+# property of TEES and may not be disclosed, examined or reproduced
+# in whole or in part without explicit written authorization from TEES.
+
+{
+  ORTE OOB suppression rule
+  Memcheck:Param
+  writev(vector[...])
+  fun:writev
+  fun:mca_oob_tcp_msg_send_handler
+  fun:mca_oob_tcp_peer_send
+  fun:mca_oob_tcp_send_nb
+  fun:orte_rml_oob_send
+  fun:orte_rml_oob_send_buffer
+  ...
+  fun:ompi_mpi_init
+}
+
+{
+  _wordcopy_fwd_dest_aligned
+  Memcheck:Addr8
+  fun:_wordcopy_fwd_dest_aligned
+  fun:__GI_memmove
+  fun:argz_insert
+  fun:lt_argz_insert
+  fun:foreachfile_callback
+  fun:foreach_dirinpath
+  fun:lt_dlforeachfile
+  fun:mca_base_component_find
+  fun:mca_base_components_open
+  fun:opal_hwloc_base_open
+  fun:opal_init
+  fun:orte_init
+}
+
+{
+  opal_os_dirpath_create
+  Memcheck:Addr4
+  fun:opal_os_dirpath_create
+  fun:orte_session_dir
+  fun:orte_ess_base_app_setup
+  fun:rte_init
+  fun:orte_init
+  fun:ompi_mpi_init
+}
+
+{
+  OMPI init leak
+  Memcheck:Leak
+  fun:malloc
+  ...
+  fun:ompi_mpi_init
+}
+
+{
+  OMPI init leak
+  Memcheck:Leak
+  fun:realloc
+  ...
+  fun:ompi_mpi_init
+}
+
+{
+  OMPI init leak
+  Memcheck:Leak
+  fun:calloc
+  ...
+  fun:ompi_mpi_init
+}
+
+{
+  OMPI free_list leak
+  Memcheck:Leak
+  fun:malloc
+  ...
+  fun:ompi_free_list_grow
+}
+
+{
+  orte_init leak
+  Memcheck:Leak
+  fun:malloc
+  ...
+  fun:orte_init
+}
+
+{
+  opal_event_base_loop leak
+  Memcheck:Leak
+  fun:malloc
+  ...
+  fun:opal_event_base_loop
+}
+
+{
+  opal_hwloc_unpack leak
+  Memcheck:Leak
+  fun:malloc
+  ...
+  fun:opal_hwloc_unpack
+}
+
+{
+  mca_base_components_open leak
+  Memcheck:Leak
+  fun:malloc
+  ...
+  fun:mca_base_components_open
+}
+
+{
+  mca_base_components_open leak
+  Memcheck:Leak
+  fun:calloc
+  ...
+  fun:mca_base_components_open
+}

@@ -1,0 +1,318 @@
+-*- text -*-
+
+// Copyright 1997-2000 University of Notre Dame.
+// Authors: Andrew Lumsdaine, Jeremy G. Siek, Lie-Quan Lee
+//
+// This file is part of the Matrix Template Library
+//
+// You should have received a copy of the License Agreement for the
+// Matrix Template Library along with the software;  see the
+// file LICENSE.  If not, contact Office of Research, University of Notre
+// Dame, Notre Dame, IN  46556.
+//
+// Permission to modify the code and to distribute modified code is
+// granted, provided the text of this NOTICE is retained, a notice that
+// the code was modified is included with the above COPYRIGHT NOTICE and
+// with the COPYRIGHT NOTICE in the LICENSE file, and that the LICENSE
+// file is distributed with the modified code.
+//
+// LICENSOR MAKES NO REPRESENTATIONS OR WARRANTIES, EXPRESS OR IMPLIED.
+// By way of example, but not limitation, Licensor MAKES NO
+// REPRESENTATIONS OR WARRANTIES OF MERCHANTABILITY OR FITNESS FOR ANY
+// PARTICULAR PURPOSE OR THAT THE USE OF THE LICENSED SOFTWARE COMPONENTS
+// OR DOCUMENTATION WILL NOT INFRINGE ANY PATENTS, COPYRIGHTS, TRADEMARKS
+// OR OTHER RIGHTS.
+
+---------------------------------------------------------------
+
+              The Matrix Template Library
+                    Version 2.1
+
+
+I. Installation
+===============
+
+Note that MTL resides completely in header files, so there
+is no need to build a library, which simplifies installation
+and usage considerable. However, if you want to compile
+the MTL examples and test suite, then there will be
+more steps to follow.
+
+A. On Unix Systems
+------------------
+
+From the top level directory of mtl:
+
+1. Set the CXX environment variable to your compiler.
+
+csh:
+  setenv CXX KCC   (or g++ or SGI's CC)
+sh:
+  CXX=KCC
+  export CXX
+ksh:
+  export CXX=KCC
+
+
+2. Run the configure script
+
+./configure [options]
+
+Where options can include:
+
+--prefix=dir
+  The header files of MTL will be copied into this directory,
+  placed under a /mtl directory.
+
+--with-blais
+   This tells MTL to use the high-performance BLAIS kernels and blocked
+   algorithms. This option should not be used with egcs. The blocked
+   algorithms have not yet been converted from the MTL v2.0 interface
+   so it will be a while before they are included in the
+   distribution.
+
+--with-lapack=libs
+   There is a lapack interface provided with MTL. If you wish to
+   compile the tests and examples specify this flag and provide the
+   necessary libraries. This may include some cross-language library
+   links such as -lF77 or -lxlf or -lg2c. Also make sure that the
+   lapack library directories are in your LD_LIBRARY_PATH.
+
+   For linux users, the BLAS and LAPACK rpms are available at
+   contribs.redhat.com:
+     blas-2.0-10.i386.rpm 
+     blas-man-2.0-10.i386.rpm 
+     lapack-2.0-10.i386.rpm
+     lapack-man-2.0-10.i386.rpm 
+   The correct configure option is --with-lapack="-llapack -lblas -lg2c".
+
+--with-matlab=dir
+   There are several utility functions in MTL for reading and writing
+   Matlab file formats. If you wish to compile the examples specify
+   this option and give the directory in which the Matlab headers are
+   installed.
+
+The next step is to do:
+
+make install
+
+which will copy the MTL header files to the install directory.  Unlike
+most software libraries, there is not an MTL library file (no
+libmtl.a). All of the MTL functionality is in the MTL headers
+and one just needs to #include them.
+
+You can optionally make and run the test suite and the examples. The
+test suite takes about 3 hours to run, so this is not recommended. You
+can see the results of our nightly run on the web page.
+
+cd test
+perl make_and_test.pl
+
+Optionally you can compile just a couple of the tests with:
+
+cd test
+make tests
+
+
+The examples take much less time to compile and run. To compile all
+of the examples that come with MTL do the following.
+
+cd contrib/examples
+make mtl_examples
+
+
+If you wish to also compile the lapack interface examples type:
+
+cd contrib/examples
+make lapack_examples
+
+Note that during the configure you needed to specify the lapack
+libraries using --with-lapack, and that the libraries must
+be in your LD_LIBRARY_PATH.
+
+
+B. On a Macintosh (with CodeWarrior Pro 5.0)
+--------------------------------------------
+
+Once you have downloaded and uncompressed MTL, you merely need to add
+the MTL root directory to your "Access Paths" under the menu
+"Edit:...Settings" in the CodeWarrior IDE. Then #include any
+of the MTL header files you want to use in your program.
+
+If you wish to compile and run the examples, you will need to have
+installed MPW (which is on the CW CD). Just start up the MPW Shell,
+set the directory to contrib:examples under the MTL root, then invoke
+the "Build" menu, and specify "mtl_examples" as the target.
+Similarly, there is a test suite in test:src that can be
+compiled using MPW. If you want to test different matrix types,
+you can edit the file matrix_attr.h. There are also perl
+scripts that test many combinations of matrices, but
+we have not yet ported these to a Mac version of Perl.
+(a volunteer to do this would be much appreciated!)
+
+
+C. On a Windoze Machine (with Visual C++ 6.0 or CodeWarrior Pro 5.0)
+--------------------------------------------------------------------
+
+* Use winzip (or whatever) to unzip the MTL Windows distribution file.
+
+* Set the include directory to point to the top directory
+  of the MTL distrubution tree.
+
+  - In the CodeWarrior IDE this is in the Edit->...Settings->Access Paths
+  - In VC++ IDE this is in Tools->Options->Directories 
+     (with "Show directories for: Include files" selected)
+
+* Add the proper includes in your source files. Such as
+
+    #include <mtl/matrix.h>
+    #include <mtl/mtl.h>
+
+  The documentation for each MTL class and function specifies
+    which file it is in.
+
+* If you also want to run the MTL examples and testsuite
+  follow the directions below, otherwise you are done. Enjoy!
+
+
+D. Running the examples and testsuite on a windoze machine
+----------------------------------------------------------
+
+* If you do not have cygwin installed, you will need
+  to do so. You can download it for free from
+
+    http://sourceware.cygnus.com/cygwin/
+
+* Make a symbolic link to the cygnus bin directory
+  in your "root" directory. (top level of C: drive)
+  so that various gnu tools can be easily found.
+
+  - start the cygnus command line tool (bash shell)
+  - type the following (the directory names may
+    be different depending on the versiof cygwin installed)
+
+    cd /
+    ln -s /cygnus/cygwin-b20/H-i586-cygwin32/bin
+
+* Set up your environment variables
+    In the following I gives examples of the values for
+    filling in the environment variables, though they
+    may be different depending on where things are installed
+    on your machine.
+
+  - For NT, go to the following dialogue:
+    Start->Settings->Control Panel->System->Environment
+
+    For Windows95/98 you may need to edit your autoexec.bat
+    to add/modify the environment variables discussed below.
+
+  - Make sure the compiler (cl.exe for VC++ or mwcc.exe for
+    CodeWarrior) is in your PATH environment variable.
+
+     PATH  /Program Files/Microsoft Visual Studio/Vc98/Bin
+        or /Program Files/Metrowerks/CodeWarrior/Tools/Command Line Tools
+
+  - Set the CXX and CC environment variables to your compiler
+    for VC++ the compiler executable name is "cl.exe". For
+    CodeWarrior the executable name is "mwcc.exe".
+
+  - If using VC++, set the LIB and INCLUDE environment variables
+
+     LIB      /Program Files/Microsoft Visual Studio/Vc98/Lib
+
+     INCLUDE  /Program Files/Microsoft Visual Studio/Vc98/Include
+
+  - If using CodeWarrior, set up the following environment variables
+
+     CWFolder       /Program Files/Metrowerks/CodeWarrior
+
+     MWCIncludes    /Program Files/Metrowerks/CodeWarrior/MSL/MSL_C/MSL_Common/Include:/Program Files/Metrowerks/CodeWarrior/MSL/MSL_C/MSL_Win32/Include:/Program Files/Metrowerks/CodeWarrior/MSL/MSL_C++/MSL_Win32/Include:/Program Files/Metrowerks/CodeWarrior/MSL/MSL_C++/MSL_Common/Include:/Program Files/Metrowerks/CodeWarrior/Win32-x86 Support/Headers/Win32 SDK
+
+     MWLibraries    /Program Files/Metrowerks/CodeWarrior/Win32-x86 Support/Libraries/Runtime:/Program Files/Metrowerks/CodeWarrior/Win32-x86 Support/Libraries/Win32 SDK:/Program Files/Metrowerks/CodeWarrior/MSL/MSL_C/MSL_Win32/Lib/x86:/Program Files/Metrowerks/CodeWarrior/MSL/MSL_C++/MSL_Win32/Lib/x86
+
+     MWLibraryFiles User32.lib:Kernel32.lib:Gdi32.lib:ANSICX86D.LIB:ANSICPPX86D.LIB:MWCRTLD.LIB
+
+* Build the examples, and one instance of the test suite
+   
+  - Run make (we have already run configure for you)
+
+    cd <the mtl top directory>
+    make 
+
+* Run the full MTL test suite (this takes several hours!)
+
+  - If you do not have perl, you need to install it. Perl Win32
+    (ActivePerl) can be downloaded for free from:
+
+    http://www.activestate.com/ActivePerl/
+
+    Make sure it works, and that it is in your PATH.
+
+  - Run the test suite
+
+    cd <the mtl top directory>/test/src
+    ../scripts/make_and_test.pl
+
+  - Get a summary of the output
+
+    cd <the mtl top directory>/test/scripts
+    ./summarize_make_and_test.pl ../src
+
+  - Feel warm and fuzzy because you have not seen
+    any errors in compiling or running the MTL examples and
+    test suite.
+
+
+
+II. Using MTL
+=============
+
+The code resides completely in header files, so it is not necessary to
+compile a library and link the MTL library into your executable. Just
+include the MTL header file you need. The header files for particular
+functions and data types are listed in the documentation.
+
+There are MTL utility functions for reading and writing Matlab .mat
+files. To use these you will need to set a matlab directory in
+the configure.
+
+In addition, for convenience there is an MTL interface to LAPACK
+included. In order to use the interface you must specify the
+directory in which it is installed in the configure.
+
+
+III. High Performance
+=====================
+
+To get high performance with MTL you must use a good optimizing compiler,
+such as KAI's C++. You must also use the right compilation flags.
+We recommend:
+
++K3 --inline_keyword_space_time=10000 --no_exceptions
+
+and the flags needed for the backend compiler such as:
+
+-fast
+
+
+Note: g++ does not make enough optimizations for MTL to be fast.
+
+
+IV. Blocked Algorithms
+======================
+
+The MTL uses blocked algorithms and the BLAIS high-performance kernels
+to acheive vendor-tuned levels of performance. The blocked algorithms
+have not yet been converted from the MTL 2.0 interface to the MTL 2.1
+interface. Stayed tuned for the next update which will include the
+blocked algorithms for dense matrices. The addition of the blocked
+algorithms will not change the MTL interface, merely change the
+underlying impelementation.
+
+
+V. The doubledouble extended precision number class
+===================================================
+
+Just include doubledouble.h to use this class. All of the
+functionality has been moved to header files, the library is no longer
+necessary.

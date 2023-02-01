@@ -1,0 +1,7 @@
+1 INSERT IGNORE INTO applications
+1 INSERT IGNORE INTO machines
+1 INSERT IGNORE INTO users
+1 INSERT IGNORE INTO runs
+12 INSERT IGNORE INTO statistics_associations
+12 INSERT IGNORE INTO statistics_info
+12 INSERT IGNORE INTO statistics

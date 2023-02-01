@@ -1,0 +1,556 @@
+\documentclass{report}
+\begin{document}
+\title{STAPL Alpha Release Notice}
+\date{\today}
+\maketitle
+
+\newcommand{\stapl}{{\sc STAPL}}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\vspace*{8cm}
+\begin{center}
+Copyright (c) 2014, Texas Engineering Experiment Station (TEES), a
+component of the Texas A\&M University System.
+
+All rights reserved.
+\end{center}
+\pagebreak
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\chapter{Introduction}
+
+\section{Purpose}
+
+These release notes contain the following:
+\begin{itemize}
+\item
+A brief description of the features of the release,
+\item
+Instructions for installing,
+\item
+Description of those known high-impact defects that can be shown 
+with a user source code example, and workarounds where available.
+\end{itemize}
+
+\subsection{Terminology}
+
+\subsection{Alpha Release Documentation}
+
+The following documentation is provided with the Alpha Release:
+
+\begin{itemize}
+\item
+{\bf Reference Manual:} HTML automatically generated from \stapl\ source,
+using the doxygen tool and comments embedded in the source.
+To use this documentation, point your browser at /docs/html.
+\item
+{\bf Tutorial User Guide:} PDF which guides the new user through a set
+of twenty graduated examples, showing how to perform common tasks.
+\end{itemize}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\chapter{Software Features}
+
+This chapter describes the features supported by the alpha release of \stapl.
+
+Software features are organized in the following categories:
+
+\begin{itemize}
+\item
+Container Support
+\item
+View Support
+\item
+Algorithm Support
+\item
+Nested parallelism
+\item
+Data redistribution
+\item
+Multi-protocol parallelism
+\end{itemize}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\section{Container Support}
+
+\noindent
+These sequence containers are supported:
+
+{\tt list, vector }
+
+\noindent
+These associative containers are supported:
+
+{\tt set, map }
+
+For the alpha release, the members of sets are limited  
+boolean, character, integer, and floating point data types.
+
+In a future release, \stapl\ will support containers as members of sets.
+
+For the alpha release, the keys of a map are limited to 
+boolean, character, integer, and floating point data types.
+
+In a future release, \stapl\ will support containers as keys of a map.
+
+There is no limitation on the data types of the values of a map.
+These can be basic data types, or containers of any kind.
+
+\noindent
+These indexed containers are supported:
+
+{\tt array, matrix, multiarray (vector is also indexed) }
+
+\noindent
+These relational containers are supported:
+
+{\tt graph, dynamic\_graph }
+
+\vspace{0.4cm}
+
+\noindent
+\textit{ The following associative containers are {\bf NOT} supported
+in the alpha release.  }
+
+{\tt multiset, multimap }
+
+\noindent
+\textit{ The following unordered associative containers are {\bf NOT} 
+supported in the alpha release.  }
+
+{\tt unordered set, unordered map }
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\section{View Support}
+
+\subsection{Abstract Data Types}
+
+\noindent
+These views model common abstract data types.
+Most of them are associated with a container of the same name,
+but their use is not limited to that associated container.
+The following views in this category are supported:
+
+{\tt array, array\_ro, vector, list, graph, map, set,
+multi\_array }
+
+\subsection{No Concrete Storage}
+
+\noindent
+These views generate values in a manner that does not
+require concrete data storage associated with every element.
+The following views in this category are supported:
+
+{\tt overlap, repeated, counting }
+
+\vspace{0.4cm}
+
+\noindent
+\textit{ The following views in this category are 
+{\bf NOT} supported in the alpha release: }
+
+{\tt functor }
+
+\subsection{Modifying Views}
+
+These views modify 
+\begin{itemize}
+\item
+the values retrieved from the storage associated with a container, or
+\item
+the mapping function M or domain D, such that a different value is retrieved.
+\end{itemize}
+The following views in this category are supported:
+
+{\tt transform, strided, filter, reverse }
+
+\subsection{Sub-dividing Views}
+
+\noindent
+These views present elements that are subviews.
+
+{\tt native, balance, explicit, partitioned }
+
+\subsection{Compositions}
+
+These views perform compositions on containers.
+
+\noindent
+The following views in this category are supported:
+
+{\tt zip }
+
+\vspace{0.4cm}
+
+\noindent
+\textit{ The following views in this category are {\bf NOT} supported 
+in the alpha release:}
+
+{\tt cross, union }
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\section{Algorithm Support}
+
+The following algorithms are supported:
+
+\begin{itemize}
+\item Non-modifying algorithms:
+
+{\tt
+for\_each, count, count\_if, min\_element, max\_element, 
+find, find\_if, search\_n, search, find\_end, 
+find\_first\_of, adjacent\_find, equal, mismatch, 
+lexicographic\_compare
+}
+
+\item Modifying algorithms:
+
+{\tt
+for\_each, copy, copy\_backward, transform, merge, 
+swap\_ranges, fill, fill\_n, generate, generate\_n, 
+replace, replace\_if, replace\_copy, replace\_copy\_if
+}
+
+\item Removing algorithms:
+
+{\tt
+remove, remove\_if, remove\_copy, remove\_copy\_if, 
+unique, unique\_copy
+}
+
+\item Mutating algorithms:
+
+{\tt
+reverse, reverse\_copy, rotate, rotate\_copy, 
+next\_permutation, prev\_permutation, random\_shuffle
+}
+
+\item Sorting algorithms:
+
+{\tt
+sort, stable\_sort, partial\_sort, partial\_sort\_copy, 
+nth\_element, partition, stable\_partition
+}
+
+\item Sorted range algorithms:
+
+{\tt
+binary\_search, includes, lower\_bound, upper\_bound, 
+equal\_range, merge, inplace\_merge, adjacent\_find
+}
+
+\item Numeric algorithms:
+
+{\tt
+accumulate, inner\_product, adjacent\_difference, 
+partial\_sum
+}
+
+\item C++ '11 STL algorithms:
+
+{\tt
+is\_partitioned, partition\_point, is\_sorted,
+all\_of, any\_of, one\_of, none\_of,
+is\_sorted\_until, is\_permutation,
+copy\_n, partition\_copy
+copy\_if, iota, minmax\_element,
+find\_if\_not,
+}
+
+\item \stapl\ general algorithms not in STL:
+
+{\tt
+adjacent\_find, not\_equal,
+n\_partition, sample\_sort, shuffle,
+column\_sort, 
+keep\_if, max\_value, min\_value,
+}
+
+\item \stapl\ graph algorithms:
+
+{\tt
+breadth\_first\_search, connected\_components, 
+graph\_coloring, topological\_sort, hierarchical\_view, 
+cut\_conductance, graph\_metrics, strongly\_connected\_components
+}
+\end{itemize}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\section{Nested Parallelism}
+
+Nested parallelism supports the following features:
+
+\begin{itemize}
+\item
+Uniform nested containers from the following:
+vector, array, map, multiarray, graph, set
+\item
+Mixed nested containers from the following:
+vector, array, map, multiarray, graph, set
+\item
+Data distribution for supported nested containers for all containers
+at a specified nesting level, or for individual nested containers.
+Distribution are specified when the container is constructed.
+\end{itemize}
+
+\noindent
+\textit{ The following containers have specialized limitations when used in a nested fashion:}
+\begin{itemize}
+\item
+set - can only be the innermost container (key semantics)
+\item
+map - nested container can only be the value, not the key (key semantics)
+\end{itemize}
+
+\noindent
+\textit{ The following containers are {\bf NOT} supported for
+nested parallelism in the alpha release: }
+
+\noindent
+matrix, list, 
+unordered set, unordered map, multiset, multimap, multi\_graph
+
+\noindent
+\textit{ The following features are {\bf NOT} supported for
+nested parallelism in the alpha release : }
+
+\begin{itemize}
+\item
+Constructing non-innermost nested containers by insertion.
+\item
+Copying interior nested containers to or from the enclosing container.
+\end{itemize}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\section{Data Redistribution}
+
+The following features for data redistribution are supported:
+
+\begin{itemize}
+\item
+For those containers for which it is possible, they have a "migrate" 
+method, which moves an element specified by a GID to a designated
+location.
+\item
+Each supported container has a "redistribute" method, 
+which takes a view which specifies the new distribution.
+\end{itemize}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\section{New Container Classes}
+
+\noindent
+The following non-STL containers are supported in the alpha release.
+
+{\tt
+matrix, multi-array, graph
+}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\section{Multi-protocol Parallelism}
+
+\noindent
+Multi-protocol parallelism, in which the outer parallelism uses MPI,
+and the inner parallelism uses OpenMP, is supported in the Alpha Release.
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\chapter{Installation Procedures}
+
+\section{Compiler Support}
+
+\stapl\ supports the following compilers:
+
+\begin{itemize}
+\item
+gcc versions 4.7.0 and higher.
+\item
+icpc (ICC) versions 13.1.2 20130514 and higher, using libstdc++ from
+gcc 4.7.0.
+\item
+clang versions 3.3 and higher.
+\end{itemize}
+
+We plan to support the PGI C++ compiler in the \stapl\ beta release.
+
+\section{Overview}
+
+Source code for \stapl\ is delivered in the form of tar.gz archive,
+plus scripts to configure, build and install \stapl.
+
+The installation process is driven by shell scripts which do the following:
+
+\begin{itemize}
+\item
+Configure \stapl\ for the version of Linux, BOOST location, install location
+\item
+Build libstapl.a and install
+\item
+Copy header files
+\end{itemize}
+
+\noindent
+The scripts require that the installer have "sudo" privileges.
+
+\section{Packaging Procedure}
+
+The \stapl\ deliverables are packaged by the following process,
+which is described here in order to enable understanding of
+what is delivered with the \stapl\ distribution.  
+
+\begin{itemize}
+\item
+Checkout source code from source control system.
+\item
+Strip source control information.
+\item
+Delete unnecessary files and directories: functionality tests, 
+performance tests, software tools, internal documentation.
+\item
+Build the API doxygen-based HTML reference.
+\item
+Build LaTeX-based tutorial user guide.
+\item
+Create a gzip compressed tar file (defaults to "stapl.tar.gz")
+\end{itemize}
+
+\section{Installation Procedure}
+
+\subsection{Extraction}
+
+The first step in the installation process is to extract the sources
+into a local file system.
+
+\begin{verbatim}
+% tar xvf stapl.tar.gz
+\end{verbatim}
+
+\subsection{Compilation}
+
+The second step in installing \stapl\ is to compile the sources.
+A script is provided which performs this task.
+
+\begin{verbatim}
+% cd stapl
+% ./compile.sh
+\end{verbatim}
+
+This script has the following command line options:
+\begin{itemize}
+\item
+\texttt{-openmp} : Compile mixed-mode support based on OpenMP
+\item
+\texttt{-cc=xx} : Change compiler to XX
+\item
+\texttt{-AR=XX} : Change archiver to XX
+\end{itemize}
+
+This script has the following features:
+
+\begin{itemize}
+\item
+It automatically picks up Boost based on \texttt{BOOST\_ROOT}.
+\item
+It attempts to find the correct libstdc++ based on the GCC version.
+\item
+It creates a directory 
+\texttt{build} and copies \texttt{tools} and \texttt{stapl} directories in it.
+\item
+It builds debug (\texttt{libstapl\_debug.a}) and release 
+(\texttt{libstapl.a}) versions.
+\item
+It builds OpenMP versions if requested 
+(\texttt{libstapl\_omp\_debug.a / libstapl\_omp.a}).
+\item
+It puts libraries in \texttt{build/lib}.
+\item
+It puts environment variable scripts in \texttt{build/bin}.
+\end{itemize}
+
+\subsection{Installation}
+
+The third step in installing \stapl\ is to install the libraries
+and header files.  A script is provided to perform this task.
+
+\begin{verbatim}
+% sudo install.sh PATH
+\end{verbatim}
+
+This script has the following features:
+
+\begin{itemize}
+\item
+It is a tool for installing \stapl\ into a directory.
+\item
+It copies the \texttt{build} directory to the location specified by the
+\texttt{PATH} command line argument.
+\item
+It is typically invoked with "sudo".  Because it modifies system directories,
+it cannot be run by an ordinary user account without root privileges.
+\end{itemize}
+
+\subsection{Configuration}
+
+The final step in installing \stapl\ is to configure the user's environment
+to use \stapl.  Configuration is done on a per-user basis.
+Scripts are provided to perform this task.
+	
+\begin{verbatim}
+$ source staplvars.sh
+\end{verbatim}
+
+\texttt{staplvars.sh [debug]} and \texttt{staplvars\_omp.sh [debug]}
+
+These scripts have the following features:
+\begin{itemize}
+\item
+They set up the environment for compiling \stapl\ applications.
+\item
+They typically used with \texttt{source}, in order to set the shell variables.
+\item
+If they are passed debug as argument, 
+then they bring in the variables for the debug versions.
+\end{itemize}
+
+These scripts set the following variables:
+\begin{itemize}
+\item
+\texttt{STAPL\_ROOT} : \stapl\ installation path
+\item
+\texttt{STAPL\_FLAGS} : \stapl\ required flags
+\item
+\texttt{STAPL\_LIBS} : \stapl\ required libraries
+\end{itemize}
+
+Given appropriate values for these variables, 
+the user could compile a \stapl\ application as follows
+(where \texttt{CC} has been assigned the path to the correct compiler):
+
+\begin{verbatim}
+$CC $STAPL_FLAGS $CXXFLAGS myapp.cpp -o myapp $LIBS $STAPL_LIBS
+\end{verbatim}
+
+Given this compilation, the user could invoke the resulting
+application with a command line such as this
+(where \texttt{LAUNCH} has been assigned the path to the appropriate launcher, 
+such as mpiexec, aprun, etc.):
+
+\begin{verbatim}
+$ $LAUNCH -n 42 -N 8 -d 6 ./myapp
+\end{verbatim}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\chapter{Known Defects and Workarounds}
+
+\end{document}

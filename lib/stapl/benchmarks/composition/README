@@ -1,0 +1,46 @@
+The sweeps benchmark performs a computation whose shape is similar to that of
+PDT.  Currently the code only contains the 8 independent sweeps.  It will be
+expanded to include a convergence test that will execute the while pattern and a
+timestep loop to further exercise the nested composition of PARAGRAPHS.
+
+Currently the code only runs when the STAPL_EXECUTOR_WINDOW_SIZE and
+STAPL_EXECUTOR_RETIRE_CHUNK environment variables are set to 8 or higher.
+
+The benchmark now uses nested parallelism and is capable of executing with
+thread support. This is done by adding
+  CXXFLAGS +=-DSTAPL_RUNTIME_USE_OMP -fopenmp
+or
+  USER_CXXFLAGS +=-DSTAPL_RUNTIME_USE_OMP -fopenmp
+in GNUmakefile.platforms. You must also do
+ $ export OMP_NUM_THREADS=PX*PY
+(see parameters below) in your environment.
+
+
+The parameters for the benchmark are:
+
+NX - The number of cells in the X dimension.
+NY - The number of cells in the Y dimension.
+NZ - The number of cells in the Z dimension.
+
+ A - The agggregation factor used in each dimension at each level of nesting to
+     create the hierarchical cellset graph.
+
+ L - The number of levels of nested parallelism to employ.  The benchmark
+     supports values from 1 to 5.
+
+PX - The number of locations in the X dimension.
+PY - The number of locations in the Y dimension.
+
+
+The number of cells in a dimension must be A^(L+1).  Tested combinations and
+their expected execution time when compiled with -O0 -g are below.
+
+NX NY NZ  A  L PX PY   Expected Execution Time
+ 4  4  4  2  1  2  2   2 seconds
+ 8  8  8  2  2  2  2   2 seconds
+16 16 16  2  3  2  2   20 seconds
+32 32 32  2  4  2  2   200 seconds
+64 64 64  2  5  2  2   2000 seconds
+
+The increase in time is due to the oversubscription of the system as each nested
+PARAGRAPH is run on as many locations as the original execution.

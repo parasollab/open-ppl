@@ -1,0 +1,86 @@
+/*
+// Copyright (c) 2000-2009, Texas Engineering Experiment Station (TEES), a
+// component of the Texas A&M University System.
+
+// All rights reserved.
+
+// The information and source code contained herein is the exclusive
+// property of TEES and may not be disclosed, examined or reproduced
+// in whole or in part without explicit written authorization from TEES.
+*/
+
+
+#ifndef STAPL_RUNTIME_SYSTEM_HPP
+#define STAPL_RUNTIME_SYSTEM_HPP
+
+#include "utility/c_string.hpp"
+#include <cstddef>
+
+namespace stapl {
+
+namespace runtime {
+
+////////////////////////////////////////////////////////////////////
+/// @brief Returns a demangled version of the given mangled name.
+///
+/// @ingroup runtimeUtility
+////////////////////////////////////////////////////////////////////
+c_string demangle(const char*);
+
+////////////////////////////////////////////////////////////////////
+/// @brief Returns a demangled version of the given mangled name.
+///
+/// @ingroup runtimeUtility
+////////////////////////////////////////////////////////////////////
+c_string demangle(c_string const&);
+
+
+////////////////////////////////////////////////////////////////////
+/// @brief Returns the process id of the calling process.
+///
+/// @ingroup system
+////////////////////////////////////////////////////////////////////
+int getpid(void) noexcept;
+
+
+////////////////////////////////////////////////////////////////////
+/// @brief Returns the total amount of physical memory in bytes.
+///
+/// @ingroup runtimeUtility
+////////////////////////////////////////////////////////////////////
+std::size_t get_total_physical_memory(void) noexcept;
+
+////////////////////////////////////////////////////////////////////
+/// @brief Returns the amount of physical memory that is being used in bytes.
+///
+/// @ingroup runtimeUtility
+////////////////////////////////////////////////////////////////////
+std::size_t get_used_physical_memory(void) noexcept;
+
+////////////////////////////////////////////////////////////////////
+/// @brief Returns the amount of physical memory available in bytes.
+///
+/// @ingroup runtimeUtility
+////////////////////////////////////////////////////////////////////
+std::size_t get_available_physical_memory(void) noexcept;
+
+////////////////////////////////////////////////////////////////////
+/// @brief Returns the percentage of physical memory that is being used (0-100).
+///
+/// @ingroup runtimeUtility
+////////////////////////////////////////////////////////////////////
+std::size_t get_physical_memory_load(void) noexcept;
+
+
+////////////////////////////////////////////////////////////////////
+/// @brief Returns the number of hardware threads on the system.
+///
+/// @ingroup runtimeUtility
+////////////////////////////////////////////////////////////////////
+std::size_t get_num_hardware_threads(void) noexcept;
+
+} // namespace runtime
+
+} // namespace stapl
+
+#endif

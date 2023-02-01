@@ -1,0 +1,78 @@
+### Include for stapl
+
+ifndef STAPL
+  export STAPL = $(shell echo "$(PWD)" | sed 's,/benchmarks/fmm,,')
+endif
+
+include $(STAPL)/GNUmakefile.STAPLdefaults
+
+.SUFFIXES: .cxx .cu .o
+
+### choose kernel
+EQUATION = Laplace
+#EQUATION = Yukawa (not available yet)
+#EQUATION = Helmholtz (not available yet)
+#EQUATION = Stokes (not available yet)
+
+### choose basis of multipole/local expansion
+BASIS	= Cartesian
+#BASIS	= Spherical
+#BASIS	= Planewave (not available yet)
+
+### choose device to use
+DEVICE	= CPU
+#DEVICE	= GPU (not integrated)
+
+
+### Base flags
+CXXFLAGS	+= -Iinclude
+
+#CXX	+= -I$$(echo $$CPATH | sed 's/:/ -I/g') # BG compilers need this
+#LFLAGS	+= -L$$(echo $$LIBRARY_PATH | sed 's/:/ -L/g') # BG compilers need this
+LFLAGS	+= -D$(BASIS) # Specify basis of multipole/local expansion
+LFLAGS  += -DEXPANSION=4 # Specify expansion order
+#LFLAGS	+= -DUSE_SIMD # Use SSE/AVX/MIC intrinsics
+#LFLAGS	+= -DUSE_WEIGHT # Use weights for partitioning
+#LFLAGS	+= -DFP64 # Use double precision
+#LFLAGS	+= -DKAHAN # Use Kahan summation
+
+### Debugging flags
+LFLAGS	+= -DASSERT # Turns on asserttions (otherwise define an empty macro function)
+#LFLAGS	+= -DCOUNT # Count number calls to P2P and M2L (slows down execution)
+
+
+### Thread model flags
+#LFLAGS	+= -DCILK -lcilkrts # Cilk is included in the Intel C/C++ Compiler
+#LFLAGS	+= -DTBB -ltbb # TBB is available from http://threadingbuildingblocks.org/download.php
+#LFLAGS	+= -DMTHREAD -lmyth-native # MassiveThreads is available from http://code.google.com/p/massivethreads/
+#LFLAGS	+= -DQTHREAD -lqthread # Qthread is available from https://code.google.com/p/qthreads/
+#LFLAGS	+= -DOPENMP # OpenMP is included in most modern compilers
+
+### DAG Recorder flags : DAG Recorder is part of MassiveThreads available from http://code.google.com/p/massivethreads/
+#LFLAGS	+= -DDAG_RECORDER=2 -ldr
+
+### PAPI flags : set environment value to (export EXAFMM_PAPI_EVENTS="PAPI_L2_DCM,PAPI_L2_DCA,PAPI_TLB_DM") or something else
+#LFLAGS	+= -DPAPI -lpapi
+
+### Trace flags : This tracing tool is part of ExaFMM
+#LFLAGS	+= -DTRACE
+
+### VTK flags : VTK is available from http://www.vtk.org/VTK/resources/software.html
+#LFLAGS	+= -DVTK -lvtkCharts -lvtkRendering -lvtkGraphics -lvtkFiltering -lvtkViews -lvtkCommon -lvtkWidgets -lvtkIO
+
+ifeq ($(DEVICE),GPU)
+NVCC	= nvcc -use_fast_math -arch=sm_35 -I../include
+### CUDA flags
+LFLAGS  += -lcudadevrt
+SOURCES	= ../kernels/$(EQUATION)$(BASIS)$(DEVICE).cu ../kernels/$(EQUATION)P2P$(DEVICE).cu
+OBJECTS	= $(SOURCES:.cu=.o)
+else
+SOURCES	= ../kernels/$(EQUATION)$(BASIS)$(DEVICE).cxx ../kernels/$(EQUATION)P2P$(DEVICE).cxx
+OBJECTS	= $(SOURCES:.cxx=.o)
+endif
+
+MAKEFLAGS += --no-print-directory
+
+
+.cc.o  :
+	${CC} ${STAPL_CXXFLAGS} ${CXXFLAGS} -o $@ $< ${STAPL_LIBRARIES} ${LIB} ${LIB_EPILOGUE} ${LFLAGS}

@@ -1,0 +1,73 @@
+This file contains any messages produced by compilers while
+running configure, to aid debugging if configure makes a mistake.
+
+configure:574: checking host system type
+configure:595: checking target system type
+configure:613: checking build system type
+configure:657: checking for a BSD compatible install
+configure:710: checking whether build environment is sane
+configure:767: checking whether make sets ${MAKE}
+configure:813: checking for working aclocal
+configure:826: checking for working autoconf
+configure:839: checking for working automake
+configure:852: checking for working autoheader
+configure:865: checking for working makeinfo
+configure:895: checking for a BSD compatible install
+configure:957: checking for Cygwin environment
+configure:973: g++ -c   conftest.C 1>&5
+configure: In function `int main()':
+configure:969: `__CYGWIN32__' undeclared (first use this function)
+configure:969: (Each undeclared identifier is reported only once for each 
+   function it appears in.)
+configure: failed program was:
+#line 962 "configure"
+#include "confdefs.h"
+
+int main() {
+
+#ifndef __CYGWIN__
+#define __CYGWIN__ __CYGWIN32__
+#endif
+return __CYGWIN__;
+; return 0; }
+configure:991: checking if we really have cygwin
+configure:1006: checking for c++
+configure:1038: checking whether the C++ compiler (c++  ) works
+configure:1054: c++ -o conftest    conftest.C  1>&5
+configure:1080: checking whether the C++ compiler (c++  ) is a cross-compiler
+configure:1085: checking whether we are using GNU C++
+configure:1094: c++ -E conftest.C
+configure:1113: checking whether c++ accepts -g
+configure:1162: c++ -c -g -O2  conftest.C 1>&5
+configure:1179: c++ -c -g -O2  conftest.C 1>&5
+configure: In function `int main()':
+configure:1175: `exit' undeclared (first use this function)
+configure:1175: (Each undeclared identifier is reported only once for each 
+   function it appears in.)
+configure: failed program was:
+#line 1172 "configure"
+#include "confdefs.h"
+
+int main() {
+exit (42);
+; return 0; }
+configure:1162: c++ -c -g -O2  conftest.C 1>&5
+configure:1179: c++ -c -g -O2  conftest.C 1>&5
+configure:1534: checking for gcc
+configure:1647: checking whether the C compiler (gcc  ) works
+configure:1663: gcc -o conftest    conftest.c  1>&5
+configure:1689: checking whether the C compiler (gcc  ) is a cross-compiler
+configure:1694: checking whether we are using GNU C
+configure:1703: gcc -E conftest.c
+configure:1722: checking whether gcc accepts -g
+configure:1761: checking how to run the C++ preprocessor
+configure:1779: g++ -E  conftest.C >/dev/null 2>conftest.out
+configure:1816: checking for copysign
+configure:1830: checking for std::abs
+configure:1840: g++ -c -g -O2 conftest.cpp 1>&5
+configure:1860: checking for <limits> header
+configure:1870: g++ -c -g -O2 conftest.cpp 1>&5
+configure:1896: checking whether to use MTL exceptions
+configure:1909: checking whether to use BLAIS performance optimizations
+configure:1929: checking whether to use interface to matlab files
+configure:1954: checking whether to use interface to LAPACK

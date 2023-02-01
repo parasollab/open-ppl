@@ -1,0 +1,17 @@
+This utility is a generic visualizer based on OpenGL. To use it, create a
+visualization class that inherits from the base_visualization class (see
+example_visualization for a demo).
+
+What's in here:
+
+nonstd:
+  A collection of utilities that aren't in the std namespace but reasonably
+  could belong there, like approximate equality and a string tokenizer.
+
+glutils:
+  A collection of utilities for working with OpenGL, like camera and transform
+  objects.
+
+sandbox:
+  The visualizer code, which is based on Qt. Run make from this folder to build
+  the visualizer.

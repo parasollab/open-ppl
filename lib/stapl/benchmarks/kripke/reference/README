@@ -1,0 +1,77 @@
+====================
+AUTHOR
+====================
+Adam J. Kunen <kunen1@llnl.gov>
+Peter N. Brown <brown42@llnl.gov>
+Teresa S. Bailey <bailey42@llnl.gov>
+
+
+====================
+OVERVIEW
+====================
+Kripke is a simple, scalable, 3D Sn deterministic particle transport code.
+Its primary purpose is to research how data layout, programming paradigms and
+architectures effect the implementation and performance of Sn transport.
+A main goal of Kripke is investigating how different data-layouts affect
+instruction, thread and task level parallelism, and what the implications are
+on overall solver performance.
+
+
+
+====================
+REQUIRMENTS
+====================
+CMake 2.8 or later
+C++ Compiler (g++, icpc, etc.)
+MPI 1.0 or later
+Python 2.7 or later
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+///
+///    PARASOL SPECIFIC INFORMATION
+///
+///    When building Kripke on a Parasol system (the workstations or Rain) you
+///    must specify SYS_TYPE for cmake. SYS_TYPE is an enviornment variable
+///    set on LLNL systems, and used in the provided cmake files. The files
+///    have been modified to accept "optiplex" and "rain".
+///
+///    To build on a workstation the commands are as follows:
+///
+///    mkdir kripke-Linux
+///    cd kripke-Linux
+///    SYS_TYPE=optiplex cmake ..
+///    make -j8
+///
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+====================
+BUILDING
+====================
+Setup uses CMake, so first create a build subdirectory inside the Kripke
+root directory:
+
+	mkdir kripke-Linux
+
+Go into that directory and run CMake:
+
+  cd kripke-Linux
+	cmake ..
+
+Now make Kripke:
+
+  make -j8
+
+Now you have built Kripke, try running the test harness:
+
+  ./src/tools/kripke --test
+
+
+====================
+FURTHER RESOURCES
+====================
+You can look at the source code and the user manual included in the tarball
+for further information.
+
+

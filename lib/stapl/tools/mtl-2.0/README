@@ -1,0 +1,144 @@
+-*- text -*-
+
+// Copyright 1997-2000 University of Notre Dame.
+// Authors: Andrew Lumsdaine, Jeremy G. Siek, Lie-Quan Lee
+//
+// This file is part of the Matrix Template Library
+//
+// You should have received a copy of the License Agreement for the
+// Matrix Template Library along with the software;  see the
+// file LICENSE.  If not, contact Office of Research, University of Notre
+// Dame, Notre Dame, IN  46556.
+//
+// Permission to modify the code and to distribute modified code is
+// granted, provided the text of this NOTICE is retained, a notice that
+// the code was modified is included with the above COPYRIGHT NOTICE and
+// with the COPYRIGHT NOTICE in the LICENSE file, and that the LICENSE
+// file is distributed with the modified code.
+//
+// LICENSOR MAKES NO REPRESENTATIONS OR WARRANTIES, EXPRESS OR IMPLIED.
+// By way of example, but not limitation, Licensor MAKES NO
+// REPRESENTATIONS OR WARRANTIES OF MERCHANTABILITY OR FITNESS FOR ANY
+// PARTICULAR PURPOSE OR THAT THE USE OF THE LICENSED SOFTWARE COMPONENTS
+// OR DOCUMENTATION WILL NOT INFRINGE ANY PATENTS, COPYRIGHTS, TRADEMARKS
+// OR OTHER RIGHTS.
+
+---------------------------------------------------------------
+
+              The Matrix Template Library
+                     Version 2.1
+
+I. Introduction
+===============
+
+The Matrix Template Library is a C++ class library for basic linear
+algebra. The MTL is designed for high-performance while at the same
+time taking advantage of the generic programming paradigm (ala the
+STL) to allow much greater flexibility and breadth of
+functionality. Many new and advanced programming techniques were used
+in the construction of this library.
+
+The MTL is a low level library in the sense that the user must be
+conscious of the matrix type being used, and that all computationally
+expensive operations are explicit. The MTL is not a C++
+Matlab. Nevertheless, the interface is designed to be simple and easy
+to use.
+
+The matrix types provided include compressed sparse row/column,
+banded, packed, diagonal (and tridiagonal), envelope, array of
+pointers, and of course dense matrices. All matrix types share
+a common and easy to use interface.
+
+The algorithms consist of the traditional basic linear algebra
+routines (from the BLAS level-1 to 3) which includes matrix and vector
+arithmetic as well as operations such as backward substitution and
+norm calculations.
+
+
+II. Compilers
+=============
+
+The Matrix Template Library has been tested (and passed)
+with the following compilers and architectures:
+
+Silicon Graphics
+----------------
+MIPSpro Compilers: Version 7.30
+KAI C++ 3.3f
+
+Solaris
+-------
+KAI C++ 3.4g
+g++ 2.95.2
+
+Linux
+-----
+KAI C++ 4.0
+g++ 2.96
+g++ 3.0.1 
+
+Macintosh
+---------
+Metrowerks CW Pro 5.0
+
+Windoze
+-------
+Visual C++ 6.0
+Metrowerks CW Pro 5.0
+
+
+The MTL will NOT compile yet with the following compilers, and the
+degree of difficulty of the port has been noted.
+
+Compiler           Difficulty of porting MTL
+--------------     ------------------------
+Intel C++ 4.0      Easy (perhaps already there)
+Solaris C++ 5.0    Impossible
+
+Even though I was able to port MTL to Visual C++ 6.0, it was still
+really difficult, so please complain to Microsoft about their lack of
+standards compliance, particularly with partial specialization.
+
+Compilers that are not noted above have not yet be investigated.
+
+
+III. Documentation
+==================
+
+The documentation resides in the /doc directory and is in html. You
+can also view the documentation at our web site:
+www.lsc.nd.edu/research/mtl
+
+There are also a large number of examples in the /contrib/examples
+directory.
+
+
+IV. Installation Procedure
+==========================
+
+See the file INSTALL in this directory.
+
+
+
+V. Contact Information
+=======================
+
+The Matrix Template Library is available at the main distribution site:
+
+    http://www.lsc.nd.edu/research/mtl
+
+This distribution includes:
+
+    - Source code for the MTL (all header files /mtl)
+    - A test suite (/test)
+    - Some example code (/contrib/examples)
+    - The doubledouble extended precision class (contrib/doubledouble)
+
+Bug reports should be sent to mtl@lsc.nd.edu.
+
+Questions, comments, suggestions, and requests for additional
+information should also be directed to mtl@lsc.nd.edu.
+
+Send mail to majordomo@lsc.nd.edu and include a body of:
+
+     subscribe mtl-announce

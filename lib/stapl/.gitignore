@@ -1,0 +1,3 @@
+GNUmakefile.thisbuild
+lib/*.a
+src/**/*.o

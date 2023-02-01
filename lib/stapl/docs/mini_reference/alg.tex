@@ -1,0 +1,1056 @@
+\chapter{Parallel Algorithms}
+
+STAPL parallel algorithms are organized into the following categories:
+
+\begin{itemize}
+\item
+Non-modifying Sequence Operations : (Section \ref{sec-nonmod-alg} )
+\newline
+search and query view elements.
+
+\begin{itemize}
+\item
+Search Operations API (Section \ref{sec-search-alg} )
+\item
+Summary Operations API (Section \ref{sec-sumry-alg} )
+\item
+Extrema Operations API (Section \ref{sec-extrem-alg} )
+\item
+Counting Operations API (Section \ref{sec-count-alg} )
+\end{itemize}
+
+\item
+Mutating Sequence Operations : (Section \ref{sec-mutseq-alg} )
+\newline
+modify the elements in a view.
+
+\begin{itemize}
+\item
+Mutating Sequence Operations API (Section \ref{sec-mutate-alg} )
+\item
+Removing Operations API (Section \ref{sec-remove-alg} )
+\item
+Reordering Operations API (Section \ref{sec-reord-alg} )
+\end{itemize}
+
+\item
+Sorting and Related Operations : (Section \ref{sec-sorting-alg} )
+\newline
+sort elements in a view or perform operations on sorted sequences.
+
+\begin{itemize}
+\item
+Sorting Operations API (Section \ref{sec-sort-alg} )
+\item
+Binary Search Operations API (Section \ref{sec-binsrch-alg} )
+\item
+Sorting Related Operations API (Section \ref{sec-sortrel-alg} )
+\end{itemize}
+
+\item
+Generalized Numeric Algorithms : (Section \ref{sec-numer-alg} )
+\newline
+algorithms for numeric operations on view elements.
+
+\end{itemize}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\section{Introduction}
+
+A Parallel algorithm is the parallel counterpart of the STL algorithm. There are three types of Parallel algorithms in STAPL:
+
+Parallel algorithms with semantics identical to their sequential counterparts.
+Parallel algorithms with enhanced semantics (e.g. a parallel find could return any (or all) element found, while STL find only returns the first).
+Parallel algorithms with no sequential equivalent in STL.
+
+STL algorithms take iterators marking the start and end of an input sequence as parameters. Using STL constructs, such as the vector, this can be illustrated as follows:
+
+\begin{verbatim}
+std::vector<int> v(1000000);
+// initialize v
+std::find( v.begin(), v.end(), 0 );
+\end{verbatim}
+
+However, regular C++ arrays also support iterators, because iterators are in fact just generalized pointers:
+
+\begin{verbatim}
+int v[1000000];
+... initialize v ...
+find( &v[0], &v[1000000], 0 );
+\end{verbatim}
+
+STAPL Parallel algorithms take one or more pView instances as parameters instead. For example, STL provides an algorithm to find an element in a list, find. STAPL provides find which works with pViews. The construction of the pView over a container is an additional step, but the same pView instance can be used across multiple Parallel algorithm calls and allows additional flexibility such as providing access to a portion of the container instead of the entire data set.
+
+\begin{verbatim}
+stapl::vector<int> v(1000000);
+stapl::vector_view<stapl::vector<int>> vw(v);
+// initialize v
+stapl::find( vw, 0 );
+\end{verbatim}
+
+In describing the parameters of these sets of Parallel algorithms, some conventions are used. All of the Parallel algorithms operate on sequences of input and/or output data (there are a few STL algorithms that only operate on a few elements, such as min or max, which are not parallel operations). STL generally describes this sequence using set notation as $[first, last)$, where first is an iterator to the start of a sequence and last is an iterator to the end of a sequence, and everything from the first element up to, but not including, the last element is considered part of the sequence. STAPL's pViews completely encapsulate this information. Hence, when describing a given Parallel algorithm, a sequence is represented as a pView.
+
+Many Parallel algorithms behavior is described in terms of operator $?$, where $?$ is one of the C++ operators such as $<, >, ==$, etc. C++ allows the programmer to override the actions taken when one of the operators is called on a given class or type, and it may be helpful for the learning STAPL programmer to study this mechanism in C++. Another method that STL uses to change the default behavior of operators is to define Function Objects. These are functions or classes that implement operator() that will be used instead of the given operator. Most Parallel algorithms (and algorithms in STL), accept function objects, and in fact such flexibility lets both STL and STAPL algorithms to be adjusted to exactly what is needed, reducing the amount of code that a user needs to rewrite to obtain the desired effect.
+
+All Parallel algorithms are expressed using dependence patterns, which when combined with the functor describing the operation on a single element and the set of pViews to process are using to instantiate the parallel task graph, PARAGRAPH. When the PARAGRAPH instance is executed using the executor and scheduler facilities of the STAPL runtime the desired parallel computation is performed. The scheduling policy can be specified for each PARAGRAPH instance if desired, otherwise the default FIFO policy is used. Multiple PARAGRAPHS may be processed concurrently by a PARAGRAPH executor that the set of locations executing the STAPL applications use to perform work.
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\pagebreak
+
+\section{Non-modifying Sequence Operations} \label{sec-nonmod-alg}
+
+The non-modifying sequence operations do not directly modify the sequences of data they operate on. Each algorithm has two versions, one using operator $==$ for comparisons, and the other using a user-defined function object.
+
+\subsection{Search Operations API} \label{sec-search-alg}
+
+\begin{verbatim}
+template<typename View0, typename View1, typename Pred >
+View0::reference stapl::find_first_of (View0 const &view0,
+                 View1 const &view1, Pred const &predicate)
+\end{verbatim}
+
+Finds the first element in the input which matches any of the elements in the given view, according to the given predicate.
+
+\begin{verbatim}
+template<typename View0, typename View1 >
+View0::reference stapl::find_first_of (View0 const &view0, View1 const &view1)
+\end{verbatim}
+
+Finds the first element in the input which matches any of the elements in the given view.
+
+\begin{verbatim}
+template<typename View, typename Predicate >
+View::reference stapl::find_if (View const &view, Predicate const &pred)
+\end{verbatim}
+
+Finds the first element in the input for which the predicate returns true, or NULL if none exist.
+
+\begin{verbatim}
+template<typename View, typename Predicate >
+View::reference stapl::find_if_not (View const &view, Predicate const &pred)
+\end{verbatim}
+
+Finds the first element in the input for which the predicate returns false, or NULL if none exist.
+
+\begin{verbatim}
+template<typename View, typename T >
+View::reference stapl::find (View const &view, T const &value)
+\end{verbatim}
+
+Finds the first occurrence of the given value in the input, or NULL if it is not found.
+
+\begin{verbatim}
+template<typename View, typename Pred >
+View::reference stapl::partition_point (View const &pview, Pred predicate)
+\end{verbatim}
+
+Finds the position of the first element for which the functor returns false, indicating the partition point.
+
+\begin{verbatim}
+template<typename View1, typename View2, typename Predicate >
+std::pair< typename View1::reference, typename View2::reference >
+stapl::mismatch (View1 const &view1, View2 const &view2, Predicate pred)
+\end{verbatim}
+
+Given two input views, returns the positions of the first elements which do not match.
+
+\begin{verbatim}
+template<typename View1, typename View2 >
+std::pair< typename View1::reference, typename View2::reference >
+stapl::mismatch (View1 const &view1, View2 const &view2)
+\end{verbatim}
+
+Given two input views, returns the positions of the first elements which do not match.
+
+\begin{verbatim}
+template<typename View1, typename View2, typename Pred >
+View1::reference stapl::find_end (const View1 &sequence, const View2 &pattern,
+    Pred const &predicate)
+\end{verbatim}
+
+Finds the last occurrence of the given pattern in the input sequence.
+
+\begin{verbatim}
+template<typename View1, typename View2 >
+View1::reference stapl::find_end (const View1 &sequence, const View2 &pattern)
+\end{verbatim}
+
+Finds the last occurrence of the given pattern in the input sequence.
+
+\begin{verbatim}
+template<typename View, typename BinPredicate >
+View::reference stapl::adjacent_find (View view, BinPredicate bin_predicate)
+\end{verbatim}
+
+Return the position of the first adjacent pair of equal elements.
+
+\begin{verbatim}
+template<typename View >
+View::reference stapl::adjacent_find (View view)
+\end{verbatim}
+
+Return the position of the first adjacent pair of equal elements.
+
+\begin{verbatim}
+template<class View1, class View2, class Predicate >
+View1::reference stapl::search (View1 v1, View2 v2, Predicate pred)
+\end{verbatim}
+
+Return the position of the first occurrence of the given sequence within the input, or NULL if it is not found.
+
+\begin{verbatim}
+template<class View1, class View2 >
+View1::reference stapl::search (View1 v1, View2 v2)
+\end{verbatim}
+
+Return the position of the first occurrence of the given sequence within the input, or NULL if it is not found.
+
+\begin{verbatim}
+template<class View1, class Predicate >
+View1::reference stapl::search_n (View1 v1, size_t count,
+    typename View1::value_type value, Predicate pred)
+\end{verbatim}
+
+Return the position of the first occurrence of a sequence of the given value which is of the given length, or NULL if none exists.
+
+\begin{verbatim}
+template<class View1 >
+View1::reference stapl::search_n (View1 v1, size_t count,
+    typename View1::value_type value)
+\end{verbatim}
+
+Return the position of the first occurrence of a sequence of the given value which is of the given length, or NULL if none exists.
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\subsection{Summary Operations API} \label{sec-sumry-alg}
+
+\begin{verbatim}
+template<typename View, typename Predicate >
+bool stapl::is_partitioned (View const &pview, Predicate predicate)
+\end{verbatim}
+
+Decides if the input view is partitioned according to the given functor, in that all elements which return true precede all those that do not.
+
+\begin{verbatim}
+template<typename View1, typename View2, typename Pred >
+bool stapl::is_permutation (View1 const &view1, View2 const &view2, Pred pred)
+\end{verbatim}
+
+Computes whether all the elements in the first view are contained in the second view, even in a different order.
+
+\begin{verbatim}
+template<typename View1, typename View2 >
+bool stapl::is_permutation (View1 const &view1, View2 const &view2)
+\end{verbatim}
+
+Computes whether all the elements in the first view are contained in the second view, even in a different order.
+
+\begin{verbatim}
+template<typename View0, typename View1, typename Predicate >
+bool stapl::equal (View0 const &view0, View1 const &view1, Predicate pred)
+\end{verbatim}
+
+Compares the two input views and returns true if all of their elements compare pairwise equal.
+
+\begin{verbatim}
+template<typename View0, typename View1 >
+bool stapl::equal (View0 const &view0, View1 const &view1)
+\end{verbatim}
+
+Compares the two input views and returns true if all of their elements compare pairwise equal.
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\subsection{Extrema Operations API} \label{sec-extrem-alg}
+
+\begin{verbatim}
+template<typename View, typename Pred >
+std::pair< typename View::value_type, typename View::value_type >
+stapl::minmax_value (View const &view, Pred const &pred)
+\end{verbatim}
+
+Returns a pair containing the minimum and maximum values returned by the given predicate when called on all values in the input view.
+
+\begin{verbatim}
+template<typename View, typename Compare >
+View::value_type stapl::min_value (View const &view, Compare comp)
+\end{verbatim}
+
+Finds the smallest value in the input view.
+
+\begin{verbatim}
+template<typename View >
+View::value_type stapl::min_value (View const &view)
+\end{verbatim}
+
+Finds the smallest value in the input view.
+
+\begin{verbatim}
+template<typename View, typename Compare >
+View::value_type stapl::max_value (View const &view, Compare comp)
+\end{verbatim}
+
+Finds the largest value in the input view.
+
+\begin{verbatim}
+template<typename View >
+View::value_type stapl::max_value (View const &view)
+\end{verbatim}
+
+Finds the largest value in the input view.
+
+\begin{verbatim}
+template<typename View, typename Compare >
+View::reference stapl::min_element (View const &view, Compare comp)
+\end{verbatim}
+
+Finds the smallest element in the input view (or the first smallest if there are multiple), which compares less than any other element using the given functor.
+
+\begin{verbatim}
+template<typename View >
+View::reference stapl::min_element (View const &view)
+\end{verbatim}
+
+Finds the smallest element in the input view (or the first smallest if there are multiple).
+
+\begin{verbatim}
+template<typename View, typename Compare >
+View::reference stapl::max_element (View const &view, Compare comp)
+\end{verbatim}
+
+Finds the largest element in the input view (or the first largest if there are multiple), which does not compare less than any other element using the given functor.
+
+\begin{verbatim}
+template<typename View >
+View::reference stapl::max_element (View const &view)
+\end{verbatim}
+
+Finds the largest element in the input view (or the first largest if there are multiple).
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\subsection{Counting Operations API} \label{sec-count-alg}
+
+\begin{verbatim}
+template<typename View0, typename Pred >
+bool stapl::all_of (View0 const &view, Pred predicate)
+\end{verbatim}
+
+Returns true if the given predicate returns true for all of the elements in the input view.
+
+\begin{verbatim}
+template<typename View0, typename Pred >
+bool stapl::none_of (View0 const &view, Pred predicate)
+\end{verbatim}
+
+Returns true if the given predicate returns false for all of the elements in the input view, or the view is empty.
+
+\begin{verbatim}
+template<typename View0, typename Pred >
+bool stapl::any_of (View0 const &view, Pred predicate)
+\end{verbatim}
+
+Returns true if the given predicate returns true for any of the elements in the input view.
+
+\begin{verbatim}
+template<typename View, typename Predicate >
+View::iterator::difference_type stapl::count_if (View const &view,
+    Predicate pred)
+\end{verbatim}
+
+Computes the number of elements in the input view for which the given functor returns true.
+
+\begin{verbatim}
+template<typename View, typename T >
+View::iterator::difference_type stapl::count (View const &view, T const &value)
+\end{verbatim}
+
+Computes the number of elements in the input view which compare equal to the given value.
+
+\begin{verbatim}
+template<typename View, typename T >
+result_of::count< View, T >::type stapl::prototype::count (View const &view,
+    T const &value)
+\end{verbatim}
+
+Computes the number of elements in the input view which compare equal to the given value.
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\pagebreak
+
+\section{Mutating Sequence Operations} \label{sec-mutseq-alg}
+
+Mutating algorithms modify the sequences of data that they operate on in some way. The replace(), remove(), and unique() each have two versions, one using operator $==$ for comparisons, and the other using a function object.
+
+\subsection{Mutating Sequence Operations API} \label{sec-mutate-alg}
+
+\begin{verbatim}
+template<typename View0, typename View1 >
+void stapl::copy (View0 const &vw0, View1 const &vw1)
+\end{verbatim}
+
+Copy the elements of the input view to the output view.
+
+\begin{verbatim}
+template<typename View0, typename View1, typename Size >
+void stapl::copy_n (View0 const &vw0, View1 const &vw1, Size n)
+\end{verbatim}
+
+Copy the first n elements from the input view to the output view.
+
+\begin{verbatim}
+template<typename View, typename Generator >
+void stapl::generate (View const &view, Generator gen)
+\end{verbatim}
+
+Assign each value of the input view to the result of a successive call to the provided functor.
+
+\begin{verbatim}
+template<typename View, typename Generator >
+void stapl::generate_n (View const &view, size_t first_elem, size_t n,
+    Generator gen)
+\end{verbatim}
+
+
+Assign the n values of the input view starting at the given element to the result of a successive call to the provided functor.
+
+\begin{verbatim}
+template<typename View, typename Predicate >
+void stapl::replace_if (View &vw, Predicate pred,
+    typename View::value_type const &new_value)
+\end{verbatim}
+
+Replace the values from the input view for which the given predicate returns true with the new value.
+
+\begin{verbatim}
+template<typename View >
+void stapl::replace (View &vw, typename View::value_type const &old_value,
+    typename View::value_type const &new_value)
+\end{verbatim}
+
+Replace the given value in the input with the new value.
+
+\begin{verbatim}
+template<typename View0, typename View1, typename Predicate >
+View1::iterator stapl::replace_copy_if (View0 const &vw0, View1 const &vw1,
+    Predicate pred, typename View0::value_type new_value)
+\end{verbatim}
+
+Copy the values from the input view to the output, except for those elements for which the given predicate returns true, which are replaced with the given value.
+
+\begin{verbatim}
+template<typename View, typename Size >
+void stapl::fill_n (View &vw, typename View::value_type value, Size n)
+\end{verbatim}
+
+Assigns the given value to the first n elements of the input view.
+
+\begin{verbatim}
+template<typename View >
+void stapl::fill (View const &vw, typename View::value_type value)
+\end{verbatim}
+
+Assigns the given value to the elements of the input view.
+
+\begin{verbatim}
+template<typename View >
+void stapl::swap_ranges (View &vw0, View &vw1)
+\end{verbatim}
+
+Swaps the elements of the two input views.
+
+\begin{verbatim}
+template<typename View0, typename View1 >
+View1::iterator stapl::replace_copy (View0 &vw0, View1 &vw1,
+    typename View0::value_type old_value, typename View0::value_type new_value)
+\end{verbatim}
+
+Copy the elements from the input to the output, replacing the given old\_value with the new\_value.
+
+\begin{verbatim}
+template<typename View0, typename Function >
+Function stapl::for_each (const View0 &vw0, Function func)
+\end{verbatim}
+
+Applies the given functor to all of the elements in the input.
+
+\begin{verbatim}
+template<typename View0, typename View1, typename Function >
+void stapl::transform (const View0 &vw0, const View1 &vw1, Function func)
+\end{verbatim}
+
+Applies the given function to the input, and stores the result in the output.
+
+\begin{verbatim}
+template<typename View0, typename View1, typename View2, typename Function >
+void stapl::transform (View0 &vw0, View1 &vw1, View2 &vw2, Function func)
+\end{verbatim}
+
+Applies the given function to the inputs, and stores the result in the output.
+
+\begin{verbatim}
+template<typename View >
+void stapl::prototype::fill (View &vw, typename View::value_type value)
+\end{verbatim}
+
+Assigns the given value to the elements of the input view.
+
+\begin{verbatim}
+template<typename View0, typename Function >
+Function stapl::prototype::for_each (View0 const &vw0, Function func)
+\end{verbatim}
+
+Applies the given functor to all of the elements in the input.
+
+\begin{verbatim}
+template<typename View0 >
+void stapl::iota (View0 const &view, typename View0::value_type const &value)
+\end{verbatim}
+
+Initializes the elements of the view such that the first element is assigned value, the next element value+1, etc.
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\subsection{Removing Operations API} \label{sec-remove-alg}
+
+\begin{verbatim}
+template<typename View, typename Pred >
+View stapl::keep_if (View const &pview, Pred predicate)
+\end{verbatim}
+
+Remove the values from the input view for which the given predicate returns false.
+
+\begin{verbatim}
+template<typename View, typename Pred >
+View stapl::remove_if (View const &pview, Pred predicate)
+\end{verbatim}
+
+Remove the values from the input view for which the given predicate returns true.
+
+\begin{verbatim}
+template<typename View0, typename View1, typename Pred >
+View1 stapl::copy_if (View0 const &vw0, View1 &vw1, Pred predicate)
+\end{verbatim}
+
+Copy the values from the input view to the output those elements for which the given predicate returns true.
+
+\begin{verbatim}
+template<typename View0, typename View1, typename Pred >
+View1 stapl::remove_copy_if (View0 const &vw0, View1 &vw1, Pred predicate)
+\end{verbatim}
+
+Copy the values from the input view to the output, except for those elements for which the given predicate returns true.
+
+\begin{verbatim}
+template<typename View >
+View stapl::remove (View &vw0, typename View::value_type valuetoremove)
+\end{verbatim}
+
+Remove the given value from the input.
+
+\begin{verbatim}
+template<typename View0, typename View1 >
+View1 stapl::remove_copy (View0 const &vw0, View1 &vw1,
+    typename View0::value_type valuetoremove)
+\end{verbatim}
+
+Copy the values from the input view to the output, except for those elements which are equal to the given value.
+
+\begin{verbatim}
+template<typename View, typename DestView, typename BinPredicate >
+std::pair< DestView, DestView > stapl::unique_copy (View &src_view,
+    DestView &dest_view, BinPredicate bin_predicate)
+\end{verbatim}
+
+Copies all of the elements from the source to the destination view, except those that are consecutive duplicates (equal to the preceding element), which are moved to the end of the destination view.
+
+\begin{verbatim}
+template<typename View0, typename View1 >
+std::pair< View1, View1 > stapl::unique_copy (View0 src_view, View1 dest_view)
+\end{verbatim}
+
+Copies all of the elements from the source to the destination view, except those that are consecutive duplicates (equal to the preceding element), which are moved to the end of the destination view.
+
+\begin{verbatim}
+template<typename View, typename BinPredicate >
+std::pair< View, View > stapl::unique (View view, BinPredicate bin_predicate)
+\end{verbatim}
+
+Remove all duplicate elements from the given view.
+
+\begin{verbatim}
+template<typename View >
+std::pair< View, View > stapl::unique (View view)
+\end{verbatim}
+
+Remove all duplicate elements from the given view.
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\subsection{Reordering Operations API} \label{sec-reord-alg}
+
+\begin{verbatim}
+template<typename View0, typename View1 >
+void stapl::reverse_copy (View0 const &vw0, View1 const &vw1)
+\end{verbatim}
+
+Copy elements of the input view to the output view in reverse order.
+
+\begin{verbatim}
+template<typename View0 >
+void stapl::reverse (View0 const &vw0)
+\end{verbatim}
+
+Reverse the order of the elements in the input view.
+
+\begin{verbatim}
+template<typename View0, typename View1 >
+void stapl::rotate_copy (View0 const &vw0, View1 const &vw1, int k)
+\end{verbatim}
+
+Copy the elements in the input view to the output view rotated to the left by k positions.
+
+\begin{verbatim}
+template<typename View0 >
+void stapl::rotate (View0 const &vw1, int k)
+\end{verbatim}
+
+Rotate the elements in the view to the left by k positions.
+
+\begin{verbatim}
+template<typename View, typename Pred >
+size_t stapl::stable_partition (View const &pview, Pred predicate)
+\end{verbatim}
+
+Partition the input such that all elements for which the predicate returns true are ordered before those for which it returned false, while also maintaining the relative ordering of the elements.
+
+\begin{verbatim}
+template<typename View0, typename View1, typename View2, typename Pred >
+std::pair< View1, View2 > stapl::partition_copy (View0 const &pview0,
+    View1 const &pview1, View2 const &pview2, Pred predicate)
+\end{verbatim}
+
+Copies all elements from the input for which the functor returns true into the first output view, and all others into the second output.
+
+\begin{verbatim}
+template<typename View, typename Pred >
+size_t stapl::partition (View const &pview, Pred predicate)
+\end{verbatim}
+
+Partition the input such that all elements for which the predicate returns true are ordered before those for which it returned false.
+
+\begin{verbatim}
+template<typename View, typename RandomNumberGenerator >
+void stapl::random_shuffle (View const &view, RandomNumberGenerator const &rng)
+\end{verbatim}
+
+Computes a random shuffle of elements in the input view.
+
+\begin{verbatim}
+template<typename View >
+void stapl::random_shuffle (View const &view)
+\end{verbatim}
+
+Computes a random shuffle of elements in the input view.
+
+\begin{verbatim}
+template<typename View, typename UniformRandomNumberGenerator >
+void stapl::shuffle (const View &view, const UniformRandomNumberGenerator &rng)
+\end{verbatim}
+
+Computes a random shuffle of elements in the input view, using the given uniform random number generator.
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\pagebreak
+
+\section{Sorting and Related Operations} \label{sec-sorting-alg}
+
+The sorting algorithms perform operations related to sorting or depending on sorted order. All algorithms define ordering of elements based on operator< or an optional StrictWeakOrdering function object.
+
+\subsection{Sorting Operations API} \label{sec-sort-alg}
+
+\begin{verbatim}
+template<typename View, typename Compare >
+void stapl::sample_sort (View &view, Compare comp, size_t sampling_method,
+    size_t over_partitioning_ratio=1, size_t over_sampling_ratio=128)
+\end{verbatim}
+
+Sorts the elements of the input view according to the comparator provided using a sample-based approach.
+
+\begin{verbatim}
+template<typename View >
+void stapl::sample_sort (View &view, size_t sampling_method,
+    size_t over_partitioning_ratio=1, size_t over_sampling_ratio=128)
+\end{verbatim}
+
+Sorts the elements of the input view according to the comparator provided using a sample-based approach.
+
+\begin{verbatim}
+template<typename View, typename Compare >
+void stapl::sample_sort (View &view, Compare comp)
+\end{verbatim}
+
+Sorts the elements of the input view according to the comparator provided using a sample-based approach.
+
+\begin{verbatim}
+template<typename View >
+void stapl::sample_sort (View &view)
+\end{verbatim}
+
+Sorts the elements of the input view according to the comparator provided using a sample-based approach.
+
+\begin{verbatim}
+template<typename View, typename Comparator >
+void stapl::sort (View &view, Comparator comp)
+\end{verbatim}
+
+Sorts the elements of the input view according to the comparator provided.
+
+\begin{verbatim}
+template<typename View >
+void stapl::sort (View &view)
+\end{verbatim}
+
+Sorts the elements of the input view according to the comparator provided.
+
+\begin{verbatim}
+template<typename InputView, typename SplittersView, typename Compare,
+    typename Functor >
+segmented_view< InputView, splitter_partition<
+    typename InputView::domain_type > > stapl::n_partition
+    (InputView input_v, SplittersView splitters,
+    Compare comp, Functor partition_functor)
+\end{verbatim}
+
+Reorders the elements in the input view in such a way that all elements for which the comparator returns true for a splitter s.
+
+\begin{verbatim}
+template<typename InputView, typename SplittersView, typename Compare >
+segmented_view< InputView, splitter_partition< typename
+    InputView::domain_type > >
+stapl::n_partition (InputView input_v, SplittersView splitters, Compare comp)
+\end{verbatim}
+
+Reorders the elements in the input view in such a way that all elements for which the comparator returns true for a splitter s.
+
+\begin{verbatim}
+template<typename InputView, typename SplittersView >
+segmented_view< InputView, splitter_partition< typename
+     InputView::domain_type > >
+stapl::n_partition (InputView input_v, SplittersView splitters)
+\end{verbatim}
+
+Reorders the elements in the input view in such a way that all elements for which the default '<' comparison function returns true for a splitter s - within the input splitters set - precede the elements for which the compare function returns false. The relative ordering of the elements is not preserved.
+
+\begin{verbatim}
+template<typename InputView, typename Compare, typename Functor >
+segmented_view< InputView, splitter_partition< typename
+    InputView::domain_type > >
+stapl::n_partition (InputView input_v, std::vector< typename
+    InputView::value_type > splitters, Compare comp, Functor partition_functor)
+\end{verbatim}
+
+Reorders the elements in the input view in such a way that all elements for which the comparator returns true for a splitter s.
+
+\begin{verbatim}
+template<typename InputView, typename Compare >
+void stapl::partial_sort (InputView input_v, typename InputView::iterator nth,
+    Compare comp)
+\end{verbatim}
+
+Performs a partial sort of the data in the input view using the comparator provided such that all elements before the nth position are sorted using the comparator.
+
+\begin{verbatim}
+template<typename InputView >
+void stapl::partial_sort (InputView input_v, typename InputView::iterator nth)
+\end{verbatim}
+
+Performs a partial sort of the data in the input view using the comparator provided such that all elements before the nth position are sorted using the comparator.
+
+\begin{verbatim}
+template<typename InputView, typename OutputView, typename Compare >
+OutputView stapl::partial_sort_copy (InputView input_v, OutputView output_v,
+    Compare comp)
+\end{verbatim}
+
+Performs a partial sort of the input view data into the output view using the comparator provided such that all elements before the nth position are sorted using the comparator.
+
+\begin{verbatim}
+template<typename InputView, typename OutputView >
+OutputView stapl::partial_sort_copy (InputView input_v, OutputView output_v)
+\end{verbatim}
+
+Performs a partial sort of the input view data into the output view using the comparator provided such that all elements before the nth position are sorted using the comparator.
+
+\begin{verbatim}
+template<typename InputView >
+void stapl::radix_sort (InputView input_v)
+\end{verbatim}
+
+Sorts the element in the input view according to the radix-sort algorithm.
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\subsection{Permuting Operations}
+
+Reorder the elements in a view.
+
+\begin{verbatim}
+template<typename View, typename Predicate >
+bool stapl::next_permutation (View &vw, Predicate pred)
+\end{verbatim}
+
+Computes the next lexicographic ordering of the input view (where the highest is sorted in decreasing order), or if input is already in highest order, places it in the lowest permutation (increasing order).
+
+\begin{verbatim}
+template<typename View >
+bool stapl::next_permutation (View &vw)
+\end{verbatim}
+
+Computes the next lexicographic ordering of the input view (where the highest is sorted in decreasing order), or if input is already in highest order, places it in the lowest permutation (increasing order).
+
+\begin{verbatim}
+template<typename View, typename Predicate >
+bool stapl::prev_permutation (View &vw, Predicate pred)
+\end{verbatim}
+
+Computes the previous lexicographic ordering of the input view (where the lowest is sorted in increasing order), or if input is already in lowest order, places it in the highest permutation (decreasing order).
+
+\begin{verbatim}
+template<typename View >
+bool stapl::prev_permutation (View &vw)
+\end{verbatim}
+
+Computes the previous lexicographic ordering of the input view (where the lowest is sorted in increasing order), or if input is already in lowest order, places it in the highest permutation (decreasing order).
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\subsection{Binary Search Operations API} \label{sec-binsrch-alg}
+
+\begin{verbatim}
+template<typename View, typename StrictWeakOrdering >
+bool stapl::binary_search (View const &view, typename View::value_type value,
+    StrictWeakOrdering comp)
+\end{verbatim}
+
+Searches the input view for the given value using a binary search, and returns true if that value exists in the input.
+
+\begin{verbatim}
+template<typename View >
+bool stapl::binary_search (View const &view, typename View::value_type value)
+\end{verbatim}
+
+Searches the input view for the given value using a binary search, and returns true if that value exists in the input.
+
+\begin{verbatim}
+template<typename View, typename T, typename StrictWeakOrdering >
+View::reference stapl::lower_bound (View const &view, T const &value,
+    StrictWeakOrdering comp)
+\end{verbatim}
+
+Finds the first element in the input view which compares greater than or equal to the given value.
+
+\begin{verbatim}
+template<typename View, typename T >
+View::reference stapl::lower_bound (View const &view, T const &value)
+\end{verbatim}
+
+Finds the first element in the input view which compares greater than or equal to the given value.
+
+\begin{verbatim}
+template<typename View, typename T, typename StrictWeakOrdering >
+View::reference stapl::upper_bound (View const &view, T const &value,
+    StrictWeakOrdering comp)
+\end{verbatim}
+
+Finds the first element in the input view which compares greater than the given value.
+
+\begin{verbatim}
+template<typename View, typename T >
+View::reference stapl::upper_bound (View const &view, T const &value)
+\end{verbatim}
+
+Finds the first element in the input view which compares greater than the given value.
+
+\begin{verbatim}
+template<typename View, typename StrictWeakOrdering >
+View stapl::equal_range (View const &view, typename View::value_type
+    const &value, StrictWeakOrdering const &comp)
+\end{verbatim}
+
+Computes the range of elements which are equal to the given value.
+
+\begin{verbatim}
+template<typename View >
+View stapl::equal_range (View const &view, typename View::value_type
+    const &value)
+\end{verbatim}
+
+Computes the range of elements which are equal to the given value.
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\subsection{Sorting Related Operations API} \label{sec-sortrel-alg}
+
+\begin{verbatim}
+template<typename View, typename View2, typename Pred >
+bool stapl::lexicographical_compare (View const &pview1, View2 const &pview2,
+    Pred const &pred)
+\end{verbatim}
+
+Determines if the first view is lexicographically less than the second view, using the given functor.
+
+\begin{verbatim}
+template<typename View, typename View2 >
+bool stapl::lexicographical_compare (View const &pview1, View2 const &pview2)
+\end{verbatim}
+
+Determines if the first view is lexicographically less than the second view.
+
+\begin{verbatim}
+template<typename View1, typename View2, typename MergeView >
+void stapl::merge (View1 const &view1, View2 const &view2, MergeView &merged)
+\end{verbatim}
+
+Merges the two sorted input views into the output view in sorted order.
+
+\begin{verbatim}
+template<typename View, typename Comp >
+bool stapl::is_sorted (View const &view, Comp comp)
+\end{verbatim}
+
+Computes whether the input view is sorted.
+
+\begin{verbatim}
+template<typename View >
+bool stapl::is_sorted (View const &view)
+\end{verbatim}
+
+Computes whether the input view is sorted.
+
+\begin{verbatim}
+template<typename View, typename Comp >
+View stapl::is_sorted_until (View const &v, Comp const &c)
+\end{verbatim}
+
+Finds the range of elements in the input which are sorted.
+
+\begin{verbatim}
+template<typename View >
+View stapl::is_sorted_until (View const &v)
+\end{verbatim}
+
+Finds the range of elements in the input which are sorted.
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\pagebreak
+
+\section{Generalized Numeric Algorithms API} \label{sec-numer-alg}
+
+\begin{verbatim}
+template<typename View, typename T, typename Oper >
+T stapl::accumulate (View const &view, T init, Oper oper)
+\end{verbatim}
+
+Compute the sum of the elements and the initial value.
+
+\begin{verbatim}
+template<typename View, typename T >
+T stapl::accumulate (View const &view, T init)
+\end{verbatim}
+
+Compute the sum of the elements and the initial value.
+
+\begin{verbatim}
+template<typename View1, typename View2, typename Oper >
+void stapl::adjacent_difference (View1 const &view1, View2 const &view2,
+    Oper oper)
+\end{verbatim}
+
+Assign each element of the output the difference between the corresponding input element and the input element that precedes it.
+
+\begin{verbatim}
+template<typename View1, typename View2 >
+void stapl::adjacent_difference (View1 const &view1, View2 const &view2)
+\end{verbatim}
+
+Assign each element of the output the difference between the corresponding input element and the input element that precedes it.
+
+\begin{verbatim}
+template<typename View1, typename View2, typename Init, typename Sum,
+    typename Product > Init
+stapl::inner_product (View1 const &view1, View2 const &view2, Init init,
+    Sum op1, Product op2)
+\end{verbatim}
+
+Compute the inner product of the elements of two input views. Inner product is defined as the sum of pair-wise products of the elements of two input views.
+
+\begin{verbatim}
+template<typename View1, typename View2, typename Init >
+Init stapl::inner_product (View1 const &view1, View2 const &view2, Init init)
+\end{verbatim}
+
+Compute the inner product of the elements of two input views. Inner product is defined as the sum of pair-wise products of the elements of two input views.
+
+\begin{verbatim}
+template<typename T, typename ViewA, typename Views >
+std::vector< T > stapl::inner_product (const ViewA &va, const Views &views,
+    std::vector< T > init)
+\end{verbatim}
+
+Compute the inner product of the elements of one view and the elements of each of a set of views.
+
+\begin{verbatim}
+template<typename Init, typename View1, typename View2, typename View3,
+     typename Sum, typename Product >
+Init stapl::weighted_inner_product (View1 const &view1, View2 const &view2,
+    View3 const &wt, Init init, Sum op1, Product op2)
+\end{verbatim}
+
+Compute a weighted inner product of the elements of two views, where each pair-wise product is multiplied by a weight factor before the sum of products is performed.
+
+\begin{verbatim}
+template<typename Init, typename View1, typename View2, typename View3 >
+Init stapl::weighted_inner_product (View1 const &view1, View2 const &view2,
+    View3 const &wt, Init init)
+\end{verbatim}
+
+Compute a weighted inner product of the elements of two views, where each pair-wise product is multiplied by a weight factor before the sum of products is performed.
+
+\begin{verbatim}
+template<typename View1, typename View2, typename Sum, typename Product >
+View1::value_type stapl::weighted_norm (View1 const &view1, View2 const &wt,
+    Sum op1, Product op2)
+\end{verbatim}
+
+Compute a weighted normal of the elements of a view.
+
+\begin{verbatim}
+template<typename View1, typename View2 >
+View1::value_type stapl::weighted_norm (View1 const &view1, View2 const &wt)
+\end{verbatim}
+
+Compute a weighted normal of the elements of a view.
+
+\begin{verbatim}
+template<typename View0, typename View1, typename BinaryFunction >
+void stapl::partial_sum (View0 const &view0, View1 const &view1,
+    BinaryFunction binary_op, const bool shift)
+\end{verbatim}
+
+Computes the prefix sum of the elements of the input view and stores the result in the output view.
+
+\begin{verbatim}
+template<typename View0, typename View1 >
+void stapl::partial_sum (View0 const &view0, View1 const &view1,
+    const bool shift)
+\end{verbatim}
+
+Computes the prefix sum of the elements of the input view and stores the result in the output view.
+

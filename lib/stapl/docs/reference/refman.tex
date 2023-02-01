@@ -1,0 +1,82 @@
+\documentclass{book}
+\usepackage[T1]{fontenc}
+\usepackage{makeidx}
+
+\usepackage{amsmath}
+\usepackage{graphicx}
+
+\makeindex
+\begin{document}
+\title{STAPL Reference -- VERSION 0.1}
+\date{\today}
+\maketitle
+
+\newenvironment{hashitemize}{%
+  \renewcommand{\labelitemi}{\bfseries \#\#}%
+        \begin{itemize}}{\end{itemize}}
+
+\newcommand{\stapl}{{\sc STAPL}}
+\newcommand{\stl}{{\sc STL}}
+\newcommand{\pview}{{\sc PVIEW}}
+\newcommand{\pviews}{{\sc PVIEWS}}
+\newcommand{\pcontainer}{{\sc PCONTAINER}}
+\newcommand{\pcontainers}{{\sc PCONTAINERS}}
+
+\pagestyle{myheadings}
+\renewcommand{\chaptermark}[1]{
+              \markboth{*** DRAFT 0.1 *** \chaptername\ \thechapter. #1 } {} }
+\renewcommand{\sectionmark}[1]{
+              \markright{*** DRAFT 0.1 *** \thesection. #1 } {}}
+
+\setcounter{secnumdepth}{3}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\frontmatter
+
+\vspace*{8cm}
+\begin{center}
+Copyright (c) 2015, Texas Engineering Experiment Station (TEES), a
+component of the Texas A\&M University System.
+
+All rights reserved.
+\end{center}
+\pagebreak
+                                       
+\mainmatter
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\input{model}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\input{cont}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\input{view}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\input{algo}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\input{gralg}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+%%\input{skel}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+%%\input{io}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\backmatter
+
+\include{index}
+
+\end{document}

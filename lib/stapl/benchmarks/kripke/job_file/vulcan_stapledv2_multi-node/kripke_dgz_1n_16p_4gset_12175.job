@@ -1,0 +1,16 @@
+#!/bin/bash
+#MSUB -l nodes=1
+#MSUB -l walltime=12:00:00
+#MSUB -q psmall
+#MSUB -V
+#MSUB -o /g/g92/shen10/dgz.1_node.16_proc.4_gset.12175.out
+
+
+export STAPL_NUM_THREADS=1
+export OMP_NUM_THREADS=1
+
+cd /g/g92/shen10/STAPL_12175/benchmarks/kripke/stapled_v2
+srun -N 1 -n 16 --ntasks-per-node=16 ./kripke  --procs 2,2,4 --zones 24,24,48 --zset 2,2,4 --nest DGZ --quad 16 --dset 16 --groups 4 --gset 4 --niter 8
+srun -N 1 -n 16 --ntasks-per-node=16 ./kripke  --procs 2,2,4 --zones 24,24,48 --zset 2,2,4 --nest DGZ --quad 16 --dset 16 --groups 4 --gset 4 --niter 8
+srun -N 1 -n 16 --ntasks-per-node=16 ./kripke  --procs 2,2,4 --zones 24,24,48 --zset 2,2,4 --nest DGZ --quad 16 --dset 16 --groups 4 --gset 4 --niter 8
+srun -N 1 -n 16 --ntasks-per-node=16 ./kripke  --procs 2,2,4 --zones 24,24,48 --zset 2,2,4 --nest DGZ --quad 16 --dset 16 --groups 4 --gset 4 --niter 8
