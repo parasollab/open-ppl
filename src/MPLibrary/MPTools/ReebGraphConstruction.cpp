@@ -234,7 +234,8 @@ CreateArc(size_t _s, size_t _t, const unordered_set<size_t>& _tetra) {
     MeshEdge* m2 = new MeshEdge(_s, _t, &m_reebGraph);
     m_edges.insert(m2);
     RGEID eid = m_reebGraph.add_edge(_s, _t, ReebArc(_s, _t, m2));
-    m2->m_arcs.insert(eid);
+    // TODO revise commented line below
+    //m2->m_arcs.insert(eid);
   }
 
   //Associate tetrahedrons with edge's reeb arcs
@@ -309,9 +310,10 @@ MergeArcs(RGEID _a0, RGEID _a1) {
 
   //Merge data into a0
   for(auto& edge : a1.m_edges) {
-    edge->m_arcs.insert(_a0);
-    edge->m_arcs.erase(_a1);
-    a0.m_edges.insert(edge);
+    // TODO revise commented lines below
+    // edge->m_arcs.insert(_a0);
+    // edge->m_arcs.erase(_a1);
+    // a0.m_edges.insert(edge);
   }
   a0.m_tetra.insert(a1.m_tetra.begin(), a1.m_tetra.end());
 
@@ -320,8 +322,10 @@ MergeArcs(RGEID _a0, RGEID _a1) {
     ReebArc a = a1;
     a.m_source = a0.m_target;
     RGEID neweid = m_reebGraph.add_edge(a.m_source, a.m_target, a);
-    for(auto& edge : GetReebArc(neweid).m_edges)
-      edge->m_arcs.insert(neweid);
+    for(auto& edge : GetReebArc(neweid).m_edges) {
+        // TODO revise commented line below
+        // edge->m_arcs.insert(neweid);
+    }
   }
 
   //Delete a1
@@ -373,15 +377,16 @@ Remove2Nodes() {
 
         ReebArc& newa = GetReebArc(neweid);
         for(auto& edge : ain.m_edges) {
-          edge->m_arcs.insert(neweid);
-          edge->m_arcs.erase(in);
-          newa.m_edges.insert(edge);
+          // TODO revise commented lines below
+          // edge->m_arcs.insert(neweid);
+          // edge->m_arcs.erase(in);
+          // newa.m_edges.insert(edge);
         }
         newa.m_tetra.insert(ain.m_tetra.begin(), ain.m_tetra.end());
         for(auto& edge : aout.m_edges) {
-          edge->m_arcs.insert(neweid);
-          edge->m_arcs.erase(out);
-          newa.m_edges.insert(edge);
+          // edge->m_arcs.insert(neweid);
+          // edge->m_arcs.erase(out);
+          // newa.m_edges.insert(edge);
         }
         newa.m_tetra.insert(aout.m_tetra.begin(), aout.m_tetra.end());
 

@@ -1,5 +1,6 @@
 #include "SliderTextWidget.h"
-
+#include <QHBoxLayout>
+#include <QDoubleValidator>
 
 /*------------------------------- Construction -------------------------------*/
 

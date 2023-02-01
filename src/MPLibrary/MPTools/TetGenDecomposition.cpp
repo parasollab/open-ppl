@@ -19,7 +19,7 @@
 #include <CGAL/IO/io.h>
 #include <CGAL/IO/Polyhedron_iostream.h>
 #include <CGAL/IO/Nef_polyhedron_iostream_3.h>
-#include <CGAL/IO/print_wavefront.h>
+#include <CGAL/IO/print_OFF.h>
 #include <CGAL/Nef_polyhedron_3.h>
 #include <CGAL/Polyhedron_3.h>
 #include <CGAL/Nef_3/SNC_indexed_items.h>
@@ -284,7 +284,8 @@ OutputNefPolyhedron(const NefPolyhedron& _p, const string _filename) {
   ofstream objFile(_filename);
   Polyhedron output;
   _p.convert_to_polyhedron(output);
-  CGAL::print_polyhedron_wavefront(objFile, output);
+  // TODO confirm upgrade print_polyhedron_wavefront to print_polyhedron_OFF
+  CGAL::print_polyhedron_OFF(objFile, output);
   objFile.close();
 }
 
