@@ -202,7 +202,7 @@ AddHyperarc(std::set<size_t> _head, std::set<size_t> _tail,
   std::map<Robot*, size_t> startVIDs;
   std::map<Robot*, size_t> targetVIDs;
 
-  for(auto hid : _head) {
+  for(auto hid : _tail) {
     auto cState = this->GetVertexType(hid);
     auto hRobots = cState.GetGroup()->GetRobots();
     for(auto robot : hRobots) {
@@ -214,7 +214,7 @@ AddHyperarc(std::set<size_t> _head, std::set<size_t> _tail,
   }
 
 
-  for(auto hid : _tail) {
+  for(auto hid : _head) {
     auto cState = this->GetVertexType(hid);
     auto hRobots = cState.GetGroup()->GetRobots();
     for(auto robot : hRobots) {
@@ -272,65 +272,65 @@ AddHyperarc(std::set<size_t> _head, std::set<size_t> _tail,
     // If not, assert that the edge to be added does not already exist and then
     // add it.
     else 
-      throw RunTimeException(WHERE) << "Expected edge (" << individualSourceVID
-                                      << ", " << individualTargetVID << ") does "
-                                      << "not exist for robot "
-                                      << roadmap->GetRobot()->GetLabel() << ".";
+      std::cout << "Invalid ED: Expected edge (" << individualSourceVID
+                << ", " << individualTargetVID << ") does "
+                << "not exist for robot "
+                << robots[i]->GetLabel() << "." << std::endl;
   }
 
   if(numInactiveRobots == edge.GetNumRobots())
     return BaseType::AddHyperarc(_head, _tail, edge, _overWrite);
 
-  // Add Intermediates
+  // Add Intermediates - actually do this in WoDaSH
   // Find the length of each individual edge and the maximum length
   // Intermediate length is five times the average robot diameter
-  if(!edge.GetNumIntermediates()) {
-    double diam = 0;
-    for(auto robot : robots)
-      diam += robot->GetMultiBody()->GetBoundingSphereRadius() * 2;
-    double intLength = (diam / robots.size()) * 5;
+  // if(!edge.GetNumIntermediates()) {
+  //   double diam = 0;
+  //   for(auto robot : robots)
+  //     diam += robot->GetMultiBody()->GetBoundingSphereRadius() * 2;
+  //   double intLength = (diam / robots.size()) * 5;
 
-    std::vector<Point3d> starts;
-    std::vector<Point3d> displacements;
-    double maxDist = 0;
-    for(size_t i = 0; i < robots.size(); ++i) {
-      auto start = m_skeletons.at(robots[i])->find_vertex(edgeDescriptors[i].source());
-      auto target = m_skeletons.at(robots[i])->find_vertex(edgeDescriptors[i].target());
-      starts.push_back(start->property());
+  //   std::vector<Point3d> starts;
+  //   std::vector<Point3d> displacements;
+  //   double maxDist = 0;
+  //   for(size_t i = 0; i < robots.size(); ++i) {
+  //     auto start = m_skeletons.at(robots[i])->find_vertex(edgeDescriptors[i].source());
+  //     auto target = m_skeletons.at(robots[i])->find_vertex(edgeDescriptors[i].target());
+  //     starts.push_back(start->property());
 
-      auto disp = target->property() - start->property();
-      const auto dist = (disp).norm();
+  //     auto disp = target->property() - start->property();
+  //     const auto dist = (disp).norm();
 
-      if(dist < intLength)
-        displacements.push_back({0., 0., 0.});
-      else
-        displacements.push_back(disp);
+  //     if(dist < intLength)
+  //       displacements.push_back({0., 0., 0.});
+  //     else
+  //       displacements.push_back(disp);
       
-      if(dist > maxDist)
-        maxDist = dist;
-    }
+  //     if(dist > maxDist)
+  //       maxDist = dist;
+  //   }
 
-    // Find the number of composite edge intermediates
-    std::vector<VertexType> inters;
-    int numInter = (int)ceil(maxDist/intLength);
+  //   // Find the number of composite edge intermediates
+  //   std::vector<VertexType> inters;
+  //   int numInter = (int)ceil(maxDist/intLength);
 
-    // Set the intermediate values along the edge
-    for(int i = 0; i <= numInter; ++i){
-      VertexType v = VertexType(edge.GetGroup());
+  //   // Set the intermediate values along the edge
+  //   for(int i = 0; i <= numInter; ++i){
+  //     VertexType v = VertexType(edge.GetGroup());
 
-      for(size_t r = 0; r < robots.size(); r++) {
-        Point3d d = {i * displacements[r][0]/numInter, 
-                    i * displacements[r][1]/numInter,
-                    i * displacements[r][2]/numInter};
-        v.SetRobotCfg(r, starts[r] + d);
-      }
+  //     for(size_t r = 0; r < robots.size(); r++) {
+  //       Point3d d = {i * displacements[r][0]/numInter, 
+  //                   i * displacements[r][1]/numInter,
+  //                   i * displacements[r][2]/numInter};
+  //       v.SetRobotCfg(r, starts[r] + d);
+  //     }
 
-      inters.push_back(v);
-    }
+  //     inters.push_back(v);
+  //   }
 
-    // Set the intermediates
-    edge.SetIntermediates(inters);
-  }
+  //   // Set the intermediates
+  //   edge.SetIntermediates(inters);
+  // }
 
   return BaseType::AddHyperarc(_head, _tail, edge, _overWrite);
 }

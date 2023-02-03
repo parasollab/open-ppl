@@ -486,7 +486,9 @@ LowLevelPlanner(CBSNodeType& _node, Robot* _robot) {
 
   // Get the start and goal vids in the individual skeleton
   auto start = m_skeletonStarts.at(_robot);
-  auto goal = m_skeletonStarts.at(_robot);
+  auto goal = m_skeletonGoals.at(_robot);
+
+  std::cout << _robot->GetLabel() << " s: " << start << " g: " << goal << std::endl;
 
   // Check that start does not violate a constraint and get min end time
   size_t minEndTimestep = 0;
@@ -703,19 +705,23 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
   }
 
   m_groundHIDs.clear();
+  m_mergeTraj.clear();
+  m_splitTraj.clear();
   std::vector<std::unordered_map<std::pair<VID, VID>, std::vector<Robot*>>> hyperarcGroups;
-  for(size_t t = 0; t < maxTimestep - 2; t++) {
+  for(size_t t = 0; t < maxTimestep - 1; t++) {
     std::unordered_map<Robot*, SkeletonEdgeDescriptor> individualEdges;
     std::unordered_map<std::pair<VID, VID>, std::vector<Robot*>> edgeGroups;
 
     for(auto kv : _mapfSolution) {
       auto robot = kv.first;
       auto path = *kv.second;
+
       std::cout << robot->GetLabel() << std::endl;
       std::cout << path << std::endl;
 
       auto source = path.size() > t ? path.at(t) : path.at(path.size() - 1);
       auto target = path.size() > t + 1 ? path.at(t+1) : path.at(path.size() - 1);
+
       std::cout << source << " " << target << std::endl;
 
       // group with robots going both ways on this edge
@@ -747,6 +753,8 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
       auto tvertex = CompositeSkeletonVertex(group, &m_indSkeleton);
       auto cedge = CompositeSkeletonEdge(group, &m_indSkeleton);
 
+      std::cout << "starting" << std::endl;
+
       for(auto robot : group->GetRobots()) {
         auto ed = individualEdges.at(robot);
         auto source = ed.source();
@@ -756,11 +764,15 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
         tvertex.SetRobotCfg(robot, target);
 
         cedge.SetEdge(robot, ed);
+
+        std::cout << robot->GetLabel() << ": " << source << " " << target << std::endl;
       }
 
       // Construct the corresponding hyperskeleton vertices and edges
       auto svid = m_skeleton->AddVertex(svertex);
       auto tvid = m_skeleton->AddVertex(tvertex);
+
+      // TODO account for waiting
       auto hid = m_skeleton->AddHyperarc({tvid}, {svid}, cedge);
       m_groundHIDs.insert(hid);
       if(t == 0)
@@ -777,13 +789,15 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
   for(size_t t = 0; t < maxTimestep - 2; t++) {
     auto edgeGroup = hyperarcGroups.at(t);
     std::unordered_map<VID, std::set<VID>> incidentHVIDs;
+
+    std::cout << "TIME " << t << std::endl;
     
     // Split hyperarcs that contain robots going opposite directions ("nop" 
     // hyperarcs - do nothing, just for connectivity)
     for(auto iter : edgeGroup) {
       auto robots = iter.second;
       auto shid = m_hidPaths[t][robots[0]];
-      auto svertex = *(m_skeleton->GetHyperarc(shid).tail.begin());
+      auto svertex = *(m_skeleton->GetHyperarc(shid).head.begin());
 
       std::unordered_map<std::pair<VID, VID>, std::vector<Robot*>> splitGroups;
       for(auto robot : robots) {
@@ -801,6 +815,7 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
         auto path = *_mapfSolution[robot];
         auto target = path.size() > t + 1 ? path.at(t+1) : path.at(path.size() - 1);
         incidentHVIDs[target].insert(svertex);
+        std::cout << "Not splitting here" << std::endl;
         continue;
       }
 
@@ -816,6 +831,8 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
         auto tvid = m_skeleton->AddVertex(tvertex);
         incidentHVIDs[edge.second].insert(tvid);
         tvids.insert(tvid);
+
+        std::cout << "nop splitting now" << std::endl;
       }
       auto cgroup = m_skeleton->GetVertexType(svertex).GetGroup();
       auto cedge = CompositeSkeletonEdge(cgroup, &m_indSkeleton);
@@ -824,6 +841,7 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
 
     // Merge groups going into the same vertex ("coupling" hyperarcs - sample 
     // trajectories for passing into/though the same vertex)
+    std::cout << "incident: " << incidentHVIDs << std::endl;
     std::unordered_map<VID, VID> mergedVIDs;
     for(auto iter : incidentHVIDs) {
       auto skelVID = iter.first;
@@ -843,6 +861,8 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
           if(m_groundHIDs.count(h))
             m_origStart.insert(h);
         }
+
+        std::cout << "only one incoming, not merging" << std::endl;
         continue;
       }
 
@@ -862,10 +882,12 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
       auto hid = m_skeleton->AddHyperarc({tvid}, predVIDs, cedge);
       m_mergeTraj.insert(hid);
       mergedVIDs[skelVID] = tvid;
+      std::cout << "merged " << predVIDs.size() << "incoming groups" << std::endl;
     }
 
     // Split groups going down separate edges ("decoupling" hyperarcs - sample 
     // trajectories moving away from same vertex onto different edges)
+    std::unordered_map<std::pair<VID, VID>, std::set<VID>> incidentEdges;
     for(auto iter : mergedVIDs) {
       auto scvertex = m_skeleton->GetVertexType(iter.second);
       auto robots = scvertex.GetGroup()->GetRobots();
@@ -882,10 +904,18 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
       }
 
       if(splitGroups.size() == 1) {
+        std::cout << "only one outgoing, not splitting" << std::endl;
         auto thid = m_hidPaths[t+1][robots[0]];
+        auto svid = *(m_skeleton->GetHyperarc(thid).tail.begin());
         auto tvid = *(m_skeleton->GetHyperarc(thid).head.begin());
-        auto cedge = CompositeSkeletonEdge(scvertex.GetGroup(), &m_indSkeleton);
-        m_skeleton->AddHyperarc({tvid}, {iter.second}, cedge);
+
+        auto skelStart = m_skeleton->GetVertexType(svid).GetVID(robots[0]);
+        auto skelTarget = m_skeleton->GetVertexType(tvid).GetVID(robots[0]);
+        auto s = std::min(skelStart, skelTarget);
+        auto t = std::max(skelStart, skelTarget);
+
+        auto edgePair = std::make_pair(s, t);
+        incidentEdges[edgePair].insert(iter.second);
         continue;
       }
 
@@ -893,13 +923,45 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
       for(auto sg : splitGroups) {
         for(auto robot : sg.second) {
           auto thid = m_hidPaths[t+1][robot];
+          auto svid = *(m_skeleton->GetHyperarc(thid).tail.begin());
           auto tvid = *(m_skeleton->GetHyperarc(thid).head.begin());
-          tvids.insert(tvid);
+          tvids.insert(svid);
+
+          auto skelStart = m_skeleton->GetVertexType(svid).GetVID(robot);
+          auto skelTarget = m_skeleton->GetVertexType(tvid).GetVID(robot);
+          auto s = std::min(skelStart, skelTarget);
+          auto t = std::max(skelStart, skelTarget);
+
+          auto edgePair = std::make_pair(s, t);
+          incidentEdges[edgePair].insert(svid);
         }
       }
+      std::cout << "splitting outgoing groups" << std::endl;
       auto cedge = CompositeSkeletonEdge(scvertex.GetGroup(), &m_indSkeleton);
       auto hid = m_skeleton->AddHyperarc(tvids, {iter.second}, cedge);
       m_splitTraj.insert(hid);
+    }
+
+    // Merge together groups going opposite directions down a skeleton edge
+    for(auto iter : incidentEdges) {
+      if(iter.second.size() == 1) {
+        std::cout << "only one group incoming to edge, not merging" << std::endl;
+        continue;
+      }
+
+      std::cout << "merging together " << iter.second.size() << " opp dir groups" << std::endl;
+
+      std::vector<Robot*> robots;
+      for(auto v : iter.second) {
+        auto rs = m_skeleton->GetVertexType(v).GetGroup()->GetRobots();
+        robots.insert(robots.end(), rs.begin(), rs.end());
+      }
+      auto group = AddGroup(robots);
+      auto cedge = CompositeSkeletonEdge(group, &m_indSkeleton);
+
+      auto hid = m_hidPaths[t+1][robots[0]];
+      auto tvid = *(m_skeleton->GetHyperarc(hid).tail.begin());
+      m_skeleton->AddHyperarc(iter.second, {tvid}, cedge);
     }
   }
 }
@@ -941,12 +1003,14 @@ GroundHyperskeleton() {
     auto lastVID = grm->GetLastVID();
     auto lastVertex = grm->GetVertex(lastVID);
     if(!FinishedEdge(cedge, lastVertex)) {
+      std::cout << "Failed to ground HID " << hid << ", replanning..." << std::endl;
       // Couldn't finish edge, need to replan hyperpath.
       auto ed = cedge.GetEdgeDescriptors()[0];
       m_failedEdges.emplace(std::make_pair(ed.source(), ed.target()), cedge.GetGroup());
       return false;
     }
     
+    std::cout << "Successfully grounded HID " << hid << std::endl;
     m_endReps[hid] = std::make_pair(grm, lastVID);
 
     // Convert vids into a task and path to save in grounded hypergraph
@@ -963,6 +1027,7 @@ GroundHyperskeleton() {
           new CSpaceConstraint(robot,endGcfg.GetRobotCfg(robot)))));
       task->AddTask(t);
     }
+    this->GetMPLibrary()->GetGoalTracker()->AddMap(grm, task.get());
 
     // Solve for the task
     this->GetMPLibrary()->SetGroupTask(task.get());
@@ -977,6 +1042,8 @@ GroundHyperskeleton() {
   }
 
   this->GetMPLibrary()->SetGroupTask(originalTask);
+
+  std::cout << "Successfully grounded " << m_groundHIDs.size() << "edges, sampling trajectories..." << std::endl;
 
   return SampleTrajectories();
 }
@@ -993,46 +1060,40 @@ ComputeIntermediates(const CompositeSkeletonVertex _source,
 
   auto robots = _edge.GetGroup()->GetRobots();
   auto& edgeDescriptors = _edge.GetEdgeDescriptors();
-  auto source = m_indSkeleton.find_vertex(edgeDescriptors[0].source())->property();
-  auto target = m_indSkeleton.find_vertex(edgeDescriptors[0].target())->property();
-
-  // Assume homogeneous robots
-  auto edgeDist = (target - source).norm();
-  if(pushStart)
-    edgeDist -= m_regionRadius.at(robots[0]) * sqrt(2.);
-  if(pushTarget)
-    edgeDist -= m_regionRadius.at(robots[0]) * sqrt(2.);
   
   auto robotRadius = robots[0]->GetMultiBody()->GetBoundingSphereRadius();
   auto intLength = robotRadius * m_intermediateFactor;
-  auto numInter = (int)ceil(edgeDist / intLength);
 
   std::vector<Point3d> starts;
   std::vector<Point3d> displacements;
   for(size_t i = 0; i < robots.size(); ++i) {
     auto start = m_indSkeleton.find_vertex(edgeDescriptors[i].source())->property();
     auto target = m_indSkeleton.find_vertex(edgeDescriptors[i].target())->property();
-    auto disp = target - start;
 
-    if(!pushStart and !pushTarget)
-      starts.push_back(start);
-    else {
-      auto unitDisp = disp / disp.norm();
-      if(pushStart) {
-        start += (unitDisp * m_regionRadius.at(robots[i]) * sqrt(2.));
-        starts.push_back(start);
-      }
-      if(pushTarget) {
-        target -= (unitDisp * m_regionRadius.at(robots[i]) * sqrt(2.));
-      }
-      disp = target - start;
+    auto disp = target - start;
+    auto unitDisp = disp / disp.norm();
+    if(pushStart) {
+      auto push = m_regionRadius.at(robots[i]) * sqrt(2.);
+      push = std::min(push, disp.norm() / 2.);
+      start += unitDisp * push;
     }
+
+    if(pushTarget) {
+      auto push = m_regionRadius.at(robots[i]) * sqrt(2.);
+      push = std::min(push, disp.norm() / 2.);
+      target -= unitDisp * push;
+    }
+
+    starts.push_back(start);
+    disp = target - start;
 
     if(disp.norm() < intLength)
       displacements.push_back({0., 0., 0.});
     else
       displacements.push_back(disp);
   }
+  auto edgeDist = std::max(displacements[0].norm(), 1e-7);
+  auto numInter = (int)ceil(edgeDist / intLength);
 
   // Set the intermediate values along the edge
   std::vector<CompositeSkeletonVertex> inters;
@@ -1115,7 +1176,7 @@ SpawnVertex(GroupRoadmapType* _grm, CompositeSkeletonVertex _vertex) {
 bool
 WoDaSH::
 FinishedEdge(CompositeSkeletonEdge _edge, const GroupCfgType& _groupCfg) {
-  auto inter = _edge.GetIntermediates().at(_edge.GetNumIntermediates());
+  auto inter = _edge.GetIntermediates().at(_edge.GetNumIntermediates() - 1);
   auto robots = _edge.GetGroup()->GetRobots();
 
   bool touching = true;
@@ -1405,8 +1466,8 @@ RobotGroup*
 WoDaSH::
 AddGroup(std::vector<Robot*> _robots) {
   // std::cout << "group: ";
-  for (auto robot : _robots)
-    std::cout << robot->GetLabel() << " " << std::endl;
+  // for (auto robot : _robots)
+  //   std::cout << robot->GetLabel() << " " << std::endl;
 
   auto group = this->GetMPProblem()->AddRobotGroup(_robots, "");
   this->GetMPLibrary()->GetMPSolution()->AddRobotGroup(group);
