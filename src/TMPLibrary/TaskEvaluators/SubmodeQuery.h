@@ -59,7 +59,7 @@ class SubmodeQuery : public TaskEvaluatorMethod {
     ///@name Helper Functions
     ///@{
 
-    virtual bool Run(Plan* _plan = nullptr);
+    virtual bool Run(Plan* _plan = nullptr) override;
 
     ActionHistory CombineHistories(size_t _vid, const std::set<size_t>& _pgh,
                                    const ActionHistory& _history);

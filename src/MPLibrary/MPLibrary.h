@@ -613,6 +613,14 @@ ReadXMLFile(const std::string& _filename) {
     throw ParseException(WHERE) << "Cannot find MPLibrary node in XML file '"
                                 << _filename << "'.";
 
+  std::string filename = planningLibrary->Read("filename",false,"","Separate Library XML file.");
+  if(!filename.empty()) {
+    mpNode = XMLNode(filename,"MotionPlanning");
+    for(auto& child : mpNode)
+      if(child.Name() == "Library")
+        planningLibrary = &child;
+  }
+
   // Parse the library node to set algorithms and parameters.
   for(auto& child : *planningLibrary)
     ParseChild(child);

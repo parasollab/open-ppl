@@ -14,6 +14,7 @@
 // PoIPlacementMethods to include
 
 // TaskEvaluators to include
+#include "TMPLibrary/TaskEvaluators/GreedyHyperpathQuery.h"
 #include "TMPLibrary/TaskEvaluators/HCRQuery.h"
 #include "TMPLibrary/TaskEvaluators/ScheduledCBS.h"
 #include "TMPLibrary/TaskEvaluators/SimpleMotionEvaluator.h"
@@ -68,6 +69,7 @@ struct TMPTraits {
 
   //types of task evaluators available in our world
   typedef boost::mpl::list<
+    GreedyHyperpathQuery,
     HCRQuery,
     ScheduledCBS,
 		SimpleMotionEvaluator,

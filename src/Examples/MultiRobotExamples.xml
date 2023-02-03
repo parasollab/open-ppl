@@ -5,41 +5,37 @@
        'baseFilename in the Problem node is for Simulator stat output only. -->
   <Problem baseFilename="example">
 
-    <Environment filename="3D/3d.env"/>
+        <Environment filename="3D/3d-empty.xml" />
 
-    <Robot label="boxy-1" filename="3D/boxy.robot">
-      <Agent type="planning"/>
-    </Robot>
+        <Robot label="boxy-0" filename="3D/iCreate.xml">
+            <Agent type="child" waypointDm="positionEuclidean" waypointThreshold=".05" debug="true" />
+        </Robot>
+        <Robot label="boxy-1" filename="3D/iCreate.xml">
+            <Agent type="child" waypointDm="positionEuclidean" waypointThreshold=".05" debug="true" />
+        </Robot>
 
-    <Robot label="boxy-2" filename="3D/boxy.robot">
-      <Agent type="planning"/>
-    </Robot>
+        <!-- The robotLabels parameter lists all of the robots included in this group -->
+        <RobotGroup label="robotGroup" robotLabels="boxy-0 boxy-1" />
 
-    <RobotGroup label="robotGroup" robotLabels="boxy-1 boxy-2"/>
-
-    <GroupTask label="groupQuery" group="robotGroup">
-      <Task label="query-1" robot="boxy-1">
-        <StartConstraints>
-          <CSpaceConstraint point="0 0 0 0 0 0"/>
-        </StartConstraints>
-
-        <GoalConstraints>
-          <CSpaceConstraint point="20 5 10 0.2 0.8 0.5"/>
-        </GoalConstraints>
-      </Task>
-
-      <Task label="query-2" robot="boxy-2">
-        <StartConstraints>
-          <CSpaceConstraint point="0 0 5 0 0 0"/>
-        </StartConstraints>
-
-        <GoalConstraints>
-          <CSpaceConstraint point="20 -5 10 0.2 0.8 0.5"/>
-        </GoalConstraints>
-      </Task>
-    </GroupTask>
-
-  </Problem>
+        <GroupTask label="groupQuery" group="robotGroup">
+            <Task label="query-0" robot="boxy-0">
+                <StartConstraints>
+                    <CSpaceConstraint point="-4.170000 0.000000 0.000000" />
+                </StartConstraints>
+                <GoalConstraints>
+                    <CSpaceConstraint point="4.170000 0.000000 0.000000" />
+                </GoalConstraints>
+            </Task>
+            <Task label="query-1" robot="boxy-1">
+                <StartConstraints>
+                    <CSpaceConstraint point="0.000000 -4.170000 0.000000" />
+                </StartConstraints>
+                <GoalConstraints>
+                    <CSpaceConstraint point="0.000000 4.170000 0.000000" />
+                </GoalConstraints>
+            </Task>
+        </GroupTask>
+    </Problem>
 
   <!-- Set available algorithms and parameters. -->
   <Library>
@@ -162,7 +158,7 @@
 
     <!-- MPProblem allows multiple solvers to be specified and executed. -->
 
-    <Solver mpStrategyLabel="CompositePRMstar" seed="12345678"
+    <Solver mpStrategyLabel="CompositePRM" seed="12345678"
       baseFilename="coupled-star" vizmoDebug="true"/>
 
   </Library>

@@ -536,6 +536,7 @@ TASK_SRCS := \
   TMPLibrary/TaskAllocators/SmartAllocator.cpp \
   TMPLibrary/TaskAllocators/TaskAllocatorMethod.cpp \
   TMPLibrary/TaskDecomposers/TaskDecomposerMethod.cpp \
+  TMPLibrary/TaskEvaluators/GreedyHyperpathQuery.cpp \
   TMPLibrary/TaskEvaluators/HCRQuery.cpp \
   TMPLibrary/TaskEvaluators/ScheduledCBS.cpp \
   TMPLibrary/TaskEvaluators/SimpleMotionEvaluator.cpp \

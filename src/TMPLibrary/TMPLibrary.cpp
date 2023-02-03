@@ -103,6 +103,16 @@ ReadXMLFile(const std::string& _filename) {
     throw ParseException(WHERE) << "Cannot find TMPLibrary node in XML file '"
       << _filename << "'.";
 
+
+  std::string filename = tmpLibrary->Read("filename",false,"",
+      "Separate file containing the TMPLibrary.");
+  if(!filename.empty()) {
+    tmpNode = XMLNode(filename,"MotionPlanning");
+    for(auto& child : tmpNode)
+      if(child.Name() == "TMPLibrary")
+        tmpLibrary = &child;
+  }
+
   // Parse the library node to set algorithms and parameters.
   for(auto& child : *tmpLibrary)
     ParseChild(child);
@@ -158,7 +168,16 @@ ParseChild(XMLNode& _node) {
     return true;
   }
   if(_node.Name() == "ActionSpace") {
-    m_actionSpace->ParseXML(_node);
+    std::string filename = _node.Read("filename",false,"",
+      "Separate ActionSpace XML file.");
+
+    if(!filename.empty()) {
+      XMLNode actionNode(filename,"ActionSpace");
+      m_actionSpace->ParseXML(actionNode);
+    }
+    else {
+      m_actionSpace->ParseXML(_node);
+    }
   }
   else if(_node.Name() == "InteractionStrategies") {
     m_interactionStrategies->ParseXML(_node);

@@ -105,9 +105,14 @@ PlanTasks() {
         else if(plan->GetCost() < m_upperBound) {
           m_upperBound = plan->GetCost();
           me->SetUpperBound(m_upperBound);
+
+          // TODO::Make this more formal - quit if we just want to find a single solution
+          if(lowerBound < 1)
+            break;
         }
       }
     }
+
 
     // TODO::Store solution in solution set
   }
