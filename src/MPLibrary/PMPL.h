@@ -28,7 +28,7 @@ extern template class PathType<PMPLTraits>;
 
 // Set the templated types using the chosen traits.
 typedef PMPLTraits::CfgType     CfgType;
-typedef PMPLTraits::WeightType  EdgeType; // TODO revise as WeightType conflicts with LHK.h
+typedef PMPLTraits::WeightType  PMPLWeightType; // TODO revise as WeightType conflicts with LHK.h
 typedef PMPLTraits::RoadmapType RoadmapType;
 typedef PMPLTraits::Path        Path;
 typedef PMPLTraits::MPLibrary   MPLibrary;

@@ -1,7 +1,6 @@
 FROM ubuntu:20.04
 
 #Installs prerequisites for pmpl
-
 RUN  apt-get update \
     && apt-get -y upgrade \
     && apt-get update \
@@ -30,13 +29,11 @@ RUN  apt-get update \
         libssl-dev \
         doxygen graphviz
         
-# download and build Cmake
-RUN wget https://github.com/Kitware/CMake/releases/download/v3.24.1/cmake-3.24.1.tar.gz \
-&& tar -zxvf cmake-3.24.1.tar.gz
-WORKDIR /cmake-3.24.1
-RUN ./bootstrap \
-    && make \
-    && make install
+# install latest cmake > 3.24
+RUN wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | sudo tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null
+RUN apt-add-repository 'deb https://apt.kitware.com/ubuntu/ focal main'
+RUN apt update
+RUN apt install cmake
 
 #download and build vcpkg
 RUN mkdir -p /opt \

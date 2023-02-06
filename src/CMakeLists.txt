@@ -95,6 +95,7 @@ set(PMPL_SRCS
         ${CMAKE_CURRENT_SOURCE_DIR}/Geometry/Shapes/NBox.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Geometry/Shapes/NSphere.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Geometry/Shapes/NSphericalShell.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/MapEvaluators/SIPPMethod.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/MPTools/MeanCurvatureSkeleton3D.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/MPTools/ReebGraphConstruction.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/MPTools/TetGenDecomposition.cpp
