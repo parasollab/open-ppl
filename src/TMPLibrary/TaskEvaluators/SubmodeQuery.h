@@ -54,6 +54,8 @@ class SubmodeQuery : public TaskEvaluatorMethod {
 
     ///@}
 
+    void AddSchedulingConstraint(SemanticTask* _task, SemanticTask* _constraint);
+
   protected:
 
     ///@name Helper Functions
@@ -107,10 +109,16 @@ class SubmodeQuery : public TaskEvaluatorMethod {
     /// Map from grounded hypergraph vertices to action extended vertices
     std::unordered_map<size_t,std::set<size_t>> m_vertexMap;
 
+    /// Map from grounded hypergraph hyperarcs to action extended hyperarcs
+    std::unordered_map<size_t,std::set<size_t>> m_hyperarcMap;
+
     /// Map from grounded hypergraph hyperarcs to action extended partial groundings
     std::unordered_map<size_t,std::vector<PartiallyGroundedHyperarc>> m_partiallyGroundedHyperarcs;
 
     size_t m_goalVID;
+
+    std::unordered_map<SemanticTask*,size_t> m_vertexTasks;
+    std::unordered_map<SemanticTask*,size_t> m_hyperarcTasks;
 
     /// Map from grouneded hypergraph vertex to heuristic value
     std::unordered_map<size_t,double> m_costToGoMap; 
@@ -132,6 +140,21 @@ class SubmodeQuery : public TaskEvaluatorMethod {
 
     std::string m_mgLabel;
     std::string m_ghLabel;
+
+    std::set<size_t> m_computedFS;
+
+    struct SchedulingConstraint {
+      bool vertex{false}; // true = vertex, false = hyperarc
+      size_t id;
+
+      bool operator<(const SchedulingConstraint& _other) const {
+        if(id != _other.id) 
+          return id < _other.id;
+        return vertex < _other.vertex;
+      }
+    };
+
+    std::map<SchedulingConstraint,std::set<SchedulingConstraint>> m_constraintMap;
 
     ///@}
 };

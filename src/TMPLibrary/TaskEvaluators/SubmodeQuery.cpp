@@ -44,6 +44,54 @@ Initialize() {
   m_actionExtendedHypergraph = ActionExtendedHypergraph();
 }
 
+void
+SubmodeQuery::
+AddSchedulingConstraint(SemanticTask* _task, SemanticTask* _constraint) {
+ 
+  SchedulingConstraint t;
+  SchedulingConstraint c;
+
+  // Check if the _task is a vertex or a hyperarc
+  auto vi = m_vertexTasks.find(_task);
+  if(vi != m_vertexTasks.end()) {
+    t.vertex = true;
+    t.id = vi->second;;
+  }
+
+  auto hi = m_hyperarcTasks.find(_task);
+  if(hi == m_hyperarcTasks.end() and !t.vertex) {
+    throw RunTimeException(WHERE) << _task->GetLabel() 
+                                  << " does not have a corresponding vertex or hyperarc."
+                                  << std::endl;
+  }
+  else {
+    t.id = hi->second;
+  }
+
+  // Check if the _constraint is a vertex or a hyperarc
+  vi = m_vertexTasks.find(_constraint);
+  if(vi != m_vertexTasks.end()) {
+    c.vertex = true;
+    c.id = vi->second;
+  }
+
+  hi = m_hyperarcTasks.find(_constraint);
+  if(hi == m_hyperarcTasks.end() and !c.vertex) {
+    throw RunTimeException(WHERE) << _task->GetLabel() 
+                                  << " does not have a corresponding vertex or hyperarc."
+                                  << std::endl;
+  }
+  else {
+    c.id = hi->second;
+  }
+
+  // Save constraint
+  if(m_constraintMap[t].count(c))
+    throw RunTimeException(WHERE) << "Adding already existing scheduling constraint.";
+
+  m_constraintMap[t].insert(c);
+}
+
 /*----------------------------- Helper Functions ---------------------------*/
 
 bool
@@ -233,6 +281,7 @@ ConvertToPlan(Plan* _plan) {
         SemanticTask::SubtaskRelation::AND,false,true,task));
     decomp->AddTask(st);
     initialTasks[group] = std::make_pair(false,st.get());
+    m_vertexTasks[st.get()] = aev.groundedVID;
   }
 
   // Save last set of tasks in each hyperarc
@@ -302,6 +351,7 @@ ConvertToPlan(Plan* _plan) {
         auto task = std::shared_ptr<SemanticTask>(new SemanticTask(label,top.get(),decomp,
                  SemanticTask::SubtaskRelation::AND,false,true,groupTask));
         decomp->AddTask(task);
+        m_hyperarcTasks[task.get()] = aeh.property;
 
         if(m_debug) {
           std::cout << "Creating task: " << task->GetLabel() << std::endl;
@@ -708,7 +758,13 @@ HyperpathPathWeightFunction(
 std::set<size_t>
 SubmodeQuery::
 HyperpathForwardStar(const size_t& _vid, ActionExtendedHypergraph* _h) {
- 
+
+  if(m_computedFS.count(_vid)) {
+    return _h->GetOutgoingHyperarcs(_vid);
+  }
+
+  m_computedFS.insert(_vid);
+
   auto mg = dynamic_cast<ModeGraph*>(this->GetStateGraph(m_mgLabel).get());
   auto gh = dynamic_cast<GroundedHypergraph*>(this->GetStateGraph(m_ghLabel).get());
   //auto& gh = mg->GetGroundedHypergraph();
@@ -886,6 +942,7 @@ HyperpathForwardStar(const size_t& _vid, ActionExtendedHypergraph* _h) {
       // Add hyperarc to action extended hypergraph
       auto newHID = m_actionExtendedHypergraph.AddHyperarc(head,newPGH,hid);
       fullyGroundedHyperarcs.insert(newHID);
+      m_hyperarcMap[hid].insert(newHID);
     }
 
     for(auto pgh : newPartiallyGroundedHyperarcs) {

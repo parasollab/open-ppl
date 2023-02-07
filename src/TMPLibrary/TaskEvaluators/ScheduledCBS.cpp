@@ -7,6 +7,7 @@
 
 #include "TMPLibrary/StateGraphs/ModeGraph.h"
 #include "TMPLibrary/Solution/Plan.h"
+#include "TMPLibrary/TaskEvaluators/SubmodeQuery.h"
 
 #include <map>
 #include <set>
@@ -34,6 +35,8 @@ ScheduledCBS(XMLNode& _node) : TaskEvaluatorMethod(_node) {
 
   m_bypass = _node.Read("bypass",false,m_bypass,
           "Flag to use bypass strategy.");
+
+  m_sqLabel = _node.Read("sqLabel",true,"","SubmodeQuery label.");
 
   m_upperBound = std::numeric_limits<double>::infinity();
 }
@@ -99,12 +102,18 @@ Run(Plan* _plan) {
     }
   );
 
+  CBSEarlyTerminationFunction termination(
+    [this](const size_t& _numNodes) {
+      return this->m_quit;
+    }
+  );
+
   // Collect tasks
   auto decomp = _plan->GetDecomposition();
   auto tasks = decomp->GetGroupMotionTasks();
 
   // Call CBS
-  Node solution = CBS(tasks,validation,splitNode,lowLevel,cost,initial);
+  Node solution = CBS(tasks,validation,splitNode,lowLevel,cost,initial,termination);
 
   // Check if solution was found
   if(solution.cost == std::numeric_limits<double>::infinity())
@@ -334,6 +343,15 @@ SplitNodeFunction(Node& _node,
     }
 
     newNodes.push_back(child);
+  }
+
+  if(newNodes.empty()) {
+    std::vector<SemanticTask*> tasks;
+    for(auto pair : _constraints) {
+      tasks.push_back(pair.first);
+    }
+
+    m_quit = HandleFailure(tasks);
   }
 
   return newNodes;
@@ -725,6 +743,20 @@ FindConflicts(Node& _node, bool _getAll) {
   });
 
   return constraintSets;
+}
+
+bool
+ScheduledCBS::
+HandleFailure(std::vector<SemanticTask*> _tasks) {
+  auto sq = dynamic_cast<SubmodeQuery*>(this->GetTaskEvaluator(m_sqLabel).get());
+
+  // TODO::Remove assumption of two tasks 
+  auto task1 = _tasks[0];
+  auto task2 = _tasks[1];
+
+  sq->AddSchedulingConstraint(task1,task2);
+
+  return true;
 }
 
 void

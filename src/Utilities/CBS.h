@@ -1,8 +1,12 @@
 #ifndef PPL_CBS_H_
 #define PPL_CBS_H_
 
+#include "Utilities/MPUtils.h"
+
 #include <functional>
+#include <map>
 #include <queue>
+#include <set>
 #include <unordered_set>
 #include <unordered_map>
 #include <vector>
@@ -158,6 +162,12 @@ CBSDefaultInitialFunction() {
   };
 }
 
+using CBSEarlyTerminationFunction = 
+  std::function<bool(const size_t& _numNodes)>;
+
+CBSEarlyTerminationFunction
+CBSDefaultEarlyTermination();
+
 template <typename IndividualTask, typename ConstraintType, typename IndividualSolution>
 CBSNode<IndividualTask, ConstraintType, IndividualSolution>
 CBS(
@@ -168,8 +178,10 @@ CBS(
   CBSCostFunction<IndividualTask,ConstraintType,IndividualSolution>& _cost)
 {
   auto initial = CBSDefaultInitialFunction<IndividualTask, ConstraintType, IndividualSolution>();
-  return CBS(_tasks, _validate, _split, _lowlevel, _cost, initial);
+  auto termination = CBSDefaultEarlyTermination();
+  return CBS(_tasks, _validate, _split, _lowlevel, _cost, initial, termination);
 }
+
 
 template <typename IndividualTask, typename ConstraintType, typename IndividualSolution>
 CBSNode<IndividualTask, ConstraintType, IndividualSolution>
@@ -180,6 +192,37 @@ CBS(
   CBSLowLevelPlanner<IndividualTask,ConstraintType,IndividualSolution>& _lowlevel,
   CBSCostFunction<IndividualTask,ConstraintType,IndividualSolution>& _cost,
   CBSInitialFunction<IndividualTask,ConstraintType,IndividualSolution>& _initial)
+{
+  auto termination = CBSDefaultEarlyTermination();
+  return CBS(_tasks, _validate, _split, _lowlevel, _cost, _initial, termination);
+}
+
+
+template <typename IndividualTask, typename ConstraintType, typename IndividualSolution>
+CBSNode<IndividualTask, ConstraintType, IndividualSolution>
+CBS(
+  std::vector<IndividualTask*> _tasks,
+  CBSValidationFunction<IndividualTask,ConstraintType,IndividualSolution>& _validate,
+  CBSSplitNodeFunction<IndividualTask,ConstraintType,IndividualSolution>& _split,
+  CBSLowLevelPlanner<IndividualTask,ConstraintType,IndividualSolution>& _lowlevel,
+  CBSCostFunction<IndividualTask,ConstraintType,IndividualSolution>& _cost,
+  CBSEarlyTerminationFunction& _termination)
+{
+  auto initial = CBSDefaultInitialFunction<IndividualTask, ConstraintType, IndividualSolution>();
+  return CBS(_tasks, _validate, _split, _lowlevel, _cost, initial, _termination);
+}
+
+
+template <typename IndividualTask, typename ConstraintType, typename IndividualSolution>
+CBSNode<IndividualTask, ConstraintType, IndividualSolution>
+CBS(
+  std::vector<IndividualTask*> _tasks,
+  CBSValidationFunction<IndividualTask,ConstraintType,IndividualSolution>& _validate,
+  CBSSplitNodeFunction<IndividualTask,ConstraintType,IndividualSolution>& _split,
+  CBSLowLevelPlanner<IndividualTask,ConstraintType,IndividualSolution>& _lowlevel,
+  CBSCostFunction<IndividualTask,ConstraintType,IndividualSolution>& _cost,
+  CBSInitialFunction<IndividualTask,ConstraintType,IndividualSolution>& _initial,
+  CBSEarlyTerminationFunction& _termination)
 {
 
   using CBSNodeType = CBSNode<IndividualTask,ConstraintType,IndividualSolution>;
@@ -192,10 +235,15 @@ CBS(
   // Create root node with initial plans
   std::vector<CBSNodeType> root;
 
+  // Total number of CT nodes
+  size_t numNodes = 0;
+
   _initial(root, _tasks, _lowlevel, _cost);
 
-  for (auto node : root)
+  for (auto node : root) {
+    numNodes++;
     ct.push(node);
+  }
 
   // Search conflict tree
   while(!ct.empty()) {
@@ -211,11 +259,16 @@ CBS(
     if(constraints.empty())
      return node;
 
+    // Check early termination
+    if(_termination(numNodes))
+      return CBSNodeType(); 
+
     // Create child nodes
     auto children = _split(node, constraints, _lowlevel, _cost);
 
     // Add child nodes to the tree
     for(const auto& child : children) {
+      numNodes++;
       ct.push(child);
     }
   }

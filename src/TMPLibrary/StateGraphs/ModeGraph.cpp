@@ -2060,7 +2060,7 @@ CanReach(const State& _state) {
 
       if(!mb->IsPassive()) {
         // TODO::Compute proper radius - for now, we know UR5e is roughly 1 meter
-        radius = .91;
+        radius = .8;
       }
 
       spheres.emplace_back(center,radius);
@@ -2158,22 +2158,47 @@ ContainsSolution(std::set<VID>& _startVIDs) {
   std::vector<size_t> starts = {1};
   auto output = DijkstraSSSP(g,starts,weight,termination);
 
+  //TODO::Change this to instead seach over robots/objects which are specified in the goal constraints
   // Ensure each object start vertex can reach the sink
   for(auto v : _startVIDs) {
 
     auto vertex = gh->GetVertex(v);
     auto group = vertex.first->GetGroup();
-    bool passive = false;
+    //bool passive = false;
 
+    /*
     for(auto robot : group->GetRobots()) {
       if(robot->GetMultiBody()->IsPassive()) {
         passive = true;
         break;
       }
     }
+    */
 
-    if(!passive)
+    bool goalRobot = false;
+    // Check if robot is specified in the goal constraints
+    auto decomp = this->GetPlan()->GetDecomposition();
+    for(auto st : decomp->GetGroupMotionTasks()) {
+      auto task = st->GetGroupMotionTask();
+      for(auto t : *task) {
+        for(auto robot : group->GetRobots()) {
+          if(robot == t.GetRobot()) {
+            goalRobot = true;
+            break;
+          }
+        }
+        if(goalRobot)
+          break;
+      }
+      if(goalRobot)
+        break;
+    }
+
+    if(!goalRobot)
       continue;
+
+    //if(!passive)
+    //  continue;
 
     auto iter = output.distance.find(v);
     if(iter == output.distance.end())

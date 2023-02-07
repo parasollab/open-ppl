@@ -41,6 +41,8 @@ Run(Plan* _plan) {
   if(!_plan)
     _plan = this->GetPlan();
 
+  this->ComputeHeuristicValues();
+
   // Initialize action extended hyperpath from grounded hypergraph
   ActionExtendedVertex source;
   source.groundedVID = 0;
@@ -83,11 +85,11 @@ DFS(const VID _source) {
   ActionHistory root;
   auto rootVID = m_historyGraph->AddVertex(root);
 
-  std::vector<VID> queue = {rootVID};
+  std::vector<VID> priority_queue = {rootVID};
 
-  while(!queue.empty()) {
-    VID v = queue.back();
-    queue.pop_back();
+  while(!priority_queue.empty()) {
+    VID v = priority_queue.back();
+    priority_queue.pop_back();
 
     if(this->m_debug) {
       this->m_actionExtendedHypergraph.Print();
@@ -104,7 +106,7 @@ DFS(const VID _source) {
 
     auto frontier = Frontier(v);
     for(auto u : frontier) {
-      queue.push_back(u);
+      priority_queue.push_back(u);
     }
   }
 
@@ -183,37 +185,146 @@ Frontier(const VID _vid) {
     frontierVIDs.insert(0);
   }
 
+  std::priority_queue<std::pair<double,VID>,std::vector<std::pair<double,VID>>> transNeighbors;
+  std::priority_queue<std::pair<double,VID>,std::vector<std::pair<double,VID>>> motionNeighbors;
+
+  auto quantum = BuildQuantumFrontier(frontierVIDs,history);
+
+  for(auto v : quantum) {
+    ExpandVertex(_vid,v,quantum,history,transNeighbors,motionNeighbors);
+  }
+
   std::vector<VID> neighbors;
+  while(!motionNeighbors.empty()) {
+    neighbors.push_back(motionNeighbors.top().second);
+    motionNeighbors.pop();
+  }
 
-  for(auto v : frontierVIDs) {
-    auto fs = this->HyperpathForwardStar(v,&(this->m_actionExtendedHypergraph));
-    for(auto hid : fs) {
-
-      // Check if hyperarc is adjacent to history (all tail vertices along frontier)
-      auto hyperarc = this->m_actionExtendedHypergraph.GetHyperarc(hid);
-      bool adjacent = true;
-      for(auto vid : hyperarc.tail) {
-        if(!frontierVIDs.count(vid))
-          adjacent = false;
-      }
-      if(!adjacent)
-        continue;
-
-      // Check if hyperarc is compatible with full history
-      auto newHistory = history;
-      newHistory.insert(hid);
-      if(!IsValidHistory(newHistory))
-      //if(newHistory.empty() and hid != 0)
-        continue;
-
-      // If it is, add the extension to the graph
-      auto vid = m_historyGraph->AddVertex(newHistory);
-      m_historyGraph->AddEdge(_vid,vid,hid);
-      neighbors.push_back(vid);
-    }
+  while(!transNeighbors.empty()) {
+    neighbors.push_back(transNeighbors.top().second);
+    transNeighbors.pop();
   }
 
   return neighbors;
+}
+
+std::set<GreedyHyperpathQuery::VID>
+GreedyHyperpathQuery::
+BuildQuantumFrontier(std::set<VID> _frontier, ActionHistory _history) {
+
+  // Add all possible motion transitions to the history (ignoring conflicts)
+  std::set<VID> newVertices;
+  for(auto v : _frontier) {
+    auto fs = this->HyperpathForwardStar(v,&(this->m_actionExtendedHypergraph));
+    for(auto hid : fs) {
+      
+      // Check if hyperarc is a motion transition
+      auto hyperarc = this->m_actionExtendedHypergraph.GetHyperarc(hid);
+
+      // Check that this isn't the head isn't the sink vertex
+      if(hyperarc.head.size() == 1 and 
+         this->m_actionExtendedHypergraph.GetVertexType(*(hyperarc.head.begin())).groundedVID == 1)
+        continue;
+
+      // TODO::This is a pretty loose check - should go back to mode 
+      //       graph (task space hypergraph) and check if they're the same
+      if(!(hyperarc.head.size() == 1 and hyperarc.tail.size() == 1)) {
+        continue;
+      }
+
+      for(auto vid : hyperarc.head) {
+        newVertices.insert(vid);
+        this->HyperpathForwardStar(vid,&(this->m_actionExtendedHypergraph));
+      }
+
+      _history.insert(hid);
+    }
+  }
+
+  // Compute the new frontier
+  for(auto v : newVertices) {
+    _frontier.insert(v);
+  }
+
+  return _frontier;
+}
+
+void
+GreedyHyperpathQuery::
+ExpandVertex(const VID _source, const VID _vid, const std::set<VID> _frontier, 
+             const ActionHistory _history, 
+             std::priority_queue<std::pair<double,VID>,std::vector<std::pair<double,VID>>>& _transNeighbors,
+             std::priority_queue<std::pair<double,VID>,std::vector<std::pair<double,VID>>>& _motionNeighbors) {
+
+  auto fs = this->HyperpathForwardStar(_vid,&(this->m_actionExtendedHypergraph));
+  for(auto hid : fs) {
+
+    // Check if hyperarc is a motion transition (and not that the head isn't the sink vertex)
+    auto hyperarc = this->m_actionExtendedHypergraph.GetHyperarc(hid);
+    // TODO::This is a pretty loose check - should go back to mode 
+    //       graph (task space hypergraph) and check if they're the same
+    if(hyperarc.head.size() == 1 and hyperarc.tail.size() == 1 and 
+       this->m_actionExtendedHypergraph.GetVertexType(*(hyperarc.head.begin())).groundedVID != 1) {
+      /*auto newVID = *(hyperarc.head.begin());
+      auto front = _frontier;
+      front.insert(newVID);
+      front.erase(_vid);
+      auto hist = _history;
+      hist.insert(hid);
+      ExpandVertex(_source,newVID,front,hist,_transNeighbors,_motionNeighbors);
+      */
+      // Already computed possible motion transitions in the quantum frontier
+      continue;
+    }
+
+    // Check if hyperarc is adjacent to history (all tail vertices along frontier)
+    bool adjacent = true;
+    for(auto vid : hyperarc.tail) {
+      if(!_frontier.count(vid))
+        adjacent = false;
+    }
+    if(!adjacent)
+      continue;
+
+    // Create new history
+    auto newHistory = _history;
+    // Add last hyperarc
+    newHistory.insert(hid);
+
+    // Add any predecessor hyperarcs (computed in the quantum frontier)
+    for(auto v : hyperarc.tail) {
+      for(auto h : this->m_actionExtendedHypergraph.GetIncomingHyperarcs(v)) {
+        newHistory.insert(h);
+      }
+    }
+
+    // Check if hyperarc is compatible with full history
+    if(!IsValidHistory(newHistory))
+      //if(newHistory.empty() and hid != 0)
+      continue;
+
+    // If it is, add the extension to the graph
+    if(m_historyGraph->IsVertex(newHistory))
+      continue;
+    auto vid = m_historyGraph->AddVertex(newHistory);
+    m_historyGraph->AddEdge(_source,vid,hid);
+
+    // TODO::Find better way to compute this (with caching)
+    double heuristic = 0;
+    for(auto vid : hyperarc.tail) {
+      heuristic = std::max(heuristic,HyperpathHeuristic(vid));
+      break;
+    }
+    m_heuristicValues[vid] = heuristic;
+    // TODO::This is a pretty loose check - should go back to mode 
+    //       graph (task space hypergraph) and check if they're the same
+    if(hyperarc.head.size() == 1 and hyperarc.tail.size() == 1) {
+      _motionNeighbors.emplace(heuristic,vid);
+    }
+    else {
+      _transNeighbors.emplace(heuristic,vid);
+    }
+  }
 }
 
 bool

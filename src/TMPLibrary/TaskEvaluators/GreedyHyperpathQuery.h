@@ -54,6 +54,13 @@ class GreedyHyperpathQuery : public SubmodeQuery {
 
     std::vector<GreedyHyperpathQuery::VID> Frontier(const VID _vid);
 
+    std::set<VID> BuildQuantumFrontier(std::set<VID> _frontier, ActionHistory _history);
+
+    void ExpandVertex(const VID _source, const VID _vid, const std::set<VID> _frontier, 
+                      const ActionHistory _history,
+                      std::priority_queue<std::pair<double,VID>,std::vector<std::pair<double,VID>>>& _transNeighbors,
+                      std::priority_queue<std::pair<double,VID>,std::vector<std::pair<double,VID>>>& _motionNeighbors);
+
     bool IsValidHistory(const ActionHistory& _history);
 
     ///@}

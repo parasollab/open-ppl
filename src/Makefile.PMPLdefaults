@@ -683,6 +683,7 @@ PMPL_SRCS := \
   Simulator/BulletModel.cpp \
   Simulator/Conversions.cpp \
   Simulator/MicroSimulator.cpp \
+  Utilities/CBS.cpp \
   Utilities/ClockClass.cpp \
   Utilities/CountingStreamBuffer.cpp \
   Utilities/IOUtils.cpp \

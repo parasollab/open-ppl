@@ -107,8 +107,12 @@ PlanTasks() {
           me->SetUpperBound(m_upperBound);
 
           // TODO::Make this more formal - quit if we just want to find a single solution
-          if(lowerBound < 1)
+          if(lowerBound < 1) {
+            if(m_debug) {
+              std::cout << "Found first solution, quit." << std::endl;
+            }
             break;
+          }
         }
       }
     }

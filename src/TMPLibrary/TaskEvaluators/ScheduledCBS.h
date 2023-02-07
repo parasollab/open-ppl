@@ -102,6 +102,9 @@ class ScheduledCBS : public TaskEvaluatorMethod {
     std::vector<Range<size_t>> ConstructSafeIntervals(std::vector<Range<size_t>>& _unsafeIntervals);
 
     std::vector<std::vector<std::pair<SemanticTask*,Constraint>>> FindConflicts(Node& _node, bool _getAll = false);
+
+    bool HandleFailure(std::vector<SemanticTask*> _tasks);
+
     ///@}
     ///@name Critical Path Functions
     ///@{
@@ -124,6 +127,8 @@ class ScheduledCBS : public TaskEvaluatorMethod {
 
     std::string m_queryStrategy;
 
+    std::string m_sqLabel;
+
     std::map<GroupPathType*,size_t> m_startTimes;
     std::map<GroupPathType*,size_t> m_endTimes;
 
@@ -143,6 +148,8 @@ class ScheduledCBS : public TaskEvaluatorMethod {
     std::map<size_t,size_t> m_scheduleAtomicDistances;
 
     bool m_bypass{true};
+
+    bool m_quit{false};
 
     ///@}
 
