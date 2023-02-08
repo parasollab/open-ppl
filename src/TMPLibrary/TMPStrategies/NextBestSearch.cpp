@@ -40,6 +40,9 @@ NextBestSearch(XMLNode& _node) : TMPStrategyMethod(_node) {
 
   m_motionEvaluator = _node.Read("motionEvaluator",true,"",
               "Evaluator label for motion planning.");
+
+  m_singleShot = _node.Read("singleShot",false,m_singleShot,
+        "Flag to attempt only a single time to find a solution.");
 }
 
 NextBestSearch::
@@ -107,7 +110,7 @@ PlanTasks() {
           me->SetUpperBound(m_upperBound);
 
           // TODO::Make this more formal - quit if we just want to find a single solution
-          if(lowerBound < 1) {
+          if(lowerBound < 1 and m_singleShot) {
             if(m_debug) {
               std::cout << "Found first solution, quit." << std::endl;
             }

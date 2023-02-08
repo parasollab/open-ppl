@@ -23,7 +23,9 @@ GreedyHyperpathQuery::
 void
 GreedyHyperpathQuery::
 Initialize() {
-
+  SubmodeQuery::Initialize();
+  m_historyGraph = std::unique_ptr<HistoryGraph>(new HistoryGraph());
+  m_heuristicValues.clear();
 }
 
 /*------------------------- Task Evaluator Functions -----------------------*/
@@ -31,6 +33,8 @@ Initialize() {
 bool
 GreedyHyperpathQuery::
 Run(Plan* _plan) {
+
+  Initialize();
 
   auto plan = this->GetPlan();
   auto stats = plan->GetStatClass();
@@ -211,6 +215,7 @@ Frontier(const VID _vid) {
 std::set<GreedyHyperpathQuery::VID>
 GreedyHyperpathQuery::
 BuildQuantumFrontier(std::set<VID> _frontier, ActionHistory _history) {
+  auto gh = dynamic_cast<GroundedHypergraph*>(this->GetStateGraph(m_ghLabel).get());
 
   // Add all possible motion transitions to the history (ignoring conflicts)
   std::set<VID> newVertices;
@@ -228,7 +233,8 @@ BuildQuantumFrontier(std::set<VID> _frontier, ActionHistory _history) {
 
       // TODO::This is a pretty loose check - should go back to mode 
       //       graph (task space hypergraph) and check if they're the same
-      if(!(hyperarc.head.size() == 1 and hyperarc.tail.size() == 1)) {
+      auto groundedHyperarc = gh->GetHyperarc(hyperarc.property);
+      if(!(groundedHyperarc.head.size() == 1 and groundedHyperarc.tail.size() == 1)) {
         continue;
       }
 
@@ -256,14 +262,17 @@ ExpandVertex(const VID _source, const VID _vid, const std::set<VID> _frontier,
              std::priority_queue<std::pair<double,VID>,std::vector<std::pair<double,VID>>>& _transNeighbors,
              std::priority_queue<std::pair<double,VID>,std::vector<std::pair<double,VID>>>& _motionNeighbors) {
 
+  auto gh = dynamic_cast<GroundedHypergraph*>(this->GetStateGraph(m_ghLabel).get());
+
   auto fs = this->HyperpathForwardStar(_vid,&(this->m_actionExtendedHypergraph));
   for(auto hid : fs) {
 
     // Check if hyperarc is a motion transition (and not that the head isn't the sink vertex)
     auto hyperarc = this->m_actionExtendedHypergraph.GetHyperarc(hid);
+    auto groundedHyperarc = gh->GetHyperarc(hyperarc.property);
     // TODO::This is a pretty loose check - should go back to mode 
     //       graph (task space hypergraph) and check if they're the same
-    if(hyperarc.head.size() == 1 and hyperarc.tail.size() == 1 and 
+    if(groundedHyperarc.head.size() == 1 and groundedHyperarc.tail.size() == 1 and 
        this->m_actionExtendedHypergraph.GetVertexType(*(hyperarc.head.begin())).groundedVID != 1) {
       /*auto newVID = *(hyperarc.head.begin());
       auto front = _frontier;
@@ -335,8 +344,12 @@ IsValidHistory(const ActionHistory& _history) {
   for(auto hid : _history) {
     auto hyperarc = this->m_actionExtendedHypergraph.GetHyperarc(hid);
     for(auto vid : hyperarc.tail) {
-      if(outgoing.count(vid))
+      if(m_hyperarcConstraintTails[hid].count(vid)) {
+        continue;
+      }
+      if(outgoing.count(vid)) {
         return false;
+      }
 
       outgoing.insert(vid);
     }

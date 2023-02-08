@@ -22,6 +22,13 @@ class SubmodeQuery : public TaskEvaluatorMethod {
     typedef std::set<size_t>                           ActionHistory;
     typedef std::pair<std::set<size_t>,ActionHistory>  PartiallyGroundedHyperarc;
     typedef std::pair<bool,size_t> HPElem;
+
+    struct PartiallyScheduledHyperarc {
+      size_t groundedHID;
+      PartiallyGroundedHyperarc pgh;
+      std::set<size_t> constraintTail;
+      std::set<size_t> blockingVertices;
+    };
     
     struct ActionExtendedVertex {
       size_t        groundedVID;
@@ -80,6 +87,14 @@ class SubmodeQuery : public TaskEvaluatorMethod {
     std::vector<HPElem> OrderPath(std::vector<HPElem> _path);
 
     void ComputeHeuristicValues();
+
+    std::set<size_t> GetFrontier(ActionHistory _history);
+
+    std::set<size_t> GetGroundedFrontier(ActionHistory _history);
+
+    void CheckSchedulingConstraints(size_t _hid, std::set<size_t> _tail, ActionHistory _history, std::set<size_t>& _fullyGroundedHyperarcs);
+
+    size_t AddHyperarc(std::set<size_t> _tail, std::set<size_t> _head, size_t _groundedHID, std::set<size_t>& _fullyGroundedHyperarcs);
 
     ///@}
     ///@name Hyperpath Functions
@@ -155,6 +170,12 @@ class SubmodeQuery : public TaskEvaluatorMethod {
     };
 
     std::map<SchedulingConstraint,std::set<SchedulingConstraint>> m_constraintMap;
+
+    std::vector<PartiallyScheduledHyperarc> m_blockedHyperarcs;
+
+    std::unordered_map<size_t,std::set<size_t>> m_blockingMap;
+
+    std::unordered_map<size_t,std::set<size_t>> m_hyperarcConstraintTails;
 
     ///@}
 };

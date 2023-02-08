@@ -135,6 +135,8 @@ class NextBestSearch : public TMPStrategyMethod {
 
     std::string m_motionEvaluator;
 
+    bool m_singleShot{false};
+
     ///@}
 
 };

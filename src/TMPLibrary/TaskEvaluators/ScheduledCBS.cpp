@@ -534,8 +534,12 @@ FindConflicts(Node& _node, bool _getAll) {
     auto vid1 = m_scheduleGraph->GetVID(task1);
     for(auto dep : m_scheduleGraph->GetPredecessors(vid1)) {
       auto depTask = m_scheduleGraph->GetVertex(dep);
-      if(depTask)
+      if(depTask) {
         end1 = std::min(end1,m_startTimes[_node.solutionMap.at(depTask)]);
+      }
+      else {
+        end1 = maxTimestep;
+      }
     }
 
     const auto& cfgs1 = cfgPaths[task1];
@@ -755,6 +759,7 @@ HandleFailure(std::vector<SemanticTask*> _tasks) {
   auto task2 = _tasks[1];
 
   sq->AddSchedulingConstraint(task1,task2);
+  sq->AddSchedulingConstraint(task2,task1);
 
   return true;
 }

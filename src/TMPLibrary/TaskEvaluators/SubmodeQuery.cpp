@@ -40,7 +40,11 @@ SubmodeQuery::
 Initialize() {
   m_previousSolutions.clear();
   m_vertexMap.clear();
+  m_hyperarcMap.clear();
   m_partiallyGroundedHyperarcs.clear();
+  m_blockedHyperarcs.clear();
+  m_blockingMap.clear();
+  m_computedFS.clear();
   m_actionExtendedHypergraph = ActionExtendedHypergraph();
 }
 
@@ -59,13 +63,13 @@ AddSchedulingConstraint(SemanticTask* _task, SemanticTask* _constraint) {
   }
 
   auto hi = m_hyperarcTasks.find(_task);
-  if(hi == m_hyperarcTasks.end() and !t.vertex) {
+  if(hi != m_hyperarcTasks.end()) {
+    t.id = hi->second;
+  }
+  else if(!t.vertex) {
     throw RunTimeException(WHERE) << _task->GetLabel() 
                                   << " does not have a corresponding vertex or hyperarc."
                                   << std::endl;
-  }
-  else {
-    t.id = hi->second;
   }
 
   // Check if the _constraint is a vertex or a hyperarc
@@ -76,13 +80,13 @@ AddSchedulingConstraint(SemanticTask* _task, SemanticTask* _constraint) {
   }
 
   hi = m_hyperarcTasks.find(_constraint);
-  if(hi == m_hyperarcTasks.end() and !c.vertex) {
+  if(hi != m_hyperarcTasks.end()) {
+    c.id = hi->second;
+  }
+  else if(!c.vertex) {
     throw RunTimeException(WHERE) << _task->GetLabel() 
                                   << " does not have a corresponding vertex or hyperarc."
                                   << std::endl;
-  }
-  else {
-    c.id = hi->second;
   }
 
   // Save constraint
@@ -97,6 +101,8 @@ AddSchedulingConstraint(SemanticTask* _task, SemanticTask* _constraint) {
 bool
 SubmodeQuery::
 Run(Plan* _plan) {
+
+  Initialize();
 
   auto plan = this->GetPlan();
   auto stats = plan->GetStatClass();
@@ -170,8 +176,12 @@ CombineHistories(size_t _vid, const std::set<size_t>& _pgh, const ActionHistory&
     auto hyperarc = m_actionExtendedHypergraph.GetHyperarc(hid);
     // Make sure tail has not been used as outgoing yet
     for(auto vid : hyperarc.tail) {
-      if(outgoing.count(vid))
+      if(m_hyperarcConstraintTails[hid].count(vid)) {
+        continue;
+      }
+      if(outgoing.count(vid)) {
         return {};
+      }
       outgoing.insert(vid);
     }
 
@@ -918,31 +928,8 @@ HyperpathForwardStar(const size_t& _vid, ActionExtendedHypergraph* _h) {
       
       // Add fully grounded hyperarc to the action extended hypergraph
 
-      // Construct head set
-      std::set<size_t> head;
-      
-      for(auto v : gh->GetHyperarc(hid).head) {
-        ActionExtendedVertex vertex;
-        vertex.groundedVID = v;
-
-        //if(v == 1 or v == 0)
-        //  std::cout << "OMG!!!! Stuff is broken!" << std::endl;
-
-        //if(v == 3 or v == 5 or v == 7 or v == 9)
-        //  std::cout << "OMG!!!! We do actually make progress!" << std::endl;
-        //if(v == 1)
-        //  std::cout << "HAS ADDED THE HYPERARC TO THE GOAL!!!" << std::endl;
-
-
-        vertex.history = compositeHistory;
-        auto newVID = m_actionExtendedHypergraph.AddVertex(vertex);
-        head.insert(newVID);
-      }
-
-      // Add hyperarc to action extended hypergraph
-      auto newHID = m_actionExtendedHypergraph.AddHyperarc(head,newPGH,hid);
-      fullyGroundedHyperarcs.insert(newHID);
-      m_hyperarcMap[hid].insert(newHID);
+      // Check if all scheduling constraints have been satisfied
+      CheckSchedulingConstraints(hid,newPGH,compositeHistory,fullyGroundedHyperarcs);
     }
 
     for(auto pgh : newPartiallyGroundedHyperarcs) {
@@ -1110,6 +1097,242 @@ HyperpathHeuristic(const size_t& _target) {
   return m_heuristicMap.at(vid);
   */
 }
+
+std::set<size_t>
+SubmodeQuery::
+GetFrontier(ActionHistory _history) {
+
+  std::set<size_t> frontier;
+
+  for(auto hid : _history) {
+    auto hyperarc = m_actionExtendedHypergraph.GetHyperarc(hid);
+    for(auto vid : hyperarc.head) {
+      frontier.insert(vid);
+    }
+    for(auto vid : hyperarc.tail) {
+      frontier.erase(vid);
+    }
+  }
+
+  return frontier;
+}
+
+std::set<size_t>
+SubmodeQuery::
+GetGroundedFrontier(ActionHistory _history) {
+
+  std::set<size_t> frontier;
+
+  for(auto hid : _history) {
+    auto hyperarc = m_actionExtendedHypergraph.GetHyperarc(hid);
+    for(auto vid : hyperarc.head) {
+      frontier.insert(m_actionExtendedHypergraph.GetVertexType(vid).groundedVID);
+    }
+    for(auto vid : hyperarc.tail) {
+      frontier.erase(m_actionExtendedHypergraph.GetVertexType(vid).groundedVID);
+    }
+  }
+
+  return frontier;
+}
+
+void
+SubmodeQuery::
+CheckSchedulingConstraints(size_t _hid, std::set<size_t> _tail, ActionHistory _history, std::set<size_t>& _fullyGroundedHyperarcs) {
+  auto gh = dynamic_cast<GroundedHypergraph*>(this->GetStateGraph(m_ghLabel).get());
+
+  // Collect last positions and movements of all bodies/robots
+  auto frontier = GetFrontier(_history);
+  auto groundedFrontier = GetGroundedFrontier(_history);
+  std::set<size_t> mostRecentHyperarcs;
+  for(auto vid : frontier) {
+    auto incoming = m_actionExtendedHypergraph.GetIncomingHyperarcs(vid);
+    for(auto h : incoming) {
+      mostRecentHyperarcs.insert(m_actionExtendedHypergraph.GetHyperarcType(h));
+    }
+  }
+  std::map<size_t,std::set<size_t>> allVertices;
+  for(auto hid : _history) {
+    auto hyperarc = m_actionExtendedHypergraph.GetHyperarc(hid);
+    for(auto vid : hyperarc.head) {
+      auto gvid = m_actionExtendedHypergraph.GetVertexType(vid).groundedVID;
+      allVertices[gvid].insert(vid);
+    }
+  }
+
+  std::set<size_t> groundedTail = _tail;
+  std::set<size_t> constraintTail;
+  std::set<size_t> blockingVertices;
+
+  // Check hyperarc scheduling constraints
+  SchedulingConstraint hc;
+  hc.vertex = false;
+  hc.id = _hid;
+  for(auto dep : m_constraintMap[hc]) {
+    // Check if any conflicting vertices are currently on the frontier
+    if(dep.vertex and groundedFrontier.count(dep.id)) {
+      std::cout << "FOUND VERTEX CONFLICT" << std::endl;
+
+      // TODO::Look for other vertices which alleviate this constraint
+      blockingVertices.insert(dep.id);
+    }
+    // Check if vertex is further back in this history
+    else if(dep.vertex) {
+      auto iter = allVertices.find(dep.id);
+      if(iter != allVertices.end()) {
+        for(auto v : iter->second) {
+          // Ensure that no robot remains at the constraint vertex before taking this edge
+          //TODO::Add a head vertex from outgoing hyperarc of v rahter than v
+          for(auto h : this->m_actionExtendedHypergraph.GetOutgoingHyperarcs(v)) {
+            if(_history.count(h)) {
+              auto head = this->m_actionExtendedHypergraph.GetHyperarc(h).head;
+              _tail.insert(*(head.begin()));
+              constraintTail.insert(*(head.begin()));
+            }
+          }
+        }
+      }
+    }
+    else if(!dep.vertex and mostRecentHyperarcs.count(dep.id)) {
+      std::cout << "FOUND HYPERARC CONFLICT" << std::endl;
+
+      // Add dep head vertices to the _tail set to force completion
+      for(auto v : m_actionExtendedHypergraph.GetHyperarc(dep.id).head) {
+        _tail.insert(v);
+        constraintTail.insert(v);
+      }
+    }
+  }
+
+  // Check vertex scheduling constraints
+  SchedulingConstraint vc;
+  vc.vertex = true;
+  auto groundedHyperarc = gh->GetHyperarc(_hid);
+  for(auto vid : groundedHyperarc.head) {
+    vc.id = vid;
+    for(auto dep : m_constraintMap[vc]) {
+      // Check if any conflicting vertices are currently on the frontier
+      if(dep.vertex and groundedFrontier.count(dep.id)) {
+        std::cout << "FOUND VERTEX CONFLICT" << std::endl;
+
+        // TODO::Look for other vertices which alleviate this constraint
+        blockingVertices.insert(dep.id);
+      }
+      // Check if vertex is further back in this history
+      else if(dep.vertex) {
+        auto iter = allVertices.find(dep.id);
+        if(iter != allVertices.end()) {
+          for(auto v : iter->second) {
+            // Ensure that no robot remains at the constaint vertex before taking this edge
+            _tail.insert(v);
+            constraintTail.insert(v);
+          }
+        }
+      }
+      else if(!dep.vertex and mostRecentHyperarcs.count(dep.id)) {
+        // Add dep head vertices to the _tail set to force completion
+        for(auto v : m_actionExtendedHypergraph.GetHyperarc(dep.id).head) {
+          _tail.insert(v);
+          constraintTail.insert(v);
+        }
+      }
+    }
+  }
+
+  // Check if this hyperarc is blocked
+  if(!blockingVertices.empty()) {
+    PartiallyScheduledHyperarc psh;
+    psh.groundedHID = _hid;
+    psh.pgh = std::make_pair(_tail,_history);
+    psh.constraintTail = constraintTail;
+    psh.blockingVertices = blockingVertices;
+
+    size_t index = m_blockedHyperarcs.size();
+    m_blockedHyperarcs.push_back(psh);
+
+    for(auto vid : blockingVertices) {
+      m_blockingMap[vid].insert(index);
+    }
+
+    return;
+  }
+
+  // Construct head set
+  std::set<size_t> head;
+
+  for(auto v : groundedHyperarc.head) {
+    ActionExtendedVertex vertex;
+    vertex.groundedVID = v;
+
+    vertex.history = _history;
+    auto newVID = m_actionExtendedHypergraph.AddVertex(vertex);
+    head.insert(newVID);
+  }
+
+  // Add hyperarc to action extended hypergraph
+  auto newHID = AddHyperarc(_tail,head,_hid,_fullyGroundedHyperarcs);
+  if(!constraintTail.empty()) {
+    m_hyperarcConstraintTails[newHID] = constraintTail;
+  }
+}
+
+size_t
+SubmodeQuery::
+AddHyperarc(std::set<size_t> _tail, std::set<size_t> _head, size_t _groundedHID, std::set<size_t>& _fullyGroundedHyperarcs) {
+  auto gh = dynamic_cast<GroundedHypergraph*>(this->GetStateGraph(m_ghLabel).get());
+  
+  auto newHID = m_actionExtendedHypergraph.AddHyperarc(_head,_tail,_groundedHID);
+  _fullyGroundedHyperarcs.insert(newHID);
+  m_hyperarcMap[_groundedHID].insert(newHID);
+
+  // Check if this has unblocked any other hyperarcs
+  for(auto vid : _tail) {
+    for(auto index : m_blockingMap[vid]) {
+      auto bh = m_blockedHyperarcs[index];
+
+      // Remove this vertex as blocking
+      bh.blockingVertices.erase(vid);
+
+      // Add this hyperarc to the history
+      bh.pgh.second.insert(_groundedHID);
+
+      // Add this vertex to the constraint vertices and tail
+      bh.constraintTail.insert(vid);
+      bh.pgh.first.insert(vid);
+
+      // Check if this has unblocked the hyperarc
+      if(!bh.blockingVertices.empty()) {
+        // If not, add new partially blocked hyperarc to the set
+        size_t index = m_blockedHyperarcs.size();
+        m_blockedHyperarcs.push_back(bh);
+
+        for(auto vid : bh.blockingVertices) {
+          m_blockingMap[vid].insert(index);
+        }
+      }
+      continue;
+
+      // Otherwise, add unblocked hyperarc to the hypergraph
+      std::set<size_t> newHead;
+      auto gha = gh->GetHyperarc(bh.groundedHID);
+      for(auto v : gha.head) {
+        ActionExtendedVertex vertex;
+        vertex.groundedVID = v;
+
+        vertex.history = bh.pgh.second;
+        auto newVID = m_actionExtendedHypergraph.AddVertex(vertex);
+        newHead.insert(newVID);
+      }
+
+      // Recusrsively add hyperarc and check for additional unblocked hyperarcs
+      auto newHID2 = AddHyperarc(bh.pgh.first,newHead,bh.groundedHID, _fullyGroundedHyperarcs);
+      m_hyperarcConstraintTails[newHID2] = bh.constraintTail;
+    }
+  }
+
+  return newHID;
+}
+
 /*--------------------------------------------------------------------------*/
 istream&
 operator>>(istream& _is, const SubmodeQuery::ActionExtendedVertex& _vertex) {
