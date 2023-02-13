@@ -42,6 +42,8 @@ class GraspStrategy : public IndependentPaths {
 
     Cfg SampleObjectPose(Robot* _object, Interaction* _interaction);
 
+    GroupCfgType SampleObjectPoses(RobotGroup* _group, Interaction* _interaction);
+
     // Compute the EE Frame with respect to the world
     Transformation ComputeEEWorldFrame(const Cfg& _objectPose, const Transformation& _transform);
 

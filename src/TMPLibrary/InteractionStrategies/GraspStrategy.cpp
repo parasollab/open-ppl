@@ -151,6 +151,7 @@ operator()(Interaction* _interaction, State& _start) {
 
     // Get object placements
     std::map<Robot*,Cfg> objectPoses;
+    std::set<RobotGroup*> sampledGroups;
     for(auto object : objects) {  
       Cfg objectPose(object);
 
@@ -163,8 +164,28 @@ operator()(Interaction* _interaction, State& _start) {
       }
       // If not, sample object pose
       else {
-        objectPose = SampleObjectPose(object,_interaction);
+        bool passive = true;
+        for(auto r : initGroup->GetRobots()) {
+          passive = passive and r->GetMultiBody()->IsPassive();
+        }
+        if(!passive) {
+          objectPose = SampleObjectPose(object,_interaction);
+        }
+        else if(sampledGroups.count(initGroup)) {
+          continue;
+        }
+        else {
+          auto stackPose = SampleObjectPoses(initGroup,_interaction);
+          stackPose.ConfigureRobot();
+          for(auto r : initGroup->GetRobots()) {
+            objectPoses[r] = stackPose.GetRobotCfg(r);
+          }
+          sampledGroups.insert(initGroup);
+        }
       }
+
+      if(sampledGroups.count(initGroup))
+        continue;
 
       objectPoses[object] = objectPose;
       objectPose.ConfigureRobot();
@@ -537,6 +558,73 @@ SampleObjectPose(Robot* _object, Interaction* _interaction) {
   return Cfg(nullptr);
 }
 
+GraspStrategy::GroupCfgType
+GraspStrategy::
+SampleObjectPoses(RobotGroup* _group, Interaction* _interaction) {
+
+  // Identify leader
+  Robot* leader = nullptr;
+  auto as = this->GetTMPLibrary()->GetActionSpace();
+  auto stages = _interaction->GetStages();
+  auto pregraspConditions = _interaction->GetStageConditions(stages[0]);
+  for(auto condition : pregraspConditions) {
+    auto f = dynamic_cast<FormationCondition*>(as->GetCondition(condition));
+    if(!f)
+      continue;
+
+    for(auto label : f->GetRoles()) {
+      auto info = f->GetRoleInfo(label);
+      if(info.referenceRole != "")
+        continue;
+
+      leader = m_roleMap[label];
+      break;
+    }
+
+    if(leader)
+      break;
+  }
+
+  // Sample pose
+  std::map<Robot*,const Boundary*> boundaryMap;
+  auto envBoundary = this->GetMPProblem()->GetEnvironment()->GetBoundary();
+  for(auto r : _group->GetRobots()) {
+    if(r == leader)
+      continue;
+
+    boundaryMap[r] = envBoundary;
+  }
+
+  auto sm = this->GetMPLibrary()->GetSampler(m_smLabel);
+  for(size_t i = 0; i < m_maxAttempts; i++) {
+    // Sample pose for leader
+    auto base = SampleObjectPose(leader,_interaction);
+
+    // If base has no robot, then we have exceeded max attempts for finding the base location
+    if(!base.GetRobot())
+      return GroupCfgType();
+
+    // Update boundary map
+    auto leaderBoundary = new CSpaceBoundingBox(base.DOF());
+    leaderBoundary->ShrinkToPoint(base);
+    boundaryMap[leader] = leaderBoundary;
+
+    // Sample group cfg for boundary
+    std::vector<GroupCfgType> samples;
+    sm->Sample(1,1,boundaryMap,std::back_inserter(samples));
+
+    delete leaderBoundary;
+
+    // Check if it is valid and either return or continue
+    if(samples.empty())
+      continue;
+
+    return samples[0];
+  }
+
+  return GroupCfgType();
+}
+
 Transformation
 GraspStrategy::
 ComputeEEWorldFrame(const Cfg& _objectPose, const Transformation& _transform) {
@@ -581,6 +669,10 @@ ComputeEEFrames(Interaction* _interaction, std::map<Robot*,Cfg>& objectPoses, si
       auto frame = ComputeEEWorldFrame(cfg, -transform);
       
       auto refRobot = m_roleMap[roleInfo.referenceRole];
+      // Check that refRobot is active
+      if(refRobot->GetMultiBody()->IsPassive())
+        continue;
+
       auto refBase = refRobot->GetMultiBody()->GetBase();
       auto refBaseTransformation = refBase->GetWorldTransformation();
 
