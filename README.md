@@ -4,6 +4,11 @@ The PMPL library is a general code base for studying motion planning algorithms.
 This file lists the package dependencies for PMPL and how to install them.
 > Tested on Ubuntu 20.04
 
+## Clone repository
+```bash
+git clone https://gitlab.engr.illinois.edu/parasol-group/parasol/pmpl.git
+```
+
 ## Requirements
 ### Required Tools:
 - vcpkg
@@ -18,6 +23,8 @@ This file lists the package dependencies for PMPL and how to install them.
 It is recommended to update programs on your system before continuing. However,
 this can sometimes break certain programs that require a specific package
 version, such as a graphics driver and CUDA library.
+
+
 
 ### To update your system, run the following commands:
 ```bash
@@ -64,18 +71,40 @@ sudo apt update
 sudo apt install cmake
 ```
 
-### Install vcpkg
-Full instructions available at https://vcpkg.io/en/getting-started.html 
+
+
+### Install and build using vcpkg
+
+#### Install vcpkg
+Full instructions available at https://vcpkg.io/en/getting-started.html
 
 ```bash
 git clone https://github.com/Microsoft/vcpkg.git
 ./vcpkg/bootstrap-vcpkg.sh
 ```
 
-### Build
+#### Build pmpl with vcpkg
 Run cmake, specify build type (e.g. Release or Debug), generator (e.g. Ninja), vcpkg installation path, source path, output path
 ```bash
-/usr/bin/cmake -DCMAKE_BUILD_TYPE=Debug -G Ninja -DCMAKE_TOOLCHAIN_FILE=/opt/vcpkg/scripts/buildsystems/vcpkg.cmake -S /pmpl -B /pmpl/build
+cmake -DCMAKE_BUILD_TYPE=Debug -G Ninja -DCMAKE_TOOLCHAIN_FILE=/opt/vcpkg/scripts/buildsystems/vcpkg.cmake -S /pmpl -B /pmpl/build
+```
+
+### Install and build using Conan
+#### Install conan 
+Alternate installation instructions available at https://docs.conan.io/en/latest/installation.html
+```bash
+pip install conan
+```
+
+#### Install conan packages
+```bash
+conan install . --install-folder cmake-build-release --build=missing
+```
+
+#### Build pmpl with conan
+```bash
+cmake . -DCMAKE_TOOLCHAIN_FILE=cmake-build-release/conan_toolchain.cmake
+cmake --build .
 ```
 
 <!---
