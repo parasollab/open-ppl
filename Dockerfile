@@ -30,10 +30,10 @@ RUN  apt-get update \
         doxygen graphviz
         
 # install latest cmake > 3.24
-RUN wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | sudo tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null
+RUN wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null
 RUN apt-add-repository 'deb https://apt.kitware.com/ubuntu/ focal main'
 RUN apt update
-RUN apt install cmake
+RUN apt-get -y install cmake
 
 #download and build vcpkg
 RUN mkdir -p /opt \
@@ -42,6 +42,10 @@ RUN mkdir -p /opt \
 WORKDIR /opt/vcpkg
 RUN ./bootstrap-vcpkg.sh \
     && chmod 666 .vcpkg-root
+
+#install conan
+# RUN pip install conan
+# RUN conan install .
 
 #Copy source code from host system
 COPY . /pmpl

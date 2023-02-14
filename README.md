@@ -46,16 +46,16 @@ sudo apt-get install tzdata build-essential gdb python gperf libclang-dev gfortr
 
 ### Remove previous versions of cmake and install latest cmake
 ```bash
-sudo apt remove --purge --auto-remove cmake
+sudo apt remove -y --purge --auto-remove cmake
 wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | sudo tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null
 ```
 For Ubuntu Focal Fossa (20.04)
 ```bash
-sudo apt-add-repository 'deb https://apt.kitware.com/ubuntu/ focal main'   
+sudo apt-add-repository -y 'deb https://apt.kitware.com/ubuntu/ focal main'   
 ```
 For Ubuntu Bionic Beaver (18.04)
 ```bash
-sudo apt-add-repository 'deb https://apt.kitware.com/ubuntu/ bionic main'
+sudo apt-add-repository -y 'deb https://apt.kitware.com/ubuntu/ bionic main'
 ```
 
 ### Install latest cmake
