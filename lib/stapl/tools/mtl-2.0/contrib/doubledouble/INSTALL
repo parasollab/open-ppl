@@ -1,0 +1,25 @@
+Installation of doubledouble:
+
+0. Unpack shar or tar file.
+   Typical location: ~/math++/2.2/
+
+1. Edit top part of `Makefile' to suit your hardware and compiler
+
+2. make
+
+User programs should:
+
+   (a) #include "doubledouble.h"
+   (b) compile with -DDD_INLINE
+   (c) compile with -Dx86 on x86 hardware (including Pentium)
+   (d) link libdoubledouble.a
+
+See trydd.cc for examples of usage.
+
+This code has been tested on:
+x86-unknown-linux with gcc 2.7.2.1 
+mips*-sgi-irix6 with ecgs-1.0
+sparc-sun-solaris2.4 with ecgs-1.0
+x86-windows95 with Microsoft C++ 5.0
+
+Please report problems (or success!) to Keith Briggs kmb28@cam.ac.uk.

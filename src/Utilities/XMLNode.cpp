@@ -22,7 +22,7 @@ XMLNode(const std::string& _filename, const std::string& _desiredNode) :
   std::function<TiXmlNode*(TiXmlNode* const)> findNode =
       [&findNode, &_desiredNode](TiXmlNode* const _node) -> TiXmlNode* {
         // Skip nodes that don't represnt elements.
-        if(_node->Type() != TiXmlNode::ELEMENT)
+        if(_node->Type() != TiXmlNode::TINYXML_ELEMENT)
           return nullptr;
 
         // Check this node for the desired tag.
@@ -219,9 +219,9 @@ BuildChildVector() {
 
   TiXmlNode* child = m_node->FirstChild();
   while(child != NULL) {
-    if(child->Type() == TiXmlNode::ELEMENT)
+    if(child->Type() == TiXmlNode::TINYXML_ELEMENT)
       m_children.push_back(XMLNode(child, m_filename, m_doc));
-    else if(child->Type() != TiXmlNode::COMMENT)
+    else if(child->Type() != TiXmlNode::TINYXML_COMMENT)
       throw ParseException(Where(m_filename, child->Row(), child->Column()),
           "Invalid XML element.");
     child = child->NextSibling();

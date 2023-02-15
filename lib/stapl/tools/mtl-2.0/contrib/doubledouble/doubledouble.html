@@ -1,0 +1,128 @@
+<title>The doubledouble homepage</title>
+<IMG SRC="updated.gif" ALIGN="TOP">1998 February 03<br>
+<H1>The doubledouble homepage</H1>
+<hr>
+<H2>Overview</H2>
+This page describes my C++ software package `doubledouble' which 
+implements approximately 30 decimal place floating point arithmetic.
+This code does NOT use multiple-precision or arbitrary-precision methods,
+which always have a significant speed penalty.  Rather, the intention is to increase
+precision beyond double, while maintaining efficiency.   The speed penalty
+is about a 10-25 times slowdown compared to double precision.  Hardware strictly conforming to IEEE 754 is essential,
+though the Pentium is also acceptable since the control word is manipulated to override
+the effect of double rounding.
+<p>
+This is the probably the simplest way to increase the precision of 
+existing double-precision C or C++ code.   For a quick conversion of simple 
+programs, all that may be required to convert to doubledouble is the addition of two lines:<p>
+#include "doubledouble.h"<br>
+#define double doubledouble<p>
+and the linking of the doubledouble library.<br>
+(This is NOT the recommended method, though. See the file trydd.cc for more
+sophisticated examples of usage.)
+
+<hr>
+<H2>Internals</H2>
+The techniques used are the well-known ones due to Dekker, Linnainmaa, Kahan, Knuth and Priest; that is, the same methods normally used for software implementations
+of real*16 in Fortran compilers.
+I credit Kahan with the addition algorithm (the simplification
+which permits the elimination of the tests and branches is due to Knuth);
+Dekker and Linnainmaa with the multiply, divide, and square root routines,
+and Priest for an initial transcription into C++.
+<p>
+Included is a fairly complete math library, which borrows some ideas
+from David Bailey's <a href="http://science.nas.nasa.gov/Groups/AAA/db.webpage/mpdist/mpdist.html">MPFUN</a> fortran package.
+<p>
+Except where otherwise indicated by comments in the code, this software
+is covered by the GNU Public License, as described in the included COPYLEFT notice.
+<p>
+The current version is 2.2.  This version includes many improvements suggested
+by Stefan Bauberger, Roger Schlafly, Wayne Hayes, Victor Shoup, Tony Dixon, and Alan
+Miller.  These include new operators, more transcendental functions, 
+portability enhancements, and improvements to many details.  
+In particular, I am grateful to Wayne Hayes for writing new output formatting
+code, more overloaded operators, modf, and a new test program.  Victor Shoup supplied
+a fix for the non-IEEE Pentium problem.
+<p>
+Warning: the representable numbers in this system have a strange distribution.
+For example, numbers like 1+1e-300 can be represented.   This makes the concept
+of machine epsilon rather ambiguous.   For more information on the theory, see
+<a href="http://HTTP.CS.Berkeley.EDU/~wkahan/ieee754status/ieee754.ps">this paper by Kahan</a>.
+<p>
+This is a development of code formerly released as `Quad version 2.0'.
+The name Quad has been dropped as the code does NOT implement the 
+IEEE quadruple precision format.   The name `doubledouble' was chosen instead
+since it is distinctive and reminds one that an unusual data type is being
+used, and it describes the format of two adjacent doubles. 
+<p>
+The code was developed with g++ 2.7.2.1 and egcs-1.0 
+(See <A HREF="http://www.cygnus.com/egcs/">egcs project home page</A>
+or <A HREF="ftp://sunsite.doc.ic.ac.uk/packages/gnu/cygnus/egcs/releases/egcs-1.0.1/">UK mirror</A>).
+<br>
+To use doubledouble precision complex numbers,<br>
+#include &lt;std/complext.h&gt;<br>
+#include &lt;std/complext.cc&gt;<br>
+typedef complex&lt;doubledouble&gt; dd_complex;
+<br><br>
+The code has been tested on:<br>
+x86-unknown-linux with gcc 2.7.2.1<br>
+mips*-sgi-irix6 with ecgs-1.0<br>
+sparc-sun-solaris2.4 with ecgs-1.0<br>
+x86-unknown-windows95 with Microsoft C++ 5.0.<br>
+<hr>
+
+<H2>Applications</H2>
+This code has been used for:<br>
+<p>
+Studies of Feigenbaum scaling in discrete dynamical systems.<br>
+Two-loop integral for radiative corrections in muon decay.<br>
+Number theory research, e.g. in LLL algorithms.<br>
+Coefficient generation and checking of double-precision algorithms for transcendental functions.<br>
+Testing sensitivity to rounding errors of existing double-precision code.
+<p>
+An earlier version of this code is also used in the C++ libraries 
+<a href="http://www.informatik.th-darmstadt.de/TI/LiDIA/">LiDIA</a>
+(as xdouble) and 
+<a href="http://www.cs.wisc.edu/~shoup/ntl/">NTL</a>
+(as quad_float).<br>
+These libraries also implement arbitrary-precision arithmetic.
+<hr>
+
+<H2>Download the current version</H2>
+as a gzipped tar file: <a href="doubledouble.tgz">shift-click here</a><br>
+as a shar file: <a href="doubledouble.shar">click here</a><br>
+<p>
+The sources (not necessarily the current version) may be browsed here:<br>
+<A HREF="doubledouble.h.html">doubledouble.h</a><br>
+<A HREF="doubledouble.cc.html">doubledouble.cc</a><br>
+<A HREF="inline.h.html">inline.h</a><br>
+<A HREF="math.cc.html">math.cc</a><br>
+<hr>
+
+<H2>Installation</H2>
+0. Unpack shar or tar file.
+   Typical location: ~/math++/2.2/
+<br>
+1. Edit top part of `Makefile' to suit your hardware and compiler
+<br>
+2. make
+<br>
+User programs should:<br>
+   (a) #include "doubledouble.h"<br>
+   (b) compile with -DDD_INLINE<br>
+   (c) compile with -Dx86 on x86 hardware (including Pentium)<br>
+   (d) link libdoubledouble.a<br>
+   See trydd.cc for examples of usage.
+<hr>
+<H2>Screenshot</H2>
+<img src="ss.gif">
+<hr>
+<H2>Bugs</H2>
+There is not much documentation apart from this webpage.
+<hr>
+Feedback is very welcome, especially reports of success or failure on other platforms.<p>
+Please send reports to <A HREF="mailto:NO-SPAM-kmb28@cam.ac.uk">Keith Briggs</A>,
+not forgetting to clean up the processed meat first.<P>
+Department of Plant Sciences,
+University of Cambridge, Downing Street, Cambridge CB2 3EA.<br>
+<hr>

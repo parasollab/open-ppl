@@ -1,0 +1,10 @@
+This implementation uses non-blocking PARAGRAPHs to implement the concurrent
+execution of sweeps in all directions.  In order for this to work the STAPL
+gang_executor that processes PARAGRAPHs has to be configured to allow all sweep
+PARAGRAPHs to be active at the same time.  Set the following environment
+variables to configure the executor correctly.
+
+Environment Variable         Value
+STAPL_EXECUTOR_WINDOW_SIZE     10
+STAPL_EXECUTOR_RETIRE_CHUNK    10
+

@@ -1,0 +1,38 @@
+There are four different types of test to run, which are controlled by
+the value of the QUICK macro in the makefile.
+
+1) To run a comprehensive test of all algorithms and all datatypes
+
+  make test QUICK=
+
+This will probably take about 12 hours to complete
+(Perhaps in 2001 when mtl was last updated... but in 2005,
+it only takes about 4 minutes on a AMD64 3000+... YMMV - jkp)
+
+2) To run a test comprehensive in data types but on only one
+algorithm, 
+
+  make test QUICK=-Q
+
+3) To run a test comprehensive in algorithms but on only one
+data type
+
+  make test QUICK=-q
+
+4) To run a sanity test that checks only one algorithm and one data
+type 
+
+  make test QUICK=-qQ
+
+5) To combine tests 2 and 3 in one test
+
+  make test QUICK=-p
+
+Test number 4 is the default
+
+The output of the tests will be left in the file
+./make_and_test_results.txt.  You can post-process the output file by
+issuing the command
+
+  make summary   
+

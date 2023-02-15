@@ -1,0 +1,5 @@
+input = [u0_c u1_c]
+v1 = map(prepare) [u0_c]
+v2 = alltoall<alltoall_data_t, skeletons::tags::pairwise_exchange>() [v1]
+v3 = zip<2>(finish) [v2 u1_c]
+output = [v3]

@@ -1,7 +1,7 @@
 #ifndef EDIT_BODY_DIALOG_H_
 #define EDIT_BODY_DIALOG_H_
 
-#include <QtGui>
+#include <QDialog>
 
 class Body;
 class DrawableBody;

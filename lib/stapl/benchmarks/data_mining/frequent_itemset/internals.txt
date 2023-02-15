@@ -1,0 +1,810 @@
+// ------------------------------ DRIVER ------------------------------
+
+///////////////////////////////////////////////////////////////////////////
+// sort each frequent itemset in ascending order
+///////////////////////////////////////////////////////////////////////////
+
+struct finalize_wf {
+  void operator()(Cont cont) {
+    std::sort( cont.begin(), cont.end() );
+  }
+};
+
+///////////////////////////////////////////////////////////////////////////
+// perform the ECLAT algorithm with parallelism depth=1
+///////////////////////////////////////////////////////////////////////////
+
+ulong eclat_flat( double min_supp, double min_conf, double load_bal,
+               ulong trans_cnt, ulong max_sz, ulong tot_items, char in_type,
+               pary_ul_tp & trans_len, pary_ul_tp & item_cnt,
+               stapl::stream<ifstream> & trans_data,
+               stapl::stream<ofstream> & freq_out ) {
+  // Input step
+
+  pary_ul_vw_tp trans_len_vw(trans_len);
+
+  // Horizontal database
+
+  pvec_vec_item_tp horz_db(trans_cnt);
+  pvec_vec_item_vw_tp horz_db_vw(horz_db);
+
+  stapl::map_func( resize_vec_wf(),
+                   horz_db_vw, trans_len_vw );
+
+  // read the transactions database
+
+  if ( in_type == 't' ) {
+    stapl::serial_io(read_trans_txt_wf(trans_data), horz_db_vw);
+  } else {
+    stapl::serial_io(read_trans_bin_wf(trans_data), horz_db_vw);
+  }
+
+  pvec_pair_item_tp itemset_2;
+  pvec_pair_item_vw_tp arg_itemset_2_vw(itemset_2);
+
+  // Initialize Step
+
+  initialize_flat(min_supp, trans_cnt, tot_items, horz_db_vw,
+                  arg_itemset_2_vw);
+
+  pvec_pair_item_vw_tp itemset_2_vw(itemset_2);
+
+  // ensure there is enough work to distribute to all locations
+  ulong num_locs = horz_db_vw.get_num_locations();
+  if ( itemset_2.size() < num_locs ) {
+    return 0;
+  }
+
+  // Transform Step - create vertical database
+
+  pvec_vec_item_tp in_itemsets;
+  pvec_vec_item_vw_tp arg_itemsets_vw(in_itemsets);
+
+  ndx_dom_ul_tp map_dom(0,max_key);
+  pmap_encpair_ul_tp in_item_pairs(map_dom);
+  pmap_encpair_ul_vw_tp in_item_pairs_vw(in_item_pairs);
+
+  vector<eqv_cl_tp *> equiv_class;
+  prepare_vertical(min_supp, trans_cnt, tot_items, horz_db_vw,
+                   itemset_2_vw,
+                   arg_itemsets_vw,
+                   in_item_pairs_vw,
+                   equiv_class);
+  pvec_vec_item_vw_tp in_itemsets_vw(in_itemsets);
+
+  // ensure there is enough work to distribute to all locations
+  ulong ctl_breaks = count_control_breaks(in_itemsets_vw);
+  if ( ctl_breaks < num_locs ) {
+    return 0;
+  }
+
+  // create the distribution of the candidates across the locations
+  stapl::array<arbitrary_partition_info> part_info(num_locs);
+  ulong part_cnt = gen_arb_dist( in_itemsets_vw, part_info );
+  if ( part_cnt != num_locs ) {
+    return 0;
+  }
+
+  stapl::array_view<stapl::array<arbitrary_partition_info>>
+         part_view(part_info);
+  dist_spec_tp arb_spec = stapl::arbitrary( part_view );
+
+  // vertical database MUST be ordered for build_equiv_class to work
+  pmap_ul_set_ul_arb_tp vert_db(arb_spec);
+  pmap_ul_set_ul_arb_vw_tp vert_temp_vw(vert_db);
+
+  pvec_pair_ul_set_ul_tp invert;
+  pvec_pair_ul_set_ul_vw_tp invert_vw(invert);
+
+  transform_flat( horz_db_vw, invert_vw, vert_temp_vw, equiv_class,
+                 in_item_pairs_vw );
+
+  pmap_ul_set_ul_arb_vw_tp vert_db_vw(vert_db);
+
+  // Asynchronous Step - find itemsets length > 2
+
+  pvec_vec_item_tp out_itemsets; 
+  pvec_vec_item_vw_tp temp_itemsets_vw(out_itemsets);
+
+  asynchronous_flat( min_supp, trans_cnt, tot_items,
+                     vert_db_vw, in_itemsets_vw, temp_itemsets_vw);
+
+  // Aggregate Step - save the results
+
+  // it is just as easy to perform a separate write to the file
+  // in_itemsets are already sorted, so this reduces the cost of the sort
+
+  stapl::serial_io(write_freq_std_wf(freq_out), in_itemsets_vw );
+
+  pvec_vec_item_vw_tp out_itemsets_vw(out_itemsets);
+  ulong size = out_itemsets_vw.size();
+
+  pvec_vec_item_tp tuple_itemsets(size);
+  pvec_vec_item_vw_tp tuple_itemsets_vw(tuple_itemsets);
+  for( ulong i=0; i<size; ++i) {
+    tuple_itemsets_vw[i] = out_itemsets_vw[i];
+  }
+
+  stapl::map_func( finalize_wf(),
+                   tuple_itemsets_vw );
+
+  pvec_vec_item_tp bin_itemsets(num_locs);
+  pvec_vec_item_vw_tp bin_itemsets_vw(bin_itemsets);
+  aggregate_flat( tuple_itemsets_vw, bin_itemsets_vw );
+  stapl::serial_io(write_freq_bin_wf(freq_out), bin_itemsets_vw );
+
+  return in_itemsets_vw.size() + tuple_itemsets_vw.size();
+}
+
+// ------------------------------ STEP 2 ------------------------------
+
+///////////////////////////////////////////////////////////////////////////
+// compute the per-location counts of each pair
+///////////////////////////////////////////////////////////////////////////
+
+struct partial_map_counts_wf {
+  void operator()(SegView seg, RepView & vec_map) {
+    map_pair_ul_tp local_counts;
+    typename SegView::iterator seg_it;
+    for ( seg_it = seg.begin(); seg_it != seg.end(); ++seg_it ) {
+      auto trans = *seg_it;
+      for ( ulong i=0; i<trans.size(); i++ ) {
+        for ( ulong j=i+1; j<trans.size(); j++ ) {
+          pair_ul_tp key = make_pair(trans[i],trans[j]);
+          ulong count = local_counts[key];
+          local_counts[key] = count + 1;
+        }
+      }
+    }
+    vec_map[m_loc_id] = local_counts;
+  }
+};
+
+///////////////////////////////////////////////////////////////////////////
+// reduce the per-location counts of each pair to a single global count
+///////////////////////////////////////////////////////////////////////////
+
+struct partial_reduce_counts_wf {
+  struct insert_update_wf {
+    void operator()(MapElement& val, NewElement const& new_val) const {
+      ulong local_count = new_val.second;
+      ulong global_count = val.second;
+      ulong result_count = global_count + local_count;
+      val.second = result_count;
+    }
+  };
+
+  void operator()(View1 proxy1, RepView2 & proxy2) {
+    map_pair_ul_tp partial_counts = proxy1;
+    pmap_encpair_ul_vw_tp global_counts_vw = proxy2;
+    map_pair_ul_tp::iterator map_it;
+    for ( map_it = partial_counts.begin();
+         map_it != partial_counts.end(); ++map_it ) {
+      pair_ul_tp temp = map_it->first;
+      ulong first = temp.first;
+      ulong second = temp.second;
+      ulong partial_cnt = map_it->second;
+      encpair_tp key = (first << encode_shift) | second;
+      global_counts_vw.insert( key, partial_cnt, insert_update_wf() );
+    }
+  }
+};
+
+///////////////////////////////////////////////////////////////////////////
+// select the pairs that have the minimum required support and save them
+///////////////////////////////////////////////////////////////////////////
+
+struct select_pair_counts_wf {
+  void operator()(View1 counts, RepView2 & itemset_2_vw) {
+    auto enckey = counts.first;
+    ulong first = (first_mask&enckey)>>encode_shift;
+    ulong second = second_mask&enckey;
+    double cnt_dbl = (double) counts.second;
+    if ( ( cnt_dbl / m_trans_cnt ) >= m_min_supp ) {
+      itemset_2_vw.push_back( make_pair(first,second) );
+    }
+  }
+};
+
+///////////////////////////////////////////////////////////////////////////
+// - identify 2-itemsets with counts
+// - enumerate pairs with sufficient support
+///////////////////////////////////////////////////////////////////////////
+
+void initialize_flat( double min_supp, ulong trans_cnt, ulong item_cnt,
+                    pvec_vec_item_vw_tp & horz_db_vw,
+                    pvec_pair_item_vw_tp & itemset_2_vw ) {
+  ulong num_locs = horz_db_vw.get_num_locations();
+  ulong loc_id = horz_db_vw.get_location_id();
+
+  pvec_map_pair_ul_tp partial_counts(num_locs);
+  pvec_map_pair_ul_vw_tp partial_counts_vw(partial_counts);
+
+  stapl::map_func( partial_map_counts_wf(loc_id),
+                   stapl::native_view(horz_db_vw),
+                   stapl::make_repeat_view(partial_counts_vw) );
+
+  pmap_encpair_ul_tp global_counts;
+  pmap_encpair_ul_vw_tp arg_counts_vw(global_counts);
+
+  stapl::map_func( partial_reduce_counts_wf(),
+                   partial_counts_vw,     
+                   stapl::make_repeat_view(arg_counts_vw) );
+
+  pmap_encpair_ul_vw_tp global_counts_vw(global_counts);
+
+  double trans_cnt_dbl = (double) trans_cnt;
+
+  stapl::map_func( select_pair_counts_wf(trans_cnt_dbl,min_supp),
+                   global_counts_vw,     
+                   stapl::make_repeat_view(itemset_2_vw) );
+}
+
+// ------------------------------ STEP 3 ------------------------------
+
+///////////////////////////////////////////////////////////////////////////
+// copy a STAPL vector of STL pairs to a STAPL vector of STL vectors
+///////////////////////////////////////////////////////////////////////////
+
+struct copy_itemset2_vec_wf {
+  void operator()(PairView proxy1, RepView & proxy2 ) {
+    pair_item_tp item_pair = proxy1;
+    vec_item_tp item_vec(2);
+    item_vec[0] = item_pair.first;
+    item_vec[1] = item_pair.second;
+    proxy2.push_back(item_vec);
+  }
+};
+
+///////////////////////////////////////////////////////////////////////////
+// copy a STAPL vector of STL pairs to a STAPL map of encoded pairs
+// which map to an unsigned int (TID)
+///////////////////////////////////////////////////////////////////////////
+
+struct copy_itemset2_map_wf
+{
+  void operator()(PairView proxy1, RepView & proxy2, CountView ndx ) {
+    pair_item_tp itempair = proxy1;
+    ulong first = itempair.first;
+    ulong second = itempair.second;
+    pmap_encpair_ul_vw_tp in_item_pairs_vw = proxy2;
+    encpair_tp enckey = (first << encode_shift ) | second;
+
+    // add 1 to ndx so that map retrieval of non-existent key
+    // is NOT confused with retrieval of first (0-th) index
+    // must subtract 1 when values are fetched from this map
+    in_item_pairs_vw.insert( enckey, 1+ndx);
+  }
+};
+
+///////////////////////////////////////////////////////////////////////////
+// on one location (native view):
+// - process each transaction
+//   - process each item
+//     - add the transaction id to the TID list of each item pair
+//       that has this item as the first value of the pair
+///////////////////////////////////////////////////////////////////////////
+
+struct build_vert_flat_db_wf {
+  struct insert_tidset_wf {
+    void operator()(MapElement& val, NewElement const& new_val) const {
+      vec_ul_tp result_tidset;
+      vec_ul_tp local_tidset = new_val.second;
+      vec_ul_tp global_tidset = val.second;
+      set_union( local_tidset.begin(), local_tidset.end(),
+                 global_tidset.begin(), global_tidset.end(),
+                 inserter(result_tidset,result_tidset.begin()) );
+      val.second = result_tidset;
+    }
+  };
+
+  void operator()(SegView seg, RepView1 vert_db_vw,
+                         RepView2 equiv_class,
+                         RepView3 global_in_item_pairs_vw,
+                         RepView4 local_results_vw) {
+
+    // local processing, no communication
+    // for the transactions on this location,
+    // create lists of transactions associated with each item
+  
+    map_ul_set_ul_tp local_tid_map;
+    map_pair_ul_tp local_item_pairs;
+
+    ulong trans_ctr = 0, lookups = 0;
+    ulong trans_id = seg.domain().first();
+    typename SegView::iterator seg_it;
+    for ( seg_it = seg.begin(); seg_it != seg.end(); ++seg_it ) {
+      vec_item_tp trans = *seg_it;
+      auto outer_it = trans.begin();
+      ulong outer_ctr = 0;
+      for ( ; outer_it != trans.end(); ++outer_it ) {
+        ulong outer = *outer_it;
+        outer_ctr++;
+        ulong inner_ctr = 0;
+        vec_item_tp::iterator inner_it = trans.begin();
+        // triangularization
+        for ( ulong i=0; i<outer_ctr; i++ ) {
+          inner_it++;
+        }
+
+        for ( ; inner_it != trans.end(); ++inner_it ) {
+          ulong inner = *inner_it;
+          inner_ctr++;
+          ulong lo = outer;
+          ulong hi = inner;
+          if ( outer > inner ) {
+            hi = outer;
+            lo = inner;
+          }
+          auto try_pair = make_pair(lo,hi);
+
+          // is the pair in the local cache of item pairs?
+          ulong local_entry = local_item_pairs[try_pair];
+          if ( local_entry > 0 ) {
+              // subtract 1 from ndx so that map retrieval of non-existent key
+              // is NOT confused with retrieval of first (0-th) index
+              ulong ndx = local_entry - 1;
+              local_tid_map[ndx].push_back(trans_id);
+          } else {
+            // is the pair in the global map of item pairs?
+            encpair_tp enckey = (lo << encode_shift ) | hi;
+            ulong global_entry = global_in_item_pairs_vw[enckey];
+            // entry == 0 means not found
+            if ( global_entry > 0 ) {
+              // subtract 1 from ndx so that map retrieval of non-existent key
+              // is NOT confused with retrieval of first (0-th) index
+              ulong ndx = global_entry - 1;
+              local_tid_map[ndx].push_back(trans_id);
+              local_item_pairs[try_pair] = global_entry;
+            }
+          }
+        }
+        lookups += inner_ctr;
+      }
+      trans_ctr++;
+      trans_id++;
+    }
+    map_ul_set_ul_tp::iterator map_it;
+    // save the results to be merged later
+    local_results_vw[m_loc_id] = local_tid_map;
+  }
+};
+
+///////////////////////////////////////////////////////////////////////////
+// merge tidsets for 2 locations that are on the same shared-memory node
+///////////////////////////////////////////////////////////////////////////
+
+struct merge_local_wf {
+  void operator()( View1 proxy, RepView2 &all_results_vw ) {
+    if ( 0 == m_loc_id % m_step ) {
+      map_ul_set_ul_tp src_tid_map = all_results_vw[ m_loc_id + (m_step >> 1) ];
+      auto it_begin = src_tid_map.begin();
+      auto it_end = src_tid_map.end();
+      map_ul_set_ul_tp dest_tid_map = proxy;
+      dest_tid_map.insert( it_begin, it_end );
+      for ( auto src_it = src_tid_map.begin(); 
+           src_it != src_tid_map.end(); ++src_it ) {
+        auto src_key = (*src_it).first;
+        set_ul_tp src_tidset = (*src_it).second;
+        set_ul_tp dest_tidset = dest_tid_map[src_key];
+        set_ul_tp merge_tidset;
+        set_union( src_tidset.begin(), src_tidset.end(),
+                   dest_tidset.begin(), dest_tidset.end(),
+                   inserter(merge_tidset,merge_tidset.begin()) );
+        dest_tid_map[src_key] = merge_tidset;
+      }
+      all_results_vw[ m_loc_id ] = dest_tid_map;
+    }
+  }
+};
+
+///////////////////////////////////////////////////////////////////////////
+// compact maps residing in different STAPL locations on the same 
+// shared memory node into one map in one location
+///////////////////////////////////////////////////////////////////////////
+
+struct compact_local_wf {
+  void operator()( View1 proxy, RepView2 & invert_vw ) { 
+    if ( 0 == m_loc_id % m_step ) {
+      auto local_tid_map = proxy;
+      auto local_it = local_tid_map.begin();
+      for ( ; local_it != local_tid_map.end(); ++local_it )  {
+        ulong itemset_ndx = (*local_it).first;
+        vec_ul_tp local_tidset = (*local_it).second;
+        invert_vw.push_back( make_pair(itemset_ndx,local_tidset) );
+      }
+    }
+  }
+};
+
+///////////////////////////////////////////////////////////////////////////
+// for all transaction ID sets distributed to a location,
+// merge the TID sets for groups of adjacent identical keys
+///////////////////////////////////////////////////////////////////////////
+
+struct merge_invert_wf {
+  struct merge_tidset_wf {
+    void operator()(MapElement& val, NewElement const& new_val) const {
+      vec_ul_tp result_tidset;
+      vec_ul_tp local_tidset = new_val.second;
+      vec_ul_tp global_tidset = val.second;
+      set_union( local_tidset.begin(), local_tidset.end(),
+                 global_tidset.begin(), global_tidset.end(),
+                 inserter(result_tidset,result_tidset.begin()) );
+      val.second = result_tidset;
+    }
+  };
+
+  void operator()( SegView1 seg, RepView2 & vert_db_vw ) {
+    vec_ul_tp * merge_tidset = new vec_ul_tp();
+    vec_ul_tp * result_tidset = new vec_ul_tp();
+    vec_ul_tp * swap_tidset = nullptr;
+
+    auto seg_it = seg.begin(); 
+    ulong prev_key = (*seg_it).first;
+    vec_ul_tp prev_tidset = (*seg_it).second;
+    seg_it++;
+
+    while ( seg_it != seg.end() ) {
+      auto rec = *seg_it;
+      ulong curr_key = rec.first;
+      vec_ul_tp curr_tidset = rec.second;
+      seg_it++;
+
+      set_union( merge_tidset->begin(), merge_tidset->end(),
+                 curr_tidset.begin(), curr_tidset.end(),
+                 inserter(*result_tidset, result_tidset->begin()) );
+
+      if ( prev_key != curr_key ) {
+        vert_db_vw.insert( curr_key, *result_tidset, merge_tidset_wf());
+        result_tidset = new vec_ul_tp();
+        merge_tidset->clear();
+      } else {
+        swap_tidset = merge_tidset;
+        merge_tidset = result_tidset;
+        result_tidset = swap_tidset;
+      }
+
+      prev_key = curr_key;
+      prev_tidset = curr_tidset;
+    }
+    set_union( merge_tidset->begin(), merge_tidset->end(),
+               prev_tidset.begin(), prev_tidset.end(),
+               inserter(*result_tidset, result_tidset->begin()) );
+    vert_db_vw.insert( prev_key, *result_tidset, merge_tidset_wf());
+  }
+};
+
+///////////////////////////////////////////////////////////////////////////
+// merge tidsets for 2 locations that are on different shared-memory nodes
+///////////////////////////////////////////////////////////////////////////
+
+struct merge_global_wf {
+  struct merge_tidset_wf { 
+    void operator()(MapElement& val, NewElement const& new_val) const {
+      vec_ul_tp result_tidset;
+      vec_ul_tp local_tidset = new_val.second;
+      vec_ul_tp global_tidset = val.second;
+      set_union( local_tidset.begin(), local_tidset.end(),
+                 global_tidset.begin(), global_tidset.end(),
+                 inserter(result_tidset,result_tidset.begin()) );
+      val.second = result_tidset;
+    }
+  };
+
+  void operator()( View1 proxy, RepView2 & vert_db_vw ) {
+    if ( 0 == m_loc_id % m_step ) {
+      auto local_tid_map = proxy;
+      auto local_it = local_tid_map.begin();
+      for ( ; local_it != local_tid_map.end(); ++local_it )  {
+        ulong itemset_ndx = (*local_it).first;
+        vec_ul_tp local_tidset = (*local_it).second;
+        vert_db_vw.insert(itemset_ndx, local_tidset, merge_tidset_wf());
+      }
+    }
+  }
+};
+
+///////////////////////////////////////////////////////////////////////////
+// - create sorted vector of equivalence classes of 2-itemsets
+// - schedule 2-itemsets over the parallel locations
+// - insert 2-itemsets into TID-list map
+///////////////////////////////////////////////////////////////////////////
+
+void prepare_vertical( double min_supp, ulong trans_cnt, ulong item_cnt,
+                   pvec_vec_item_vw_tp & horz_db_vw,
+                   pvec_pair_item_vw_tp & itemset_2_vw,
+                   pvec_vec_item_vw_tp & in_itemsets_vw,
+                   pmap_encpair_ul_vw_tp & in_item_pairs_vw,
+                   vector<eqv_cl_tp *> & equiv_class ) {
+
+  build_equiv_class( itemset_2_vw, equiv_class );
+  std::sort( equiv_class.begin(), equiv_class.end(), eqv_cl_weight_lt );
+  schedule_classes( equiv_class, horz_db_vw.get_num_locations() );
+  std::sort( equiv_class.begin(), equiv_class.end(), eqv_cl_begin_lt );
+
+  stapl::map_func( copy_itemset2_vec_wf(),
+                   itemset_2_vw,
+                   stapl::make_repeat_view(in_itemsets_vw) );
+
+  ulong size = itemset_2_vw.size();
+
+  stapl::map_func( copy_itemset2_map_wf(),
+                   itemset_2_vw,
+                   stapl::make_repeat_view(in_item_pairs_vw),
+                   stapl::counting_view<int>(size) );
+
+}
+
+///////////////////////////////////////////////////////////////////////////
+// perform transform step
+///////////////////////////////////////////////////////////////////////////
+
+void transform_flat( pvec_vec_item_vw_tp & horz_db_vw,
+                   pvec_pair_ul_set_ul_vw_tp & invert_vw,
+
+                   pmap_ul_set_ul_arb_vw_tp & vert_db_vw,
+                   vector<eqv_cl_tp *> & equiv_class,
+
+                   pmap_encpair_ul_vw_tp & in_item_pairs_vw) {
+
+  ulong num_locs = horz_db_vw.get_num_locations();
+  ulong loc_id = horz_db_vw.get_location_id();
+
+  pvec_map_ul_set_ul_tp local_results(num_locs);
+  pvec_map_ul_set_ul_vw_tp local_results_vw(local_results);
+
+  stapl::map_func(build_vert_flat_db_wf(loc_id),
+                  stapl::native_view(horz_db_vw),
+                  stapl::make_repeat_view(vert_db_vw),
+                  stapl::make_repeat_view(equiv_class),
+                  stapl::make_repeat_view(in_item_pairs_vw),
+                  stapl::make_repeat_view(local_results_vw)
+                  );
+
+  ulong local_locs = (num_locs < 32) ? num_locs : 32;
+
+  // use a binary tree for merging, rather than linear pass
+  // same number of merge operations, but less temp storage required
+ 
+  for ( ulong step = 1; step < local_locs; step <<= 1 ) {
+
+    stapl::map_func(merge_local_wf(loc_id, 2*step),
+                    local_results_vw, 
+                    stapl::make_repeat_view(local_results_vw) );
+  }
+
+  stapl::map_func( compact_local_wf(loc_id, local_locs),
+                   local_results_vw, 
+                   stapl::make_repeat_view(invert_vw) ); 
+
+  stapl::sort( invert_vw, comp_first_wf<pair_ul_set_ul_tp>() );
+
+  stapl::map_func( merge_invert_wf(),
+                   stapl::native_view(invert_vw), 
+                   stapl::make_repeat_view(vert_db_vw) ); 
+}
+
+// ------------------------------ STEP 4 ------------------------------
+
+///////////////////////////////////////////////////////////////////////////
+//  1. identify equivalence classes in local L_2
+//  2. for each equivalence class E_2 in local L_2
+//  3. compute_freqent(E_2)
+//
+//  compute_frequent(E_k-1)
+//  4.  for all itemsets left and right in E_k-1
+//  5.    if ( |intersect(left.tidlist,right.tidlist)| > min_supp )
+//  6.      add union(left,right) to L_k
+//  7.  partition L_k into equivalence classes
+//  8.  for each equivalence class E_K in L_k
+//  9.    compute_frequent(E_k)
+///////////////////////////////////////////////////////////////////////////
+
+struct asynchronous_flat_wf {
+  void operator()(SegView1 vert_db_vw, RepView1 in_itemsets_vw,
+                         View1 & out_itemsets_vw) { 
+    typedef pair<int,int> stack_entry;
+    stack<stack_entry> call_stack;
+
+  //  1. compute equivalence classes in local L_2 (within this segment)
+
+    vector<pair_ul_tp> seg_equiv_class;
+    build_equiv_class<SegView1,RepView1>
+      ( vert_db_vw, in_itemsets_vw, seg_equiv_class); // #4
+
+    // push each equivalence class on the call stack
+    ulong size = seg_equiv_class.size();
+    for ( ulong i = 0; i<size; i++ ) {
+      ulong lo = seg_equiv_class[i].first;
+      ulong hi = seg_equiv_class[i].second;
+      call_stack.push( make_pair(lo, hi) );
+    }
+
+    map_ul_vec_ul_tp local_trans_sets;
+    size = vert_db_vw.end() - vert_db_vw.begin();
+
+    vec_vec_item_tp local_itemsets(size);
+
+  //  2. for each equivalence class E_2 in local L_2
+
+    // copy the segment transaction ids sets onto local_trans_sets
+    // copy the segment item ids sets onto local_itemsets
+
+    ulong ndx = 0;
+    auto db_it = vert_db_vw.begin();
+    while ( db_it != vert_db_vw.end() ) {
+      auto proxy_pair = *db_it++;
+      auto link = proxy_pair.first;
+      vec_ul_tp tid_set = proxy_pair.second;
+      local_trans_sets[ndx] = tid_set;
+      local_itemsets[ndx] = in_itemsets_vw[link];
+      ndx++;
+    }
+
+  //  3. compute_freqent(E_2)
+
+    ulong iter_ctr = 0;
+    vec_vec_ul_tp invoc_trans_sets;
+    vec_vec_item_tp invoc_itemsets;
+    do {
+
+      stack_entry entry = call_stack.top();
+      call_stack.pop();
+      ulong eqv_class_lo = entry.first;
+      ulong eqv_class_hi = entry.second;
+      ulong itemset_base = local_itemsets.size();
+
+      invoc_trans_sets.clear(); // results for this invocation
+      invoc_itemsets.clear();
+
+      if ( eqv_class_lo == eqv_class_hi ) {
+        continue; // ignore singletons
+      }
+
+  //  4.  for all itemsets I_1 and I_2 in E_k-1
+
+      ulong local_size = local_trans_sets.size();
+      assert( eqv_class_lo < local_size && eqv_class_hi < local_size );
+
+      for (ulong left_ctr=eqv_class_lo; left_ctr<eqv_class_hi; left_ctr++ ) {
+        for (ulong right_ctr=left_ctr+1; right_ctr<=eqv_class_hi; right_ctr++ ) {
+
+          if ( left_ctr >= local_trans_sets.size() ) {
+            assert(0);
+          }
+          vec_ul_tp left_trans_set = local_trans_sets[left_ctr];
+
+          assert( 0 < left_trans_set.size() );
+
+          if ( right_ctr >= local_trans_sets.size() ) {
+            assert(0);
+          }
+          vec_ul_tp right_trans_set = local_trans_sets[right_ctr];
+          assert( 0 < right_trans_set.size() );
+
+          vec_ul_tp result_trans_set;
+
+  //  5.    if ( |intersect(left.tidlist,right.tidlist)| > min_supp )
+
+          set_intersection(left_trans_set.begin(), left_trans_set.end(),
+                           right_trans_set.begin(), right_trans_set.end(),
+                           inserter(result_trans_set,result_trans_set.begin()));
+
+          double avg_size = ((double) result_trans_set.size()) / m_trans_cnt;
+          if ( avg_size >= m_min_supp )  {
+
+            invoc_trans_sets.push_back( result_trans_set );
+  //  6.      add union(left,right) to L_k
+            vec_item_tp new_itemset;
+            auto left_itemset = local_itemsets[left_ctr];
+            auto right_itemset = local_itemsets[right_ctr];
+
+            ulong prefix = left_itemset.size() - 1;
+            new_itemset.insert( new_itemset.begin(),
+                                 left_itemset.begin(), left_itemset.end() );
+
+            auto iter = right_itemset.begin();
+            new_itemset.insert( new_itemset.end(),
+                                 iter+prefix, right_itemset.end() );
+
+            invoc_itemsets.push_back(new_itemset);
+          }
+        }
+      }
+
+      if ( invoc_itemsets.size() > 0 ) {
+  //  7.  partition L_k into equivalence classes
+        vector<pair_ul_tp> invoc_equiv_class;
+        build_equiv_class( invoc_itemsets, invoc_equiv_class );
+
+  //  8.  for each equivalence class E_k in L_k
+        for ( ulong i=0; i<invoc_equiv_class.size(); i++ ) {
+          pair_ul_tp eqv_cl = invoc_equiv_class[i];
+          eqv_cl.first += itemset_base;
+          eqv_cl.second += itemset_base;
+  //  9.    compute_frequent(E_k)
+  //
+          call_stack.push( eqv_cl );
+        }
+
+        // accumulate the results of this invocation for this processor
+        for ( ulong i=0; i<invoc_itemsets.size(); i++ ) {
+          auto itemset = invoc_itemsets[i];
+          vec_ul_tp trans_set = invoc_trans_sets[i];
+          ulong key = local_itemsets.size();
+          local_itemsets.push_back( itemset  );
+
+          local_trans_sets[key] = trans_set;
+        }
+      }
+
+      iter_ctr++;
+
+    } while ( call_stack.size() > 0 );
+
+    // insert local results in global data structure
+    size = local_itemsets.size();
+    for ( ulong i=0; i<local_itemsets.size(); i++ ) {
+      auto itemset = local_itemsets[i];
+      if ( 2 < itemset.size() ) { // pairs were repeated to all locations
+        out_itemsets_vw.container().add( itemset );
+      }
+    }
+  }
+};
+
+///////////////////////////////////////////////////////////////////////////
+// perform asynchronous step
+///////////////////////////////////////////////////////////////////////////
+
+void asynchronous_flat( double min_supp, ulong trans_cnt, ulong item_cnt,
+                        pmap_ul_set_ul_arb_vw_tp & vert_db_vw,
+                        pvec_vec_item_vw_tp & in_itemsets_vw,
+                        pvec_vec_item_vw_tp & out_itemsets_vw ) {
+  double trans_cnt_dbl = (double) trans_cnt;
+  pvec_vec_item_tp & out_itemsets_ct = out_itemsets_vw.container();
+
+  stapl::map_func( asynchronous_flat_wf(trans_cnt_dbl, min_supp),
+                   stapl::native_view(vert_db_vw),
+                   stapl::make_repeat_view(in_itemsets_vw),
+                   stapl::make_repeat_view(out_itemsets_vw) );
+}
+
+// ------------------------------ STEP 5 ------------------------------
+
+struct aggregate_flat_wf {
+  void operator() (SegView seg_vw, RepView & bin_itemsets_vw ) {
+    ulong count = 0;
+    ulong seg_ctr = 0;
+    typename SegView::iterator seg_it;
+    for ( seg_it = seg_vw.begin(); seg_it != seg_vw.end(); ++seg_it ) {
+      vec_item_tp itemset = *seg_it;
+      ulong size = itemset.size();
+      count += (1 + size);
+      ++seg_ctr;
+    }
+
+    vec_item_tp buffer(1+count);
+    ulong buf_ctr = 0;
+    buffer[buf_ctr++] = seg_ctr;
+    for ( seg_it = seg_vw.begin(); seg_it != seg_vw.end(); ++seg_it ) {
+      vec_item_tp itemset = *seg_it;
+      ulong size = itemset.size();
+      buffer[buf_ctr++] = size;
+      for ( ulong i=0; i<size; i++ ) {
+        buffer[buf_ctr++] = itemset[i];
+      }
+    }
+    bin_itemsets_vw[m_loc_id] = buffer;
+  }
+};
+
+void aggregate_flat( pvec_vec_item_vw_tp & out_itemsets_vw,
+                     pvec_vec_item_vw_tp & bin_itemsets_vw ) {
+  ulong loc_id = out_itemsets_vw.get_location_id();
+
+  stapl::map_func( aggregate_flat_wf(loc_id),
+                   stapl::native_view(out_itemsets_vw),
+                   stapl::make_repeat_view(bin_itemsets_vw) );
+}

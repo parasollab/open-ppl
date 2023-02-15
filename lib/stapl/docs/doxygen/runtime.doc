@@ -1,0 +1,371 @@
+//////////////////////////////////////////////////////////////////////
+/// @defgroup runtimeSystem Runtime System
+/// @brief The STAPL Runtime System (RTS) is the runtime system of STAPL that
+///        provides platform abstraction and portable performance for the rest
+///        of the components of STAPL.
+///
+/// The STAPL Runtime System (RTS) provides support for, and abstracts,
+/// parallel processing for different parallel architectures (e.g., clusters,
+/// Cray Supercomputer, IBM Supercomputers and others), and for different
+/// parallel paradigms (e.g., C++11 threads, OpenMP, MPI) that would generally
+/// be used to run on such architectures.
+///
+/// Essentially, the RTS provides all the tools a developer needs to express
+/// parallelism. Most of STAPL's components, such as @ref pContainers,
+/// @ref pViews, @ref paragraph, rely heavily on the RTS. Details of parallel
+/// execution are handled by the run-time system, allowing other components to
+/// cleanly express a given concept.
+///
+/// Currently, the RTS contains the following main components:
+/// -# @ref ARMI, the Adaptive Remote Method Invocation primitives that are
+///    designed to abstract communication and synchronization,
+/// -# @ref serialization that allows the transport of C++ objects seemlessly
+///    when doing communication,
+/// -# @ref executors that handle the execution of tasks that are deemed
+///    runnable from the @ref paragraph,
+/// -# @ref counters that abstract platform specific counters, such as
+///    wall-clock timers, cache miss/hit counters and others and
+/// -# @ref instrumentation that provides hooks to tools such as TAU, Vampir,
+///    MPE and others for instrumenting STAPL code.
+//////////////////////////////////////////////////////////////////////
+
+
+
+//////////////////////////////////////////////////////////////////////
+/// @defgroup ARMI Adaptive Remote Method Invocation (ARMI)
+/// @ingroup runtimeSystem
+/// @brief Parallelism, communication and synchronization support.
+///
+/// ARMI (Adaptive Remote Method Invocation) primitives are designed to abstract
+/// the creation, registration, communication and synchronization of parallelism
+/// in a STAPL program, allowing for performance and portability on different
+/// systems.
+///
+/// The unit of parallel execution is called a @c location. Contrary to the
+/// concept of shared-memory threads, locations may or may not live in the same
+/// address space. As such, it is undefined behavior to try to share writeable
+/// global variables, references and pointers, including static class members,
+/// between locations.
+///
+/// Upon program startup, all locations begin SPMD execution in parallel. There
+/// are no purely sequential regions. The starting point for execution is
+///
+/// @code stapl::exit_code stapl_main(int argc, char* argv[]) @endcode
+///
+/// which replaces the sequential standard
+///
+/// @code int main(int argc, char* argv[]) @endcode
+///
+/// The primitives provide shared-object parallelism through distributed objects
+/// named @c p_objects. Locations communicate with each other using Remote
+/// Method Invocations (RMI) on distributed objects. As such, each location in
+/// which a distributed object has been constructed has a local part of the
+/// distributed object.
+///
+/// Distributed objects are identified by a handle, and their local objects are
+/// identified by that handle (@ref stapl::rmi_handle) and a location id. As
+/// such, all objects that are communication targets must have a handle and
+/// register with it. This handle allows for proper address translation between
+/// locations.
+///
+/// Since each location owns a local portion of the distributed object, it is
+/// not necessary for a location to use RMI to access its local object. However,
+/// it is still valid to use RMI on the local objects. It is up to the
+/// distributed object implementation to keep track of which portions are local
+/// and which are remote.
+///
+/// Some communication primitives are collective, meaning all locations must
+/// call the function before it can complete. Collective calls typically need to
+/// perform complicated communication patterns among all locations, such as
+/// reductions and broadcasts. The rest of the communication calls are
+/// point-to-point or one-sided collective operations, and hence need to be
+/// called by only one location.
+///
+/// Point-to-point calls cannot be used to explicitly synchronize specific
+/// locations. Collective calls imply synchronization if they return a value.
+///
+/// Any RMI call may be aggregated and/or combined for improved performance, by
+/// decreasing the amount of network congestion that can happen due to many
+/// small messages. See @ref stapl::set_aggregation() for more details.
+///
+/// To ensure portability, only these primitives should be used to express
+/// parallelism and synchronization within a STAPL program. The actual
+/// implementation varies (OpenMP, pthreads, MPI, etc). Even if it is known that
+/// the primitives have been implemented a certain way for a certain system,
+/// using calls outside this specification (e.g., MPI calls) is non-portable and
+/// highly discouraged.
+///
+/// <b>SEMANTICS OF RMIs:</b>\n
+/// RMIs make a number of guarantees. First, RMI requests always maintain order,
+/// i.e., a newer request may not overtake and execute before an older request,
+/// unless explicitly specified (e.g., the unordered primitives). However, there
+/// is no guarantee of fairness between locations. For example, although
+/// locations 0 and 1 may simultaneously issue requests to location 2, location
+/// 2 may receive all of location 1's requests before receiving any of location
+/// 0's requests.
+///
+/// Second, remotely invoked methods execute atomically, i.e., they will not be
+/// interrupted by other incoming requests or local operations. The only
+/// exception is if the remotely invoked method explicitly uses any of the
+/// primitives. In this case, all operations before the usage are atomic, as
+/// well as all operations after, until either the end of the method or the next
+/// RMI operation.
+///
+/// RMI also has a few semantic differences from traditional C++ method
+/// invocation. First, the arguments to RMI are pass-by-value, regardless of
+/// type (e.g., pointers and references), i.e., the calling location will not
+/// see any modifications made to the arguments. Likewise, the receiving
+/// location will not see any modifications made to a return value of an RMI.
+/// References and pointers are not allowed as return values.
+///
+/// Second, although remotely invoked methods may use and modify the supplied
+/// arguments freely, they should should not store pointers or references to the
+/// arguments after the invocation completes. This allows the runtime to reuse
+/// buffers, instead of continuously allocating space. Also, since arguments may
+/// exist within RMI maintained buffers, remotely invoked methods should not try
+/// to delete/free the object, or perform a @c realloc().
+///
+/// In many cases, especially when using aggregation settings greater than 1,
+/// starting a request does not imply it has been transferred to or executed by
+/// the destination location. There are three stages of a request: creation,
+/// issue, and execution. Only the creation stage is guaranteed to complete when
+/// asynchronous calls complete, which gathers and stores enough information to
+/// ensure that the request may subsequently execute as expected. After
+/// aggregation settings are met, a group of requests is issued to the
+/// destination location, performing the necessary data transfer.
+///
+/// <b>OPTIMAL USAGE:</b>\n
+/// As in traditional C++ method invocation, the style of passing arguments can
+/// have a significant impact on performance. Most arguments are passed quicker
+/// as a const reference, since no intermediate copies are necessary. Although
+/// RMIs require a copy from the calling to the receiving location, to preserve
+/// copy-by-value semantics, all other copies will be eliminated. It is almost
+/// always quickest to pass an object of type @c T as a <tt>T const&</tt> if it
+/// will not be mutated and <tt>sizeof(T)>sizeof(T*)</tt>.
+///
+/// @warning Some compilers have problems with function template argument
+///          deduction. If your compiler issues such an error, it may be related
+///          to several issues: multiple member functions of the class matching
+///          the member functions name, arguments that require implicit casting
+///          before properly matching the member functions expected arguments
+///          etc. A simple solution is to specify a member function more
+///          explicitly:
+///          @code
+///            Rtn (Class::*pmf)(Args...) = &Class::f;
+///            async_rmi(..., ..., pmf, ...);
+///          @endcode
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+/// @defgroup ARMITags ARMI Tags
+/// @ingroup ARMI
+/// @brief ARMI primitives tags.
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+/// @defgroup ARMITypeTraits ARMI Type traits
+/// @ingroup ARMI
+/// @brief Type traits related to ARMI.
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+/// @defgroup distributedObjects Distributed objects
+/// @ingroup ARMI
+/// @brief Distributed object creation, registration, retrieval and destruction.
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+/// @defgroup ARMIOneSided ARMI One-sided primitives
+/// @ingroup ARMI
+/// @brief One-sided (point-to-point or point-to-many) communication primitives.
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+/// @defgroup ARMICollectives ARMI Collective primitives
+/// @ingroup ARMI
+/// @brief Collective communication primitives.
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+/// @defgroup ARMISyncs ARMI Synchronization primitives
+/// @ingroup ARMI
+/// @brief Synchronization primitives.
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+/// @defgroup ARMIUnordered ARMI Unordered primitives
+/// @ingroup ARMI
+/// @brief Communication primitives with relaxed consistency.
+///
+/// Unordered primitives may violate the RMI consistency model.
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+/// @defgroup ARMIAggregation Request aggregation control
+/// @ingroup ARMI
+/// @brief Primitives that control aggregation.
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+/// @defgroup ARMIUtilities ARMI Utilities
+/// @ingroup ARMI
+/// @brief Utility classes and variables.
+//////////////////////////////////////////////////////////////////////
+
+
+
+//////////////////////////////////////////////////////////////////////
+/// @defgroup serialization Serialization
+/// @ingroup runtimeSystem
+/// @brief Support for packing/unpacking of arbitrary types.
+///
+/// During communication transport, all RMI arguments are copied. The specific
+/// copying method varies with the type of the object. The RTS obtains
+/// information about an object to determine the optimal means of
+/// packing/unpacking and copying from its type.
+///
+/// Simple types, such as fundamental types (@c int, @c double etc) are packed
+/// by copying them using @c memcpy().
+///
+/// More complex types require extra marshalling information. See
+/// @ref stapl::typer for more information.
+///
+/// Distributed objects (@ref stapl::p_object, @ref stapl::rmi_handle) are never
+/// packed. When something that references a distributed object has to
+/// communicated (e.g a pointer, and @c std::reference_wrapper or anything
+/// similar) then a @ref stapl::rmi_handle::light_reference or
+///  @ref stapl::rmi_handle::reference is being transported instead.
+//////////////////////////////////////////////////////////////////////
+
+
+
+//////////////////////////////////////////////////////////////////////
+/// @defgroup executors Executors
+/// @ingroup runtimeSystem
+/// @brief @ref stapl::paragraph_impl::paragraph task execution support.
+///
+/// The executor is the component that allows the @ref paragraph to schedule
+/// runnable tasks. Each paragraph is associated with one @ref stapl::executor.
+/// Once all the dependencies of a task have been satisfied, it is added to the
+/// executor, along with any required scheduling information. Each
+/// @ref stapl::executor is added to the gang's @ref stapl::gang_executor.
+///
+/// The RTS is going through each @ref stapl::executor in the
+/// @ref stapl::gang_executor executing its tasks according to the scheduling
+/// information.
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+/// @defgroup scheduling Scheduling information
+/// @ingroup executors
+/// @brief Scheduling information support.
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+/// @defgroup workstealing Work Stealing
+/// @ingroup executors
+/// @brief Work stealing support.
+//////////////////////////////////////////////////////////////////////
+
+
+
+//////////////////////////////////////////////////////////////////////
+/// @defgroup counters Counters
+/// @ingroup runtimeSystem
+/// @brief Hardware counters support.
+///
+/// The counters are abstracting the hardware counters, such as wall-clock
+/// timers, cache hits/misses and others. Different hardware counters are
+/// available in its platform so not all the available counters may be
+/// available.
+//////////////////////////////////////////////////////////////////////
+
+
+
+//////////////////////////////////////////////////////////////////////
+/// @defgroup instrumentation Instrumentation
+/// @ingroup runtimeSystem
+/// @brief Runtime System and application instrumentation support.
+///
+/// The RTS has hooks to support instrumentation tools such as TAU, Vampir, MPE
+/// and others so users can identify performance issues with the @ref ARMI
+/// primitives, identify and visualize communication patterns.
+//////////////////////////////////////////////////////////////////////
+
+
+
+//////////////////////////////////////////////////////////////////////
+/// @defgroup runtimeSystemImpl Runtime System implementation
+/// @ingroup runtimeSystem
+/// @brief Support functions and classes for the STAPL Runtime System (RTS).
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+/// @defgroup runtimeConfig Runtime Configuration
+/// @ingroup runtimeSystemImpl
+/// @brief Compile-time configuration components of the @ref runtimeSystem.
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+/// @defgroup runtimeUtility Runtime Utilities
+/// @ingroup runtimeSystemImpl
+/// @brief Support functions and classes for the @ref runtimeSystem.
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+/// @defgroup runtimeMetadata Runtime Metadata
+/// @ingroup runtimeSystemImpl
+/// @brief @ref runtimeSystem metadata managing functions and classes.
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+/// @defgroup processCommunication Distributed Memory Communication
+/// @ingroup runtimeSystemImpl
+/// @brief Support functions and classes for communicating on distributed memory
+///        for the @ref runtimeSystem.
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+/// @defgroup runtimeCollectives Collective Operations support
+/// @ingroup runtimeSystemImpl
+/// @brief Support functions and classes for collective operations of the
+///        @ref runtimeSystem.
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+/// @defgroup concurrency Threading Support
+/// @ingroup runtimeSystemImpl
+/// @brief Support functions and classes for threads and mixed-mode for the
+///        @ref runtimeSystem.
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+/// @defgroup requestBuildingBlock ARMI Requests Building Blocks
+/// @ingroup runtimeSystemImpl
+/// @brief Support functions and class for @ref ARMI.
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+/// @defgroup ARMITypeTraitsImpl ARMI Type traits implementation
+/// @ingroup runtimeSystemImpl
+/// @brief Support functions and classes for @ref ARMITypeTraits.
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+/// @defgroup serializationImpl Serialization implementation
+/// @ingroup runtimeSystemImpl
+/// @brief Support functions and classes for @ref serialization.
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+/// @defgroup executorsImpl Executors implementation
+/// @ingroup runtimeSystemImpl
+/// @brief Support functions and classes for @ref executors.
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+/// @defgroup instrumentationImpl Instrumentation implementation
+/// @ingroup runtimeSystemImpl
+/// @brief Support functions and classes for @ref instrumentation.
+//////////////////////////////////////////////////////////////////////
+

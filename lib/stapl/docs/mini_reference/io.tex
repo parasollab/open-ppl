@@ -1,0 +1,148 @@
+\chapter{Parallel Input/Output}
+
+\section{User Messages}
+
+STAPL is a SPMD system.  So, every statement in a program
+run using STAPL will be executed by every process.  This means typical
+C++ input and output statements will perform in duplicate, unless something 
+is done to avoid this.
+
+The STAPL basic parallel algorithms ( \texttt{
+map\_func, map\_reduce, scan, reduce, serial, serial\_io, do\_once ) }
+distribute execution among processing locations, rather than duplicate it.
+The last two constructs are used to perform I/O without duplication.
+
+The \texttt{ do\_once }
+is used to generate messages to the user.  It executes a work function one
+time on location zero.  Define an appropriate work function as follows:
+
+\begin{verbatim}
+#include <iostream> 
+#include <stapl/utility/do_once.hpp>
+#include <stapl/runtime.hpp> 
+
+template<typename Value>
+struct msg_val {
+private:
+  const char *m_txt;
+  Value m_val;
+public:
+  msg_val(const char *text, Value val)
+    : m_txt(text), m_val(val)
+  { }
+
+  typedef void result_type;
+  result_type operator() () {
+    cout << m_txt << " " << m_val << endl;
+  }
+  void define_type(stapl::typer& t) {
+    t.member(m_txt);
+    t.member(m_val);
+  }
+};
+\end{verbatim}
+
+Execute the work function in your application as follows:
+
+\begin{verbatim}
+  stapl::do_once( msg_val<int>( "The answer is ", 42 ) );
+\end{verbatim}
+
+If you are familiar with the C++11 \texttt{lambda} feature, you can use it
+with \texttt{do\_once} to generate user messages, without having to use
+a separate work function.
+
+\begin{verbatim}
+  stapl::do_once([&](void) {
+    cout << "The answer is " << 42 << endl;
+  });
+\end{verbatim}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{Serial Data Values}
+
+The 
+\texttt{
+serial\_io }
+basic algorithm is used to apply a work function to the elements of
+the input views in serial order.  The work function will only be executed
+on location 0.
+
+The STAPL \texttt{stream} class is used to encapsulate the C++ 
+\texttt{iostream} file classes in a form that can be used with STAPL.
+
+In order to read or write STAPL containers using \texttt{serial\_io},
+we need a work function like the following.
+
+\begin{verbatim}
+class get_val_wf
+{
+private:
+  stapl::stream<ifstream> m_zin;
+public:
+  get_val_wf(stapl::stream<ifstream> const& zin)
+    : m_zin(zin)
+  { }
+  typedef void result_type;
+  template <typename Ref>
+  result_type operator()(Ref val) {
+    m_zin >> val;
+  }
+  void define_type(stapl::typer& t) {
+    t.member(m_zin);
+  }
+};
+\end{verbatim}
+
+The work function is used as follows.  First, we open the file, and then
+we apply 
+
+\begin{verbatim}
+  stapl::vector<int> a_ct(size);
+  stapl::vector_view<vector<int> > a_vw(a_ct);
+  const char *file_name = "path";
+  stapl::stream<ifstream> zin;
+  zin.open(file_name);
+  stapl::serial_io(get_val_wf(zin), a_vw);
+\end{verbatim}
+
+Performing output from a STAPL parallel container is done in a completely
+analogous manner, substituting \texttt{ofstream} for \texttt{ifstream}, and
+the insert operator $<<$ for the extract operator $>>$.
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{Parallel Data Values}
+
+The STAPL graph class provides some special methods that make it possible
+to perform parallel I/O on graphs stored in files.  One method can perform
+\textit{sharding} on an input file.  This process splits a file into a set
+of files, with a metadata file that describes the set as a whole.  These
+files can then each be read independently by separate processing locations.
+The sharder is called as follows;
+
+\begin{verbatim}
+  const char *file_name = "path";
+  int block_size = 100;
+  stapl::graph_sharder(file_name,block_size);
+  stapl::rmi_fence();
+\end{verbatim}
+
+Sharding is possible for graphs because the edge list representation
+that is stored on a file can be easily be made into self-describing parts.
+
+A file containing a graph edge list that has been sharded can be read
+in parallel with code that looks like the following
+
+\begin{verbatim}
+typedef stapl::graph<stapl::UNDIRECTED, stapl::NONMULTIEDGES, int, int>
+        graf_int_tp;
+typedef stapl::graph_view<graf_int_tp> graf_int_vw_tp;
+
+graf_int_vw_tp gr_vw = stapl::sharded_graph_reader<graf_int_tp>
+                       (filename, stapl::read_adj_list_line() );
+\end{verbatim}
+
+Future releases of STAPL may included sharding for representations of
+other data structures which can be made self-identifying, such as sparse arrays.

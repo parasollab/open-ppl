@@ -1,0 +1,226 @@
+# Copyright (c) 2000-2009, Texas Engineering Experiment Station (TEES), a
+# component of the Texas A&M University System.
+#
+# All rights reserved.
+#
+# The information and source code contained herein is the exclusive
+# property of TEES and may not be disclosed, examined or reproduced
+# in whole or in part without explicit written authorization from TEES.
+
+#############################################################################
+# See GNUmakefile.STAPL_README
+###############################################################################
+
+# These definitions assume that the default for MPI is the specified compiler
+# extension. For example, if you specify LINUX_gcc, g++ is assumed to be the
+# default compiler for MPI. It may be necessary to set environment variables
+# (e.g., MPICH_CCC, LAMHCP) and adjust paths to enable the desired compiler if
+# it differs from the default.
+
+
+# IBM AIX / IBM xlC
+#
+ifeq ($(platform), AIX_xlC)
+  FOUNDPLAT       =1
+  stl             =./tools/stl_others
+  CC              =mpCC_r
+  AR              =ar -rv -X64
+  CXXFLAGS       +=-qenum=small -qstrict -q64 -qrtti=all -qtemplatedepth=1000 \
+                   -qmaxmem=-1 -Wall -Werror -Wno-unknown-pragmas -std=c++11
+  STAPL_CXXFLAGS +=-DSTAPL_STL_DIR=/usr/local/xlC11.1/usr/vacpp/include
+  USER_CXXFLAGS  +=-O3 -DSTAPL_NDEBUG -qarch=auto -qtune=auto
+  LIB            +=-lpmapi
+  staplrun        =export MP_HOSTFILE=~/.host.list; export MP_RESD=no; \
+                   export MP_SHARED_MEMORY=yes; export MP_PROCS=$(1); poe
+endif
+
+
+# Linux / GCC
+#
+ifeq ($(platform), LINUX_gcc)
+  FOUNDPLAT =1
+  CXXFLAGS +=-Wall -Werror -Wno-unused-local-typedefs -Wno-unknown-pragmas \
+             -Wno-misleading-indentation -Wno-deprecated-declarations \
+             -std=c++11 -D_GLIBCXX_USE_CXX11_ABI=0
+  LIB      +=-lrt
+endif
+
+
+# CRAY / GCC
+#
+ifeq ($(platform), CRAY_gcc)
+  FOUNDPLAT      =1
+  CC             =CC
+  CXXFLAGS      +=-DBOOST_TR1_GCC_INCLUDE_PATH=g++ \
+                  -Wall -Wno-unknown-pragmas -Wno-unused-local-typedefs \
+                  -Wno-misleading-indentation -Wno-deprecated-declarations \
+                  -std=c++11 -D_GLIBCXX_USE_CXX11_ABI=0
+  USER_CXXFLAGS +=-O3 -DSTAPL_NDEBUG
+  LIB           +=-lrt
+  staplrun       =aprun -n $(1)
+endif
+
+
+# CRAY / PGI
+#
+ifeq ($(platform), CRAY_pgi)
+  FOUNDPLAT     =1
+  CC            =CC
+  CXXFLAGS      =--gnu --gnu_version 4_8 --c++11
+  USER_CXXFLAGS =-O3 -DSTAPL_NDEBUG
+  LIB          +=-lrt
+  staplrun      =aprun -n $(1)
+endif
+
+
+# CRAY / CCE
+#
+ifeq ($(platform), CRAY_cce)
+  FOUNDPLAT     =1
+  CC            =CC
+  USER_CXXFLAGS =-O3 -DSTAPL_NDEBUG
+  LIB          +=-lrt
+  staplrun      =aprun -n $(1)
+endif
+
+
+# Linux / Intel compiler
+#
+ifeq ($(platform), LINUX_icc)
+  FOUNDPLAT =1
+  CXXFLAGS +=-Wall -Werror -Wno-unknown-pragmas -std=c++11 -Wno-deprecated \
+             -wd177 -wd1170 -wd3180 -D_GLIBCXX_USE_CXX11_ABI=0
+  LIB      +=-ltbb -ltbbmalloc -lrt
+endif
+
+
+# Solaris (SPARC T2) / GCC
+#
+ifeq ($(platform), SOLARIS_gcc)
+  FOUNDPLAT       =1
+  CXXFLAGS       +=-m32 -mcpu=niagara2 --param ggc-min-heapsize=1024000 \
+                   -Wall -Werror -Wno-unknown-pragmas -std=c++11 \
+                   -Wno-misleading-indentation -Wno-deprecated-declarations \
+                   -D_GLIBCXX_USE_CXX11_ABI=0
+  # fixes alignment issues
+  STAPL_CXXFLAGS += -DSTAPL_RUNTIME_DEFAULT_ALIGNMENT=8
+  LIB            +=-lrt
+endif
+
+
+# Mac OS/X (Darwin) / GCC
+#
+ifeq ($(platform), MACOSX_gcc)
+  FOUNDPLAT =1
+  CXXFLAGS +=-Wall -Werror -Wno-unknown-pragmas -std=c++11 \
+             -Wno-misleading-indentation -Wno-deprecated-declarations \
+             -D_GLIBCXX_USE_CXX11_ABI=0
+  LIB      +=-lstdc++
+endif
+
+
+# Clang
+#
+ifeq ($(platform), clang)
+  # Make clang impersonate the gcc version of the current stl
+  TMP_GCC_STR:= $(notdir $(stl))
+  # Grab a space-separated gcc version string
+  TMP_GCC:=$(shell echo "$(TMP_GCC_STR)" | tr "." " ")
+  # Grab the install path of the current gcc
+  TMP_GCC_ROOT  := $(patsubst %/bin/,%/,$(dir $(shell which g++)))
+  TMP_GCC_ROOT  := $(strip $(TMP_GCC_ROOT))
+  TMP_GCC_FLAGS += -DSTAPL__GNUC__=$(word 1, $(TMP_GCC)) \
+                   -DSTAPL__GNUC_MINOR__=$(word 2, $(TMP_GCC)) \
+                   -DSTAPL__GNUC_PATCHLEVEL__=$(word 3, $(TMP_GCC))
+  # This is only available in the newer trunk versions of clang.
+  TMP_GCC_FLAGS += -gcc-toolchain $(TMP_GCC_ROOT)
+
+  FOUNDPLAT =1
+  CXXFLAGS +=-fno-color-diagnostics $(TMP_GCC_FLAGS) \
+             -Wno-constexpr-not-const -Wall -Werror -Wno-unknown-pragmas \
+             -Wno-deprecated-register -Wno-unused-command-line-argument \
+             -Wno-deprecated-declarations \
+             -Wno-unused-local-typedef \
+             -std=c++11 -ftemplate-depth=1024
+  LIB      +=-lrt
+endif
+
+
+# IBM BlueGene/P / GCC
+#
+ifeq ($(platform), BGP_gcc)
+  ifeq "$(BG_SYS)" ""
+    BG_SYS=/bgsys/drivers/ppcfloor
+  endif
+
+  FOUNDPLAT     =1
+  CC            =$(BG_SYS)/comm/bin/mpicxx
+  CXXFLAGS     +=-I$(BG_SYS)/arch/include/ -DBOOST_NO_INTRINSIC_WCHAR_T \
+                 -Wall -Wno-unknown-pragmas -std=c++11 \
+                 -D_GLIBCXX_USE_CXX11_ABI=0
+  USER_CXXFLAGS =-O3 -DSTAPL_NDEBUG
+  LIB          +=-lrt
+  AR            =$(BG_SYS)/gnu-linux/bin/powerpc-bgp-linux-ar crs
+endif
+
+
+# IBM BlueGene/Q / GCC
+#
+ifeq ($(platform), BGQ_gcc)
+  ifeq "$(BG_SYS)" ""
+    BG_SYS=/bgsys/drivers/ppcfloor
+  endif
+
+  FOUNDPLAT     =1
+  CC            =mpig++-4.8.4
+  CXXFLAGS     +=-I$(BG_SYS)/arch/include/ -DBOOST_NO_INTRINSIC_WCHAR_T \
+                 -DBOOST_NO_STD_WSTRING -Wall -Wno-unknown-pragmas -std=c++11 \
+                 -Wno-misleading-indentation -Wno-deprecated-declarations \
+                 -D_GLIBCXX_USE_CXX11_ABI=0
+  USER_CXXFLAGS =-O3 -DSTAPL_NDEBUG
+  LIB          +=-lrt
+  AR            =$(BG_SYS)/gnu-linux/bin/powerpc64-bgq-linux-ar crs
+endif
+
+
+# Android / GCC
+#
+ifeq ($(platform), ANDROID_gcc) # Android ndk
+  ifeq "$(ANDROID_NDK_ROOT)" ""
+    ANDROID_NDK_ROOT=/scratch/norfolk/afidel/android/ndk-8e
+  endif
+  ANDROID_GCC_VERSION       =4.7
+  ANDROID_NDK_REVISION      =android_ndk_r8e
+  ANDROID_NDK_TOOLCHAIN_BIN =$(ANDROID_NDK_ROOT)/toolchains/arm-linux-androideabi-$(ANDROID_GCC_VERSION)/prebuilt/linux-x86_64/bin
+  ANDROID_STL_ROOT          =$(ANDROID_NDK_ROOT)/sources/cxx-stl/gnu-libstdc++/$(ANDROID_GCC_VERSION)
+  ANDROID_PLATFORM_ROOT     =$(ANDROID_NDK_ROOT)/platforms/android-14/arch-arm
+  BOOST_ROOT                =$(ANDROID_NDK_ROOT)/sources/boost-1_53_0
+
+  FOUNDPLAT =1
+  stl       =./tools/libstdc++/4.7.0
+  CC        =$(ANDROID_NDK_TOOLCHAIN_BIN)/arm-linux-androideabi-g++
+  AR        =$(ANDROID_NDK_TOOLCHAIN_BIN)/arm-linux-androideabi-ar cr
+  CXXFLAGS +=-fexceptions -frtti -funwind-tables \
+             -D__ARM_ARCH_5__ -D__ARM_ARCH_5T__ -D__ARM_ARCH_5E__ \
+             -D__ARM_ARCH_5TE__ \
+             -march=armv5te -mtune=xscale -msoft-float -mthumb \
+             -fno-strict-aliasing -finline-limit=64 -Wa,--noexecstack \
+             -DANDROID -D__ANDROID__ \
+             -fvisibility=hidden -fvisibility-inlines-hidden \
+             -fdata-sections -D__arm__ -D_REENTRANT -D_GLIBCXX__PTHREADS \
+             -I$(ANDROID_STL_ROOT)/include \
+             -I$(ANDROID_STL_ROOT)/libs/armeabi/include \
+             -I$(ANDROID_PLATFORM_ROOT)/usr/include \
+             --sysroot=/scratch/norfolk/afidel/android/ndk/platforms/android-14/arch-arm \
+             -fno-omit-frame-pointer -fstack-protector \
+             -Wl,--no-undefined -Wl,-z,noexecstack -Wl,-z,relro -Wl,-z,now \
+             -Wl,--gc-sections -Wl,-z,nocopyreloc \
+             -Wall -Werror -Wno-unknown-pragmas -std=c++11 \
+             -D_GLIBCXX_USE_CXX11_ABI=0
+  LIB +=-L$(ANDROID_STL_ROOT)/libs/armeabi -lgnustl_static
+  LIB_EPILOGUE +=-lgnustl_static
+
+  STAPL_CXXFLAGS +=-DSTAPL_DONT_USE_MPI
+
+  staplrun=$(STAPL)/scripts/androidlaunch.sh $(1)
+endif

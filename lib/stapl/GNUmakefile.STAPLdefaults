@@ -1,0 +1,239 @@
+# Copyright (c) 2000-2009, Texas Engineering Experiment Station (TEES), a
+# component of the Texas A&M University System.
+#
+# All rights reserved.
+#
+# The information and source code contained herein is the exclusive
+# property of TEES and may not be disclosed, examined or reproduced
+# in whole or in part without explicit written authorization from TEES.
+
+##############################################################################
+# See GNUmakefile.STAPL_README
+###############################################################################
+
+ifndef STAPL
+  $(error The "STAPL" variable should be defined before including this file)
+endif
+
+# supported platforms
+PLATFORMS=generic AIX_xlC LINUX_gcc CRAY_gcc CRAY_pgi CRAY_cce LINUX_icc SOLARIS_gcc \
+          MACOSX_gcc clang BGP_gcc BGQ_gcc ANDROID_gcc
+
+# supported STL versions
+FULLPATH_STLS=$(shell find $(STAPL)/tools/libstdc++ -type d -type d -name "[456]*" && find $(STAPL)/tools/libstdc++ -type l -name "[456]*" | sort)
+STLS=$(shell echo $(FULLPATH_STLS) | sed "s,$(STAPL),\.,g") ./tools/stl_others
+
+# detect pkg-config
+ifeq "$(PKG_CONFIG)" ""
+  PKG_CONFIG=$(shell which pkg-config 2> /dev/null)
+endif
+
+# set a flag if all are set
+ALLHERE=0
+ifdef platform
+  ifdef stl
+    ALLHERE=1
+  endif
+endif
+
+# try to read the build makefile if it exists
+THISBUILD=$(STAPL)/GNUmakefile.thisbuild
+FOUND=$(shell test -f $(THISBUILD) > /dev/null ; echo $$?)
+ifneq ($(ALLHERE),1)
+  ifeq ($(FOUND),0)
+    include $(THISBUILD) # this is created when we first start a platform
+  endif
+else
+  ifneq ($(FOUND),0) # all parameters provided, but no file exists... create it
+    $(shell echo platform=$(platform) >> $(THISBUILD))
+    $(shell echo stl=$(stl) >> $(THISBUILD))
+    $(shell echo USER_CXXFLAGS=$(USER_CXXFLAGS) >> $(THISBUILD))
+    $(shell echo USER_LIB=$(USER_LIB) >> $(THISBUILD))
+  endif
+endif
+
+# test again - set a flag if all are set
+ALLHERE=0
+ifdef platform
+  ifdef stl
+    ALLHERE=1
+  endif
+endif
+
+# The user specifies the desired platform, which in-turn allows us to set the
+# appropriate variables. If both not specified, give error
+ifneq ($(ALLHERE),1)
+  $(warning USAGE: gmake platform=P stl=S [target],)
+  $(warning where P={$(PLATFORMS)})
+  $(warning and   S={$(STLS)})
+endif
+
+ifndef platform
+commandlineerror:
+	@echo ""
+	@echo "Start by choosing one of the below (cut and paste): "
+	@echo ""
+	@for p in `echo $(PLATFORMS)` ; do echo "gmake platform=$$p" ; done
+else
+  FOUND=$(shell echo $(PLATFORMS) | grep $(platform) > /dev/null ; echo $$?)
+  ifneq ($(FOUND),0)
+    $(error platform $(platform) is not one of $(PLATFORMS))
+  endif
+  ifndef stl
+commandlineerror:
+	@echo ""
+	@echo "Finally, choose an STL library (cut and paste): "
+	@echo ""
+	@GCC_VER=`gcc -dumpversion` ; if [ "$GCC_VER" != "" ] ; then echo "" ; echo "A quick check of gcc indicates tools/libstdc++/`gcc -dumpversion` _MIGHT_ be the correct libstdc++ choice (if available)" ; echo "" ; fi
+  else
+    FOUND=$(shell echo $(STLS) | grep $(stl) > /dev/null ; echo $$?)
+    ifneq ($(FOUND),0)
+      $(error STL $(stl) is not one of $(STLS))
+    endif
+  endif
+endif
+
+# STAPL required flags, include paths and libs
+STAPL_FLAGS=-D_STAPL
+STAPL_INCLUDE_DIRS=-I$(STAPL)/$(stl) -I$(STAPL)/tools -I$(STAPL)
+STAPL_CXXFLAGS=$(STAPL_FLAGS) $(STAPL_INCLUDE_DIRS)
+STAPL_LIBRARIES=-L$(STAPL)/lib -lstapl
+STAPL_LIBRARIES_ONLY_RTS=-L$(STAPL)/lib -lstapl_rt
+
+# default tools
+CC=mpic++
+AR=ar cr
+staplrun=mpiexec -n $(1)
+
+# find platform
+FOUNDPLAT=0
+include $(STAPL)/GNUmakefile.platforms
+# if platform is generic, then already found
+ifeq ($(platform), generic)
+  FOUNDPLAT=1
+endif
+ifeq ($(FOUNDPLAT), 0) # not supported
+  $(error $(platform) not presently supported.)
+endif
+
+# compiler override
+ifneq "$(CC_USER)" ""
+  CC=$(CC_USER)
+endif
+
+# archiver override
+ifneq "$(AR_USER)" ""
+  AR=$(AR_USER)
+endif
+
+# Boost discovery
+#
+# The following variables are required for compiling STAPL. They can be computed
+# automatically from the BOOST_ROOT, but this may not work for all platforms. 
+# For platforms where boost is installed in /usr, export BOOST_ROOT=/usr
+# may be sufficient.
+#
+# Boost_INCLUDE_DIRS := the directories where the boost headers can be found
+# 											The default value is $(BOOST_ROOT)/include
+# Boost_LIBRARY_DIRS := the directories where the boost libs can be found
+# 											The default value is $(BOOST_ROOT)/lib
+# 											Note: on Ubuntu, should be /usr/lib/x86_64-linux-gnu/
+# Boost_LIBRARIES    := the list of -l flags to link against boost libs
+
+ifeq (,$(and $(Boost_INCLUDE_DIRS),$(Boost_LIBRARY_DIRS)))
+  ifeq (,$(BOOST_ROOT))
+    $(error BOOST_ROOT not defined. Try setting it or check your modules)
+  endif
+  Boost_INCLUDE_DIRS ?= $(BOOST_ROOT)/include
+  Boost_LIBRARY_DIRS ?= $(BOOST_ROOT)/lib
+endif
+
+# Test that Boost_INCLUDE_DIRS/Boost_LIBRARY_DIRS are valid directory paths
+ifeq (,$(realpath $(Boost_INCLUDE_DIRS)/.))
+ $(error Boost_INCLUDE_DIRS not set to a valid path)
+endif
+ifeq (,$(realpath $(Boost_LIBRARY_DIRS)/.))
+ $(error Boost_LIBRARY_DIRS not set to a valid path)
+endif
+
+ifeq "$(Boost_LIBRARIES)" ""
+  Boost_LIBRARIES=-L$(Boost_LIBRARY_DIRS) -l$(shell ls $(Boost_LIBRARY_DIRS) | grep -e boost_serialization | head -n 1 | sed 's/lib//g' | sed 's/\.so//g' | sed 's/\.a//g') -l$(shell ls $(Boost_LIBRARY_DIRS) | grep -e boost_system | head -n 1 | sed 's/lib//g' | sed 's/\.so//g' | sed 's/\.a//g')
+	# "Make sure we found all the libraries, i.e. we don't have any "-l "
+ 	ifneq (,$(findstring -l , $(Boost_LIBRARIES)))
+    $(error Could not find all the necessary boost libraries. Please check your Boost_LIBRARY_DIRS or BOOST_ROOT. The current value is $(Boost_LIBRARY_DIRS))
+  endif
+endif
+AUTOFLAGS+=-I$(Boost_INCLUDE_DIRS)
+AUTOLIB+=$(Boost_LIBRARIES)
+# remove when boost::result_of<> issues have been fixed
+AUTOFLAGS+=-DBOOST_RESULT_OF_USE_TR1_WITH_DECLTYPE_FALLBACK
+
+# PAPI discovery
+ifdef PAPI_PREFIX
+  ifeq "$(PAPI_INCLUDE_DIRS)" ""
+    PAPI_INCLUDE_DIRS=-I$(PAPI_PREFIX)/include
+  endif
+  ifeq "$(PAPI_LIBRARIES)" ""
+    ifeq "$(PAPI_LIBRARY_DIRS)" ""
+      PAPI_LIBRARY_DIRS=$(PAPI_PREFIX)/lib
+    endif
+    PAPI_LIB=$(shell ls $(PAPI_LIBRARY_DIRS) | grep -e papi | head -n 1 | sed 's/lib//g' | sed 's/\.so//g' | sed 's/\.a//g')
+    ifeq "$(PAPI_LIB)" ""
+      $(error PAPI library could not be found.)
+    endif
+    PAPI_LIBRARIES=-L$(PAPI_LIBRARY_DIRS) -l$(PAPI_LIB)
+  endif
+  AUTOFLAGS+=-DSTAPL_USE_PAPI $(PAPI_INCLUDE_DIRS)
+  AUTOLIB+=$(PAPI_LIBRARIES)
+else
+  ifneq "$(PKG_CONFIG)" ""
+    PAPI_EXISTS =$(shell $(PKG_CONFIG) --exists papi && echo "1" || echo "0")
+    ifeq "$(PAPI_EXISTS)" "1"
+      PAPI_INCLUDE_DIRS =$(shell $(PKG_CONFIG) --cflags papi)
+      PAPI_LIBRARIES    =$(shell $(PKG_CONFIG) --libs papi)
+      AUTOFLAGS        +=-DSTAPL_USE_PAPI $(PAPI_INCLUDE_DIRS)
+      AUTOLIB          +=$(PAPI_LIBRARIES)
+    endif
+  endif
+endif
+
+# add user defined flags and libraries
+ifneq "$(USER_CXXFLAGS)" ""
+  AUTOFLAGS+=$(USER_CXXFLAGS)
+endif
+ifneq "$(USER_LIB)" ""
+  AUTOLIB+=$(USER_LIB)
+endif
+
+# add automatically discovered flags and libraries
+ifneq "$(AUTOFLAGS)" ""
+  CXXFLAGS+=$(AUTOFLAGS)
+endif
+ifneq "$(AUTOLIB)" ""
+  LIB+=$(AUTOLIB)
+endif
+
+# Here are some default/implicit rules that are useful
+%: %.cc
+	${CC} ${STAPL_CXXFLAGS} ${CXXFLAGS} -o $@ $< ${STAPL_LIBRARIES} ${LIB} ${LIB_EPILOGUE}
+
+%.o: %.cc
+	${CC} ${STAPL_CXXFLAGS} ${CXXFLAGS} -c $<
+
+%.o: %.cpp
+	${CC} ${STAPL_CXXFLAGS} ${CXXFLAGS} -c $<
+
+%_debug: CXXFLAGS +=-DSTAPL_DEBUG -g -DSHORT_TEST
+%_debug: %
+	@echo "Debug version of $< complete"
+
+define run_np4
+  $(call staplrun,4) ./$< $$ARGS; \
+  if [ $$? -ne 0 ] ; \
+    then echo "ERROR:: $@ - $< exited abnormally" ; \
+    else echo "PASS:: $@ - $< exited normally" ; \
+  fi # ; echo ARGS is $$ARGS
+endef
+
+run_%: %
+	@$(run_np4)

@@ -1,0 +1,27 @@
+/*
+// Copyright (c) 2000-2009, Texas Engineering Experiment Station (TEES), a
+// component of the Texas A&M University System.
+
+// All rights reserved.
+
+// The information and source code contained herein is the exclusive
+// property of TEES and may not be disclosed, examined or reproduced
+// in whole or in part without explicit written authorization from TEES.
+*/
+
+
+#ifndef STAPL_STL_OTHERS_VECTOR_H
+#define STAPL_STL_OTHERS_VECTOR_H
+
+// supports std::valarray<> packing through Boost.Serialization
+#include "stl_location.h"
+#include STAPL_STL_INCLUDE(vector)
+#include <stapl/runtime/serialization_fwd.hpp>
+#include "../libstdc++/proxy/vector.h"
+#if !defined(STD)
+# include <boost/serialization/valarray.hpp>
+# include <boost/serialization/vector.hpp>
+#endif
+
+#endif
+

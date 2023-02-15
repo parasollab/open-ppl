@@ -10,6 +10,10 @@ typedef mathtool::Vector<float, 4> Color4; ///< RGBA color, range from 0-1
 
 #ifdef __APPLE__
   #include <OpenGL/gl.h>
+#elif _WIN32
+  #define NOMINMAX
+  #include <windows.h>
+  #include <gl.h>
 #else
   #include <gl.h>
 #endif

@@ -1,0 +1,145 @@
+Whitespace
+
+1) Do Not Use Tabs!
+
+2) Use indentation of 2 spaces.
+2a) Namespace doesn't introduce a new level of indentation
+2b) public/private qualifiers in classes/structs are not indented.
+
+3) Put two lines between definitions unless they are inside a class/struct.
+  Definitions in a class may be separated by a single line.
+
+4) Put a space after keywords, generally no spaces around parens,
+  and use spaces to denote precedence
+
+    if (x) { }
+    if (a*b + c*d >= 0)
+    while () { }
+    func() {
+
+5) Do not insert spaces at the end of a line.
+
+6) Lines are limited to 80 characters long.  When breaking a line use 2 spaces
+ of indentation.
+
+
+Curly Braces
+
+1) Class/Struct/Function Definitions put opening brace on a new line.
+
+2) Control flow statements may leave braces on the same line.
+
+3) Use curly braces in case statements only if variables are declared.
+
+namespace stapl {
+
+class example
+{
+public:
+  void foo(int x)
+  {
+    if (x%2 == 0) {
+      std::cout << "x is 0 or even.\n";
+    } else {
+      std::cout << "x is odd.\n";
+    }
+  }
+};
+
+}
+
+
+Variables
+
+1) Variables are defined at the point of use.
+
+2) Put each variable declaration on a separate line.
+
+3) Explicit initialization is required.
+
+4) Use char* p, not char *p, when declaring pointers.
+
+5) Use T const& and T const* instead of const T& and const T*.
+
+
+7) The template keyword and template parameters are on a separate line.
+
+  template <typename T>
+  int foo(T x)
+  {}
+
+
+8) The return type of a function and the function name should be on same line
+   unless the return type pushes the line over 80 characters long.
+
+
+Naming Conventions
+
+9) No name can begin with an underscore.
+
+10) Variable names are all lower case with underscores (e.g., task_cnt).
+10a) Names of class/struct data members are prefaced with m_ (e.g., m_task_cnt).
+
+
+11) Class Names
+11a) Base class names have _base at the end (e.g., container_base).
+11b) Class/Struct names are all lower case with underscores (e.g. run_test_func).
+
+
+12) #ifdef guards are named with the general format STAPL_GROUP_FILENAME_H
+  where group is:
+    RUNTIME
+    CONTAINERS
+    VIEWS
+    PARAGRAPH
+    ALGORITHMS
+    etc.
+
+#ifdef guards for tests are named with the general format
+STAPL_GROUP_TEST_FILENAME_HPP
+
+
+13) Namespaces
+  Everything that a user code is expected to call is in the stapl namespace.
+  Helper functions and classes are in namespaces with names ending in _impl or
+  _details.
+
+
+14) Template parameters begin with a Capital and use JavaStyleNames.
+
+
+15) limit use of macros
+  macros are named using all uppercase with underscores between words
+
+
+16) Functions with no parameters have an explicit void parameter.
+  E.g., void x_to_y(void)
+
+
+17) type definitions end in _type.
+
+
+18) Do not leave commented out sections of code.  If code will be used in the
+  future it can be commented out and the section prefaced with an explanation of
+  why it is commented and when it will be uncommented.
+
+
+19) Commit policy
+ -- privately make sure all tests pass and record results in a log file.
+ -- code must be reviewed by two people. Email a diff of the changes and an
+      explanation of the changes to Timmie, Nathan, and Milan. The review will
+      be handled online. You can commit when two of them have signed off on the
+      changes.
+
+
+20) compiler warnings
+20a) Use -Wall in makefiles
+20b) Fix all warnings before committing.
+
+
+21) Use virtual functions only on demand (as needed)
+
+
+22) Use C++ casts, no c style casts.
+
+23) Prefer use of member initialization instead of assignment in constructors.

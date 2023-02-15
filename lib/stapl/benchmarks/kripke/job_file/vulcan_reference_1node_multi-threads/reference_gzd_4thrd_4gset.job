@@ -1,0 +1,16 @@
+#!/bin/bash
+#MSUB -l nodes=1
+#MSUB -l walltime=12:00:00
+#MSUB -q psmall
+#MSUB -V
+#MSUB -o /g/g92/shen10/reference_4thrd_4gset.gzd.out
+
+
+export STAPL_NUM_THREADS=1
+export OMP_NUM_THREADS=4
+
+cd /g/g92/shen10/STAPL_12175/benchmarks/kripke/reference/kripke-Linux/src/tools
+srun -n 1 --ntasks-per-node=8 ./kripke  --procs 1,1,1 --zones 12,24,24 --nest GZD --dir 2:1 --grp 4:1 --niter 8
+srun -n 1 --ntasks-per-node=8 ./kripke  --procs 1,1,1 --zones 12,24,24 --nest GZD --dir 2:1 --grp 4:1 --niter 8
+srun -n 1 --ntasks-per-node=8 ./kripke  --procs 1,1,1 --zones 12,24,24 --nest GZD --dir 2:1 --grp 4:1 --niter 8
+srun -n 1 --ntasks-per-node=8 ./kripke  --procs 1,1,1 --zones 12,24,24 --nest GZD --dir 2:1 --grp 4:1 --niter 8

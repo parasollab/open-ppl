@@ -1,0 +1,30 @@
+[requires]
+opencv/4.5.5
+eigen/3.4.0
+cgal/5.5.1
+bullet3/3.24
+boost/1.81.0
+nlohmann_json/3.10.5
+dlib/19.24
+qt/6.4.2
+tinyxml/2.6.2
+catch2/3.3.1
+
+# dependencies for above packages
+libjpeg/9e
+libpng/1.6.39
+libwebp/1.2.4
+sqlite3/3.40.0
+
+[options]
+#cgal:
+
+[generators]
+cmake
+
+[imports]
+bin, *.dll -> ./bin # Copies all dll files from packages bin folder to my "bin" folder
+lib, *.dylib* -> ./bin # Copies all dylib files from packages lib folder to my "bin" folder
+
+[layout]
+cmake_layout

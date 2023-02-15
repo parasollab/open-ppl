@@ -1,0 +1,4094 @@
+\documentclass{report}
+\usepackage[T1]{fontenc}
+\begin{document}
+\title{STAPL Alpha Release Tutorial User Guide - VERSION 0.9}
+\date{\today}
+\maketitle
+
+\newenvironment{hashitemize}{%
+  \renewcommand{\labelitemi}{\bfseries \#\#}%
+        \begin{itemize}}{\end{itemize}}
+
+\newcommand{\stapl}{{\sc STAPL}}
+\newcommand{\stl}{{\sc STL}}
+\newcommand{\pview}{{\sc PVIEW}}
+\newcommand{\pviews}{{\sc PVIEWS}}
+\newcommand{\pcontainer}{{\sc PCONTAINER}}
+\newcommand{\pcontainers}{{\sc PCONTAINERS}}
+
+\pagestyle{myheadings}
+\renewcommand{\chaptermark}[1]{
+              \markboth{*** DRAFT 0.9 *** \chaptername\ \thechapter. #1 } {} }
+\renewcommand{\sectionmark}[1]{
+              \markright{*** DRAFT 0.9 *** \thesection. #1 } {}}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\vspace*{8cm}
+\begin{center}
+Copyright (c) 2014, Texas Engineering Experiment Station (TEES), a
+component of the Texas A\&M University System.
+
+All rights reserved.
+\end{center}
+\pagebreak
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\chapter{Fundamental Concepts}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\section{What is \stapl?}
+
+\stapl\ is a framework for parallel C++ code development.
+
+What is a \stapl\ program?  It has three parts:
+\begin{itemize}
+\item Dependence graph
+\newline
+The dependence graph describes which memory operations must precede others,
+and which computations produce values that others consume.
+\item Data distribution
+\newline
+The data distribution describes how data aggregates should be partitioned
+among the memories associated with processing elements.
+\item Instructions
+\newline
+The instructions, as in any program, describe the computations.
+\end{itemize}
+
+The instructions are written in C++, using templated containers and algorithms
+analogous to those in the Standard Template Library (\stl\ ).
+The dependence graph is defined by the instructions written in C++.
+The data distribution takes on default values
+in the absence of an explicit specification.
+
+The \stapl\ system has the following characteristics:
+
+\begin{itemize}
+
+\item Execution Model
+
+The \stapl\ execution model is an asynchronous coarse-grain data flow machine.
+\stapl\ enables the programmer to describe the parallelism in the program
+at the finest granularity possible.  The \stapl\ system will coarsen the grain
+of the described parallelism to fit the execution platform,
+both at compile time and at execution time.
+
+\item Memory Model
+
+The \stapl\ memory model is a global address space with automatic data
+distribution.  This is often referred to as Partitioned Global
+Address Space (PGAS).  Data is never replicated in the memories associated
+with processing elements.
+
+\item Extensibility
+\newline
+The system is extensible because new kinds of each of the major features can
+be introduced by composition, inheritance, and even implementation from scratch.
+Programmers can create new kinds of views, containers, distributions,
+algorithms, schedulers, and skeletons.
+
+\item Engineering Excellence
+\newline
+The implementation of \stapl\ is engineered to be usable for real-world problems
+on the full range of parallel systems, providing robust, high-performance
+execution.
+\end{itemize}
+
+The following features implement the design principles of \stapl.
+
+\begin{itemize}
+
+\item Execution Model
+\begin{itemize}
+\item Multi-protocol parallelism:
+\newline
+Applications built with \stapl\ can employ message-passing on a coarse-grain
+basis, and threading on a fine-grain basis, without any effort required
+from the programmer.
+\end{itemize}
+
+\item Memory Model
+\begin{itemize}
+\item Transparent data distribution:
+Programmers can create applications using a shared memory address space and
+rely on \stapl\ to manage the distribution and data movement across distributed
+memory configurations.  In addition to the default behavior, the programmer
+can also select from a library of data distribution mechanisms, or even write
+their own.
+\newline
+\end{itemize}
+
+\item Extensibility
+\begin{itemize}
+\item Nested parallelism:
+\newline
+Programmers can compose parallelism using generic containers and generic algorithms.
+\item New container classes:
+\newline
+Programmers can use parallel data structures commonly employed in High Performance Computing which do not have serial analogs in the \stl\
+%% FOR THE BETA RELEASE
+%\item Library Interoperability
+%\newline
+%Applications built with \stapl\ will run in parallel with numerical libraries commonly used in High Performance Computing, such as LAPACK.
+\end{itemize}
+
+\item Engineering Excellence
+\begin{itemize}
+\item Scalable performance:
+\newline
+Applications built with \stapl\ will run in parallel on systems from
+multi-processor tablets to the largest supercomputers.
+\item Platform independence:
+\newline
+Applications built with \stapl\ can be deployed on both shared memory and distributed memory systems, requiring only a re-compile and re-link.  Execution is virtualized, providing a runtime system that is independent of the number or type of processors.
+\end{itemize}
+
+\end{itemize}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\section{C++ Concepts}
+
+This section briefly describes C++ concepts and features that are
+essential for understanding the remainder of this document.
+
+\subsection{Class Declarations}
+
+A struct is a class in which the members are default public.
+Since it is undesirable to have data members which have public access,
+we adopt the convention in this document
+that classes with no data members are defined using the
+\texttt{{\bf struct}}
+keyword rather than the
+\texttt{{\bf class}}
+keyword.
+
+\subsection{Function Objects}
+
+A function object is a class that defines
+\texttt{{\bf operator()}}.
+This operator is known as the "function call" or "application" operator.
+
+Besides the application operator, a function object can also have
+data members.  This enables the function to have state.
+
+Each function object has its own type, unlike ordinary functions, which
+have different types only when they have different signatures.
+
+Because a function object is an object, it can be passed as a argument.
+An alternate name for function object is "functor".
+
+C++11 also supports lambdas, which are not used in this document.
+
+\subsection{Templates}
+
+A template is a class or function that is specified in terms of types
+or values, which are treated as parameters of the template.
+
+\subsection{Standard Template Library}
+
+The Standard Template Library (\stl) is a part of the C++ standard library.
+It provides the programmer with the ability to use \emph{generic programming}.
+The \stl\ includes collection classes for organizing data, and algorithms
+for applying to those collections.  The components of the \stl\ are all
+template, so they can be used with any elemental type.
+
+The \stl\ has three main features:
+\begin{itemize}
+\item
+Containers
+\newline
+Containers provide varying interfaces to collections of objects.
+These interfaces implement common Abstract Data Types.
+\item
+Iterators
+\newline
+Iterators are used to access the elements in collections of objects.
+The chief benefit of iterators is that they provide a simple and common
+interface for all of the container types.
+\item
+Algorithms
+\newline
+Algorithms use iterators to process the elements of containers.
+\end{itemize}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\section{Parallelism Concepts}
+
+This section briefly describes parallelism concepts that are
+essential for understanding the remainder of this document.
+
+\subsection{SPMD}
+
+SPMD (Single Program, Multiple Data)
+is a technique employed to achieve parallelism.
+In SPMD, multiple autonomous processors simultaneously execute
+the same program at independent points.
+
+\subsection{MPI}
+
+Message Passing Interface (MPI) is a de facto standard that supports portable
+message-passing programming in Fortran, C and and C++. It consists of a set
+of library routines that provide protocols for point-to-point and collective
+communication. Implementations are available on common processor architectures and operating systems.
+
+\subsection{OpenMP}
+
+Open Multi-Processing (OpenMP) is a standard that supports multi-platform shared memory multiprocessing programming in Fortran, C, and C++.
+It consists of a set of compiler directives (Fortran) or pragmas (C/C++), library routines, and environment variables that influence run-time behavior.
+Implementations are available on common processor architectures and operating systems.
+
+\section{\stapl\ Concepts}
+
+This section briefly describes \stapl\ concepts that are
+essential for understanding the remainder of this document.
+
+\subsection{Iterators, Ranges, and Views}
+
+The \emph{iterator} is a common abstraction used to represent data
+in sequential programming.
+Iterators are used in generic algorithms, such as
+the \stl\ in C++, to specify the data.
+A key function of the iterator is to separate data structures from algorithms.
+All accesses to data are performed through iterators, which are implemented
+as memory pointers.  Iterators cannot encapsulate other information about the
+referenced data, e.g., length of the sequence.
+Moreover, the operations associated with iterators are essentially
+limited to {\em sequential} traversals of a collection of elements,
+and so algorithms using iterators have a linear, flat memory model
+that only supports {\em sequential access}.
+
+To allow concurrent access to multiple elements,
+some parallel systems provide the \emph{range}.
+A range defines a sequence of elements between two
+iterators. With the range abstraction, the program can create
+sub-ranges and process them in parallel.  Ranges alleviate the
+sequential access problem, but still offer only a flat memory model.
+
+In \stapl, a \pview\ encapsulates the information about the collection
+of elements it represents, the elements that can be accessed through it,
+and provides a set of operations to interact with the data.
+Using \pviews, parallel algorithms can be specified using abstract data
+types (ADTs).  The \pview\ encodes information about the partition of
+the data that allows it to operate in a distributed environment.
+The \emph{domain} of a \pview\ is the valid set of identifiers.
+The domain specifies which elements of the underlying container
+can be accessed through the \pview.
+
+\subsection{Parallel Views}
+
+Different ADTs provide common sets of operations or concepts.
+Views can have any of the following attributes, which control the
+operations they can perform.
+
+\texttt{read\_write}:
+Views that have this attribute support operations to read and
+write values for a given element identifier (i.e., index or key).
+Some views have the \emph{read} attribute, but not the \emph{write}
+attribute.
+
+\texttt{subscript}:
+Views that have this attribute support the square-bracket operator.
+This operator returns a reference over the element instead of
+returning a copy of the value, as the
+\texttt{read}
+operation does.
+
+\texttt{sequence}:
+Views that have this attribute support the operations
+\texttt{begin},
+and
+\texttt{end}
+and the required associated types
+required for use with iterators.
+
+\texttt{insert\_erase}:
+Views that have this attribute provide the dynamic
+operations \emph{insert} and \emph{erase}.
+
+\stapl\ views fall into the following categories:
+
+\begin{itemize}
+\item
+Model abstract data types:
+\newline
+array, vector, list, map, multiarray, heap, set, graph
+\item
+Modify access patterns to the container:
+\newline
+repeated, overlap, counting, strided, reverse, filter, transform, linear
+\item
+Modify distribution of the container:
+\newline
+native, balance, explicit, segmented
+\end{itemize}
+
+Here is a partial, but illustrative, list of examples of applying views
+over values, containers, or other views to provide functionality that
+would not otherwise be available easily.
+
+\begin{itemize}
+\item
+Applying a \emph{list\_view} over a graph container
+provides sequential access to nodes.
+\item
+Applying an \emph{array\_view} over a map container
+provides indexing to a key-based structure.
+\item
+Applying a \emph{repeated\_view} over a scalar
+makes the value available on all processing locations.
+\item
+Applying a \emph{segmented\_view} over an array
+makes it possible to handle irregularly-shaped data.
+\item
+Applying a \emph{counting\_view} in conjunction with another view
+provides integer labeling of data.
+\item
+Applying a \emph{strided\_view} over a vector
+provides non-contiguous element access.
+\end{itemize}
+
+\subsection{Parallel Containers}
+\label{para-cont-subsect}
+
+\stapl\ parallel containers (\pcontainers) are distributed,
+thread-safe, concurrent objects.  The are composable and extensible
+by C++ inheritance mechanisms.  Most \pcontainers\ have analogs in the
+\stl.  There are several additional containers not provided by the \stl\
+which are very important for High Performance Computing: the parallel
+multi-dimensional array (pMultiarray) and the parallel graph (pGraph).
+
+\pcontainers\ provide methods that correspond to the \stl\ container
+methods, where there is an analogous container.  They also provide
+additional methods specifically designed for parallel use.
+
+While the data in a \pcontainer\ is distributed, \pcontainers\ provide a
+\emph{shared object view}.  This means that they are shared data structures
+with a global address space.  Each element of a \pcontainer\ has a unique
+global identifier (GID).  \stapl\ automatically translates the GID so that
+it can locate both local and remote elements.
+
+The following containers are supported by \stapl:
+\begin{itemize}
+\item
+Sequence containers: {\tt list, vector }
+\item
+Associative containers: {\tt set, map }
+\item
+Indexed containers: {\tt array, matrix, multiarray (vector is also indexed) }
+\item
+Relational containers: {\tt graph, dynamic\_graph, multi\_graph }
+\end{itemize}
+
+\subsection{Work Functions}
+\label{work-func-subsect}
+
+A work function is a function object which is applied to each element
+of a view by a basic algorithm (see below).
+\texttt{{\bf operator()}}
+specified by the work function
+should have as many arguments as there views passed to the basic algorithm.
+
+A work function can have other members besides
+\texttt{{\bf operator()}}.
+It can have data members, which hold state.
+If the function object has data members, the class will need
+a constructor and/or "setter" method to give them values.  It will
+also need a
+\texttt{{\bf define\_type}}
+method (see Chapter 3).
+It may also need a "getter" method to retrieve updated state.
+
+The simplest way to create a work function is to instantiate a template
+from \texttt{{\bf stapl/algorithms/functional.hpp}} and
+from \texttt{{\bf stapl/algorithms/generator.hpp}}. 
+You will find code like the following in a number of examples in this guide.
+
+\small
+\begin{verbatim}
+typedef stapl::identify<int> id_int_wf;
+typedef stapl::plus<double> add_dbl_wf;
+
+typedef stapl::block_sequence<int> repeat_wf;
+typedef stapl::sequence<int> step_wf;
+\end{verbatim}
+\normalsize
+
+If you are going to create your own work functions, the simplest form
+is a stateless work function that is defined with a 
+\texttt{{\bf struct}}.
+It must have two features:
+\begin{itemize}
+\item
+the definition of \texttt{{\bf result\_type}},
+\item
+the definition of \texttt{{\bf operator()}}.
+\end{itemize}
+The following comes from one of the examples in this guide.
+
+\small
+\begin{verbatim}
+struct binary_wf {
+  typedef void result_type;
+  template <typename Ref1, typename Ref2, typename Ref3>
+  result_type operator()(Ref1 x, Ref2 y, Ref3 z) {
+    z = (x % 10) + (y % 10);
+  }
+};
+\end{verbatim}
+\normalsize
+
+A more complicated work function may require state. This requires
+the following additional features:
+\begin{itemize}
+\item
+the definition of the state variables in the \texttt{{\bf private}} section,
+\item
+the declaration of a constructor which receives initial values for the
+state variables,
+\item
+the declaration of a \texttt{{\bf define\_type}} method, which ensures
+proper serialization of data members.  All data members must be listed
+in this method.
+\end{itemize}
+For purposes of clarity, this guide declares work functions which have
+state with the \texttt{{\bf class}} keyword,
+
+The following comes from one of the examples in this guide.
+\small
+\begin{verbatim}
+class put_val_wf
+{
+private:
+  stapl::stream<ofstream> m_zout;
+public:
+  put_val_wf(stapl::stream<ofstream> const& zout)
+    : m_zout(zout)
+  { }
+
+  typedef void result_type;
+  template <typename Ref>
+  result_type operator()(Ref val) {
+    m_zout << val << " ";
+  }
+
+  void define_type(stapl::typer& t) {
+    t.member(m_zout);
+  }
+};
+\end{verbatim}
+\normalsize
+
+\subsection{Basic Algorithms}
+
+These functions take one or more work functions as arguments,
+which are applied to the elements of the specified view(s),
+according to the dependence graph which defines the semantics
+of the particular basic algorithm.
+
+\texttt{{\bf map\_func }}
+
+When processing a single view, apply the work function to each
+item of the view independently.  When processing multiple views,
+apply the work function to a corresponding value from each view.
+The work function may return a void type, if it will not be used
+to create nested parallelism.
+
+\texttt{{\bf map\_reduce }}
+
+Apply the first work function independently to each item of the view.
+Apply the second work function cumulatively to each item of the values from
+the first application.
+
+This function is sometimes used with an identity function for
+the map operation, thus becoming a simple reduction.
+Both of the work functions must return a non-void type.
+
+\texttt{{\bf reduce }}
+
+Apply the first work function independently to each item of the view.
+The work function must return a non-void type.
+
+\texttt{{\bf scan }}
+
+Apply the work function cumulatively to each item of the view,
+saving the intermediate results of each function application.
+The work function must return a non-void type.
+
+\texttt{{\bf serial\_io }}
+
+Apply the work function to each item of the view in serial order,
+and execute it on location zero.
+The work function may return a void type, if it will not be used
+in a nested fashion.
+
+\texttt{{\bf do\_once }}
+
+Execute the work function a single time on location zero.
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\section{Notation and Terminology}
+
+This document uses certain conventional prefixes and suffixes
+in the names of various entities to provide information about their
+attributes.
+
+\begin{itemize}
+\item
+\texttt{{\bf \_ct }}
+: A \stapl\ container class
+\item
+\texttt{{\bf \_vw }}
+: A \stapl\ view
+\item
+\texttt{{\bf \_tp }}
+: A type
+\item
+\texttt{{\bf \_wf }}
+: A work function
+\item
+\texttt{{\bf \_vec }}
+: A \stapl\ vector
+\item
+\texttt{{\bf \_ary }}
+: A \stapl\ array
+\end{itemize}
+
+All \stapl\ constructs are qualified with
+\texttt{{\bf stapl::}}
+to emphasize the \stapl\ functionality, rather than use a
+\stapl\ namespace.
+This also avoids conflicts with \stl\ entities.  We recommend that users
+follow the same convention.  The alternative is to qualify all
+constructs with
+\texttt{{\bf std::}}.
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\chapter{Basic Operations}
+
+This chapter introduces the basic operations of \stapl\ through a series
+of graduated examples.  Each example builds upon the previous one.
+The following topics are covered.
+
+\begin{itemize}
+\item
+Print Location Identifiers
+\item
+Construct and Output Vector
+\item
+Construct and Output Array
+\item
+Construct and Output Map
+\item
+Reduce a Vector
+\item
+Reduce an Array
+\item
+Reduce a Map
+\item
+Unary Function on a Vector
+\item
+Binary Function on Arrays
+\item
+Input, Map, Algorithm on a Vector
+\item
+Map Reduce Vector and Array, Scan Vector and Array
+\item
+Input, Map and Map Reduce a Map
+\item
+User Work Functions
+\end{itemize}
+
+The source code for each topic is found in a single source file in
+the tutorial directory where \stapl\ is installed.
+
+We recommend that you use the following procedure to get maximum benefit
+from this chapter:
+
+\begin{itemize}
+\item
+Copy the tutorial directory from the \stapl\ installation to a file system
+where you have space and permissions.
+\item
+Read over the source code for the topic.
+\item
+Read the explanatory comments in corresponding section of this chapter.
+Source lines that have explanatory material have a comment of the form
+\texttt{{\bf // \#\# N}},
+where N is an integer identifying the explanation.
+\item
+Compile the example.  To compile the example,
+type
+\texttt{{\bf make NNN.exe}}
+on the command line, where NNN is the example number.
+\item
+Execute the example.  Type
+\texttt{{\bf exec.sh NNN}}
+on the command line,
+where N is the example number.
+\item
+Perform the suggested experiments for the topic.  These involve modifying
+the example source, re-compiling, and re-executing the example.
+\end{itemize}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\pagebreak
+\section{Print Location Identifiers}
+
+\subsection{Source Code}
+
+\input{ex_200}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\subsection{Explanation}
+
+This example demonstrates how to generate output from a \stapl\ program.
+The first two output statements are guarded by a check of the \stapl\
+location ID, so that they only execute once.
+The final output statement will be executed multiple times if the
+program is launched to run on multiple processors.
+
+\begin{hashitemize}
+\item 1 : \texttt{{\bf iostream}}
+\newline
+All I/O in these examples is performed using the C++ iostream features.
+
+\item 2 : \texttt{{\bf do\_once.hpp}}
+\newline
+Since \stapl\ executes a program in SPMD fashion, the application must
+normally take steps to ensure that input/output is generated only on one
+parallel location.  This file provides a \stapl\ feature to do that.
+This file should be included in every \stapl\ application source file
+which generates messages to be displayed to the user.
+
+\item 3 : \texttt{{\bf runtime.hpp}}
+\newline
+Provide access to the methods of the \stapl\ runtime system
+that are useful at the application level.
+This file should be included in every \stapl\ application source file.
+
+\item 4 : \texttt{{\bf using namespace std;}}
+\newline
+"The repeated qualification {\bf std} is
+tedious and distracting.... To alleviate that we can use a
+{\bf using-}declaration" (Stroustrup, 2013, p. 393)
+
+In all examples in this document, we use the standard namespace, and
+explicitly qualify the \stapl\ features.  The reverse is also possible.
+It is not possible to use both the standard namespace and the \stapl\
+namespace in the same source file, since there are name conflicts which
+will result in confusing and irritating compiler diagnostics.
+
+\item 5 : \texttt{{\bf msg(const char *text)}}
+\newline
+We will use this functor throughout these examples to generate messages
+to display to the user.  The argument to the constructor is the literal
+message text.
+
+\item 6 : \texttt{{\bf cout $<<$ m\_txt}}
+\newline
+Display the message with a newline afterwards.
+
+\item 7 : \texttt{{\bf msg\_val(const char *text, Value val)}}
+\newline
+We will use this templated functor throughout these examples to generate
+messages to display to the user, which also display a variable value.
+The first argument to the constructor is the literal message text, and
+the second is a type specified by the programmer.
+
+\item 8 : \texttt{{\bf cout $<<$ m\_txt}}
+\newline
+Display the message and the value, with a newline afterwards.
+
+\item 9 : \texttt{{\bf stapl\_main}}
+\newline
+This is the main program of the application.  It must have this name,
+not the usual
+\texttt{{\bf main}}.
+The arguments are the same.
+
+\item 10 : \texttt{{\bf stapl::do\_once()}}
+\newline
+Execute the specified functor only once.  In this case, the functor will
+generate the specified message to the standard output.
+
+\item 11 : \texttt{{\bf stapl::do\_once()}}
+\newline
+Execute the specified functor only once.  In this case, the functor will
+generate the specified message to the standard output, along with the
+specified numeric value.
+
+\item 12 : \texttt{{\bf cout $<<$ "Hello, World"}}
+\newline
+Execute an unguarded I/O statement.
+
+\end{hashitemize}
+
+Save the source of the example in a temporary file.
+Restore the source after each experiment.
+
+After compiling and executing the example, try the following experiments:
+\begin{itemize}
+\item
+Change the second invocation of
+\texttt{{\bf stapl::do\_once()}}
+into a simple output statement that sends the message and value to
+standard output, like the one that follows it.
+How many times does it execute?  Why?
+\item
+Edit the script you used to execute the program so that it runs on
+eight (8) processors.  What changes do you see in the output of the
+program.
+\end{itemize}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\pagebreak
+\section{Construct and Output Vector}
+
+\subsection{Source Code}
+
+\input{ex_201}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\subsection{Explanation and Experimentation}
+
+This example shows how to build a \stapl\ vector, using a generator,
+which executes in parallel.
+It also shows how to print the values that are assigned to that vector.
+
+\begin{hashitemize}
+\item 1 : \texttt{{\bf vector.hpp}}
+\newline
+Provide access to the features of the
+\texttt{{\bf vector}}
+container.
+The previous include provides access to the features of the
+\texttt{{\bf vector}}
+view, which can be applied to containers other than
+\texttt{{\bf vector}}.
+
+\item 2 : \texttt{{\bf algorithm.hpp}}
+\newline
+Provide access to the \stapl\ parallel algorithms, which
+correspond to the \stl\ algorithms.  It should always be included in a
+\stapl\ application.
+
+\item 3 : \texttt{{\bf stream.hpp}}
+\newline
+Provide a wrapper that can be used with the standard
+\texttt{{\bf ifstream}}
+and
+\texttt{{\bf ofstream}}
+classes,
+so that they can be used in parallel execution.
+
+\item 4 : \texttt{{\bf ch2\_msg.hpp}}
+\newline
+The
+\texttt{{\bf msg}}
+and
+\texttt{{\bf msg\_val}}
+functors
+from the first example have been placed in a separate file
+for re-use in the subsequent examples.
+
+\item 5 : \texttt{{\bf stapl::vector$<$int$>$}}
+\newline
+Declare a \stapl\ vector container whose items are integers.
+
+\item 6 : \texttt{{\bf stapl::vector\_view}}
+\newline
+Declare a \stapl\ vector view over a \stapl\ vector container.
+There is no requirement that the container and the view be of the same kind.
+(Otherwise, what would be the point of the view?)
+Any view can be applied to any container, with the caveat that the
+container must support all of the operations that the view does.
+
+\item 7 : \texttt{{\bf class put\_val\_wf }}
+\newline
+A work function which prints the value of its argument to the standard
+output, along with a blank space to separate it from other values.
+We declare it as a \emph{class}, rather than a \emph{struct},
+since it has data members.
+
+\item 8 : \texttt{{\bf typename Ref}}
+\newline
+There is no semantic information in the name of the type used to
+parameterize the template.  It could have as easily be named 'T' or "foo".
+
+\item 9 : \texttt{{\bf void define\_type(stapl::typer\& t) }}
+\newline
+Any work function that contains data members, and which will be executed
+on multiple parallel locations, must contain a member function with
+this name and prototype.  The body of the function must invoke the
+\emph{member} method separately on each data member.  This method
+makes it possible for the \stapl\ runtime system to properly transport
+the data members.
+
+\item 10 : \texttt{{\bf container constructor}}
+\newline
+Construct a vector container of integers, with the specified size.
+
+\item 11 : \texttt{{\bf view constructor}}
+\newline
+Construct a vector view over the specified vector container.
+
+\item 12 : \texttt{{\bf stapl::iota}}
+\newline
+Generate a sequence of integers, starting at zero, increasing by one,
+up to the size of the specified view.  This executes in parallel.
+
+\item 13 : \texttt{{\bf stapl::serial\_io(put\_val\_wf }}
+\newline
+Apply the user work function to each element of the view.
+\texttt{{\bf stapl::serial\_io }}
+executes the work function on location zero, and nowhere else.
+
+%%\item 14 : \texttt{{\bf stapl::rmi\_fence() }}
+%%\newline
+%%This statement ensures that all \stapl\ objects reach a stable state.
+%%There are two conditions under which you \textbf{must} use a fence:
+%%\begin{itemize}
+%%\item
+%%If a function declares a \stapl\ container (thus allocating storage),
+%%you must put a fence at the end of that function.  This is the case
+%%shown by this example.  You will see such a fence in almost every example
+%%in this tutorial.
+%%\item
+%%If a function changes the values of a \stapl\ container outside of a
+%%\stapl\ basic algorithm, you must put a fence after the code that performs
+%%the modifications.  We do not show an example of this usage in this
+%%tutorial, and we do not recommend that beginning users of \stapl\ employ
+%%this usage.
+%%\end{itemize}
+
+\end{hashitemize}
+
+Save the source of the example in a temporary file.
+Restore the source after each experiment.
+
+After compiling and executing the example, try the following experiments:
+\begin{itemize}
+\item
+Change the initial value of the variable.
+\texttt{{\bf size}}.
+Re-compile and re-execute.
+\item
+Change the base type of the vector to
+\texttt{{\bf double}}.
+Re-compile and re-execute.
+\end{itemize}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\pagebreak
+\section{Construct and Output Array}
+
+\subsection{Source Code}
+
+\input{ex_202}
+
+\subsection{Explanation and Experimentation}
+
+This example shows how to build a \stapl\ array, using a generator,
+which executes in parallel.
+It also shows how to print the values that are assigned to that array.
+
+\begin{hashitemize}
+\item 1 : \texttt{{\bf array.hpp}}
+\newline
+Provide access to the features of the
+\texttt{{\bf array}}
+container.
+The previous include provides access to the features of the
+\texttt{{\bf array}}
+view, which can be applied to containers other than
+\texttt{{\bf array}}.
+
+\item 2 : \texttt{{\bf ch2\_io.hpp}}
+\newline
+The
+\texttt{{\bf put\_val\_wf}}
+and similar functors (introduced later)
+from the second example have been placed in a separate file
+for re-use in the subsequent examples.
+
+\item 3 : \texttt{{\bf stapl::array$<$int$>$}}
+\newline
+Declare a \stapl\ parallel container whose items are integers.
+
+\item 4 : \texttt{{\bf stapl::array\_view}}
+\newline
+Declare an array view over an array.
+Views are applied over data, which is usually, but not always
+a \stapl\ parallel container.
+
+\item 5 : \texttt{{\bf container constructor}}
+\newline
+Construct an array container of integers, with the specified size.
+
+\item 6 : \texttt{{\bf view constructor}}
+\newline
+Construct an array view over the specified array container.
+
+\item 7 : \texttt{{\bf stapl::sequence}}
+\newline
+Declare a functor that generators a monotonically increasing sequence,
+given a base value and a step value.
+
+\item 8 : \texttt{{\bf stapl::generate}}
+\newline
+Assign the result of calling the specified functor to an element
+of the specified view.  This executes in parallel.
+
+\item 9 : \texttt{{\bf stapl::serial\_io}}
+\newline
+Apply the user work function to each element of the view.
+\texttt{{\bf stapl::serial\_io }}
+executes the work function on location zero, and nowhere else.
+
+\end{hashitemize}
+
+Save the source of the example in a temporary file.
+Restore the source after each experiment.
+
+After compiling and executing the example, try the following experiments:
+\begin{itemize}
+\item
+Change the initial value of the variable
+\texttt{{\bf base}}.
+Re-compile and re-execute.
+\item
+Change the initial value of the variable
+\texttt{{\bf step}}.
+Re-compile and re-execute.
+\end{itemize}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\pagebreak
+\section{Construct and Output Map}
+
+\subsection{Source Code}
+
+\input{ex_203}
+
+\subsection{Explanation and Experimentation}
+
+This example shows how to build a \stapl\ map, 
+and is somewhat peculiar in that there is no parallelism construct
+used.  It is occasionally necessary to write a loop that executes identically
+on every location.  This example shows that it is possible.  In general,
+however, it is inefficient and unnecessary.
+It also shows how to print the values that are assigned to that map.
+
+\begin{hashitemize}
+\item 1 : \texttt{{\bf map\_view.hpp}}
+\newline
+Provide access to the features of the
+\texttt{{\bf map\_view.hpp}}
+view, which can be applied to containers other than
+\texttt{{\bf map}},
+if they provide the necessary features.
+
+\item 2 : \texttt{{\bf map}},
+\newline
+Provide access to the features of the
+\texttt{{\bf map}}
+container.
+
+\item 3 : \texttt{{\bf prime\_nums}}
+\newline
+Declare integer arrays to use in building the map.  The first contains
+the first N prime numbers in ascending order, and the second contains
+a set of random numbers of the same cardinality.  We use a fixed set
+of random numbers in order to provide reproducibility of results.
+
+\item 4 : \texttt{{\bf stapl::map}}
+\newline
+This type defines a map from integers to integers.
+
+\item 5 : \texttt{{\bf stapl::indexed\_domain}}
+\newline
+The global ID's (GIDs) of an indexed domain are consecutive and enumerable.
+The domain is specified by a low and high value pair.  See 
+\ref{para-cont-subsect} for more about GID's.
+
+\item 6 : \texttt{{\bf pair.first, pair.second}}
+\newline
+The items of a map are pairs.  The values of the pair are
+stored in the members named {\it first} and {\it second}.
+
+You can code a work function that can be used to display the contents of
+\emph{vectors} and \emph{arrays}, since they both provide access
+methods that use the bracket operator.  That function won't work
+if applied to a map.  \emph{maps} require a different work function,
+like the one in this example, which accesses the two members of the pair
+by name.
+
+\item 7 : \texttt{{\bf domain constructor}}
+\newline
+Construct a domain for a map, which ranges from 0 to the largest
+prime number in the input data set (which is sorted).
+
+\item 8 : \texttt{{\bf map constructor}}
+\newline
+Construct a map container from integers to integers.
+
+\item 9 : \texttt{{\bf view constructor}}
+\newline
+Construct a map view over the specified map container.
+
+\item 10 : \texttt{{\bf map store}}
+\newline
+New values are inserted into a map and existing values are replaced
+using the same bracket operator assignment.  Note that every iteration
+of this loop will be executed on every location.  The first location
+to execute the body with a given iteration counter value will perform
+an insertion into the map.  The remaining locations will perform
+replacements with identical values for a given key.
+
+\item 11 : \texttt{{\bf stapl::serial\_io}}
+\newline
+Apply the user work function to each element of the view.
+\texttt{{\bf stapl::serial\_io }}
+executes the work function on location zero, and nowhere else.
+
+\item 12 : \texttt{{\bf stapl::rmi\_fence() }}
+\newline
+This statement ensures that all \stapl\ objects reach a stable state.
+If a function accesses the values of a \stapl\ container outside of a
+\stapl\ basic algorithm, you must put a fence after the code that accesses
+the values.  Basic algorithms perform a fence on their own.  So, if you
+only use \stapl\ basic algorithms, you don't have to worry about fences.
+\end{hashitemize}
+
+Save the source of the example in a temporary file.
+Restore the source after each experiment.
+
+After compiling and executing the example, try the following experiments:
+\begin{itemize}
+\item
+Insert these statements after the body of the loop that initializes
+the map values:
+\begin{verbatim}
+  c[ 7 ] = 999;
+  c[ 17 ] = 999;
+  c[ 10 ] = 888;
+  c[ 20 ] = 888;
+\end{verbatim}
+Re-compile and re-execute.
+\item
+Use the
+\texttt{{\bf rand\_nums}}
+variable as the keys of the map,
+and the values of the
+\texttt{{\bf prime\_nums}}
+variable as the values.
+\item
+Write a work function that contains the loop that inserts values into
+the map.  Replace the original loop header and body with a
+\texttt{{\bf stapl::do\_once}}
+basic algorithm, which applies your new
+work function.  How many times will the loop be executed in total now?
+\end{itemize}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\pagebreak
+\section{Reduce a Vector}
+
+\subsection{Source Code}
+
+\input{ex_204}
+
+\subsection{Explanation and Experimentation}
+
+This example shows how to perform a reduction (summation)
+on a \stapl\ vector, which executes in parallel.
+
+\begin{hashitemize}
+
+\item 1 : \texttt{{\bf stapl::identity}}
+\newline
+This is a functor provided by the file functional.hpp,
+which can be specialized with an elemental data type.
+
+\item 2 : \texttt{{\bf stapl::block\_sequence}}
+\newline
+Specify a work function that will
+generate repeated values using the specified base and repeat factor.
+
+\item 3 : \texttt{{\bf stapl::generate}}
+\newline
+Assign the result of calling the specified functor to an element
+of the specified view.
+
+\item 4 : \texttt{{\bf stapl::map\_reduce}}
+\newline
+When the identity function is used as the map operator of a map\_reduce,
+the operation a simple reduction.
+
+\item 5 : \texttt{{\bf stapl::reduce}}
+\newline
+It is not necessary to use the general map\_reduce basic algorithm.
+\stapl\ has a specialized reduction basic algorithm, which performs
+the same computation as a map\_reduce with an identity map function.
+
+\end{hashitemize}
+
+Save the source of the example in a temporary file.
+Restore the source after each experiment.
+
+After compiling and executing the example, try the following experiments:
+\begin{itemize}
+\item
+Change the initial value of the variable
+\texttt{{\bf rep}}.
+Re-compile and re-execute.
+\item
+Change the initial value of the variable
+\texttt{{\bf base}}.
+Re-compile and re-execute.
+\end{itemize}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\pagebreak
+\section{Reduce an Array}
+
+\subsection{Source Code}
+
+\input{ex_205}
+
+\subsection{Explanation and Experimentation}
+
+This example shows how to perform a reduction (maximum value)
+on a \stapl\ array, which executes in parallel.
+
+\begin{hashitemize}
+\item 1 : \texttt{{\bf stapl::random\_sequence}}
+\newline
+Generate a pseudo-random sequence of integers.
+The functionality is provided by
+\texttt{{\bf generator.hpp}},
+which is included by
+\texttt{{\bf algorithm.hpp}}.
+
+\item 2 : \texttt{{\bf stapl::map\_reduce}}
+\newline
+map\_reduce returns the result of applying the second function as a reduction
+to the values generated by mapping the view values with the first function.
+Functions that can be used to reduce elemental data types are:
+\texttt{{\bf plus, max, min, logical\_and, logical\_or}}.
+These are all associative functions.
+\emph{multiplies} is also an associative function, but the intermediate
+results often exceed the size of the machine representation of the
+elemental type, resulting in an overflow.  Data sets which are
+appropriate to process in parallel are likely to generate products too
+big to represent.
+\end{hashitemize}
+
+Save the source of the example in a temporary file.
+Restore the source after each experiment.
+
+After compiling and executing the example, try the following experiments:
+\begin{itemize}
+\item
+Change the initial value of the variable
+\texttt{{\bf size}}
+to 10.
+Re-compile and re-execute.  Confirm that the reduction found the maximum
+of the array values correctly.
+%%\item
+%%Modify the
+%%\texttt{{\bf exec.sh }}
+%%script so that the variable
+%%\texttt{{\bf PROC}}
+%%is assigned a value of 4 instead of 2.
+%%Comment out the two statements which call
+%%\texttt{{\bf get\_location\_id()}}
+%%and the corresponding closing braces.
+%%Re-compile and re-execute.
+%%See chapter 1, if you have not been using the
+%%\texttt{{\bf exec.sh }}
+%%script.
+\item
+Insert this statement
+\begin{verbatim}
+  a[0] = 100;
+\end{verbatim}
+after the statement which calls
+\texttt{{\bf serial\_io }}.
+Re-compile and re-execute.
+How many times was this assignment executed?
+Make it execute exactly once.
+Restore the source after you have inspected the output.
+\item
+Replace the first line of
+\texttt{{\bf ex\_005}}
+(the declaration of the array) with this statement.
+\begin{verbatim}
+  ary_int_tp a(2,sz);
+\end{verbatim}
+Comment out the line which calls
+\texttt{{\bf stapl::generate}}
+Re-compile and re-execute.
+Restore the source after you have inspected the output.
+\item
+Restore the exec.sh script to execute with one processor.
+\end{itemize}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\pagebreak
+\section{Reduce a Map}
+
+\subsection{Source Code}
+
+\input{ex_206}
+
+\subsection{Explanation and Experimentation}
+
+This example shows how to perform a reduction (summation)
+on a \stapl\ map, which executes in parallel.
+
+\begin{hashitemize}
+\item 1 : \texttt{{\bf ch2\_io.hpp}}
+\newline
+The
+\texttt{{\bf put\_map\_val\_wf}}
+functor from the fourth example has been placed in a separate file
+for re-use in the subsequent examples.
+
+\item 2 : \texttt{{\bf pair.second}}
+\newline
+The elements of a map, as passed to a work function by
+a basic algorithm, are pairs.
+The values of a pair are referred to by the names 'first' and 'second'.
+This work function accesses the map values through the element pairs.
+
+\item 3 : \texttt{{\bf map insert}}
+\newline
+Insert into a map a value from a set of random numbers with a key
+from a set of prime numbers.
+
+This operation must be done in a conventional loop.  It can't be done
+using a \stapl\ basic algorithm, such as
+\texttt{{\bf map\_func}},
+because these algorithms iterate over the existing values in a parallel
+data structure.  A
+\texttt{{\bf map}}
+has no values initially.
+Every iteration of this loop will be executed on every parallel location,
+which is not an efficient way to execute parallel programs.
+See the experiments for a better approach.
+
+\item 4 : \texttt{{\bf stapl::map\_reduce}}
+\newline
+map\_reduce can be applied to a map view.  The first work function
+must extract the value from second part of the pair, so that the
+second work function has values to compute with.
+
+\item 5 : \texttt{{\bf put\_map\_val\_wf}}
+\newline
+It is possible to perform output on a map.  The work function must
+extract the values of the pair of each element.
+
+\end{hashitemize}
+
+Save the source of the example in a temporary file.
+Restore the source after each experiment.
+
+After compiling and executing the example, try the following experiments:
+\begin{itemize}
+\item
+Insert these statements after the call to
+\texttt{{\bf stapl::map\_reduce}}
+\begin{verbatim}
+  cout << c.size() << endl;
+  c[0] = 100;
+  c[2] = 100;
+  c[4] = 100;
+  cout << c.size() << endl;
+\end{verbatim}
+Re-compile and re-execute.
+\item
+Extract the loop that initializes the map, and place it in a separate
+work function.  Invoke the work function using
+\texttt{{\bf stapl::do\_once}}.
+\end{itemize}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\pagebreak
+\section{Unary Function on a Vector}
+
+\subsection{Source Code}
+
+\input{ex_207}
+
+\subsection{Explanation and Experimentation}
+
+This example shows how to
+apply a unary function to one \stapl\ vector and store the result
+in a another \stapl\ vector, with the computation executing in parallel.
+
+\begin{hashitemize}
+\item 1 : \texttt{{\bf Ref1, Ref2}}
+\newline
+When a work function takes multiple view arguments, each of them may have
+a distinct type.  If so, the template needs to be parameterized on each
+of those types.
+
+\item 2 : \texttt{{\bf Ref1 pos, Ref2 val}}
+\newline
+This work function processes values from two different views.
+
+\item 3 : \texttt{{\bf stapl::counting\_view}}
+\newline
+This view represents an increasing sequence of integers, starting at zero.
+
+\item 4 : \texttt{{\bf stapl::transform}}
+\newline
+Apply the specified work function to the first view,
+and stores the result in the second view.
+
+\end{hashitemize}
+
+Save the source of the example in a temporary file.
+Restore the source after each experiment.
+
+After compiling and executing the example, try the following experiments:
+\begin{itemize}
+\item
+Insert these statements after the call to
+\texttt{{\bf stapl::transform}}
+\begin{verbatim}
+  cout << b_vw.size() << endl;
+\end{verbatim}
+Re-compile and re-execute.
+\item
+Insert these statements after the call to
+\texttt{{\bf stapl::transform}}
+\begin{verbatim}
+  sz = sz/2;
+  b_vw.resize(sz);
+  cout << b_vw.size() << endl;
+\end{verbatim}
+Re-compile and re-execute.
+\item
+Insert these statements after the call to
+\texttt{{\bf stapl::transform}}
+\begin{verbatim}
+  sz += stapl::get_num_locations();
+  b_vw.add(99);
+  b_vw.flush();
+  cout << b_vw.size() << endl;
+\end{verbatim}
+Re-compile and re-execute.
+\end{itemize}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\pagebreak
+\section{Binary Function on Arrays}
+
+\subsection{Source Code}
+
+\input{ex_208}
+
+\subsection{Explanation and Experimentation}
+
+This example shows how to
+apply a binary function to two \stapl\ arrays and store the result
+in a third \stapl\ array, with the computation executing in parallel.
+
+\begin{hashitemize}
+
+\item 1 : \texttt{{\bf stapl::generate}}
+\newline
+Assign the result of calling the specified functor to an element
+of the specified view.
+
+\item 2 : \texttt{{\bf stapl::generate}}
+\newline
+The parameters of the work function are stored as state, and thus
+a different integer sequence is generated here, than those generated
+by the previous invocation.
+
+\item 3 : \texttt{{\bf stapl::transform}}
+\newline
+Apply the specified work function to the first and second views,
+and stores the result in the third view.
+
+\end{hashitemize}
+
+Save the source of the example in a temporary file.
+Restore the source after each experiment.
+
+After compiling and executing the example, try the following experiments:
+\begin{itemize}
+\item
+Use a typedef to define a work function
+\texttt{{\bf max\_int\_wf}}.
+Change the call to
+\texttt{{\bf stapl::transform}}.
+to use the new work function.
+\end{itemize}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\pagebreak
+\section{Input, Map, Algorithm on a Vector}
+
+\subsection{Source Code}
+
+\input{ex_209}
+
+\subsection{Explanation and Experimentation}
+
+This example shows how to read inputs from a file into several \stapl\
+vectors.  It then shows how to apply a \stapl\ algorithm, using the
+\texttt{{\bf stapl::map\_func}}
+basic parallel algorithm.
+
+\begin{hashitemize}
+\item 1 : \texttt{{\bf stapl::serial\_io(get\_val\_wf}}
+\newline
+Apply the user work function to each element of the view.
+\texttt{{\bf stapl::serial\_io }}
+executes the work function on location zero, and nowhere else.
+This work function extracts (reads) an input value from the input stream.
+
+\item 2 : \texttt{{\bf stapl::map\_func}}
+\newline
+Assign values of first view to elements of second view.
+
+\item 3 : \texttt{{\bf stapl::counting\_view}}
+\newline
+This view represents an increasing sequence of integers, used to label
+the values of the other view.
+
+\item 4 : \texttt{{\bf stapl::copy}}
+\newline
+Copy the elements of the first argument view to the second argument view.
+
+\end{hashitemize}
+
+Save the source of the example in a temporary file.
+Restore the source after each experiment.
+
+After compiling and executing the example, try the following experiments:
+\begin{itemize}
+\item
+Insert these statements after the call to
+\texttt{{\bf stapl::copy}}
+\begin{verbatim}
+  cout << c.size() << endl;
+  c.erase(c.size()/2); stapl::rmi_fence();
+  cout << c.size() << endl;
+\end{verbatim}
+Re-compile and re-execute.
+\item
+Insert these statements after the call to
+\texttt{{\bf stapl::copy}}
+\begin{verbatim}
+  cout << c.size() << endl;
+  c.push_back(999); stapl::rmi_fence();
+  cout << c.size() << endl;
+\end{verbatim}
+Re-compile and re-execute.
+\item
+Insert these statements after the call to
+\texttt{{\bf stapl::copy}}
+\begin{verbatim}
+  cout << c.size() << endl;
+  c.pop_back(); stapl::rmi_fence();
+  cout << c.size() << endl;
+\end{verbatim}
+Re-compile and re-execute.
+{\bf Note:} Execution will result in a \stapl\ ASSERTION that terminates execution.  This is a known issue with the \texttt{vector::pop\_back} implementation. When the bug is resolved the snippet above will execute correctly.
+\item
+Insert these statements after the call to
+\texttt{{\bf stapl::copy}}
+\begin{verbatim}
+  cout << c.size() << endl;
+  c.clear(); stapl::rmi_fence();
+  cout << c.size() << endl;
+\end{verbatim}
+Re-compile and re-execute.
+\end{itemize}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\pagebreak
+\section{Map Reduce Vector and Array, Scan Vector and Array }
+
+\subsection{Source Code}
+
+\input{ex_210}
+
+\subsection{Explanation and Experimentation}
+
+This example shows how to perform two operations in \stapl\
+which are very common in parallel computing:
+map-reduce and parallel-prefix (scan).
+These operations are performed on \stapl\ vectors and arrays.
+
+\begin{hashitemize}
+\item 1 : \texttt{{\bf stapl::map\_reduce}}
+\newline
+The function
+\texttt{{\bf neg\_int\_wf}}
+is applied independently to each element of the view, and then the
+\texttt{{\bf min\_int\_wf}}
+function is applied cumulatively to the result.
+
+\item 2 : \texttt{{\bf stapl::map\_reduce}}
+\newline
+The basic algorithm \emph{map\_reduce} works in the same manner,
+regardless of the container or view that it is applied to.
+
+\item 3 : \texttt{{\bf stapl::scan}}
+\newline
+The function
+\texttt{{\bf min\_int\_wf}}
+is applied cumulatively to each element of the first view, and
+each partial result is stored in the second view.
+
+\item 4 : \texttt{{\bf stapl::scan}}
+\newline
+The basic algorithm \emph{scan} works in the same manner,
+regardless of the container or view that it is applied to.
+
+\end{hashitemize}
+
+Save the source of the example in a temporary file.
+Restore the source after each experiment.
+
+After compiling and executing the example, try the following experiments:
+\begin{itemize}
+\item
+Insert these statements after the
+\texttt{{\bf using namespace}}
+statement.
+\begin{verbatim}
+size_t fibo[] = { 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987 };
+\end{verbatim}
+
+Insert these statements at the end of the function
+\texttt{{\bf ex\_210}}.
+\begin{verbatim}
+  typedef stapl::logical_not<int> not_int_wf;
+  typedef stapl::logical_and<int> and_int_wf;
+  stapl::fill(a_vw, 1);
+  if (stapl::get_location_id() == 0) {
+    size_t j = 0;
+    for( size_t i=0; i< a_vw.size(); i++ ) {
+      if( i == fibo[j] ) {
+        a_vw[i] = 0;
+        j++;
+      }
+    }
+  }
+  int val = stapl::map_reduce( not_int_wf(), and_int_wf(), a_vw );
+  stapl::serial_io(put_val_wf(), a_vw);
+\end{verbatim}
+Re-compile and re-execute.
+\item
+Insert these statements at the end of the function
+\texttt{{\bf ex\_210}}.
+(You can save typing by just editing the statements which were previously
+inserted.  Comments indicate the changes.)
+\begin{verbatim}
+  typedef stapl::logical_or<int> or_int_wf; // or, or
+  stapl::fill(b_vw, 0); // (b_vw, 0)
+  if (stapl::get_location_id() == 0) {
+    size_t j = 0;
+    for( size_t i=0; i< b_vw.size(); i++ ) { // b_vw
+      if( i == fibo[j] ) {
+        b_vw[i] = 1; // replace entire statement
+        j++;
+      }
+    }
+  }
+  int val = stapl::map_reduce( id_int_wf(), or_int_wf(), b_vw ); // b_vw
+  stapl::serial_io(put_val_wf(), b_vw); // b_vw
+\end{verbatim}
+Re-compile and re-execute.
+\item
+Insert these statements at the end of the function
+\texttt{{\bf ex\_210}}.
+(You can save typing by just editing the statements which were previously
+inserted.  Comments indicate the changes.)
+\begin{verbatim}
+  stapl::fill(c_vw, 1); // (c_vw, 1)
+  if (stapl::get_location_id() == 0) {
+    size_t j = 0;
+    for( size_t i=0; i< c_vw.size(); i++ ) { // c_vw
+      if( i == fibo[j] ) {
+        c_vw[i] = 0; // replace entire statement
+        j++;
+      }
+    }
+  }
+  stapl::scan( and_int_wf(), c_vw, d_vw ); // replace map_reduce statement
+  stapl::serial_io(put_val_wf(), d_vw); // d_vw
+\end{verbatim}
+Re-compile and re-execute.
+\item
+Insert these statements at the end of the function
+\texttt{{\bf ex\_210}}.
+(You can save typing by just editing the statements which were previously
+inserted.  Comments indicate the changes.)
+\begin{verbatim}
+  stapl::fill(d_vw, 0); // (d_vw, 0)
+  if (stapl::get_location_id() == 0) {
+    size_t j = 0;
+    for( size_t i=0; i< d_vw.size(); i++ ) { // d_vw
+      if( i == fibo[j] ) {
+        d_vw[i] = 1; // replace entire statement
+        j++;
+      }
+    }
+  }
+  stapl::scan( or_int_wf(), c_vw, d_vw ); // or
+  stapl::serial_io(put_val_wf(), d_vw);
+\end{verbatim}
+\end{itemize}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\pagebreak
+\section{Input, Algorithm, and Map Reduce on a Map}
+
+\subsection{Source Code}
+
+\input{ex_211}
+
+\subsection{Explanation and Experimentation}
+
+This example shows how to read inputs from a file into a \stapl\ map.
+It then shows how to perform the map-reduce operation on a \stapl\ map.
+
+\begin{hashitemize}
+\item 1 : \texttt{{\bf return pair.second}}
+\newline
+The \emph{second} member contains the values in the pairs that
+comprise a map.
+
+\item 2 : \texttt{{\bf zin $>>$ val;}}
+\newline
+Extract the value for a pair, which will overwrite the value currently stored
+in the map.  The key of a map element cannot be modified once the element is
+inserted into the container.
+
+\item 3 : map insertion
+\newline
+Bracket assignment to a map both overwrites existing key/value pairs,
+and inserts new pairs if the key doesn't already exist.
+
+\item 4 : \texttt{{\bf a\_vw.count(elem)}}
+\newline
+Returns 1 if the specified key exists, otherwise returns 0.
+
+\item 5 : \texttt{{\bf stapl::serial\_io(get\_map\_key\_val\_wf(), ...)}}
+\newline
+Apply special function required to read input values for the key and value
+of a pair to insert into a map.
+
+\item 6 : \texttt{{\bf stapl::map\_reduce(map\_int\_val\_wf(), ...)}}
+\newline
+Apply special function required to extract the values of the map so that
+they can be reduced.  Equivalent to
+\texttt{{\bf id\_int\_wf()}} for a vector or array.
+
+\end{hashitemize}
+
+Save the source of the example in a temporary file.
+Restore the source after each experiment.
+
+After compiling and executing the example, try the following experiments:
+\begin{itemize}
+\item
+Insert this statement before and after call to the count() function.
+\begin{verbatim}
+  cout << a_vw.size() << endl;
+\end{verbatim}
+Re-compile and re-execute.  Does the call have any effect on the map?
+\item
+Insert these statements at the end of ex\_211().
+\begin{verbatim}
+  cout << a_vw.size() << endl;
+  cout << a_vw[1234]; // not a prime
+  cout << a_vw.size() << endl;
+\end{verbatim}
+Re-compile and re-execute.  Does accessing a key that isn't in the map
+have any effect on the map?
+\end{itemize}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\pagebreak
+\section{User Work Functions}
+
+\subsection{Source Code}
+
+\input{ex_212}
+
+\subsection{Explanation and Experimentation}
+
+This section shows examples of user work functions in several contexts:
+\begin{itemize}
+\item
+Applying a user work function to a
+\texttt{{\bf vector}} with
+\texttt{{\bf map\_func}},
+\item
+Applying a user work function to a
+\texttt{{\bf vector}}
+with the transform algorithm,
+\item
+Applying a user work function to an
+\texttt{{\bf array}}
+with
+\texttt{{\bf map\_func}}.
+\end{itemize}
+
+\begin{hashitemize}
+
+\item 1 : \texttt{{\bf struct}}
+\newline
+We specify user work functions as a
+\texttt{{\bf struct}}
+ which contains
+\texttt{{\bf operator ()}}.
+
+\item 2 : \texttt{{\bf Ref1 x, Ref2 z}}
+\newline
+This functor takes one input as a reference, and delivers its output
+through another reference.  There is no significance to the type names
+chosen.
+
+\item 3 : assignment
+\newline
+The second argument is modified as a reference.
+
+\item 4 : \texttt{{\bf Ref1 x, Ref2 y, Ref3 z}}
+\newline
+This functor takes two inputs as references, and delivers its output
+through another reference.  There is no significance to the type names
+chosen.
+
+\item 5 : \texttt{{\bf typedef int result\_type}}
+\newline
+\texttt{{\bf transform}}
+expects a work function that returns a result.
+All work functions should typedef
+\texttt{{\bf result\_type}}.
+If the function doesn't return a result, the type should be
+\texttt{{\bf void}}.
+
+\item 6 : \texttt{{\bf stapl::map\_func}}
+\newline
+\texttt{{\bf map\_func}}.
+takes a work function followed by a series of input and
+output views.
+
+\item 7 : \texttt{{\bf stapl::transform}}
+\newline
+\texttt{{\bf transform}}.
+takes a one (or two) input views, an output view,
+and a unary or binary work function.  It applies the work function
+to the input views, and modifies the output view.
+
+\end{hashitemize}
+
+Save the source of the example in a temporary file.
+Restore the source after each experiment.
+
+After compiling and executing the example, try the following experiments:
+\begin{itemize}
+\item
+Create a work function
+\texttt{{\bf binary\_val\_wf}},
+modeled after
+\texttt{{\bf unary\_val\_wf}}, which takes two input arguments.
+Apply it to the arrays
+\texttt{{\bf c, d, e}} using the
+\texttt{{\bf stapl::transform }} algorithm.
+\end{itemize}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\chapter{Nested Parallelism}
+
+One of the most valuable features of \stapl\ is the ability to
+compose parallelism using generic containers and generic algorithms.
+There are very few languages or libraries for programming parallel
+applications that provide such facilities.
+
+Nested parallel containers can be constructed as homogeneous or
+heterogeneous structures.  For example, you can create vectors of vectors
+or maps of maps, and you can also create vectors of maps or maps of vectors.
+
+\begin{quote}
+\emph{For the alpha release of \stapl, the following
+containers can be used to construct nested parallel containers:}
+\end{quote}
+
+\begin{itemize}
+\item array
+\item vector
+\item map
+\item set
+\item graph
+\item multiarray
+\end{itemize}
+
+\begin{quote}
+\emph{In a future release, there will be additional containers which can be
+composed in a nested manner.}
+\end{quote}
+
+Nested parallel containers can be constructed in several ways:
+
+\begin{itemize}
+\item
+Uniform lengths based on tuples,
+\item
+Mixed lengths based on size views,
+\item
+Uniform distributions based on distribution views,
+\item
+Mixed distributions based on distribution views.
+\end{itemize}
+
+\begin{quote}
+\emph{In a future release, there will be additional methods for constructing
+nested containers.}
+\end{quote}
+
+In order to use nested containers, the programmer must also write nested
+work functions.
+
+This chapter shows examples of using the nested parallelism
+features of \stapl.  Each example builds upon the previous one.
+The following topics are covered.
+
+\begin{itemize}
+\item
+vectors of vectors
+\item
+arrays of arrays
+\item
+maps of maps
+\item
+vectors of arrays, arrays of vectors
+\item
+vectors of maps, arrays of maps
+\item
+maps of vectors, maps of arrays
+\item
+vectors of sets, arrays of sets
+\item
+vectors of graphs, arrays of graphs
+\item
+graphs of vectors, graphs of arrays
+\end{itemize}
+
+This list is illustrative, not exhaustive.  In particular, containers
+can be nested to arbitrary depth, e.g. a vector of arrays of graphs of sets
+is possible.  The amount of code to build and populate such a complex
+data structure is beyond the scope of this document.
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\section{Common Functionality}
+
+In order to keep the size of this chapter manageable, we have factored
+out a number of include statements, type definitions, and functor
+definitions, which are used in multiple examples, and have placed them
+in a single file, which is shown below.  Please refer to this listing
+as necessary, as you study the specifics of each example.
+
+\input{ch3}
+
+\pagebreak
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\pagebreak
+\section{Vectors of Vectors, Arrays of Arrays}
+
+\subsection{Source Code}
+
+\input{ex_301}
+
+\subsection{Explanation and Experimentation}
+
+This example shows how to how to build nested \stapl\ vectors and arrays.
+
+\begin{hashitemize}
+\item 1 : \texttt{{\bf stapl::vector $<$ vec\_int\_tp $>$ }}
+\newline
+Declare a vector of vectors.  Each inner vector can have a different size.
+
+\item 2 : \texttt{{\bf stapl::vector $<$ vec\_int\_tp $>$ }}
+\newline
+Declare a view over a vector of vectors.
+
+\item 3 : \texttt{{\bf stapl::iota}}
+\newline
+Generate a sequence of integers, starting at zero, increasing by one,
+up to the size of the inner container which is the argument.
+
+\item 4 : \texttt{{\bf stapl::assign}}
+\newline
+Assign the value from the first argument to the element referenced by
+the second argument.
+
+\item 5 : \texttt{{\bf stapl::counting\_view}}
+\newline
+Generate an increasing sequence of integers which will used to label
+the values from the other view.
+
+\item 6 : \texttt{{\bf stapl::repeat\_view}}
+\newline
+Replicate the scalar value as many times as the size of the view
+which is the other argument.
+
+\item 7 : \texttt{{\bf vec\_vec\_int\_tp }}
+\newline
+Construct a vector of vectors, in which each inner vector is allocated
+an initial set of elements whose size is determined by the corresponding
+element of the argument view.
+
+\item 8 : \texttt{{\bf vec\_vec\_int\_vw\_tp}}
+\newline
+Construct a view over the vector of vectors container.
+
+\item 9 : \texttt{{\bf stapl::map\_func}}
+\newline
+Apply the work function independently to each inner vector referenced by
+the view of the outer vector.
+
+\item 10 : \texttt{{\bf roll\_wf}}
+\newline
+Apply the work function to each element of the first argument view.
+This will generate an independently selected random number from 1 to
+the specified limit, and store it in the element of the first view.
+
+\item 11 : \texttt{{\bf ary\_ary\_int\_tp}}
+\newline
+Construct an array of arrays, in which each inner array is allocated
+an initial set of elements whose size is determined by the corresponding
+element of the argument view.
+
+\item 12 : \texttt{{\bf build\_wf}}
+\newline
+Apply the work function independently to each element of the first argument
+view.  This will apply a functor that generates a monotonically increasing
+sequence, given a base and step value.
+
+\item 13 : \texttt{{\bf read\_wf}}
+\newline
+Apply the work function independently to each element of the argument view.
+This will apply the basic algorithm
+\texttt{{\bf serial\_io}},
+using the work function
+\texttt{{\bf get\_val\_wf}}.
+This will read values from standard input and store them in the argument view.
+
+\item 14 : \texttt{{\bf process\_wf }}
+\newline
+Apply the work function independently to each element of each of the two
+views.  This will assign a value of the second view to the corresponding
+element of the first view.
+
+\item 15 : \texttt{{\bf display\_wf}}
+\newline
+Apply the work function independently to each element of the argument view.
+This will apply the basic algorithm
+\texttt{{\bf serial\_io}},
+using the work function
+\texttt{{\bf put\_ndx\_val\_wf}}
+to the elements of the inner containers.
+Each of these elements will be sent to the standard output, along with
+an integer element number.
+
+\end{hashitemize}
+
+Save the source of the example in a temporary file.
+Restore the source after each experiment.
+
+After compiling and executing the example, try the following experiments:
+\begin{itemize}
+\item
+Modify the
+\texttt{{\bf stapl::serial\_io}}
+statement that uses
+\texttt{{\bf counting\_view}},
+so that the values are numbered in reverse order.
+(Hint: Construct a
+\texttt{{\bf reverse\_view}}
+on the
+\texttt{{\bf counting\_view}}.
+
+\end{itemize}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\pagebreak
+\section{Maps of Maps}
+
+\subsection{Source Code}
+
+\input{ex_302}
+
+\subsection{Explanation and Experimentation}
+
+This example shows how to how to build a nested \stapl\ map.
+
+\begin{hashitemize}
+\item 1 : \texttt{{\bf map\_map\_int\_tp}}
+\newline
+Declare a map which associates each integer key with another map,
+which associates one integer with another.
+
+\item 2 : \texttt{{\bf bracket assignment}}
+\newline
+If the value specified by the
+\texttt{{\bf outer\_key}}
+has not yet been used as a key in the outer map, then
+the bracket operator with the
+\texttt{{\bf outer\_key}}
+causes the construction of a map with default initialization (no keys).
+This inner map is inserted into the outer map as a value that will
+that will correspond to the specified outer key.
+
+The bracket operator with the
+\texttt{{\bf inner\_key}}
+creates a pair of the inner key and the value on the right hand of the
+assignment operator.  This pair is inserted into the inner map.
+
+\item 3 : \texttt{{\bf elem.second.size()}}
+\newline
+Work functions which process the elements of maps receive pairs as inputs.
+The values of the pair are referred to as
+\texttt{{\bf first}} and \texttt{{\bf second}}.
+Since this work function will be applied to a map of maps, the second part of
+the pair is itself a map, which has a size.
+
+\item 4 : \texttt{{\bf bracket assignment}}
+\newline
+Build a nested map in same way as in the earlier part of the example.
+Here the outer key, inner key, and value are coming from the triplet
+arrays read from file, instead of being functions of global static variables.
+
+\item 5 : \texttt{{\bf ndx\_dom\_tp}}
+\newline
+The domain of a map specifies the valid keys.  This domain specifies keys
+from zero to the value of the last element in the array
+\texttt{{\bf prime\_nums}}.
+Since this array is known to be sorted, this effectively creates a domain
+that covers all values in the array.
+
+\item 6 : \texttt{{\bf map\_map\_int\_tp}}
+\newline
+Construct a map of maps with the specified domain.
+No elements are initialized, since the keys that will be actually used
+are not yet known.  Thus, the initial size of both the inner and outer
+maps is zero.  The inner maps will be constructed when elements are inserted
+into the outer map.
+
+\item 7 : \texttt{{\bf map\_map\_int\_vw\_tp}}
+\newline
+Construct a view over the map of maps container.
+
+\item 8 : \texttt{{\bf stapl::do\_once(ex\_302\_fill\_wf}}
+\newline
+With other nested containers, we construct the container with a initial
+size, and the elements are initialized with default values.  Then we fill
+in the inner containers separately.
+
+This isn't possible with nested maps.  The number of elements in the outer
+container depends on the unique values of the keys inserted into the map.
+This means that the container can only be initialized in an empty state.
+
+The consequence of this is that after initialization, it is not possible
+to apply a basic algorithm such as
+\texttt{{\bf stapl::map\_func}}
+to the map, since there are no elements
+to iterate over.  So, we must iterate over it with a sequential loop nest,
+in order to build the nested map.
+We put the guard around the sequential loop nest, in order to to ensure
+that we aren't doing the exact same work on every processor, which is what
+will happen in an SPMD program otherwise.
+
+\item 9 : \texttt{{\bf ary\_sz\_tp}}
+\newline
+Construct three arrays of the same size, which will hold
+the left (outer) key, right (inner) key, and value for a nested map.
+
+\item 10 : \texttt{{\bf get\_triple\_wf}}
+\newline
+Read integer triplets from the standard input.  One value for each
+triplet is stored in each of the three containers accessed by the views.
+
+\item 11 : \texttt{{\bf ndx\_dom\_tp}}
+\newline
+Create a domain for the keys of the outer and inner maps.
+The upper bound of $2^{24}$ was selected with knowledge about the input
+data sets -- no prime in the first 100,000 primes is larger than this value.
+
+\end{hashitemize}
+
+Save the source of the example in a temporary file.
+Restore the source after each experiment.
+
+After compiling and executing the example, try the following experiments:
+\begin{itemize}
+\item
+In the line that constructs
+\texttt{{\bf map\_dom\_a}},
+replace the variable
+\texttt{{\bf data\_cnt}}
+with the expression
+\texttt{{\bf data\_cnt/2}}.
+Explain the change in the behavior of the program.
+
+%% TODO: stapl::get_location_id() == 0 no longer in the actual code (was
+% replaced by stapl::do_once) - modify the excercise accordingly.
+%
+% \item
+% Disable the guard statement
+% \texttt{{\bf
+%   if (stapl::get\_location\_id() == 0)
+% }}, with a comment or \emph{ifdef}.  Don't forget the closing brace.
+% Does the behavior of the program change?  If you can't observe any difference,
+% devise an experiment to prove that something did change.  (Hint: see the
+% first example in this tutorial.)
+
+\item
+Create a new work function, based on
+\texttt{{\bf get\_triple\_wf}},
+which reads four integers at a time.  Call it
+\texttt{{\bf get\_quad\_wf}},
+Write a new \stapl program which applies your new work function.
+
+\item
+This example uses
+\texttt{{\bf multi\_map\_cksum\_wf}},
+rather than
+\linebreak[4] \texttt{{\bf inner\_map\_cksum\_wf}} or
+\texttt{{\bf outer\_map\_cksum\_wf}}.
+
+What are the differences between these work functions?  Why is the choice
+made in this example necessary?
+
+\end{itemize}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\pagebreak
+\section{Vectors of Arrays, Arrays of Vectors}
+
+\subsection{Source Code}
+
+\input{ex_303}
+
+\subsection{Explanation and Experimentation}
+
+This is the first example that uses heterogeneous nested containers, that is,
+containers nested within each other which are not all of the same kind.
+
+\begin{hashitemize}
+\item 1 : \texttt{{\bf vec\_ary\_int\_tp}}
+\newline
+Define the type of a vector of arrays of integers.
+
+\item 2 : \texttt{{\bf ary\_vec\_int\_tp}}
+\newline
+Define the type of an array of vectors of integers.  In the first case, there
+was one vector which contained many arrays.  In this case, there will be
+one array, which contains many vectors.
+
+\item 3 : \texttt{{\bf stapl::map\_func}}
+\newline
+Apply the work function
+\texttt{{\bf roll\_wf }}
+independently to one element referenced by
+the length view, and to a repeated copy of the value of the inner limit.
+The work function picks a random value from 1 to the specified limit,
+and assigns it to the element of the storage referenced by the length view.
+
+\item 4 : \texttt{{\bf ex\_303\_fill\_wf }}
+\newline
+Apply the specified work function independently to one element referenced by
+the vector view of the container \emph{a}.  The work function generates
+a sequence of integers for each inner container.
+
+\item 5 : \texttt{{\bf ex\_303\_show\_wf }}
+\newline
+Apply the specified work function independently to one element referenced by
+the vector view of the container
+\texttt{{\bf a}}.
+The work function calls the basic algorithm
+\texttt{{\bf serial\_io }},
+which calls another work function to display a single value on the
+standard output.
+
+\end{hashitemize}
+
+Save the source of the example in a temporary file.
+Restore the source after each experiment.
+
+After compiling and executing the example, try the following experiments:
+\begin{itemize}
+\item
+Replace
+\texttt{{\bf vector\_view }}
+with
+\texttt{{\bf array\_view }}
+in the second type definition.  Does the code compile?  Does it execute?
+Why?
+
+\item
+Replace
+\texttt{{\bf array\_view }}
+with
+\texttt{{\bf vector\_view }}
+in the fourth type definition.  Does the code compile?  Does it execute?
+Why?
+
+%%\item
+%%Use the \stapl API Documentation found in \emph{/docs/html}.
+%%Find some non-mutating features of a
+%%\texttt{{\bf vector}}
+%%that can't be performed on an \texttt{{\bf array}}.
+%%Add a statement that uses one of these features.  Does the code compile?
+%%Does it execute?  Why?
+
+\end{itemize}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\pagebreak
+\section{Vectors of Maps, Arrays of Maps}
+
+\subsection{Source Code}
+
+\input{ex_304}
+
+\subsection{Explanation and Experimentation}
+
+This example shows how to construct nested containers in which a map is
+the inner container, and a different container class is the outer container.
+
+\begin{hashitemize}
+\item 1 : \texttt{{\bf vec\_map\_int\_tp}}
+\newline
+Define the type of a vector of maps of integers.
+
+\item 2 : \texttt{{\bf ary\_map\_int\_tp}}
+\newline
+Define the type of an array of maps of integers.  In the first case, there
+was one vector which contains many maps.  In the second case, there will be
+one array, which contains many maps.
+
+\item 3 : \texttt{{\bf stapl::splitter\_partition}}
+\newline
+A splitter partition specifies a set of \emph{cuts} on a data structure.
+
+\item 4 : \texttt{{\bf stapl::segmented\_view}}
+\newline
+A segmented view imposes an additional level of structure on a specified
+view or container.
+
+\item 5 : \texttt{{\bf assignment}}
+\newline
+This loop nest looks like the construction of maps of maps from an earlier
+example.  The difference is that the leftmost bracket operator is referring to
+an existing map, rather than constructing it, in the case that the key
+had not been used previously.  The variable names used in the brackets
+were chosen to emphasize this point.
+
+\item 6 : \texttt{{\bf vec\_map\_int\_tp}}
+\newline
+Construct a vector of maps of integers.  The maps are initialized at
+this point, but they have no key-value pairs.
+
+\item 7 : \texttt{{\bf iterator}}
+\newline
+The first two arguments are segments of a larger structure.  In this usage,
+the first argument is a sequence of all of the keys that will be inserted
+into an inner map.  The second argument is a sequence of the corresponding
+values for each of the keys.
+
+\item 8 : \texttt{{\bf bracket assignment}}
+\newline
+The third argument is a view over an inner map.  The loop processes
+all of the keys and values in the segments, and inserts them into the map.
+
+\item 9 : \texttt{{\bf size()}}
+\newline
+Each inner map has its own size, which is the number of unique keys inserted.
+
+\item 10 : \texttt{{\bf get\_triple\_wf}}
+\newline
+Read in triplets into three arrays.
+The triplets are sorted by the first value in triple.
+The first values can be duplicated, the second values occur
+only once for each unique first value.
+There will be a separate map in the array for each unique first value.
+
+\item 11 : \texttt{{\bf seg\_flag}}
+\newline
+Identify the points at which the keys elements change values.
+Generate the segment flags from the keys.  For example,
+\newline
+keys   1 1 1 2 2 3 4 4 5 5 5
+\newline
+flags  0 0 1 0 1 1 0 1 0 0 1
+
+\item 12 : \texttt{{\bf seg\_cnt}}
+\newline
+Generate the segment counts from the segment flags.  For example,
+\newline
+flags   0 0 1 0 1 1 0 1 0 0 1
+\newline
+counts  3 2 1 2 3
+
+\item 13 : \texttt{{\bf seg\_cnt.size()-1}}
+\newline
+Subtract 1 from the size because splitter\_partition adds an element.
+
+\item 14 : \texttt{{\bf assignment}}
+\newline
+Copy the segment lengths to an \stl\ vector.
+
+\item 15 : \texttt{{\bf seg\_ary\_vw\_tp}}
+\newline
+Create segmented views over the map keys and the map values.
+
+\item 16 : \texttt{{\bf ary\_map\_int\_tp}}
+\newline
+Create an array with as many elements as unique values in the
+first elements of the tuples.
+
+\item 17 : \texttt{{\bf stapl::map\_func}}
+\newline
+Copy from the segment view of the source to the nested map destination.
+
+\item 18 : \texttt{{\bf stapl::map\_reduce}}
+\newline
+Compute a checksum over the entire data structure.  The work function computes
+the checksum for all of the values in a single map.  The map reduce basic
+algorithm applies the exclusive or function to the results of computing
+the individual check sums.
+
+\end{hashitemize}
+
+Save the source of the example in a temporary file.
+Restore the source after each experiment.
+
+After compiling and executing the example, try the following experiments:
+\begin{itemize}
+\item
+Write a work function and a
+\texttt{{\bf stapl::map\_reduce}}
+statement which will verify that each of the maps has the correct number
+of pairs.  (Hint: use the arrays
+\texttt{{\bf mf}} and \texttt{{\bf seg\_cnt}} ).
+
+\item
+Write a work function and a
+\texttt{{\bf stapl::map\_func}}
+statement which will compute the minimum and maximum values of each map
+stored in
+\texttt{{\bf mv}}
+data structure.  Save those values in a pair.
+Create a vector that stores each of those value pairs as a result of
+applying the work function and the
+\texttt{{\bf stapl::map\_func}}
+statement.
+
+\item 
+Is copying to \texttt{{\bf std::vector}} in \#\# 14 really necessary? 
+Modify the code so that it uses the view \texttt{{\bf seg\_cnt\_vw}} 
+directly. (Hint: Explore other possible parameterizations of the 
+\texttt{{\bf stapl::partition\_splitter}} constructor.)
+
+\end{itemize}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\pagebreak
+\section{Maps of Vectors, Maps of Arrays}
+
+\subsection{Source Code}
+
+\input{ex_305}
+
+\subsection{Explanation and Experimentation}
+
+This example shows how to construct nested containers in which a map is
+the outer container, and a different container class is the inner container.
+
+\begin{hashitemize}
+\item 1 : \texttt{{\bf map\_vec\_int\_tp}}
+\newline
+Define a map of vectors of integers.  The map keys are integers, each
+corresponding map value is a vector.
+
+\item 2 : \texttt{{\bf map\_ary\_int\_tp}}
+\newline
+Define a map of arrays of integers.  The map keys are integers, each
+corresponding map value is an array.
+
+\item 3 : \texttt{{\bf a[key]}}
+\newline
+Creates a new pair \texttt{(key, <empty array>)} and inserts it into the map
+referred to by \texttt{{\bf a}}.
+
+\item 4 : \texttt{{\bf bracket assignment}}
+\newline
+The left bracket selects a vector associated with the specified key.
+The right bracket selects item of the vector and assigns a new value to it.
+
+\item 5 : \texttt{{\bf elem.second}}
+\newline
+This work function is applied to a map by the
+\texttt{{\bf map\_func}}
+basic algorithm.  Each item processed is a pair.
+The second value of the pair will be a view that can be treated as a sequence.
+
+\item 6 : \texttt{{\bf stapl::reduce}}
+\newline
+Computes the sum of all elements in the view.
+
+\item 7 : \texttt{{\bf map\_vec\_int\_tp}}
+\newline
+Construct two maps of integers to vectors, each with the same domain.
+
+\item 8 : \texttt{{\bf key}}
+\newline
+The first and second arguments are equally long segments of a larger structure. 
+In this usage, the first argument is a sequence of equal integers, the first of
+which will serve as a key to the map.
+
+\item 9 : \texttt{{\bf iterator}}
+\newline
+The second argument is a sequence of all of the values that will be inserted 
+into the map.
+
+\item 10 : \texttt{{\bf bracket assignment}}
+\newline
+Copy all of the values from the second argument into consecutive positions in 
+the array newly added to the map.
+
+\item 11 : \texttt{{\bf assignment}}
+\newline
+The first argument is pair of an integer key and a vector. This key is used to
+create a new entry in the map referred to by the second argument. Its
+value is then set to the length of the vector.
+
+\item 12 : \texttt{{\bf ary\_int\_tp}}
+\newline
+Generate the segment flags.
+
+\item 13 : \texttt{{\bf ary\_int\_tp}}
+\newline
+Generate the segment counts.
+
+\item 14 : \texttt{{\bf size()-1}}
+\newline
+Subtract 1 from the size because splitter\_partition adds an element.
+
+\item 15 : \texttt{{\bf stapl::map\_func}}
+\newline
+Copy from the segmented view of the source to the nested map destination.
+
+\end{hashitemize}
+
+Save the source of the example in a temporary file.
+Restore the source after each experiment.
+
+After compiling and executing the example, try the following experiments:
+\begin{itemize}
+\item
+Write a work function and a
+\texttt{{\bf stapl::map\_reduce}}
+statement
+which will verify that each of the vectors has the correct number of elements.
+(Hint: use the arrays
+\texttt{{\bf mf}} and \texttt{{\bf seg\_cnt}} ).
+
+\item
+Write a work function and a
+\texttt{{\bf stapl::map\_func}}
+statement which will compute the minimum and maximum values
+of each vector stored in
+\texttt{{\bf mv}}
+data structure.  Save those values in a pair.
+Create a map that stores each of those value pairs as a result of
+applying the work function and the
+\texttt{{\bf stapl::map\_func}}
+statement.
+
+\end{itemize}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\pagebreak
+\section{Vectors of Sets, Arrays of Sets}
+
+\subsection{Source Code}
+
+\input{ex_306}
+
+\subsection{Explanation and Experimentation}
+
+This example shows how to construct nested containers in which a set is
+the inner container, and a different container class is the outer container.
+
+\begin{hashitemize}
+
+\item 1 : \texttt{{\bf stapl::array}}
+\newline
+Define an array of sets of integers.
+\begin{quote}
+\emph{In the alpha release, it is not
+possible to define sets which contain non-basic types.}
+\end{quote}
+
+\item 2 : \texttt{{\bf stapl::vector}}
+\newline
+Define a vector of sets of integers.
+
+\item 3 : \texttt{{\bf container().insert}}
+\newline
+Add the specified value as a new member of the set.
+We must access the container that the set view covers, since the view
+doesn't provide an
+\texttt{{\bf insert}}
+method.
+
+\item 4 : \texttt{{\bf stapl::do\_once}}
+\newline
+With other nested containers, we construct the container with a initial
+size, and the elements are initialized with default values.  Then we fill
+in the inner containers separately.
+
+This isn't possible with nested sets.  The number of elements in the outer
+container depends on the unique values of the elements inserted into the set.
+This means that the container can only be initialized in an empty state.
+
+The consequence of this is that after initialization, it is not possible
+to apply a basic algorithm such as
+\texttt{{\bf stapl::map\_func}}
+to the set, since there are no elements
+to iterate over.  So, we must iterate over it with a sequential loop nest,
+in order to build the nested set.
+We put the guard around the sequential loop nest, in order to to ensure
+that we aren't doing the exact same work on every processor, which is what
+would happen without it.
+
+\item 5 : \texttt{{\bf vw1.size()}}
+\newline
+Compute the cardinality of the set and return it.
+
+\item 6 : \texttt{{\bf outer}}
+\newline
+Determine the number of sets that the array will contain.
+
+\item 7 : \texttt{{\bf inner}}
+\newline
+Determine the maximum number of elements that each set will contain.
+
+\item 8 : \texttt{{\bf roll\_wf}}
+\newline
+Apply the work function to each element of the first argument view.
+This will generate an independently selected random number from 0 to
+the specified limit, and store it in the element of the first view.
+
+\item 9 : \texttt{{\bf ary\_set\_int\_tp}}
+\newline
+Construct an array of the specified number of sets.
+
+\item 10 : \texttt{{\bf stapl::map\_func}}
+\newline
+Apply the work function to each set in the array, and populate the sets.
+
+\item 11 : \texttt{{\bf stapl::map\_reduce}}
+\newline
+Apply the work function to each set in the array, and compute the sizes.
+
+\item 12 : \texttt{{\bf stapl::map\_func}}
+\newline
+Apply the work function to each set in the array, and display the elements.
+
+\end{hashitemize}
+
+Save the source of the example in a temporary file.
+Restore the source after each experiment.
+
+After compiling and executing the example, try the following experiments:
+\begin{itemize}
+\item
+Replace the occurrences of the type
+\texttt{{\bf ary\_set\_int\_tp}}
+with
+\texttt{{\bf vec\_set\_int\_tp}}.
+Make any other necessary changes, re-compile and re-run.
+\end{itemize}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\chapter{Data Distribution}
+
+This chapter introduces the features of \stapl\ which support 
+distribution of work and data across the system hierarchy.
+
+\begin{itemize}
+\item
+Data distribution specifications
+\item
+Homogeneous nested containers with regular distributions
+\item
+Heterogeneous nested containers with regular distributions
+\item 
+Homogeneous nested containers with arbitrary distributions
+\item 
+Heterogenous nested containers with arbitrary distributions
+\end{itemize}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\pagebreak
+\section{Homogeneous nested containers, regular distributions}
+
+\subsection{Source Code}
+
+\input{ex_401}
+
+\subsection{Explanation and Experimentation}
+
+This example shows how to construct nested containers in which the same
+container class is used at each level of nesting.  The distributions
+which are constructed for the composed containers are regular.
+The same type of distributions is used at each level of nesting.
+
+\begin{hashitemize}
+\item 1 : \texttt{{\bf distribution\_spec<> }}
+\newline
+Distribution specs are functions that create view-based specifications of common data distributions.
+\item 2 : \texttt{{\bf vector<dist\_spec\_tp> }}
+\newline
+Distributions can be organized into a vector.
+\item 3 : \texttt{{\bf view\_based\_partition<dist\_spec\_tp> }}
+\newline
+Over-ride the default partition for the vector.
+\item 4 : \texttt{{\bf view\_based\_mapper<dist\_spec\_tp> }}
+\newline
+Over-ride the default mapper for the vector.
+\item 5 : \texttt{{\bf inner / (2 * stapl::get\_num\_locations) }}
+\newline
+Compute block size based on number of processing elements.
+\item 6 : \texttt{{\bf comp\_spec(3) }}
+\newline
+Data vector will have 3 levels of nesting, so distribution vector must have an element corresponding to each.
+\item 7 : \texttt{{\bf stapl::cyclic(outer) }}
+\newline
+Outer container is distributed cyclic with specified length.
+\item 8 : \texttt{{\bf stapl::block\_cyclic(inner, blk\_size) }}
+\newline
+Middle containers are distributed blocked-cyclic with specified length and block size.
+\item 9 : \texttt{{\bf stapl::block(inner, blk\_size) }}
+\newline
+Inner containers are distributed blocked with specified length and block size.
+\item 10 : \texttt{{\bf vec3\_int\_tp a(comp\_spec) }}
+\newline
+Construct container with specified distribution.
+\end{hashitemize}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\pagebreak
+\section{Homogeneous nested containers, regular distributions}
+
+\subsection{Source Code}
+
+\input{ex_402}
+
+\subsection{Explanation and Experimentation}
+
+This example shows how to construct nested containers in which the same
+container class is used at each level of nesting.  The distributions
+which are constructed for the composed containers are regular.
+Different types of distributions are used at each level of nesting.
+
+\begin{hashitemize}
+\item 1 : \texttt{{\bf view\_based\_partition<dist\_spec\_tp> }}
+\newline
+Over-ride default partition for the array.
+\item 2 : \texttt{{\bf view\_based\_mapper<dist\_spec\_tp> }}
+\newline
+Over-ride default mapper for the array.
+\item 3 : \texttt{{\bf inner / (2 * stapl::get\_num\_locations) }}
+\newline
+Compute block size based on number of processing elements.
+\item 4 : \texttt{{\bf comp\_spec(3) }}
+\newline
+Data array will have 3 levels of nesting, so distribution vector must have an element corresponding to each.
+\item 5 : \texttt{{\bf stapl::balance(outer) }}
+\newline
+Outer containers is distributed balanced with specified length.
+\item 6 : \texttt{{\bf stapl::block(inner, blk\_size) }}
+\newline
+Middle containers are distributed blocked with specified length and block size.
+\item 7 : \texttt{{\bf stapl::block\_cyclic(inner, blk\_size) }}
+\newline
+Inner containers are distributed blocked-cyclic with specified length and  block size.
+\item 8 : \texttt{{\bf ary3\_int\_tp a(comp\_spec) }}
+\newline
+Construct container with specified distribution.
+\end{hashitemize}
+
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\pagebreak
+\section{Heterogenous nested containers, regular distributions}
+
+\subsection{Source Code}
+
+\input{ex_403}
+
+\subsection{Explanation and Experimentation}
+
+This example shows how to construct nested containers in which different
+container classes are used at different levels of nesting.  The distributions
+which are constructed for the composed containers are regular.
+The same type of distributions is used at each level of nesting.
+
+\begin{hashitemize}
+\item 1 : \texttt{{\bf view\_based\_partition<dist\_spec\_tp> }}
+\newline
+Over-ride default partition and mapper for heterogeneous array of vectors
+\item 2 : \texttt{{\bf array\_view<ary\_vec\_ary\_int\_tp> }}
+\newline
+Distributions can be specified for heterogenous nested containers
+\item 3 : \texttt{{\bf stapl::block(outer, otr\_blk\_size) }}
+\newline
+Outer container is distributed blocked with specified length and block size.
+\item 4 : \texttt{{\bf stapl::block(inner, blk\_size) }}
+\newline
+Middle containers are distribut blocked with specified length and block size.
+\item 5 : \texttt{{\bf stapl::block(inner, blk\_size) }}
+\newline
+Inner containers are distributed blocked with specified length and block size.
+\end{hashitemize}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\pagebreak
+\section{Heterogenous nested containers, regular distributions}
+
+\subsection{Source Code}
+
+\input{ex_404}
+
+\subsection{Explanation and Experimentation}
+
+This example shows how to construct nested containers in which different
+container classes are used at different levels of nesting.  The distributions
+which are constructed for the composed containers are regular.
+Different types of distributions are used at each level of nesting.
+
+\begin{hashitemize}
+\item 1 : \texttt{{\bf view\_based\_partition<dist\_spec\_tp> }}
+\newline
+Over-ride default partition and mapper for heterogeneous array of vectors
+\item 2 : \texttt{{\bf vector\_view<vec\_ary\_vec\_int\_tp> }}
+\newline
+Distributions can be specified for heterogenous nested containers
+\item 3 : \texttt{{\bf stapl::cyclic(outer) }}
+\newline
+Outer container is distributed cyclic with specified length;
+\item 4 : \texttt{{\bf stapl::balance(inner) }}
+\newline
+Middle containers are distributed balanced with specified length and block size.
+\item 5 : \texttt{{\bf stapl::block(inner, blk\_size) }}
+\newline
+Inner containers are distributed blocked with specified length and block size.
+\end{hashitemize}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\pagebreak
+\section{ Homogeneous nested containers, arbitrary distributions }
+
+\subsection{Source Code}
+
+\input{ex_405}
+
+\subsection{Explanation and Experimentation}
+
+This example shows how to construct nested containers in which the same
+container class is used at each level of nesting.  
+The distributions which are constructed for the composed containers
+are irregular.
+
+%%\begin{hashitemize}
+%%\item 1 : \texttt{{\bf map< int, vec\_int\_tp >}}
+%%\newline
+%%\item 2 : \texttt{{\bf map< int, ary\_int\_tp >}}
+%%\newline
+%%\item 3 : \texttt{{\bf a[key][index] = value}}
+%%\newline
+%%\item 4 : \texttt{{\bf elem.second }}
+%%\newline
+%%\item 5 : \texttt{{\bf stapl::map\_reduce }}
+%%\newline
+%%\item 6 : \texttt{{\bf map\_vec\_int\_tp a(map\_dom) }}
+%%\newline
+%%\item 7 : \texttt{{\bf SegRef::iterator}}
+%%\newline
+%%\item 8 : \texttt{{\bf vw[j++] = *iter}}
+%%\newline
+%%\item 9 : \texttt{{\bf val = vec.size()}}
+%%\newline
+%%\item 10 : \texttt{{\bf ex\_405b\_seg\_flags\_wf()}}
+%%\newline
+%%\item 11 : \texttt{{\bf ex\_405b\_seg\_counts\_wf()}}
+%%\newline
+%%\item 12 : \texttt{{\bf stdq(seg\_cnt.size()-1)}}
+%%\newline
+%%\item 13 : \texttt{{\bf ex\_405b\_build\_wf()}}
+%%\newline
+%%\end{hashitemize}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\pagebreak
+\section{ Heterogenous nested containers, arbitrary distributions }
+
+\subsection{Source Code}
+
+\input{ex_406}
+
+\subsection{Explanation and Experimentation}
+
+This example shows how to construct nested containers in which different
+container classes are used at different levels of nesting.  
+The distributions which are constructed for the composed containers
+are irregular.
+
+%%\begin{hashitemize}
+%%\item 1 : \texttt{{\bf ary<set\_int\_tp>}}
+%%\newline
+%%\item 2 : \texttt{{\bf vector<set\_int\_tp>}}
+%%\newline
+%%\item 3 : \texttt{{\bf vw1.insert( key )}}
+%%\newline
+%%\item 4 : \texttt{{\bf ex\_406\_gen\_wf(count)}}
+%%\newline
+%%\item 5 : \texttt{{\bf vw1.size()}}
+%%\newline
+%%\item 6 : \texttt{{\bf size\_t outer}}
+%%\newline
+%%\item 7 : \texttt{{\bf size\_t inner}}
+%%\newline
+%%\item 8 : \texttt{{\bf roll\_wf()}}
+%%\newline
+%%\item 9 : \texttt{{\bf ary\_set\_int\_tp}}
+%%\newline
+%%\item 10 : \texttt{{\bf ex\_405\_fill\_wf()}}
+%%\newline
+%%\item 11 : \texttt{{\bf ex\_406\_process\_wf()}}
+%%\newline
+%%\end{hashitemize}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\chapter{Using Views in \stapl\ }
+
+This chapter introduces the use of views to provide additional
+functionality to containers.
+of graduated examples.  Each example builds upon the previous one.
+The following topics are covered.
+
+\begin{itemize}
+\item
+Make a data aggregate available to view elements processing.
+\item
+Apply a strided view over a vector to
+provide non-contiguous element access.
+\item
+Apply a linear view over a multiarray container to
+provide sequential access to all elements without having
+to write a parallel construct for each dimension.
+\item
+Apply a reverse view to the input to a directional algorithm,
+such as parallel prefix (scan), to provide a variant of the algorithm.
+\item
+Apply an overlap view to an array to access overlapping data segments.
+\item
+Apply a filter view to the inputs to an algorithm so that
+only relevant inputs are processed.
+\item
+Apply a segmented view over an array to handle irregularly-shaped data.
+\item
+Apply a zip view over multiple sequences to enable storing simple
+relational tables in inverted form for ease of processing.
+\end{itemize}
+
+\section{Common Functionality}
+
+In order to keep the size of this chapter manageable, we have factored
+out a number of include statements, type definitions, and functor
+definitions, which are used in multiple examples, and have placed them
+in a single file, which is shown below.  Please refer to this listing
+as necessary, as you study the specifics of each example.
+
+\input{ch5}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\pagebreak
+\section{Repeat Views over Aggregates}
+
+\subsection{Source Code}
+
+\input{ex_501}
+
+\subsection{Explanation and Experimentation}
+
+This example shows how to construct views which access the same
+aggregate data structure to process each element of another view.
+
+\begin{hashitemize}
+\item 1 : \texttt{{\bf stapl::repeat\_view}}
+\newline
+Make the address of the C vector accessible to processing each element
+of the vector argument.
+
+\item 2 : \texttt{{\bf stapl::repeat\_view}}
+\newline
+Make a reference to the STL vector accessible to processing
+each element of the vector argument.
+
+\item 3 : \texttt{{\bf stapl::repeat\_view}}
+\newline
+Make a reference to the entire \stapl\ map accessible to processing
+each element of the vector argument.
+
+\end{hashitemize}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\pagebreak
+\section{Strided View over Indexed Containers}
+
+\subsection{Source Code}
+
+\input{ex_502}
+
+\subsection{Explanation and Experimentation}
+
+This example shows how to construct views which access a subset of values,
+in which the subset is defined by indices which are a fixed distance apart.
+
+\begin{hashitemize}
+\item 1 : \texttt{{\bf stapl::strided\_view}}
+\newline
+Define a type which provides non-unit stride over vector of integers.
+
+\item 2 : \texttt{{\bf stapl::make\_strided\_view}}
+\newline
+Stride of 2 skips over alternate elements.
+
+\item 3 : \texttt{{\bf stapl::make\_strided\_view}}
+\newline
+Stride of 2 corresponds to vector twice as long.
+
+\item 4 : \texttt{{\bf stapl::make\_strided\_view}}
+\newline
+Stride of 4 corresponds to vector four times as long.
+
+\item 5 : \texttt{{\bf stapl::map\_func}}
+\newline
+Applying strided\_views over vectors provides non-contiguous element access
+to basic algorithms.
+
+\end{hashitemize}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\pagebreak
+\section{Linear View over Multiarray Containers}
+
+\subsection{Source Code}
+
+\input{ex_503}
+
+\subsection{Explanation and Experimentation}
+
+This example shows how to apply a linear\_view over a multiarray container.
+This provides sequential access to all elements without having
+to write a parallel construct for each dimension.
+
+\begin{hashitemize}
+
+\item 1 : \texttt{{\bf stapl::multiarray<3, int> }}
+\newline
+Define a three-dimensional array.
+
+\item 2 : \texttt{{\bf stapl::multiarray\_view }}
+\newline
+Define a multiarray view over a three-dimensional array.
+
+\item 3 : \texttt{{\bf stapl::linear\_view}}
+\newline
+Construct the linear view over the multiarray view.
+
+\item 4 : \texttt{{\bf stapl::map\_func}}
+\newline
+Apply the work function to each corresponding element of the two input
+arrays, processing them in linear order.
+
+\end{hashitemize}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\pagebreak
+\section{Reverse View with a Directional Algorithm}
+
+\subsection{Source Code}
+
+\input{ex_504}
+
+\subsection{Explanation and Experimentation}
+
+This example shows how to apply a partial prefix (sum/max) computation,
+in either direction, to an array.
+
+\begin{hashitemize}
+\item 1 : \texttt{{\bf stapl::scan }}
+\newline
+The scan basic algorithm processes from left to right.
+
+\item 2 : \texttt{{\bf stapl::scan(a\_rev\_vw }}
+\newline
+ Applying a reverse\_view to the input to a directional algorithm,
+  provides a variant of the algorithm.
+
+\item 3 : \texttt{{\bf rev\_ary\_int\_vw\_tp }}
+\newline
+ Applying a reverse\_view to the output to a directional algorithm,
+  provides another variant of the algorithm.
+
+\end{hashitemize}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\pagebreak
+\section{Overlap View with Matrix Containers}
+
+\subsection{Source Code}
+
+\input{ex_505}
+
+\subsection{Explanation and Experimentation}
+
+This example shows how to apply an overlap view to an array in order to access
+overlapping segments of data.
+
+\begin{hashitemize}
+\item 1 : \texttt{{\bf stapl::overlap\_view }}
+\newline
+Define an overlap\_view over an array.
+
+\item 2 : \texttt{{\bf iterator }}
+\newline
+The overlap\_view consists of overlapping segments. Here we use serial\_io to
+output each segment on its own line.
+
+\item 3 : \texttt{{\bf inner\_prod\_wf }}
+\newline
+The inner product of each pair of segments of the two overlap\_views given on
+input is computed by iterating over their elements. The result is inserted to
+the output (non-overlapping) view.
+
+\item 4 : \texttt{{\bf left, right, core}}
+\newline
+The overlap\_view is specified in terms of these three variables:
+left overlap, right overlap, non-overlap (core).
+
+\item 5 : \texttt{{\bf stapl::overlap\_view}}
+\newline
+Construct on overlap view over an array.
+
+\item 6 : \texttt{{\bf stapl::map\_func }}
+\newline
+Assign each element of the output the inner product of the corresponding
+segments of the two inputs.
+
+\end{hashitemize}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\pagebreak
+\section{Filter View before an Algorithm with Restricted Domain}
+
+\subsection{Source Code}
+
+\input{ex_506}
+
+\subsection{Explanation and Experimentation}
+
+This example shows how to selectively apply functions to a
+\stapl\ view by composing it with a filter view.
+
+\begin{hashitemize}
+\item 1 : \texttt{{\bf struct filt\_even\_wf}}
+\newline
+Work function filters which values should be processed.
+
+\item 2 : \texttt{{\bf stapl::filter\_view}}
+\newline
+Declare filter\_view in terms of templated filter work function.
+
+\item 3 : \texttt{{\bf filt\_even\_wf<int>}}
+\newline
+Define templated work function.
+
+\item 4 : \texttt{{\bf a\_flt\_vw}}
+\newline
+Construct filter\_view over view of container.
+
+\item 5 : \texttt{{\bf stapl::transform}}
+\newline
+Apply a filter\_view to the inputs of an algorithm.
+
+\item 6 : \texttt{{\bf stapl::reduce}}
+\newline
+Apply a filter\_view to the inputs of a basic algorithm.
+
+\end{hashitemize}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\pagebreak
+\section{Segmented View for Irregular Data}
+
+\subsection{Source Code}
+
+\input{ex_507}
+
+\subsection{Explanation and Experimentation}
+
+This example shows how to apply a segmented\_view over an array,
+making it possible to process irregularly-shaped data.
+
+\begin{hashitemize}
+\item 1 : \texttt{{\bf ex\_507\_seg\_flags\_wf}}
+\newline
+Identify differences in values at consecutive locations with boolean flags.
+
+\item 2 : \texttt{{\bf ex\_507\_seg\_counts\_wf}}
+\newline
+Compute the number of segments of unique values as marked with boolean flags.
+
+\item 3 : \texttt{{\bf tot +=}}
+\newline
+Accumulate the sum reduction for this segment.
+
+\item 4 : \texttt{{\bf elem = tot}}
+\newline
+Save the final sum for this segment.
+
+\item 5 : \texttt{{\bf elem +=}}
+\newline
+Save all the partial sums within this segment
+
+\item 6 : \texttt{{\bf stapl::serial\_io(get\_triple\_wf}}
+\newline
+Read in triplets from example file.  Only the first value in each
+triplet is used in this example.  The initial values are sorted.
+
+\item 7 : \texttt{{\bf seg\_flag\_vw}}
+\newline
+Identify the points at which the keys elements change values.
+Generate the segment flags from the keys.  For example,
+\newline
+keys   1 1 1 2 2 3 4 4 5 5 5
+\newline
+flags  0 0 1 0 1 1 0 1 0 0 1
+
+\item 8 : \texttt{{\bf seg\_cnt\_vw}}
+\newline
+Generate the segment counts from the segment flags.  For example,
+\newline
+flags   0 0 1 0 1 1 0 1 0 0 1
+\newline
+counts  3 2 1 2 3
+
+\item 9 : \texttt{{\bf seg\_cnt.size()-1}}
+\newline
+Subtract 1 from the size because splitter\_partition adds an element.
+
+\item 10 : \texttt{{\bf for}}
+\newline
+Copy the segment lengths to an \stl\ vector.
+
+\item 11 : \texttt{{\bf seg\_ary\_vw\_tp}}
+\newline
+Create segmented views over the data array.
+
+\item 12 : \texttt{{\bf stapl::map\_func(ex\_507\_seg\_red\_wf() }}
+\newline
+Compute segmented reduction - initial value is reset at the beginning of
+each segment.
+
+%%\item 13 : \texttt{{\bf stapl::map\_func(ex\_507\_seg\_scan\_wf() }}
+%%\newline
+%%Compute segmented scan - partial results restart at the beginning of
+%%each segment.
+
+\end{hashitemize}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\pagebreak
+\section{Zip View for Combining Sequence Containers}
+
+Applying a zip\_view over multiple sequence views enables storing
+simple databases in inverted form, for efficient processing.
+
+\subsection{Source Code}
+
+\input{ex_508}
+
+\subsection{Explanation and Experimentation}
+
+This example shows how to
+
+\begin{hashitemize}
+\item 1 : \texttt{{\bf stapl::zip\_view}}
+\newline
+A zip view produces a sequence of tuples from a set of two or more views,
+with one item in the tuple from each view.
+
+\item 2 : \texttt{{\bf tuple<int,int,int>}}
+\newline
+Copy the argument of the work function into a tuple for ease of processing.
+
+\item 3 : \texttt{{\bf get<0>(tup)}}
+\newline
+The items in a tuple are accessed by using the function template
+\texttt{{\bf get}}, where the template type is an integer constant,
+and the function argument is the tuple.
+
+\item 4 : \texttt{{\bf zip3\_vec\_int\_vw\_tp}}
+\newline
+Construct the zip view over three vectors of integers.
+
+\end{hashitemize}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\chapter{Using Graphs in \stapl\ }
+
+This chapter introduces the use of graph container and views
+with a series of graduated examples.
+Each example builds upon the previous one.
+The following topics are covered.
+
+\begin{itemize}
+\item
+Building graphs with generators
+\item
+Building graphs with data from files
+\item
+Varieties of graphs
+\item
+Processing graphs with \stapl\ algorithms
+\item
+Properties on vertices and edges
+\item
+Vectors of graphs, arrays of graphs
+\item
+Graphs of vectors, graphs of arrays
+\end{itemize}
+
+\section{Common Functionality}
+
+In order to keep the size of this chapter manageable, we have factored
+out a number of include statements, type definitions, and functor
+definitions, which are used in multiple examples, and have placed them
+in a single file, which is shown below.  Please refer to this listing
+as necessary, as you study the specifics of each example.
+
+\input{ch6}
+
+Graphs resulting from the examples are written out for further inspection by
+methods like \texttt{{\bf stapl::write\_edge\_list}} or \texttt{{\bf
+stapl::write\_adj\_list}}. These methods append to the output files, so you may
+want to delete the output files before subsequent runs of each example. 
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\pagebreak
+\section{Building Graphs with Generators}
+
+\subsection{Source Code}
+
+\input{ex_601}
+
+\subsection{Explanation and Experimentation}
+
+\begin{hashitemize}
+\item 1 : \texttt{{\bf graph\_io.hpp}}
+\newline
+This file provides methods to read graphs from files and write them
+to files, in several formats. Like most other graph-related classes, it is also
+included in \texttt{stapl/graph.hpp}.
+
+\item 2 : \texttt{{\bf stapl::UNDIRECTED}}
+\newline
+The edges in this graph are undirected.  The alternative is DIRECTED.
+Such graphs are called directed graphs, or digraphs.
+
+\item 3 : \texttt{{\bf stapl::NONMULTIEDGES}}
+\newline
+The vertices in this graph will not allow multiple edges to the same
+target vertex.  The alternative is to allow multiple edges with the
+attribute MULTIEDGES.  Such graphs are called multigraphs.
+
+\item 4 : \texttt{{\bf stapl::properties::no\_property}}
+\newline
+The vertices in this graph will not have a property associated with them.
+Otherwise, this attribute must specify the data type of the property
+associated with each vertex.
+
+\item 5 : \texttt{{\bf stapl::properties::no\_property}}
+\newline
+The edges in this graph will not have a property associated with them.
+Otherwise, this attribute must specify the data type of the property
+associated with each edge.
+
+\item 6 : \texttt{{\bf stapl::generators::make\_mesh}}
+\newline
+Generate a graph which is a mesh, with the specified dimensions.
+
+\item 7 : \texttt{{\bf stapl::write\_edge\_list}}
+\newline
+Output a list of pairs of source and targets of each edge,
+excluding properties, regardless of whether they exist or not.
+
+\item 8 : \texttt{{\bf num\_vertices()}}
+\newline
+Return the number of vertices in the graph.
+
+\item 9 : \texttt{{\bf stapl::generators::make\_binary\_tree}}
+\newline
+Generate a graph which is a binary tree, with the specified dimensions.
+
+\item 10 : \texttt{{\bf stapl::generators::make\_torus}}
+\newline
+Generate a graph which is a torus, with the specified dimensions.
+
+\end{hashitemize}
+
+Save the source of the example in a temporary file.
+Restore the source after each experiment.
+
+After compiling and executing the example, try the following experiments:
+\begin{itemize}
+\item
+Inspect the output files produced by this program.
+\item
+Change a call to \texttt{{\bf stapl::write\_edge\_list}} to
+\texttt{{\bf stapl::write\_dot}}.  Use the open source DOT tool to generate
+a graphic display of graphs.  (See graphviz.org if DOT isn't already
+installed on your system.)
+\end{itemize}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\pagebreak
+\section{Building Graphs with Data from Files}
+
+\subsection{Source Code}
+
+\input{ex_602}
+
+\subsection{Explanation and Experimentation}
+
+\begin{hashitemize}
+\item 1 : \texttt{{\bf stapl::graph}}
+\newline
+Declare a static graph type which has integers for properties of both
+vertices and edges.  No vertices can be added to the graph after it
+is constructed.
+
+\item 2 : \texttt{{\bf stapl::dynamic\_graph}}
+\newline
+Declare a dynamic graph type which has integers for properties of both
+vertices and edges.  Vertices \emph{can} be added to the graph after it
+is constructed.
+
+\item 3 : \texttt{{\bf vtx.property}}
+\newline
+Set the property on the vertex to zero.
+
+\item 4 : \texttt{{\bf stapl::read\_edge\_list}}
+\newline
+Construct a static graph by reading the edges from file, using
+a function supplied in \texttt{{\bf graph\_io.hpp}}. By default, all vertex and
+edge properties will be initialized to the default value of their
+respective types (in this case to 0).
+
+\item 5 : \texttt{{\bf gr\_vw[0].property() = }}
+\newline
+Set the property on vertex ID 0.
+
+\item 6 : \texttt{{\bf stapl::write\_adj\_list}}
+\newline
+Write the graph to the specified file in adjacency list format.
+
+\item 7 : \texttt{{\bf stapl::graph\_reader}}
+\newline
+Construct a dynamic graph by reading the edges from file. Here we show a more
+flexible equivalent of \texttt{stapl::read\_edge\_list} that allows the user to
+specify how each line of the input file translates to a new edge in the graph.
+
+\item 8 : \texttt{{\bf stapl::map\_func(ex\_602\_init\_wf()}}
+\newline
+Manually initialize the vertex property for all vertices of the graph.
+
+\item 9 : \texttt{{\bf add\_vertex}}
+\newline
+Add vertices with given property to the graph - one per each location. This
+operation is asynchronous -- stapl::rmi\_fence() is needed before accessing the
+new vertices.
+
+\item 10 : \texttt{{\bf add\_edge}}
+\newline
+Synchronously add new edges from vertex 0 to the newly added vertices, with
+weights corresponding to the location of the target vertex. The method waits
+until the operation is complete and then returns the descriptor of the new edge.
+If that descriptor is not used, the asynchronous \texttt{{\bf add\_edge\_async}}
+should be preferred.
+
+\item 11 : \texttt{{\bf read\_edge\_list\_with\_props\_line}}
+\newline
+A functor specifying how each line of the input file should be interpreted when
+constructing the graph.
+
+\item 12 : \texttt{{\bf operator()}}
+\newline
+The first argument is a stringstream representing a line from the input file.
+The second argument can be used for aggregating edges before adding them to the
+graph (for increased performance); since aggregation of edges with properties is
+not currently supported in \stapl, this argument will not be used here. The
+final argument is a pointer to the resulting graph. Expected return values are 
+0 for success, 1 for failure.
+
+\item 13 : \texttt{{\bf ss $>>$ }}
+\newline
+Read both endpoints of an edge and its property value.
+
+\item 14 : \texttt{{\bf add\_edge\_async}}
+\newline
+Asynchronously add a new edge -- graph readers provided by \stapl\ take care of
+the global synchronization that guarantees the edge was actually added to the
+graph.
+
+\item 15 : \texttt{{\bf stapl::graph\_sharder}}
+\newline
+Split the input file into "shards", which can be processed in parallel. 
+
+\item 16 : \texttt{{\bf stapl::sharded\_graph\_reader}}
+\newline
+Read the "shards", build a graph from them, and construct a view over
+graph. Customized line reader is used in order to read the edge properties 
+from the file.
+
+\item 17 : \texttt{{\bf stapl::write\_adj\_list}}
+\newline
+Write the graph to the specified file in adjacency list format.
+Since this graph has non-zero property values on the edges, they
+should be reflected in the output.
+
+\end{hashitemize}
+
+Save the source of the example in a temporary file.
+Restore the source after each experiment.
+
+After compiling and executing the example, try the following experiments:
+\begin{itemize}
+\item
+Inspect the input files used by this program.  Make sure you understand
+the file format.
+\item
+Inspect the output files produced by this program.
+\item
+Change the call to \texttt{{\bf stapl::write\_edge\_list}} to
+\texttt{{\bf stapl::write\_dot}}.  Use the open source DOT tool to generate
+a graphic display of graphs.
+\item  
+Modify \texttt{{\bf ex\_602b}} so that only one vertex is added to the graph.
+\end{itemize}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\pagebreak
+\section{Varieties of Graphs}
+
+\subsection{Source Code}
+
+\input{ex_603}
+
+\subsection{Explanation and Experimentation}
+
+\begin{hashitemize}
+\item 1 : \texttt{{\bf UNDIRECTED, NONMULTIEDGES}}
+\newline
+Declare type of graph whose vertices and edges both have integer properties,
+whose edges are undirected, and whose vertices do not allow multiple
+edges to the same target vertex.
+
+\item 2 : \texttt{{\bf DIRECTED, NONMULTIEDGES }}
+\newline
+Declare type of graph whose vertices and edges both have integer properties,
+whose edges are directed, and whose vertices do not allow multiple
+edges to the same target vertex.
+
+\item 3 : \texttt{{\bf UNDIRECTED, MULTIEDGES}}
+\newline
+Declare type of graph whose vertices and edges both have integer properties,
+whose edges are undirected, and whose vertices allow multiple
+edges to the same target vertex.
+
+\item 4 : \texttt{{\bf DIRECTED, MULTIEDGES}}
+\newline
+Declare type of graph whose vertices and edges both have integer properties,
+whose edges are directed, and whose vertices allow multiple
+edges to the same target vertex.
+
+\item 5 : \texttt{{\bf "u\_v48\_e108.txt"}}
+\newline
+A file with undirected source-target vertex pairs.
+
+\item 6 : \texttt{{\bf "d\_v48\_e210.txt"}}
+\newline
+A file with directed source-target vertex pairs.
+
+\item 7 : \texttt{{\bf graf.add\_edge}}
+\newline
+Add a reverse edge from the destination to the source, if the
+edge number is a multiple of 10.
+
+\item 8 : \texttt{{\bf stapl::read\_edge\_list}}
+\newline
+Open a file with edges, specified by source-target vertex pairs,
+construct a graph, and return a view over that graph.
+
+\item 9 : \texttt{{\bf xin $>>$ vtx\_cnt $>>$ edge\_cnt }}
+\newline
+Read the number of vertices and edges in the graph. Note that using
+std::ifstream directly (instead of wrapping it in
+stapl::stream) ensures that on all locations, vtx\_cnt and edge\_cnt
+are the first two values read from the file.
+
+\item 10 : \texttt{{\bf src\_vw, dest\_vw}}
+\newline
+Declare containers to store corresponding parts of edge specifications.
+
+\item 11 : \texttt{{\bf stapl::serial\_io(get\_pair\_wf}}
+\newline
+Read pairs of values from a text file into two corresponding \stapl\ arrays.
+
+\item 12 : \texttt{{\bf stapl::map\_func}}
+\newline
+Visit all the pairs of source and destination, applying the work function
+which may insert an edge for the pair.
+
+%%%%%%%%%%
+
+\item 13 : \texttt{{\bf graf.add\_edge(dest,src)}}
+\newline
+If the source and destination indices are between 0 and 12,
+add an edge that goes from the destination to the source.
+
+\item 14 : \texttt{{\bf stapl::map\_func}}
+\newline
+Visit all the pairs of source and destination, applying the work function
+which may insert an edge for the pair.
+
+%%%%%%%%%%
+
+\item 15 : \texttt{{\bf std::map<int,int>}}
+\newline
+Define an STL map from integers to groups of related vertices.
+
+\item 16 : \texttt{{\bf getline(xin, buffer)}}
+\newline
+Read all of the integer pairs from the file.
+
+\item 17 : \texttt{{\bf groups.insert(}}
+\newline
+Insert each pair into the map.
+
+\item 18 : \texttt{{\bf stapl::map\_func}}
+\newline
+Both the groups map and the graph are passed to the work function using
+the \texttt{{\bf repeat\_view}}.  The function needs the entire data
+structure, not individual elements, which is what would be passed
+without using the \texttt{{\bf repeat\_view}}.
+
+%%%%%%%%%%
+
+\item 19 : \texttt{{\bf ex\_603\_dup\_edges }}
+\newline
+Add multiple edges between some vertices.
+
+\item 20 : \texttt{{\bf ex\_603\_rev\_edges }}
+\newline
+Add edges in both directions.
+
+\end{hashitemize}
+
+Save the source of the example in a temporary file.
+Restore the source after each experiment.
+
+After compiling and executing the example, try the following experiments:
+\begin{itemize}
+\item
+Inspect the output files produced by this program.
+\item
+Change the call to \texttt{{\bf stapl::write\_edge\_list}} to
+\texttt{{\bf stapl::write\_dot}}.  Use the open source DOT tool to generate
+a graphic display of graphs.
+\item Is there any difference between the graph defined in u\_v48\_e108.txt and
+the one resulting from \texttt{\bf ex\_603a} (written to ex\_603a.out)? Why?
+\item Is there any difference between the graph defined in d\_v48\_e216.txt and
+the one resulting from \texttt{\bf ex\_603b} (written to ex\_603b.out)? Why?
+\end{itemize}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\pagebreak
+\section{Processing Graphs with \stapl\ algorithms}
+
+\subsection{Source Code}
+
+\input{ex_604}
+
+\subsection{Explanation and Experimentation}
+
+\begin{hashitemize}
+\item 1 : \texttt{{\bf bfs\_graf\_tp}}
+\newline
+Declare a graph type which has no edge properties, but has a vertex property
+suitable for computing a breadth first search of the graph.
+
+\item 2 : \texttt{{\bf vertex\_descriptor}} \newline Define the vertex color
+type used by the algorithm for computing strongly connected components of a
+graph. A strongly connected component is a maximal subgraph such that there is a
+path along the edges in the subgraph from every vertex to every other vertex.
+
+\item 3 : \texttt{{\bf scc\_graf\_tp}}
+\newline
+Declare a graph type which has no edge properties, but has a vertex property
+suitable for computing the strongly connected components.
+
+\item 4 : \texttt{{\bf tops\_graf\_tp}}
+\newline
+Declare a graph type which has no edge properties, but has a vertex property
+suitable for computing a topological sort of the vertices.
+
+\item 5 : \texttt{{\bf graf\_int\_tp}}
+\newline
+Declare a graph type which has both vertex and edge properties stored
+as integers.
+
+\item 6 : \texttt{{\bf stapl::array<vtx\_desc\_tp>}}
+\newline
+Construct an array which can hold the vertex descriptors generated
+by the breadth first search.
+
+\item 7 : \texttt{{\bf stapl::breadth\_first\_search}}
+\newline
+Apply the breadth first search in a level synchronous manner.
+
+\item 8 : \texttt{{\bf stapl::map\_func}}
+\newline
+Read the values generated by the search and store them in the
+results array.
+
+\item 9 : \texttt{{\bf stapl::array<vtx\_col\_tp>}}
+\newline
+Construct an array which can hold the ``color'' of each vertex (i.e. a number 
+determining which connected component the vertex belongs to).
+
+\item 10 : \texttt{{\bf stapl::pscc}}
+\newline
+Compute the strongly connected components of the graph, using a parallel
+algorithm.
+
+\item 11 : \texttt{{\bf stapl::map\_func}}
+\newline
+Read the vertex property values generated by the SCC algorithm and store them in
+the results array. Vertices with the same property value belong to the same
+strongly connected component.
+
+\item 12 : \texttt{{\bf property().rank()}}
+\newline
+Graphs processed by this work function have been declared to have a
+vertex property which contains the topological rank of each vertex.
+
+\item 13 : \texttt{{\bf stapl::topological\_sort}}
+\newline
+Apply the topological sort in a level-synchronous manner.
+This sort produces a linear ordering of the vertices of a directed
+acyclic graph, such that for each edge from vertex v to vertex w,
+v comes before w in the ordering.
+
+\item 14 : \texttt{{\bf stapl::map\_reduce}}
+\newline
+Compute the maximum topological rank of all the vertices of the graph. This
+number represents the maximum path length in a directed acyclic graph.
+
+\item 15 : \texttt{{\bf Vtx::adj\_edge\_iterator}}
+\newline
+Edges adjacent to a vertex are accessed through an edge iterator.
+
+\item 16 : \texttt{{\bf aei != vtx.end() }}
+\newline
+Visit all of the edges adjacent to one vertex.
+
+\item 17 : \texttt{{\bf (*aei).property()}}
+\newline
+Fetch the property value associated with an edge.
+
+\item 18 : \texttt{{\bf stapl::read\_edge\_list}}
+\newline
+Read in the edges which define the graph, including edge weights. Note
+that the same approach as in Example 602 is used to read both the edges and
+their properties from the input file.
+
+\item 19 : \texttt{{\bf stapl::map\_reduce}}
+\newline
+Compute the maximum value of the total of the edge weights for each vertex.
+
+\end{hashitemize}
+
+% Save the source of the example in a temporary file.
+% Restore the source after each experiment.
+% 
+% After compiling and executing the example, try the following experiments:
+% \begin{itemize}
+% \item
+% 
+% \end{itemize}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\pagebreak
+\section{Properties on Vertices and Edges}
+
+\subsection{Source Code}
+
+\input{ex_605}
+
+\subsection{Explanation and Experimentation}
+
+This example shows how to set and get properties on vertices and edges,
+including properties which are not basic data types.
+
+\begin{hashitemize}
+\item 1 : \texttt{{\bf class my\_vertex\_property}}
+\newline
+This class holds an aggregrate vertex property, consisting of a double
+and an unsigned integer.
+
+\item 2 : \texttt{{\bf get\_size\_prop} / {\bf set\_size\_prop}}
+\newline
+Accessor and mutator for the unsigned integer part of the property.
+
+\item 3 : \texttt{{\bf get\_double\_prop} / {\bf get\_double\_prop}}
+\newline
+Accessor and mutator for the double part of the property.
+
+\item 4 : \texttt{{\bf STAPL\_PROXY\_HEADER}}
+\newline
+According to Design Patterns [GHVJ95], the intent of a proxy is:
+"Provide a surrogate or placeholder for another object to control
+access to it." 
+A definition of a proxy class is required in namespace stapl for any
+object that might be accessed remotely. Such a proxy class can be easily written
+with the help of several macros provided by \stapl\ -- the first,
+STAPL\_PROXY\_HEADER, defines the header of every proxy class. 
+
+\item 5 : \texttt{{\bf STAPL\_PROXY\_DEFINES}}
+\newline
+This macro defines the common part of every proxy class.
+
+\item 6 : \texttt{{\bf STAPL\_PROXY\_METHOD\_RETURN}}
+\newline
+Defines the proxy version of a method with a return value
+
+\item 7 : \texttt{{\bf STAPL\_PROXY\_METHOD}}
+\newline
+Defines the proxy version of a method with no return value.
+
+\item 8 : \texttt{{\bf vtx.property().set\_size\_prop}}
+\newline
+Assign the vertex unsigned integer property a new value.
+
+\item 9 : \texttt{{\bf gr\_vw[0].property().set\_double\_prop}}
+\newline
+Assign the vertex double property a new value for the specified vertex.
+
+\item 10: \texttt{{\bf ex\_605a\_set\_wf()}}
+\newline
+Set the unsigned integer property of all vertices.
+
+\item 11: \texttt{{\bf stapl::write\_adj\_list}}
+\newline
+Display the graph in adjacency list format, including the values of
+vertex properties.
+
+\item 12 : \texttt{{\bf vtx.property().set\_double\_prop}}
+\newline
+Set the double part of the vertex property.
+
+\item 13 : \texttt{{\bf (*aei).property() = }}
+\newline
+Set the edge property.
+
+\item 14: \texttt{{\bf ex\_605b\_set\_wf()}}
+\newline
+Set the vertex and edge property values.
+
+\item 15 : \texttt{{\bf gr\_vw[0].property().set\_size\_prop}}
+\newline
+Assign the vertex unsigned integer property a new value
+for the specified vertex.
+
+\item 16: \texttt{{\bf stapl::write\_adj\_list}}
+\newline
+Display the graph in adjacency list format, including the values of
+vertex and edge properties.
+
+\end{hashitemize}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\pagebreak
+\section{Vectors of Graphs, Arrays of Graphs}
+
+\subsection{Source Code}
+
+\input{ex_606}
+
+\subsection{Explanation and Experimentation}
+
+This example shows how to construct nested containers in which a vector
+or array is the outer container, and a graph is the inner container.
+
+\begin{hashitemize}
+\item 1 : \texttt{{\bf graf\_int\_tp}}
+\newline
+A directed graph which does not allow multiple edges between the same
+source and destination nodes, and which stores integers as property values.
+
+\item 2 : \texttt{{\bf ary\_graf\_int\_tp}}
+\newline
+Declare an array type in which each element is an undirected graph
+which does not allow multiple edges.
+
+\item 3 : \texttt{{\bf vec\_graf\_int\_tp}}
+\newline
+Declare a vector type in which each element is an undirected graph which
+does not allow multiple edges.
+
+\item 4 : \texttt{{\bf src $<$ count \&\& dest $<$ count }}
+\newline
+Make an edge if the specified source and destination nodes are included
+in the graph being constructed.
+
+\item 5 : \texttt{{\bf stapl::map\_func(ex\_606\_init\_wf() }}
+\newline
+Set the initial vertex property for all vertices in the graph. 
+
+\item 6 : \texttt{{\bf stapl::map\_func(ex\_606\_build\_wf() }}
+\newline
+Apply \texttt{{\bf repeat\_view}} to the graph and the count so that they
+are available for processing each element of the views.
+
+\item 7 : \texttt{{\bf map\_reduce(inner\_graf\_wf()}}
+\newline
+Compute the sums of the weights of the vertices.
+
+\item 8 : \texttt{{\bf map\_func(print\_vertex\_wf()}}
+\newline
+Visit each vertex and apply a work function to display it.
+
+\item 9 : \texttt{{\bf outer}}
+\newline
+The number of elements in the array, which is the number of graphs which
+must be constructed.
+
+\item 10 : \texttt{{\bf inner}}
+\newline
+The maximum number of nodes to be in each graph.
+
+\item 11 : \texttt{{\bf roll\_wf()}}
+\newline
+Pick the specific number of nodes to be in each graph.  The number is
+separately selected for each graph.
+
+\item 12 : \texttt{{\bf stapl::serial\_io}}
+\newline
+Read in pairs that define the sources and destinations of edges.
+
+\item 13 : \texttt{{\bf stapl::map\_func(ex\_606\_fill\_wf()}}
+\newline
+Apply work function to each element of the array, which is a separate graph.
+
+\end{hashitemize}
+
+% After compiling and executing the example, try the following experiments:
+% \begin{itemize}
+% \item
+% \end{itemize}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\pagebreak
+\section{Graphs of Vectors, Graphs of Arrays}
+
+\subsection{Source Code}
+
+\input{ex_607}
+
+\subsection{Explanation and Experimentation}
+
+This example shows how to construct nested containers in which
+a graph is the outer container, and an array is the inner container.
+
+\begin{hashitemize}
+\item 1 : \texttt{{\bf graf\_ary\_int\_tp}}
+\newline
+Declare type of a graph of arrays, with undirected edges and possibly multiple
+edges between vertices.
+
+\item 2 : \texttt{{\bf stapl::generate}}
+\newline
+Generate a random set of values for each array associated with a vertex,
+uniformly distributed in the interval $[0, 1000]$.
+
+\item 3 : \texttt{{\bf elem.property().size()}}
+\newline
+Return the size of the array associated with a vertex.
+
+\item 4 : \texttt{{\bf outer}}
+\newline
+The number of nodes in the outer graph, which is the number of inner arrays that
+must be constructed.
+
+\item 5 : \texttt{{\bf inner}}
+\newline
+The maximum size of each inner array.
+
+\item 6 : \texttt{{\bf roll\_wf()}}
+\newline
+Pick the specific size for each inner array.  The number is
+separately selected for each node in the outer grah, i.e. for each inner array.
+
+\item 7 : \texttt{{\bf edge\_cnt}}
+\newline
+Set edge count for the graph.
+
+\item 8 : \texttt{{\bf stapl::generate}}
+\newline
+Generate two random sequences defining the source and destination vertices of
+the edges in the outer graph. 
+
+\item 9 : \texttt{{\bf stapl::map\_func(ex\_607\_add\_edge\_wf()}}
+\newline
+Add edges between random vertices of the graph.
+
+\item 10 : \texttt{{\bf stapl::map\_func(ex\_607\_set\_vtx\_wf()}}
+\newline
+Visit each vertex in the graph, filling in the nested arrays.
+
+\item 11 : \texttt{{\bf ex\_607\_process\_wf()}}
+\newline
+Compute the sum of the sizes of the arrays associated with each vertex
+of the graph.
+
+\end{hashitemize}
+
+Save the source of the example in a temporary file.
+Restore the source after each experiment.
+
+After compiling and executing the example, try the following experiments:
+\begin{itemize}
+\item
+Inspect the output file produced by this program.
+\item
+Display the graph by using \texttt{{\bf stapl::write\_dot}} and the open source
+tool DOT.
+\end{itemize}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+%%\chapter{Software Development Using \stapl\ }
+
+%%This chapter will be written for the beta release.
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+%%\section{Coding}
+
+%%\pagebreak
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+%%\section{Testing}
+
+%%\pagebreak
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+%%\section{Debugging}
+
+%%\pagebreak
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+%%\tableofcontents
+
+%%\listoffigures
+
+%%\listoftables
+
+\end{document}

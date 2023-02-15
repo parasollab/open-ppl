@@ -1,0 +1,160 @@
+This directory contains implementations of the OSU microbenchmarks
+(http://mvapich.cse.ohio-state.edu/benchmarks/) using the ARMI primitives.
+
+All the benchmarks are based on the OSU microbenchmarks v4.3 and follow similar
+communication patterns.
+
+For information on which primitives each benchmark stresses, you can use
+  $ <benchmark-name> --help
+
+
+IMPLEMENTED BENCHMARKS
+
+== async_rmi_acc_latency ==
+
+Measures the latency for doing a remote asynchronous accumulate. The sender
+location sends a buffer that has to be accumulated byte by byte to the
+receiver's buffer.
+
+It can be compared against:
+ - omb/mpi/one-sided/osu_acc_latency.c
+
+
+== async_rmi_bw ==
+
+Measures the bandwidth of asynchronous primitives that send a buffer of bytes.
+
+It can be compared against:
+ - omb/mpi/one-sided/osu_put_bw.c
+ - omb/mpi/pt2pt/osu_bw.c
+
+The bi-directional benchmark ("--bidirectional" flag) can be compared against:
+ - omb/mpi/one-sided/osu_put_bibw.c
+ - omb/mpi/pt2pt/osu_bibw.c
+
+
+== async_rmi_latency ==
+
+Measures the latency of asynchronous primitives that send a buffer of bytes.
+
+It can be compared against:
+ - omb/mpi/one-sided/osu_put_latency.c
+ - omb/mpi/pt2pt/osu_latency.c
+ - omb/openshmem/osu_oshm_put.c
+
+The pairs of locations benchmark ("--use_pairs" flag) can be compared against:
+ - omb/upc/osu_upc_memput.c
+
+
+== async_rmi_multi_lat ==
+
+Measures the latency for doing a asynchronous puts between pairs of locations
+
+It can be compared against:
+ - omb/mpi/pt2pt/osu_multi_lat.c
+
+
+== boost_mpi_latency ==
+
+Measures the latency of boost::mpi::send / boost::mpi::recv.
+
+It can be compared against:
+ - omb/mpi/one-sided/osu_put_latency.c
+ - omb/mpi/pt2pt/osu_latency.c
+ - omb/openshmem/osu_oshm_put.c
+
+
+== sync_rmi_acc_latency ==
+
+Measures the latency for doing a remote get followed by an accumulate. The
+sender location sends a buffer that has to be accumulated byte by byte to the
+receiver's buffer. The receiver's buffer prior to the accumulation operation is
+returned.
+
+It can be compared against:
+ - omb/mpi/one-sided/osu_get_acc_latency.c
+
+
+== sync_rmi_bw ==
+
+Measures the bandwidth of synchronous primitives that get a buffer of bytes.
+
+It can be compared against:
+ - omb/mpi/one-sided/osu_get_bw.c
+
+
+== sync_rmi_cas_latency ==
+
+Measures the latency for doing a remote compare-and-swap. The sender location
+sends a long long int that has to be compared-and-swapped with the receiver's
+and waits for the result.
+
+It can be compared against:
+ - omb/mpi/one-sided/osu_cas_latency.c
+
+
+== sync_rmi_fop_latency ==
+
+Measures the latency for doing a remote fetch-and-add. The sender location
+sends a long long int that has to be added to the receiver's and waits for the
+value before the addition.
+
+It can be compared against:
+ - omb/mpi/one-sided/osu_fop_latency.c
+
+
+== sync_rmi_latency ==
+
+Measures the latency of synchronous primitives that get a buffer of bytes.
+
+It can be compared against:
+ - omb/mpi/one-sided/osu_get_latency.c
+ - omb/openshmem/osu_oshm_get.c
+
+The pairs of locations benchmark ("--use_pairs" flag) can be compared against:
+ - omb/upc/osu_upc_memget.c
+
+
+== collective ===
+
+Measures the latency of SPMD collective primitives.
+
+It can be compared against:
+  - omb/mpi/collective/osu_allgather.c  ("--primitive allgather_rmi" flag)
+  - omb/mpi/collective/osu_allgatherv.c ("--primitive allgather_rmi" flag)
+  - omb/mpi/collective/osu_allreduce.c  ("--primitive allreduce_rmi" flag)
+  - omb/mpi/collective/osu_bcast.c      ("--primitive broadcast_rmi" flag)
+  - omb/openshmem/osu_oshm_broadcast.c  ("--primitive broadcast_rmi" flag)
+  - omb/openshmem/osu_oshm_reduce.c     ("--primitive allreduce_rmi" flag)
+
+
+== one_sided_collective ===
+
+Measures the latency of one-sided collective primitives.
+
+It can be compared against:
+  - omb/mpi/collective/osu_gather.c    ("--primitive opaque_rmi" flag)
+  - omb/mpi/collective/osu_gatherv.c   ("--primitive opaque_rmi" flag)
+  - omb/mpi/collective/osu_reduce.c    ("--primitive reduce_rmi" flag)
+  - omb/mpi/collective/osu_bcast.c     ("--primitive async_rmi" flag)
+  - omb/openshmem/osu_oshm_broadcast.c ("--primitive async_rmi" flag)
+
+
+== sync ===
+
+Measures the latency of synchronization primitives.
+
+The barrier benchmark ("--primitive rmi_barrier" flag) can be compared against:
+  - omb/mpi/collective/osu_barrier.c
+  - omb/openshmem/osu_oshm_barrier.c
+
+There is no equivalent of the fence benchmark ("--primitive rmi_fence" flag).
+
+
+UNIMPLEMENTED BENCHMARKS
+
+The following OSU benchmarks have not been implemented:
+ - mpi/pt2pt/osu_latency_mt: In this benchmark, the sender process sends
+   messages to the receiver process which has multiple threads and any of the
+   threads can process the message. In ARMI, the RMIs have to have a specific
+   target.

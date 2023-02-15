@@ -1,0 +1,17 @@
+1 (STR) DB:applications_name
+1 (STR) DB:runs_timestamp
+1 (STR) DB:machines_name
+1 (STR) DB:users_csuser
+1 (STR) DB:users_name
+1 (INT) PID
+1 (INT) num_locations
+1 (INT) location_id
+1 (INT) iterations
+1 (REAL) timer_avg
+1 (REAL) timer_max
+1 (REAL) timer_min
+1 (REAL) timer_variance
+1 (REAL) timer_stddev
+1 (REAL) timer_confidenceinterval95
+1 (REAL) db_basic_timer
+1 (STR) db_basic_timer_type

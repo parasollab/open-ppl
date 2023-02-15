@@ -1,0 +1,56 @@
+image: illario/pmpl:latest
+
+stages:
+- build
+- test
+- deploy
+
+build:
+  stage: build
+  tags:
+    - linux
+  only:
+    - ari-sandbox
+  variables:
+    VCPKG_DIR: /opt/vcpkg/scripts/buildsystems/vcpkg.cmake
+  script:
+    - cmake -B debug_build -S . -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_TOOLCHAIN_FILE=$VCPKG_DIR -DCODE_COVERAGE=ON
+    - cmake --build debug_build
+    - cmake --build debug_build --target doc_doxygen
+  cache:
+    key: vcpkg-cache
+    paths:
+      - /opt/vcpkg/packages/
+      - /root/.cache/vcpkg/archives
+  artifacts:
+    paths:
+      - debug_build/.ninja_log
+      - debug_build/docs/Doxygen/html
+
+unit-test-job:
+  stage: test
+  tags:
+    - linux
+  only:
+    - ari-sandbox
+  script:
+    - ls
+
+integration-test-job:
+  stage: test
+  tags:
+    - linux
+  only:
+    - ari-sandbox
+  script:
+    - ls
+
+publish-doc-job:
+  stage: deploy
+  tags:
+    - linux
+  when: manual
+  only:
+    - ari-sandbox
+  script:
+    - ls

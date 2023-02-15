@@ -1,0 +1,50 @@
+Installing STAPL on Linux/MPI clusters
+
+1. make sure you have GCC >= 3.2.1 installed on your system.  Our code
+requires that.  Also make sure you have MPICH installed if you plan to
+run the MPI version of the runtime system.
+	g++ -v
+	mpiCC -v
+
+2. Grab the latest version of the project. Replace USER_NAME with your username.
+
+cvs -d :ext:USER_NAME@umbrella.cs.tamu.edu:/research/umbrella/cvsrepository co stapl
+
+If some other projects are required at you can check them out at this point(e.g. nsa)
+
+3. cd stapl/STLport/src ; gmake -f gcc-linux.mak clean all install
+
+This build STLport and does most of the installation in to STAPL.
+
+4. cd ../../lib
+   ln -s libstlport_gcc.so.4.5 libstlport_gcc.so
+   ln -s libstlport_gcc_stldebug.so.4.5 libstlport_gcc_stldebug.so
+
+This creates a few symbolic links that the STLport installation
+doesn't.  This needs to be resolved, but I haven't had time to track
+it down.
+
+5. cd ../runtime
+   gmake platform=LINUX_g++ rts=MPI
+
+This compiles ARMI to use MPI.
+
+STAPL is now built and installed.  When compiling STAPL programs you
+need to make sure your command line looks something like
+
+g++ foo.cc -o foo -I./stapl/include -I./stapl/include/stlport -D_STAPL
+-D_STAPL_THREAD
+-D_STL_PORT -D_EXPLICIT_USE_NAMESPACE_STD -DVECTOR -DUSE_RAPID
+-L./stapl/lib -lstlport_gcc -lrt -Wl,-rpath=<insert-full-path-here>/stapl/lib
+
+I know the compile line is huge, but it is something that is always
+put inside a Makefile.  On the last option,
+-Wl,-rpath=<insert-full-path-here>/stapl/lib, you need to plug in the
+full absolute path of the directory where you installed STAPL.  This
+is because the GNU linker complains about absolute paths here.  On
+other platforms we are able to use relative paths.
+
+6. Running programs
+	mpirun -np <NUMBER OF PROCESSORS> <PROGRAM_NAME> <PROGRAM_ARGUMENTS>
+	  mpirun -np 4 ./executable 100
+	

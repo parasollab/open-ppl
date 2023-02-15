@@ -1,0 +1,1737 @@
+\chapter{Parallel Views}
+
+Parallel views in STAPL are grouped into the following categories:
+\vspace{0.4cm}
+
+Model common abstract data types:
+\newline
+Array (Section \ref{sec-ary-vw}),
+Vector (Section \ref{sec-vec-vw}),
+List (Section \ref{sec-list-vw}),
+Map (Section \ref{sec-map-vw}),
+MultiArray (Section \ref{sec-multi-vw}),
+ArrayRO (Section \ref{sec-aryro-vw}),
+Set (Section \ref{sec-set-vw})
+\vspace{0.4cm}
+
+Model graph abstract data types:
+\newline
+Graph (Section \ref{sec-graf-vw}),
+\vspace{0.4cm}
+
+Present data without using concrete storage:
+\newline
+Overlap (Section \ref{sec-over-vw}),
+Repeated (Section \ref{sec-rep-vw}),
+Counting (Section \ref{sec-cnt-vw}),
+Functor (Section \ref{sec-func-vw})
+\vspace{0.4cm}
+
+Modify values retrieved from underlying view or container:
+\newline
+Strided (Section \ref{sec-str-vw}),
+Reverse (Section \ref{sec-rev-vw}),
+Filter (Section \ref{sec-filt-vw}),
+Transform (Section \ref{sec-trans-vw})
+\vspace{0.4cm}
+
+Modify distributions of underlying container:
+\newline
+Native (Section \ref{sec-nat-vw}),
+Balance (Section \ref{sec-bal-vw}),
+Explicit (Section \ref{sec-expl-vw}),
+Partitioned (Section \ref{sec-part-vw})
+\vspace{0.4cm}
+
+Compose views with other views:
+\newline
+Zip (Section \ref{sec-zip-vw})
+\vspace{0.4cm}
+
+Enable specification of an arbitrary data distribution:
+\newline
+System (Section \ref{sec-dist-sys-vw}),
+Mapping (Section \ref{sec-dist-map-vw}),
+Partitioning (Section \ref{sec-dist-part-vw}),
+Distribution specifications (Section \ref{sec-dist-spec-vw})
+
+\pagebreak
+
+\section{Array View API } \label{sec-ary-vw}
+
+\emph{A view that provides the interface of an array abstract data type.}
+
+\begin{verbatim}
+array_view (view_container_type *vcont, domain_type const &dom,
+            map_func_type mfunc=MapFunc())
+\end{verbatim}
+
+Constructor used to pass ownership of the container to the view.
+
+\begin{verbatim}
+array_view (view_container_type *vcont, domain_type const &dom,
+            map_func_type mfunc, array_view const &)
+\end{verbatim}
+
+Constructor used to pass ownership of the container to the view.
+
+\begin{verbatim}
+array_view (view_container_type const &vcont, domain_type const &dom,
+            map_func_type mfunc=MapFunc())
+\end{verbatim}
+
+Constructor that does not takes ownership over the passed container.
+
+\begin{verbatim}
+array_view (view_container_type const &vcont, domain_type const &dom,
+            map_func_type mfunc, array_view const &)
+\end{verbatim}
+
+Constructor that does not takes ownership over the passed container.
+
+\begin{verbatim}
+array_view (view_container_type *vcont)
+\end{verbatim}
+
+Constructs a view that can reference all the elements of the passed container. The view takes ownership of the container.
+
+\begin{verbatim}
+array_view (view_container_type &vcont)
+\end{verbatim}
+
+Constructs a view that can reference all the elements of the passed container.
+
+\begin{verbatim}
+template<typename Derived1 >
+array_view (array_view< C, Dom, MapFunc, Derived1 > const &other)
+\end{verbatim}
+
+Copy constructor when the passed view is not the most derived view.
+
+\begin{verbatim}
+void resize (size_t size)
+\end{verbatim}
+
+Update the underlying container to hold the specified number of elements.
+All previous information is lost.
+
+\begin{verbatim}
+size_type size (void) const
+\end{verbatim}
+
+Returns the number of elements referenced for the view.
+
+\begin{verbatim}
+bool empty (void) const
+\end{verbatim}
+
+Returns if the view does not reference any element.
+
+\begin{verbatim}
+value_type get_element (index_t const &index) const
+\end{verbatim}
+
+Get the element index from the container.
+
+\begin{verbatim}
+template<class Functor >
+Functor::result_type apply_get (index_t const &index, Functor f)
+\end{verbatim}
+
+Applies the provided function to the value referenced for the given index and returns the result of the operation.
+
+\begin{verbatim}
+void set_element (index_t const &index, value_t const &value)
+\end{verbatim}
+
+Set the element index in the container to value value.
+
+\begin{verbatim}
+template<class Functor >
+void apply_set (index_t const &index, Functor f)
+\end{verbatim}
+
+Applies the provided function to the value referenced for the given index and mutates the element with the resulting value.
+
+\begin{verbatim}
+reference operator[] (index_t index) const
+\end{verbatim}
+
+The bracket operator is the basic access method.
+
+\begin{verbatim}
+reference make_reference (index_t index) const
+\end{verbatim}
+
+\section{Vector View API  } \label{sec-vec-vw}
+
+\emph{A view that provides the interface of a vector abstract data type. }
+
+\begin{verbatim}
+vector_view (view_container_type *vcont, domain_type const &dom,
+    map_func_type mfunc=MapFunc())
+\end{verbatim}
+
+Constructor used to pass ownership of the container to the view.
+
+\begin{verbatim}
+vector_view (view_container_type const &vcont, domain_type const &dom,
+    map_func_type mfunc=MapFunc(), vector_view const &other=vector_view())
+\end{verbatim}
+
+Constructor that does not takes ownership over the passed container.
+
+\begin{verbatim}
+vector_view (view_container_type *vcont)
+\end{verbatim}
+
+Constructs a view that can reference all the elements of the passed container. The view takes ownership of the container.
+
+\begin{verbatim}
+vector_view (view_container_type &vcont)
+\end{verbatim}
+
+Constructs a view that can reference all the elements of the passed container.
+
+\begin{verbatim}
+void add (value_type const &val)
+\end{verbatim}
+
+Insert a new element in the container locally.
+
+\begin{verbatim}
+void insert (index_type const &index, value_type const &value)
+\end{verbatim}
+
+Inserts the given value at the position index.
+
+\begin{verbatim}
+void push_back (value_type const &value)
+\end{verbatim}
+
+Inserts the given value an the end of the underlying container.
+
+\begin{verbatim}
+void pop_back (void)
+\end{verbatim}
+
+Removes the last element in the underlying container.
+
+\begin{verbatim}
+void erase (index_type const &index)
+\end{verbatim}
+
+Removes the element at the position index.
+
+\begin{verbatim}
+void resize (size_type n)
+\end{verbatim}
+
+Update the underlying container to hold n elements.
+
+\begin{verbatim}
+void flush (void)
+\end{verbatim}
+
+Flushes pending update information of the underlying container.
+
+\begin{verbatim}
+iterator find (index_type const &index)
+\end{verbatim}
+
+Returns and iterator pointing to the element at position index.
+
+\begin{verbatim}
+reference front (void)
+\end{verbatim}
+
+Returns a reference to the element at the beginning of the underlying container.
+
+\begin{verbatim}
+reference back (void)
+\end{verbatim}
+
+Returns a reference to the element at the end of the underlying container.
+
+\begin{verbatim}
+size_type size (void) const
+\end{verbatim}
+
+Returns the number of elements referenced for the view.
+
+\begin{verbatim}
+bool empty (void) const
+\end{verbatim}
+
+Returns if the view does not reference any element.
+
+\begin{verbatim}
+value_type get_element (index_t const &index) const
+\end{verbatim}
+
+Get the element index from the container.
+
+\begin{verbatim}
+template<class Functor >
+Functor::result_type apply_get (index_t const &index, Functor f)
+\end{verbatim}
+
+Applies the provided function to the value referenced for the given index and returns the result of the operation.
+
+\begin{verbatim}
+void set_element (index_t const &index, value_t const &value)
+\end{verbatim}
+
+Set the element index in the container to value value.
+
+\begin{verbatim}
+template<class Functor >
+void apply_set (index_t const &index, Functor f)
+\end{verbatim}
+
+Applies the provided function to the value referenced for the given index and mutates the element with the resulting value.
+
+\begin{verbatim}
+reference operator[] (index_t index) const
+\end{verbatim}
+
+The bracket operator is the basic access method.
+
+\begin{verbatim}
+reference make_reference (index_t index) const
+\end{verbatim}
+
+\section{List View API } \label{sec-list-vw}
+
+\emph{A view that provides the interface of a list abstract data type. }
+
+\begin{verbatim}
+list_view (view_container_type *vcont, domain_type const &dom,
+    map_func_type mfunc=MapFunc())
+\end{verbatim}
+
+Constructor used to pass ownership of the container to the view.
+
+\begin{verbatim}
+list_view (view_container_type const &vcont, domain_type const &dom,
+           map_func_type mfunc=MapFunc(), list_view const &other=list_view())
+\end{verbatim}
+
+Constructor that does not takes ownership over the passed container.
+
+\begin{verbatim}
+list_view (view_container_type *vcont)
+\end{verbatim}
+
+Constructs a view that can reference all the elements of the passed container. The view takes ownership of the container.
+
+\begin{verbatim}
+list_view (view_container_type &vcont)
+\end{verbatim}
+
+Constructs a view that can reference all the elements of the passed container.
+
+\begin{verbatim}
+template<typename Derived1 >
+list_view (list_view< C, Dom, MapFunc, Derived1 > const &other)
+\end{verbatim}
+
+Copy constructor when the passed view is not the most derived view.
+
+\begin{verbatim}
+list_view (list_view const &other)
+\end{verbatim}
+
+\begin{verbatim}
+iterator insert (iterator const &pos, value_type const &value)
+\end{verbatim}
+
+Inserts the given value at the position index.
+
+\begin{verbatim}
+void push_back (value_type const &value)
+\end{verbatim}
+
+Inserts the given value an the end of the underlying container.
+
+\begin{verbatim}
+void pop_back (void)
+\end{verbatim}
+
+Removes the last element in the underlying container.
+
+\begin{verbatim}
+void erase (index_type const &index)
+\end{verbatim}
+
+Removes the element at the position index.
+
+\begin{verbatim}
+iterator find (index_type const &index)
+\end{verbatim}
+
+Returns and iterator pointing to the element at position index.
+
+\begin{verbatim}
+reference front (void)
+\end{verbatim}
+
+Returns a reference to the element at the beginning of the underlying container.
+
+\begin{verbatim}
+reference back (void)
+\end{verbatim}
+
+Returns a reference to the element at the end of the underlying container.
+
+\begin{verbatim}
+void add (value_type const &value)
+\end{verbatim}
+
+Insert the given value into the underlying container.
+
+\begin{verbatim}
+size_type size (void) const
+\end{verbatim}
+
+Returns the number of elements referenced for the view.
+
+\begin{verbatim}
+bool empty (void) const
+\end{verbatim}
+
+Returns if the view does not reference any element.
+
+\section{Map View API } \label{sec-map-vw}
+
+\emph{ A view that maps from keys to values. }
+
+\begin{verbatim}
+map_view (view_container_type *vcont, domain_type const &dom,
+    map_func_type mfunc=MapFunc())
+\end{verbatim}
+
+Constructor used to pass ownership of the container to the view.
+
+\begin{verbatim}
+map_view (view_container_type *vcont, domain_type const &dom,
+    map_func_type mfunc, map_view const &other)
+\end{verbatim}
+
+\begin{verbatim}
+map_view (view_container_type const &vcont, domain_type const &dom,
+    map_func_type mfunc=MapFunc(), map_view const &other=map_view())
+\end{verbatim}
+
+Constructor that does not takes ownership over the passed container.
+
+\begin{verbatim}
+map_view (view_container_type *vcont)
+\end{verbatim}
+
+Constructs a view that can reference all the elements of the passed container. The view takes ownership of the container.
+
+\begin{verbatim}
+map_view (view_container_type &vcont)
+\end{verbatim}
+
+Constructs a view that can reference all the elements of the passed container.
+
+\begin{verbatim}
+template<typename Derived1 >
+map_view (map_view< C, Dom, MapFunc, Derived1 > const &other)
+\end{verbatim}
+
+\begin{verbatim}
+bool insert (value_type const &value)
+\end{verbatim}
+
+Inserts the given value if the value does not exist in the container.
+
+\begin{verbatim}
+void insert (key_type const &key, mapped_type const &value)
+\end{verbatim}
+
+Inserts the given value if the key does not exist in the container.
+
+\begin{verbatim}
+template<typename Functor >
+void insert (value_type const &val, Functor const &func)
+\end{verbatim}
+
+Inserts the given <key,value> pair (val) if the key does not exist in the container, otherwise mutates the stored value by applying the given functor func.
+
+\begin{verbatim}
+template<typename Functor >
+void insert (key_type const &key, mapped_type const &value, Functor const &on_failure)
+\end{verbatim}
+
+Inserts the given value associated with the given key if the key does not exist in the container, otherwise mutates the stored value by applying the given functor func.
+
+\begin{verbatim}
+mapped_type get (key_type const &key)
+\end{verbatim}
+
+Fetch the value associated with the specified key.
+
+\begin{verbatim}
+size_t erase (key_type const &key)
+\end{verbatim}
+
+Removes the value associated with the specified key.
+
+\begin{verbatim}
+iterator find (key_type const &key)
+\end{verbatim}
+
+Returns an iterator pointing to the element associated with the given key.
+
+\begin{verbatim}
+int count (key_type const &key)
+\end{verbatim}
+
+Returns 1 if the specified key exists, and otherwise 0.
+
+\begin{verbatim}
+void clear (void)
+\end{verbatim}
+
+Removes all the elements stored in the container.
+
+\begin{verbatim}
+size_type size (void) const
+\end{verbatim}
+
+Returns the number of elements referenced for the view.
+
+\begin{verbatim}
+bool empty (void) const
+\end{verbatim}
+
+Returns if the view does not reference any element.
+
+\begin{verbatim}
+value_type get_element (index_t const &index) const
+\end{verbatim}
+
+Get the element index from the container.
+
+\begin{verbatim}
+template<class Functor >
+Functor::result_type apply_get (index_t const &index, Functor f)
+\end{verbatim}
+
+Applies the provided function to the value referenced for the given index and returns the result of the operation.
+
+\begin{verbatim}
+void set_element (index_t const &index, value_t const &value)
+\end{verbatim}
+
+Set the element index in the container to value value.
+
+\begin{verbatim}
+template<class Functor >
+void apply_set (index_t const &index, Functor f)
+\end{verbatim}
+
+Applies the provided function to the value referenced for the given index and mutates the element with the resulting value.
+
+\begin{verbatim}
+reference operator[] (index_t index) const
+\end{verbatim}
+
+The bracket operator is the basic access method.
+
+\begin{verbatim}
+reference make_reference (index_t index) const
+\end{verbatim}
+
+\section{Multiarray View API } \label{sec-multi-vw}
+
+\emph{ A view that provides that interface of a multi-dimensional array abstract data type.}
+
+\begin{verbatim}
+multiarray_view (view_container_type &vcont, domain_type const &dom,
+    map_function mfunc=map_function())
+\end{verbatim}
+
+Constructor that does not take ownership over the passed container.
+
+\begin{verbatim}
+multiarray_view (view_container_type *vcont)
+\end{verbatim}
+
+Constructor used to pass ownership of the container to the view.
+
+\begin{verbatim}
+multiarray_view (view_container_type &vcont)
+\end{verbatim}
+
+Constructor that does not take ownership over the passed container.
+
+\begin{verbatim}
+multiarray_view (view_container_type *vcont, domain_type const &dom,
+    map_function mfunc=map_function())
+\end{verbatim}
+
+Constructor used to pass ownership of the container to the view.
+
+\begin{verbatim}
+domain_type::size_type dimensions (void) const
+\end{verbatim}
+
+The length of each of the dimensions of the multiarray.
+
+\begin{verbatim}
+void resize (typename domain_type::size_type size)
+\end{verbatim}
+
+Update the underlying container to hold the specified number of elements.
+All previous information is lost.
+
+\begin{verbatim}
+size_type size (void) const
+\end{verbatim}
+
+Returns the number of elements referenced for the view.
+
+\begin{verbatim}
+bool empty (void) const
+\end{verbatim}
+
+Returns if the view does not reference any element.
+
+\begin{verbatim}
+value_type get_element (index_t const &index) const
+\end{verbatim}
+
+Get the element index from the container.
+
+\begin{verbatim}
+template<class Functor >
+Functor::result_type apply_get (index_t const &index, Functor f)
+\end{verbatim}
+
+Applies the provided function to the value referenced for the given index and returns the result of the operation.
+
+\begin{verbatim}
+void set_element (index_t const &index, value_t const &value)
+\end{verbatim}
+
+Set the element index in the container to value value.
+
+\begin{verbatim}
+template<class Functor >
+void apply_set (index_t const &index, Functor f)
+\end{verbatim}
+
+Applies the provided function to the value referenced for the given index and mutates the element with the resulting value.
+
+\begin{verbatim}
+reference operator[] (index_t index) const
+\end{verbatim}
+
+The bracket operator is the basic access method.
+
+\begin{verbatim}
+reference make_reference (index_t index) const
+\end{verbatim}
+
+\section{Read-Only Array View API } \label{sec-aryro-vw}
+
+\emph{ A view that provides that interface of a one-dimensional array abstract data type, which is read-only.}
+
+\begin{verbatim}
+array_ro_view (view_container_type *vcont)
+\end{verbatim}
+
+Constructs a view that can reference all the elements of the container provided. The view takes ownership of the container.
+
+\begin{verbatim}
+array_ro_view (view_container_type *vcont, domain_type const &dom)
+\end{verbatim}
+
+Constructs a view with a restricted domain of the elements of the container provided. The view takes ownership of the container.
+
+\begin{verbatim}
+array_ro_view (view_container_type *vcont, domain_type const &dom,
+    map_func_type mfunc)
+\end{verbatim}
+
+Constructs a view with a potentially restricted domain of the elements of the container provided and a non-identity mapping function. The view takes ownership of the container.
+
+\begin{verbatim}
+array_ro_view (view_container_type const &vcont)
+\end{verbatim}
+
+Constructs a view that can reference all the elements of the container provided. The view does not take ownership of the container.
+
+\begin{verbatim}
+array_ro_view (view_container_type const &vcont, domain_type const &dom)
+\end{verbatim}
+
+Constructs a view with a restricted domain of the elements of the container provided. The view does not take ownership of the container.
+
+\begin{verbatim}
+array_ro_view (view_container_type const &vcont, domain_type const &dom,
+    map_func_type mfunc)
+\end{verbatim}
+
+Constructs a view with a potentially restricted domain of the elements of the container provided and a non-identity mapping function. The view does not take ownership of the container.
+
+\begin{verbatim}
+array_ro_view (view_container_type const &vcont, domain_type const &dom,
+    map_func_type mfunc, array_ro_view const &)
+\end{verbatim}
+
+Constructs a view with a potentially restricted domain of the elements of the container provided and a non-identity mapping function. The constructor accepts another ArrayRO instance from which it could copy additional state. The view does not take ownership of the container.
+
+\begin{verbatim}
+template<typename Derived1 >
+array_ro_view (array_ro_view< C, Dom, MapFunc, Derived1 > const &other)
+\end{verbatim}
+
+Copy constructor when the view provided is not the most derived view.
+
+\begin{verbatim}
+array_ro_view (array_ro_view const &other)
+\end{verbatim}
+
+\begin{verbatim}
+size_type
+size (void) const
+\end{verbatim}
+
+Returns the number of elements referenced for the view.
+
+\begin{verbatim}
+bool empty (void) const
+\end{verbatim}
+
+Returns if the view does not reference any element.
+
+\begin{verbatim}
+value_type get_element (index_t const &index) const
+\end{verbatim}
+
+Get the element index from the container.
+
+\begin{verbatim}
+Functor::result_type
+apply_get (index_t const &index, Functor f)
+\end{verbatim}
+
+Applies the provided function to the value referenced for the given index and returns the result of the operation.
+
+\begin{verbatim}
+reference operator[] (index_t index) const
+\end{verbatim}
+
+The bracket operator is the basic access method.
+
+\begin{verbatim}
+reference make_reference (index_t index) const
+\end{verbatim}
+
+\section{Set View API } \label{sec-set-vw}
+
+\emph{ A view that provides that interface of a set abstract data type.}
+
+\begin{verbatim}
+set_view (view_container_type *vcont, domain_type const &dom,
+    map_func_type mfunc=MapFunc())
+\end{verbatim}
+
+Constructor used to pass ownership of the container to the view.
+
+\begin{verbatim}
+set_view (view_container_type *vcont, domain_type const &dom,
+    map_func_type mfunc, set_view const &other)
+\end{verbatim}
+
+Constructor used to pass ownership of the container to the view.
+
+\begin{verbatim}
+set_view (view_container_type const &vcont, domain_type const &dom,
+          map_func_type mfunc=MapFunc(), set_view const &other=set_view())
+\end{verbatim}
+
+Constructor that does not takes ownership over the passed container.
+
+\begin{verbatim}
+set_view (view_container_type *vcont)
+\end{verbatim}
+
+Constructs a view that can reference all the elements of the passed container. The view takes ownership of the container.
+
+\begin{verbatim}
+set_view (view_container_type &vcont)
+\end{verbatim}
+
+Constructs a view that can reference all the elements of the passed container.
+
+\begin{verbatim}
+template<typename Derived1 >
+set_view (set_view< C, Dom, MapFunc, Derived1 > const &other)
+\end{verbatim}
+
+\begin{verbatim}
+void insert (key_type const &key)
+\end{verbatim}
+
+Inserts the given key if the key does not exist in the container.
+
+\begin{verbatim}
+void erase (key_type const &key)
+\end{verbatim}
+
+Removes the value associated with the specified key.
+
+\begin{verbatim}
+iterator find (key_type const &key)
+\end{verbatim}
+
+Returns an iterator pointing to the element associated with the given key.
+
+\begin{verbatim}
+void clear (void)
+\end{verbatim}
+
+Removes all the elements stored in the container.
+
+\begin{verbatim}
+size_type size (void) const
+\end{verbatim}
+
+Returns the number of elements referenced for the view.
+
+\begin{verbatim}
+bool empty (void) const
+\end{verbatim}
+
+Returns if the view does not reference any element.
+
+\begin{verbatim}
+value_type get_element (index_t const &index) const
+\end{verbatim}
+
+Get the element index from the container.
+
+\begin{verbatim}
+template<class Functor >
+Functor::result_type apply_get (index_t const &index, Functor f)
+\end{verbatim}
+
+Applies the provided function to the value referenced for the given index and returns the result of the operation.
+
+\begin{verbatim}
+void set_element (index_t const &index, value_t const &value)
+\end{verbatim}
+
+Set the element index in the container to value value.
+
+\begin{verbatim}
+template<class Functor >
+void apply_set (index_t const &index, Functor f)
+\end{verbatim}
+
+Applies the provided function to the value referenced for the given index and mutates the element with the resulting value.
+
+\begin{verbatim}
+reference operator[] (index_t index) const
+\end{verbatim}
+
+The bracket operator is the basic access method.
+
+\begin{verbatim}
+reference make_reference (index_t index) const
+\end{verbatim}
+
+\pagebreak
+
+\section{Graph View API } \label{sec-graf-vw}
+
+\emph{ A view that provides that interface of a graph abstract data type.}
+
+\begin{verbatim}
+graph_view (view_container_type *vcont, domain_type const &dom,
+    map_func_type mfunc=MapFunc())
+\end{verbatim}
+
+Constructor used to pass ownership of the container to the view.
+
+\begin{verbatim}
+template<typename OV >
+graph_view (view_container_type *vcont, domain_type const &dom,
+            map_func_type mfunc, OV const &)
+\end{verbatim}
+
+Constructor used to pass ownership of the container to the view.
+
+\begin{verbatim}
+graph_view (view_container_type const &vcont, domain_type const &dom,
+    map_func_type mfunc=MapFunc(), graph_view const &other=graph_view())
+\end{verbatim}
+
+Constructor that does not takes ownership over the passed container.
+
+\begin{verbatim}
+template<typename OV >
+graph_view (view_container_type const &vcont, domain_type const &dom,
+    map_func_type mfunc, OV const &)
+\end{verbatim}
+
+Constructor that does not takes ownership over the passed container.
+
+\begin{verbatim}
+graph_view (view_container_type *vcont)
+\end{verbatim}
+
+Constructs a view that can reference all the elements of the passed container. The view takes ownership of the container.
+
+\begin{verbatim}
+graph_view (view_container_type &vcont)
+\end{verbatim}
+
+Constructs a view that can reference all the elements of the passed container.
+
+\begin{verbatim}
+graph_view (view_container_type const &vcont)
+\end{verbatim}
+
+Constructs a view that can reference all the elements of the passed container.
+
+\begin{verbatim}
+template<typename Derived1 >
+graph_view (graph_view< PG, Dom, MapFunc, Derived1 > const &other)
+\end{verbatim}
+
+Copy constructor when the passed view is not the most derived view.
+
+\begin{verbatim}
+template<typename T1 , typename T2 >
+graph_view (graph_view< PG, iterator_domain< T1, T2 >, MapFunc, Derived >
+    const &other)
+\end{verbatim}
+
+Copy constructor when the passed view has an iterator domain. This constructor converts a view using the default graph domain (iterator\_domain) to view using a gid-based domain (domset1D) as iterator domain can't handle a selective set of elements.
+
+\begin{verbatim}
+vertex_descriptor add_vertex (void)
+\end{verbatim}
+
+Adds a vertex to the pGraph with a default-constructed property.
+
+\begin{verbatim}
+vertex_descriptor add_vertex (vertex_property const &vp)
+\end{verbatim}
+
+Adds a vertex to the pGraph with the given property.
+
+\begin{verbatim}
+vertex_descriptor add_vertex_uniform (vertex_property const &vp)
+\end{verbatim}
+
+Adds a vertex to the pGraph with the given property to a location based on the vertex descriptor assigned by the graph. This method is asynchronous. This method differs from the typical add\_vertex as it inserts the vertex into a potentially remote location, rather than the calling location.
+
+\begin{verbatim}
+void add_vertex (vertex_descriptor const &vd, vertex_property const &vp)
+\end{verbatim}
+
+Adds a vertex to the pGraph with the given property and descriptor.
+
+\begin{verbatim}
+template<typename Functor >
+void add_vertex (vertex_descriptor const &vd, vertex_property const &vp,
+    Functor const &f)
+\end{verbatim}
+
+Adds a vertex to the pGraph with the given property and descriptor, if the vertex does not exist, or applies the given functor to the existing vertex. The vertex is added to the home location, unlike the other add\_vertex calls that add the vertex at the current location.
+
+\begin{verbatim}
+void delete_vertex (vertex_descriptor const &vd)
+\end{verbatim}
+
+\begin{verbatim}
+void add_edge_async (vertex_descriptor const &src, vertex_descriptor const &tgt)
+\end{verbatim}
+
+Adds an edge between the two given vertices with given property. The edge is added asynchronously and method returns immediately. Edge is not guaranteed to be added until after a global synchronization.
+
+\begin{verbatim}
+void add_edge_async (vertex_descriptor const &src, vertex_descriptor
+     const &tgt, edge_property const &p)
+\end{verbatim}
+
+Adds an edge between the two given vertices with given property. The edge is added asynchronously and method returns immediately. Edge is not guaranteed to be added until after a global synchronization.
+
+\begin{verbatim}
+void add_edge_async (edge_descriptor const &ed)
+\end{verbatim}
+
+Adds an edge with given descriptor. The edge is added asynchronously and method returns immediately. Edge is not guaranteed to be added until after a global synchronization.
+
+\begin{verbatim}
+void add_edge_async (edge_descriptor const &ed, edge_property const &p)
+\end{verbatim}
+
+Adds an edge with given descriptor and property. The edge is added asynchronously and method returns immediately. Edge is not guaranteed to be added until after a global synchronization.
+
+\begin{verbatim}
+edge_descriptor add_edge (vertex_descriptor const &src, vertex_descriptor
+    const &tgt)
+\end{verbatim}
+
+Adds an edge between the two given vertices.
+
+\begin{verbatim}
+edge_descriptor add_edge (vertex_descriptor const &src, vertex_descriptor
+    const &tgt, edge_property const &p)
+\end{verbatim}
+
+Adds an edge between the two given vertices with given property.
+
+\begin{verbatim}
+edge_descriptor add_edge (edge_descriptor const &ed)
+\end{verbatim}
+
+Adds an edge with given descriptor.
+
+\begin{verbatim}
+edge_descriptor add_edge (edge_descriptor const &ed, edge_property const &p)
+\end{verbatim}
+
+Adds an edge with given descriptor and property.
+
+\begin{verbatim}
+void delete_edge (vertex_descriptor const &src, vertex_descriptor const &tgt)
+\end{verbatim}
+
+Deletes the edge between the given source and target vertices. The edge is deleted asynchronously. The edge is not guaranteed to have been deleted until after a global synchronization.
+
+\begin{verbatim}
+void delete_edge (edge_descriptor const &ed)
+\end{verbatim}
+
+Deletes the edge with given descriptor. Asynchronous.
+
+\begin{verbatim}
+void clear (void)
+\end{verbatim}
+
+Clears the graph. This resets internal counters for vertex-descriptor and edge-id assignments, and clears graph storage.
+
+\begin{verbatim}
+vertex_iterator find_vertex (vertex_descriptor const &vd) const
+\end{verbatim}
+
+Returns a global vertex iterator to the given descriptor.
+
+\begin{verbatim}
+size_t num_vertices (void) const
+\end{verbatim}
+
+Return the number of vertices in the graph.
+
+\begin{verbatim}
+size_t num_edges (void) const
+\end{verbatim}
+
+Returns the number of edges in the pGraph. This method is a non-collective version of num\_edges. This must be used when not all locations are calling num\_edges.
+
+\begin{verbatim}
+size_t num_edges_collective (void) const
+\end{verbatim}
+
+Returns the number of edges in the pGraph.
+
+\begin{verbatim}
+size_t num_local_edges (void) const
+\end{verbatim}
+
+Returns the number of local outgoing edges in the pGraph. This is a non-blocking method.
+
+\begin{verbatim}
+bool is_directed (void) const
+\end{verbatim}
+
+\begin{verbatim}
+void sort_edges (void)
+\end{verbatim}
+
+Sorts edges of each vertex by home-location of target-vertex.
+
+\begin{verbatim}
+template<typename F >
+void apply_set (vertex_descriptor const &gid, F const &f)
+\end{verbatim}
+
+Applies a function to the vertex with the given descriptor.
+
+\begin{verbatim}
+template<class Functor >
+void vp_apply_async (vertex_descriptor const &vd, Functor const &f)
+\end{verbatim}
+
+Applies a function to the property of vertex with given descriptor. This method is asynchronous.
+
+\begin{verbatim}
+template<typename Functor >
+Functor::result_type vp_apply (vertex_descriptor const &vd, Functor const &f)
+     const
+\end{verbatim}
+
+Applies a function to the property of vertex with given descriptor.
+
+\begin{verbatim}
+template<class Functor >
+void ep_apply_async (edge_descriptor const &ed, Functor const &f)
+\end{verbatim}
+
+Applies a function to the property of edge with given descriptor. This method is asynchronous.
+
+\begin{verbatim}
+template<class Functor >
+Functor::result_type ep_apply (edge_descriptor const &ed, Functor const &f)
+\end{verbatim}
+
+Applies a function to the property of edge with given descriptor.
+
+\begin{verbatim}
+vertices_view_type vertices (void) const
+\end{verbatim}
+
+Returns an Array over the vertices of the graph.
+
+\begin{verbatim}
+size_type size (void) const
+\end{verbatim}
+
+Returns the number of elements referenced for the view.
+
+\begin{verbatim}
+bool empty (void) const
+\end{verbatim}
+
+Returns if the view does not reference any element.
+
+\begin{verbatim}
+value_type get_element (index_t const &index) const
+\end{verbatim}
+
+Get the element index from the container.
+
+\begin{verbatim}
+template<class Functor >
+Functor::result_type apply_get (index_t const &index, Functor f)
+\end{verbatim}
+
+Applies the provided function to the value referenced for the given index and returns the result of the operation.
+
+\begin{verbatim}
+void set_element (index_t const &index, value_t const &value)
+\end{verbatim}
+
+Set the element index in the container to value value.
+
+\begin{verbatim}
+template<class Functor >
+void apply_set (index_t const &index, Functor f)
+\end{verbatim}
+
+Applies the provided function to the value referenced for the given index and mutates the element with the resulting value.
+
+\begin{verbatim}
+reference operator[] (index_t index) const
+\end{verbatim}
+
+The bracket operator is the basic access method.
+
+\begin{verbatim}
+reference make_reference (index_t index) const
+\end{verbatim}
+
+\pagebreak
+
+\section {Overlap View API } \label{sec-over-vw}
+
+\emph{ A view that provides overlapped access to elements.}
+
+\begin{verbatim}
+view_type operator() (View &v, size_t c=1, size_t l=0, size_t r=0)
+\end{verbatim}
+
+\begin{verbatim}
+view_type operator() (View const &v, size_t c=1, size_t l=0, size_t r=0)
+\end{verbatim}
+
+\section{Repeat View API } \label{sec-rep-vw}
+
+\emph{ A view that can produce infinite copies of the same value. }
+
+\begin{verbatim}
+repeated_view (view_container_type *vcont, domain_type const &dom,
+    map_func_type mfunc=map_func_type())
+\end{verbatim}
+
+Constructor used to pass ownership of the container to the view.
+
+\begin{verbatim}
+repeated_view (view_container_type const &vcont, domain_type const &dom,
+    map_func_type mfunc=map_func_type(), repeated_view const
+    &other=repeated_view())
+\end{verbatim}
+
+Constructor that does not takes ownership over the passed container.
+
+\begin{verbatim}
+repeated_view (value_type const &data)
+\end{verbatim}
+
+Constructs a view that represents an infinite array of the same element (data).
+
+\begin{verbatim}
+repeated_view (repeated_view const &other)
+\end{verbatim}
+
+\begin{verbatim}
+size_type size (void) const
+\end{verbatim}
+
+Returns the number of elements referenced for the view.
+
+\begin{verbatim}
+bool empty (void) const
+\end{verbatim}
+
+Returns if the view does not reference any element.
+
+\begin{verbatim}
+value_type get_element (index_t const &index) const
+\end{verbatim}
+
+Get the element index from the container.
+
+\begin{verbatim}
+Functor::result_type apply_get (index_t const &index, Functor f)
+\end{verbatim}
+
+Applies the provided function to the value referenced for the given index and returns the result of the operation.
+
+\begin{verbatim}
+reference operator[] (index_t index) const
+\end{verbatim}
+
+The bracket operator is the basic access method.
+
+\begin{verbatim}
+reference make_reference (index_t index) const
+\end{verbatim}
+
+\section{Counting View API} \label{sec-cnt-vw}
+
+\emph{ A view that provides a sequence of integers.}
+
+subsection{Classes}
+
+\begin{verbatim}
+struct stapl::view_impl::counting_container< T >
+\end{verbatim}
+
+Container that represents an increasing sequence of elements.
+
+\begin{verbatim}
+struct stapl::result_of::counting_view< T >
+\end{verbatim}
+
+Defines the type of a counting view parameterized with T.
+
+\subsection{Functions}
+
+\begin{verbatim}
+template<typename T >
+result_of::counting_view< T >::type stapl::counting_view (size_t n, T init=0)
+\end{verbatim}
+
+Helper function that creates a read-only view representing a set of increasing elements.
+
+\section{Functor View API} \label{sec-func-vw}
+
+\emph{ A view that creates an array view on top of a functor container.}
+
+\begin{verbatim}
+template<typename Func>
+typename functor_view_type<Func>::type
+functor_view(size_t const& n, Func const& func)
+\end{verbatim}
+
+Create an array view on top of a functor container.
+
+\pagebreak
+\section{Strided View API} \label{sec-str-vw}
+
+\subsection{Classes}
+
+\begin{verbatim}
+struct stapl::strided_view< BV >
+\end{verbatim}
+
+A metafunction that computes the type of a strided view based on a given view.
+
+\subsection{Functions}
+
+\begin{verbatim}
+template<typename BV >
+strided_view< BV >::type stapl::make_strided_view (BV view,
+    typename view_traits< BV >::index_type const &step, typename
+    view_traits< BV >::index_type const &start)
+\end{verbatim}
+
+Takes an input view and creates a strided view over the original view's container.
+
+\section{Reverse View API } \label{sec-rev-vw}
+
+\emph{ A view that reverses the order of the elements in a sequence.}
+
+\begin{verbatim}
+reverse_view (View const &view)
+\end{verbatim}
+
+Constructs a reverse view over the given view.
+
+\begin{verbatim}
+reverse_view (view_container_type *vcont, domain_type const &dom,
+    map_func_type mfunc=map_func_type())
+\end{verbatim}
+
+Constructor used to pass ownership of the container to the view.
+
+\begin{verbatim}
+reverse_view (view_container_type const &vcont, domain_type const &dom,
+    map_func_type mfunc, reverse_view const &other)
+\end{verbatim}
+
+Constructor that does not takes ownership over the passed container.
+
+\begin{verbatim}
+reverse_view (view_container_type const &vcont, domain_type const &dom,
+    map_func_type mfunc=map_func_type())
+\end{verbatim}
+
+Constructor that does not takes ownership over the passed container.
+
+\begin{verbatim}
+reverse_view (reverse_view const &other)
+\end{verbatim}
+
+\begin{verbatim}
+size_type size (void) const
+\end{verbatim}
+
+Returns the number of elements referenced for the view.
+
+\begin{verbatim}
+bool empty (void) const
+\end{verbatim}
+
+Returns if the view does not reference any element.
+
+\section{Filter View API } \label{sec-filt-vw}
+
+\emph{ A view that filters the elements in a sequence.}
+
+\begin{verbatim}
+filter_view (View const &view, Pred const &pred)
+\end{verbatim}
+
+Constructs a filter view over the given view.
+
+\begin{verbatim}
+filter_view (view_container_type *vcont, domain_type const &dom,
+    map_func_type mfunc=map_func_type(), Pred const &pred=Pred())
+\end{verbatim}
+
+Constructor used to pass ownership of the container to the view.
+
+\begin{verbatim}
+filter_view (view_container_type const &vcont, domain_type const &dom,
+    map_func_type mfunc=map_func_type(), Pred const &pred=Pred())
+\end{verbatim}
+
+Constructor that does not takes ownership over the passed container.
+
+\begin{verbatim}
+filter_view (view_container_type const &vcont, domain_type const &dom,
+    map_func_type mfunc, filter_view const &other)
+\end{verbatim}
+
+\begin{verbatim}
+filter_view (filter_view const &other)
+\end{verbatim}
+
+Constructor that does not takes ownership over the passed container.
+
+\begin{verbatim}
+iterator begin (void)
+\end{verbatim}
+
+Return an iterator over the element whose GID is the first valid index,
+based on applying the predicate to the element value.
+
+\begin{verbatim}
+const_iterator begin (void) const
+\end{verbatim}
+
+Return an iterator over the element whose GID is the first valid index,
+based on applying the predicate to the element value.
+
+\begin{verbatim}
+iterator end (void)
+\end{verbatim}
+
+Return an iterator over the element whose GID is the last valid index,
+based on applying the predicate to the element value.
+
+\begin{verbatim}
+const_iterator end (void) const
+\end{verbatim}
+
+Return an iterator over the element whose GID is the last valid index,
+based on applying the predicate to the element value.
+
+\begin{verbatim}
+index_type next (index_type index) const
+\end{verbatim}
+
+Return an iterator over the element whose GID is the next valid index,
+based on applying the predicate to the element value.
+
+\begin{verbatim}
+value_type get_element (index_type index)
+\end{verbatim}
+
+Returns the value at the specified index.
+
+\begin{verbatim}
+Pred const & predicate (void) const
+\end{verbatim}
+
+Returns the predicate used to filter the values.
+
+\begin{verbatim}
+size_t size (void) const
+\end{verbatim}
+
+Returns the number of elements referenced for the view.
+
+\begin{verbatim}
+bool empty (void) const
+\end{verbatim}
+
+Returns true if the view does not reference any element.
+
+\section{Transform View API } \label{sec-trans-vw}
+
+\emph{ A view that applies the given functor to the elements when they are returned by get data methods. }
+
+\begin{verbatim}
+transform_view (container_t &vcont, domain_t const &dom, map_func_t mfunc,
+    transform_view const &other)
+\end{verbatim}
+
+\begin{verbatim}
+transform_view (container_t &vcont, domain_t const &dom, map_func_t
+    mfunc=map_func_t())
+\end{verbatim}
+
+\begin{verbatim}
+transform_view (View const &view, Functor const &func)
+\end{verbatim}
+
+\begin{verbatim}
+reference operator[] (index_type g) const
+\end{verbatim}
+
+\begin{verbatim}
+Functor const & func (void) const
+\end{verbatim}
+
+\pagebreak
+
+\section{Native View API } \label{sec-nat-vw}
+
+\emph{ A view that uses the native partitioner. }
+
+\begin{verbatim}
+view_type operator() (View const &v)
+\end{verbatim}
+
+\section{Balance View API } \label{sec-bal-vw}
+
+\emph{ A view that uses the balanced partitioner. }
+
+\begin{verbatim}
+view_type operator() (View &v, size_t n)
+\end{verbatim}
+
+\begin{verbatim}
+view_type operator() (View const &v, size_t n)
+\end{verbatim}
+
+\section{Explicit View API } \label{sec-expl-vw}
+
+\emph{ A view that uses a explicit partitioner.}
+
+\begin{verbatim}
+view_type operator() (View const &view, Storage const &doms_spec)
+\end{verbatim}
+
+Constructor based on the view to partition and a container where the explicit domains are specified (doms\_spec).
+
+\begin{verbatim}
+view_type operator() (View const &view, pexpl_type const &partition)
+\end{verbatim}
+
+Constructor based on the view to partition and an explicit\_partition object is used specify the explicit domains.
+
+\section{Partitioned View API } \label{sec-part-vw}
+
+\emph{ A view that creates a virtual container of views. }
+
+\begin{verbatim}
+segmented_view (view_container_type *c, domain_type const &dom,
+    const map_func_type mf=map_func_type())
+\end{verbatim}
+
+Constructor used to pass ownership of the container to the view.
+
+\begin{verbatim}
+segmented_view (view_container_type const &c, domain_type const &dom,
+    map_func_type const &mf=map_func_type(), segmented_view
+    const &other=segmented_view())
+\end{verbatim}
+
+Constructor that does not takes ownership over the passed container.
+
+\begin{verbatim}
+segmented_view (view_container_type const &c)
+\end{verbatim}
+
+Constructs a view that can reference all the elements of the passed container.
+
+\begin{verbatim}
+segmented_view (C const &c, partition_type const &part, map_fun_gen_t
+    const &mfg=map_fun_gen_t())
+\end{verbatim}
+
+Constructs a partitioned\_view over the container c using the partition part.
+
+\begin{verbatim}
+size_type size (void) const
+\end{verbatim}
+
+Returns the number of elements referenced for the view.
+
+\begin{verbatim}
+bool empty (void) const
+\end{verbatim}
+
+Returns if the view does not reference any element.
+
+\begin{verbatim}
+value_type get_element (index_t const &index) const
+\end{verbatim}
+
+Get the element index from the container.
+
+\begin{verbatim}
+template<class Functor >
+Functor::result_type apply_get (index_t const &index, Functor f)
+\end{verbatim}
+
+Applies the provided function to the value referenced for the given index and returns the result of the operation.
+
+\begin{verbatim}
+reference operator[] (index_t index) const
+\end{verbatim}
+
+The bracket operator is the basic access method.
+
+\begin{verbatim}
+reference make_reference (index_t index) const
+\end{verbatim}
+
+\pagebreak
+
+\section{Zip View API } \label{sec-zip-vw}
+
+\emph{ A view that creates a one dimensional view over a zipped set of views. }
+
+\begin{verbatim}
+size_type size (void) const
+\end{verbatim}
+
+Returns the number of elements referenced for the view.
+
+\begin{verbatim}
+bool empty (void) const
+\end{verbatim}
+
+Returns if the view does not reference any element.
+
+\begin{verbatim}
+value_type get_element (index_t const &index) const
+\end{verbatim}
+
+Get the element index from the container.
+
+\begin{verbatim}
+template<class Functor >
+Functor::result_type apply_get (index_t const &index, Functor f)
+\end{verbatim}
+
+Applies the provided function to the value referenced for the given index and returns the result of the operation.
+
+\begin{verbatim}
+void set_element (index_t const &index, value_t const &value)
+\end{verbatim}
+
+Set the element index in the container to value value.
+
+\begin{verbatim}
+template<class Functor >
+void apply_set (index_t const &index, Functor f)
+\end{verbatim}
+
+Applies the provided function to the value referenced for the given index and mutates the element with the resulting value.
+
+\begin{verbatim}
+reference operator[] (index_t index) const
+\end{verbatim}
+
+The bracket operator is the basic access method.
+
+\begin{verbatim}
+reference make_reference (index_t index) const
+\end{verbatim}
+
+\pagebreak
+
+\section{System View API} \label{sec-dist-sys-vw}
+
+\emph{A view that provides a set of location ids on to which partition ids may be mapped.  Used to specify a data distribution. }
+
+subsection{Classes}
+
+\begin{verbatim}
+struct stapl::dist_view_impl::system_container
+\end{verbatim}
+
+Container that represents the set of locations in the system.
+
+\begin{verbatim}
+struct stapl::result_of::system_view
+\end{verbatim}
+
+Defines the type of a system view.
+
+\subsection{Functions}
+
+\begin{verbatim}
+result_of::system_view::type * stapl::system_view
+    (location_type nlocs=get_num_locations())
+\end{verbatim}
+
+Creates a read-only view representing the set of locations in the system. More.
+
+\section{Mapping View API} \label{sec-dist-map-vw}
+
+\emph{A view that maps partitions to location ids.  Used to specify a data distribution. }
+
+subsection{Classes}
+
+\begin{verbatim}
+struct stapl::result_of::mapping_view< SysView, PartitionIdDomain,
+    MappingFunction >
+\end{verbatim}
+
+Defines the type of a view that maps partition ids to locations.
+
+\subsection{Functions}
+
+\begin{verbatim}
+template<typename SysView , typename PartitionIds , typename MappingFunction >
+result_of::mapping_view < SysView, PartitionIds, MappingFunction >::type
+    stapl::mapping_view (SysView const &system, PartitionIds const &domain,
+    MappingFunction const &mapping_func)
+\end{verbatim}
+
+Creates a read-only view whose domain is the identifiers of the partitions of an element partitioning and whose mapping function maps from partition id to location id.
+
+\section{Partitioning View API} \label{sec-dist-part-vw}
+
+\emph{A view that maps element ids to partition ids.
+Used to specify a data distribution. }
+
+subsection{Classes}
+
+\begin{verbatim}
+struct stapl::result_of::partitioning_view< MappingView, GIDDomain,
+    PartitioningFunction >
+\end{verbatim}
+
+Defines the type of a view that partitions element GIDs to partition ids.
+
+\subsection{Functions}
+
+\begin{verbatim}
+template<typename MappingView , typename GIDDomain , typename PartitioningFunction >
+result_of::partitioning_view < MappingView, GIDDomain, PartitioningFunction >
+    ::type stapl::partitioning_view (MappingView const &mapping_view,
+    GIDDomain const &domain, PartitioningFunction const &partitioning_func)
+\end{verbatim}
+
+Creates a read-only view whose domain is the identifiers of a container's elements and whose mapping function maps from element GID to partition id.
+
+\section{Distribution Specifications View API} \label{sec-dist-spec-vw}
+
+\emph{A view that provides a collection of functions that create view-based specifications of common data distributions.  Used to specify a data distribution.}
+
+\subsection{Functions}
+
+\begin{verbatim}
+distribution_spec stapl::block (unsigned long int n,
+    unsigned long int block_size, location_type num_locs=get_num_locations())
+\end{verbatim}
+
+Construct the specification of a blocked distribution.
+
+\begin{verbatim}
+distribution_spec stapl::cyclic (unsigned long int n,
+    location_type num_locs=get_num_locations())
+\end{verbatim}
+
+Construct the specification of a cyclic distribution.
+
+\begin{verbatim}
+distribution_spec stapl::block_cyclic (unsigned long int n,
+    unsigned long int block_size, location_type num_locs=get_num_locations())
+\end{verbatim}
+
+Construct the specification of a block-cyclic distribution.
+
+\begin{verbatim}
+distribution_spec stapl::balance (unsigned long int n,
+    location_type num_locs=get_num_locations())
+\end{verbatim}
+
+Construct the specification of a balanced distribution.
+
+\begin{verbatim}
+template<typename Traversal , typename Size >
+dist_spec_impl::md_distribution_spec < tuple_size< Size >::value, Traversal >::type
+    stapl::volumetric (Size const &n, location_type num_locs=
+    get_num_locations())
+\end{verbatim}
+
+Construct the specification of a volumetric distribution of a multidimensional container.

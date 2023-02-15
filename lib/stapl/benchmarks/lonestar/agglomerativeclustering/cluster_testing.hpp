@@ -1,0 +1,367 @@
+/*
+// Copyright (c) 2000-2009, Texas Engineering Experiment Station (TEES), a
+// component of the Texas A&M University System.
+
+// All rights reserved.
+
+// The information and source code contained herein is the exclusive
+// property of TEES and may not be disclosed, examined or reproduced
+// in whole or in part without explicit written authorization from TEES.
+*/
+
+#ifndef STAPL_BENCHMARK_LONESTAR_CLUSTER_TESTING_HPP
+#define STAPL_BENCHMARK_LONESTAR_CLUSTER_TESTING_HPP
+
+#include <stapl/utility/do_once.hpp>
+#include <stapl/containers/array/array.hpp>
+#include <stapl/views/array_view.hpp>
+#include <boost/random.hpp>
+#include <boost/random/uniform_real_distribution.hpp>
+#include <boost/random/variate_generator.hpp>
+#include "agglomerativeclustering.hpp"
+
+using namespace stapl;
+
+/////////////////////////////////////////////////////////////////////
+/// @brief Used in the generation of the test data and stores static
+///        data and information about each local process.
+/////////////////////////////////////////////////////////////////////
+struct local_loc_data
+{
+  size_t m_num_elems;
+  size_t m_num_locs;
+  size_t m_loc_id;
+  double m_loc_range;
+  double m_loc_range_start;
+  double m_data_skip;
+  size_t m_offset_start;
+
+  local_loc_data(size_t num_elems, size_t num_locs, size_t loc_id)
+    : m_num_elems(num_elems), m_num_locs(num_locs), m_loc_id(loc_id)
+  {
+    // Generated values are between [0.25, 0.75).
+    double range_start = 0.25;
+    double range_end = 0.75;
+    double range = range_end - range_start;
+    double factor = get_factor(m_num_locs, m_loc_id);
+    m_loc_range = range / (2.0*m_num_locs-1);
+    m_loc_range_start = 2.0*m_loc_id*m_loc_range*factor + range_start;
+    m_data_skip = (double)m_num_locs * m_loc_range / m_num_elems;
+
+    size_t elem_per_loc = m_num_elems / m_num_locs;
+    m_offset_start = elem_per_loc * m_loc_id;
+
+    if (m_loc_id < (m_num_elems % m_num_locs)) {
+      m_offset_start += m_loc_id;
+    } else {
+      m_offset_start += m_num_elems % m_num_locs;
+    }
+  }
+
+  /////////////////////////////////////////////////////////////////////
+  /// @brief Returns a coefficient factor based on the number of iterations
+  ///        it takes to reach a value given range using a binary search. Used
+  ///        to make pairs of points closer in space to eliminate issues with
+  ///        floating point comparisons and to guarantee ordering.
+  /////////////////////////////////////////////////////////////////////
+  static double get_factor(size_t range, size_t val)
+  {
+    range /= 2;
+    double depth = 0.0;
+    while (val != range && range > 0) {
+      if (val > range) {
+        val -= range;
+      }
+      range /= 2;
+      ++depth;
+    }
+    return pow(0.999, depth);
+  }
+
+  double data_range_offset(size_t offset)
+  {
+    double factor = get_factor(m_num_elems, offset);
+    return (offset - m_offset_start) * m_data_skip * factor;
+  }
+
+  void define_type(stapl::typer& t)
+  {
+    t.member(m_num_elems);
+    t.member(m_num_locs);
+    t.member(m_loc_id);
+    t.member(m_loc_range);
+    t.member(m_loc_range_start);
+    t.member(m_data_skip);
+    t.member(m_offset_start);
+  }
+};
+
+
+/////////////////////////////////////////////////////////////////////
+/// @brief Generates testing point.
+///
+/// For each point:
+///     The X dimension stores the index of the point in the array. The value
+///   is scaled down so that it does not impact the clustering processing, but
+///   can still be used to determine the original index.
+///     The Y dimension contains values that are generated in such a way that
+///   the resulting clustering will group points in deterministic pairs.
+///     The Z dimension contains a value that remains constant for each
+///   location. Therefore for each process there should exist one major cluster.
+///
+/// If the number of processes and the number of elements are powers of two,
+/// the resulting clustering should be a perfect binary tree.
+/////////////////////////////////////////////////////////////////////
+struct wf_test_data
+{
+  using state_type = std::true_type;
+
+  local_loc_data m_local_data;
+  size_t         m_offset;
+
+  wf_test_data(local_loc_data local_data)
+    : m_local_data(local_data), m_offset(0)
+  { }
+
+  wf_test_data(wf_test_data const& wf, size_t offset)
+    : m_local_data(wf.m_local_data), m_offset(offset)
+  { }
+
+  my_point operator()()
+  {
+    double data_range_offset = m_local_data.data_range_offset(m_offset);
+    my_point point;
+    point.m_x = 0.00001 * m_offset / m_local_data.m_num_elems;
+    point.m_y = m_local_data.m_loc_range_start + data_range_offset;
+    point.m_z = m_local_data.m_loc_range_start;
+    return point;
+  }
+
+  void define_type(stapl::typer& t)
+  {
+    t.member(m_local_data);
+    t.member(m_offset);
+  }
+};
+
+
+
+/////////////////////////////////////////////////////////////////////
+/// @brief Fills an array with test points
+/// @todo Crashes with random inputs but passes for input generated by seed 0,
+///       needs to be debugged and fixed.
+/////////////////////////////////////////////////////////////////////
+template <typename ArrayView>
+void fill_with_test_points(ArrayView& av)
+{
+  local_loc_data local_data(av.size(), get_num_locations(), get_location_id());
+  wf_test_data wf(local_data);
+  stapl::generate(av, wf);
+
+  #if 0
+  srand(time(0));
+  #else
+  srand(0);
+  #endif
+  typedef typename ArrayView::const_iterator::difference_type difference_type;
+  random_shuffle(av,
+    algo_details::default_random_number_generator<difference_type>(
+      av.get_location_id()+rand()));
+}
+
+
+
+/////////////////////////////////////////////////////////////////////
+/// @brief Used to simplify accessing elements of a cluster.
+/////////////////////////////////////////////////////////////////////
+template<typename Clusters, typename Cluster>
+struct cluster_wrapper
+  : public Cluster
+{
+  Clusters& m_clusters;
+  size_t m_depth;
+
+  cluster_wrapper(Clusters& clusters, Cluster cluster, size_t depth)
+    : Cluster(cluster), m_clusters(clusters), m_depth(depth)
+  { }
+
+  size_t get_num_children()
+  { return (*this).property().children.size(); }
+
+  size_t get_num_elements_in_cluster()
+  { return (*this).property().property.get_Count(); }
+
+  size_t get_child_id(size_t child_index)
+  { return (*this).property().children[child_index]; }
+
+  cluster_wrapper get_child(size_t child_index)
+  {
+    size_t id = get_child_id(child_index);
+    return cluster_wrapper(m_clusters, m_clusters[m_depth-1][id], m_depth-1);
+  }
+
+  cluster_wrapper get_left_cluster()
+  {
+    if (get_num_children() == 0) {
+      return (*this);
+    } else if (get_num_children() == 1) {
+      return get_child(0).get_left_cluster();
+    } else {
+      return get_child(0);
+    }
+  }
+
+  cluster_wrapper get_right_cluster()
+  {
+    if (get_num_children() == 0) {
+      return (*this);
+    } else if (get_num_children() == 1) {
+      return get_child(0).get_right_cluster();
+    } else {
+      return get_child(1);
+    }
+  }
+};
+
+
+/////////////////////////////////////////////////////////////////////
+/// @brief Constructs a wrapper for a cluster vertex.
+/////////////////////////////////////////////////////////////////////
+template<typename Clusters, typename Cluster>
+cluster_wrapper<Clusters, Cluster> wrap_cluster(Clusters& clusters,
+                                                Cluster cluster, size_t depth)
+{
+  return cluster_wrapper<Clusters, Cluster>(clusters, cluster, depth);
+}
+
+
+/////////////////////////////////////////////////////////////////////////////
+/// @brief Recursive function that checks if the clustering is a perfect
+///        binary tree.
+/////////////////////////////////////////////////////////////////////////////
+template <typename ClusterWrapper>
+void test_pow2(ClusterWrapper cluster, bool& passed, size_t size)
+{
+  size_t num_children = cluster.get_num_children();
+  if (num_children == 0 || !passed) {
+    return;
+  } else if (cluster.get_num_elements_in_cluster() != size) {
+    passed = false;
+    return;
+  } else {
+    test_pow2(cluster.get_left_cluster(), passed, size / 2);
+    if (num_children == 2) {
+      test_pow2(cluster.get_right_cluster(), passed, size / 2);
+    }
+  }
+}
+
+
+//////////////////////////////////////////////////////////////////////////////
+/// @brief If number of elements and processors are powers of two, then the
+///        resulting clustering should be a perfect binary tree.
+//////////////////////////////////////////////////////////////////////////////
+template <typename Clusters>
+bool test_pow2(Clusters clusters)
+{
+  size_t num_elems = clusters[0].size();
+  size_t depth = clusters.size()-1;
+  bool passed = true;
+
+  auto root = clusters[depth][0];
+  test_pow2(wrap_cluster(clusters, root, depth), passed, num_elems);
+
+  return passed;
+}
+
+
+//////////////////////////////////////////////////////////////////////////////
+/// @brief Checks that pairs of points were clustered correctly.
+//////////////////////////////////////////////////////////////////////////////
+template <typename Clusters>
+struct pair_test_wf
+{
+  typedef bool result_type;
+
+  Clusters const& m_clusters;
+  local_loc_data m_local_data;
+
+  pair_test_wf(Clusters const& clusters, local_loc_data local_data)
+    : m_clusters(clusters), m_local_data(local_data)
+  { }
+
+  template <typename Vertex>
+  result_type operator()(Vertex v)
+  {
+    if (v.property().children.size() > 2) {
+      return false;
+    } else if (v.property().children.size() == 2) {
+      size_t id0 = v.property().children[0];
+      size_t id1 = v.property().children[1];
+      my_point p0 = m_clusters[0][id0].property().property.get_Centroid();
+      my_point p1 = m_clusters[0][id1].property().property.get_Centroid();
+      double diff = std::abs(p0.m_x - p1.m_x);
+      if (diff > 0.000011 / m_local_data.m_num_elems) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /////////////////////////////////////////////////////////////////////
+  /// @bug Packing reference (m_clusters).
+  /////////////////////////////////////////////////////////////////////
+  void define_type(stapl::typer& t)
+  {
+    t.member(m_clusters);
+    t.member(m_local_data);
+  }
+};
+
+
+/////////////////////////////////////////////////////////////////////
+/// @brief Prints pass/fail message on single location.
+/////////////////////////////////////////////////////////////////////
+void print_test_msg(char const* msg, bool passed)
+{
+  if (get_num_locations() == 1) {
+    if (passed) {
+      std::cout << msg << ": \x1b[;32m[PASSED]\x1b[;0m\n";
+    } else {
+      std::cout << msg << ": \x1b[;31m[FAILED]\x1b[;0m\n";
+    }
+  } else {
+    do_once([&](void) {
+      print_test_msg(msg, passed);
+    });
+  }
+}
+
+
+//////////////////////////////////////////////////////////////////////////////
+/// @brief Performs various tests to check if clustering is correct.
+//////////////////////////////////////////////////////////////////////////////
+template <typename Clusters>
+void cluster_testing(Clusters& clusters)
+{
+  size_t num_elems = clusters[0].size();
+  size_t num_locs =  get_num_locations();
+  local_loc_data local_data(num_elems, num_locs, get_location_id());
+
+  // Check that pairs of points were clustered correctly.
+  if (clusters.size() >= 2) {
+    pair_test_wf<Clusters> wf(clusters, local_data);
+    bool passed = nc_map_reduce(wf, stapl::logical_and<bool>(), clusters[1]);
+    print_test_msg("Pair Test", passed);
+  }
+
+  // If num_elems and num_locs are both power of two's, perform extensive test
+  if (!(num_elems & (num_elems - 1)) && !(num_locs & (num_locs - 1))) {
+    do_once([&clusters](void) {
+      bool passed = test_pow2(clusters);
+      print_test_msg("Extensive Test", passed);
+    });
+  }
+}
+
+#endif

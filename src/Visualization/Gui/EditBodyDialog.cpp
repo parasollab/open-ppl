@@ -8,6 +8,9 @@
 
 #include "sandbox/gui/main_window.h"
 
+#include <QDialogButtonBox>
+#include <QVBoxLayout>
+#include <QPushButton>
 
 /*------------------------------- Construction -------------------------------*/
 

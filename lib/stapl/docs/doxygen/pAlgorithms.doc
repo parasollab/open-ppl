@@ -1,0 +1,329 @@
+// The following is the pAlgorithms component of STAPL, along with the detailed
+// descriptions and subsections (e.g., Non-Modifying Algorithms).  All
+// subsections should appear in the desired order of appearance, and are
+// defined by @defgroup.  Source code that belongs in a section or subsection
+// should indicate as such with @addtogroup.
+
+
+//////////////////////////////////////////////////////////////////////
+/// @defgroup pAlgorithms pAlgorithms
+/// A pAlgorithm is the parallel counterpart of the STL algorithm.
+/// There are three types of pAlgorithms in STAPL:
+/// - pAlgorithms with semantics identical to their sequential counterparts.
+/// - pAlgorithms with enhanced semantics (e.g. a parallel find could return
+/// any (or all) element found, while STL find only returns the first).
+/// - pAlgorithms with no sequential equivalent in STL.
+///
+/// STL algorithms take iterators marking the start and end of an
+/// input sequence as parameters.  Using STL constructs, such as the vector,
+/// this can be illustrated as follows:
+///
+/// @code
+/// std::vector<int> v(1000000);
+/// // initialize v
+/// std::find( v.begin(), v.end(), 0 );
+/// @endcode
+///
+/// However, regular C++ arrays also support iterators, because iterators
+/// are in fact just generalized pointers:
+///
+/// @code
+/// int v[1000000];
+/// ... initialize v ...
+/// find( &v[0], &v[1000000], 0 );
+/// @endcode
+///
+/// STAPL pAlgorithms take one or more @ref pView instances as parameters
+/// instead. For example, STL provides an algorithm to find an element in a
+/// list, @c find.  STAPL provides find which works with pViews.
+/// The construction of the pView over a container is an additional step, but
+/// the same pView instance can be used across multiple pAlgorithm calls and
+/// allows additional flexibility such as providing access to a portion of
+/// the container instead of the entire data set.
+/// @code
+/// stapl::vector<int> v(1000000);
+/// stapl::vector_view<stapl::vector<int>> vw(v);
+/// // initialize v
+/// stapl::find( vw, 0 );
+/// @endcode
+///
+/// In describing the parameters of these sets of pAlgorithms, some conventions
+/// are used.  All of the pAlgorithms operate on sequences of input and/or
+/// output data (there are a few STL algorithms that only operate on a few
+/// elements, such as @c min or @c max, which are not parallel operations).
+/// STL generally describes this sequence using set notation as [@c first, @c
+/// last), where @c first is an iterator to the start of a sequence and @c last
+/// is an iterator to the end of a sequence, and everything from the @c first
+/// element up to, but not including, the last element is considered part of
+/// the sequence.  STAPL's pViews completely encapsulate this information.
+/// Hence, when describing a given pAlgorithm, a sequence is represented as a
+/// pView.
+///
+/// Many pAlgorithms behavior is described in terms of @c operator?, where @c
+/// ? is one of the C++ operators such as @c <, @c >, @c ==, etc.  C++ allows
+/// the programmer to override the actions taken when one of the operators is
+/// called on a given class or type, and it may be helpful for the learning
+/// STAPL programmer to study this mechanism in C++.  Another method that STL
+/// uses to change the default behavior of operators is to define @ref
+/// functionObjects.  These are functions or classes that implement @c
+/// operator() that will be used instead of the given operator.  Most
+/// pAlgorithms (and algorithms in STL), accept function objects, and in fact
+/// such flexibility lets both STL and STAPL algorithms to be adjusted to
+/// exactly what is needed, reducing the amount of code that a user needs to
+/// rewrite to obtain the desired effect.
+///
+/// All pAlgorithms are expressed using dependence patterns, which when combined
+/// with the functor describing the operation on a single element and the set of
+/// pViews to process are using to instantiate the parallel task graph,
+/// PARAGRAPH.  When the PARAGRAPH instance is executed using the executor and
+/// scheduler facilities of the STAPL runtime the desired parallel computation
+/// is performed.  The scheduling policy can be specified for each PARAGRAPH
+/// instance if desired, otherwise the default FIFO policy is used.  Multiple
+/// PARAGRAPHS may be processed concurrently by a PARAGRAPH executor that the
+/// set of locations executing the STAPL applications use to perform work.
+//////////////////////////////////////////////////////////////////////
+
+
+//////////////////////////////////////////////////////////////////////
+/// @ingroup pAlgorithms
+/// @defgroup nonModifyingAlgorithms Non-modifying Sequence Operations
+/// @brief Search and query view elements.
+///
+/// The non-modifying sequence operations do not directly modify the
+/// sequences of data they operate on.  Each algorithm has two versions,
+/// one using @c operator== for comparisons, and the other using a
+/// user-defined function object.
+//////////////////////////////////////////////////////////////////////
+
+
+//////////////////////////////////////////////////////////////////////
+/// @ingroup nonModifyingAlgorithms
+/// @defgroup searchAlgorithms Search Operations
+/// @brief Search for elements in view(s) that meet the specified criteria
+/// (e.g. @ref stapl::find()).  Defined in stapl/algorithms/algorithm.hpp
+///
+/// The search operations are non-modifying algorithms that scan
+/// one or more views looking for elements that meet the specified criteria.
+/// For example, @ref stapl::find() searches the view provided for an element
+/// that matches the value supplied to the algorithm call.
+//////////////////////////////////////////////////////////////////////
+
+
+//////////////////////////////////////////////////////////////////////
+/// @ingroup nonModifyingAlgorithms
+/// @defgroup summaryAlgorithms Summary Operations
+/// @brief Summarize the entire set of elements in the view(s)
+/// (e.g., @ref stapl::equal()).
+//////////////////////////////////////////////////////////////////////
+
+
+//////////////////////////////////////////////////////////////////////
+/// @ingroup nonModifyingAlgorithms
+/// @defgroup extremaAlgorithms Extrema Operations
+/// @brief Find the extreme values in the view provided
+/// (e.g., @ref stapl::min_element()).  Defined in
+/// stapl/algorithms/algorithm.hpp.
+//////////////////////////////////////////////////////////////////////
+
+
+//////////////////////////////////////////////////////////////////////
+/// @ingroup nonModifyingAlgorithms
+/// @defgroup countingAlgorithms Counting Operations
+/// @brief Summarize the number of elements in the view(s) that meet the
+/// specified criteria. Defined in stapl/algorithms/algorithm.hpp
+//////////////////////////////////////////////////////////////////////
+
+
+//////////////////////////////////////////////////////////////////////
+/// @ingroup pAlgorithms
+/// @defgroup mutatingAlgorithms Mutating Sequence Operations
+/// @brief Modify the elements in a view.
+///
+/// Mutating algorithms modify the sequences of data that they operate on in
+/// some way.  The @ref replace(), @ref remove(), and @ref unique() each have
+/// two versions, one using @c operator== for comparisons, and the other using a
+/// function object.
+//////////////////////////////////////////////////////////////////////
+
+
+//////////////////////////////////////////////////////////////////////
+/// @ingroup mutatingAlgorithms
+/// @defgroup generatingAlgorithms Generating Operations
+/// @brief Initialize the elements in a view (e.g., @ref stapl::generate()).
+/// Defined in stapl/algorithms/algorithm.hpp
+///
+/// Modifies the elements in a view by assigning values that are:
+///   - provided by the caller (@ref stapl::fill()),
+///   - computed by a functor (@ref stapl::generate()),
+///   - or computed from values in a source view (@ref stapl::transform()).
+//////////////////////////////////////////////////////////////////////
+
+
+//////////////////////////////////////////////////////////////////////
+/// @ingroup mutatingAlgorithms
+/// @defgroup removingAlgorithms Removing Operations
+/// @brief Remove elements from the input view that meet a specified
+/// criteria (e.g., @ref stapl::remove(), @ref stapl::unique()). Defined in
+/// stapl/algorithms/algorithm.hpp
+///
+/// Elements in the input view that are not removed by the algorithm
+/// are reorganized such that they occupy a contiguous interval of the domain
+/// of the input view.  The remaining elements of the input view are no
+/// longer valid.  The view and its underlying container are not resized
+/// by the algorithm.
+//////////////////////////////////////////////////////////////////////
+
+
+//////////////////////////////////////////////////////////////////////
+/// @ingroup mutatingAlgorithms
+/// @defgroup reorderingAlgorithms Reordering Operations
+/// @brief Reorder the elements in the input view (e.g., @ref stapl::reverse(),
+/// @ref stapl::rotate()). Defined in stapl/algorithms/algorithm.hpp
+//////////////////////////////////////////////////////////////////////
+
+
+//////////////////////////////////////////////////////////////////////
+/// @ingroup pAlgorithms
+/// @defgroup sortingAlgorithms Sorting and Related Operations
+/// @brief Sort elements in a view or perform operations on sorted sequences.
+///
+/// The sorting algorithms perform operations related to sorting or depending
+/// on sorted order.  All algorithms define ordering of elements based on @c
+/// operator< or an optional StrictWeakOrdering function object.
+//////////////////////////////////////////////////////////////////////
+
+
+//////////////////////////////////////////////////////////////////////
+/// @ingroup sortingAlgorithms
+/// @defgroup sortAlgorithms Sorting Operations
+/// @brief Sort the elements in a view.  Defined in
+/// stapl/algorithms/sorting.hpp
+//////////////////////////////////////////////////////////////////////
+
+
+//////////////////////////////////////////////////////////////////////
+/// @ingroup sortingAlgorithms
+/// @defgroup permutingAlgorithms Permuting Operations
+/// @brief Reorder the elements in a view.  Defined in
+/// stapl/algorithms/sorting.hpp
+//////////////////////////////////////////////////////////////////////
+
+
+//////////////////////////////////////////////////////////////////////
+/// @ingroup sortingAlgorithms
+/// @defgroup binarysearchAlgorithms Binary Search Operations
+/// @brief Search the elements of a view using binary search.  Defined
+/// in stapl/algorithms/sorting.hpp
+//////////////////////////////////////////////////////////////////////
+
+
+//////////////////////////////////////////////////////////////////////
+/// @ingroup sortingAlgorithms
+/// @defgroup sortrelatedAlgorithms Sorting Related Operations
+/// @brief Algorithms related to sorting elements in views.  Defined
+/// in stapl/algorithms/sorting.hpp
+//////////////////////////////////////////////////////////////////////
+
+
+//////////////////////////////////////////////////////////////////////
+/// @ingroup pAlgorithms
+/// @defgroup numericAlgorithms Generalized Numeric Algorithms
+/// @brief Algorithms for numeric operations on view elements.  Defined
+/// in stapl/algorithms/numeric.hpp
+///
+/// The generalized numeric algorithms provide a parallel version of several
+/// common numerical algorithms.  The common version of each algorithm is
+/// provided, along with a generalized version that utilizes a BinaryFunc
+/// instead of the corresponding math operator.  This BinaryFunc could be
+/// redefined to perform some different operation, while maintaining the data
+/// processing order that the common algorithm provides.  For instance,
+/// p_accumulate could use a BinaryFunc to multiply, instead of sum, its input.
+///
+/// @warning
+/// These algorithms assume that all numeric operations are associative. As
+/// such, they distribute data among processors and let the operations be
+/// performed in parallel, possibly with a merge taking place between processor
+/// partitions. Hence, the result could be slightly different than if the
+/// calculations had been performed linearly, as is the case with sequential
+/// STL code. The user must decide if the margin of error is acceptable for
+/// their application.
+//////////////////////////////////////////////////////////////////////
+
+
+//////////////////////////////////////////////////////////////////////
+/// @ingroup pAlgorithms
+/// @defgroup functionObjects Function Objects
+/// @brief A collection of element-wise operations commonly used to
+/// process view elements in a pAlgorithm.  Defined in
+/// stapl/algorithms/functional.hpp
+//////////////////////////////////////////////////////////////////////
+
+
+//////////////////////////////////////////////////////////////////////
+/// @ingroup functionObjects
+/// @defgroup baseFunctionObjects Base Function Objects
+/// @brief Base classes used to simplify the development of new operators
+/// that will be used in pAlgorithms.  Defined in
+/// stapl/algorithms/functional.hpp
+//////////////////////////////////////////////////////////////////////
+
+
+//////////////////////////////////////////////////////////////////////
+/// @ingroup functionObjects
+/// @defgroup comparatorFunctionObjects Comparator Function Objects
+/// @brief Function objects that implement element-wise comparison.
+/// Defined in stapl/algorithms/functional.hpp
+///
+/// The @ref stapl::element_map function object is included here as it is the
+/// function operation that implements the identity operation used in
+/// all of the pAlgorithms that compare view elements
+/// (e.g., @ref stapl::max_element()).
+//////////////////////////////////////////////////////////////////////
+
+
+//////////////////////////////////////////////////////////////////////
+/// @ingroup functionObjects
+/// @defgroup mutatingFunctionObjects Mutating Function Objects
+/// @brief Function objects that mutate one or both or their arguments.
+/// Defined in stapl/algorithms/functional.hpp
+//////////////////////////////////////////////////////////////////////
+
+
+//////////////////////////////////////////////////////////////////////
+/// @ingroup functionObjects
+/// @defgroup numericFunctionObjects Numeric Function Objects
+/// @brief Function objects implement numeric operations.
+/// Defined in stapl/algorithms/functional.hpp
+//////////////////////////////////////////////////////////////////////
+
+
+//////////////////////////////////////////////////////////////////////
+/// @ingroup functionObjects
+/// @defgroup logicFunctionObjects Logical Function Objects
+/// @brief Function objects implement logic operations.
+/// Defined in stapl/algorithms/functional.hpp
+//////////////////////////////////////////////////////////////////////
+
+
+//////////////////////////////////////////////////////////////////////
+/// @ingroup functionObjects
+/// @defgroup bitwiseFunctionObjects Bit-wise Function Objects
+/// @brief Function objects implement bit-wise operations on view elements.
+/// Defined in stapl/algorithms/functional.hpp
+//////////////////////////////////////////////////////////////////////
+
+
+//////////////////////////////////////////////////////////////////////
+/// @ingroup functionObjects
+/// @defgroup refFunctionObjects Reference Function Objects
+/// @brief Function objects that manipulate references to view elements.
+/// Defined in stapl/algorithms/functional.hpp
+//////////////////////////////////////////////////////////////////////
+
+
+//////////////////////////////////////////////////////////////////////
+/// @ingroup functionObjects
+/// @defgroup bindFunctionObjects Binding Function Objects
+/// @brief Function objects that bind a value to one or more parameters
+/// of another function object. Defined in stapl/algorithms/functional.hpp
+//////////////////////////////////////////////////////////////////////

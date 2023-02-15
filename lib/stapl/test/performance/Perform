@@ -1,0 +1,31 @@
+#
+
+# pushd /mnt/lustre/lus0/rmetzger/Perform
+# cd ./containers
+# sh Build cont >& log
+# cd ../views
+# sh Build view1 >& log
+# sh Build view2 >& log
+# cd ../algorithms
+# sh Build algo1 >& log
+# sh Build algo2 >& log
+# sh Build algo3 >& log
+# sh Build algo4 >& log
+# sh Build algo5 >& log
+# sh Build algo6 >& log
+# popd
+
+#for N in 2 4 8 16 32 64 128 256 512
+#do
+#sed -e "s/SED/"$N"/g" < containers/Cont_pbs.sh > DOIT ; qsub DOIT
+#sed -e "s/SED/"$N"/g" < views/View1_pbs.sh > DOIT ; qsub DOIT
+#sed -e "s/SED/"$N"/g" < views/View2_pbs.sh > DOIT ; qsub DOIT
+
+#sed -e "s/SED/"$N"/g" < algorithms/Algo1_pbs.sh > DOIT ; qsub DOIT
+#sed -e "s/SED/"$N"/g" < algorithms/Algo2_pbs.sh > DOIT ; qsub DOIT
+#sed -e "s/SED/"$N"/g" < algorithms/Algo3_pbs.sh > DOIT ; qsub DOIT
+
+#sed -e "s/SED/"$N"/g" < algorithms/Algo4_pbs.sh > DOIT ; qsub DOIT
+#sed -e "s/SED/"$N"/g" < algorithms/Algo5_pbs.sh > DOIT ; qsub DOIT
+#sed -e "s/SED/"$N"/g" < algorithms/Algo6_pbs.sh > DOIT ; qsub DOIT
+#done

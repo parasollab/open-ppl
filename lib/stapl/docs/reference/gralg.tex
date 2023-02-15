@@ -1,0 +1,5475 @@
+\chapter{Parallel Graph Algorithms}
+
+STAPL supports the following parallel graph algorithms.
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\begin{itemize}
+\item
+betweenness\_centrality 
+\newline
+Computes betweenness centrality value of unweighted, directed graph
+ : (Section \ref{sec-betw-cent-alg} )
+
+\item
+Breadth First Search
+\begin{itemize}
+\item
+breadth\_first\_search 
+\newline
+Parallel Breadth-First Search (BFS) 
+ : (Section \ref{sec-br-first-alg} )
+\item
+breadth\_first\_search\_h 
+\newline
+Parallel Breadth-First Search (BFS) using the hierarchical machine paradigm (h\_paradigm())
+ : (Section \ref{sec-br-first-hmach-alg} )
+\item
+breadth\_first\_search\_h 
+\newline
+Parallel Breadth-First Search (BFS) using the hierarchical machine and hubs paradigm (h\_hubs\_paradigm())
+ : (Section \ref{sec-br-first-hmach-hubs-alg} )
+\end{itemize}
+
+\item
+Connected Components
+\begin{itemize}
+\item
+connected\_components 
+\newline
+Parallel Connected Components (CC) Algorithm. 
+ : (Section \ref{sec-conn-comp-alg} )
+\item
+connected\_components\_h 
+\newline
+Parallel Connected Components (CC) Algorithm using the hierarchical machine paradigm (h\_paradigm())
+ : (Section \ref{sec-conn-comp-hmach-alg} )
+\item
+connected\_components\_h 
+\newline
+Parallel Connected Components (CC) Algorithm using the hierarchical machine and hubs paradigm (h\_hubs\_paradigm())
+ : (Section \ref{sec-conn-comp-hmach-hubs-alg} ) 
+\end{itemize}
+
+\item
+Connected Components Statistics and Membership
+\begin{itemize}
+\item
+cc\_stats 
+\newline
+Compute the number of vertices belonging to each connected-component in the graph, given the connected-component of each vertices
+ : (Section \ref{sec-conn-comp-stats-alg} )
+\item
+cc\_stats 
+\newline
+Compute all vertices belonging to the specified connected-component
+ : (Section \ref{sec-is-same-cc-alg} )
+\item
+is\_same\_cc 
+\newline
+Compute if two specified vertices belong to the same connected component (i.e., are connected through a path), based on the given input graph and the Connected-Component IDs of vertices
+ : (Section \ref{sec-is-same-cc-alg} )
+\item
+p\_cc\_stats 
+\newline
+Given a graph, mark all vertices belonging to the same connected component in a property map
+ : (Section \ref{sec-p-stats-cc-alg} )
+\item
+p\_is\_same\_cc 
+\newline
+Given a graph and a connected component map of vertices, determine if two vertices are in the same connected component
+ : (Section \ref{sec-p-is-same-cc-alg} )
+\end{itemize}
+
+\item
+Hierarchy Creation
+\begin{itemize}
+\item
+create\_hierarchy 
+\newline
+Create multiple levels of hierarchy at once.Creates multiple levels of hierarchy based on the input graph and the provided vertex-grouping algorithm
+ : (Section \ref{sec-create-hier-alg} )
+\item
+flatten\_hierarchy 
+\newline
+Flatten multiple levels of hierarchy into a single level
+ : (Section \ref{sec-flat-hier-alg} )
+\item
+create\_level 
+\newline
+Create an entire level of hierarchy at once.  Creates a new level of hierarchy based on the input graph and the provided vertex-grouping
+ : (Section \ref{sec-create-level-alg} )
+\item
+create\_level 
+\newline
+Create an entire level of hierarchy at once.
+ : (Section \ref{sec-create-level-all-alg} )
+\item
+create\_level\_hubs 
+\newline
+Create a level of hierarchy based on hubs, for use in h\_hubs\_paradigm()
+ : (Section \ref{sec-create-level-hubs-alg} )
+\item
+create\_level\_machine 
+\newline
+Create a level of hierarchy based on the machine hierarchy, for use in h\_paradigm()
+ : (Section \ref{sec-create-level-mach-alg} )
+\item
+create\_level\_partial\_info 
+\newline
+Create an entire level of hierarchy at once, based on partial vertex-matching information.  Creates a new level of hierarchy based on the input graph and the provided vertex-grouping
+ : (Section \ref{sec-create-level-part-alg} )
+\end{itemize}
+
+
+\item
+cut\_conductance 
+\newline
+Compute the conductance of a cut defined to be the set of vertices for which member(v) = id
+ : (Section \ref{sec-cut-cond-alg} )
+
+\item
+Graph Coloring
+\begin{itemize}
+\item
+color\_graph 
+\newline
+Parallel Level-Synchronized Graph Coloring Algorithm
+ : (Section \ref{sec-color-graf-alg} )
+\item
+color\_graph 
+\newline
+Parallel Level-Synchronized Graph Coloring Algorithm
+ : (Section \ref{sec-color-graf-alg} )
+\item
+color\_graph 
+\newline
+Parallel Level-Synchronized Graph Coloring Algorithm
+ : (Section \ref{sec-color-graf-alg} )
+\item
+get\_graph\_colors 
+\newline
+Extracts the colors from the input graph, given the color map
+ : (Section \ref{sec-get-graf-color-alg} )
+\item
+is\_valid\_graph\_coloring 
+\newline
+Computes if the given coloring is valid for the input graph
+ : (Section \ref{sec-is-valid-color-alg} )
+\end{itemize}
+
+\item
+Graph Writers
+\begin{itemize}
+\item
+write\_adj\_list 
+\newline
+Write the adjacency-list of a graph
+ : (Section \ref{sec-wr-adj-list-alg} )
+\item
+write\_edge\_list 
+\newline
+Write the edge-list of a graph, without properties
+ : (Section \ref{sec-wr-edge-list-alg} )
+\item
+write\_dot 
+\newline
+Write a DOT graph, without properties
+ : (Section \ref{sec-wr-dot-alg} )
+\item
+write\_PMPL\_graph 
+\newline
+Write the graph in PMPL format
+ : (Section \ref{sec-wr-pmpl-alg} )
+\end{itemize}
+
+\item
+Graph Readers
+\begin{itemize}
+\item
+graph\_reader 
+\newline
+Read a graph from the given input file.  Uses the user-provided reader to read each line and add the edges from the line to the graph
+ : (Section \ref{sec-rd-graf-alg} )
+\item
+sharded\_graph\_reader 
+\newline
+Read a sharded graph from the given input file.  Uses the user-provided reader to read each line and add the edges from the line to the graph
+ : (Section \ref{sec-shard-rd-graf-alg} )
+\item
+read\_edge\_list 
+\newline
+Wrap around file-reader to support reading an edge-list
+ : (Section \ref{sec-rd-edge-list-alg} )
+\item
+read\_edge\_list\_shuffle 
+\newline
+Wrap around file-reader to support reading an edge-list and rename the vertices id when added to the graph view
+ : (Section \ref{sec-rd-edge-list-ren-alg} )
+\item
+read\_adj\_list 
+\newline
+Wrap around file-reader to support reading an adjacency-list
+ : (Section \ref{sec-rd-adj-list-alg} )
+\item
+read\_dimacs 
+\newline
+Wrap around file-reader to support reading an adjacency-list
+ : (Section \ref{sec-read-dimacs-alg} )
+\end{itemize}
+
+\item
+graph\_sharder 
+\newline
+Shard an input file for efficient parallel reading
+ : (Section \ref{sec-shard-graf-alg} )
+
+\item
+graph\_metrics 
+\newline
+Compute various metrics for the provided input graph, based on the graph-partition provided
+ : (Section \ref{sec-graf-metrics-alg} )
+
+\item
+create\_level 
+\newline
+Create a level in the hierarchy of graphs, using the user-provided vertex partitioner and edge-functor
+ : (Section \ref{sec-create-level-user-alg} )
+
+\item
+K-Core 
+\begin{itemize}
+\item
+k\_core 
+\newline
+Parallel k-core algorithm
+ : (Section \ref{sec-k-core-alg} )
+\item
+k\_core 
+\newline
+Parallel k-core algorithm
+ : (Section \ref{sec-k-core-alg} )
+\item
+k\_core\_dynamic 
+\newline
+Parallel k-core algorithm
+ : (Section \ref{sec-k-core-dyn-alg} )
+\item
+k\_core\_dynamic 
+\newline
+Parallel k-core algorithm
+ : (Section \ref{sec-k-core-dyn-alg} )
+\end{itemize}
+
+\item
+maximal\_bipartite\_matching 
+\newline
+Parallel Maximal Bipartite Matching 
+ : (Section \ref{sec-max-bi-match-alg} )
+\item
+mssp 
+\newline
+Parallel Multi-Source Shortest Paths (MSSP) algorithm
+ : (Section \ref{sec-mssp-alg} )
+
+\item
+Page Rank
+\begin{itemize}
+\item
+page\_rank 
+\newline
+Parallel Level-Synchronized PageRank Algorithm
+ : (Section \ref{sec-page-rank-alg} )
+\item
+page\_rank\_h 
+\newline
+Parallel Level-Synchronized PageRank Algorithm using the hierarchical machine paradigm (h\_paradigm())
+ : (Section \ref{sec-page-rank-h-alg} )
+\item
+page\_rank\_h 
+\newline
+Parallel Level-Synchronized PageRank Algorithm using the hierarchical machine and hubs paradigm (h\_hubs\_paradigm
+ : (Section \ref{sec-page-rank-h-alg} )
+\end{itemize}
+
+\item
+Graph Paradigms
+\begin{itemize}
+\item
+graph\_paradigm 
+\newline
+Parallel Graph Algorithm Paradigm
+ : (Section \ref{sec-graf-para-alg} )
+\item
+h\_hubs\_paradigm 
+\newline
+Parallel Hierarchical Hubs Level-Synchronous (h-hubs) Paradigm
+ : (Section \ref{sec-hubs-para-alg} )
+\item
+h\_paradigm 
+\newline
+Parallel Hierarchical Level-Synchronous (h) Paradigm
+ : (Section \ref{sec-level-para-alg} )
+\item
+kla\_paradigm 
+\newline
+Parallel k-Level-Asynchronous (KLA) Paradigm
+ : (Section \ref{sec-kla-alg} )
+\item
+level\_sync\_paradigm 
+\newline
+Parallel Level-Synchronous (level\_sync) Paradigm
+ : (Section \ref{sec-level-sync-alg} )
+\end{itemize}
+
+\item
+preflow\_push 
+\newline
+Initializes the properties of vertices and edges for the preflow push algorithm, and calculates the max flow in the graph
+ : (Section \ref{sec-preflow-push-alg} )
+
+\item
+Parallel Strongly Connected Components
+\begin{itemize}
+\item
+pscc 
+\newline
+Parallel Strongly-Connected Components Algorithm (pSCC) 
+ : (Section \ref{sec-pscc-alg} )
+\item
+pscc\_schudy
+\newline
+Schudy's MultiPivot SCC algorithm
+ : (Section \ref{sec-pscc-schudy-alg} )
+\item
+pscc\_single
+\newline
+Parallel Strongly-Connected Components Algorithm (pSCC) 
+ : (Section \ref{sec-pscc-single-alg} )
+\end{itemize}
+
+\item
+Rebalance Diffusively
+\begin{itemize}
+\item
+rebalance\_diffusive 
+\newline
+Rebalance a graph diffusively by iteratively moving vertices between neighboring partitions
+ : (Section \ref{sec-rebal-diff-alg} )
+\item
+rebalance\_diffusive
+\newline
+Rebalance a graph diffusively by iteratively moving vertices between neighboring partitions
+ : (Section \ref{sec-rebal-diff-alg} )
+\item
+rebalance\_diffusive
+\newline
+Rebalance a graph diffusively by iteratively moving vertices between neighboring partitions
+ : (Section \ref{sec-rebal-diff-alg} )
+\end{itemize}
+
+\item
+Rebalance Globally
+\begin{itemize}
+\item
+rebalance\_global
+\newline
+Parallel global rebalancer based on vertex-weights
+ : (Section \ref{sec-rebal-glob-alg} )
+\item
+rebalance\_global
+\newline
+Parallel global rebalancer based on vertex-weights
+ : (Section \ref{sec-rebal-glob-alg} )
+\item
+rebalance\_global
+\newline
+Parallel global rebalancer based on number of vertices
+ : (Section \ref{sec-rebal-glob-alg} )
+\end{itemize}
+
+\item
+sssp 
+\newline
+Parallel Single-Source Shortest Paths (SSSP) algorithm
+ : (Section \ref{sec-sssp-alg} )
+
+\item
+topological\_sort
+\newline
+Parallel Topological Sort algorithm
+ : (Section \ref{sec-topsort-alg} )
+\end{itemize}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{ Betweenness Centrality} 
+\label{sec-betw-cent-alg}
+\index{algorithms!graph!betweenness}
+
+\subsection{Interface} \label{sec-betw-cent-alg-inter}
+
+\noindent
+\texttt{%
+template<typename GView >
+\newline
+void 
+}
+\newline
+\textbf{stapl::betweenness\_centrality}%
+\newline
+\texttt{%
+(
+GView \&
+\textit{gv,}%
+size\_t
+\textit{num\_sources = 0}%
+)     
+}
+\index{betweenness\_centrality()}
+\vspace{0.4cm}
+
+\textit{
+Computes betweenness centrality value of unweighted, directed graph.
+}
+\vspace{0.4cm}
+
+Parameters:
+\begin{itemize}
+\item
+\texttt{gv} --
+View of graph on which centrality will be computed
+\item
+\texttt{num\_sources} --
+Number of sources to process at a time, if num\_sources equals zero then all sources are processed at the the same time.
+\end{itemize}
+
+\subsection{Usage Example} \label{sec-betw-cent-alg-use}
+
+The following example shows how to use 
+\texttt{betweenness\_centrality}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{gralg/betweenness_centrality.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-betw-cent-alg-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-betw-cent-alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:betw-cent-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/betw_cent_alg_proc}
+\caption{betweenness\_centrality Algorithm Execution Time}
+\label{fig:betw-cent-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{ Breadth First Search} 
+\label{sec-br-first-alg}
+\index{algorithms!graph!breadth first search}
+\index{algorithms!graph!search!breadth first}
+
+\subsection{Interface} \label{sec-br-first-alg-inter}
+
+\noindent
+\texttt{%
+template<class GView >
+\newline
+size\_t 
+}
+\newline
+\textbf{stapl::breadth\_first\_search}%
+\newline
+\texttt{%
+(   
+GView \&    
+\textit{g,}%
+typename 
+GView::vertex\_descriptor const \& 
+\textit{source,}%
+size\_t    
+\textit{k = 0}%
+)     
+}
+\index{breadth\_first\_search()}
+\vspace{0.4cm}
+
+\textit{
+Performs a breadth-first search on the input graph. 
+Stores the BFS-level and BFS-parent on each reachable vertex.
+}
+\vspace{0.4cm}
+
+Parameters:
+\begin{itemize}
+\item
+\texttt{g} --
+The graph\_view over the input graph.
+\item
+\texttt{source} --
+The descriptor of the source vertex for this traversal.
+\item
+\texttt{k} --
+The maximum amount of asynchrony allowed in each phase. $0 <= k <= inf.$ \ \ $k == 0$ implies level-sync BFS. $k >= D$ implies fully asynchronous (D is diameter of graph).
+\end{itemize}
+
+Returns:
+\begin{itemize}
+\item
+The number of iterations performed by the paradigm. 
+\end{itemize}
+
+\subsection{Usage Example} \label{sec-br-first-alg-use}
+
+The following example shows how to use 
+\texttt{breadth\_first\_search}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{gralg/breadth_first_search.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-br-first-alg-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-br-first-alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:br-first-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/br_first_alg_proc}
+\caption{breadth\_first\_search Algorithm Execution Time}
+\label{fig:br-first-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{ Breadth First Search with Hierarchical Machine Paradigm} 
+\label{sec-br-first-hmach-alg}
+\index{algorithms!graph!hierarchical machine}
+
+\subsection{Interface} \label{sec-br-first-hmach-alg-inter}
+
+\noindent
+\texttt{%
+template<class GView, class HView >
+\newline
+size\_t 
+}
+\newline
+\textbf{stapl::breadth\_first\_search\_h}%
+\newline
+\texttt{%
+(   
+GView \&    
+\textit{g,}%
+HView \&    
+\textit{h,}%
+typename GView::vertex\_descriptor const \&
+\textit{source}%
+)     
+}
+\index{breadth\_first\_search\_h()}
+\vspace{0.4cm}
+
+\textit{
+Performs a breadth-first search on the input graph and its hierarchical machine Graph.
+Stores the BFS-level and BFS-parent on each reachable vertex of the input.
+See section
+Section \ref{sec-level-para-alg}
+for more information on the hierarchical machine paradigm.
+}
+\vspace{0.4cm}
+
+Parameters:
+\begin{itemize}
+\item
+\texttt{g} --
+The graph\_view over the input graph.
+\item
+\texttt{h} --
+The hierarchical machine view over the input graph. This is generated by calling
+\texttt{create\_level\_machine()}%
+ on the input graph.
+\item
+\texttt{source} --
+The descriptor of the source vertex for this traversal.
+\end{itemize}
+
+Returns:
+\begin{itemize}
+\item
+The number of iterations performed by the paradigm. 
+\end{itemize}
+
+\subsection{Usage Example} \label{sec-br-first-hmach-alg-use}
+
+The following example shows how to use 
+\texttt{breadth\_first\_search}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{gralg/breadth_first_search_hmach.tex} 
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-br-first-hmach-alg-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-br-first-hmach-alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:br-first-hmach-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/br_first_hmach_alg_proc}
+\caption{breadth\_first\_search\_h Algorithm Execution Time}
+\label{fig:br-first-hmach-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{ Breadth First Search with Hierarchical Machine Paradigm} 
+\label{sec-br-first-hmach-hubs-alg}
+\index{algorithms!graph!hubs}
+
+\subsection{Interface} \label{sec-br-first-hmach-hubs-alg-inter}
+
+\noindent
+\texttt{%
+template<class GView, class HView, class HubsView >
+\newline
+size\_t 
+}
+\newline
+\textbf{stapl::breadth\_first\_search\_h}%
+\newline
+\texttt{%
+(
+GView \&
+\textit{g,}%
+HView \&
+\textit{h,}%
+HubsView \&
+\textit{hubs,}%
+typename GView::vertex\_descriptor const \&
+\textit{source}%
+)     
+}
+\index{breadth\_first\_search\_h()}
+\vspace{0.4cm}
+
+\textit{
+Performs a breadth-first search on the input graph and its hierarchical machine and hierarchical hubs Graph. 
+Stores the BFS-level and BFS-parent on each reachable vertex of the input.
+See section
+Section \ref{sec-hubs-para-alg}
+for more information on the hierarchical machine and hubs paradigm.
+}
+\vspace{0.4cm}
+
+Parameters:
+\begin{itemize}
+\item
+\texttt{g} --
+The graph\_view over the input graph.
+\item
+\texttt{h} --
+The hierarchical machine view over the input graph. This is generated by calling
+\texttt{create\_level\_machine()}%
+ on the input graph.
+\item
+\texttt{hubs} --
+The hierarchical hubs view over the input graph, which creates a hierarchical view over all the high-degree vertices (hubs) of the input graph. This is generated by calling 
+\texttt{create\_level\_hubs()}%
+on the input graph.
+\item
+\texttt{source} --
+The descriptor of the source vertex for this traversal.
+\end{itemize}
+
+Returns:
+\begin{itemize}
+\item
+The number of iterations performed by the paradigm. 
+\end{itemize}
+
+\subsection{Usage Example} \label{sec-br-first-hmach-hubs-alg-use}
+
+The following example shows how to use 
+\texttt{breadth\_first\_search}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{gralg/breadth_first_search_hubs.tex} 
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-br-first-hmach-hubs-alg-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-br-first-hmach-hubs-alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:br-first-hmach-hubs-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/br_first_hmach_hubs-alg_proc}
+\caption{breadth\_first\_search\_h Algorithm Execution Time}
+\label{fig:br-first-hmach-hubs-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{ Connected Components}
+\label{sec-conn-comp-alg}
+\index{algorithms!graph!connected components}
+
+\subsection{Interface} \label{sec-conn-comp-alg-inter}
+
+\noindent
+\texttt{%
+template<class GView >
+\newline
+size\_t 
+}
+\newline
+\textbf{stapl::connected\_components}%
+\newline
+(
+\texttt{%
+GView \&
+\textit{g,}%
+size\_t
+\textit{k = 0}%
+)     
+}
+\index{connected\_components()}
+\vspace{0.4cm}
+
+\textit{
+Marks all vertices belonging to the same connected component with the same connected-component ID.
+}
+\vspace{0.4cm}
+
+Parameters:
+\begin{itemize}
+\item
+\texttt{g} --
+The graph\_view over the input graph. 
+\texttt{property\_type}%
+on the vertex needs to have these methods: 
+\begin{itemize}
+\item
+\texttt{vertex\_descriptor cc(void)} --
+for getting the connected-component id. 
+\item
+\texttt{cc(vertex\_descriptor)} --
+for setting the connected-component id. 
+\item
+\texttt{bool active(void)} --
+for checking if vertices are active. 
+\item
+\texttt{void active(bool)} --
+for marking vertices as active.
+\end{itemize}
+\item
+\texttt{k} --
+The maximum amount of asynchrony allowed in each phase.
+\end{itemize}
+
+Returns:
+\begin{itemize}
+\item
+The number of iterations performed by the algorithm. 
+\end{itemize}
+
+\subsection{Usage Example} \label{sec-conn-comp-alg-use}
+
+The following example shows how to use 
+\texttt{connected\_components}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{gralg/connected_components.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-conn-comp-alg-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-conn-comp-alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:conn-comp-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/conn_comp_alg_proc}
+\caption{connected\_components Algorithm Execution Time}
+\label{fig:conn-comp-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{ Hierarchical Connected Components}
+\label{sec-conn-comp-hmach-alg}
+\index{algorithms!graph!hierarchical}
+
+\subsection{Interface} \label{sec-conn-comp-hmach-alg-inter}
+
+\noindent
+\texttt{%
+template<class GView, class HView >
+\newline
+size\_t 
+}
+\newline
+\textbf{stapl::connected\_components\_h}%
+\newline
+\texttt{%
+(
+GView \&
+\textit{g,}%
+HView \&
+\textit{h}%
+)     
+}
+\index{connected\_components\_h()}
+\vspace{0.4cm}
+
+\textit{
+Marks all vertices belonging to the same connected with the same connected-component ID.
+See  section
+\texttt{(h\_paradigm()}%
+for more information on the hierarchical machine paradigm.
+}
+\vspace{0.4cm}
+
+Parameters:
+\begin{itemize}
+\item
+\texttt{g} --
+The graph\_view over the input graph.
+\item
+\texttt{h} --
+The hierarchical machine view over the input graph. This is generated by calling
+\texttt{create\_level\_machine()}%
+on the input graph. 
+\texttt{property\_type}%
+on the vertex needs to have these methods: 
+\begin{itemize}
+\item
+\texttt{vertex\_descriptor cc(void)} --
+for getting the connected-component id. 
+\item
+\texttt{cc(vertex\_descriptor)} --
+for setting the connected-component id. 
+\item
+\texttt{bool active(void)} --
+for checking if vertices are active. 
+\item
+\texttt{void active(bool)} --
+for marking vertices as active.
+\end{itemize}
+\end{itemize}
+
+Returns:
+\begin{itemize}
+\item
+The number of iterations performed by the algorithm. 
+\end{itemize}
+
+HERE
+\subsection{Usage Example} \label{sec-conn-comp-hmach-alg-use}
+
+The following example shows how to use 
+\texttt{connected\_components\_h}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{gralg/connected_components_hmach.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-conn-comp-hmach-alg-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-conn-compmach-h-alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:conn-comp-hmach-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/conn_comp_hmach_alg_proc}
+\caption{connected\_components\_h Algorithm Execution Time}
+\label{fig:conn-comp-hmach-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{ Hierarchical Connected Components}
+\label{sec-conn-comp-hmach-hubs-alg}
+\index{algorithms!graph!hubs}
+
+\subsection{Interface} \label{sec-conn-comp-hmach-hubs-alg-inter}
+
+\noindent
+\texttt{%
+template<class GView, class HView, class HubsView >
+\newline
+size\_t 
+}
+\newline
+\textbf{stapl::connected\_components\_h}%
+\newline
+\texttt{%
+(
+GView \&
+\textit{g,}%
+HView \&
+\textit{h,}%
+HubsView \&
+\textit{hubs}%
+)     
+}
+\index{connected\_components\_h()}
+\vspace{0.4cm}
+
+\textit{
+Marks all vertices belonging to the same connected component with the same 
+connected-component ID.
+See section
+Section \ref{sec-level-para-alg}
+for more information on the hierarchical machine and hubs paradigm.
+}
+\vspace{0.4cm}
+
+Parameters:
+\begin{itemize}
+\item
+\texttt{g} --
+The graph\_view over the input graph.
+\item
+\texttt{h} --
+The hierarchical machine view over the input graph. This is generated by calling
+\texttt{create\_level\_machine()}%
+ on the input graph.
+\item
+\texttt{hubs} --
+The hierarchical hubs view over the input graph, which creates a hierarchical view over all the high-degree vertices (hubs) of the input graph. This is generated by calling 
+\texttt{create\_level\_hubs()}%
+ on the input graph. 
+\texttt{property\_type} 
+on the vertex needs to have these methods: 
+\begin{itemize}
+\item
+\texttt{vertex\_descriptor cc(void)} --
+for getting the connected-component id. 
+\item
+\texttt{cc(vertex\_descriptor)} --
+for setting the connected-component id. 
+\item
+\texttt{bool active(void)} --
+for checking if vertices are active. 
+\item
+\texttt{void active(bool)} --
+for marking vertices as active.
+\end{itemize}
+\end{itemize}
+
+Returns:
+\begin{itemize}
+\item
+The number of iterations performed by the algorithm. 
+\end{itemize}
+
+\subsection{Usage Example} \label{sec-conn-comp-hmach-hubs-alg-use}
+
+The following example shows how to use 
+\texttt{connected\_components\_h}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{gralg/connected_components_hubs.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-conn-comp-hmach-hubs-alg-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-conn-compmach-hubs-h-alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:conn-comp-hmach-hubs-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/conn_comp_hmach_hubs_alg_proc}
+\caption{connected\_components\_h Algorithm Execution Time}
+\label{fig:conn-comp-hmach-hubs-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{ Connected Components Statistics}
+\label{sec-conn-comp-stats-alg}
+\index{algorithms!graph!statistics}
+\index{algorithms!graph!connected components}
+
+\subsection{Interface} \label{sec-conn-comp-stats-alg-inter}
+
+\noindent
+\texttt{%
+template<typename GView >
+\newline
+std::vector<std::pair<typename GView::vertex\_descriptor, size\_t>> 
+}
+\newline
+\textbf{stapl::cc\_stats}%
+\newline
+\texttt{%
+(
+GView \&
+\textit{g}%
+)    
+}
+\index{stapl::cc\_stats()}
+\vspace{0.4cm}
+
+\textit{
+Compute the number of vertices belonging to each connected-component in the graph, given the connected-component of each vertices.
+}
+\vspace{0.4cm}
+
+Parameters:
+\begin{itemize}
+\item
+\texttt{g} --
+The graph\_view over the input graph. 
+\texttt{property\_type}%
+on the vertex needs to have these methods: 
+\begin{itemize}
+\item
+\texttt{vertex\_descriptor cc(void)} --
+– for getting the connected-component id. 
+\item
+\texttt{cc(vertex\_descriptor)} --
+– for setting the connected-component id. 
+\end{itemize}
+The connected-component for each vertex must be available, or be filled-in by calling connected\_components(g) algorithm before calling cc\_stats.
+\end{itemize}
+
+Returns:
+\begin{itemize}
+\item
+A vector of pairs containing the CCID and the number of vertices in that connected-component, for each CC. [Size: O(num CC)] 
+\end{itemize}
+
+% % % % % % % % % %
+
+\noindent
+\texttt{%
+template<typename GView, typename VertexDescriptor, typename ResView >
+\newline
+void 
+}
+\textbf{stapl::cc\_stats}%
+\newline
+\texttt{%
+(
+GView \&
+\textit{g,}%
+VertexDescriptor
+\textit{CCid,}%
+ResView \&
+\textit{output}%
+)     
+}
+\index{cc\_stats()}
+\vspace{0.4cm}
+
+\textit{
+Given a Graph, and Connected-Component IDs for each vertex, return all vertices belonging to the connected-component specified by the connected component id.
+}
+\vspace{0.4cm}
+
+Parameters:
+\begin{itemize}
+\item
+\texttt{g} --
+The graph\_view over the input graph. 
+\texttt{property\_type}%
+on the vertex needs to have these methods: 
+\begin{itemize}
+\item
+\texttt{vertex\_descriptor cc(void)} --
+ for getting the connected-component id. 
+\item
+\texttt{cc(vertex\_descriptor)} --
+ for setting the connected-component id. 
+\end{itemize}
+The connected-component for each vertex must be available, or be filled-in by calling connected\_components(g) algorithm before calling cc\_stats.
+\item
+\texttt{CCid} --
+The connected-component ID of the desired connected-component.
+\item
+\texttt{output} --
+The output view used to store and return vertices belonging to the specified connected-component. Can be a view over stapl::array<std::vector<VD> > or any 1-d view of std::vectors<VD>. Each location stores the local vertices belonging to the specified CC.
+\end{itemize}
+
+\subsection{Usage Example} \label{sec-conn-comp-stats-alg-use}
+
+The following example shows how to use 
+\texttt{cc\_stats}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{gralg/cc_stats.tex} 
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-conn-comp-stats-alg-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-conn-comp-stats-alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:cc-stats-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/cc_stats_alg_proc}
+\caption{cc\_stats Algorithm Execution Time}
+\label{fig:cc-stats-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{ Connected Components Commonality}
+\label{sec-is-same-cc-alg}
+\index{algorithms!graph!connected components}
+
+\subsection{Interface} \label{sec-is-same-cc-alg-inter}
+
+\noindent
+\texttt{%
+template<typename GView >
+\newline
+bool 
+}
+\newline
+\textbf{stapl::is\_same\_cc}%
+\newline
+\texttt{%
+(
+GView \&
+\textit{g,}%
+typename GView::vertex\_descriptor
+\textit{v1,}%
+typename GView::vertex\_descriptor
+\textit{v2}%
+)     
+}
+\index{is\_same\_cc()}
+\vspace{0.4cm}
+
+\textit{
+Compute if two specified vertices belong to the same connected component (i.e., are connected through a path), based on the given input graph and the Connected-Component IDs of vertices.
+}
+\vspace{0.4cm}
+
+Parameters:
+\begin{itemize}
+\item
+\texttt{g} --
+The graph\_view over the input graph. 
+\texttt{property\_type}%
+on the vertex needs to have these methods: 
+\begin{itemize}
+\item
+\texttt{vertex\_descriptor cc(void)} --
+ for getting the connected-component id. 
+\item
+\texttt{cc(vertex\_descriptor)} --
+ for setting the connected-component id. 
+\end{itemize}
+The connected-component for each vertex must be available, or be filled-in by calling connected\_components(g) algorithm before calling is\_same\_cc.
+\item
+\texttt{v1} --
+Vertex descriptor of the first vertex.
+\item
+\texttt{v2} --
+Vertex descriptor of the second vertex.
+\end{itemize}
+
+Returns:
+\begin{itemize}
+\item
+True if both vertices are in the same Connected-Component, or false otherwise. 
+\end{itemize}
+
+\subsection{Usage Example} \label{sec-is-same-cc-alg-use}
+
+The following example shows how to use 
+\texttt{is\_same\_cc}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{gralg/is_same_cc.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-is-same-cc-alg-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-is-same-cc-alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:is-same-cc-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/is_same_cc_alg_proc}
+\caption{is\_same\_cc Algorithm Execution Time}
+\label{fig:is-same-cc-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{ Connected Components Property Map}
+\label{sec-p-stats-cc-alg}
+\index{algorithms!graph!connected components}
+
+\subsection{Interface} \label{sec-p-stats-cc-alg-inter}
+
+\noindent
+\texttt{%
+template<typename View >
+\newline
+void 
+}
+\newline
+\textbf{stapl::p\_cc\_stats}%
+\newline
+\texttt{%
+(
+View \&
+\textit{g}%
+)    
+}
+\index{p\_stats\_cc()}
+\vspace{0.4cm}
+
+\textit{
+Given a graph, mark all vertices belonging to the same connected component in a property map.
+}
+\vspace{0.4cm}
+
+Parameters:
+\begin{itemize}
+\item
+\texttt{g} --
+A view of the graph.
+\end{itemize}
+
+\subsection{Usage Example} \label{sec-p-stats-cc-alg-use}
+
+The following example shows how to use 
+\texttt{p\_cc\_stats}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{gralg/p_cc_stats.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-p-stats-cc-alg-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-p-stats-cc-alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:p-cc-stats-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/p_cc_stats_alg_proc}
+\caption{p\_cc\_stats Algorithm Execution Time}
+\label{fig:p-cc-stats-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{ Connected Components Commonality in Map}
+\label{sec-p-is-same-cc-alg}
+\index{algorithms!graph!connected components}
+
+\subsection{Interface} \label{sec-p-is-same-cc-alg-inter}
+
+\noindent
+\texttt{%
+template<typename GView, typename CCMap, typename VertexDescriptor >
+\newline
+bool 
+}
+\newline
+\textbf{stapl::p\_is\_same\_cc}%
+\newline
+\texttt{%
+(
+GView \&
+\textit{g,}%
+CCMap \&
+\textit{map,}%
+VertexDescriptor
+\textit{v1,}%
+VertexDescriptor
+\textit{v2}%
+)     
+}
+\index{p\_cc\_stats()}
+\vspace{0.4cm}
+
+\textit{
+Given a graph and a connected component map of vertices, determine if two vertices are in the same connected component.
+Assumes that a map is first populated using the 
+\texttt{p\_cc\_stats()}%
+algorithm.
+}
+\vspace{0.4cm}
+
+Parameters:
+\begin{itemize}
+\item
+\texttt{g} --
+A View of the graph
+\item
+\texttt{map} --
+A property map of connected component IDs
+\item
+\texttt{v1, v2} --
+Two vertices to query.
+\end{itemize}
+
+Returns:
+\begin{itemize}
+\item
+True if the two input vertices are in the same connected component. 
+\end{itemize}
+
+\subsection{Usage Example} \label{sec-p-is-same-cc-alg-use}
+
+The following example shows how to use 
+\texttt{p\_is\_same\_cc}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{gralg/is_same_cc.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-p-is-same-cc-alg-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-p-is-same-cc-alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:p-is-same-cc-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/p_is_same_cc_alg_proc}
+\caption{p\_is\_same\_cc Algorithm Execution Time}
+\label{fig:p-is-same-cc-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{ Create Hierarchy}
+\label{sec-create-hier-alg}
+\index{algorithms!graph!hierarchy}
+
+\subsection{Interface} \label{sec-create-hier-alg-inter}
+
+\noindent
+\texttt{%
+template<typename GraphView, typename Coarsener, 
+\newline
+typename VertexPReducer, typename EdgePReducer, typename Done >
+\newline
+std::vector<GraphView>
+}
+\newline
+\textbf{stapl::create\_hierarchy}%
+\newline
+\texttt{%
+(
+GraphView \&
+\textit{gvw,}%
+Coarsener const \&
+\textit{coarsener,}%
+VertexPReducer const \&
+\textit{vpr,}%
+EdgePReducer const \&
+\textit{epr,}%
+Done const \&
+\textit{done,}%
+size\_t
+\textit{max\_msg\_sz = 512,}%
+bool
+\textit{self\_edges = false,}%
+bool
+\textit{sort\_edges = false}%
+)     
+}
+\index{create\_hierarchy()}
+\vspace{0.4cm}
+
+\textit{
+Create multiple levels of hierarchy at once.  Creates multiple levels of hierarchy based on the input graph and the provided vertex-grouping algorithm. Supervertices and superedges in each level store descriptors of their children in the level below. Properties of supervertices and superedges are reductions of the properties of their children through the user provided reducers.
+}
+\vspace{0.4cm}
+
+Parameters:
+\begin{itemize}
+\item
+\texttt{gvw} --
+The input Graph over which the new levels are to be created. The underlying graph container must be DIRECTED, NONMULTIEDGES, and store the custom super\_vertex\_property and super\_edge\_property on their vertices and edges, respectively.
+\item
+\texttt{coarsener} --
+A functor which takes an input Graph and level-id and outputs an std::pair of bool indicating if the matching information is complete (true) or partial (false), and a vertex property map identifying the "group" of each vertex in the graph. The leader-vertex of each group is the vertex whose group ID is the same as its descriptor. There must be exactly one leader vertex in each group. Non-leader vertices may choose to "collapse" with other leader or non-leader vertices. The final grouping with which to create the supervertex is calculated by running a pointer-jumping (or similar) algorithm. [vertex->vertex\_descriptor]
+\item
+\texttt{vpr} --
+The vertex property reducer for reducing child-vertex properties to form the supervertex property.
+\item
+\texttt{epr} --
+The edge property reducer for reducing child-edge properties to form the superedge property.
+\item
+\texttt{done} --
+A functor which takes an input Graph and level-id and outputs if another level of hierarchy should be created. [bool]
+\item
+\texttt{max\_msg\_sz} --
+The number of requests to aggregate for the aggregator.
+\item
+\texttt{self\_edges} --
+Indicates whether self-edges are allowed on the output graph or not. If the supergraph has self-edges, they will represent the internal edges between the supervertex's child vertices.
+\item
+\texttt{sort\_edges} --
+Indicates if the adjacent-edges for each supervertex in the output supergraph will be sorted based on their target-descriptors.
+\end{itemize}
+
+Returns:
+\begin{itemize}
+\item
+An std::vector of Graph representing the final hierarchy. The type of the view is the same as the input graph\_view. Size of the output reflects the number of levels in the hierarchy, and hierarchy[i] represents the graph at the i-th level in the hierarchy, with hierarchy[0] being the original input graph. 
+\end{itemize}
+
+\subsection{Usage Example} \label{sec-create-hier-alg-use}
+
+The following example shows how to use 
+\texttt{create\_hierarchy}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{gralg/create_hierarchy.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-create-hier-alg-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-create-hier-alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:cr-hier-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/cr_hier_alg_proc}
+\caption{ create\_hierarchy Algorithm Execution Time}
+\label{fig:cr-hier-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{ Flatten Hierarchy}
+\label{sec-flat-hier-alg}
+\index{algorithms!graph!hierarchy}
+
+\subsection{Interface} \label{sec-flat-hier-alg-inter}
+
+\noindent
+\texttt{%
+template<typename GraphView >
+\newline
+graph\_view<graph<DIRECTED, NONMULTIEDGES, 
+\newline
+typename GraphView::vertex\_property::property\_type, bool> > 
+}
+\newline
+\textbf{stapl::flatten\_hierarchy}%
+\newline
+\texttt{%
+(
+std::vector< GraphView > const \&
+\textit{hierarchy}%
+)    
+}
+\index{flatten\_hierarchy()}
+\vspace{0.4cm}
+
+\textit{
+Flatten multiple levels of hierarchy into a single level.
+The edges of the output graph represent parent-child relationship in the hierarchy. 
+The leaf-vertices represent the vertices of level-0 of the hierarchy and non-leaf vertices represent supervertices in intermediate-levels of the hierarchy.
+}
+\vspace{0.4cm}
+
+Parameters:
+\begin{itemize}
+\item
+\texttt{hierarchy} --
+An std::vector of Graph representing the hierarchy. Size of the input reflects the number of levels in the hierarchy, and hierarchy[i] represents the graph at the i-th level in the hierarchy, with hierarchy[0] being the lowest level in the hierarchy.
+\end{itemize}
+
+Returns:
+\begin{itemize}
+\item
+ A Graph representing the flattened hierarchy. The view is over a DIRECTED, NONMULTIEDGES static graph whose vertices have the user vertex-property stored on them and edge-property is a bool indicating if it is an edge from a vertex in a higher-level to a vertex in a lower-level (true) or vice-versa (false). 
+\end{itemize}
+
+\subsection{Usage Example} \label{sec-flat-hier-alg-use}
+
+The following example shows how to use 
+\texttt{flatten\_hierarchy}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{gralg/flatten_hierarchy.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-flat-hier-alg-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-flat-hier-alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:flat-hier-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/flat_hier_alg_proc}
+\caption{ flatten\_hierarchy Algorithm Execution Time}
+\label{fig:flat-hier-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{ Create Hierarchy Level}
+\label{sec-create-level-alg}
+\index{algorithms!graph!hierarchy}
+
+\subsection{Interface} \label{sec-create-level-alg-inter}
+
+\noindent
+\texttt{%
+template<typename GraphView, typename PropMap, 
+\newline
+typename VertexPReducer, typename EdgePReducer >
+\newline
+GraphView 
+}
+\newline
+\textbf{stapl::create\_level}%
+\newline
+\texttt{%
+(
+GraphView \&
+\textit{gvw,}%
+PropMap \&
+\textit{vertex\_group\_map,}%
+VertexPReducer const \& ,
+EdgePReducer const \& ,
+size\_t
+\textit{max\_msg\_sz = 512,}%
+bool
+\textit{self\_edges = false,}%
+bool
+\textit{sort\_edges = false}%
+)     
+}
+\index{create\_level()}
+\vspace{0.4cm}
+
+\textit{
+Create an entire level of hierarchy at once.  Creates a new level of hierarchy based on the input graph and the provided vertex-grouping. 
+Supervertices and superedges in the resulting output graph store descriptors of their children in the input. 
+Properties of supervertices and superedges are reductions of the properties of their children through the user provided reducers.
+}
+\vspace{0.4cm}
+
+Parameters:
+\begin{itemize}
+\item
+\texttt{gvw} --
+The input Graph over which the new level is to be created. The underlying graph container must be DIRECTED, NONMULTIEDGES, and store the custom super\_vertex\_property and super\_edge\_property on their vertices and edges, respectively.
+\item
+\texttt{vertex\_group\_map} --
+A vertex property map identifying the "group" of each vertex in the graph. The leader-vertex of each group is the vertex whose group ID is the same as its descriptor. There must be exactly one leader vertex in each group. All non-leader vertices must indicate one of the leader-vertices as their group, with whom they would like to "collapse" to form the supervertex. [vertex->vertex\_descriptor].
+\item
+\texttt{vpr} --
+The vertex property reducer for reducing child-vertex properties to form the supervertex property.
+\item
+\texttt{epr} --
+The edge property reducer for reducing child-edge properties to form the superedge property.
+\item
+\texttt{max\_msg\_sz} --
+The number of requests to aggregate for the aggregator.
+\item
+\texttt{self\_edges} --
+Indicates whether self-edges are allowed on the output graph or not. If the supergraph has self-edges, they will represent the internal edges between the supervertex's child vertices.
+\item
+\texttt{sort\_edges} --
+Indicates if the adjacent-edges for each supervertex in the output supergraph will be sorted based on their target-descriptors.
+\end{itemize}
+
+Returns:
+\begin{itemize}
+\item
+A graph\_view over the output supergraph. The type of this view is the same as the input graph\_view. 
+\end{itemize}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{ Create Hierarchy Level}
+\label{sec-create-level-all-alg}
+\index{algorithms!graph!hierarchy}
+
+\subsection{Interface} \label{sec-create-level-all-alg-inter}
+
+\noindent
+\texttt{%
+template<typename GraphView, typename PropMap, 
+\newline
+typename VertexPReducer, typename EdgePReducer >
+\newline
+GraphView 
+}
+\newline
+\textbf{stapl::create\_level}%
+\newline
+\texttt{%
+(
+GraphView \&    
+\textit{gvw,}%
+std::pair< bool, PropMap > const \&
+\textit{vertex\_grouping,}%
+VertexPReducer
+\textit{vpr,}%
+EdgePReducer
+\textit{epr,}%
+size\_t
+\textit{max\_msg\_sz = 512,}%
+bool
+\textit{self\_edges = false,}%
+bool
+\textit{sort\_edges = false}%
+)    
+}
+\index{create\_level()}
+\vspace{0.4cm}
+
+\textit{
+Create an entire level of hierarchy at once.  Creates a new level of hierarchy based on the input graph and the provided vertex-grouping. 
+Supervertices and superedges in the resulting output graph store descriptors of their children in the input. 
+Properties of supervertices and superedges are reductions of the properties of their children through the user provided reducers.
+}
+\vspace{0.4cm}
+
+Parameters:
+\begin{itemize}
+\item
+\texttt{gvw} --
+The input Graph over which the new level is to be created. The underlying graph container must be DIRECTED, NONMULTIEDGES, and store the custom super\_vertex\_property and super\_edge\_property on their vertices and edges, respectively.
+\item
+\texttt{vertex\_grouping} --
+An std::pair of a bool and a vertex property map. The bool indicates whether the matching information is complete (true) or partial (false). The vertex property map identifies the "group" of each vertex in the graph. The leader-vertex of each group is the vertex whose group ID is the same as its descriptor. There must be exactly one leader vertex in each group. All non-leader vertices must either chose indicate one of the leader-vertices as their group, with whom they would like to "collapse" to form the supervertex (complete grouping), OR the non-leader vertices may choose to "collapse" with other leader or non-leader vertices (partial grouping). In case of partial grouping, the final grouping with which to create the supervertex is calculated by running a pointer-jumping (or similar) algorithm . [vertex->vertex\_descriptor]
+\item
+\texttt{vpr} --
+The vertex property reducer for reducing child-vertex properties to form the supervertex property.
+\item
+\texttt{epr} --
+The edge property reducer for reducing child-edge properties to form the superedge property.
+\item
+\texttt{max\_msg\_sz} --
+The number of requests to aggregate for the aggregator.
+\item
+\texttt{self\_edges} --
+Indicates whether self-edges are allowed on the output graph or not. If the supergraph has self-edges, they will represent the internal edges between the supervertex's child vertices.
+\item
+\texttt{sort\_edges} --
+Indicates if the adjacent-edges for each supervertex in the output supergraph will be sorted based on their target-descriptors.
+\end{itemize}
+
+Returns:
+\begin{itemize}
+\item
+A graph\_view over the output supergraph. The type of this view is the same as the input graph\_view. 
+\end{itemize}
+
+\subsection{Usage Example} \label{sec-create-level-all-alg-use}
+
+The following example shows how to use 
+\texttt{create\_level}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{gralg/create_level.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-create-level-all-alg-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-create-level-all-alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:cr-level-all-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/cr_level_all_alg_proc}
+\caption{ create\_level Algorithm Execution Time}
+\label{fig:cr-level-all-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{ Create Hierarchy Level with Hubs}
+\label{sec-create-level-hubs-alg}
+\index{algorithms!graph!hierarchy}
+
+\subsection{Interface} \label{sec-create-level-hubs-alg-inter}
+
+\noindent
+\texttt{%
+template<typename GraphView >
+\newline
+graph\_view<digraph< create\_level\_hubs\_detail::super\_vertex\_hub\_property<GraphView> > > 
+}
+\newline
+\textbf{stapl::create\_level\_hubs}%
+\newline
+\texttt{%
+(
+GraphView \&
+\textit{gvw,}%
+size\_t
+\textit{k,}%
+bool
+\textit{delete\_edges = true}%
+)     
+}
+\index{create\_level\_hubs()}
+\vspace{0.4cm}
+
+\textit{
+Creates a level of hierarchy based on the input graph and high-degree vertices (hubs) in the input graph, i.e., all hub vertices will have hub-vertex representative supervertices on each location. Supervertices and superedges in the resulting output graph store descriptors of their children in the input.
+For use with the 
+\texttt{h\_hubs\_paradigm(),}%
+this must be called before calling 
+\texttt{create\_level\_machine()}%
+on the input graph.
+}
+\vspace{0.4cm}
+
+\begin{itemize}
+\item
+The algorithm first finds all vertices qualifying as hubs (i.e. have out-degree greater than the given threshold (k). 
+\item
+A new level of hierarchy is created with one supervertex per location, and each such supervertex contains representatives of all hub vertices. 
+\item
+These representatives can only be written to, and their values can be flushed to the actual hub-vertices in the input graph.
+\item
+This incurs O(h) storage per location, where h is the number of hubs, as defined by the hub cutoff k.
+\end{itemize}
+
+Parameters:
+\begin{itemize}
+\item
+\texttt{gvw} --
+The input Graph over which the new level is to be created.
+\item
+\texttt{k} --
+The cutoff degree for considering a vertex as a hub. All vertices with out-degree greater than k are considered hub vertices.
+\item
+\texttt{delete\_edges} --
+Indicates if the non-local edges for the input graph will be deleted. This is true by default, as the h\_paradigm requires the edges to be deleted.
+\end{itemize}
+
+Returns:
+\begin{itemize}
+\item
+A graph\_view over the output supergraph. 
+\end{itemize}
+
+Note:
+Destructive, the input graph view will be mutated to delete some or all edges, but the information of the graph is maintained between the input and the hierarchy. 
+
+\subsection{Usage Example} \label{sec-create-level-hubs-alg-use}
+
+The following example shows how to use 
+\texttt{create\_level\_hubs}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{gralg/create_level_hubs.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-create-level-hubs-alg-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-create-level-hubs-alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:cr-level-hubs-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/cr_level_hubs_alg_proc}
+\caption{ create\_level\_hubs Algorithm Execution Time}
+\label{fig:cr-level-hubs-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{ Create Hierarchy with Machine Hierarchy}
+\label{sec-create-level-mach-alg}
+\index{algorithms!graph!hierarchy}
+
+\subsection{Interface} \label{sec-create-level-mach-alg-inter}
+
+\noindent
+\texttt{%
+template<typename GraphView >
+\newline
+graph\_view<digraph< create\_level\_machine\_detail::super\_vertex\_machine\_property<GraphView> > > 
+}
+\newline
+\textbf{stapl::create\_level\_machine}%
+\newline
+\texttt{%
+(
+GraphView \&
+\textit{gvw,}%
+bool
+\textit{delete\_edges = true,}%
+size\_t
+\textit{max\_msg\_sz = 512}%
+)     
+}
+\index{create\_level\_machine()}
+\vspace{0.4cm}
+
+\textit{
+Create a level of hierarchy based on the machine hierarchy, for use in 
+\texttt{h\_paradigm().}%
+Creates a level of hierarchy based on the input graph and vertex-grouping by locality, i.e., all vertices on a location belong to the same supervertex, and each location has one supervertex. 
+Supervertices and superedges in the resulting output graph store descriptors of their children in the input.
+}
+\vspace{0.4cm}
+
+Parameters:
+\begin{itemize}
+\item
+\texttt{gvw} --
+The input Graph over which the new level is to be created.
+\item
+\texttt{max\_msg\_sz} --
+The number of requests to aggregate for the aggregator.
+\item
+\texttt{delete\_edges} --
+Indicates if the non-local edges of the input graph will be deleted. This is true by default, as the h\_paradigm requires the edges to be deleted.
+\end{itemize}
+
+Returns:
+\begin{itemize}
+\item
+A graph\_view over the output supergraph. 
+\end{itemize}
+
+Note:
+Destructive, the input graph view will be mutated to delete some or all edges, but the information of the graph is maintained between the input and the hierarchy. 
+
+\subsection{Usage Example} \label{sec-create-level-mach-alg-use}
+
+The following example shows how to use 
+\texttt{create\_level\_machine}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{gralg/create_level_machine.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-create-level-mach-alg-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-create-level-mach-alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:cr_level_mach-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/cr_level_mach_alg_proc}
+\caption{ create\_level\_machine Algorithm Execution Time}
+\label{fig:cr_level_mach-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{ Create Level Partial Vertex Matching}
+\label{sec-create-level-part-alg}
+\index{algorithms!graph!hierarchy}
+
+\subsection{Interface} \label{sec-create-level-part-alg-inter}
+
+\noindent
+\texttt{%
+template<typename GraphView, typename PropMap, 
+\newline
+typename VertexPReducer, typename EdgePReducer >
+\newline
+GraphView 
+}
+\newline
+\textbf{stapl::create\_level\_partial\_info}%
+\newline
+\texttt{%
+(
+GraphView \&
+\textit{gvw,}%
+PropMap \&
+\textit{partial\_vertex\_group\_map,}%
+VertexPReducer
+\textit{vpr,}%
+EdgePReducer
+\textit{epr,}%
+size\_t
+\textit{max\_msg\_sz = 512,}%
+bool
+\textit{self\_edges = false}%
+)     
+}
+\index{create\_level\_partial\_info()}
+\vspace{0.4cm}
+
+\textit{
+Create an entire level of hierarchy at once, based on partial vertex-matching information.
+Creates a new level of hierarchy based on the input graph and the provided vertex-grouping. 
+Supervertices and superedges in the resulting output graph store descriptors of their children in the input. 
+Properties of supervertices and superedges are reductions of the properties of their children through the user provided reducers.
+}
+\vspace{0.4cm}
+
+Parameters:
+\begin{itemize}
+\item
+\texttt{gvw} --
+The input Graph over which the new level is to be created. The underlying graph container must be DIRECTED, NONMULTIEDGES, and store the custom super\_vertex\_property and super\_edge\_property on their vertices and edges, respectively.
+\item
+\texttt{partial\_vertex\_group\_map} --
+Vertex property map identifying the "group" of each vertex in the graph. The leader-vertex of each group is the vertex whose group ID is the same as its descriptor. There must be exactly one leader vertex in each group. Non-leader vertices may choose to "collapse" with other leader or non-leader vertices. The final grouping with which to create the supervertex is calculated by running a pointer-jumping (or similar) algorithm . [vertex->vertex\_descriptor]
+\item
+\texttt{vpr} --
+The vertex property reducer for reducing child-vertex properties to form the supervertex property.
+\item
+\texttt{epr} --
+The edge property reducer for reducing child-edge properties to form the superedge property.
+\item
+\texttt{max\_msg\_sz} --
+The number of requests to aggregate for the aggregator.
+\item
+\texttt{self\_edges} --
+Indicates whether self-edges are allowed on the output graph or not. If the supergraph has self-edges, they will represent the internal edges between the supervertex's child vertices.
+\end{itemize}
+
+Returns:
+\begin{itemize}
+\item
+A graph\_view over the output supergraph. The type of this view is the same as the input graph\_view. 
+\end{itemize}
+
+\subsection{Usage Example} \label{sec-create-level-part-alg-use}
+
+The following example shows how to use 
+\texttt{create\_level\_partial\_info}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{gralg/create_level_partial_info.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-create-level-part-alg-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-create-level-part-alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:cr-level-part-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/cr_level_part_alg_proc}
+\caption{ create\_level\_partial\_info Algorithm Execution Time}
+\label{fig:cr-level-part-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{ Cut Conductance}
+\label{sec-cut-cond-alg}
+\index{algorithms!graph!cut conductance}
+
+\subsection{Interface} \label{sec-cut-cond-alg-inter}
+
+\noindent
+\texttt{%
+template<typename View, typename MemberMap >
+\newline
+double 
+}
+\newline
+\textbf{stapl::cut\_conductance}%
+\newline
+\texttt{%
+(
+View const \&
+\textit{vw,}%
+MemberMap const \&
+\textit{member\_map,}%
+typename MemberMap::value\_type const \&
+\textit{id}%
+)     
+}
+\index{cut\_conductance()}
+\vspace{0.4cm}
+
+\textit{
+Compute the conductance of a cut defined to be the set of vertices for which member(v) = id.
+}
+\vspace{0.4cm}
+
+Parameters:
+\begin{itemize}
+\item
+\texttt{vw} --
+The input Graph.
+\item
+\texttt{member\_map} --
+Input vertex property map specifying the cut ids of vertices.
+\item
+\texttt{id} --
+The cut id for which to compute conductance.
+\end{itemize}
+
+% % % % % % % % % %
+
+\noindent
+\texttt{%
+template<typename View, typename MemberMap, typename CrossMap >
+\newline
+double 
+}
+\textbf{stapl::cut\_conductance}%
+\newline
+\texttt{%
+(
+View const \&
+\textit{vw,}%
+MemberMap const \&
+\textit{member\_map,}%
+CrossMap const \&
+\textit{cross\_map,}%
+typename MemberMap::value\_type const \&
+\textit{id}%
+)     
+}
+\index{cut\_conductance()}
+\vspace{0.4cm}
+
+\begin{itemize}
+\item
+Compute the conductance of a cut defined to be the set of vertices for which member(v) = id.
+\end{itemize}
+
+Parameters:
+\begin{itemize}
+\item
+\texttt{vw} --
+The input Graph.
+\item
+\texttt{member\_map} --
+Input vertex property map specifying the cut ids of vertices.
+\item
+\texttt{cross\_map} --
+Temporary vertex property map to store the number of cross edges
+\item
+\texttt{id} --
+The cut id for which to compute conductance.
+\end{itemize}
+
+\subsection{Usage Example} \label{sec-cut-cond-alg-use}
+
+The following example shows how to use 
+\texttt{cut\_conductance}
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{gralg/cut_conductance.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-cut-cond-alg-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-cut-cond-alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:cut-cond-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/cut_cond_alg_proc}
+\caption{ cut\_conductance Algorithm Execution Time}
+\label{fig:cut-cond-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{ Graph Coloring Level-Synchronized}
+\label{sec-color-graf-alg}
+\index{algorithms!graph!coloring}
+
+\subsection{Interface} \label{sec-color-graf-alg-inter}
+
+\noindent
+\texttt{%
+template<template< typename, typename, typename, typename > 
+\newline
+class GView, template< graph\_attributes, graph\_attributes, typename...> 
+\newline
+class Graph, graph\_attributes M, typename... OptionalParams, 
+\newline
+typename Dom, typename MapFunc, typename Derived, typename ColorMap >
+\newline
+void 
+}
+\newline
+\textbf{stapl::color\_graph}%
+\newline
+\texttt{%
+(
+GView< Graph< DIRECTED, M, OptionalParams...>, Dom, MapFunc, Derived > const \&
+\textit{graph,}%
+ColorMap \&
+\textit{color\_map}%
+)     
+}
+\index{color\_graph()}
+\vspace{0.4cm}
+
+\textit{
+Parallel Level-Synchronized Graph Coloring Algorithm:
+Assigns coloring to the vertices of the input graph, such that neighboring vertices are not assigned the same color.
+}
+\vspace{0.4cm}
+
+Parameters:
+\begin{itemize}
+\item
+\texttt{graph} --
+The graph\_view over the input graph.
+\item
+\texttt{color\_map} --
+The output vertex property map where the color information will be stored. 
+$[vertex->color (int)]$ 
+Specialization for directed graphs. Copies the directed graph to an undirected graph and computes coloring for the undirected graph.
+\end{itemize}
+
+% % % % % % % % % %
+
+\noindent
+\texttt{%
+template<template< typename, typename, typename, typename > 
+\newline
+class GView, template< graph\_attributes, graph\_attributes, typename...> 
+\newline
+class Graph, graph\_attributes M, typename... OptionalParams, 
+\newline
+typename Dist, typename DomMap, typename MapFunc, typename Derived, typename ColorMap >
+\newline
+void 
+}
+\textbf{stapl::color\_graph}%
+\newline
+\texttt{%
+(
+GView< Graph< UNDIRECTED, M, OptionalParams...>, iterator\_domain< Dist, DomMap >, MapFunc, Derived > const \&
+\textit{graph,}%
+ColorMap \&
+\textit{color\_map}%
+)     
+}
+\index{color\_graph()}
+\vspace{0.4cm}
+
+\begin{itemize}
+\item
+Assigns coloring to the vertices of the input graph, such that neighboring vertices are not assigned the same color.
+\end{itemize}
+
+Parameters:
+\begin{itemize}
+\item
+\texttt{graph} --
+The graph\_view over the input graph.
+\item
+\texttt{color\_map} --
+The output vertex property map where the color information will be stored. 
+$[vertex->color (int)]$
+Specialization for iterator\_domain based Graph over dynamic\_graph, because sparse-domain is needed in the algorithm to have a view over the boundary vertices.
+\end{itemize}
+
+% % % % % % % % % %
+
+\noindent
+\texttt{%
+template<typename GView, typename ColorMap >
+\newline
+void 
+}
+\textbf{stapl::color\_graph}%
+\newline
+\texttt{%
+(
+GView const \&
+\textit{graph,}%
+ColorMap \&
+\textit{color\_map}%
+)     
+}
+\index{color\_graph()}
+\vspace{0.4cm}
+
+\begin{itemize}
+\item
+Assigns coloring to the vertices of the input graph, such that neighboring vertices are not assigned the same color.
+\end{itemize}
+
+Parameters:
+\begin{itemize}
+\item
+\texttt{graph} --
+The graph\_view over the input graph.
+\item
+\texttt{color\_map} --
+The output vertex property map where the color information will be stored. 
+$[vertex->color (int)]$
+\end{itemize}
+
+\subsection{Usage Example} \label{sec-color-graf-alg-use}
+
+The following example shows how to use 
+\texttt{color\_graph}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{gralg/color_graph.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-color-graf-alg-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-color-graf-alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:color-graf-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/color_graf_alg_proc}
+\caption{ color\_graph Algorithm Execution Time}
+\label{fig:color-graf-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{ Extract Graph Colors}
+\label{sec-get-graf-color-alg}
+\index{algorithms!graph!coloring}
+
+\subsection{Interface} \label{sec-get-graf-color-alg-inter}
+
+\noindent
+\texttt{%
+template<typename GView, typename ColorMap >
+\newline
+domset1D<size\_t> 
+}
+\newline
+\textbf{stapl::get\_graph\_colors}%
+\newline
+\texttt{%
+(
+GView const \&
+\textit{graph,}%
+ColorMap \&
+\textit{color\_map}%
+)     
+}
+\index{get\_graph\_colors()}
+\vspace{0.4cm}
+
+\textit{
+Extracts the colors from the input graph, given the color map.
+}
+\vspace{0.4cm}
+
+Parameters:
+\begin{itemize}
+\item
+\texttt{graph} --
+The graph\_view over the input graph.
+\item
+\texttt{color\_map} --
+The input vertex property map where the color information is stored. 
+$[vertex->color (int)].$ 
+Must have been previously populated by calling color\_graph().
+\end{itemize}
+
+Returns:
+\begin{itemize}
+\item
+The domain of colors in the graph. 
+\end{itemize}
+
+\subsection{Usage Example} \label{sec-get-graf-color-alg-use}
+
+The following example shows how to use 
+\texttt{get\_graph\_colors}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{gralg/get_graph_colors.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-get-graf-color-alg-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-get-graf-color-alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:get-graf-color-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/get_graf_color_alg_proc}
+\caption{ get\_graph\_colors Algorithm Execution Time}
+\label{fig:get-graf-color-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{ Check Valid Graph Coloring}
+\label{sec-is-valid-color-alg} 
+\index{algorithms!graph!coloring}
+
+\subsection{Interface} \label{sec-is-valid-color-alg-inter}
+
+\noindent
+\texttt{%
+template<typename GView, typename ColorMap >
+\newline
+bool 
+}
+\newline
+\textbf{stapl::is\_valid\_graph\_coloring}%
+\newline
+\texttt{%
+(
+GView const \&
+\textit{graph,}%
+ColorMap \&
+\textit{color\_map}%
+)     
+}
+\index{is\_valid\_graph\_coloring()}
+\vspace{0.4cm}
+
+\textit{
+Computes if the given coloring is valid for the input graph.
+}
+\vspace{0.4cm}
+
+Parameters:
+\begin{itemize}
+\item
+\texttt{graph} --
+The graph\_view over the input graph.
+\item
+\texttt{color\_map} --
+The input vertex property map where the color information is stored. [vertex->color (int)]. Must have been previously populated by calling 
+\texttt{color\_graph().}
+\end{itemize}
+
+Returns:
+\begin{itemize}
+\item
+True if the coloring is valid, false otherwise. 
+\end{itemize}
+
+\subsection{Usage Example} \label{sec-is-valid-color-alg-use}
+
+See ~\ref{sec-color-graf-alg-inter}
+for an example which shows how to use 
+\texttt{is\_valid\_graph\_coloring}.
+
+%%The following example shows how to use 
+%%\texttt{is\_valid\_graph\_coloring}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+%%\input{gralg/is_valid_graph_coloring.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-is-valid-color-alg-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-is-valid-color-alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:is-valid-color-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/is_valid_color_alg_proc}
+\caption{ is\_valid\_graph\_coloring Algorithm Execution Time}
+\label{fig:is-valid-color-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{ Write Graph Adjacency List}
+\label{sec-wr-adj-list-alg}
+\index{algorithms!graph!output}
+\index{algorithms!graph!adjacency list}
+
+\subsection{Interface} \label{sec-wr-adj-list-alg-inter}
+
+\noindent
+\texttt{%
+emplate<typename GraphVw >
+\newline
+void 
+}
+\newline
+\textbf{stapl::write\_adj\_list}%
+\newline
+\texttt{%
+(
+GraphVw \&
+\textit{g,}%
+std::string
+\textit{filename = ""}%
+)     
+}
+\index{write\_adj\_list()}
+\vspace{0.4cm}
+
+\textit{
+Write the adjacency-list of a graph.
+}
+\vspace{0.4cm}
+
+Format:
+\begin{verbatim}
+VID VERTEXPROP #edges TGT0 EDGEPROP0 TGT1 EDGEPROP1 ...
+VID VERTEXPROP #edges TGT0 EDGEPROP0 TGT1 EDGEPROP1 ...
+:
+\end{verbatim}
+
+Parameters:
+\begin{itemize}
+\item
+\texttt{g} --
+The input Graph to be printed.
+\item
+\texttt{filename} --
+The name of the file where the graph will be printed.
+\end{itemize}
+
+\subsection{Usage Example} \label{sec-wr-adj-list-alg-use}
+
+The following example shows how to use 
+\texttt{write\_adj\_list}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{gralg/write_adj_list.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-wr-adj-list-alg-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-wr-adj-list-alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:wr-adj-list-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/wr_adj_list_alg_proc}
+\caption{ write\_adj\_list Algorithm Execution Time}
+\label{fig:wr-adj-list-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{ Write Graph Edge List}
+\label{sec-wr-edge-list-alg}
+\index{algorithms!graph!output}
+\index{graph!edge list}
+\index{edge list!graph}
+
+\subsection{Interface} \label{sec-wr-edge-list-alg-inter}
+
+\noindent
+\texttt{%
+template<typename GraphVw >
+\newline
+void 
+}
+\newline
+\textbf{stapl::write\_edge\_list}%
+\newline
+\texttt{%
+(
+GraphVw \&
+\textit{g,}%
+std::string
+\textit{filename = ""}%
+)     
+}
+\index{write\_edge\_list()}
+\vspace{0.4cm}
+
+\textit{
+Write the edge-list of a graph, without properties.
+}
+\vspace{0.4cm}
+
+Format:
+
+\begin{verbatim}
+SRC0 TGT0
+SRC1 TGT1
+SRC2 TGT2
+:
+\end{verbatim}
+
+Parameters:
+\begin{itemize}
+\item
+\texttt{g} --
+The input Graph to be printed.
+\item
+\texttt{filename} --
+The name of the file where the graph will be printed.
+\end{itemize}
+
+\subsection{Usage Example} \label{sec-wr-edge-list-alg-use}
+
+The following example shows how to use 
+\texttt{write\_edge\_list}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{gralg/write_edge_list.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-wr-edge-list-alg-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-wr-edge-list-alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:wr-edge-list-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/wr_edge_list_alg_proc}
+\caption{ write\_edge\_list Algorithm Execution Time}
+\label{fig:wr-edge-list-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{ Write Graph in DOT Format}
+\label{sec-wr-dot-alg}
+\index{algorithms!graph!output}
+\index{graph!DOT format}
+\index{DOT format!graph}
+
+\subsection{Interface} \label{sec-wr-dot-alg-inter}
+
+\noindent
+\texttt{%
+template<typename GraphVw >
+\newline
+void 
+}
+\newline
+\textbf{stapl::write\_dot}%
+\newline
+\texttt{%
+(
+GraphVw \&
+\textit{g,}%
+std::string
+\textit{filename}%
+)     
+}
+\index{write\_dot()}
+\vspace{0.4cm}
+
+\textit{
+Write a DOT graph, without properties.
+}
+\vspace{0.4cm}
+
+Parameters:
+\begin{itemize}
+\item
+\texttt{g} --
+The input Graph to be printed.
+\item
+\texttt{filename} --
+The name of the file where the graph will be printed.
+\end{itemize}
+
+\subsection{Usage Example} \label{sec-wr-dot-alg-use}
+
+The following example shows how to use 
+\texttt{write\_dot}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{gralg/write_dot.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-wr-dot-alg-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-wr-dot-alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:wr-dot-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/wr_dot_alg_proc}
+\caption{ write\_dot Algorithm Execution Time}
+\label{fig:wr-dot-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{ Write Graph in PMPL Format}
+\label{sec-wr-pmpl-alg}
+\index{algorithms!graph!output}
+\index{graph!PMPL format}
+\index{PMPL format!graph}
+
+\subsection{Interface} \label{sec-wr-pmpl-alg-inter}
+
+\noindent
+\texttt{%
+template<typename GraphVw >
+\newline
+void
+}
+\newline
+\textbf{stapl::write\_PMPL\_graph}%
+\newline
+\texttt{%
+(
+GraphVw \&
+\textit{g,}%
+std::string
+\textit{filename = ""}%
+)     
+}
+\index{write\_PMPL\_graph()}
+\vspace{0.4cm}
+
+\textit{
+Write the graph in PMPL format.
+}
+\vspace{0.4cm}
+
+Parameters:
+\begin{itemize}
+\item
+\texttt{g} --
+The input Graph to be printed.
+\item
+\texttt{filename} --
+The name of the file where the graph will be printed.
+\end{itemize}
+
+\subsection{Usage Example} \label{sec-wr-pmpl-alg-use}
+
+The following example shows how to use 
+\texttt{write\_PMPL\_graph}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{gralg/write_PMPL_graph.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-wr-pmpl-alg-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-wr-pmpl-alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:wr-pmpl-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/wr_pmpl_alg_proc}
+\caption{ write\_PMPL\_graph Algorithm Execution Time}
+\label{fig:wr-pmpl-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{ Read Graph}
+\label{sec-rd-graf-alg}
+\index{algorithms!graph!input}
+
+\subsection{Interface} \label{sec-rd-graf-alg-inter}
+
+\noindent
+\texttt{%
+template<typename Graph, typename LineReader >
+\newline
+graph\_view<Graph> 
+}
+\newline
+\textbf{stapl::graph\_reader}%
+\newline
+\texttt{%
+(
+std::string
+\textit{filename,}%
+LineReader
+\textit{line\_reader,}%
+size\_t
+\textit{blk\_sz = 4096}%
+)     
+}
+\index{graph\_reader()}
+\vspace{0.4cm}
+
+\textit{
+Read a graph from the given input file.  
+Uses the user-provided reader to read each line and add the edges from the line to the graph.
+}
+\vspace{0.4cm}
+
+Parameters:
+\begin{itemize}
+\item
+\texttt{filename} --
+The name of the input file.
+\item
+\texttt{line\_reader} --
+The functor used to read-in a line of text from file and add the appropriate edges to the provided aggregator, LineReader is given a stream with the line and an Edge-Aggregator. It should read the stream and add the appropriate edges to the provided Aggregator. LineReader should return '0' for success, '1' for failure.
+\item
+\texttt{blk\_sz} --
+The size of the block (in number of lines), in which the input file will be partitioned to be read.
+\end{itemize}
+
+Returns:
+\begin{itemize}
+\item
+A Graph over the output graph, populated with the vertices and edges from the input file. 
+\end{itemize}
+
+\subsection{Usage Example} \label{sec-rd-graf-alg-use}
+
+The following example shows how to use 
+\texttt{graph\_reader}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{gralg/graph_reader.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-rd-graf-alg-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-rd-graf-alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:rd-graf-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/rd_graf_alg_proc}
+\caption{ graph\_reader Algorithm Execution Time}
+\label{fig:rd-graf-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{ Read Sharded Graph}
+\label{sec-shard-rd-graf-alg}
+\index{algorithms!graph!input}
+\index{graph!sharded}
+
+\subsection{Interface} \label{sec-shard-rd-graf-alg-inter}
+
+\noindent
+\texttt{%
+template<typename Graph, typename LineReader >
+\newline
+graph\_view<Graph> 
+}
+\newline
+\textbf{stapl::sharded\_graph\_reader}%
+\newline
+\texttt{%
+(
+std::string
+\textit{filename,}%
+LineReader
+\textit{line\_reader}%
+)     
+}
+\index{sharded\_graph\_reader()}
+\vspace{0.4cm}
+
+\textit{
+Read a sharded graph from the given input file.  
+Uses the user-provided reader to read each line and add the edges from the line to the graph. 
+Input graph must be sharded using the sharder. 
+A sharded file is split into multiple input files and a metadata file that keeps track of the number of shards, vertices and edges, etc.
+}
+\vspace{0.4cm}
+
+Parameters:
+\begin{itemize}
+\item
+\texttt{filename} --
+The name of the input file.
+\item
+\texttt{line\_reader} --
+The functor used to read-in a line of text from file and add the appropriate edges to the provided aggregator, LineReader is given a stream with the line and an Edge-Aggregator. It should read the stream and add the appropriate edges to the provided Aggregator. LineReader should return '0' for success, '1' for failure.
+\end{itemize}
+
+Returns:
+\begin{itemize}
+\item
+A Graph over the output graph, populated with the vertices and edges from the input file. 
+\end{itemize}
+
+\subsection{Usage Example} \label{sec-shard-rd-graf-alg-use}
+
+The following example shows how to use 
+\texttt{sharded\_graph\_reader}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{gralg/sharded_graph_reader.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-shard-rd-graf-alg-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-shard-rd-graf-alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:shard-rd-graf-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/shard_rd_graf_alg_proc}
+\caption{ sharded\_graph\_reader Algorithm Execution Time}
+\label{fig:shard-rd-graf-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{Read Edge List and Shuffle}
+\label{sec-rd-edge-list-shuf-alg} 
+\index{algorithms!graph!input}
+\index{graph!edge list}
+\index{edge list!graph}
+
+\subsection{Interface} \label{sec-rd-edge-list-alg-inter}
+
+\noindent
+\texttt{%
+template<typename Graph, typename ShuffleMapperView >
+\newline
+graph\_view< Graph >
+}
+\newline
+\textbf{stapl::read\_edge\_list\_shuffle}%
+\newline
+\texttt{%
+(std::string 
+\textit{filename,}%
+size\_t 
+\textit{blk\_sz=4096}%
+)
+}
+\index{read\_edge\_list\_shuffle()}
+\vspace{0.4cm}
+
+\textit{
+Function to wrap around file-reader to support reading an edge-list.
+}
+\vspace{0.4cm}
+
+\subsection{Usage Example} \label{sec-rd-edge-list-alg-use}
+
+The following example shows how to use 
+\texttt{read\_edge\_list}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{gralg/read_edge_list.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-rd-edge-list-alg-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-rd-edge-list-alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:rd-edge-list-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/rd_edge_list_alg_proc}
+\caption{ read\_edge\_list\_shuffle Algorithm Execution Time}
+\label{fig:rd-edge-list-alg-exec-exper}
+\end{figure}
+
+% % % % %
+
+\subsection{Interface} \label{sec-rd-edge-list-ren-alg-inter}
+
+\noindent
+\texttt{%
+template<typename Graph, typename ShuffleMapperView >
+\newline
+graph\_view< Graph > 
+}
+\newline
+\textbf{stapl::read\_edge\_list\_shuffle}%
+\newline
+\texttt{%
+(ShuffleMapperView const \&
+\textit{mapper,}%
+std::string 
+\textit{filename,}%
+size\_t 
+\textit{blk\_sz=4096}%
+)
+}
+\index{read\_edge\_list\_shuffle()}
+\vspace{0.4cm}
+
+\textit{
+Function to wrap around file-reader to support reading an edge-list and rename the vertices id when added to the graph view. 
+}
+\vspace{0.4cm}
+
+\subsection{Usage Example} \label{sec-rd-edge-list-ren-alg-use}
+
+The following example shows how to use 
+\texttt{read\_edge\_list\_shuffle}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{gralg/read_edge_list_shuffle.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-rd-edge-list-ren-alg-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-rd-edge-list-ren-alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:rd-edge-list-shuf-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/rd_edge_list_shuf_alg_proc}
+\caption{ read\_edge\_list\_shuffle}% Algorithm Execution Time}
+\label{fig:rd-edge-list-shuf-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{Read Adjacency List}
+\label{sec-rd-adj-list-alg}
+\index{algorithms!graph!input}
+\index{graph!adjacency list}
+\index{adjacency list!graph}
+
+\subsection{Interface} \label{sec-rd-adj-list-alg-inter}
+
+\noindent
+\texttt{%
+template<typename Graph >
+\newline
+graph\_view< Graph > 	
+}
+\newline
+\textbf{stapl::read\_adj\_list}%
+\newline
+\texttt{%
+(std::string 
+\textit{filename,}%
+size\_t 
+\textit{blk\_sz=4096}%
+)
+}
+\index{read\_adj\_list()}
+\vspace{0.4cm}
+
+\textit{
+Function to wrap around file-reader to support reading an adjacency-list. 
+}
+\vspace{0.4cm}
+
+\subsection{Usage Example} \label{sec-rd-adj-list-alg-use}
+
+The following example shows how to use 
+\texttt{read\_adj\_list}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{gralg/read_adj_list.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-rd-adj-list-alg-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-rd-adj-list-alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:rd-adj-list-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/rd_adj_list_alg_proc}
+\caption{ read\_adj\_list Algorithm Execution Time}
+\label{fig:rd-adj-list-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{Read DIMACS}
+\label{sec-read-dimacs-alg}
+\index{algorithms!graph!input}
+\index{graph!DIMACS format}
+\index{DIMACS format!graph}
+
+\subsection{Interface} \label{sec-read-dimacs-alg-inter}
+
+\noindent
+\texttt{%
+template<typename Graph >
+\newline
+graph\_view< Graph >
+}
+\newline
+\textbf{stapl::read\_dimacs}%
+\newline
+\texttt{%
+(std::string 
+\textit{filename,}%
+size\_t 
+\textit{blk\_sz=4096}%
+}
+\index{read\_dimacs()}
+\vspace{0.4cm}
+
+\textit{
+Function to wrap around file-reader to support reading an adjacency-list. 
+}
+\vspace{0.4cm}
+
+\subsection{Usage Example} \label{sec-read-dimacs-alg-use}
+
+The following example shows how to use 
+\texttt{read\_dimacs}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{gralg/read_dimacs.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-read-dimacs-alg-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-read-dimacs-alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:rd-dimacs-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/rd_dimacs_alg_proc}
+\caption{ read\_dimacs Algorithm Execution Time}
+\label{fig:rd-dimacs-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{ Split Graph into Shards}
+\label{sec-shard-graf-alg}
+\index{algorithms!graph!sharding}
+\index{graph!sharded}
+
+\subsection{Interface} \label{sec-shard-graf-alg-inter}
+
+\noindent
+\texttt{%
+\newline
+void 
+}
+\newline
+\textbf{stapl::graph\_sharder}%
+\newline
+\texttt{%
+(
+std::string
+\textit{filename,}%
+size\_t
+\textit{shard\_size,}%
+bool
+\textit{removecomments = true}%
+)     
+}
+\index{graph\_sharder()}
+\vspace{0.4cm}
+
+\textit{
+Shard an input file for efficient parallel reading.
+Files sharded by the graph sharder can be read by sharded\_graph\_reader(). 
+This function is not parallel and works from one location.
+}
+\vspace{0.4cm}
+
+Parameters:
+\begin{itemize}
+\item
+\texttt{filename} --
+The name of the input file. The input file must contain the number of vertices and edges in the graph in the first line. The output shards created will be named with the provided filename as the prefix, followed by the shard-ID. A metadata file with the name filename.metadata will be created containing the metadata for the shards (\#vertices, \#edges, \#shards, etc.).
+\item
+\texttt{shard\_size} --
+The size (in number of lines) of each output shard.
+\item
+\texttt{removecomments} --
+Set to true for excluding commented lines from shards, or false to keep the commented lines in the output shards.
+\end{itemize}
+
+\subsection{Usage Example} \label{sec-shard-graf-alg-use}
+
+The following example shows how to use 
+\texttt{graph\_sharder}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{gralg/graph_sharder.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-shard-graf-alg-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-shard-graf-alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:shard-graf-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/shard_graf_alg_proc}
+\caption{ graph\_sharder Algorithm Execution Time}
+\label{fig:shard-graf-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{ Compute Graph Metrics}
+\label{sec-graf-metrics-alg}
+\index{algorithms!graph!metrics}
+\index{graph!metrics}
+
+\subsection{Interface} \label{sec-graf-metrics-alg-inter}
+
+\noindent
+\texttt{%
+template<typename Graph, typename VertexPartitionMap >
+\newline
+metrics\_info 
+}
+\newline
+\textbf{stapl::graph\_metrics}%
+\newline
+\texttt{%
+(
+Graph \&
+\textit{g,}%
+VertexPartitionMap \&
+\textit{vertex\_partition\_map}%
+)     
+}
+\index{graph\_metrics()}
+\vspace{0.4cm}
+
+\textit{
+Compute various metrics for the provided input graph, based on the graph-partition provided.  
+These metrics are useful for scientific-computing codes that work on partitioned meshes. The metrics produce information about the quality of the partition. 
+These metrics are based on those requested by a National Lab.
+}
+\vspace{0.4cm}
+
+Parameters:
+\begin{itemize}
+\item
+\texttt{g} --
+The graph\_view over the input graph.
+\item
+\texttt{vertex\_partition\_map} --
+The input vertex property map specifying the partition that each vertex belongs to.
+\end{itemize}
+
+Returns:
+\begin{itemize}
+\item
+A metrics\_info object containing information about the quality of the specified partition for the input graph. 
+\end{itemize}
+
+\subsection{Usage Example} \label{sec-graf-metrics-alg-use}
+
+The following example shows how to use 
+\texttt{graph\_metrics}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{gralg/graph_metrics.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-graf-metrics-alg-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-graf-metrics-alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:graf-metrics-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/graf_metrics_alg_proc}
+\caption{ graph\_metrics Algorithm Execution Time}
+\label{fig:graf-metrics-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{ Create Level by Algorithm}
+\label{sec-create-level-user-alg}
+\index{algorithms!graph!level}
+
+\subsection{Interface} \label{sec-create-level-user-alg-inter}
+
+\noindent
+\texttt{%
+template<typename GraphVw, typename VertexPartitioner, typename EdgeFunctor >
+\newline
+hierarchical\_graph\_view< dynamic\_graph<DIRECTED, MULTIEDGES, 
+\newline
+hierarchical\_graph\_view<typename GraphVw::view\_container\_type, 
+\newline
+typename extract\_domain\_type<GraphVw, VertexPartitioner>::type >, 
+\newline
+typename EdgeFunctor::value\_type> > 
+}
+\newline
+\textbf{stapl::create\_level}%
+\newline
+\texttt{%
+(
+const GraphVw \&
+\textit{graph,}%
+const VertexPartitioner \&
+\textit{partitioner,}%
+const EdgeFunctor \&
+\textit{ef,}%
+size\_t
+\textit{level}%
+)     
+}
+\index{create\_level()}
+\vspace{0.4cm}
+
+\textit{
+Create a level in the hierarchy of graphs, using the user-provided vertex partitioner and edge-functor.
+}
+\vspace{0.4cm}
+
+Parameters:
+\begin{itemize}
+\item
+\texttt{graph} --
+A view over the input graph.
+\item
+\texttt{partitioner} --
+The vertex paritioner which takes an input graph and returns the partition of vertices on next level, along with descriptors corresponding to them.
+\item
+\texttt{ef} --
+The edge functor which takes graph of the next level, and adds the required edges.
+\item
+\texttt{level} --
+The level of this view in the hierarchy.
+\end{itemize}
+
+Returns:
+\begin{itemize}
+\item
+A hierarchical\_graph\_view over the graph of the next-level. 
+\end{itemize}
+
+% % % % % % % % % %
+
+\noindent
+\texttt{%
+template<typename VertexPartitioner, typename EdgeFunctor, 
+\newline
+typename PG, typename Dom, typename MapFunc, typename Derived >
+\newline
+hierarchical\_graph\_view< dynamic\_graph<DIRECTED, MULTIEDGES, 
+\newline
+hierarchical\_graph\_view<PG, typename extract\_domain\_type<PG, 
+\newline
+VertexPartitioner>::type>, typename EdgeFunctor::value\_type>> 
+}
+\textbf{stapl::create\_level}%
+\newline
+\texttt{%
+(
+const hierarchical\_graph\_view< PG, Dom, MapFunc, Derived > \&
+\textit{graph,}%
+const VertexPartitioner \&
+\textit{partitioner,}%
+const EdgeFunctor \&
+\textit{ef}%
+)     
+}
+\index{create\_level()}
+\vspace{0.4cm}
+
+\textit{
+Create a level in the hierarchy of graphs, using the user-provided vertex partitioner and edge-functor.
+}
+\vspace{0.4cm}
+
+Parameters:
+\begin{itemize}
+\item
+\texttt{graph} --
+A hierarchical\_graph\_view over the input graph.
+\item
+\texttt{partitioner} --
+The vertex paritioner which takes an input graph and returns the partition of vertices on next level, along with descriptors corresponding to them.
+\item
+\texttt{ef} --
+The edge functor which takes graph of the next level, and adds the required edges.
+\end{itemize}
+
+Returns:
+\begin{itemize}
+\item
+A hierarchical\_graph\_view over the graph of the next-level.
+\end{itemize}
+
+% % % % % % % % % %
+
+\noindent
+\texttt{%
+template<typename VertexPartitioner, typename EdgeFunctor, 
+\newline
+typename PG, typename Dom, typename MapFunc, typename Derived >
+\newline
+hierarchical\_graph\_view< dynamic\_graph<DIRECTED, MULTIEDGES, 
+\newline
+hierarchical\_graph\_view<PG, typename extract\_domain\_type<PG, 
+\newline
+VertexPartitioner>::type>, typename EdgeFunctor::value\_type>> 
+}
+\textbf{stapl::create\_level}%
+\newline
+\texttt{%
+(
+const graph\_view< PG, Dom, MapFunc, Derived > \&
+\textit{graph,}%
+const VertexPartitioner \&
+\textit{partitioner,}%
+const EdgeFunctor \&
+\textit{ef}%
+)     
+}
+\index{create\_level()}
+\vspace{0.4cm}
+
+\textit{
+Create a level in the hierarchy of graphs, using the user-provided vertex partitioner and edge-functor.
+}
+\vspace{0.4cm}
+
+Parameters:
+\begin{itemize}
+\item
+\texttt{graph} --
+A view over the input graph.
+\item
+\texttt{partitioner} --
+The vertex paritioner which takes an input graph and returns the partition of vertices on next level, along with descriptors corresponding to them.
+\item
+\texttt{ef} --
+The edge functor which takes graph of the next level, and adds the required edges.
+\end{itemize}
+
+Returns:
+\begin{itemize}
+\item
+A hierarchical\_graph\_view over the graph of the next-level.
+\end{itemize}
+
+\subsection{Usage Example} \label{sec-create-level-alg-use}
+
+The following example shows how to use 
+\texttt{create\_level}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{gralg/create_level.tex} 
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-create-level-alg-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-create-level-alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:cr-level-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/cr_level_alg_proc}
+\caption{ create\_level Algorithm Execution Time}
+\label{fig:cr-level-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{ Compute Graph k-core}
+\label{sec-k-core-alg}
+\index{algorithms!graph!k-core}
+
+\subsection{Interface} \label{sec-k-core-alg-inter}
+
+\noindent
+\texttt{%
+template<typename GView, typename Comp >
+\newline
+size\_t 
+}
+\newline
+\textbf{stapl::k\_core}%
+\newline
+\texttt{%
+(
+GView \&
+\textit{graph,}%
+int
+\textit{core\_sz,}%
+size\_t
+\textit{k,}%
+Comp
+\textit{comp}%
+)     
+}
+\index{k\_core()}
+\vspace{0.4cm}
+
+\textit{
+Iteratively marks all vertices not satisfying the specified comparison of the vertex's out-degree with the provided k parameter, as 'deleted', i.e. the vertex property is set to -1.
+}
+\vspace{0.4cm}
+
+Parameters:
+\begin{itemize}
+\item
+\texttt{graph} --
+The graph\_view over the input graph.
+\item
+\texttt{core\_sz} --
+The parameter to control which vertices are deleted.
+\item
+\texttt{k} --
+The maximum amount of asynchrony allowed in each phase. $0 <= k <= inf.$ \ \ $k == 0$ implies level-sync BFS. $k >= D$ implies fully asynchronous (D is diameter of graph).
+\item
+\texttt{comp} --
+The comparator to compare the vertex's out-degree with k.
+\end{itemize}
+
+Returns:
+\begin{itemize}
+\item
+The number of iterations performed by the paradigm. Note this is different from the dynamic version which returns the number of vertices deleted. 
+\end{itemize}
+
+% % % % % % % % % %
+
+\noindent
+\texttt{%
+template<typename GView >
+\newline
+size\_t 
+}
+\textbf{stapl::k\_core}%
+\newline
+\texttt{%
+(
+GView \&
+\textit{graph,}%
+int
+\textit{core\_sz,}%
+size\_t
+\textit{k}%
+)     
+}
+\index{k\_core()}
+\vspace{0.4cm}
+
+\textit{
+A variant of 
+\texttt{k\_core()} 
+that uses the 
+\texttt{less<int>() comparator.}
+}
+\vspace{0.4cm}
+
+Parameters:
+\begin{itemize}
+\item
+\texttt{graph} --
+The graph\_view over the input graph.
+\item
+\texttt{core\_sz} --
+The parameter to control which vertices are deleted.
+\item
+\texttt{k} --
+The maximum amount of asynchrony allowed in each phase. $0 <= k <= inf.$ \ \ $k == 0$ implies level-sync BFS. $k >= D$ implies fully asynchronous (D is diameter of graph).
+\end{itemize}
+
+Returns:
+\begin{itemize}
+\item
+The number of iterations performed by the paradigm. Note this is different from the dynamic version which returns the number of vertices deleted. 
+\end{itemize}
+
+\subsection{Usage Example} \label{sec-k-core-alg-use}
+
+The following example shows how to use 
+\texttt{k\_core}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{gralg/k_core.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-k-core-alg-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-k-core-alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:k-core-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/k_core_alg_proc}
+\caption{ k\_core Algorithm Execution Time}
+\label{fig:k-core-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{ Compute Graph k-core Dynamically}
+\label{sec-k-core-dyn-alg}
+\index{algorithms!graph!k-core}
+
+\subsection{Interface} \label{sec-k-core-dyn-alg-inter}
+
+\noindent
+\texttt{%
+template<typename GView, typename Comp >
+\newline
+size\_t 
+}
+\newline
+\textbf{stapl::k\_core\_dynamic}%
+\newline
+\texttt{%
+(
+GView \&
+\textit{graph,}%
+size\_t
+\textit{k,}%
+Comp
+\textit{comp}%
+)     
+}
+\index{k\_core\_dynamic()}
+\vspace{0.4cm}
+
+\textit{
+Iteratively deletes all vertices not satisfying the specified comparison of the vertex's out-degree with the provided k parameter.
+}
+\vspace{0.4cm}
+
+Parameters:
+\begin{itemize}
+\item
+\texttt{graph} --
+The graph\_view over the input graph.
+\item
+\texttt{k} --
+The parameter to control which vertices are deleted.
+\item
+\texttt{comp} --
+The comparator to compare the vertex's out-degree with k.
+\end{itemize}
+
+% % % % % % % % % %
+
+\noindent
+\texttt{%
+template<typename GView >
+\newline
+size\_t 
+}
+\textbf{stapl::k\_core\_dynamic}%
+\newline
+\texttt{%
+(
+GView \&
+\textit{graph,}%
+size\_t
+\textit{k}%
+)     
+}
+\index{k\_core\_dynamic()}
+\vspace{0.4cm}
+
+\textit{
+Iteratively deletes all vertices with out-degree smaller than k.
+}
+\vspace{0.4cm}
+
+Parameters:
+\begin{itemize}
+\item
+\texttt{graph} --
+The graph\_view over the input graph.
+\item
+\texttt{k} --
+The parameter to control which vertices are deleted.
+\end{itemize}
+
+\subsection{Usage Example} \label{sec-k-core-dyn-alg-use}
+
+The following example shows how to use 
+\texttt{k\_core\_dynamic}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{gralg/k_core_dynamic.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-k-core-dyn-alg-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-k-core-dyn-alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:k-core-dyn-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/k_core_dyn_alg_proc}
+\caption{ k\_core\_dynamic Algorithm Execution Time}
+\label{fig:k-core-dyn-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{ Maximal Bipartite Matching}
+\label{sec-max-bi-match-alg}
+\index{algorithms!graph!matching}
+
+\subsection{Interface} \label{sec-max-bi-match-alg-inter}
+
+\noindent
+\texttt{%
+template<class GView >
+\newline
+size\_t 
+}
+\newline
+\textbf{stapl::maximal\_bipartite\_matching}%
+\newline
+\texttt{%
+(
+GView \&
+\textit{g,}%
+size\_t
+\textit{k = 0}%
+)     
+}
+\index{maximal\_bipartite\_matching()}
+\vspace{0.4cm}
+
+\textit{
+Performs a maximal bipartite matching on the input graph, storing the matchings on each vertex.
+}
+\vspace{0.4cm}
+
+Parameters:
+\begin{itemize}
+\item
+\texttt{g} --
+The graph\_view over the input graph. The input must be a bipartite graph, with the vertices divided in one of 
+\texttt{properties::bipartite\_partition::LEFT} --
+or
+\texttt{properties::bipartite\_partition::RIGHT,} --
+as specified by the vertex property. Edges should only occur between vertices of different partitions, i.e., inter-partition.
+\end{itemize}
+
+Returns:
+\begin{itemize}
+\item
+The size of the maximal matching. 
+\end{itemize}
+
+\subsection{Usage Example} \label{sec-max-bi-match-alg-use}
+
+The following example shows how to use 
+\texttt{maximal\_bipartite\_matching}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{gralg/maximal_bipartite_matching.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-max-bi-match-alg-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-max-bi-match-alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:max-bi-match-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/max_bi_match_alg_proc}
+\caption{ maximal\_bipartite\_matching Algorithm Execution Time}
+\label{fig:max-bi-match-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{ Multi-Source Shortest Paths}
+\label{sec-mssp-alg} 
+\index{algorithms!graph!shortest paths}
+\index{shortest path algorithm}
+
+\subsection{Interface} \label{sec-mssp-alg-inter}
+
+\noindent
+\texttt{%
+template<class GView >
+\newline
+size\_t 
+}
+\newline
+\textbf{stapl::mssp}%
+\newline
+\texttt{%
+(
+GView \&
+\textit{g,}%
+std::vector< typename GView::vertex\_descriptor > const \&
+\textit{sources,}%
+size\_t
+\textit{k = 0}%
+)     
+}
+\index{mssp()}
+\vspace{0.4cm}
+
+\textit{
+Performs a multi-source shortest path query on the input graph, storing the shortest path distances and parents on each reachable vertex for each traversal. 
+All vertices will be initialized with their distances as infinity (MAX) and their active states as empty, except the source-vertex for each traversal, which will have its distance set to zero (0) and active state set to true for that traversal. 
+Parents of each vertex will be initialized to the vertex's descriptor.
+}
+\vspace{0.4cm}
+
+Parameters:
+\begin{itemize}
+\item
+\texttt{g} --
+The graph\_view over the input graph.
+\item
+\texttt{sources} --
+The descriptors of the source vertices for this traversal.
+\item
+\texttt{k} --
+The maximum amount of asynchrony allowed in each phase. $0 <= k <= inf.$ \ \ $k == 0$ implies level-sync BFS. $k >= D$ implies fully asynchronous (D is diameter of graph).
+\end{itemize}
+
+Returns:
+\begin{itemize}
+\item
+The number of iterations performed by the paradigm. 
+\end{itemize}
+
+\subsection{Usage Example} \label{sec-mssp-alg-use}
+
+The following example shows how to use 
+\texttt{mssp}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{gralg/mssp.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-mssp-alg-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-mssp-alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:mssp-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/mssp_alg_proc}
+\caption{mssp Algorithm Execution Time}
+\label{fig:mssp-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{ Page Rank, Level-Synchronized}
+\label{sec-page-rank-alg}
+\index{algorithms!graph!page rank}
+\index{page rank algorithm}
+
+\subsection{Interface} \label{sec-page-rank-alg-inter}
+
+\noindent
+\texttt{%
+template<typename GView >
+\newline
+size\_t 
+}
+\newline
+\textbf{stapl::page\_rank}%
+\newline
+\texttt{%
+(
+GView \&
+\textit{graph,}%
+size\_t
+\textit{iterations,}%
+double
+\textit{damping = 0.85}%
+)     
+}
+\index{page\_rank()}
+\vspace{0.4cm}
+
+\textit{
+Performs a PageRank on the input graph, storing the ranks of all vertices on their properties.
+}
+\vspace{0.4cm}
+
+Parameters:
+\begin{itemize}
+\item
+\texttt{graph} --
+The graph\_view over the input graph.
+\item
+\texttt{iterations} --
+The number of PageRank iterations to perform.
+\item
+\texttt{damping} --
+The damping factor for the algorithm.
+\end{itemize}
+
+Returns:
+\begin{itemize}
+\item
+The number of iterations performed. 
+\end{itemize}
+
+\subsection{Usage Example} \label{sec-page-rank-alg-use}
+
+The following example shows how to use 
+\texttt{page\_rank}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{gralg/page_rank.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-page-rank-alg-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-page-rank-alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:page-rank-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/page_rank_alg_proc}
+\caption{ page\_rank Algorithm Execution Time}
+\label{fig:page-rank-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{ Page Rank, Hierarchical Level Synchronized}
+\label{sec-page-rank-h-alg}
+\index{algorithms!graph!page rank}
+\index{page rank algorithms}
+
+\subsection{Interface} \label{sec-page-rank-h-alg-inter}
+
+\noindent
+\texttt{%
+template<class GView, class HView >
+\newline
+size\_t 
+}
+\newline
+\textbf{stapl::page\_rank\_h}%
+\newline
+\texttt{%
+(
+GView \&
+\textit{g,}%
+HView \&
+\textit{h,}%
+size\_t
+\textit{iterations,}%
+double
+\textit{damping = 0.85}%
+)     
+}
+\index{page\_rank\_h()}
+\vspace{0.4cm}
+
+\textit{
+Parallel Level-Synchronized PageRank Algorithm using the hierarchical machine paradigm (
+\texttt{h\_paradigm()}%
+).
+Performs a PageRank on the input graph, storing the ranks of all vertices on their properties.
+}
+\vspace{0.4cm}
+
+Parameters:
+\begin{itemize}
+\item
+\texttt{graph} --
+The graph\_view over the input graph.
+\item
+\texttt{h} --
+The hierarchical machine view over the input graph. This is generated by calling
+\texttt{create\_level\_machine()} 
+on the input graph.
+\item
+\texttt{iterations} --
+The number of PageRank iterations to perform.
+\item
+\texttt{damping} --
+The damping factor for the algorithm.
+\end{itemize}
+
+Returns:
+\begin{itemize}
+\item
+The number of iterations performed. 
+\end{itemize}
+
+% % % % % % % % % %
+
+\noindent
+\texttt{%
+template<class GView, class HView, class HubsView >
+\newline
+size\_t 
+}
+\textbf{stapl::page\_rank\_h}%
+\newline
+\texttt{%
+(
+GView \&
+\textit{g,}%
+HView \&
+\textit{h,}%
+HubsView \&
+\textit{hubs,}%
+size\_t
+\textit{iterations,}%
+double
+\textit{damping = 0.85}%
+)     
+}
+\index{page\_rank\_h()}
+\vspace{0.4cm}
+
+\textit{
+Parallel Level-Synchronized PageRank Algorithm using the hierarchical machine and hubs paradigm (
+\texttt{h\_hubs\_paradigm()}%
+).
+Performs a PageRank on the input graph, storing the ranks of all vertices on their properties.
+}
+\vspace{0.4cm}
+
+Parameters:
+\begin{itemize}
+\item
+\texttt{graph} --
+The graph\_view over the input graph.
+\item
+\texttt{h} --
+The hierarchical machine view over the input graph. This is generated by calling
+\texttt{create\_level\_machine()} 
+on the input graph.
+\item
+\texttt{hubs} --
+The hierarchical hubs view over the input graph, which creates a hierarchical view over all the high-degree vertices (hubs) of the input graph. This is generated by calling 
+\texttt{create\_level\_hubs()} 
+on the input graph.
+\item
+\texttt{iterations} --
+The number of PageRank iterations to perform.
+\item
+\texttt{damping} --
+The damping factor for the algorithm.
+\end{itemize}
+
+Returns:
+\begin{itemize}
+\item
+The number of iterations performed. 
+\end{itemize}
+
+\subsection{Usage Example} \label{sec-page-rank-h-alg-use}
+
+The following example shows how to use 
+\texttt{page\_rank\_h}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{gralg/page_rank_h.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-page-rank-h-alg-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-page-rank-h-alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:page-rank-h-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/page_rank_h_alg_proc}
+\caption{ page\_rank\_h Algorithm Execution Time}
+\label{fig:page-rank-h-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{ Parallel Graph Algorithm Paradigm}
+\label{sec-graf-para-alg}
+\index{algorithms!graph!paradigm}
+
+\subsection{Interface} \label{sec-graf-para-alg-inter}
+
+\noindent
+\texttt{%
+template<typename WF, typename UF, typename PostExecute, typename GView >
+\newline
+size\_t 
+}
+\newline
+\textbf{stapl::graph\_paradigm}%
+\newline
+\texttt{%
+(
+WF const \&
+\textit{uwf,}%
+UF const \&,
+PostExecute
+\textit{post\_execute,}%
+GView \&
+\textit{g,}%
+int
+\textit{k}%
+)     
+}
+\index{graph\_paradigm()}
+\vspace{0.4cm}
+
+\textit{
+Allows expression of parallel fine-grained graph algorithms, with optimizations for selecting between different graph algorithmic paradigms.
+Selects between the level-synchronous and KLA paradigms based on k.
+}
+\vspace{0.4cm}
+
+The user provides a work function to express the computation to be performed on each vertex, and a visitor that will be applied to each neighbor that is visited. The work function is passed in a vertex and a visit object. To visit a neighboring vertex, the work function must call 
+\texttt{visit(neighbor, visitor()).}
+The work function must return true if the vertex was active (i.e. its value was updated), or false otherwise. The visitor is passed in the target vertex. Visitors may carry state, but must be immutable. They should return true if the visit was successful (i.e. the target vertex will be activated after this visit), or false otherwise. Users may also provide additional functions to be executed after each KLA-Superstep (KLA-SS).
+
+Template Parameters:
+\begin{itemize}
+\item
+\texttt{WF} --
+The type of the user provided work function expressing computation to be performed over each vertex.
+\item
+\texttt{UF} --
+The type of the user provided visitor expressing computation to be performed over neighboring vertices.
+\end{itemize}
+
+Parameters:
+\begin{itemize}
+\item
+\texttt{uwf} --
+Functor that implements the operation to be performed on each vertex
+\item
+\texttt{post\_execute} --
+Optional functor that will be executed on the Graph at the end of each KLA-SS. This will be invoked with the input Graph and the current KLA-SS ID (the ID of the KLA-SS that just finished).
+\item
+\texttt{g} --
+The graph\_view over the input graph.
+\item
+\texttt{k} --
+The maximum amount of asynchrony allowed in each phase. $0 <= k <= inf.$ \ \ $k == 0$ implies level-sync BFS. $k >= D$ implies fully asynchronous (D is the number of iterations performed by the level-synchronous variant of the algorithm).
+\end{itemize}
+
+Returns:
+\begin{itemize}
+\item
+The number of iterations performed by the paradigm.
+\end{itemize}
+
+\subsection{Usage Example} \label{sec-graf-para-alg-use}
+
+The following example shows how to use 
+\texttt{graph\_paradigm}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{gralg/graph_paradigm.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-graf-para-alg-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-graf-para-alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:graf-para-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/graf_para_alg_proc}
+\caption{ graph\_paradigm Algorithm Execution Time}
+\label{fig:graf-para-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{ Parallel Hierarchical Hubs Level-Synchronous (h-hubs) Paradigm}
+\label{sec-hubs-para-alg}
+\index{algorithms!graph!paradigm}
+\index{algorithms!graph!hubs}
+
+\subsection{Interface} \label{sec-hubs-para-alg-inter}
+
+\noindent
+\texttt{%
+template<typename WF, typename UF, typename VPR, 
+\newline
+typename PostExecute, typename HView, typename HubsView, typename GView >
+\newline
+size\_t 
+}
+\newline
+\textbf{stapl::h\_hubs\_paradigm}%
+\newline
+\texttt{%
+(
+WF const \&
+\textit{uwf,}%
+UF const \& ,
+VPR const \&
+\textit{vpr,}%
+PostExecute
+\textit{post\_execute,}%
+HView \&
+\textit{h,}%
+HubsView \&
+\textit{hubs,}%
+GView \&
+\textit{g}%
+)     
+}
+\index{h\_hubs\_paradigm()}
+\vspace{0.4cm}
+
+\textit{
+Implements the hierarchical hubs level-sync paradigm, which iteratively executes BSP-Supersteps (SS). 
+}
+\vspace{0.4cm}
+
+Each SS applies the user provided vertex-operator over the vertices of the input graph. Any communication generated within a SS is guaranteed to have finished before the SS finishes. The communication happens hierarchically, by following the locality of the graph through the machine-hierarchy and the hubs-hierarchy. Updates (neighbor-operators) to be applied to remote neighbors of a vertex v are sent to v's parent vertex in the machine hierarchy. The parent then forwards the update to all its neighbors that contain neighbors of v. When the update is received by the parent's neighbor, it applies the update to all of its children that are neighbors of v in the lower-level graph. The update is also sent to v's parent vertex in its hub-hierarchy. The hub-hierarchy contains representatives of high-degree vertices (hubs) on each location, created using
+\texttt{create\_level\_hubs().}%
+
+ The update is applied to the hub-representatives of all neighboring hub-vertices of vertex v. Upon completion of an SS, the hub-representatives on each location are flushed to the actual hubs vertices in the lower-level graph, using the provided reduction operator (vpr). Finally, the local neighbors of v are updated. This allows us to send a single update per remote location vs. sending an update per remote/cross edge, as well as avoid heavy communication to hub-vertices. This may lead to a reduction in the amount of communication from O(E) to O(V), providing faster and more scalable performance.
+
+The hierarchical hubs paradigm is an extension of the hierarchical paradigm (
+\texttt{h\_paradigm()}%
+), and adds the ability to reduce communication to hub vertices of the graph. The hierarchical paradigm reduces outgoing communication from vertices, while the hubs-hierarchy allows the reduction of incoming communication to high-degree vertices.
+
+The user provides a vertex-operator to express the computation to be performed on each vertex, and a neighbor-operator that will be applied to each neighbor that is visited. The vertex-operator is passed in a vertex and a visit object. To visit a neighboring vertex, the vertex-operator must call 
+\texttt{visit\_all\_edges(neighbor, visitor()).}
+ The vertex-operator must return true if the vertex was active (i.e. its value was updated), or false otherwise. The neighbor-operator is passed in the target vertex. Neighbor-operators may carry state, but must be immutable. They should return true if the visit was successful (i.e. the target vertex will be activated after this visit), or false otherwise. Users may also provide additional functions to be executed before and after each SS.
+
+Template Parameters:
+\begin{itemize}
+\item
+\texttt{WF} --
+The type of the user provided vertex-operator expressing computation to be performed over each vertex.
+\item
+\texttt{UF} --
+The type of the user provided neighbor-operator expressing computation to be performed over neighboring vertices.
+\end{itemize}
+
+Parameters:
+\begin{itemize}
+\item
+\texttt{vpr} --
+A vertex property reducer for the algorithm. It should accept two vertex properties and reduce them to update the first one. Used to update the hub vertices.
+\item
+\texttt{post\_execute} --
+Optional functor that will be executed on the Graph at the end of each SS. This will be invoked with the input Graph and the current SS ID (the ID of the SS that just finished).
+\item
+\texttt{h} --
+The hierarchical machine view over the input graph. This must be created using 
+\texttt{create\_level\_machine().}
+\item
+\texttt{hubs} --
+The hierarchical hubs view over the input graph. This must be created using 
+\texttt{create\_level\_hubs()} 
+over the input graph, before calling 
+\texttt{create\_level\_machine().}
+\item
+\texttt{g} --
+The graph\_view over the input graph.
+\end{itemize}
+
+Returns:
+\begin{itemize}
+\item
+The number of iterations performed by the paradigm. 
+\end{itemize}
+
+\subsection{Usage Example} \label{sec-hubs-para-alg-use}
+
+The following example shows how to use 
+\texttt{h\_hubs\_paradigm}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{gralg/h_hubs_paradigm.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-hubs-para-alg-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-hubs-para-alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:h-hubs-para-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/h_hubs_para_alg_proc}
+\caption{ h\_hubs\_paradigm Algorithm Execution Time}
+\label{fig:h-hubs-para-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section {Parallel Hierarchical Level-Synchronous (h) Paradigm}
+\label{sec-level-para-alg}
+\index{algorithms!graph!paradigm}
+\index{algorithms!graph!level synchronous}
+
+\subsection{Interface} \label{sec-level-para-alg-inter}
+
+\noindent
+\texttt{%
+template<typename WF, typename UF, typename PostExecute, 
+\newline
+typename HView, typename GView >
+\newline
+size\_t 
+}
+\newline
+\textbf{stapl::h\_paradigm}%
+\newline
+\texttt{%
+(
+WF const \&
+\textit{uwf,}%
+UF const \&,
+PostExecute
+\textit{post\_execute,}%
+HView \&
+\textit{h,}%
+GView \&    
+\textit{g}%
+)     
+}
+\index{h\_paradigm()}
+\vspace{0.4cm}
+
+\textit{
+Implements the hierarchical level-sync paradigm, which iteratively executes BSP-Supersteps (SS). 
+}
+\vspace{0.4cm}
+
+Each SS applies the user provided vertex-operator over the vertices of the input graph. Any communication generated within a SS is guaranteed to have finished before the SS finishes. The communication happens hierarchically, by following the locality of the graph through the machine-hierarchy. Updates (neighbor-operators) to be applied to remote neighbors of a vertex v are sent to v's parent vertex in the machine hierarchy. The parent then forwards the update to all its neighbors that contain neighbors of v. When the update is received by the parent's neighbor, it applies the update to all of its children that are neighbors of v in the lower-level graph. This allows us to send a single update per remote location vs. sending an update per remote/cross edge. Next, the local neighbors of v are updated. This may lead to a reduction in the amount of communication from O(E) to O(V), providing faster and more scalable performance.
+
+The user provides a vertex-operator to express the computation to be performed on each vertex, and a neighbor-operator that will be applied to each neighbor that is visited. The vertex-operator is passed in a vertex and a visit object. To visit a neighboring vertex, the vertex-operator must call 
+\texttt{visit\_all\_edges(neighbor, neighbor\_operator()}
+). The vertex-operator must return true if the vertex was active (i.e. its value was updated), or false otherwise. The neighbor-operator should be instantiated within vertex-operators and passed to a visit method to be applied to a vertex's neighbors. It is passed in a neighboring vertex. Neighbor-operators instantiated within vertex-operators may carry state, but must be immutable. They should return true if the visit was successful (i.e. the target vertex will be activated after this visit), or false otherwise. Users may also provide additional functions to be executed before and after each SS.
+
+Template Parameters:
+\begin{itemize}
+\item
+\texttt{WF} --
+The type of the user provided vertex-operator expressing computation to be performed over each vertex.
+\item
+\texttt{UF} --
+The type of the user provided neighbor-operator expressing computation to be performed over neighboring vertices.
+\end{itemize}
+
+Parameters:
+\begin{itemize}
+\item
+\texttt{post\_execute} --
+Optional functor that will be executed on the Graph at the end of each SS. This will be invoked with the input Graph and the current SS ID (the ID of the SS that just finished).
+\item
+\texttt{h} --
+The hierarchical machine view over the input graph. This must be created using 
+\texttt{create\_level\_machine().}
+\item
+\texttt{g} --
+The graph\_view over the input graph.
+\end{itemize}
+
+Returns:
+\begin{itemize}
+\item
+The number of iterations performed by the paradigm. 
+\end{itemize}
+
+\subsection{Usage Example} \label{sec-level-para-alg-use}
+
+The following example shows how to use 
+\texttt{h\_paradigm}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{gralg/h_paradigm.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-level-para-alg-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-level-para-alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:level-para-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/level_para_alg_proc}
+\caption{ h\_paradigm Algorithm Execution Time}
+\label{fig:level-para-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{Parallel k-Level-Asynchronous (KLA) Paradigm}
+\label{sec-kla-alg}
+\index{algorithms!graph!asynchronous}
+\index{algorithms!graph!paradigm}
+\index{algorithms!graph!k-level}
+
+\subsection{Interface} \label{sec-kla-alg-inter}
+
+\noindent
+\texttt{%
+template<typename WF, typename UF, typename PostExecute, typename GView >
+\newline
+size\_t 
+}
+\newline
+\textbf{stapl::kla\_paradigm}%
+\newline
+\texttt{%
+(
+WF const \&
+\textit{uwf,}%
+UF const \&,
+PostExecute
+\textit{post\_execute,}%
+GView \&
+\textit{g,}%
+size\_t
+\textit{k = 0}%
+)     
+}
+\index{kla\_paradigm()}
+\vspace{0.4cm}
+
+\textit{
+Implements the KLA paradigm, which iteratively executes KLA-Supersteps (KLA-SS). Each KLA-SS can perform asynchronous visits up to 'k' levels deep. 
+}
+\vspace{0.4cm}
+
+Any communication generated within a KLA-SS is guaranteed to have finished before the KLA-SS finishes. The user provides a vertex-operator to express the computation to be performed on each vertex, and a neighbor-operator that will be applied to each neighbor that is visited. The vertex-operator is passed in a vertex and a visit object. To visit a neighboring vertex, the vertex-operator must call 
+\texttt{visit(neighbor, neighbor-operator()).}
+ The vertex-operator must return true if the vertex was active (i.e. its value was updated), or false otherwise. The neighbor-operator is passed in the target vertex. Neighbor-operators may carry state, but must be immutable. They should return true if the visit was successful (i.e. the target vertex will be activated after this visit), or false otherwise. Users may also provide additional functions to be executed before and after each KLA-SS.
+
+Template Parameters:
+\begin{itemize}
+\item
+\texttt{WF} --
+The type of the user provided vertex-operator expressing computation to be performed over each vertex.
+\item
+\texttt{UF} --
+The type of the user provided neighbor-operator expressing computation to be performed over neighboring vertices.
+\end{itemize}
+
+Parameters:
+\begin{itemize}
+\item
+\texttt{uwf} --
+Functor that implements the operation to be performed on each vertex
+\item
+\texttt{post\_execute} --
+Optional functor that will be executed on the Graph at the end of each KLA-SS. This will be invoked with the input Graph and the current KLA-SS ID (the ID of the KLA-SS that just finished).
+\item
+\texttt{g} --
+The graph\_view over the input graph.
+\item
+\texttt{k} --
+The maximum amount of asynchrony allowed in each phase. $0 <= k <= inf.$ \ \ $k == 0$ implies level-sync BFS. $k >= D$ implies fully asynchronous (D is the number of iterations performed by the level-synchronous variant of the algorithm).
+\end{itemize}
+
+Returns:
+\begin{itemize}
+\item
+The number of iterations performed by the paradigm. 
+\end{itemize}
+
+\subsection{Usage Example} \label{sec-kla-alg-use}
+
+The following example shows how to use 
+\texttt{kla\_paradigm}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{gralg/kla_paradigm.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-kla-alg-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-kla-alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:kla-para-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/kla_para_alg_proc}
+\caption{ kla\_paradigm Algorithm Execution Time}
+\label{fig:kla-para-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{ Parallel Level-Synchronous (level\_sync) Paradigm}
+\label{sec-level-sync-alg}
+\index{algorithms!graph!paradigm}
+\index{algorithms!graph!level synchronous}
+
+\subsection{Interface} \label{sec-level-sync-alg-inter}
+
+\noindent
+\texttt{%
+template<typename WF, typename UF, typename PostExecute, typename GView >
+\newline
+size\_t 
+}
+\newline
+\textbf{stapl::level\_sync\_paradigm}%
+\newline
+\texttt{%
+(
+WF const \&
+\textit{uwf,}%
+UF const \& ,
+PostExecute
+\textit{post\_execute,}%
+GView \&
+\textit{g}%
+)     
+}
+\index{level\_sync\_paradigm()}
+\vspace{0.4cm}
+
+\textit{
+Implements the level-sync paradigm, which iteratively executes BSP-Supersteps (SS). 
+}
+\vspace{0.4cm}
+
+Each SS applies the user provided work function over the vertices of the input graph. Any communication generated within a SS is guaranteed to have finished before the SS finishes. The user provides a vertex-operator to express the computation to be performed on each vertex, and a neighbor-operator that will be applied to each neighbor that is visited. The vertex-operator is passed in a vertex and a visit object. To visit a neighboring vertex, the vertex-operator must call 
+\texttt{visit(neighbor, neighbor-operator()).} 
+The vertex-operator must return true if the vertex was active (i.e. its value was updated), or false otherwise. The neighbor-operator is passed in the target vertex. Neighbor-operators may carry state, but must be immutable. They should return true if the visit was successful (i.e. the target vertex will be activated after this visit), or false otherwise. Users may also provide additional functions to be executed before and after each SS.
+
+Template Parameters:
+\begin{itemize}
+\item
+\texttt{WF} --
+The type of the user provided vertex-operator expressing computation to be performed over each vertex.
+\item
+\texttt{UF} --
+The type of the user provided neighbor-operator expressing computation to be performed over neighboring vertices.
+\end{itemize}
+
+Parameters:
+\begin{itemize}
+\item
+\texttt{uwf} --
+Functor that implements the operation to be performed on each vertex
+\item
+\texttt{post\_execute} --
+Optional functor that will be executed on the Graph at the end of each SS. This will be invoked with the input Graph and the current SS ID (the ID of the SS that just finished).
+\item
+\texttt{g} --
+The graph\_view over the input graph.
+\end{itemize}
+
+Returns:
+\begin{itemize}
+\item
+The number of iterations performed by the paradigm. 
+\end{itemize}
+
+\subsection{Usage Example} \label{sec-level-sync-alg-use}
+
+The following example shows how to use 
+\texttt{level\_sync\_paradigm}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{gralg/level_sync_paradigm.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-level-sync-alg-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-level-sync-alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:level-sync-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/level_sync_alg_proc}
+\caption{ level\_sync\_paradigm Algorithm Execution Time}
+\label{fig:level-sync-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{ Preflow Push}
+\label{sec-preflow-push-alg}
+\index{algorithms!graph!preflow push}
+\index{preflow push algorithm}
+
+\subsection{Interface} \label{sec-preflow-push-alg-inter}
+
+\noindent
+\texttt{%
+template<typename GraphView >
+\newline
+stapl::tuple<double, double, double, double> 
+}
+\newline
+\textbf{stapl::preflow\_push}%
+\newline
+\texttt{%
+(
+GraphView \&
+\textit{gView,}%
+size\_t
+\textit{source,}%
+size\_t
+\textit{sink,}%
+int
+\textit{async}%
+)     
+}
+\index{preflow\_push()}
+\vspace{0.4cm}
+
+\textit{
+Initializes the properties of vertices and edges for the preflow push algorithm, and calculates the max flow in the graph.
+}
+\vspace{0.4cm}
+
+Parameters:
+\begin{itemize}
+\item
+\texttt{gView} --
+View of the graph.
+\item
+\texttt{source} --
+Source of the flow network.
+\item
+\texttt{sink} --
+Sink of the flow network.
+\item
+\texttt{async} --
+Level of asynchrony to use for the graph paradigm.
+\end{itemize}
+
+\subsection{Usage Example} \label{sec-preflow-push-alg-use}
+
+The following example shows how to use 
+\texttt{preflow\_push}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{gralg/preflow_push.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-preflow-push-alg-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-preflow-push-alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:preflow-push-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/preflow_push_alg_proc}
+\caption{ preflow\_push Algorithm Execution Time}
+\label{fig:preflow-push-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{Parallel Strongly-Connected Components Algorithm (pSCC)}
+\label{sec-pscc-alg}
+\index{algorithms!graph!strongly connected components}
+\index{strongly connected components!algorithm}
+
+\subsection{Interface} \label{sec-pscc-alg-inter}
+
+\noindent
+\texttt{%
+template<typename GraphView >
+\newline
+void 
+}
+\newline
+\textbf{stapl::pscc}%
+\newline
+\texttt{%
+(
+GraphView
+\textit{g,}%
+double
+\textit{pivot\_count = 1}%
+)     
+}
+\index{pscc()}
+\vspace{0.4cm}
+
+\textit{
+This function executes the DCSCMulti algorithm on the input graph. It begins by selecting approximately pivot\_count pivots and then adaptively selects a new value on each iteration. The SCC color is stored in the property using a 
+\texttt{set\_cc()} function on the graph's vertex property.
+}
+\vspace{0.4cm}
+
+Parameters:
+\begin{itemize}
+\item
+\texttt{g} --
+The graph\_view over the input graph.
+\item
+\texttt{pivot\_count} --
+The number of pivots to select at each iteration.
+\end{itemize}
+
+\subsection{Usage Example} \label{sec-pscc-alg-use}
+
+The following example shows how to use 
+\texttt{pscc}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{gralg/pscc.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-pscc-alg-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-pscc-alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:pscc-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/pscc_alg_proc}
+\caption{pscc Algorithm Execution Time}
+\label{fig:pscc-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{ Schudy's MultiPivot SCC algorithm}
+\label{sec-pscc-schudy-alg}
+\index{algorithms!graph!Schudy multipivot}
+\index{algorithms!graph!strongly connected components}
+\index{strongly connected components}
+
+\subsection{Interface} \label{sec-pscc-schudy-alg-inter}
+
+\noindent
+\texttt{%
+template<typename GraphView >
+\newline
+void 
+}
+\newline
+\textbf{stapl::pscc\_schudy}%
+\newline
+\texttt{%
+(
+GraphView
+\textit{g}%
+)    
+}
+\index{pscc\_schudy()}
+\vspace{0.4cm}
+
+\textit{
+Executes Schudy's SCC algorithm on the input graph. It first finds a pivot such that the pivot and some other nodes reach at least half of the graph. It then tests reachability from the pivot and divides the graph into the unreached and reached node sets.
+}
+\vspace{0.4cm}
+
+This algorithm is O(log n) times slower than DCSCMulti (pscc.h), and so should not be used other than for comparison. 
+
+Parameters:
+\begin{itemize}
+\item
+\texttt{g} --
+The input Graph.
+\end{itemize}
+
+\subsection{Usage Example} \label{sec-pscc-schudy-alg-use}
+
+The following example shows how to use 
+\texttt{pscc\_schudy}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{gralg/pscc_schudy.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-pscc-schudy-alg-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-pscc-schudy-alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:pscc-schudy-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/pscc_schudy_alg_proc}
+\caption{ pscc\_schudy Algorithm Execution Time}
+\label{fig:pscc-schudy-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{DCSC Algorithm}
+\label{sec-pscc-single-alg}
+\index{algorithms!graph!DCSC}
+\index{DCSC algorithm}
+
+\subsection{Interface} \label{sec-pscc-single-alg-inter}
+
+\noindent
+\texttt{%
+template<typename GraphView >
+\newline
+void 
+}
+\newline
+\textbf{stapl::pscc\_single}
+\newline
+\texttt{%
+(
+GraphView
+\textit{g}%
+)    
+}
+\index{pscc\_single()}
+\vspace{0.4cm}
+
+\textit{
+Executes the DCSC algorithm on the graph g. The algorithm works by selecting a pivot, traversing from this pivot, breaking the graph into subpieces, and then repeating this operation on each of the subpieces.
+}
+\vspace{0.4cm}
+
+Parameters:
+\begin{itemize}
+\item
+\texttt{g} --
+The graph\_view over the input graph.
+\end{itemize}
+
+For DCSC, it is very important the group to which each node belongs be maintained constantly; the algorithm cannot use more than one pivot at a time on any group. We use two different methods of distinguishing the groups, depending on which part of the algorithm we are currently executing.
+
+\begin{itemize}
+\item
+(simple) While the traversals are being executed, the groups are distinguished only by what pivot is operating on them; this is denoted by the member m\_group in pscc\_single\_vertex\_property.
+\item
+(complex) While the new pivots are being selected, the groups are distinguished by a (pivot that just operated on me, how that pivot can reach me) pair. This information is encapsulated in the algo\_details::pscc\_single\_mark\_type struct.
+\end{itemize}
+
+\subsection{Usage Example} \label{sec-pscc-single-alg-use}
+
+The following example shows how to use
+\texttt{pscc\_single}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{gralg/pscc_single.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-pscc-single-alg-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-pscc-single-alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:pscc-single-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/pscc_single_alg_proc}
+\caption{ pscc\_single Algorithm Execution Time}
+\label{fig:pscc-single-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{ Rebalance Diffusive}
+\label{sec-rebal-diff-alg}
+\index{algorithms!graph!rebalance}
+
+\subsection{Interface} \label{sec-rebal-diff-alg-inter}
+
+\noindent
+\texttt{%
+template<typename C, typename W, typename M, typename IS >
+\newline
+void 
+}
+\newline
+\textbf{stapl::rebalance\_diffusive}%
+\newline
+\texttt{%
+(
+C \&
+\textit{v,}%
+W const \&
+\textit{weight\_map,}%
+M const \&
+\textit{migration\_action\_map,}%
+IS const \&
+\textit{independent\_sets}
+)     
+}
+\index{rebalance\_diffusive()}
+\vspace{0.4cm}
+
+\textit{
+Rebalance a graph diffusively by iteratively moving vertices between neighboring partitions.  Balances the graph based on vertex-weights by migrating vertices to create an even weight-distribution among the locations, while attempting to minimize total movement of vertices.
+}
+\vspace{0.4cm}
+
+Parameters:
+\begin{itemize}
+\item
+\texttt{v} --
+The graph\_view over the input graph.
+\item
+\texttt{weight\_map} --
+The vertex property map storing weights for each vertex.
+\item
+\texttt{migration\_action\_map} --
+A map from vertex descriptor to functor describing an action to perform when a vertex is migrated. This map must export an interface compatible with std::map, where the function to execute has the signature (value\_type, gid\_type, location\_type)
+\item
+\texttt{independent\_sets} --
+A collection of independent sets, where each independent set is represented as a vector of edges (pairs of vertices). An example independent set that can be used is 
+\texttt{linear\_independent\_sets()}
+\end{itemize}
+
+% % % % % % % % % %
+
+\texttt{%
+template<typename C, typename W >
+\newline
+void 
+}
+\textbf{stapl::rebalance\_diffusive}%
+\newline
+\texttt{%
+(
+C \&
+\textit{v,}%
+W const \&
+\textit{weight\_map}%
+)     
+}
+\index{rebalance\_diffusive()}
+\vspace{0.4cm}
+
+\textit{
+Rebalance a graph diffusively by iteratively moving vertices between neighboring partitions.
+Balances the graph based on vertex-weights by migrating vertices to create an even weight-distribution among the locations, while attempting to minimize total movement of vertices.
+}
+\vspace{0.4cm}
+
+Parameters:
+\begin{itemize}
+\item
+\texttt{v} --
+The graph\_view over the input graph.
+\item
+\texttt{weight\_map} --
+The vertex property map storing weights for each vertex.
+\end{itemize}
+
+% % % % % % % % % %
+
+\texttt{%
+template<typename C >
+\newline
+void 
+}
+\textbf{stapl::rebalance\_diffusive}%
+\newline
+\texttt{%
+(
+C \&
+\textit{v}%
+)    
+}
+\index{rebalance\_diffusive()}
+\vspace{0.4cm}
+
+\textit{
+Rebalance a graph diffusively by iteratively moving vertices between neighboring partitions.
+Balances the graph based on vertex-weights by migrating vertices to create an even weight-distribution among the locations, while attempting to minimize total movement of vertices.
+}
+\vspace{0.4cm}
+
+Parameters:
+\begin{itemize}
+\item
+\texttt{v} --
+The graph\_view over the input graph.
+\end{itemize}
+
+\subsection{Usage Example} \label{sec-rebal-diff-alg-use}
+
+The following example shows how to use 
+\texttt{rebalance\_diffusive}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{gralg/rebalance_diffusive.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-rebal-diff-alg-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-rebal-diff-alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:rebal-diff-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/rebal_diff_alg_proc}
+\caption{ rebalance\_diffusive Algorithm Execution Time}
+\label{fig:rebal-diff-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{ Parallel global rebalancer based on vertex-weights}
+\label{sec-rebal-glob-alg}
+\index{algorithms!graph!rebalance}
+
+\subsection{Interface} \label{sec-rebal-glob-alg-inter}
+
+\noindent
+\texttt{%
+template<typename View, typename Weights, typename MigrationActionMap >
+\newline
+void 
+}
+\newline
+\textbf{stapl::rebalance\_global}%
+\newline
+\texttt{%
+(
+View const \&
+\textit{vw,}%
+Weights const \&
+\textit{weights,}%
+MigrationActionMap const \&
+\textit{migration\_action\_map}%
+)     
+}
+\index{rebalance\_global()}
+\vspace{0.4cm}
+
+\textit{
+Balances the graph based on vertex-weights by migrating vertices to create an even weight-distribution among the locations. Does one-shot global rebalancing.
+}
+\vspace{0.4cm}
+
+Parameters:
+\begin{itemize}
+\item
+\texttt{vw} --
+The graph\_view over the input graph.
+\item
+\texttt{weights} --
+The vertex property map storing weights for each vertex.
+\item
+\texttt{migration\_action\_map} --
+A map from vertex descriptor to functor describing an action to perform when a vertex is migrated.
+\end{itemize}
+
+% % % % % % % % % %
+
+\texttt{%
+template<typename View, typename Weights >
+\newline
+void 
+}
+\textbf{stapl::rebalance\_global}%
+\newline
+\texttt{%
+(
+View const \& 
+\textit{vw,}%
+Weights const \&
+\textit{weight\_map}%
+)     
+}
+\index{rebalance\_global()}
+\vspace{0.4cm}
+
+Balances the graph based on vertex-weights by migrating vertices to create an even weight-distribution among the locations. Does one-shot global rebalancing.
+
+Parameters:
+\begin{itemize}
+\item
+\texttt{vw} --
+The graph\_view over the input graph.
+\item
+\texttt{weight\_map} --
+The vertex property map storing weights for each vertex.
+\end{itemize}
+
+% % % % % % % % % %
+
+\texttt{%
+template<typename View >
+\newline
+void 
+}
+\textbf{stapl::rebalance\_global}%
+\newline
+\texttt{%
+(
+View \&
+\textit{vw}%
+)    
+}
+\index{rebalance\_global()}
+
+Balances the graph to even-out the number of vertices on each location. Does one-shot global rebalancing.
+
+Parameters:
+\begin{itemize}
+\item
+\texttt{vw} --
+The graph\_view over the input graph.
+\end{itemize}
+
+\subsection{Usage Example} \label{sec-rebal-glob-alg-use}
+
+The following example shows how to use 
+\texttt{rebalance\_global}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{gralg/rebalance_global.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-rebal-glob-alg-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-rebal-glob-alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:rebal-glob-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/rebal_glob_alg_proc}
+\caption{ rebalance\_global Algorithm Execution Time}
+\label{fig:rebal-glob-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{Parallel Single-Source Shortest Paths (SSSP) algorithm}
+\label{sec-sssp-alg}
+\index{algorithms!graph!shortest path}
+\index{shortest path algorithm}
+
+\subsection{Interface} \label{sec-sssp-alg-inter}
+
+\noindent
+\texttt{%
+template<class GView >
+\newline
+size\_t 
+}
+\newline
+\textbf{stapl::sssp}%
+\newline
+\texttt{%
+(
+GView \&
+\textit{g,}%
+typename GView::vertex\_descriptor const \&
+\textit{source,}%
+size\_t 
+\textit{k = 0}%
+)     
+}
+\index{sssp()}
+\vspace{0.4cm}
+
+\textit{
+Performs a single-source shortest path query on the input graph, storing the shortest path distance and parent on each reachable vertex. All vertices will be initialized with their distance as infinity (MAX) and their active state as false, except the source-vertex, which will have its distance set to zero (0) and active state set to true. Parents of each vertex will be initialized to the vertex's descriptor.
+}
+\vspace{0.4cm}
+
+Parameters:
+\begin{itemize}
+\item
+\texttt{g} --
+The graph\_view over the input graph.
+\item
+\texttt{source} --
+The descriptor of the source vertex for this traversal.
+\item
+\texttt{k} --
+The maximum amount of asynchrony allowed in each phase. $0 <= k <= inf.$ \ \ $k == 0$ implies level-sync BFS. $k >= D$ implies fully asynchronous (D is diameter of graph).
+\end{itemize}
+
+Returns:
+\begin{itemize}
+\item
+The number of iterations performed by the paradigm. 
+\end{itemize}
+
+\subsection{Usage Example} \label{sec-sssp-alg-use}
+
+The following example shows how to use
+\texttt{sssp}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{gralg/sssp.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-sssp-alg-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-sssp-alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:sssp-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/sssp_alg_proc}
+\caption{sssp Algorithm Execution Time}
+\label{fig:sssp-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{Parallel Topological Sort algorithm.}
+\label{sec-topsort-alg}
+\index{algorithms!graph!topological sort}
+\index{topological sort!graph}
+
+\subsection{Interface} \label{sec-topsort-alg-inter}
+
+\noindent
+\texttt{%
+template<typename GraphView >
+\newline
+void 
+}
+\newline
+\textbf{stapl::topological\_sort}%
+\newline
+\texttt{%
+(   
+GraphView \& 
+\textit{gvw,}%
+size\_t    
+\textit{k = 0}%
+)     
+}
+\index{topological\_sort()}
+\vspace{0.4cm}
+
+\textit{
+The input graph must be a Directed Acyclic Graph (DAG). 
+Performs a topological ordering on the input graph, which
+must be a Directed Acyclic Graph (DAG). 
+Stores the topological ordering in the vertex's rank property. This algorithm iteratively finds source-vertices and assigns the next level in the topological ordering to neighboring vertices, while decrementing their rank-values. When the rank-value reaches zero (0), the vertex becomes a source vertex.
+}
+\vspace{0.4cm}
+
+Parameters:
+\begin{itemize}
+\item
+\texttt{gvw} --
+The graph\_view over the input graph.
+\item
+\texttt{k} --
+The maximum amount of asynchrony allowed in each phase. $0 <= k <= inf.$ \ \ $k == 0$ implies level-sync BFS. $k >= D$ implies fully asynchronous (D is diameter of graph).
+\end{itemize}
+
+\subsection{Usage Example} \label{sec-topsort-alg-use}
+
+The following example shows how to use 
+\texttt{topological\_sort}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{gralg/topological_sort.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-topsort-alg-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-topsort-alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:topsort-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/topsot_alg_proc}
+\caption{ topological\_sort Algorithm Execution Time}
+\label{fig:topsort-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
