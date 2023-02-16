@@ -113,7 +113,8 @@ class GenericStateGraph: public
     ///@name Construction
     ///@{
 
-    GenericStateGraph(Robot* const _r = nullptr);
+    GenericStateGraph();
+    GenericStateGraph(Robot* const _r);
 
     ///@}
     ///@name Move and Copy
@@ -462,6 +463,10 @@ class GenericStateGraph: public
 };
 
 /*------------------------------- Construction -------------------------------*/
+
+template <typename Vertex, typename Edge>
+GenericStateGraph<Vertex, Edge>::
+GenericStateGraph() { }
 
 template <typename Vertex, typename Edge>
 GenericStateGraph<Vertex, Edge>::

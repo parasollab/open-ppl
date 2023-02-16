@@ -7,11 +7,12 @@ sim
 build
 libobprm.a
 pmpl_utils
-src/Examples
 src/Testing/StrategyTests/Scratch*
-src/Doxygen/html
+docs/Doxygen/html
 src/Examples/*.map
 src/Examples/*.hist
 src/Examples/*.path
 src/Examples/*.stat
 src/Examples/*.vd
+src/OldExamples
+deadcode
