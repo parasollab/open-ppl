@@ -98,7 +98,10 @@ cd into the cloned repo
 cd pmpl
 ```
 ```bash
-cmake -DCMAKE_BUILD_TYPE=Debug -G Ninja -DCMAKE_TOOLCHAIN_FILE=/opt/vcpkg/scripts/buildsystems/vcpkg.cmake -S . -B build
+/usr/bin/cmake -DCMAKE_BUILD_TYPE=Debug -G Ninja -DCMAKE_TOOLCHAIN_FILE=/opt/vcpkg/scripts/buildsystems/vcpkg.cmake -S . -B build
+```
+```bash
+/usr/bin/cmake --build build
 ```
 
 ### Install and build using Conan
