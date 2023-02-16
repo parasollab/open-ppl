@@ -180,10 +180,10 @@ struct MPTraits {
   //types of samplers available in our world
   typedef boost::mpl::list<
     BridgeTestSampler<MPTraits>,
-    GaussianSampler<MPTraits>
+    GaussianSampler<MPTraits>,
     ObstacleBasedSampler<MPTraits>,
     TerrainSampler<MPTraits>,
-    UniformRandomSampler<MPTraits>, 
+    UniformRandomSampler<MPTraits> 
       > SamplerMethodList;
     //DynamicRegionSampler<MPTraits>,
 
