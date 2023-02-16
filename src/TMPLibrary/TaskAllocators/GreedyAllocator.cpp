@@ -90,11 +90,12 @@ AllocateTask(SemanticTask* _semanticTask) {
     //m_solution->GetPath()->Clear();
 
     // solve the "getting there" task
+    auto path = m_solution->GetPath(robot.get());
+    path->Clear();
     lib->Solve(problem, task.get(), m_solution.get(), m_singleSolver, LRand(), this->GetNameAndLabel()+"::"+task->GetLabel());
 
     // compute cost of path
     double pathCost;
-    auto path = m_solution->GetPath(robot.get());
 
     if(path->VIDs().empty())
       continue;
@@ -113,16 +114,16 @@ AllocateTask(SemanticTask* _semanticTask) {
     auto mainTask = _semanticTask->GetMotionTask().get();
     mainTask->SetRobot(robot.get());
 
-    lib->Solve(problem,mainTask,m_solution.get());
+    lib->Solve(problem,mainTask,m_solution.get(), m_singleSolver, LRand(), this->GetNameAndLabel()+"::"+_semanticTask->GetLabel());
 
-    path = m_solution->GetPath();
+    path = m_solution->GetPath(robot.get());
     if(path->VIDs().empty())
       continue;
 
     *(pathCopy.get()) += path->VIDs();
 
     // compute cost of this task
-    double taskCost = m_solution->GetPath()->Length();
+    double taskCost = m_solution->GetPath(robot.get())->Length();
     std::cout << "task cost = " << taskCost << endl;
 
     double totalCost = pathCost + taskCost;
@@ -136,6 +137,7 @@ AllocateTask(SemanticTask* _semanticTask) {
       bestCost = estimatedCompletion;
       bestRobot = robot.get();
       bestPath = std::move(pathCopy);
+      std::cout << bestPath->Length() << std::endl;
     }
   }
 

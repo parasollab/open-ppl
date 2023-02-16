@@ -40,9 +40,6 @@ ROSFactoryAllocation(Agent* _agent, XMLNode& _node) : StepFunction(_agent,_node)
     m_taskQueuePubs[name] = nh.advertise<geometry_msgs::PoseStamped>(topic, 1, true);
   }
 
-  auto c = dynamic_cast<Coordinator*>(this->m_agent);
-  m_plan = std::unique_ptr<Plan>(new Plan());
-  m_plan->SetCoordinator(c);
 }
 
 ROSFactoryAllocation::
@@ -53,6 +50,13 @@ ROSFactoryAllocation::
 void
 ROSFactoryAllocation::
 StepAgent(double _dt) {
+
+  if(!m_initialized) {
+    auto c = dynamic_cast<Coordinator*>(this->m_agent);
+    m_plan = std::unique_ptr<Plan>(new Plan());
+    m_plan->SetCoordinator(c);
+    m_initialized = true;
+  }
 
   for(auto kv : m_taskPoints) {
     auto label = kv.first;

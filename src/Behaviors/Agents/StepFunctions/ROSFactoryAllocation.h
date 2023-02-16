@@ -89,6 +89,8 @@ class ROSFactoryAllocation : public StepFunction {
 
     bool m_planning{false};
 
+    bool m_initialized{false};
+
     ///@}
 
 };
