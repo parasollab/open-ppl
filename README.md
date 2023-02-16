@@ -82,13 +82,13 @@ Full instructions available at https://vcpkg.io/en/getting-started.html
 cd /opt
 ```
 ```bash
-git clone https://github.com/Microsoft/vcpkg.git
+sudo git clone https://github.com/Microsoft/vcpkg.git
 ```
 ```bash
-chmod 777 /opt/vcpkg && chmod 666 .vcpkg-root
+sudo chmod 777 /opt/vcpkg && sudo chmod 666 vcpkg/.vcpkg-root
 ```
 ```bash
-./vcpkg/bootstrap-vcpkg.sh
+sudo ./vcpkg/bootstrap-vcpkg.sh
 ```
 
 #### Build pmpl with vcpkg
