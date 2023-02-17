@@ -245,7 +245,8 @@ DistributeTasks() {
       const auto& cfgs = path->Cfgs();
       
       auto start = cfgs[0];
-      AssignTask(robot->GetLabel(),"depot",start.GetData());
+      //AssignTask(robot->GetLabel(),"depot",start.GetData());
+      AssignTask(robot->GetLabel(),"depot",m_depot);
       auto goal = cfgs.back();
       AssignTask(robot->GetLabel(),alloc->GetLabel(),goal.GetData());
     }
