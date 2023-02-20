@@ -90,6 +90,7 @@ Run(Plan* _plan) {
       stats->SetStat("Success",1);
       stats->SetStat("Steps",i);
       stats->SetStat("Conflicts",m_conflictCount);
+      stats->SetStat(this->GetNameAndLabel()+"::BestCost",m_goalDistance);
 
       return true;
     }
@@ -1014,7 +1015,9 @@ CheckForGoal(size_t _qNew) {
 
     return false;
   }
-  
+ 
+  m_goalDistance = m_distanceMap[_qNew];
+
   return true;
 }
 

@@ -288,6 +288,9 @@ GenerateModeHypergraph(const std::vector<VID>& _initialModes) {
     for(auto actionLabel : as->GetActions()) {
       auto action = actionLabel.second;
       ApplyAction(action,appliedActions[action],newModes);
+      if(action->IsReversible()) {
+        ApplyAction(action,appliedActions[action],newModes,false);
+      }
     }
 
   } while(!newModes.empty());
@@ -1061,13 +1064,13 @@ ConnectTransitions() {
 
 void
 ModeGraph::
-ApplyAction(Action* _action, std::set<std::vector<VID>>& _applied, std::vector<VID>& _newModes) {
+ApplyAction(Action* _action, std::set<std::vector<VID>>& _applied, std::vector<VID>& _newModes, bool _forward) {
   auto as = this->GetTMPLibrary()->GetActionSpace();
 
   // Extract the formation and motion constraints
   std::vector<FormationCondition*> initialFormationConditions;
   std::vector<MotionCondition*> initialMotionConditions;
-  auto initialStage = _action->GetStages()[0];
+  auto initialStage = _forward ? _action->GetStages()[0] : _action->GetStages().back();
   for(auto label : _action->GetStageConditions(initialStage)) {
     auto c = as->GetCondition(label);
     auto f = dynamic_cast<FormationCondition*>(c);
@@ -1186,7 +1189,7 @@ ApplyAction(Action* _action, std::set<std::vector<VID>>& _applied, std::vector<V
   // Extract the final formation and motion constraints
   std::vector<FormationCondition*> finalFormationConditions;
   std::vector<MotionCondition*> finalMotionConditions;
-  auto finalStage = _action->GetStages().back();
+  auto finalStage = _forward ? _action->GetStages().back() : _action->GetStages().front();
 
   for(auto label : _action->GetStageConditions(finalStage)) {
     auto c = as->GetCondition(label);
@@ -1330,9 +1333,9 @@ ApplyAction(Action* _action, std::set<std::vector<VID>>& _applied, std::vector<V
       if(overlap)
         continue;
 
-      m_modeHypergraph.AddHyperarc(head,tail,std::make_pair(_action,false));
+      m_modeHypergraph.AddHyperarc(head,tail,std::make_pair(_action,!_forward));
       if(_action->IsReversible()) {
-        m_modeHypergraph.AddHyperarc(tail,head,std::make_pair(_action,true));
+        m_modeHypergraph.AddHyperarc(tail,head,std::make_pair(_action,_forward));
       }
     }
 
@@ -2077,6 +2080,10 @@ CanReach(const State& _state) {
       const auto& sphere2 = spheres[j];
       const auto& center2 = sphere2.first;
       const auto& radius2 = sphere2.second;
+
+      // Check if both spheres correspond to passive objects
+      if(radius1 == 0 and radius2 == 0)
+        continue;
 
       double distance = 0;
       for(size_t k = 0; k < 3; k++) {

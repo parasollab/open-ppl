@@ -134,7 +134,7 @@ class ModeGraph : public StateGraph {
     void ConnectTransitions();
 
     void ApplyAction(Action* _action, std::set<std::vector<VID>>& _applied,
-                     std::vector<VID>& _newModes);
+                     std::vector<VID>& _newModes, bool _forward=true);
 
     std::vector<std::vector<ModeGraph::VID>> CollectModeSets(
                const std::vector<std::vector<VID>>& _formationModes, 

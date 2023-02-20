@@ -89,6 +89,9 @@ Uninitialize() {}
 void
 TMPLibrary::
 ReadXMLFile(const std::string& _filename) {
+  size_t pos = _filename.find_last_of("/\\");
+  auto path = _filename.substr(0,pos+1);
+
   // Open the XML and get the root node.
   XMLNode tmpNode(_filename, "MotionPlanning");
 
@@ -107,7 +110,7 @@ ReadXMLFile(const std::string& _filename) {
   std::string filename = tmpLibrary->Read("filename",false,"",
       "Separate file containing the TMPLibrary.");
   if(!filename.empty()) {
-    tmpNode = XMLNode(filename,"MotionPlanning");
+    tmpNode = XMLNode(path + filename,"MotionPlanning");
     for(auto& child : tmpNode)
       if(child.Name() == "TMPLibrary")
         tmpLibrary = &child;
@@ -115,7 +118,7 @@ ReadXMLFile(const std::string& _filename) {
 
   // Parse the library node to set algorithms and parameters.
   for(auto& child : *tmpLibrary)
-    ParseChild(child);
+    ParseChild(child,path);
 
   // Ensure we have at least one solver.
   if(m_solvers.empty())
@@ -138,7 +141,7 @@ ReadXMLFile(const std::string& _filename) {
 
 bool
 TMPLibrary::
-ParseChild(XMLNode& _node) {
+ParseChild(XMLNode& _node, const std::string _path) {
   if(_node.Name() == "TMPStrategies") {
     m_tmpStrategies->ParseXML(_node);
     return true;
@@ -172,7 +175,7 @@ ParseChild(XMLNode& _node) {
       "Separate ActionSpace XML file.");
 
     if(!filename.empty()) {
-      XMLNode actionNode(filename,"ActionSpace");
+      XMLNode actionNode(_path + filename,"ActionSpace");
       m_actionSpace->ParseXML(actionNode);
     }
     else {

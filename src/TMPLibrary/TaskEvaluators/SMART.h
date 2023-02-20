@@ -191,6 +191,8 @@ class SMART : public TaskEvaluatorMethod {
 
     size_t m_conflictCount{0};
 
+    double m_goalDistance{0};
+
     ///@}
 
 };

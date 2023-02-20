@@ -312,6 +312,7 @@ ConstructRobotRoadmap(Robot* _robot) {
     State state;
     state[group] = std::make_pair(nullptr,MAX_INT);
 
+    std::cout << "ASSUMING ONLY A SINGLE ROLE MAP IS FEASIBLE." << std::endl;
     RoleMap roleMap;
     f->AssignRoles(roleMap,state);
     auto formation = f->GenerateFormation(roleMap);
@@ -460,6 +461,7 @@ CopyRoadmap(GroupRoadmapType* _rm, Robot* _passive, FormationCondition* _conditi
   // Copy Formation
   State state;
   state[group] = std::make_pair(nullptr,MAX_INT);
+  std::cout << "ASSUMING ONLY A SINGLE ROLE MAP IS FEASIBLE." << std::endl;
   RoleMap roleMap;
   _condition->AssignRoles(roleMap,state);
   auto formation = _condition->GenerateFormation(roleMap);
