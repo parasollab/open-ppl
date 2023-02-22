@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.24)
 set(CMAKE_CXX_STANDARD 17)
 #add_definitions(-D_GLIBCXX_USE_CXX11_ABI=0)
 
-project(pmpl)
+project(pmpl VERSION 1.0.0)
 
 set(ROBOT_DEF "PMPCfg" CACHE STRING "Robot Type")
 add_definitions(-D${ROBOT_DEF})
@@ -96,8 +96,8 @@ include_directories(lib/RAPID)
 
 # Build Documentation
 if(BUILD_DOCS)
-   find_package(Doxygen REQUIRED dot OPTIONAL_COMPONENTS mscgen dia)
-   add_subdirectory(docs)
+    find_package(Doxygen REQUIRED dot OPTIONAL_COMPONENTS mscgen dia)
+    add_subdirectory(docs)
 endif()
 
 # Build Catch2 Tests
@@ -116,37 +116,46 @@ if(MSVC)
 endif()
 
 # define target name variables
-set(LIB ${PROJECT_NAME}_lib)
-set(EXEC ${PROJECT_NAME}_exec)
+set(LIBNAME lib${PROJECT_NAME})
+set(EXECNAME ${PROJECT_NAME}_exec)
 set(SIM ${PROJECT_NAME}_sim)
 set(PLANNER ${PROJECT_NAME}_planner)
 set(CLIENT ${PROJECT_NAME}_client)
 
+# build pmpl library
+add_library(${LIBNAME} ${PMPL_SRCS})
+set_target_properties(${LIBNAME} PROPERTIES VERSION ${PROJECT_VERSION})
+target_link_libraries(${LIBNAME} PRIVATE unofficial-tinyxml::unofficial-tinyxml LinearMath Bullet3Common
+        BulletDynamics BulletSoftBody BulletCollision BulletInverseDynamics)
+
 # Build exec
-add_executable(${EXEC} src/main.cpp ${PMPL_SRCS} ${HARDWARE_SRCS} ${TASK_SRCS})
+add_executable(${EXECNAME} src/main.cpp ${HARDWARE_SRCS} ${TASK_SRCS})
+target_link_libraries(${EXECNAME} PRIVATE ${LIBNAME})
 
 # Link external packages
-target_link_libraries(${EXEC} PRIVATE LinearMath Bullet3Common BulletDynamics BulletSoftBody BulletCollision
-        BulletInverseDynamics CGAL::CGAL dlib::dlib Eigen3::Eigen nlohmann_json::nlohmann_json
-        unofficial-tinyxml::unofficial-tinyxml Qt6::Core Qt6::Gui Qt6::OpenGL Qt6::Widgets Qt6::OpenGLWidgets)
+target_link_libraries(${EXECNAME} PRIVATE LinearMath Bullet3Common BulletDynamics
+        BulletSoftBody BulletCollision BulletInverseDynamics CGAL::CGAL dlib::dlib
+        Eigen3::Eigen nlohmann_json::nlohmann_json Qt6::Core Qt6::Gui Qt6::OpenGL Qt6::Widgets
+        Qt6::OpenGLWidgets)
 
-target_link_libraries(${EXEC} PRIVATE ${OPENGL_LIBRARIES} ${GLUT_LIBRARY})
+target_link_libraries(${EXECNAME} PRIVATE ${OPENGL_LIBRARIES} ${GLUT_LIBRARY})
 
 # Link internal built packages
-target_link_libraries(${EXEC} PRIVATE glutils)
-target_link_libraries(${EXEC} PRIVATE nonstd)
-target_link_libraries(${EXEC} PRIVATE sandbox)
+target_link_libraries(${EXECNAME} PRIVATE glutils)
+target_link_libraries(${EXECNAME} PRIVATE nonstd)
+target_link_libraries(${EXECNAME} PRIVATE sandbox)
 
-target_link_libraries(${EXEC} PRIVATE RAPID)
+target_link_libraries(${EXECNAME} PRIVATE RAPID)
 
-target_link_libraries(${EXEC} PRIVATE tetgen)
-target_link_libraries(${EXEC} PRIVATE pqp)
-target_link_libraries(${EXEC} PRIVATE modelloader)
+target_link_libraries(${EXECNAME} PRIVATE tetgen)
+target_link_libraries(${EXECNAME} PRIVATE pqp)
+target_link_libraries(${EXECNAME} PRIVATE modelloader)
 
 # Link conditional packages
 if(BUILD_TESTS)
-    target_link_libraries(${EXEC} PRIVATE Catch2::Catch2 Catch2::Catch2WithMain)
+    target_link_libraries(${EXECNAME} PRIVATE Catch2::Catch2 Catch2::Catch2WithMain)
 endif()
 
 # needed due to issue with bullet library
-target_link_directories(${EXEC} PRIVATE ${BULLET_LIBRARY_DIRS})
+target_link_directories(${EXECNAME} PRIVATE ${BULLET_LIBRARY_DIRS})
+
