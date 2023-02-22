@@ -54,3 +54,15 @@ publish-doc-job:
     - ari-sandbox
   script:
     - ls
+
+create_package:
+  stage: deploy
+  when: manual
+  tags:
+    - linux
+  script:
+    - conan remote add gitlab https://gitlab.engr.illinois.edu/api/v4/projects/25350/packages/conan
+    - conan new pmpl/1.0.0 -t
+    - conan create . parsol+pmpl+ppl/stable
+    - CONAN_LOGIN_USERNAME=conan_pat CONAN_PASSWORD=${CI_JOB_TOKEN} conan upload pmpl/1.0.0@parasol-group+parsol+pmpl/stable --all --remote=gitlab
+  environment: production
