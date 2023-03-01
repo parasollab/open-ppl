@@ -214,6 +214,9 @@ class ModeGraph : public StateGraph {
     // TEMP TO GET SEPARATE GROUNDED HYPERGRAPH
     std::string m_GH;
 
+    // Aggressive at the moment assuming objects are homogeneous
+    bool m_copyRoadmaps{true}; ///< Flag to copy roadmaps for a robot for all objects
+
     ///@}
 
 };

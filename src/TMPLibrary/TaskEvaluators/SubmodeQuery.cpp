@@ -67,6 +67,17 @@ AddSchedulingConstraint(SemanticTask* _task, SemanticTask* _constraint) {
     t.id = hi->second;
   }
   else if(!t.vertex) {
+
+    std::cout << "Task Vertices" << std::endl;
+    for(auto kv : m_vertexTasks) {
+      std::cout << kv.second << " -> " << kv.first->GetLabel() << std::endl;
+    }
+    std::cout << "Task Hyperarcs" << std::endl;
+    for(auto kv : m_hyperarcTasks) {
+      std::cout << kv.second << " -> " << kv.first->GetLabel() << std::endl;
+    }
+
+    std::cout << this->GetNameAndLabel() << std::endl;
     throw RunTimeException(WHERE) << _task->GetLabel() 
                                   << " does not have a corresponding vertex or hyperarc."
                                   << std::endl;
@@ -84,6 +95,17 @@ AddSchedulingConstraint(SemanticTask* _task, SemanticTask* _constraint) {
     c.id = hi->second;
   }
   else if(!c.vertex) {
+
+    std::cout << "Task Vertices" << std::endl;
+    for(auto kv : m_vertexTasks) {
+      std::cout << kv.second << " -> " << kv.first->GetLabel() << std::endl;
+    }
+    std::cout << "Task Hyperarcs" << std::endl;
+    for(auto kv : m_hyperarcTasks) {
+      std::cout << kv.second << " -> " << kv.first->GetLabel() << std::endl;
+    }
+
+    std::cout << this->GetNameAndLabel() << std::endl;
     throw RunTimeException(WHERE) << _task->GetLabel() 
                                   << " does not have a corresponding vertex or hyperarc."
                                   << std::endl;
@@ -102,7 +124,7 @@ bool
 SubmodeQuery::
 Run(Plan* _plan) {
 
-  Initialize();
+  //Initialize();
 
   auto plan = this->GetPlan();
   auto stats = plan->GetStatClass();

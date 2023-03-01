@@ -116,8 +116,10 @@ Run(Plan* _plan) {
   Node solution = CBS(tasks,validation,splitNode,lowLevel,cost,initial,termination);
 
   // Check if solution was found
-  if(solution.cost == std::numeric_limits<double>::infinity())
+  if(solution.cost == std::numeric_limits<double>::infinity()) {
+    _plan->SetCost(std::numeric_limits<double>::infinity());
     return false;
+  }
 
   ConvertToPlan(solution,_plan);
   return true;

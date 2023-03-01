@@ -260,8 +260,9 @@ CBS(
      return node;
 
     // Check early termination
-    if(_termination(numNodes))
-      return CBSNodeType(); 
+    if(_termination(numNodes)) {
+      break;
+    }
 
     // Create child nodes
     auto children = _split(node, constraints, _lowlevel, _cost);

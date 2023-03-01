@@ -115,7 +115,7 @@ class SMART : public TaskEvaluatorMethod {
 
     size_t Rewire(size_t _qNew, size_t _qNear, size_t _modeID, size_t _historyID);
 
-    bool ValidConnection(const Vertex& _source, const Vertex& _target);
+    size_t ValidConnection(const Vertex& _source, const Vertex& _target);
 
     bool CheckForModeSwitch(size_t _qNew);
 

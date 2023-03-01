@@ -43,6 +43,9 @@ NextBestSearch(XMLNode& _node) : TMPStrategyMethod(_node) {
 
   m_singleShot = _node.Read("singleShot",false,m_singleShot,
         "Flag to attempt only a single time to find a solution.");
+
+  m_extraEval = _node.Read("extraEval",false,"",
+        "Temporary extra evaluator for experimental purposes.");
 }
 
 NextBestSearch::
@@ -61,7 +64,7 @@ PlanTasks() {
 
   auto plan = this->GetPlan();
   auto stats = plan->GetStatClass();
-  MethodTimer mt(stats,this->GetNameAndLabel() + "::PlanTasks");
+  MethodTimer mt1(stats,this->GetNameAndLabel() + "::PlanTasks");
   
   stats->SetStat(this->GetNameAndLabel() + "::CollisionFound",0);
 
@@ -80,6 +83,36 @@ PlanTasks() {
   // Store set of solutions
   std::vector<Decomposition*> taskSolutions;
 
+  if(m_extraEval != "") {
+    std::cout << "Computing plans with extra eval: " << m_extraEval << std::endl;
+    MethodTimer mt2(stats,this->GetNameAndLabel() + "::ExtraEval");
+    auto me2 = dynamic_cast<ScheduledCBS*>(this->GetTaskEvaluator(m_motionEvaluator+"2").get());
+    me2->Initialize();
+    bool foundSolution = false;
+    while(!foundSolution) {
+      double lb = FindTaskPlan(originalDecomp,true);
+      stats->SetStat(this->GetNameAndLabel() + "::ExtraEval::LowerBound",lb);
+      if(me2->operator()(plan)) {
+
+        if(plan->GetCost() < lb) {
+          throw RunTimeException(WHERE) << "Best cost ("
+            << plan->GetCost() 
+            << ") violating lower bound ("
+            << lowerBound
+            << ").";
+        }
+        else {
+          double ub = plan->GetCost();
+          stats->SetStat(this->GetNameAndLabel() + "::ExtraEval::BestCost",ub);
+          stats->SetStat("ExtraEval::Success",ub < MAX_DBL ? 1:0);
+          foundSolution = true;
+        }
+      }
+    }
+    std::cout << "Finished computing plans with extra eval: " << m_extraEval << std::endl;
+  }
+
+  MethodTimer mt3(stats,this->GetNameAndLabel() + "::MainLoop");
   while(m_upperBound > lowerBound) {
 
     if(m_debug) {
@@ -133,14 +166,20 @@ PlanTasks() {
     
 double
 NextBestSearch::
-FindTaskPlan(Decomposition* _decomp) {
+FindTaskPlan(Decomposition* _decomp, bool _useExtraEval) {
   auto plan = this->GetPlan();
   auto stats = plan->GetStatClass();
   MethodTimer mt(stats,this->GetNameAndLabel() + "::FindTaskPlan");
 
   plan->SetDecomposition(_decomp);
 
-  auto te = this->GetTaskEvaluator(m_teLabel);
+  auto te = this->GetTaskEvaluator(_useExtraEval ? m_extraEval : m_teLabel);
+
+  std::cout << "Computing task plan with " << te->GetNameAndLabel() << std::endl;
+
+  if(_useExtraEval)
+    te->Initialize();
+
   if(te->operator()())
     //return plan->GetCost();
     // Strange off by one error somewhere
