@@ -141,6 +141,7 @@ class WoDaSH : public TMPStrategyMethod {
     std::string m_replanMethod{"global"}; // How to deal with constraints when replanning MAPF solution
 
     std::unordered_map<Robot*, MPTask*> m_taskMap;
+    std::unordered_map<RobotGroup*, GroupRoadmapType> m_roadmaps;
 
     WorkspaceSkeleton m_indSkeleton;
     std::string m_skeletonFilename;        ///< The output file for the skeleton graph

@@ -18,6 +18,7 @@
 #include "TMPLibrary/StateGraphs/GroundedHypergraph.h"
 #include "TMPLibrary/Solution/Plan.h"
 #include "TMPLibrary/TaskEvaluators/TaskEvaluatorMethod.h"
+#include "TMPLibrary/TaskEvaluators/ScheduledCBS.h"
 
 #include "MPLibrary/MPStrategies/CompositeDynamicRegionRRT.h"
 #include "Utilities/CBS.h"
@@ -98,6 +99,7 @@ Initialize() {
     auto st = decomp->GetGroupMotionTasks()[0];
     auto groupTask = st->GetGroupMotionTask();
     this->GetMPLibrary()->SetGroupTask(groupTask.get());
+    this->GetMPLibrary()->SetMPSolution(this->GetMPSolution());
   }
 
   // TODO actually use this (for now just using global)
@@ -158,15 +160,19 @@ Initialize() {
 void
 WoDaSH::
 PlanTasks() {
-  bool success = false;
-  while(!success) {
-    auto mapfSol = MAPFSolution();
-    ConstructHyperpath(mapfSol);
-    success = GroundHyperskeleton();
-  }
-  std::cout << "successfully found a path for each robot." << std::endl;
+  auto me = dynamic_cast<ScheduledCBS*>(this->GetTaskEvaluator(m_teLabel).get());
+  me->Initialize();
 
-  // TODO add solution to grounded hypergraph
+  do {
+    bool success = false;
+    while(!success) {
+      auto mapfSol = MAPFSolution();
+      ConstructHyperpath(mapfSol);
+      success = GroundHyperskeleton();
+    }
+    std::cout << "successfully found a path for each robot." << std::endl;
+
+  } while(!me->operator()());
 }
 
 /*--------------------- Helper Functions ---------------------*/
@@ -996,6 +1002,8 @@ GroundHyperskeleton() {
     auto grm = this->GetMPLibrary()->GetGroupRoadmap();
     auto startVID = SpawnVertex(grm, cedge);
     m_startReps[hid] = std::make_pair(grm, startVID);
+
+    std::cout << "Added to start reps (" << hid << "): " << startVID << " from grm " << grm << std::endl;
     
     s->GroundEdge(cedge);
 
@@ -1032,7 +1040,7 @@ GroundHyperskeleton() {
     // Solve for the task
     this->GetMPLibrary()->SetGroupTask(task.get());
     auto q = this->GetMPLibrary()->GetMapEvaluator(m_edgeQueryLabel);
-    if((*q)())
+    if(!(*q)())
       throw RunTimeException(WHERE) << "Falsely reported this edge as grounded.";
 
     // Save grounded edge
@@ -1043,7 +1051,7 @@ GroundHyperskeleton() {
 
   this->GetMPLibrary()->SetGroupTask(originalTask);
 
-  std::cout << "Successfully grounded " << m_groundHIDs.size() << "edges, sampling trajectories..." << std::endl;
+  std::cout << "Successfully grounded " << m_groundHIDs.size() << " edges, sampling trajectories..." << std::endl;
 
   return SampleTrajectories();
 }
@@ -1238,7 +1246,7 @@ ConnectToSkeleton() {
 
     // Get the first vertex on a skeleton edge
     auto hid = m_hidPaths[0][r];
-    auto rep = m_startReps[hid];
+    auto rep = m_startReps.at(hid);
     auto target = rep.first->GetVertex(rep.second);
 
     // Add start constraints
@@ -1474,12 +1482,21 @@ AddGroup(std::vector<Robot*> _robots) {
   // std::cout << "group pointer: " << group << std::endl;
 
   if (this->GetMPProblem()->GetTasks(group).size() < 1) {
+    // auto grm = new GroupRoadmapType(group, this->GetMPSolution());
+    // this->GetMPSolution()->SetGroupRoadmap(group, grm);
+
+    // std::unique_ptr<GroupRoadmapType> grm = std::unique_ptr<GroupRoadmapType>(new GroupRoadmapType(group, this->GetMPSolution()));
+    // this->GetMPSolution()->SetGroupRoadmap(group, std::move(grm));
+
+    // std::cout << "Added group with roadmap " << this->GetMPSolution()->GetGroupRoadmap(group) << std::endl;
+
     std::unique_ptr<GroupTask> gt = std::unique_ptr<GroupTask>(new GroupTask(group));
     for (auto robot : _robots)
       gt->AddTask(*m_taskMap[robot]);
     this->GetMPProblem()->AddTask(std::move(gt));
   }
 
+  // std::cout << "Now have roadmap " << this->GetMPSolution()->GetGroupRoadmap(group) << std::endl;
   return group;
 }
 
@@ -1488,6 +1505,13 @@ WoDaSH::
 AddTransitionToGroundedHypergraph(std::set<VID> _tail, std::set<VID> _head,
   GroupPathType* _path, std::shared_ptr<GroupTask> _task) {
 
+  if(this->m_debug) {
+    std::cout << "Adding hyperarc between " << _tail << " and " << _head << std::endl;
+  }
+
+  if(_tail.size() > 1 or _head.size() > 1)
+    throw RunTimeException(WHERE) << "Tail or head is too large... something bad happened";
+
   auto gh = dynamic_cast<GroundedHypergraph*>(this->GetStateGraph(m_groundedHypergraphLabel).get());
 
   // Add vertices and path to grounded hypergraph
@@ -1495,17 +1519,14 @@ AddTransitionToGroundedHypergraph(std::set<VID> _tail, std::set<VID> _head,
   std::set<VID> groundedTail;
   std::set<VID> groundedHead;
 
-  for(auto v : _tail) {
-    auto vertex = m_startReps[v];
-    auto gVID = gh->AddVertex(vertex);
-    groundedTail.insert(gVID);
-  }
+  auto hid = this->m_skeleton->GetHID(_head, _tail);
+  auto vertex = m_startReps.at(hid);
+  auto gVID = gh->AddVertex(vertex);
+  groundedTail.insert(gVID);
 
-  for(auto v : _head) {
-    auto vertex = m_endReps[v];
-    auto gVID = gh->AddVertex(vertex);
-    groundedHead.insert(gVID);
-  }
+  vertex = m_endReps.at(hid);
+  gVID = gh->AddVertex(vertex);
+  groundedHead.insert(gVID);
 
   // Add hyperarc
   GroundedHypergraph::Transition transition;

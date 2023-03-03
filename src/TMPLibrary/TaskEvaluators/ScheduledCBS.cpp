@@ -410,8 +410,7 @@ QueryPath(SemanticTask* _task, const size_t _startTime,
   auto stats = plan->GetStatClass();
   MethodTimer mt(stats,this->GetNameAndLabel() + "::QueryPath");
 
-  auto mg = dynamic_cast<ModeGraph*>(this->GetStateGraph(m_sgLabel).get());
-  auto solution = mg->GetMPSolution();
+  auto solution = this->GetMPSolution();
   auto lib = this->GetMPLibrary();
   lib->SetTask(nullptr);
   lib->SetGroupTask(_task->GetGroupMotionTask().get());
@@ -813,8 +812,7 @@ ComputeIntervals(SemanticTask* _task, const Node& _node) {
   auto stats = plan->GetStatClass();
   MethodTimer mt(stats,this->GetNameAndLabel() + "::ComputeIntervals");
 
-  auto mg = dynamic_cast<ModeGraph*>(this->GetStateGraph(m_sgLabel).get());
-  auto solution = mg->GetMPSolution();
+  auto solution = this->GetMPSolution();
   auto group = _task->GetGroupMotionTask()->GetRobotGroup();
   auto grm = solution->GetGroupRoadmap(group);
 
