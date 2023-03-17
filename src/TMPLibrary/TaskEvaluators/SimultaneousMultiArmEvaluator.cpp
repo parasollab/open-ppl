@@ -101,7 +101,7 @@ ComputeGoalBiasHeuristic() {
       auto source = eit->target();
       auto target = eit->source();
       auto edge = eit->property();
-  
+
       inverse->AddEdge(source,target,edge);
     }
   }
@@ -110,7 +110,7 @@ ComputeGoalBiasHeuristic() {
   auto prob = this->GetMPProblem();
   auto decomp = prob->GetDecompositions(c->GetRobot())[0].get();
 
-  //ObjectMode goalMode;  
+  //ObjectMode goalMode;
 
   // TODO::Create goal mode options
   std::vector<ObjectMode> goalModes = {ObjectMode()};
@@ -153,7 +153,7 @@ ComputeGoalBiasHeuristic() {
             newInfos.emplace_back(robot,info);
             break;
           }
-        } 
+        }
       }
 
       // Add Mode Infos to the goal modes
@@ -233,7 +233,7 @@ ComputeGoalBiasHeuristic() {
     [](typename GraphType::adj_edge_iterator& _ei,
        const double _sourceDistance,
        const double _targetDistance) {
-      
+
       //return _sourceDistance + _ei->property();
       return _sourceDistance + 1;
     }
@@ -296,12 +296,12 @@ Run(Plan* _plan) {
 
   for(size_t i = 0; i < m_maxIters; i++) {
 
-    // Select Mode 
+    // Select Mode
 
     auto pair = SelectMode();
     auto mode = pair.first;
     auto history = pair.second;
-  
+
     std::cout << mode << " " << history << std::endl;
 
     // Compute Heuristic
@@ -352,7 +352,7 @@ CreateRootNodes() {
   // Create initial vertex
   auto sg = static_cast<ObjectCentricModeGraph*>(
                 this->GetStateGraph(m_sgLabel).get());
- 
+
   std::vector<GroupCfgType> cfgs;
 
   // Get initial vertex in TensorProductRoadmap
@@ -399,10 +399,10 @@ SelectMode() {
 
   if(DRand() < m_goalBias) {
     for(auto mode : m_orderedModesToGoal) {
-     
-      // TODO::Allow for random tie breaks 
+
+      // TODO::Allow for random tie breaks
       auto histories = m_modeHistories[mode];
-  
+
       if(histories.empty())
         continue;
 
@@ -425,9 +425,9 @@ SelectMode() {
   while(true) {
     // For now, sample random mode
     auto mode = LRand() % g->Size();
-    
+
     auto histories = m_modeHistories[mode];
-  
+
     if(histories.empty())
       continue;
 
@@ -470,7 +470,7 @@ GetModeNeighbors(VID _vid) {
   for(auto eit = vit->begin(); eit != vit->end(); eit++) {
     neighbors.insert(eit->target());
   }
-  
+
   return neighbors;
 }
 
@@ -493,7 +493,7 @@ SampleTransition(VID _source, VID _target) {
   // Set all robots to virtual
   for(auto& robot : prob->GetRobots()) {
     robot->SetVirtual(true);
-  } 
+  }
 
   // Plan each interaction
   bool fullSuccess = true;
@@ -522,9 +522,9 @@ SampleTransition(VID _source, VID _target) {
       std::vector<RobotGroup*> passives;
 
       auto stage = stages.front();
-  
+
       for(auto condition : interaction->GetStageConditions(stage)) {
-      
+
         // Grab condition and make sure it is of type formation
         auto c = as->GetCondition(condition);
         auto f = dynamic_cast<FormationCondition*>(c);
@@ -535,7 +535,7 @@ SampleTransition(VID _source, VID _target) {
         std::vector<Robot*> robots;
         std::string label;
         bool passive = true;
-        
+
         for(auto role : f->GetRoles()) {
           auto robot = roleMap[role];
           robots.push_back(robot);
@@ -575,7 +575,7 @@ SampleTransition(VID _source, VID _target) {
 
           state[group] = std::make_pair(rm,vid);
         }
- 
+
         State end = state;
         success = is->operator()(interaction,end);
 
@@ -610,7 +610,7 @@ SampleTransition(VID _source, VID _target) {
           std::cout << std::endl;
         }
       }
-          
+
       // Set relevant robots back to virtual
       for(auto kv : state) {
         auto group = kv.first;
@@ -622,7 +622,7 @@ SampleTransition(VID _source, VID _target) {
   }
 
   if(m_debug and fullSuccess) {
-    std::cout << "Found full set of interactions from " 
+    std::cout << "Found full set of interactions from "
               << _source << "->" << _target << std::endl;
   }
 
@@ -630,7 +630,7 @@ SampleTransition(VID _source, VID _target) {
     if(robot.get() != c->GetRobot()) {
       robot->SetVirtual(false);
     }
-  } 
+  }
   return false;
 }
 
@@ -659,7 +659,7 @@ ConnectToExistingRoadmap(Interaction* _interaction, State& _start, State& _end, 
       robotPaths[robot] = {};
     }
   }
-  
+
   // Collect individual robot paths
 
   const auto& stages = _interaction->GetStages();
@@ -673,7 +673,7 @@ ConnectToExistingRoadmap(Interaction* _interaction, State& _start, State& _end, 
     for(auto path : paths) {
       const auto& cfgs = path->Cfgs();
       auto robot = path->GetRobot();
-  
+
       for(auto& cfg : cfgs) {
         robotPaths[robot].push_back(cfg);
       }
@@ -704,7 +704,7 @@ ConnectToExistingRoadmap(Interaction* _interaction, State& _start, State& _end, 
     start = _start;
     end = _end;
   }
-    
+
   for(auto kv : start) {
     auto group = kv.first;
     auto rm = sg->GetGroupRoadmap(group);
@@ -845,11 +845,11 @@ AddToRoadmap(GroupCfgType _cfg) {
   connector->Connect(rm,vid);
 
   //if(m_debug) {
-    std::cout << "Connected new vid (" << vid 
+    std::cout << "Connected new vid (" << vid
               << ") to " << rm->get_degree(vid)
               << " vertices." << std::endl;
   //}
-  
+
   bool passive = true;
   for(auto robot : _cfg.GetRobots()) {
     if(!robot->GetMultiBody()->IsPassive()) {
@@ -875,7 +875,7 @@ CreateTensorProductVertex(const std::vector<GroupCfgType>& _cfgs) {
   auto plan = this->GetPlan();
   auto stats = plan->GetStatClass();
   MethodTimer mt(stats,this->GetNameAndLabel() + "::CreateTensorProductVertex");
-  
+
   // Collect individual cfgs and active formations
   std::vector<std::pair<VID,Cfg>> individualCfgs;
   std::vector<Formation*> formations;
@@ -894,7 +894,7 @@ CreateTensorProductVertex(const std::vector<GroupCfgType>& _cfgs) {
   auto tpr = m_tensorProductRoadmap.get();
   tpr->SetAllFormationsInactive();
   auto group = tpr->GetGroup();
-  
+
   for(auto f : formations) {
     tpr->AddFormation(f,true);
   }
@@ -921,7 +921,7 @@ Select(size_t _modeID, size_t _history, std::unordered_map<Robot*,size_t> _heuri
 
   auto biasKey = std::make_pair(_modeID,_history);
   auto iter = m_modeVertexBias.find(biasKey);
-  
+
   if(iter != m_modeVertexBias.end())
     return iter->second;
 
@@ -930,10 +930,10 @@ Select(size_t _modeID, size_t _history, std::unordered_map<Robot*,size_t> _heuri
   auto dm = this->GetMPLibrary()->GetDistanceMetric(m_dmLabel);
 
   auto candidates = m_historyVertices[_history];
- 
+
   double minDistance = MAX_DBL;
   VID closest = MAX_UINT;
- 
+
   for(auto vid : candidates) {
     auto taskState = m_taskGraph->GetVertex(vid);
     auto cfg = m_tensorProductRoadmap->GetVertex(taskState.vid);
@@ -945,7 +945,7 @@ Select(size_t _modeID, size_t _history, std::unordered_map<Robot*,size_t> _heuri
     if(distance < minDistance) {
       minDistance = distance;
       closest = vid;
-    }      
+    }
   }
 
   return closest;
@@ -957,7 +957,7 @@ SampleVertex(size_t _modeID) {
   auto plan = this->GetPlan();
   auto stats = plan->GetStatClass();
   MethodTimer mt(stats,this->GetNameAndLabel() + "::SampleVertex");
-  
+
   auto env = this->GetMPProblem()->GetEnvironment();
   auto sg = static_cast<ObjectCentricModeGraph*>(
                 this->GetStateGraph(m_sgLabel).get());
@@ -1048,16 +1048,16 @@ Extend(TID _qNear, size_t _history, std::unordered_map<Robot*,size_t> _heuristic
   // Collect robot groups
   std::vector<GroupRoadmapType*> roadmaps;
   std::set<Robot*> used;
- 
-  // Collect groups with objects 
+
+  // Collect groups with objects
   for(auto kv : mode) {
     auto object = kv.first;
     used.insert(object);
     auto info = kv.second;
- 
+
     std::vector<Robot*> robots = {object};
     std::string label = object->GetLabel();
- 
+
     if(info.robot) {
       robots.push_back(info.robot);
       label += ("::" + info.robot->GetLabel());
@@ -1067,10 +1067,10 @@ Extend(TID _qNear, size_t _history, std::unordered_map<Robot*,size_t> _heuristic
     auto group = prob->AddRobotGroup(robots,label);
     auto rm = sg->GetGroupRoadmap(group);
     rm->SetAllFormationsInactive();
-    
+
     if(info.formation)
       rm->AddFormation(info.formation);
-  
+
     roadmaps.push_back(rm);
   }
 
@@ -1110,7 +1110,7 @@ Extend(TID _qNear, size_t _history, std::unordered_map<Robot*,size_t> _heuristic
     }
 
     // Leave cfg stationary if it is
-    if(passive) { 
+    if(passive) {
       neighbors.push_back(vid);
       continue;
     }
@@ -1177,7 +1177,7 @@ Extend(TID _qNear, size_t _history, std::unordered_map<Robot*,size_t> _heuristic
 size_t
 SimultaneousMultiArmEvaluator::
 ExtendTaskVertices(const TID& _source, const GroupCfgType& _target, size_t _history) {
-    
+
   auto plan = this->GetPlan();
   auto stats = plan->GetStatClass();
   MethodTimer mt(stats,this->GetNameAndLabel() + "::ExtendTaskVertices");
@@ -1198,7 +1198,7 @@ ExtendTaskVertices(const TID& _source, const GroupCfgType& _target, size_t _hist
                         true,false,{});
 
   if(isConnected) {
-  
+
     double cost = lpOut.m_edge.first.GetTimeSteps();
 
     // Add vertex to TPR
@@ -1209,7 +1209,7 @@ ExtendTaskVertices(const TID& _source, const GroupCfgType& _target, size_t _hist
 
     // Add vertex to task graph
     TaskState newState;
-    newState.vid = vid; 
+    newState.vid = vid;
     newState.mode = taskState.mode;
 
     auto tid = m_taskGraph->AddVertex(newState);
@@ -1230,7 +1230,7 @@ ExtendTaskVertices(const TID& _source, const GroupCfgType& _target, size_t _hist
   return MAX_UINT;
 }
 
-    
+
 SimultaneousMultiArmEvaluator::GroupCfgType
 SimultaneousMultiArmEvaluator::
 GetHeuristicDirection(size_t _modeID, std::unordered_map<Robot*,size_t> _heuristic) {
@@ -1355,7 +1355,7 @@ GetHeuristicDirection(size_t _modeID, std::unordered_map<Robot*,size_t> _heurist
         break;
       }
 
-      if(direction == tv) 
+      if(direction == tv)
         break;
     }
 
@@ -1392,14 +1392,14 @@ GetHeuristicDirection(size_t _modeID, std::unordered_map<Robot*,size_t> _heurist
   }
 
   return cfg;
-  
+
 }
 
 SimultaneousMultiArmEvaluator::TID
 SimultaneousMultiArmEvaluator::
 Rewire(VID _qNew, VID _qNear, size_t _history) {
 
-  // Gather neighbors and check if any of them would even be an optimal rewire, 
+  // Gather neighbors and check if any of them would even be an optimal rewire,
   // then, in order, try to extend that way, otherwise it's too expensive.
 
 
@@ -1413,14 +1413,14 @@ Rewire(VID _qNew, VID _qNear, size_t _history) {
 
   const double originalDistance = m_tpgDistance[_qNew];
 
-  // Collect neighbors 
+  // Collect neighbors
   //std::unordered_set<size_t> neighbors;
   std::vector<std::pair<double,size_t>> neighbors;
   std::vector<std::pair<double,size_t>> backNeighbors;
   for(auto tid : m_historyVertices[_history]) {
     auto taskState = m_taskGraph->GetVertex(tid);
 
-    if(taskState.mode != newTaskState.mode) 
+    if(taskState.mode != newTaskState.mode)
       throw RunTimeException(WHERE) << "Mismatched mdoes within same history vertices.";
 
     // Check that there is an edge in the implicit tensor product roadmap
@@ -1441,12 +1441,12 @@ Rewire(VID _qNew, VID _qNear, size_t _history) {
 
     if(!isEdge)
       continue;
-    
+
     // Check if edge is a valid transition
     //auto newVID = ExtendTaskVertices(tid, newCfg, _history);
     //if(newVID == MAX_UINT)
     //  continue;
-    
+
     double distance = TensorProductGraphDistance(tid,_qNew);
     backNeighbors.emplace_back(distance,tid);
     distance += m_tpgDistance[tid];
@@ -1483,7 +1483,7 @@ Rewire(VID _qNew, VID _qNear, size_t _history) {
     const size_t tid = pair.second;
     const double currentDistance = m_tpgDistance[tid];
     const double newDistance = m_tpgDistance[_qNew] + pair.first;
-    
+
     if(newDistance < currentDistance) {
 
       // Try to connect the vertices
@@ -1497,14 +1497,14 @@ Rewire(VID _qNew, VID _qNear, size_t _history) {
         if(m_tensorProductRoadmap->IsEdge(vid,tid))
           m_tensorProductRoadmap->DeleteEdge(vid,tid);
       }
-      
+
       m_tpgDistance[pair.second] = newDistance;
     }
   }
 
   return qBest;
 }
-    
+
 size_t
 SimultaneousMultiArmEvaluator::
 AddToActionExtendedGraph(TID _qBest, TID _qNew, size_t _history) {
@@ -1539,7 +1539,7 @@ CheckForModeTransition(size_t _aid, size_t _history) {
   auto plan = this->GetPlan();
   auto stats = plan->GetStatClass();
   MethodTimer mt(stats,this->GetNameAndLabel() + "::CheckForModeTransition");
-  
+
   auto sg = static_cast<ObjectCentricModeGraph*>(
                 this->GetStateGraph(m_sgLabel).get());
   auto g = sg->GetObjectModeGraph();
@@ -1578,14 +1578,14 @@ CheckForModeTransition(size_t _aid, size_t _history) {
 
         break;
       }
-    } 
+    }
   }
 
   // Collect all permutations of transition sets
   std::vector<std::vector<TransitionVertex>> combos;
 
   for(auto tv : ready) {
-    
+
     // Create copies of existing sets with this one appended
     size_t size = combos.size();
     for(size_t i = 0; i < size; i++) {
@@ -1596,7 +1596,7 @@ CheckForModeTransition(size_t _aid, size_t _history) {
 
     // Add new set with on ly this tv
     combos.push_back({tv});
-  } 
+  }
 
   // Add an edge and vertex for each valid transition
   for(auto trans : combos) {
@@ -1629,7 +1629,7 @@ CheckForModeTransition(size_t _aid, size_t _history) {
         cfgs.push_back(cfg);
 
         auto group = rm->GetGroup();
-        
+
         Robot* object = nullptr;
         Robot* robot = nullptr;
 
@@ -1660,12 +1660,12 @@ CheckForModeTransition(size_t _aid, size_t _history) {
               break;
             }
           }
-        } 
+        }
       }
 
       // Get cost of transition
       auto interactionPath = kv->second;
-    
+
       for(const auto& kv : *interactionPath) {
         cost = std::max(cost,kv.second.size());
       }
@@ -1687,7 +1687,7 @@ CheckForModeTransition(size_t _aid, size_t _history) {
     // Construct new TPV
     m_tensorProductRoadmap->SetAllFormationsInactive();
 
-    /*    
+    /*
     for(const auto& cfg : cfgs) {
       for(auto formation : cfg.GetFormations()) {
         m_tensorProductRoadmap->AddFormation(formation);
@@ -1734,7 +1734,7 @@ CheckForModeTransition(size_t _aid, size_t _history) {
 
       newMode[object] = kv.second;
     }
-    
+
     for(auto tv : trans) {
       auto map = m_transitionMap[tv];
       if(map.size() > 1)
@@ -1750,7 +1750,7 @@ CheckForModeTransition(size_t _aid, size_t _history) {
         auto vid = pair.second;
         auto cfg = rm->GetVertex(vid);
         auto group = rm->GetGroup();
-        
+
         Robot* object = nullptr;
         Robot* robot = nullptr;
 
@@ -1780,7 +1780,7 @@ CheckForModeTransition(size_t _aid, size_t _history) {
               break;
             }
           }
-        } 
+        }
       }
     }
     */
@@ -1792,7 +1792,7 @@ CheckForModeTransition(size_t _aid, size_t _history) {
         for(auto kv : newMode) {
           auto info = kv.second;
           if(f == info.formation) {
-            match = true;  
+            match = true;
             break;
           }
         }
@@ -1807,7 +1807,7 @@ CheckForModeTransition(size_t _aid, size_t _history) {
         bool match = false;
         for(auto f : checkCfg.GetFormations()) {
           if(f == info.formation) {
-            match = true;  
+            match = true;
             break;
           }
         }
@@ -1855,7 +1855,7 @@ CheckForGoal(size_t _aid) {
   auto plan = this->GetPlan();
   auto stats = plan->GetStatClass();
   MethodTimer mt(stats,this->GetNameAndLabel() + "::CheckForGoal");
-  
+
   auto c = this->GetPlan()->GetCoordinator();
   auto prob = this->GetMPProblem();
   auto decomp = prob->GetDecompositions(c->GetRobot())[0].get();
@@ -1911,16 +1911,16 @@ SplitTensorProductVertex(GroupCfgType _cfg, size_t _modeID) {
   // Collect robot groups
   std::vector<GroupRoadmapType*> roadmaps;
   std::set<Robot*> used;
- 
-  // Collect groups with objects 
+
+  // Collect groups with objects
   for(auto kv : mode) {
     auto object = kv.first;
     used.insert(object);
     auto info = kv.second;
- 
+
     std::vector<Robot*> robots = {object};
     std::string label = object->GetLabel();
- 
+
     if(info.robot) {
       robots.push_back(info.robot);
       label += ("::" + info.robot->GetLabel());
@@ -1930,10 +1930,10 @@ SplitTensorProductVertex(GroupCfgType _cfg, size_t _modeID) {
     auto group = prob->AddRobotGroup(robots,label);
     auto rm = sg->GetGroupRoadmap(group);
     rm->SetAllFormationsInactive();
-    
+
     if(info.formation)
       rm->AddFormation(info.formation);
-  
+
     roadmaps.push_back(rm);
   }
 
@@ -1959,7 +1959,7 @@ SplitTensorProductVertex(GroupCfgType _cfg, size_t _modeID) {
       auto individualCfg = _cfg.GetRobotCfg(robot);
       cfg.SetRobotCfg(robot,std::move(individualCfg));
     }
-    
+
     splitCfgs.push_back(cfg);
   }
 
@@ -2039,7 +2039,7 @@ ComputeMAPFSolution(size_t _objectMode) {
           for(const auto& terrain : terrainMap.at(object->GetCapability())) {
             if(!terrain.InTerrain(p))
               continue;
-    
+
             ModeInfo info(nullptr,nullptr,&terrain);
             auto goal = g->GetVID(info);
             m_heuristicGoals[object] = goal;
@@ -2050,28 +2050,28 @@ ComputeMAPFSolution(size_t _objectMode) {
   }
 
   // Configure CBS Functions
-  CBSLowLevelPlanner<Robot,CBSConstraint,CBSSolution> lowLevel(
+  CBSLowLevelPlanner<Robot*,CBSConstraint,CBSSolution*> lowLevel(
     [this](CBSNodeType& _node, Robot* _task) {
       return this->LowLevelPlanner(_node,_task);
     }
   );
 
-  CBSValidationFunction<Robot,CBSConstraint,CBSSolution> validation(
+  CBSValidationFunction<Robot*,CBSConstraint,CBSSolution*> validation(
     [this](CBSNodeType& _node) {
       return this->ValidationFunction(_node);
     }
   );
 
-  CBSCostFunction<Robot,CBSConstraint,CBSSolution> cost(
+  CBSCostFunction<Robot*,CBSConstraint,CBSSolution*> cost(
     [this](CBSNodeType& _node) {
       return this->CostFunction(_node);
     }
   );
 
-  CBSSplitNodeFunction<Robot,CBSConstraint,CBSSolution> splitNode(
+  CBSSplitNodeFunction<Robot*,CBSConstraint,CBSSolution*> splitNode(
     [this](CBSNodeType& _node, std::vector<std::pair<Robot*,CBSConstraint>> _constraints,
-           CBSLowLevelPlanner<Robot,CBSConstraint,CBSSolution>& _lowLevel,
-           CBSCostFunction<Robot,CBSConstraint,CBSSolution>& _cost) {
+           CBSLowLevelPlanner<Robot*,CBSConstraint,CBSSolution*>& _lowLevel,
+           CBSCostFunction<Robot*,CBSConstraint,CBSSolution*>& _cost) {
       return this->SplitNodeFunction(_node,_constraints,_lowLevel,_cost);
     }
   );
@@ -2133,13 +2133,13 @@ LowLevelPlanner(CBSNodeType& _node, Robot* _robot) {
     [](typename SingleObjectModeGraph::adj_edge_iterator& _ei,
        const double _sourceDistance,
        const double _targetDistance) {
-      
+
       return _sourceDistance + _ei->property();
     }
   );
 
   // Compute distance to goal for each vertex in g
-  auto dist2go = DijkstraSSSP(g,{goal},cost2goWeight).distance;  
+  auto dist2go = DijkstraSSSP(g,{goal},cost2goWeight).distance;
 
   auto startVertex = std::make_pair(start,0);
   auto startVID = h->AddVertex(startVertex);
@@ -2156,7 +2156,7 @@ LowLevelPlanner(CBSNodeType& _node, Robot* _robot) {
     [constraints,h](typename HeuristicSearch::adj_edge_iterator& _ei,
        const double _sourceDistance,
        const double _targetDistance) {
-     
+
       auto source = h->GetVertex(_ei->source()).first;
       auto target = h->GetVertex(_ei->target()).first;
 
@@ -2173,7 +2173,7 @@ LowLevelPlanner(CBSNodeType& _node, Robot* _robot) {
   );
 
   SSSPHeuristicFunction<HeuristicSearch> heuristic(
-    [dist2go](const HeuristicSearch* _h, 
+    [dist2go](const HeuristicSearch* _h,
        typename HeuristicSearch::vertex_descriptor _source,
        typename HeuristicSearch::vertex_descriptor _target) {
 
@@ -2196,7 +2196,7 @@ LowLevelPlanner(CBSNodeType& _node, Robot* _robot) {
       auto vertex = _h->GetVertex(_vid);
       auto gvid = vertex.first;
       auto timestep = vertex.second;
-      
+
       auto vit = g->find_vertex(gvid);
 
       for(auto eit = vit->begin(); eit != vit->end(); eit++) {
@@ -2206,7 +2206,7 @@ LowLevelPlanner(CBSNodeType& _node, Robot* _robot) {
 
         auto nvid = _h->AddVertex(neighbor);
         _h->AddEdge(_vid,nvid,edge);
-      } 
+      }
     }
   );
 
@@ -2253,7 +2253,7 @@ ValidationFunction(CBSNodeType& _node) {
     maxTimestep = std::max(maxTimestep,kv.second->size());
   }
 
-  //TODO::Currently only allows capacity of 1, need to update to check for edge conflicts in loop and build 
+  //TODO::Currently only allows capacity of 1, need to update to check for edge conflicts in loop and build
   //      capacity counts of vertices at each timestep that's checked at the end of the timestep loop iterations.
 
   for(size_t i = 0; i < maxTimestep; i++) {
@@ -2280,7 +2280,7 @@ ValidationFunction(CBSNodeType& _node) {
           //if(m_debug) {
           //  std::cout << "Found vertex conflict at timestep " << i
           //            << " between " << object1->GetLabel()
-          //            << " and " << object2->GetLabel() 
+          //            << " and " << object2->GetLabel()
           //            << std::endl;
           //}
 
@@ -2296,7 +2296,7 @@ ValidationFunction(CBSNodeType& _node) {
           //if(m_debug) {
           //  std::cout << "Found edge conflict at timestep " << i
           //            << " between " << object1->GetLabel()
-          //            << " and " << object2->GetLabel() 
+          //            << " and " << object2->GetLabel()
           //            << std::endl;
           //}
 
@@ -2313,7 +2313,7 @@ ValidationFunction(CBSNodeType& _node) {
       }
     }
   }
-  
+
   return {};
 }
 
@@ -2350,8 +2350,8 @@ std::vector<SimultaneousMultiArmEvaluator::CBSNodeType>
 SimultaneousMultiArmEvaluator::
 SplitNodeFunction(CBSNodeType& _node,
                   std::vector<std::pair<Robot*,CBSConstraint>> _constraints,
-                  CBSLowLevelPlanner<Robot,CBSConstraint,CBSSolution>& _lowLevel,
-                  CBSCostFunction<Robot,CBSConstraint,CBSSolution>& _cost) {
+                  CBSLowLevelPlanner<Robot*,CBSConstraint,CBSSolution*>& _lowLevel,
+                  CBSCostFunction<Robot*,CBSConstraint,CBSSolution*>& _cost) {
   auto plan = this->GetPlan();
   auto stats = plan->GetStatClass();
   MethodTimer mt(stats,this->GetNameAndLabel() + "::SplitNodeFunction");
@@ -2365,12 +2365,12 @@ SplitNodeFunction(CBSNodeType& _node,
 
     // Copy parent node
     CBSNodeType child = _node;
-  
+
     // Add new constraint
     child.constraintMap[task].insert(constraint);
 
     // Replan tasks affected by constraint. Skip if no valid replanned path is found
-    if(!_lowLevel(child,task)) 
+    if(!_lowLevel(child,task))
       continue;
 
     // Update the cost and add to set of new nodes
@@ -2381,7 +2381,7 @@ SplitNodeFunction(CBSNodeType& _node,
 
   return newNodes;
 }
-    
+
 double
 SimultaneousMultiArmEvaluator::
 TensorProductGraphDistance(VID _source, VID _target) {

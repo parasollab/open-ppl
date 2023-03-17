@@ -39,7 +39,7 @@ class CompositeDynamicRegionRRT : virtual public GroupRRTStrategy<MPTraits> {
     typedef typename MPTraits::GroupWeightType  GroupWeightType;
     typedef typename MPTraits::GroupRoadmapType GroupRoadmapType;
     typedef typename GroupRoadmapType::VID      VID;
-    
+
     typedef typename std::map<Robot*, VID>      VIDMap;
 
     typedef std::vector<Point3d>                PointSet;
@@ -64,13 +64,13 @@ class CompositeDynamicRegionRRT : virtual public GroupRRTStrategy<MPTraits> {
     ///@}
     ///@name CBS Types
     ///@{
-    
+
     typedef GenericStateGraph<std::pair<size_t,size_t>,double> HeuristicSearch;
     typedef std::vector<size_t>                                CBSSolution;
 
     // ((vid, vid=MAX), time)
     typedef std::pair<std::pair<SkeletonVertexDescriptor, SkeletonVertexDescriptor>, size_t> CBSConstraint;
-    typedef CBSNode<Robot,CBSConstraint,CBSSolution>           CBSNodeType;
+    typedef CBSNode<Robot*, CBSConstraint, CBSSolution*>           CBSNodeType;
 
     ///@}
     ///@name Local Types
@@ -83,7 +83,7 @@ class CompositeDynamicRegionRRT : virtual public GroupRRTStrategy<MPTraits> {
 
       ///@name Internal State
       ///@{
-      
+
       SkeletonEdgeIterator edgeIterator;
       CompositeSkeletonEdge edge;
 
@@ -97,13 +97,13 @@ class CompositeDynamicRegionRRT : virtual public GroupRRTStrategy<MPTraits> {
 
       ///@}
 
-      SamplingRegion(SkeletonEdgeIterator& _eit, const double _cost) : 
+      SamplingRegion(SkeletonEdgeIterator& _eit, const double _cost) :
           edgeIterator(_eit), cost(_cost) {
         edge = _eit->property();
         activeRobots = edge.GetActiveRobots();
       }
 
-      SamplingRegion(const CompositeSkeletonEdge _edge, const double _cost) : 
+      SamplingRegion(const CompositeSkeletonEdge _edge, const double _cost) :
             edge(_edge), cost(_cost) {
         activeRobots = _edge.GetActiveRobots();
       }
@@ -226,7 +226,7 @@ class CompositeDynamicRegionRRT : virtual public GroupRRTStrategy<MPTraits> {
 
     void InitializeCostToGo();
 
-    /// Computes the sum of costs from a composite skeleton vertex to the 
+    /// Computes the sum of costs from a composite skeleton vertex to the
     /// composite vertex closest to q_goal.
     double CompositeCostToGo(const CompositeSkeletonVertex _v);
 
@@ -236,8 +236,8 @@ class CompositeDynamicRegionRRT : virtual public GroupRRTStrategy<MPTraits> {
 
     std::vector<CBSNodeType> SplitNodeFunction(CBSNodeType& _node,
         std::vector<std::pair<Robot*,CBSConstraint>> _constraints,
-        CBSLowLevelPlanner<Robot,CBSConstraint,CBSSolution>& _lowLevel,
-        CBSCostFunction<Robot,CBSConstraint,CBSSolution>& _cost);
+        CBSLowLevelPlanner<Robot*,CBSConstraint,CBSSolution*>& _lowLevel,
+        CBSCostFunction<Robot*,CBSConstraint,CBSSolution*>& _cost);
 
     bool LowLevelPlanner(CBSNodeType& _node, Robot* _robot);
 
@@ -339,7 +339,7 @@ class CompositeDynamicRegionRRT : virtual public GroupRRTStrategy<MPTraits> {
     WorkspaceSkeleton m_individualSkeleton;
 
     // The individual skeleton VIDs closest to the start and goal for each robot
-    std::pair<std::vector<SkeletonVertexDescriptor>, 
+    std::pair<std::vector<SkeletonVertexDescriptor>,
               std::vector<SkeletonVertexDescriptor>> m_skeletonQuery;
 
     std::unordered_map<Robot*, SkeletonVertexDescriptor> m_MAPFStarts;
@@ -456,14 +456,14 @@ CompositeDynamicRegionRRT(XMLNode& _node) : GroupRRTStrategy<MPTraits>(_node) {
   m_explore = _node.Read("explore", true, m_explore, 0., 1.,
       "Weight of explore vs. exploit in region selection probabilities");
 
-  m_maxRegions = _node.Read("maxRegions", true, m_maxRegions, (size_t)1, 
+  m_maxRegions = _node.Read("maxRegions", true, m_maxRegions, (size_t)1,
       SIZE_MAX, "Maximum number of active regions at a time");
 
-  m_maxEdges = _node.Read("maxEdges", false, m_maxEdges, (size_t)1, SIZE_MAX, 
+  m_maxEdges = _node.Read("maxEdges", false, m_maxEdges, (size_t)1, SIZE_MAX,
       "Maximum number of edges to expand from each vertex");
 
-  m_maxSampleFails = _node.Read("maxSampleFails", false, m_maxSampleFails, 
-      (size_t)1, SIZE_MAX, 
+  m_maxSampleFails = _node.Read("maxSampleFails", false, m_maxSampleFails,
+      (size_t)1, SIZE_MAX,
       "Maximum number of failures before abandoning a region");
 
   m_regionFactor = _node.Read("regionFactor", true,
@@ -553,7 +553,7 @@ CompositeDynamicRegionRRT<MPTraits>::Initialize(){
     auto groupTask = this->GetGroupTask();
     int idx = 0;
     for(auto iter = groupTask->begin(); iter != groupTask->end(); iter++) {
-      if(iter->GetGoalConstraints().size() != 1) 
+      if(iter->GetGoalConstraints().size() != 1)
         throw RunTimeException(WHERE) << "Exactly one goal is required.";
 
       const auto center = iter->GetGoalConstraints()[0]->GetBoundary()->GetCenter();
@@ -639,7 +639,7 @@ SelectTarget() {
 
       iter = m_regions.erase(iter);
       numReplace++;
-    } else 
+    } else
       ++iter;
   }
 
@@ -1121,13 +1121,13 @@ GetVelocityBias(SamplingRegion* _region) {
                 << "\n\tPath index: " << index
                 << "\n\tPath size:  " << path.size()
                 << std::endl;
-    
+
     std::vector<Vector3d> biases;
     auto robots = reit->property().GetGroup()->GetRobots();
     for(size_t i = 0; i < robots.size(); i++) {
       auto start = path[index].GetRobotCfg(i);
       auto end = path[index+1].GetRobotCfg(i);
-      
+
       auto bias = makeBias(start, end);
       biases.push_back(bias);
     }
@@ -1147,13 +1147,13 @@ GetVelocityBias(SamplingRegion* _region) {
                 << "\n\tPath index: " << index
                 << "\n\tPath size:  " << path.size()
                 << std::endl;
-    
+
     std::vector<Vector3d> biases;
     auto robots = reit->property().GetGroup()->GetRobots();
     for(size_t i = 0; i < robots.size(); i++) {
       auto start = path[index-1].GetRobotCfg(i);
       auto end = path[index].GetRobotCfg(i);
-      
+
       auto bias = makeBias(start, end);
       biases.push_back(bias);
     }
@@ -1183,7 +1183,7 @@ BiasVelocity(GroupCfgType& _gcfg, SamplingRegion* _region) {
 
   // Get the bias for the region.
   auto biases = GetVelocityBias(_region);
-  
+
   // Resample the Cfg until its linear velocity aims relatively along the
   // biasing direction.
   auto robots = _gcfg.GetGroup()->GetRobots();
@@ -1290,7 +1290,7 @@ ValidationFunction(CBSNodeType& _node) {
   }
 
   std::unordered_map<SkeletonVertexDescriptor, std::unordered_map<size_t, double>> vertexCapacity;
-  std::unordered_map<std::pair<SkeletonVertexDescriptor, SkeletonVertexDescriptor>, 
+  std::unordered_map<std::pair<SkeletonVertexDescriptor, SkeletonVertexDescriptor>,
       std::unordered_map<size_t, double>> edgeCapacity;
 
   // new constraints of form (robot, ((vid, vid), time))
@@ -1353,7 +1353,7 @@ ValidationFunction(CBSNodeType& _node) {
           edgeCapacity.emplace(std::make_pair(edgePair, eMap));
         }
       }
-      
+
       // Check if this vid has been added yet
       if(vertexCapacity.find(source) != vertexCapacity.end()) {
         // Check if this timestep has been added
@@ -1417,12 +1417,12 @@ ValidationFunction(CBSNodeType& _node) {
 
 
 template <typename MPTraits>
-std::vector<typename CompositeDynamicRegionRRT<MPTraits>::CBSNodeType> 
+std::vector<typename CompositeDynamicRegionRRT<MPTraits>::CBSNodeType>
 CompositeDynamicRegionRRT<MPTraits>::
 SplitNodeFunction(CBSNodeType& _node,
         std::vector<std::pair<Robot*,CBSConstraint>> _constraints,
-        CBSLowLevelPlanner<Robot,CBSConstraint,CBSSolution>& _lowLevel,
-        CBSCostFunction<Robot,CBSConstraint,CBSSolution>& _cost) {
+        CBSLowLevelPlanner<Robot*,CBSConstraint,CBSSolution*>& _lowLevel,
+        CBSCostFunction<Robot*,CBSConstraint,CBSSolution*>& _cost) {
   auto stats = this->GetStatClass();
   MethodTimer mt(stats,this->GetNameAndLabel() + "::SplitNodeFunction");
 
@@ -1435,12 +1435,12 @@ SplitNodeFunction(CBSNodeType& _node,
 
     // Copy parent node
     CBSNodeType child = _node;
-  
+
     // Add new constraint
     child.constraintMap[robot].insert(constraint);
 
     // Replan tasks affected by constraint. Skip if no valid replanned path is found
-    if(!_lowLevel(child,robot)) 
+    if(!_lowLevel(child,robot))
       continue;
 
     // Update the cost and add to set of new nodes
@@ -1492,7 +1492,7 @@ LowLevelPlanner(CBSNodeType& _node, Robot* _robot) {
   SSSPTerminationCriterion<HeuristicSearch> termination(
     [goal,minEndTimestep](typename HeuristicSearch::vertex_iterator& _vi,
            const SSSPOutput<HeuristicSearch>& _sssp) {
-      
+
       auto vertex = _vi->property();
 
       if(goal == vertex.first and minEndTimestep <= vertex.second)
@@ -1506,7 +1506,7 @@ LowLevelPlanner(CBSNodeType& _node, Robot* _robot) {
     [constraints,h](typename HeuristicSearch::adj_edge_iterator& _ei,
        const double _sourceDistance,
        const double _targetDistance) {
-     
+
       auto source = h->GetVertex(_ei->source()).first;
       auto target = h->GetVertex(_ei->target()).first;
       auto timestep = h->GetVertex(_ei->source()).second;
@@ -1529,7 +1529,7 @@ LowLevelPlanner(CBSNodeType& _node, Robot* _robot) {
         // Check for vertex constraint
         if(source != constraint.first.first)
           continue;
-    
+
         if(timestep == constraint.second)
           return std::numeric_limits<double>::infinity();
       }
@@ -1539,7 +1539,7 @@ LowLevelPlanner(CBSNodeType& _node, Robot* _robot) {
   );
 
   SSSPHeuristicFunction<HeuristicSearch> heuristic(
-    [dist2go](const HeuristicSearch* _h, 
+    [dist2go](const HeuristicSearch* _h,
        typename HeuristicSearch::vertex_descriptor _source,
        typename HeuristicSearch::vertex_descriptor _target) {
 
@@ -1556,7 +1556,7 @@ LowLevelPlanner(CBSNodeType& _node, Robot* _robot) {
       auto vertex = _h->GetVertex(_vid);
       auto gvid = vertex.first;
       auto timestep = vertex.second;
-      
+
       auto vit = g->find_vertex(gvid);
 
       for(auto eit = vit->begin(); eit != vit->end(); eit++) {
@@ -1643,28 +1643,28 @@ ComputeMAPFHeuristic(const CompositeSkeletonVertex _vertex) {
   }
 
   // Configure CBS Functions
-  CBSLowLevelPlanner<Robot,CBSConstraint,CBSSolution> lowLevel(
+  CBSLowLevelPlanner<Robot*,CBSConstraint,CBSSolution*> lowLevel(
     [this](CBSNodeType& _node, Robot* _task) {
       return this->LowLevelPlanner(_node,_task);
     }
   );
 
-  CBSValidationFunction<Robot,CBSConstraint,CBSSolution> validation(
+  CBSValidationFunction<Robot*,CBSConstraint,CBSSolution*> validation(
     [this](CBSNodeType& _node) {
       return this->ValidationFunction(_node);
     }
   );
 
-  CBSCostFunction<Robot,CBSConstraint,CBSSolution> cost(
+  CBSCostFunction<Robot*,CBSConstraint,CBSSolution*> cost(
     [this](CBSNodeType& _node) {
       return this->CostFunction(_node);
     }
   );
 
-  CBSSplitNodeFunction<Robot,CBSConstraint,CBSSolution> splitNode(
+  CBSSplitNodeFunction<Robot*,CBSConstraint,CBSSolution*> splitNode(
     [this](CBSNodeType& _node, std::vector<std::pair<Robot*,CBSConstraint>> _constraints,
-           CBSLowLevelPlanner<Robot,CBSConstraint,CBSSolution>& _lowLevel,
-           CBSCostFunction<Robot,CBSConstraint,CBSSolution>& _cost) {
+           CBSLowLevelPlanner<Robot*,CBSConstraint,CBSSolution*>& _lowLevel,
+           CBSCostFunction<Robot*,CBSConstraint,CBSSolution*>& _cost) {
       return this->SplitNodeFunction(_node,_constraints,_lowLevel,_cost);
     }
   );
@@ -1905,16 +1905,16 @@ CreateRegions(const SkeletonVertexIterator _iter, const size_t _maxRegions) {
     double cost;
     if(m_costs.find(vertices) == m_costs.end()) {
       cost = ComputeMAPFHeuristic(vertex);
-      
+
       if(this->m_debug)
-        std::cout << "Cache miss for " << vertex.GetVIDs() 
+        std::cout << "Cache miss for " << vertex.GetVIDs()
                   << ". Computed cost " << cost << std::endl;
     }
     else {
       cost = m_costs.at(vertices);
-      
+
       if(this->m_debug)
-        std::cout << "Cache hit for " << vertex.GetVIDs() 
+        std::cout << "Cache hit for " << vertex.GetVIDs()
                   << " with cost " << cost << std::endl;
     }
 

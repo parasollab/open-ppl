@@ -35,7 +35,7 @@ WoDaSH::
 WoDaSH(XMLNode& _node) : TMPStrategyMethod(_node) {
   this->SetName("WoDaSH");
 
-  m_drStrategy = _node.Read("drStrat", true, "", 
+  m_drStrategy = _node.Read("drStrat", true, "",
            "The dynamic regions stategy to ground hyperskeleton arcs");
 
   m_trajStrategy = _node.Read("trajStrat", true, "",
@@ -44,7 +44,7 @@ WoDaSH(XMLNode& _node) : TMPStrategyMethod(_node) {
   m_sampler = _node.Read("sampler", true, "",
           "The sampler to use to generate spawn vertices on edges");
 
-  m_replanMethod = _node.Read("replanMethod", false, "global", 
+  m_replanMethod = _node.Read("replanMethod", false, "global",
           "How to get the next best MAPF solution (global, resume, or lazy");
 
   m_skeletonType = _node.Read("skeletonType", true, "",
@@ -119,7 +119,7 @@ Initialize() {
     m_regionRadius.insert(std::make_pair(robot, robotRadius));
 
     // Get the goal skeleton vertex for each robot
-    if(task.GetGoalConstraints().size() != 1) 
+    if(task.GetGoalConstraints().size() != 1)
       throw RunTimeException(WHERE) << "Exactly one goal is required.";
 
     const auto goal_center = task.GetGoalConstraints()[0]->GetBoundary()->GetCenter();
@@ -303,7 +303,7 @@ ValidationFunction(CBSNodeType& _node) {
   }
 
   std::unordered_map<VID, std::unordered_map<size_t, double>> vertexCapacity;
-  std::unordered_map<std::pair<VID, VID>, 
+  std::unordered_map<std::pair<VID, VID>,
       std::unordered_map<size_t, double>> edgeCapacity;
 
   // Check the global constraints from edges that failed to ground
@@ -374,7 +374,7 @@ ValidationFunction(CBSNodeType& _node) {
           edgeCapacity.emplace(std::make_pair(edgePair, eMap));
         }
       }
-      
+
       // Check if this vid has been added yet
       if(vertexCapacity.find(source) != vertexCapacity.end()) {
         // Check if this timestep has been added
@@ -440,12 +440,12 @@ ValidationFunction(CBSNodeType& _node) {
   return constraints;
 }
 
-std::vector<typename WoDaSH::CBSNodeType> 
+std::vector<typename WoDaSH::CBSNodeType>
 WoDaSH::
 SplitNodeFunction(CBSNodeType& _node,
         std::vector<std::pair<Robot*,CBSConstraint>> _constraints,
-        CBSLowLevelPlanner<Robot,CBSConstraint,CBSSolution>& _lowLevel,
-        CBSCostFunction<Robot,CBSConstraint,CBSSolution>& _cost) {
+        CBSLowLevelPlanner<Robot*,CBSConstraint,CBSSolution*>& _lowLevel,
+        CBSCostFunction<Robot*,CBSConstraint,CBSSolution*>& _cost) {
   // auto stats = this->GetStatClass();
   // MethodTimer mt(stats,this->GetNameAndLabel() + "::SplitNodeFunction");
 
@@ -458,12 +458,12 @@ SplitNodeFunction(CBSNodeType& _node,
 
     // Copy parent node
     CBSNodeType child = _node;
-  
+
     // Add new constraint
     child.constraintMap[robot].insert(constraint);
 
     // Replan tasks affected by constraint. Skip if no valid replanned path is found
-    if(!_lowLevel(child,robot)) 
+    if(!_lowLevel(child,robot))
       continue;
 
     // Update the cost and add to set of new nodes
@@ -513,7 +513,7 @@ LowLevelPlanner(CBSNodeType& _node, Robot* _robot) {
   SSSPTerminationCriterion<HeuristicSearch> termination(
     [goal,minEndTimestep](typename HeuristicSearch::vertex_iterator& _vi,
            const SSSPOutput<HeuristicSearch>& _sssp) {
-      
+
       auto vertex = _vi->property();
 
       if(goal == vertex.first and minEndTimestep <= vertex.second)
@@ -527,7 +527,7 @@ LowLevelPlanner(CBSNodeType& _node, Robot* _robot) {
     [constraints,h](typename HeuristicSearch::adj_edge_iterator& _ei,
        const double _sourceDistance,
        const double _targetDistance) {
-     
+
       auto source = h->GetVertex(_ei->source()).first;
       auto target = h->GetVertex(_ei->target()).first;
       auto timestep = h->GetVertex(_ei->source()).second;
@@ -550,7 +550,7 @@ LowLevelPlanner(CBSNodeType& _node, Robot* _robot) {
         // Check for vertex constraint
         if(source != constraint.first.first)
           continue;
-    
+
         if(timestep == constraint.second)
           return std::numeric_limits<double>::infinity();
       }
@@ -560,7 +560,7 @@ LowLevelPlanner(CBSNodeType& _node, Robot* _robot) {
   );
 
   SSSPHeuristicFunction<HeuristicSearch> heuristic(
-    [dist2go](const HeuristicSearch* _h, 
+    [dist2go](const HeuristicSearch* _h,
        typename HeuristicSearch::vertex_descriptor _source,
        typename HeuristicSearch::vertex_descriptor _target) {
 
@@ -577,7 +577,7 @@ LowLevelPlanner(CBSNodeType& _node, Robot* _robot) {
       auto vertex = _h->GetVertex(_vid);
       auto gvid = vertex.first;
       auto timestep = vertex.second;
-      
+
       auto vit = g->find_vertex(gvid);
 
       for(auto eit = vit->begin(); eit != vit->end(); eit++) {
@@ -649,28 +649,28 @@ MAPFSolution() {
   // MethodTimer mt(stats, this->GetNameAndLabel() + "::ComputeMAPFHeuristic");
 
   // Configure CBS Functions
-  CBSLowLevelPlanner<Robot,CBSConstraint,CBSSolution> lowLevel(
+  CBSLowLevelPlanner<Robot*,CBSConstraint,CBSSolution*> lowLevel(
     [this](CBSNodeType& _node, Robot* _task) {
       return this->LowLevelPlanner(_node,_task);
     }
   );
 
-  CBSValidationFunction<Robot,CBSConstraint,CBSSolution> validation(
+  CBSValidationFunction<Robot*,CBSConstraint,CBSSolution*> validation(
     [this](CBSNodeType& _node) {
       return this->ValidationFunction(_node);
     }
   );
 
-  CBSCostFunction<Robot,CBSConstraint,CBSSolution> cost(
+  CBSCostFunction<Robot*,CBSConstraint,CBSSolution*> cost(
     [this](CBSNodeType& _node) {
       return this->CostFunction(_node);
     }
   );
 
-  CBSSplitNodeFunction<Robot,CBSConstraint,CBSSolution> splitNode(
+  CBSSplitNodeFunction<Robot*,CBSConstraint,CBSSolution*> splitNode(
     [this](CBSNodeType& _node, std::vector<std::pair<Robot*,CBSConstraint>> _constraints,
-           CBSLowLevelPlanner<Robot,CBSConstraint,CBSSolution>& _lowLevel,
-           CBSCostFunction<Robot,CBSConstraint,CBSSolution>& _cost) {
+           CBSLowLevelPlanner<Robot*,CBSConstraint,CBSSolution*>& _lowLevel,
+           CBSCostFunction<Robot*,CBSConstraint,CBSSolution*>& _cost) {
       return this->SplitNodeFunction(_node,_constraints,_lowLevel,_cost);
     }
   );
@@ -791,8 +791,8 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
     std::unordered_map<VID, std::set<VID>> incidentHVIDs;
 
     std::cout << "TIME " << t << std::endl;
-    
-    // Split hyperarcs that contain robots going opposite directions ("nop" 
+
+    // Split hyperarcs that contain robots going opposite directions ("nop"
     // hyperarcs - do nothing, just for connectivity)
     for(auto iter : edgeGroup) {
       auto robots = iter.second;
@@ -827,7 +827,7 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
 
         for(auto robot : group->GetRobots())
           tvertex.SetRobotCfg(robot, edge.second);
-        
+
         auto tvid = m_skeleton->AddVertex(tvertex);
         incidentHVIDs[edge.second].insert(tvid);
         tvids.insert(tvid);
@@ -839,7 +839,7 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
       m_skeleton->AddHyperarc(tvids, {svertex}, cedge);
     }
 
-    // Merge groups going into the same vertex ("coupling" hyperarcs - sample 
+    // Merge groups going into the same vertex ("coupling" hyperarcs - sample
     // trajectories for passing into/though the same vertex)
     std::cout << "incident: " << incidentHVIDs << std::endl;
     std::unordered_map<VID, VID> mergedVIDs;
@@ -877,7 +877,7 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
 
       for(auto robot : group->GetRobots())
         tvertex.SetRobotCfg(robot, skelVID);
-      
+
       auto tvid = m_skeleton->AddVertex(tvertex);
       auto hid = m_skeleton->AddHyperarc({tvid}, predVIDs, cedge);
       m_mergeTraj.insert(hid);
@@ -885,7 +885,7 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
       std::cout << "merged " << predVIDs.size() << "incoming groups" << std::endl;
     }
 
-    // Split groups going down separate edges ("decoupling" hyperarcs - sample 
+    // Split groups going down separate edges ("decoupling" hyperarcs - sample
     // trajectories moving away from same vertex onto different edges)
     std::unordered_map<std::pair<VID, VID>, std::set<VID>> incidentEdges;
     for(auto iter : mergedVIDs) {
@@ -971,7 +971,7 @@ WoDaSH::
 GroundHyperskeleton() {
   // TODO cast this to avoid having to change MPStratgy interface?
   auto s = this->GetMPLibrary()->GetMPStrategy(m_drStrategy);
-  
+
   auto originalTask = this->GetMPLibrary()->GetGroupTask();
 
   for(auto hid : m_groundHIDs) {
@@ -996,7 +996,7 @@ GroundHyperskeleton() {
     auto grm = this->GetMPLibrary()->GetGroupRoadmap();
     auto startVID = SpawnVertex(grm, cedge);
     m_startReps[hid] = std::make_pair(grm, startVID);
-    
+
     s->GroundEdge(cedge);
 
     // Check if this was successful
@@ -1009,7 +1009,7 @@ GroundHyperskeleton() {
       m_failedEdges.emplace(std::make_pair(ed.source(), ed.target()), cedge.GetGroup());
       return false;
     }
-    
+
     std::cout << "Successfully grounded HID " << hid << std::endl;
     m_endReps[hid] = std::make_pair(grm, lastVID);
 
@@ -1037,7 +1037,7 @@ GroundHyperskeleton() {
 
     // Save grounded edge
     auto path = this->GetMPLibrary()->GetGroupPath(grm->GetGroup());
-    
+
     AddTransitionToGroundedHypergraph(hyperarc.tail,hyperarc.head,path,task);
   }
 
@@ -1050,7 +1050,7 @@ GroundHyperskeleton() {
 
 std::vector<typename WoDaSH::CompositeSkeletonVertex>
 WoDaSH::
-ComputeIntermediates(const CompositeSkeletonVertex _source, 
+ComputeIntermediates(const CompositeSkeletonVertex _source,
                      const CompositeSkeletonVertex _target,
                      CompositeSkeletonEdge _edge,
                      const bool pushStart, const bool pushTarget) {
@@ -1060,7 +1060,7 @@ ComputeIntermediates(const CompositeSkeletonVertex _source,
 
   auto robots = _edge.GetGroup()->GetRobots();
   auto& edgeDescriptors = _edge.GetEdgeDescriptors();
-  
+
   auto robotRadius = robots[0]->GetMultiBody()->GetBoundingSphereRadius();
   auto intLength = robotRadius * m_intermediateFactor;
 
@@ -1101,7 +1101,7 @@ ComputeIntermediates(const CompositeSkeletonVertex _source,
     auto v = CompositeSkeletonVertex(_edge.GetGroup());
 
     for(size_t r = 0; r < robots.size(); r++) {
-      Point3d d = {i * displacements[r][0]/numInter, 
+      Point3d d = {i * displacements[r][0]/numInter,
                   i * displacements[r][1]/numInter,
                   i * displacements[r][2]/numInter};
       v.SetRobotCfg(r, starts[r] + d);
@@ -1129,7 +1129,7 @@ SpawnVertex(GroupRoadmapType* _grm, CompositeSkeletonEdge _edge) {
   BoundaryMap bMap;
   for(size_t i = 0; i < robots.size(); i++)
     bMap[robots[i]] = &bounds[i];
-  
+
   // Get the sampler.
   auto s = this->GetMPLibrary()->GetSampler(m_sampler);
 
@@ -1158,7 +1158,7 @@ SpawnVertex(GroupRoadmapType* _grm, CompositeSkeletonVertex _vertex) {
   BoundaryMap bMap;
   for(size_t i = 0; i < robots.size(); i++)
     bMap[robots[i]] = &bounds[i];
-  
+
   // Get the sampler.
   auto s = this->GetMPLibrary()->GetSampler(m_sampler);
 
@@ -1252,9 +1252,9 @@ ConnectToSkeleton() {
     t.AddGoalConstraint(std::move(goalConstraint));
 
     stask->AddTask(t);
-  } 
+  }
 
-  this->GetMPLibrary()->Solve(this->GetMPProblem(), stask, 
+  this->GetMPLibrary()->Solve(this->GetMPProblem(), stask,
       this->GetMPSolution(), m_trajStrategy, LRand(), "ConnectToSkeleton");
   delete stask;
 
@@ -1287,9 +1287,9 @@ ConnectToSkeleton() {
     t.AddGoalConstraint(std::move(goalConstraint));
 
     gtask->AddTask(t);
-  } 
+  }
 
-  this->GetMPLibrary()->Solve(this->GetMPProblem(), gtask, 
+  this->GetMPLibrary()->Solve(this->GetMPProblem(), gtask,
       this->GetMPSolution(), m_trajStrategy, LRand(), "ConnectToSkeleton");
   delete gtask;
 }
@@ -1337,7 +1337,7 @@ SampleTrajectories() {
         auto iih = m_skeleton->GetIncomingHyperarcs(nopTail);
         if(iih.size() > 1)
           throw RunTimeException(WHERE) << "More than one incoming hyperarc to nop. I'll deal with this soon.";
-        
+
         auto rep = m_endReps.at(*iih.begin());
         auto vertex = rep.first->GetVertex(rep.second);
         for(auto robot : group->GetRobots())
@@ -1381,9 +1381,9 @@ SampleTrajectories() {
       // TODO set bounds within a tighter area here
 
       task->AddTask(t);
-    } 
+    }
 
-    this->GetMPLibrary()->Solve(this->GetMPProblem(), task.get(), 
+    this->GetMPLibrary()->Solve(this->GetMPProblem(), task.get(),
         this->GetMPSolution(), m_trajStrategy, LRand(),
         this->GetNameAndLabel()+"::SampleTrajectories");
     //delete task;
@@ -1443,9 +1443,9 @@ SampleTrajectories() {
       t.AddGoalConstraint(std::move(goalConstraint));
 
       task->AddTask(t);
-    } 
+    }
 
-    this->GetMPLibrary()->Solve(this->GetMPProblem(), task.get(), 
+    this->GetMPLibrary()->Solve(this->GetMPProblem(), task.get(),
         this->GetMPSolution(), m_trajStrategy, LRand(), "SampleTrajectories");
     //delete task;
 

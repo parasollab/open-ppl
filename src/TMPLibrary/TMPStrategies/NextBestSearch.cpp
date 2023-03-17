@@ -56,13 +56,13 @@ void
 NextBestSearch::
 PlanTasks() {
 
-  if(m_debug) 
+  if(m_debug)
     std::cout << this->GetNameAndLabel() + "::Starting to PlanTasks." << std::endl;
 
   auto plan = this->GetPlan();
   auto stats = plan->GetStatClass();
   MethodTimer mt(stats,this->GetNameAndLabel() + "::PlanTasks");
-  
+
   stats->SetStat(this->GetNameAndLabel() + "::CollisionFound",0);
 
   auto originalDecomp = plan->GetDecomposition();
@@ -90,7 +90,7 @@ PlanTasks() {
                 << "."
                 << std::endl;
     }
-  
+
     lowerBound = FindTaskPlan(originalDecomp);
     taskSolutions.push_back(plan->GetDecomposition());
 
@@ -100,7 +100,7 @@ PlanTasks() {
       if(me->operator()(plan)) {
         if(plan->GetCost() < lowerBound) {
           throw RunTimeException(WHERE) << "Best cost ("
-                                        << plan->GetCost() 
+                                        << plan->GetCost()
                                         << ") violating lower bound ("
                                         << lowerBound
                                         << ").";
@@ -130,7 +130,7 @@ PlanTasks() {
   //if(m_savePaths)
   //  SaveSolution(bestNode);
 }
-    
+
 double
 NextBestSearch::
 FindTaskPlan(Decomposition* _decomp) {
@@ -145,7 +145,7 @@ FindTaskPlan(Decomposition* _decomp) {
     //return plan->GetCost();
     // Strange off by one error somewhere
     return plan->GetCost() - 1;
-  else 
+  else
     return MAX_DBL;
 }
 
@@ -158,38 +158,38 @@ ComputeMotions(Node& _bestNode) {
   MethodTimer mt(stats,this->GetNameAndLabel() + "::ComputeMotions");
 
   // Configure CBS Functions
-  CBSLowLevelPlanner<SemanticTask,Constraint,GroupPathType> lowLevel(
+  CBSLowLevelPlanner<SemanticTask*,Constraint,GroupPathType*> lowLevel(
     [this](Node& _node, SemanticTask* _task) {
       return LowLevelPlanner(_node,_task);
     }
   );
 
-  CBSValidationFunction<SemanticTask,Constraint,GroupPathType> validation(
+  CBSValidationFunction<SemanticTask*,Constraint,GroupPathType*> validation(
     [this](Node& _node) {
       return this->ValidationFunction(_node);
     }
   );
 
-  CBSCostFunction<SemanticTask,Constraint,GroupPathType> cost(
+  CBSCostFunction<SemanticTask*,Constraint,GroupPathType*> cost(
     [this](Node& _node) {
       return this->CostFunction(_node);
     }
   );
 
-  CBSSplitNodeFunction<SemanticTask,Constraint,GroupPathType> splitNode(
+  CBSSplitNodeFunction<SemanticTask*,Constraint,GroupPathType*> splitNode(
     [this](Node& _node, std::vector<std::pair<SemanticTask*,Constraint>> _constraints,
-           CBSLowLevelPlanner<SemanticTask,Constraint,GroupPathType>& _lowLevel,
-           CBSCostFunction<SemanticTask,Constraint,GroupPathType>& _cost) {
+           CBSLowLevelPlanner<SemanticTask*,Constraint,GroupPathType*>& _lowLevel,
+           CBSCostFunction<SemanticTask*,Constraint,GroupPathType*>& _cost) {
       return this->SplitNodeFunction(_node,_constraints,_lowLevel,_cost);
     }
   );
 
-  CBSInitialFunction<SemanticTask,Constraint,GroupPathType> initial(
+  CBSInitialFunction<SemanticTask*,Constraint,GroupPathType*> initial(
     [this](std::vector<Node>& _root, std::vector<SemanticTask*> _tasks,
-           CBSLowLevelPlanner<SemanticTask,Constraint,GroupPathType>& _lowLevel,
-           CBSCostFunction<SemanticTask,Constraint,GroupPathType>& _cost) {
+           CBSLowLevelPlanner<SemanticTask*,Constraint,GroupPathType*>& _lowLevel,
+           CBSCostFunction<SemanticTask*,Constraint,GroupPathType*>& _cost) {
       return this->InitialSolutionFunction(_root,_tasks,_lowLevel,_cost);
-    } 
+    }
   );
 
   // Collect tasks
@@ -263,13 +263,13 @@ ComputeIntervals(SemanticTask* _task, const Node& _node) {
   for(auto vit = grm->begin(); vit != grm->end(); vit++) {
 
     m_vertexIntervals[vit->descriptor()] = ConstructSafeIntervals(vertexUnsafeIntervals[vit->descriptor()]);
- 
+
     for(auto eit = vit->begin(); eit != vit->end(); eit++) {
       m_edgeIntervals[eit->source()][eit->target()] = ConstructSafeIntervals(
         edgeUnsafeIntervals[std::make_pair(eit->source(),eit->target())]);
     }
   }
-  
+
 }
 
 std::vector<Range<double>>
@@ -302,7 +302,7 @@ ConstructSafeIntervals(std::vector<Range<double>> _unsafeIntervals) {
         continue;
 
       const auto& interval1 = copyIntervals[i];
-  
+
       double min = std::max(0.,interval1.min - (firstTime ? buffer : 0));
       double max = interval1.max + (firstTime ? buffer : 0);
 
@@ -311,7 +311,7 @@ ConstructSafeIntervals(std::vector<Range<double>> _unsafeIntervals) {
           continue;
 
         const auto& interval2 = copyIntervals[j];
-      
+
         // Check if there is no overlap
         if(interval2.min - max > buffer or min - interval2.max > buffer)
           continue;
@@ -319,10 +319,10 @@ ConstructSafeIntervals(std::vector<Range<double>> _unsafeIntervals) {
         // If there is, merge the intervals
         min = std::min(min,interval2.min-buffer);
         max = std::max(max,interval2.max+buffer);
-  
+
         merged.insert(j);
       }
-  
+
       Range<double> interval(min,max);
       unsafeIntervals.push_back(interval);
     }
@@ -339,10 +339,10 @@ ConstructSafeIntervals(std::vector<Range<double>> _unsafeIntervals) {
   std::sort(unsafeIntervals.begin(), unsafeIntervals.end(),less_than());
 
   for(size_t i = 0; i < unsafeIntervals.size() - 1; i++) {
-    if(unsafeIntervals[i].max > unsafeIntervals[i+1].max 
+    if(unsafeIntervals[i].max > unsafeIntervals[i+1].max
       or unsafeIntervals[i].max > unsafeIntervals[i+1].min)
       throw RunTimeException(WHERE) << "THIS IS VERY VERY BAD AND WILL RESULT IN AN INFINITE LOOP WITH NO ANSWERS.";
-      
+
   }
 
   // Construct set of intervals
@@ -369,7 +369,7 @@ ConstructSafeIntervals(std::vector<Range<double>> _unsafeIntervals) {
 
 /*----------------------- CBS Functors -----------------------*/
 
-bool 
+bool
 NextBestSearch::
 LowLevelPlanner(Node& _node, SemanticTask* _task) {
   const double timeRes = this->GetMPProblem()->GetEnvironment()->GetTimeRes();
@@ -380,7 +380,7 @@ LowLevelPlanner(Node& _node, SemanticTask* _task) {
   std::unordered_map<SemanticTask*,double> startTimes;
   std::unordered_map<SemanticTask*,double> endTimes;
   std::set<SemanticTask*> solved;
- 
+
   // Initialize maps
   for(auto kv : _node.solutionMap) {
     auto task = kv.first;
@@ -443,7 +443,7 @@ LowLevelPlanner(Node& _node, SemanticTask* _task) {
       auto timesteps = kv.second->TimeSteps();
       //if(timesteps > 0)
       //  endTimes[task] = startTime + timesteps;// - 1;
-      //else 
+      //else
       //  endTimes[task] = startTime;
       if(timesteps > 0) {
         endTimes[task] = startTime + timesteps; //- 1;
@@ -456,7 +456,7 @@ LowLevelPlanner(Node& _node, SemanticTask* _task) {
       }
     }
   } while(solved.size() != size);
- 
+
   // Init queue of tasks to solve
   std::priority_queue<std::pair<double,SemanticTask*>,
                       std::vector<std::pair<double,SemanticTask*>>,
@@ -499,7 +499,7 @@ LowLevelPlanner(Node& _node, SemanticTask* _task) {
     auto timesteps = path->TimeSteps();
     //if(timesteps > 0)
     //  endTimes[task] = startTime + timesteps;// - 1;
-    //else 
+    //else
     //  endTimes[task] = startTime;
     if(timesteps > 0) {
       endTimes[task] = startTime + timesteps; //- 1;
@@ -512,7 +512,7 @@ LowLevelPlanner(Node& _node, SemanticTask* _task) {
     }
 
     if(m_debug) {
-      std::cout << "Found path for " << task->GetLabel() 
+      std::cout << "Found path for " << task->GetLabel()
                 << " from " << startTime << " to "
                 << startTime + timesteps << std::endl;
     }
@@ -520,7 +520,7 @@ LowLevelPlanner(Node& _node, SemanticTask* _task) {
     // Check if new tasks are available to plan
     std::vector<SemanticTask*> toRemove;
     for(auto t : unsolved) {
-      
+
       // Check if all dependencies have been solved
       bool missingDep = false;
       double st = 0;
@@ -582,7 +582,7 @@ QueryPath(SemanticTask* _task, const double _startTime, const Node& _node) {
   );
 
   query->SetPathWeightFunction(
-    [this](typename GroupRoadmapType::adj_edge_iterator& _ei, 
+    [this](typename GroupRoadmapType::adj_edge_iterator& _ei,
            const double _sourceDistance,
            const double _targetDistance) {
       return this->RobotGroupPathWeight(_ei,_sourceDistance,_targetDistance);
@@ -607,7 +607,7 @@ QueryPath(SemanticTask* _task, const double _startTime, const Node& _node) {
       for(auto robot : constraintGroup->GetRobots()) {
         auto cfg = constraintCfg.GetRobotCfg(robot);
         std::vector<Cfg> path = {cfg,cfg,cfg};
-        
+
         //auto duration = c.first.second - c.first.first;
         //for(size_t i = 0; i < duration; i++) {
         //  path.push_back(cfg);
@@ -617,7 +617,7 @@ QueryPath(SemanticTask* _task, const double _startTime, const Node& _node) {
         dob.SetStartTime(c.first.first-1);
         dob.SetEndTime(c.first.second);
         this->GetMPProblem()->AddDynamicObstacle(std::move(dob));
-      } 
+      }
     }
   }
 
@@ -639,7 +639,7 @@ QueryPath(SemanticTask* _task, const double _startTime, const Node& _node) {
 
   //query->SetPathWeightFunction(nullptr);
   this->GetMPProblem()->ClearDynamicObstacles();
- 
+
   auto path = solution->GetGroupPath(group);
   if(path->Size() == 0)
     return nullptr;
@@ -685,7 +685,7 @@ ValidationFunction(Node& _node) {
     // Find the set of tasks that are ready to be validated
     for(auto kv :_node.solutionMap) {
       auto task = kv.first;
-      lib->SetGroupTask(task->GetGroupMotionTask().get()); 
+      lib->SetGroupTask(task->GetGroupMotionTask().get());
 
       // Skip if already validated
       if(std::find(ordering.begin(),ordering.end(),task) != ordering.end())
@@ -710,7 +710,7 @@ ValidationFunction(Node& _node) {
 
       // Recreate the paths at resolution level
       const auto& path = kv.second;
-     
+
       const auto cfgs = path->FullCfgsWithWait(lib);
       for(size_t i = 0; i < cfgs.size(); i++) {
         cfgPaths[task].push_back(cfgs[i]);
@@ -817,7 +817,7 @@ ValidationFunction(Node& _node) {
 
             if(collision) {
               if(m_debug) {
-                std::cout << "Collision found between :" 
+                std::cout << "Collision found between :"
                   << robot1->GetLabel()
                   << " and "
                   << robot2->GetLabel()
@@ -832,7 +832,7 @@ ValidationFunction(Node& _node) {
                   << " and "
                   << t2->GetLabel()
                   << std::endl;
-                  
+
                 std::cout << "Task starts: " << startTimes[t1] << " " << startTimes[t2] << std::endl;
 
                 std::cout << "Task 1:" << std::endl;
@@ -924,7 +924,7 @@ ValidationFunction(Node& _node) {
               std::vector<std::pair<SemanticTask*,Constraint>> constraints;
               Constraint constraint1 = std::make_pair(std::make_pair(t,endT),c1Index);
               Constraint constraint2 = std::make_pair(std::make_pair(t,endT),c2Index);
- 
+
               if(c1Index != MAX_UINT)
                 constraints.emplace_back(t1,constraint1);
               if(c2Index != MAX_UINT)
@@ -946,7 +946,7 @@ ValidationFunction(Node& _node) {
                 duration1 = double(_node.solutionMap[t1]->GetRoadmap()->GetEdge(
                                    edge1.first,edge1.second).GetTimeSteps()) * timeRes;
               }
-      
+
               if(edge2.first != edge2.second) {
                 duration2 = double(_node.solutionMap[t2]->GetRoadmap()->GetEdge(
                                    edge2.first,edge2.second).GetTimeSteps()) * timeRes;
@@ -963,17 +963,17 @@ ValidationFunction(Node& _node) {
                   /*
                   UnsafeVertexIntervals intervals;
                   intervals[edge1.first] = {interval1};
-  
+
                   std::map<SemanticTask*,UnsafeVertexIntervals> taskVertexIntervals;
                   std::map<SemanticTask*,UnsafeEdgeIntervals> taskEdgeIntervals;
-  
+
                   taskVertexIntervals[t1] = intervals;
                   taskEdgeIntervals[t1] = {};
-  
+
                   m_unsafeVertexIntervalMap.push_back(taskVertexIntervals);
                   m_unsafeEdgeIntervalMap.push_back(taskEdgeIntervals);
                   */
-  
+
                   auto& intervals = m_unsafeVertexIntervalMap[c1Index][t1][edge1.first];
 
                   // Debug - remove when working
@@ -992,19 +992,19 @@ ValidationFunction(Node& _node) {
                   /*
                   UnsafeEdgeIntervals intervals;
                   intervals[edge1] = {interval1};
-  
+
                   std::map<SemanticTask*,UnsafeVertexIntervals> taskVertexIntervals;
                   std::map<SemanticTask*,UnsafeEdgeIntervals> taskEdgeIntervals;
-  
+
                   taskVertexIntervals[t1] = {};
                   taskEdgeIntervals[t1] = intervals;
-  
+
                   m_unsafeVertexIntervalMap.push_back(taskVertexIntervals);
                   m_unsafeEdgeIntervalMap.push_back(taskEdgeIntervals);
                   */
-    
+
                   auto& intervals = m_unsafeEdgeIntervalMap[c1Index][t1][edge1];
-                  
+
                   // Debug - remove when working
                   for(auto elem : intervals) {
                     //if(elem == interval1) {
@@ -1023,17 +1023,17 @@ ValidationFunction(Node& _node) {
                   /*
                   UnsafeVertexIntervals intervals;
                   intervals[edge2.first] = {interval2};
-  
+
                   std::map<SemanticTask*,UnsafeVertexIntervals> taskVertexIntervals;
                   std::map<SemanticTask*,UnsafeEdgeIntervals> taskEdgeIntervals;
-  
+
                   taskVertexIntervals[t2] = intervals;
                   taskEdgeIntervals[t2] = {};
-  
+
                   m_unsafeVertexIntervalMap.push_back(taskVertexIntervals);
                   m_unsafeEdgeIntervalMap.push_back(taskEdgeIntervals);
                   */
-  
+
                   auto& intervals = m_unsafeVertexIntervalMap[c2Index][t2][edge2.first];
 
                   // Debug - remove when working
@@ -1051,17 +1051,17 @@ ValidationFunction(Node& _node) {
                   /*
                   UnsafeEdgeIntervals intervals;
                   intervals[edge2] = {interval2};
-  
+
                   std::map<SemanticTask*,UnsafeVertexIntervals> taskVertexIntervals;
                   std::map<SemanticTask*,UnsafeEdgeIntervals> taskEdgeIntervals;
-  
+
                   taskVertexIntervals[t2] = {};
                   taskEdgeIntervals[t2] = intervals;
-  
+
                   m_unsafeVertexIntervalMap.push_back(taskVertexIntervals);
                   m_unsafeEdgeIntervalMap.push_back(taskEdgeIntervals);
                   */
-  
+
                   auto& intervals = m_unsafeEdgeIntervalMap[c2Index][t2][edge2];
 
                   // Debug - remove when working
@@ -1098,7 +1098,7 @@ CostFunction(Node& _node) {
   std::unordered_map<SemanticTask*,double> startTimes;
   std::unordered_map<SemanticTask*,double> endTimes;
   std::set<SemanticTask*> solved;
- 
+
   double cost = 0;
 
   // Initialize maps
@@ -1145,7 +1145,7 @@ CostFunction(Node& _node) {
 
       if(missingDep)
         continue;
-        
+
       solved.insert(task);
 
       startTimes[task] = startTime;
@@ -1153,7 +1153,7 @@ CostFunction(Node& _node) {
       auto timesteps = double(kv.second->TimeSteps());
       //if(timesteps > 0)
       //  endTimes[task] = startTime + timesteps;// - 1;
-      //else 
+      //else
       //  endTimes[task] = startTime;
       if(timesteps > 0) {
         endTimes[task] = startTime + timesteps; //- 1;
@@ -1174,12 +1174,12 @@ CostFunction(Node& _node) {
   return cost;
 }
 
-std::vector<NextBestSearch::Node> 
+std::vector<NextBestSearch::Node>
 NextBestSearch::
-SplitNodeFunction(Node& _node, 
+SplitNodeFunction(Node& _node,
                     std::vector<std::pair<SemanticTask*,Constraint>> _constraints,
-                    CBSLowLevelPlanner<SemanticTask,Constraint,GroupPathType>& _lowLevel,
-                    CBSCostFunction<SemanticTask,Constraint,GroupPathType>& _cost) {
+                    CBSLowLevelPlanner<SemanticTask*,Constraint,GroupPathType*>& _lowLevel,
+                    CBSCostFunction<SemanticTask*,Constraint,GroupPathType*>& _cost) {
 
   std::vector<Node> newNodes;
 
@@ -1190,12 +1190,12 @@ SplitNodeFunction(Node& _node,
 
     // Copy parent node
     Node child = _node;
-  
+
     // Add new constraint
     child.constraintMap[task].insert(constraint);
 
     // Replan tasks affected by constraint. Skip if no valid replanned path is found
-    if(!_lowLevel(child,task)) 
+    if(!_lowLevel(child,task))
       continue;
 
     // Update the cost and add to set of new nodes
@@ -1210,12 +1210,12 @@ SplitNodeFunction(Node& _node,
 
   return newNodes;
 }
-    
+
 void
 NextBestSearch::
 InitialSolutionFunction(std::vector<Node>& _root, std::vector<SemanticTask*> _tasks,
-                        CBSLowLevelPlanner<SemanticTask,Constraint,GroupPathType>& _lowLevel,
-                        CBSCostFunction<SemanticTask,Constraint,GroupPathType>& _cost) {
+                        CBSLowLevelPlanner<SemanticTask*,Constraint,GroupPathType*>& _lowLevel,
+                        CBSCostFunction<SemanticTask*,Constraint,GroupPathType*>& _cost) {
 
   Node node;
 
@@ -1326,7 +1326,7 @@ IsEdgeSafe(const VID _source, const VID _target, const Constraint _constraint,
   constraintCfg.ConfigureRobot();
   auto constraintGroup = constraintCfg.GetGroupRoadmap()->GetGroup();
 
-  // Check each configuration in the resolution-level path for 
+  // Check each configuration in the resolution-level path for
   // collision with the constraint cfg
   CDInfo cdInfo;
   for(const auto& gcfg : path) {
@@ -1345,8 +1345,8 @@ IsEdgeSafe(const VID _source, const VID _target, const Constraint _constraint,
 
   return true;
 }
-    
-NextBestSearch::ConstraintSet::iterator 
+
+NextBestSearch::ConstraintSet::iterator
 NextBestSearch::
 LowerBound(size_t _bound) const {
   auto boundIt = m_currentConstraints->end();
@@ -1360,7 +1360,7 @@ LowerBound(size_t _bound) const {
   return boundIt;
 }
 
-NextBestSearch::ConstraintSet::iterator 
+NextBestSearch::ConstraintSet::iterator
 NextBestSearch::
 UpperBound(size_t _bound) const {
   auto boundIt = m_currentConstraints->end();
@@ -1391,7 +1391,7 @@ SaveSolution(const Node& _node) {
     }
   }
 
-  
+
   std::vector<SemanticTask*> ordering;
 
   auto lib = this->GetMPLibrary();
@@ -1408,7 +1408,7 @@ SaveSolution(const Node& _node) {
     // Find the set of tasks that are ready to be validated
     for(auto kv :_node.solutionMap) {
       auto task = kv.first;
-      lib->SetGroupTask(task->GetGroupMotionTask().get()); 
+      lib->SetGroupTask(task->GetGroupMotionTask().get());
 
       // Skip if already validated
       if(std::find(ordering.begin(),ordering.end(),task) != ordering.end())
@@ -1444,7 +1444,7 @@ SaveSolution(const Node& _node) {
       //auto timesteps = cfgPaths[task].size();
       //if(timesteps > 0)
       //  endTimes[task] = startTime + timesteps;// - 1;
-      //else 
+      //else
       //  endTimes[task] = startTime;
       if(timesteps > 0) {
         endTimes[task] = startTime + timesteps; //- 1;
@@ -1457,7 +1457,7 @@ SaveSolution(const Node& _node) {
       }
 
       if(m_debug) {
-        std::cout << task->GetLabel() 
+        std::cout << task->GetLabel()
                   << " start: "
                   << startTime
                   << ". end: "
@@ -1478,7 +1478,7 @@ SaveSolution(const Node& _node) {
                       << " to " << startTime
                       << " because of " << task->GetLabel()
                       << std::endl;
-          } 
+          }
         }
       }
     }
@@ -1529,7 +1529,7 @@ SaveSolution(const Node& _node) {
 
       auto cfg1 = path[t-1];
       auto cfg2 = path[t];
-      
+
       if(abs(cfg1[1] - cfg2[1]) >= .00001) {
         if(switches.empty() or switches.back() != t-1)
           switches.push_back(t-1);
@@ -1562,7 +1562,7 @@ SaveSolution(const Node& _node) {
       std::cout << "PATH LENGTH: " << kv.second.size() << std::endl;
     }
 
-    const std::string filename = this->GetMPProblem()->GetBaseFilename() 
+    const std::string filename = this->GetMPProblem()->GetBaseFilename()
                                + "::FinalPath::" + kv.first->GetLabel();
 
     std::ofstream ofs(filename);
@@ -1585,7 +1585,7 @@ SaveSolution(const Node& _node) {
   auto top = std::shared_ptr<SemanticTask>(new SemanticTask());
   Decomposition* decomp = new Decomposition(top);
   plan->SetDecomposition(decomp);
-  
+
   for(auto kv : robotPaths) {
     auto robot = kv.first;
     auto cfgs = kv.second;
@@ -1611,7 +1611,7 @@ SaveSolution(const Node& _node) {
       auto vid = rm->AddVertex(cfg);
       vids.push_back(vid);
     }
-    
+
     auto path = mpsol->GetPath(robot);
     *path += vids;
 

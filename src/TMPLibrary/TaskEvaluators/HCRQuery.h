@@ -26,7 +26,7 @@ class HCRQuery : public TaskEvaluatorMethod {
 
     typedef std::pair<size_t,Cfg> CT;
     typedef PathType<MPTraits<Cfg,DefaultWeight<Cfg>>> Path;
-    typedef CBSNode<Robot,CT,Path> Node;
+    typedef CBSNode<Robot*,CT,Path*> Node;
 
     ///@}
     ///@name Construction
@@ -40,7 +40,7 @@ class HCRQuery : public TaskEvaluatorMethod {
 
     ///@}
 
-  protected: 
+  protected:
     ///@name Overrides
     ///@{
 
@@ -57,9 +57,9 @@ class HCRQuery : public TaskEvaluatorMethod {
 
     std::vector<std::pair<Robot*,CT>> Validate(Node _node);
 
-    std::vector<Node> SplitNode(Node _node, 
+    std::vector<Node> SplitNode(Node _node,
                         std::vector<std::pair<Robot*,CT>> _constraints,
-                        CBSLowLevelPlanner<Robot,CT,Path> _lowlevel);
+                        CBSLowLevelPlanner<Robot*,CT,Path*> _lowlevel);
 
     std::unordered_map<Robot*,Path*> ExtractPaths(const std::vector<HPElem>& _hyperpath);
 
@@ -67,10 +67,10 @@ class HCRQuery : public TaskEvaluatorMethod {
 
     std::vector<HPElem> PerformHyperpathQuery();
 
-    std::vector<HPElem> ConstructPath(size_t _sink, 
+    std::vector<HPElem> ConstructPath(size_t _sink,
                 std::set<HPElem>& _parents, MBTOutput& _mbt);
 
-    std::vector<HPElem> AddBranches(std::vector<HPElem> _path, 
+    std::vector<HPElem> AddBranches(std::vector<HPElem> _path,
                 std::set<HPElem>& _parents, MBTOutput& _mbt);
 
     std::vector<HPElem> AddDanglingNodes(std::vector<HPElem> _path,

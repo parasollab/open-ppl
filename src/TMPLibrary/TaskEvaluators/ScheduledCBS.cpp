@@ -50,9 +50,9 @@ ScheduledCBS::
 void
 ScheduledCBS::
 Initialize() {
-  
+
 }
-    
+
 void
 ScheduledCBS::
 SetUpperBound(double _upperBound) {
@@ -68,36 +68,36 @@ Run(Plan* _plan) {
   BuildScheduleGraph(_plan);
 
   // Configure CBS Functions
-  CBSLowLevelPlanner<SemanticTask,Constraint,GroupPathType> lowLevel(
+  CBSLowLevelPlanner<SemanticTask*,Constraint,GroupPathType*> lowLevel(
     [this](Node& _node, SemanticTask* _task) {
       return LowLevelPlanner(_node,_task);
     }
   );
 
-  CBSValidationFunction<SemanticTask,Constraint,GroupPathType> validation(
+  CBSValidationFunction<SemanticTask*,Constraint,GroupPathType*> validation(
     [this](Node& _node) {
       return this->ValidationFunction(_node);
     }
   );
 
-  CBSCostFunction<SemanticTask,Constraint,GroupPathType> cost(
+  CBSCostFunction<SemanticTask*,Constraint,GroupPathType*> cost(
     [this](Node& _node) {
       return this->CostFunction(_node);
     }
   );
 
-  CBSSplitNodeFunction<SemanticTask,Constraint,GroupPathType> splitNode(
+  CBSSplitNodeFunction<SemanticTask*,Constraint,GroupPathType*> splitNode(
     [this](Node& _node, std::vector<std::pair<SemanticTask*,Constraint>> _constraints,
-           CBSLowLevelPlanner<SemanticTask,Constraint,GroupPathType>& _lowLevel,
-           CBSCostFunction<SemanticTask,Constraint,GroupPathType>& _cost) {
+           CBSLowLevelPlanner<SemanticTask*,Constraint,GroupPathType*>& _lowLevel,
+           CBSCostFunction<SemanticTask*,Constraint,GroupPathType*>& _cost) {
       return this->SplitNodeFunction(_node,_constraints,_lowLevel,_cost);
     }
   );
 
-  CBSInitialFunction<SemanticTask,Constraint,GroupPathType> initial(
+  CBSInitialFunction<SemanticTask*,Constraint,GroupPathType*> initial(
     [this](std::vector<Node>& _root, std::vector<SemanticTask*> _task,
-           CBSLowLevelPlanner<SemanticTask,Constraint,GroupPathType>& _lowLevel,
-           CBSCostFunction<SemanticTask,Constraint,GroupPathType>& _cost) {
+           CBSLowLevelPlanner<SemanticTask*,Constraint,GroupPathType*>& _lowLevel,
+           CBSCostFunction<SemanticTask*,Constraint,GroupPathType*>& _cost) {
       return this->InitialSolutionFunction(_root,_task,_lowLevel,_cost);
     }
   );
@@ -171,7 +171,7 @@ LowLevelPlanner(Node& _node, SemanticTask* _task) {
 
       size_t startTime = FindStartTime(task, solved, endTimes);
       if(startTime == MAX_UINT)
-        continue;      
+        continue;
 
       startTimes[task] = startTime;
 
@@ -209,10 +209,10 @@ LowLevelPlanner(Node& _node, SemanticTask* _task) {
     size_t startTime = current.first;
 
     if(m_debug) {
-      std::cout << "Start time for " 
-                << task->GetLabel() 
-                << ": " 
-                << startTime 
+      std::cout << "Start time for "
+                << task->GetLabel()
+                << ": "
+                << startTime
                 << std::endl;
     }
 
@@ -232,7 +232,7 @@ LowLevelPlanner(Node& _node, SemanticTask* _task) {
     // Save path to solution
     _node.solutionMap[task] = path;
     solved.insert(task);
-    
+
     size_t timesteps = path->TimeSteps();
     size_t offset = timesteps;// > 0 ? timesteps - 1 : 0;
     endTimes[task] = startTime + offset;
@@ -242,7 +242,7 @@ LowLevelPlanner(Node& _node, SemanticTask* _task) {
                 << task->GetLabel()
                 << " from "
                 << startTime
-                << " to " 
+                << " to "
                 << startTime + offset
                 << std::endl;
     }
@@ -250,7 +250,7 @@ LowLevelPlanner(Node& _node, SemanticTask* _task) {
     // Check if new tasks are available to plan
     std::vector<SemanticTask*> toRemove;
     for(auto t : unsolved) {
-      
+
       size_t st = FindStartTime(t, solved, endTimes);
       if(st == MAX_UINT)
         continue;
@@ -293,13 +293,13 @@ ValidationFunction(Node& _node) {
 
   return constraintSets[0];
 }
- 
+
 std::vector<ScheduledCBS::Node>
 ScheduledCBS::
-SplitNodeFunction(Node& _node, 
-          std::vector<std::pair<SemanticTask*,Constraint>> _constraints, 
-          CBSLowLevelPlanner<SemanticTask,Constraint,GroupPathType>& _lowLevel,
-          CBSCostFunction<SemanticTask,Constraint,GroupPathType>& _cost) {
+SplitNodeFunction(Node& _node,
+          std::vector<std::pair<SemanticTask*,Constraint>> _constraints,
+          CBSLowLevelPlanner<SemanticTask*,Constraint,GroupPathType*>& _lowLevel,
+          CBSCostFunction<SemanticTask*,Constraint,GroupPathType*>& _cost) {
 
   std::vector<Node> newNodes;
 
@@ -373,8 +373,8 @@ CostFunction(Node& _node) {
 void
 ScheduledCBS::
 InitialSolutionFunction(std::vector<Node>& _root, std::vector<SemanticTask*> _tasks,
-                        CBSLowLevelPlanner<SemanticTask,Constraint,GroupPathType>& _lowLevel,
-                        CBSCostFunction<SemanticTask,Constraint,GroupPathType>& _cost) {
+                        CBSLowLevelPlanner<SemanticTask*,Constraint,GroupPathType*>& _lowLevel,
+                        CBSCostFunction<SemanticTask*,Constraint,GroupPathType*>& _cost) {
 
   Node node;
 
@@ -477,7 +477,7 @@ FindConflicts(Node& _node, bool _getAll) {
   // Sort tasks based on slack
   auto slack = ComputeScheduleSlack(_node);
   std::vector<std::pair<size_t,SemanticTask*>> slackOrderedTasks;
-  
+
   for(auto kv : slack) {
     auto task = m_scheduleGraph->GetVertex(kv.first);
     if(!task)
@@ -490,7 +490,7 @@ FindConflicts(Node& _node, bool _getAll) {
   std::sort(slackOrderedTasks.begin(),slackOrderedTasks.end(),
             [this,_node](const std::pair<size_t,SemanticTask*> _elem1,
                    const std::pair<size_t,SemanticTask*> _elem2) {
-    
+
     if(_elem1.first != _elem2.first)
       return _elem1.first < _elem2.first;
 
@@ -516,7 +516,7 @@ FindConflicts(Node& _node, bool _getAll) {
     cfgPaths[task] = path->FullCfgsWithWait(lib);
   }
 
-  //TODO::Make sure collision checking happens until start of next task, 
+  //TODO::Make sure collision checking happens until start of next task,
   //      not just end of current path.
 
   //for(size_t t = 0; t <= maxTimestep; t++) {
@@ -526,7 +526,7 @@ FindConflicts(Node& _node, bool _getAll) {
     auto task1 = slackOrderedTasks[i].second;
     auto slack1 = slackOrderedTasks[i].first;
     auto path1 = _node.solutionMap.at(task1);
- 
+
     const size_t start1 = m_startTimes[path1];
 
     // Compute final timestep for path after waiting
@@ -565,7 +565,7 @@ FindConflicts(Node& _node, bool _getAll) {
 
         auto slack2 = slackOrderedTasks[j].first;
         auto path2 = _node.solutionMap.at(task2);
-        
+
         const size_t start2 = m_startTimes[path2];
         if(t < start2)
           continue;
@@ -620,7 +620,7 @@ FindConflicts(Node& _node, bool _getAll) {
                           << task2->GetLabel()
                           << std::endl;
 
-                std::cout << "Task starts: " << start1 
+                std::cout << "Task starts: " << start1
                           << ", " << start2 << std::endl;
 
                 std::cout << "Task1:" << std::endl
@@ -630,11 +630,11 @@ FindConflicts(Node& _node, bool _getAll) {
                 std::cout << "Task2:" << std::endl
                           << path2->VIDs() << std::endl
                           << path2->GetWaitTimes() << std::endl << std::endl;
-  
+
               }
 
               std::cout << "COLLISION BETWEEN SLACKS OF "
-                        << slack1 << " AND " << slack2 << std::endl; 
+                        << slack1 << " AND " << slack2 << std::endl;
 
               collidingTasks.insert(task2);
 
@@ -669,8 +669,8 @@ FindConflicts(Node& _node, bool _getAll) {
               auto edge2 = path2->GetEdgeAtTimestep(index2);
 
               if(m_debug) {
-                std::cout << "Edge 1: " << edge1 << std::endl; 
-                std::cout << "Edge 2: " << edge2 << std::endl; 
+                std::cout << "Edge 1: " << edge1 << std::endl;
+                std::cout << "Edge 2: " << edge2 << std::endl;
               }
 
               size_t duration1 = 0;
@@ -754,7 +754,7 @@ ScheduledCBS::
 HandleFailure(std::vector<SemanticTask*> _tasks) {
   auto sq = dynamic_cast<SubmodeQuery*>(this->GetTaskEvaluator(m_sqLabel).get());
 
-  // TODO::Remove assumption of two tasks 
+  // TODO::Remove assumption of two tasks
   auto task1 = _tasks[0];
   auto task2 = _tasks[1];
 
@@ -774,9 +774,9 @@ ConvertToPlan(const Node& _node, Plan* _plan) {
 
 size_t
 ScheduledCBS::
-FindStartTime(SemanticTask* _task, std::set<SemanticTask*> _solved, 
+FindStartTime(SemanticTask* _task, std::set<SemanticTask*> _solved,
               std::map<SemanticTask*,size_t> _endTimes) {
-  
+
   size_t startTime = 0;
 
   // Check if all dependencies have been solved
@@ -847,7 +847,7 @@ ComputeIntervals(SemanticTask* _task, const Node& _node) {
 std::vector<Range<size_t>>
 ScheduledCBS::
 ConstructSafeIntervals(std::vector<Range<size_t>>& _unsafeIntervals) {
-  
+
   const size_t buffer = 2;
 
   // Return infinite interval if there are no unsafe intervals
@@ -861,7 +861,7 @@ ConstructSafeIntervals(std::vector<Range<size_t>>& _unsafeIntervals) {
   do {
 
     std::set<size_t> merged;
-    
+
     std::vector<Range<size_t>> copyIntervals = unsafeIntervals;
     const size_t size = copyIntervals.size();
 
@@ -910,7 +910,7 @@ ConstructSafeIntervals(std::vector<Range<size_t>>& _unsafeIntervals) {
   };
 
   std::sort(unsafeIntervals.begin(), unsafeIntervals.end(), less_than());
-  
+
   for(size_t i = 1; i < unsafeIntervals.size(); i++) {
     if(unsafeIntervals[i-1].max > unsafeIntervals[i].max
       or unsafeIntervals[i-1].max > unsafeIntervals[i].min)
@@ -928,7 +928,7 @@ ConstructSafeIntervals(std::vector<Range<size_t>>& _unsafeIntervals) {
     max = std::min(iter->min - 1,iter->min);
     if(min < max)
       intervals.emplace_back(min,max);
-  
+
     min = std::max(iter->max + 1,iter->max);
     iter++;
   }
@@ -985,10 +985,10 @@ BuildScheduleGraph(Plan* _plan) {
 
     for(auto vit = m_scheduleGraph->begin(); vit != m_scheduleGraph->end(); vit++) {
 
-      std::cout << vit->descriptor() 
+      std::cout << vit->descriptor()
                 << ":"
                 << m_scheduleAtomicDistances[vit->descriptor()]
-                << "\tname: " 
+                << "\tname: "
                 << (vit->property() != nullptr ? vit->property()->GetLabel() : "root")
                 << std::endl
                 << "\t";
@@ -1014,7 +1014,7 @@ ComputeScheduleAtomicDistances() {
       const double _targetDistance) {
     return _sourceDistance + 1.;
   };
-  
+
   auto sssp = DijkstraSSSP(m_scheduleGraph.get(),{0},weight);
 
   for(auto kv : sssp.distance) {
@@ -1033,9 +1033,9 @@ ComputeCriticalPaths(const Node& _node) {
     for(auto kv : slack) {
       auto task = m_scheduleGraph->GetVertex(kv.first);
       auto slack = kv.second;
-      std::cout << (task ? task->GetLabel() : "root") 
-                << " : " 
-                << slack 
+      std::cout << (task ? task->GetLabel() : "root")
+                << " : "
+                << slack
                 << std::endl;
     }
   }
@@ -1051,7 +1051,7 @@ ComputeScheduleSlack(const Node& _node) {
       typename ScheduleGraph::adj_edge_iterator& _ei,
       const double _sourceDistance,
       const double _targetDistance) {
-    
+
     auto source = this->m_scheduleGraph->GetVertex(_ei->source());
     auto target = this->m_scheduleGraph->GetVertex(_ei->target());
 
