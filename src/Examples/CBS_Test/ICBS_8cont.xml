@@ -1,0 +1,178 @@
+<?xml version='1.0' encoding='utf-8'?>
+<MotionPlanning warnings="true" warningsAsErrors="true" print="false">
+  <Problem baseFilename="Cross-continuous">
+    <Environment filename="cross_8agents.env" positionRes=".5" orientationRes=".2" gravity="0 0 0" frictionCoefficient="0.01"/>
+    <Robot label="member1" filename="../objects/boxy.robot" capability="land" color="red">
+      <Agent type="pathfollowing" debug="true" waypointDm="positionEuclidean" waypointThreshold="0.2"/>
+    </Robot>
+    <Robot label="member2" filename="../objects/boxy.robot" capability="land" color="red">
+      <Agent type="pathfollowing" debug="true" waypointDm="positionEuclidean" waypointThreshold="0.2"/>
+    </Robot>
+    <Robot label="member3" filename="../objects/boxy.robot" capability="land" color="red">
+      <Agent type="pathfollowing" debug="true" waypointDm="positionEuclidean" waypointThreshold="0.2"/>
+    </Robot>
+    <Robot label="member4" filename="../objects/boxy.robot" capability="land" color="red">
+      <Agent type="pathfollowing" debug="true" waypointDm="positionEuclidean" waypointThreshold="0.2"/>
+    </Robot>
+    <Robot label="member5" filename="../objects/boxy.robot" capability="land" color="red">
+      <Agent type="pathfollowing" debug="true" waypointDm="positionEuclidean" waypointThreshold="0.2"/>
+    </Robot>
+    <Robot label="member6" filename="../objects/boxy.robot" capability="land" color="red">
+      <Agent type="pathfollowing" debug="true" waypointDm="positionEuclidean" waypointThreshold="0.2"/>
+    </Robot>
+    <Robot label="member7" filename="../objects/boxy.robot" capability="land" color="red">
+      <Agent type="pathfollowing" debug="true" waypointDm="positionEuclidean" waypointThreshold="0.2"/>
+    </Robot>
+    <Robot label="member8" filename="../objects/boxy.robot" capability="land" color="red">
+      <Agent type="pathfollowing" debug="true" waypointDm="positionEuclidean" waypointThreshold="0.2"/>
+    </Robot>
+    <RobotGroup label="robotGroup" robotLabels="member1 member2 member3 member4 member5 member6 member7 member8 "/>
+    <Robot label="coordinator" virtual="true" filename="../objects/boxy.robot" >
+      <Agent type="coordinator" dmLabel="euclidean">
+        <Member label="robotGroup"/>
+        <StepFunction type="defaultcoordinator"/>
+      </Agent>
+    </Robot>
+    <GroupTask label="groupQuery" group="robotGroup">
+      <Task label="query-1" robot="member1">
+      <StartConstraints>
+        <CSpaceConstraint point="0 1" />
+      </StartConstraints>
+      <GoalConstraints>
+        <CSpaceConstraint point="5 1" />
+      </GoalConstraints>
+      </Task>
+      <Task label="query-2" robot="member2">
+      <StartConstraints>
+        <CSpaceConstraint point="0 2" />
+      </StartConstraints>
+      <GoalConstraints>
+        <CSpaceConstraint point="5 2" />
+      </GoalConstraints>
+      </Task>
+      <Task label="query-3" robot="member3">
+      <StartConstraints>
+        <CSpaceConstraint point="0 3" />
+      </StartConstraints>
+      <GoalConstraints>
+        <CSpaceConstraint point="5 3" />
+      </GoalConstraints>
+      </Task>
+      <Task label="query-4" robot="member4">
+      <StartConstraints>
+        <CSpaceConstraint point="0 4" />
+      </StartConstraints>
+      <GoalConstraints>
+        <CSpaceConstraint point="5 4" />
+      </GoalConstraints>
+      </Task>
+      <Task label="query-5" robot="member5">
+      <StartConstraints>
+        <CSpaceConstraint point="1 0" />
+      </StartConstraints>
+      <GoalConstraints>
+        <CSpaceConstraint point="1 5" />
+      </GoalConstraints>
+      </Task>
+      <Task label="query-6" robot="member6">
+      <StartConstraints>
+        <CSpaceConstraint point="2 0" />
+      </StartConstraints>
+      <GoalConstraints>
+        <CSpaceConstraint point="2 5" />
+      </GoalConstraints>
+      </Task>
+      <Task label="query-7" robot="member7">
+      <StartConstraints>
+        <CSpaceConstraint point="3 0" />
+      </StartConstraints>
+      <GoalConstraints>
+        <CSpaceConstraint point="3 5" />
+      </GoalConstraints>
+      </Task>
+      <Task label="query-8" robot="member8">
+      <StartConstraints>
+        <CSpaceConstraint point="4 0" />
+      </StartConstraints>
+      <GoalConstraints>
+        <CSpaceConstraint point="4 5" />
+      </GoalConstraints>
+      </Task>
+    </GroupTask>
+  </Problem>
+  <Library>
+    <DistanceMetrics>
+      <Minkowski label="minkowski" r1="3.0" r2="3.0" r3="0.333" normalize="false" />
+      <Euclidean label="euclidean" />
+    </DistanceMetrics>
+
+    <ValidityCheckers>
+      <AlwaysTrueValidity label="alwaysTrue" />
+      <CollisionDetection label="rapid" method="RAPID" />
+      <CollisionDetection label="pqp" method="PQP" />
+      <CollisionDetection label="pqp_solid" method="PQP_SOLID" />
+    </ValidityCheckers>
+
+    <NeighborhoodFinders>
+      <BruteForceNF label="Nearest" dmLabel="minkowski" unconnected="false" k="1" />
+      <BruteForceNF label="BFNF" dmLabel="euclidean" unconnected="false" k="6" />
+    </NeighborhoodFinders>
+
+    <Samplers>
+      <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue" />
+      <UniformRandomSampler label="UniformRandomFree" vcLabel="pqp_solid" />
+    </Samplers>
+
+    <LocalPlanners>
+      <StraightLine label="sl" binaryEvaluation="false" vcLabel="pqp_solid" saveIntermediates="true" />
+    </LocalPlanners>
+
+    <Extenders>
+      <BasicExtender label="BERO" debug="false" dmLabel="minkowski" vcLabel="alwaysTrue" maxDist="4." minDist=".01" />
+    </Extenders>
+
+    <PathModifiers></PathModifiers>
+
+    <Connectors>
+      <NeighborhoodConnector label="Closest" nfLabel="BFNF" lpLabel="sl" checkIfSameCC="false" debug="false" />
+    </Connectors>
+
+    <MPTools>
+      <SafeIntervalTool label="SI" vcLabel="pqp_solid" debug="true" />
+    </MPTools>
+
+    <MapEvaluators>
+      <TimeEvaluator label="TimeEval" timeout="1000" />
+      <QueryMethod label="IndividualQuery" debug="false" safeIntervalToolLabel="SI" />
+      <SIPPMethod label="SIPP"/>
+      <ComposeEvaluator label="BoundedIndividualQuery" operator="or">
+        <Evaluator label="TimeEval" />
+        <Evaluator label="IndividualQuery" />
+      </ComposeEvaluator>
+      <CBSQuery label="CBSQuery" queryLabel="SIPP" debug="true" vcLabel="pqp_solid" buffer="2"/>
+      <CBSQuery label="ICBSQuery" queryLabel="SIPP" debug="true" vcLabel="pqp_solid" buffer="2" bypass="true" pc="true"/>
+    </MapEvaluators>
+    <MPStrategies>
+      <BasicPRM label="IndividualPRM">
+        <Sampler label="UniformRandomFree" number="10" attempts="5" />
+        <Connector label="Closest" />
+        <Evaluator label="BoundedIndividualQuery" />
+      </BasicPRM>
+      <GroupDecoupledStrategy label="CBSPRM" strategyLabel="IndividualPRM">
+        <Evaluator label="ICBSQuery" />
+      </GroupDecoupledStrategy>
+    </MPStrategies>
+    <Solver mpStrategyLabel="CBSPRM" seed="12345678" baseFilename="ICBS-8cont" vizmoDebug="true" />
+  </Library>
+  <TMPLibrary>
+    <TMPStrategies>
+      <SimpleMotionMethod label="SimpleMotion" teLabel="motionEval" />
+    </TMPStrategies>
+
+    <TaskEvaluators>
+      <SimpleMotionEvaluator label="motionEval" />
+    </TaskEvaluators>
+
+    <Solver tmpStrategyLabel="SimpleMotion" baseFilename="tmp_examples" />
+  </TMPLibrary>
+</MotionPlanning>
