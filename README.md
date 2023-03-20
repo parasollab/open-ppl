@@ -113,7 +113,7 @@ pip install conan
 
 #### Install conan packages
 ```bash
-conan install . --install-folder cmake-build-release --build=missing
+conan install . --install-folder cmake-build-release --build=missing -e CONAN_CMAKE_GENERATOR=Ninja -c tools.system.package_manager:mode=install -c tools.system.package_manager:sudo=true
 ```
 
 #### Build pmpl with conan
