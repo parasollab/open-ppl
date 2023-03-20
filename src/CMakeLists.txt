@@ -31,7 +31,11 @@ if(BUILD_MATLAB)
     list(APPEND MATLAB_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/Behaviors/Simulator/MatlabMicroSimulator.cpp)
 endif()
 
-set(CLIENT_SRCS
+set(COMM_SRCS`
+        PARENT_SCOPE
+        )
+
+set(PLANNER_SRCS
         PARENT_SCOPE
         )
 
