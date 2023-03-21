@@ -9,7 +9,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Samples by "snapping" random configurations to lattice points in a grid
 template <typename MPTraits>
-class MixSampler : public SamplerMethod<MPTraits> {
+class MixSampler : virtual public SamplerMethod<MPTraits> {
 
   public:
 
@@ -27,6 +27,8 @@ class MixSampler : public SamplerMethod<MPTraits> {
         vector<CfgType>& _result, vector<CfgType>& _collision);
 
     vector<pair <string, double> > samplers; // Stores method label with cumulative probability
+
+    pair<string, int> samplerLabels; // Stores label history and index
 };
 
 template <typename MPTraits>
@@ -93,10 +95,16 @@ MixSampler<MPTraits>::
 Sampler(CfgType& _cfg, const Boundary* const _boundary,
     vector<CfgType>& _result, vector<CfgType>& _collision) {
   double rand = DRand();
-  for(auto&  sampler : samplers)
-    if(rand < sampler.second)
+  int samplerIndex = 0;
+  for(auto&  sampler : samplers){
+    if(rand < sampler.second){
+      samplerLabels = make_pair(this->GetSampler(sampler.first)->GetNameAndLabel(), samplerIndex);
       return this->GetSampler(sampler.first)->
         Sampler(_cfg, _boundary, _result, _collision);
+    }
+
+    samplerIndex = samplerIndex + 1;
+  }
   return false;
 }
 

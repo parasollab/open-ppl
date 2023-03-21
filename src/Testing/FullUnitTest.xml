@@ -149,6 +149,10 @@
 
     <Samplers>
       <BridgeTestSampler label="BridgeTest" d="10" dmLabel="euclidean" vcLabel="pqp_solid"/>
+      <MixSampler label="MixSampler">
+        <Sampler label="OBPRM" p=0.5/>
+        <Sampler label="UniformRandom" p=0.5/>
+      </MixSampler>
       <ObstacleBasedSampler label="OBPRM" vcLabel="rapid" useBBX="false"
         pointSelection="cspace" dmLabel="euclidean" stepSize="0.0"
         nShellsColl="10" nShellsFree="10" debug="false" />

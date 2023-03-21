@@ -37,6 +37,7 @@
 
 //sampler includes
 #include "Testing/MPLibrary/Samplers/BridgeTestSamplerTest.h"
+#include "Testing/MPLibrary/Samplers/MixSamplerTest.h"
 #include "Testing/MPLibrary/Samplers/ObstacleBasedSamplerTest.h"
 #include "Testing/MPLibrary/Samplers/UniformRandomSamplerTest.h"
 
@@ -131,6 +132,7 @@ struct MPTraits {
   //types of samplers available in our world
   typedef boost::mpl::list<
       BridgeTestSamplerTest<MPTraits>,
+      MixSamplerTest<MPTraits>,
       ObstacleBasedSamplerTest<MPTraits>,
       UniformRandomSamplerTest<MPTraits>
       > SamplerMethodList;
