@@ -1,0 +1,51 @@
+Roadmap Statistics:
+
+  Number of Nodes: 67
+  Number of Edges: 66
+
+  There are 1 connected components:
+    CC[0]: 67 (vid 0)
+
+
+Sampler Statistics                                            Attempts Successes
+
+  UniformRandomSampler::UniformRandom                              186       186
+  UniformRandomSampler::UniformRandomFree                            1         1
+  All Samplers                                                     187       187
+  Success Rate: 100%
+
+
+Collision Detection Calls                                                  Count
+
+  BasicExtender::Expand                                                    13251
+  UniformRandomSampler::UniformRandomFree::Sampler                             1
+  All Collision Detectors                                                  13252
+
+
+Other Statistics                                                           Value
+
+  BasicRRTStrategy::RRT::Extend                                              186
+  QueryMethod::PRMQuery::FoundPath                                             0
+  QueryMethod::Query::FoundPath                                                0
+
+
+Clock Name                                                        Time (Seconds)
+
+  BasicRRTStrategy::RRT::AddEdge                                         0.00873
+  BasicRRTStrategy::RRT::AddNode                                          0.0231
+  BasicRRTStrategy::RRT::EvaluateMap                                      0.0197
+  BasicRRTStrategy::RRT::Extend                                            0.926
+  BasicRRTStrategy::RRT::FindNearestNeighbor                              0.0378
+  BasicRRTStrategy::RRT::GenerateStart                                         0
+  BasicRRTStrategy::RRT::InitAndRun                                         1.03
+  BasicRRTStrategy::RRT::Initialize                                            0
+  BasicRRTStrategy::RRT::Run                                                1.03
+  BasicRRTStrategy::RRT::SelectTarget                                     0.0125
+  BasicRRTStrategy::RRT::TryGoalExtension                                  0.014
+  BruteForceNF::Nearest::FindNeighbors                                    0.0142
+  CCTracker::AddEdge                                                       0.004
+  CCTracker::AddVertex                                                         0
+  MPLibrary::Initialize                                                        0
+  MinimumDistanceEvaluator::MinDist                                      0.00405
+  UniformRandomSampler::UniformRandom::Sample                            0.00133
+  UniformRandomSampler::UniformRandomFree::Sample                              0

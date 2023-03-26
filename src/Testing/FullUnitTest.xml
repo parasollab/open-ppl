@@ -195,6 +195,7 @@
 
       <QueryMethod label="Query" debug="false"
         graphSearchAlg="dijkstras" safeIntervalToolLabel="SI"/>
+      <MinimumDistanceEvaluator label="MinDist" minDist="10" dmLabel="euclidean"/>
     </MapEvaluators>
 
     <MPStrategies>
@@ -221,6 +222,12 @@
         <Sampler label="UniformRandom" number="1" attempts="1"/>
         <Connector label="ClosestAlwaysTrue" />
         <Evaluator label="LazyQuery"/>
+      </BasicPRM>
+
+      <BasicPRM label="WOOO" debug="false">
+        <Sampler label="UniformRandom" number="1" attempts="1"/>
+        <Connector label="ClosestAlwaysTrue" />
+        <Evaluator label="MinDist"/>
       </BasicPRM>
     </MPStrategies>
 

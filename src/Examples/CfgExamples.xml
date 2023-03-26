@@ -8,26 +8,81 @@
     <Environment filename="3D/3d.env"
       frictionCoefficient="0" gravity="0 0 0"/>
 
-    <Robot label="boxy" filename="3D/boxy.robot">
-      <!--
-      <Agent type="planning"/>
-      -->
+    <Robot label="boxy1" filename="3D/boxy.robot">
       <Agent type="pathfollowing" waypointDm="euclideanPosition"
         waypointThreshold=".05"/>
     </Robot>
 
-    <Task label="query" robot="boxy">
+    <!--Robot label="boxy2" filename="3D/boxy.robot">
+      <Agent type="pathfollowing" waypointDm="euclideanPosition"
+        waypointThreshold=".05"/>
+    </Robot-->
+
+    <!-- Single query with single robot -->
+    <Task label="query" robot="boxy1">
       <StartConstraints>
-        <!-- WARNING Support for multiple constraints is not yet implemented! -->
         <CSpaceConstraint point="0 0 0 0 0 0"/>
       </StartConstraints>
 
       <GoalConstraints>
-        <!-- Here multiple constraints indicates a compound goal. Each constraint
-             represents a single intermediate goal. -->
         <CSpaceConstraint point="20 5 10 0.2 0.8 0.5"/>
       </GoalConstraints>
     </Task>
+
+    <!-- Multiple queries can be solved in sequence -->
+    <!-- <Task label="build" robot="boxy1"></Task>
+
+    <Task label="query1" robot="boxy1">
+      <StartConstraints>
+        <CSpaceConstraint point="0 0 0 0 0 0"/>
+      </StartConstraints>
+      <GoalConstraints>
+        <CSpaceConstraint point="20 5 10 0.2 0.8 0.5"/>
+      </GoalConstraints>
+    </Task>
+
+    <Task label="query2" robot="boxy1">
+      <StartConstraints>
+        <CSpaceConstraint point="20 5 10 0.2 0.8 0.5"/>
+      </StartConstraints>
+      <GoalConstraints>
+        <CSpaceConstraint point="0 0 0 0 0 0"/>
+      </GoalConstraints>
+    </Task>
+
+    <Task label="query3" robot="boxy1">
+      <StartConstraints>
+        <CSpaceConstraint point="0 0 0 0 0 0"/>
+      </StartConstraints>
+      <GoalConstraints>
+        <CSpaceConstraint point="20 5 10 0.8 0.5 0.2"/>
+      </GoalConstraints>
+    </Task> -->
+
+
+    <!-- Group task defines start and goal constraints for multiple robots -->
+    <!--
+    <RobotGroup label="2-robotGroup" robotLabels="boxy1 boxy2"/>
+
+    <GroupTask label="2-groupQuery" group="2-robotGroup">
+      <Task label="query1" robot="boxy1">
+        <StartConstraints>
+          <CSpaceConstraint point="0 0 0 0 0 0"/>
+        </StartConstraints>
+        <GoalConstraints>
+          <CSpaceConstraint point="20 5 10 0.2 0.8 0.5"/>
+        </GoalConstraints>
+      </Task>
+      <Task label="query2" robot="boxy2">
+        <StartConstraints>
+          <CSpaceConstraint point="20 5 10 0.2 0.8 0.5"/>
+        </StartConstraints>
+        <GoalConstraints>
+          <CSpaceConstraint point="0 0 0 0 0 0"/>
+        </GoalConstraints>
+      </Task>
+    </GroupTask>
+    -->
 
   </Problem>
 
@@ -46,7 +101,6 @@
       <CollisionDetection label="pqp" method="PQP"/>
       <CollisionDetection label="pqp_solid" method="PQP_SOLID"/>
       <CollisionDetection label="bounding_spheres" method="BoundingSpheres"/>
-      <CollisionDetection label="inside_spheres" method="InsideSpheres"/>
       <AlwaysTrueValidity label="alwaysTrue"/>
     </ValidityCheckers>
 
@@ -60,14 +114,16 @@
     <Samplers>
       <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
       <UniformRandomSampler label="UniformRandomFree" vcLabel="pqp_solid"/>
-      <ObstacleBasedSampler label="ObstacleBased" vcLabel="rapid" useBBX="false"
+      <ObstacleBasedSampler label="OBPRM" vcLabel="rapid" useBBX="false"
         pointSelection="cspace" dmLabel="euclidean" stepSize="0.0"
-        nShellsColl="0" nShellsFree="10" debug="false"/>
-      <!--<GaussianSampler label="Gauss" vcLabel="rapid" d="0.2" dmLabel="euclidean"
+        nShellsColl="0" nShellsFree="1" debug="true"/>
+      <MedialAxisSampler label="MAPRM" vcLabel="pqp_solid" dmLabel="euclidean"
+        clearanceType="exact" penetrationType="exact" useBBX="true" debug="false"
+        positional="true"/>
+      <GaussianSampler label="Gauss" vcLabel="rapid" d="0.2" dmLabel="euclidean"
         useBBX="false"/>
-        nShellsColl="0" nShellsFree="1" debug="false"/>
       <BridgeTestSampler label="Bridge" vcLabel="rapid" d="0.2"
-        dmLabel="euclidean" useBBX="true"/> -->
+        dmLabel="euclidean" useBBX="true"/>
     </Samplers>
 
     <LocalPlanners>
@@ -77,9 +133,9 @@
     </LocalPlanners>
 
     <Extenders>
-      <BasicExtender label="BERO" debug="false" dmLabel="euclidean"
+      <BasicExtender label="BERO" debug="true" dmLabel="euclidean"
         vcLabel="rapid" maxDist="4." minDist=".01"/>
-      <BasicExtender label="BESO" debug="false" dmLabel="euclidean"
+      <BasicExtender label="BESO" debug="true" dmLabel="euclidean"
         vcLabel="rapid" maxDist="10." minDist=".001" randomOrientation="false"/>
     </Extenders>
 
@@ -87,6 +143,8 @@
     </PathModifiers>
 
     <Connectors>
+      <CCsConnector label="ConnectCCs" debug="true"
+        nfLabel="BFNF" lpLabel="sl"/>
       <NeighborhoodConnector label="Closest" debug="true"
         nfLabel="BFNF" lpLabel="sl" checkIfSameCC="false"/>
       <NeighborhoodConnector label="ToggleConnect" nfLabel="BFNF" lpLabel="sl"
@@ -95,9 +153,6 @@
         lpLabel="slAlwaysTrue" checkIfSameCC="false"/>
       <NeighborhoodConnector label="AllToAll" nfLabel="BFNFAll" lpLabel="sl"
         checkIfSameCC="false"/>
-      <CCsConnector label="CCs" debug="false"
-        nfLabel="BFNF" lpLabel="slAlwaysTrue" checkIfSameCC="false"/>
-      <RewireConnector label="Rewire" nfLabel="OptimalK" lpLabel="sl"/>
     </Connectors>
 
     <Metrics>
@@ -107,9 +162,8 @@
     </Metrics>
 
     <MapEvaluators>
-      <QueryMethod label="Query" debug="false"
+      <QueryMethod label="Query" debug="true"
         graphSearchAlg="dijkstras" safeIntervalToolLabel="SI"/>
-
       <LazyQuery label="LazyQuery" debug="true"
         vcLabel="pqp_solid" lpLabel="sl" enhanceDmLabel="euclidean"
         numEnhance="10" d="0.5" deleteInvalid="true">
@@ -118,46 +172,45 @@
         <Resolution mult="16"/>
         <Resolution mult="1"/>
       </LazyQuery>
-
       <PrintMapEvaluation label="PrintMap" base_name="Basic"/>
-
       <ConditionalEvaluator label="NodesEval" metric_method="NumNodes"
-        value="100" operator=">="/>
-
+        value="1000" operator=">="/>
       <ConditionalEvaluator label="EdgesEval" metric_method="NumEdges"
         value="1000" operator=">"/>
-
       <ConditionalEvaluator label="FreqNodeEval" metric_method="NumNodes"
         value="50" operator="%"/>
-
       <ComposeEvaluator label="BoundedQuery" operator="or">
         <Evaluator label="NodesEval"/>
         <Evaluator label="Query"/>
       </ComposeEvaluator>
-
       <ComposeEvaluator label="MinimumLazyQuery" operator="and">
         <Evaluator label="LazyQuery"/>
         <Evaluator label="NodesEval"/>
       </ComposeEvaluator>
-
       <TimeEvaluator label="TimeEval" timeout="10"/>
+      <GroupQuery label = "CompositeQuery"/>
+      <MinimumDistanceEvaluator label="MinDist" minDist="10"/>
     </MapEvaluators>
 
     <MPStrategies>
 
       <!-- Basic PRM where num samples is based on Number -->
-      <BasicPRM label="OBPRM" debug="true" querySampler="UniformRandomFree">
-        <Sampler label="ObstacleBased" number="10" attempts="10"/>
-        <Connector label="Closest"/>
-        <Evaluator label="NodesEval"/>
-      </BasicPRM>
-
-      <BasicPRM label="BasicPRM1" debug="true" querySampler="UniformRandomFree">
+      <BasicPRM label="PRM-build" debug="true" querySampler="UniformRandomFree">
         <Sampler label="UniformRandomFree" number="10" attempts="1"/>
+        <!--Sampler label="OBPRM" number="10" attempts="10"/-->
         <Connector label="Closest"/>
+        <!--Connector label="ConnectCCs"/-->
         <Evaluator label="NodesEval"/>
       </BasicPRM>
 
+      <!-- Basic PRM where num samples is based on Number -->
+      <BasicPRM label="PRM-query" debug="true" querySampler="UniformRandomFree">
+        <Sampler label="UniformRandomFree" number="10" attempts="1"/>
+        <!--Sampler Method="OBPRM" number="10" attempts="10"/-->
+        <Connector label="Closest"/>
+        <!--Connector label="ConnectCCs"/-->
+        <Evaluator label="Query"/>
+      </BasicPRM>
 
       <!-- Basic PRM restarted from an input roadmap input.map. -->
       <BasicPRM label="BasicPRM2"
@@ -183,59 +236,42 @@
         <Evaluator label="Query"/>
       </BasicRRTStrategy>
 
-      <!-- The connector needs to be Rewire for RRT* -->
-      <BasicRRTStrategy label="RRTstar"
-        querySampler="UniformRandomFree" samplerLabel="UniformRandom"
-        growGoals="false" growthFocus="0.01"
-        nfLabel="Nearest" extenderLabel="BERO" connectorLabel="Rewire">
-        <Evaluator label="NodesEval"/>
-      </BasicRRTStrategy>
+      <!-- Toggle PRM -->
+      <TogglePRMStrategy label="TogglePRM" vcLabel="pqp_solid" priority="true">
+        <Sampler label="UniformRandomFree" number="10" attempts="1"/>
+        <Connector label="Closest"/>
+        <ColConnector label="ToggleConnect"/>
+        <Evaluator label="Query"/>
+      </TogglePRMStrategy>
 
-      <!-- DynamicRegionRRT -->
-      <DynamicRegionRRT label="DRRRT" debug="true" querySampler="UniformRandomFree"
-          samplerLabel="UniformRandom" nfLabel="Nearest" extenderLabel="BERO"
-          growGoals="false" connectorLabel="Closest" explore=".2" regionFactor="2.5"
-          penetration="1" velocityBiasing="false" velocityAlignment=".4"
-          decompositionLabel="fine" skeletonType="ma" goalThreshold="5"
-          goalDmLabel="euclidean">
-          <Evaluator label="BoundedQuery" />
-      </DynamicRegionRRT>
+      <!-- Strategy Sequence -->
+      <StrategySequence label="Sequence" debug="true">
+        <StrategyMethod label="PRM-build" task="build" path="false"/>
+        <StrategyMethod label="PRM-query" task="query1" path="true"/>
+        <StrategyMethod label="PRM-query" task="query2" path="true"/>
+        <StrategyMethod label="PRM-query" task="query3" path="true"/>
+      </StrategySequence>
 
+      <!-- Group PRM -->
+      <GroupPRM label="CompositePRM" querySampler="UniformRandomFree" debug="true">
+        <Sampler label="UniformRandomFree" number="10" attempts="1"/>
+        <Connector label="Closest"/>
+        <Evaluator label = "CompositeQuery"/>
+      </GroupPRM>
+      <!-- My Custom Strategy -->
+      <MyStrategy label="MyStrategy"/>
     </MPStrategies>
 
     <MPTools>
-      <!-- Example nodes for a workspace decomposition with tetgen. Be aware
-           that each decomposition defined will be created immediately upon
-           initialization. If you don't need them, comment them out to save
-           pre-processing time. These examples would create new decompositions.
-      <TetGenDecomposition label="coarse" debug="false" switches="pnQ"/>
-      <TetGenDecomposition label="fine" debug="false" switches="pnqQ"/>
-      -->
+      <ReebGraphConstruction debug="true" write="false" filename=""/>
 
-      <!-- The same workspace decomposition nodes, this time reading in from
-           saved files like 'coarse.ele' and 'coarse.node'. This is preferred as
-           we cannot completely control the randomness in the CGAL functions
-           which generate the decompositions. -->
-      <!-- <TetGenDecomposition label="coarse" debug="false" switches="pnQ"
-        io="read" baseFilename="3D/coarse"/>
-      <TetGenDecomposition label="fine" debug="false" switches="pnqQ"
-        io="read" baseFilename="3D/quality"/> -->
-
-      <!-- Different objects need to work with different granularities when it
-           comes to decomposition-based tools. You can define multiple
-           topological maps for this purpose. -->
-      <!-- <TopologicalMap label="tm-coarse" decompositionLabel="coarse"
-        gridSize="1"/>
-      <TopologicalMap label="tm-fine" decompositionLabel="fine"
-        gridSize="1"/> -->
-
-      <ReebGraphConstruction debug="false" write="false" filename=""/>
-
-      <!--MedialAxisUtility label="maUtil" vcLabel="pqp_solid"
+      <ClearanceUtility label="clearanceUtil" vcLabel="pqp_solid"
         dmLabel="euclidean" clearanceType="exact" penetrationType="exact"
-        useBBX="true" positional="true"/-->
+        useBBX="true" positional="true"/>
 
-      <!--SkeletonClearanceUtility label="scu" mauLabel="maUtil"/-->
+      <MedialAxisUtility label="maUtil" vcLabel="pqp_solid"
+        dmLabel="euclidean" clearanceType="exact" penetrationType="exact"
+        useBBX="true" positional="true"/>
 
       <SafeIntervalTool label="SI" vcLabel="rapid"/>
 
@@ -243,21 +279,8 @@
 
     <!-- MPProblem allows multiple solvers to be specified and executed. -->
 
-    <Solver mpStrategyLabel="OBPRM" seed="12345678"
-      baseFilename="example" vizmoDebug="true"/>
+    <Solver mpStrategyLabel="MyStrategy" seed="12345678"
+      baseFilename="MyStrategy" vizmoDebug="true"/>
 
   </Library>
-
-  <TMPLibrary>
-    <TMPStrategies>
-      <SimpleMotionMethod label="SimpleMotion" teLabel="motionEval" />
-    </TMPStrategies>
-
-    <TaskEvaluators>
-      <SimpleMotionEvaluator label="motionEval" />
-    </TaskEvaluators>
-
-    <Solver tmpStrategyLabel="SimpleMotion" baseFilename="tmp_examples" />
-  </TMPLibrary>
-
 </MotionPlanning>
