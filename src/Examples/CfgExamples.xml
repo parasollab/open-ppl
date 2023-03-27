@@ -48,6 +48,7 @@
       <CollisionDetection label="bounding_spheres" method="BoundingSpheres"/>
       <CollisionDetection label="inside_spheres" method="InsideSpheres"/>
       <AlwaysTrueValidity label="alwaysTrue"/>
+      <TopologicalMapValidity label="topo" tmLabel="tm-coarse"/>
     </ValidityCheckers>
 
     <NeighborhoodFinders>
@@ -60,6 +61,7 @@
     <Samplers>
       <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
       <UniformRandomSampler label="UniformRandomFree" vcLabel="pqp_solid"/>
+      <UniformRandomSampler label="UniformRandomFreeTopo" vcLabel="topo"/>
       <ObstacleBasedSampler label="ObstacleBased" vcLabel="rapid" useBBX="false"
         pointSelection="cspace" dmLabel="euclidean" stepSize="0.0"
         nShellsColl="0" nShellsFree="10" debug="false"/>
@@ -153,7 +155,8 @@
       </BasicPRM>
 
       <BasicPRM label="BasicPRM1" debug="true" querySampler="UniformRandomFree">
-        <Sampler label="UniformRandomFree" number="10" attempts="1"/>
+        <!-- <Sampler label="UniformRandomFree" number="10" attempts="1"/> -->
+        <Sampler label="UniformRandomFreeTopo" number="10" attempts="1"/>
         <Connector label="Closest"/>
         <Evaluator label="NodesEval"/>
       </BasicPRM>
@@ -228,7 +231,10 @@
         gridSize="1"/>
       <TopologicalMap label="tm-fine" decompositionLabel="fine"
         gridSize="1"/> -->
-
+      <TetGenDecomposition label="coarse" debug="false" switches="pnQ"
+        io="read" baseFilename="3D/coarse"/>
+      <TopologicalMap label="tm-coarse" decompositionLabel="coarse"
+        gridSize="1"/>
       <ReebGraphConstruction debug="false" write="false" filename=""/>
 
       <!--MedialAxisUtility label="maUtil" vcLabel="pqp_solid"
@@ -243,8 +249,8 @@
 
     <!-- MPProblem allows multiple solvers to be specified and executed. -->
 
-    <Solver mpStrategyLabel="OBPRM" seed="12345678"
-      baseFilename="example" vizmoDebug="true"/>
+    <Solver mpStrategyLabel="BasicPRM1" seed="12345678"
+      baseFilename="Testing-Topo" vizmoDebug="true"/>
 
   </Library>
 
