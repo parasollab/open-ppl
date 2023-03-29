@@ -134,7 +134,6 @@
 
     <ValidityCheckers>
       <AlwaysTrueValidity label="alwaysTrue"/>
-
       <!-- Test not yet added -->
       <CollisionDetection label="pqp_solid" method="PQP_SOLID"/>
       <CollisionDetection label="rapid" method="RAPID"/>
@@ -192,7 +191,7 @@
         <Resolution mult="16"/>
         <Resolution mult="1"/>
       </LazyQuery>
-
+      <NegateEvaluator label="Neg" evalLabel="Query"/>
       <QueryMethod label="Query" debug="false"
         graphSearchAlg="dijkstras" safeIntervalToolLabel="SI"/>
     </MapEvaluators>

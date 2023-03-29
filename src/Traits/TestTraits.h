@@ -61,6 +61,7 @@
 //map evaluator includes
 #include "Testing/MPLibrary/MapEvaluators/LazyQueryTest.h"
 #include "Testing/MPLibrary/MapEvaluators/QueryMethodTest.h"
+#include "Testing/MPLibrary/MapEvaluators/NegateEvaluatorTest.h"
 
 //mp strategies includes
 #include "MPLibrary/MPStrategies/ValidationStrategy.h"
@@ -167,6 +168,7 @@ struct MPTraits {
   //types of map evaluators available in our world
   typedef boost::mpl::list<
     LazyQueryTest<MPTraits>,
+    NegateEvaluatorTest<MPTraits>,
     QueryMethodTest<MPTraits>
       > MapEvaluatorMethodList;
 
