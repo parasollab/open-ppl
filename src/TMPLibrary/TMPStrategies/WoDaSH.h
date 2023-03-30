@@ -4,6 +4,7 @@
 #include "TMPStrategyMethod.h"
 
 #include "TMPLibrary/ActionSpace/Condition.h"
+#include "Geometry/Boundaries/Boundary.h"
 
 #include "Traits/CfgTraits.h"
 
@@ -12,6 +13,7 @@
 
 class Action;
 class Interaction;
+class Boundary;
 
 class WoDaSH : public TMPStrategyMethod {
   public:
@@ -151,7 +153,7 @@ class WoDaSH : public TMPStrategyMethod {
     std::string m_scuLabel;                ///< The skeleton clearance utility label.
     std::string m_edgeQueryLabel;          ///< The query method to extract paths along grounded edges.
     std::string m_groundedHypergraphLabel; ///< The grounded hypergraph label
-    std::string m_queryLabel;              ///< The hypergraph query label
+    std::string m_motionEvaluator;         ///< The motion evaluator label (Scheduled CBS)
 
     /// Skeleton clearance annotations
     std::map<Robot*, PropertyMap<std::vector<double>,double>*> m_annotationMap; 
@@ -161,11 +163,12 @@ class WoDaSH : public TMPStrategyMethod {
     std::unordered_map<Robot*, size_t> m_pathLengths;
 
     std::unordered_set<HID> m_groundHIDs;
+    std::unordered_set<HID> m_oppSplitTraj;
     std::unordered_set<HID> m_mergeTraj;
     std::unordered_set<HID> m_splitTraj;
 
-    std::unordered_set<HID> m_origStart;
-    std::unordered_set<HID> m_origTarget;
+    std::unordered_set<HID> m_pushStart;
+    std::unordered_set<HID> m_pushTarget;
 
     // TODO::Think about if we will ever have more than one grounded instance of a WHS vertex
     // Start and end VIDs for each hyperskeleton hyperarc

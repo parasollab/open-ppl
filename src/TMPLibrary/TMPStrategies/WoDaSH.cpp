@@ -80,8 +80,8 @@ WoDaSH(XMLNode& _node) : TMPStrategyMethod(_node) {
   m_groundedHypergraphLabel = _node.Read("groundedHypergraph",true,"",
       "Label of the grounded hypergraph to use.");
 
-  m_queryLabel = _node.Read("queryLabel",true,"",
-      "Label of the hypergraph query method to use.");
+  m_motionEvaluator = _node.Read("motionEvaluator",true,"",
+              "Evaluator label for motion planning.");
 }
 
 WoDaSH::
@@ -160,8 +160,13 @@ Initialize() {
 void
 WoDaSH::
 PlanTasks() {
-  auto me = dynamic_cast<ScheduledCBS*>(this->GetTaskEvaluator(m_teLabel).get());
+  auto te = this->GetTaskEvaluator(m_teLabel);
+  te->Initialize();
+
+  auto me = dynamic_cast<ScheduledCBS*>(this->GetTaskEvaluator(m_motionEvaluator).get());
   me->Initialize();
+
+  auto plan = this->GetPlan();
 
   do {
     bool success = false;
@@ -172,7 +177,7 @@ PlanTasks() {
     }
     std::cout << "successfully found a path for each robot." << std::endl;
 
-  } while(!me->operator()());
+  } while(!te->operator()() or !me->operator()(plan));
 }
 
 /*--------------------- Helper Functions ---------------------*/
@@ -710,9 +715,13 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
     maxTimestep = std::max(maxTimestep,kv.second->size());
   }
 
+  m_pushStart.clear();
+  m_pushTarget.clear();
   m_groundHIDs.clear();
+  m_oppSplitTraj.clear();
   m_mergeTraj.clear();
   m_splitTraj.clear();
+
   std::vector<std::unordered_map<std::pair<VID, VID>, std::vector<Robot*>>> hyperarcGroups;
   for(size_t t = 0; t < maxTimestep - 1; t++) {
     std::unordered_map<Robot*, SkeletonEdgeDescriptor> individualEdges;
@@ -781,8 +790,6 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
       // TODO account for waiting
       auto hid = m_skeleton->AddHyperarc({tvid}, {svid}, cedge);
       m_groundHIDs.insert(hid);
-      if(t == 0)
-        m_origStart.insert(hid);
 
       for(auto robot: group->GetRobots()) {
         m_pathLengths[robot] = t;
@@ -842,7 +849,8 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
       }
       auto cgroup = m_skeleton->GetVertexType(svertex).GetGroup();
       auto cedge = CompositeSkeletonEdge(cgroup, &m_indSkeleton);
-      m_skeleton->AddHyperarc(tvids, {svertex}, cedge);
+      auto hid = m_skeleton->AddHyperarc(tvids, {svertex}, cedge);
+      m_oppSplitTraj.insert(hid);
     }
 
     // Merge groups going into the same vertex ("coupling" hyperarcs - sample 
@@ -857,16 +865,6 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
       if(predVIDs.size() == 1) {
         auto incomingVID = *predVIDs.begin();
         mergedVIDs[skelVID] = incomingVID;
-
-        // If no splitting or merging, do not push the intermediates for this transition
-        for(auto h : m_skeleton->GetIncomingHyperarcs(incomingVID)) {
-          if(m_groundHIDs.count(h))
-            m_origTarget.insert(h);
-        }
-        for(auto h : m_skeleton->GetOutgoingHyperarcs(incomingVID)) {
-          if(m_groundHIDs.count(h))
-            m_origStart.insert(h);
-        }
 
         std::cout << "only one incoming, not merging" << std::endl;
         continue;
@@ -889,6 +887,23 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
       m_mergeTraj.insert(hid);
       mergedVIDs[skelVID] = tvid;
       std::cout << "merged " << predVIDs.size() << "incoming groups" << std::endl;
+
+      // Push the intermediates on all of the incoming hyperskeleton arcs to the merge
+      for(auto t : predVIDs) {
+        for(auto h : m_skeleton->GetIncomingHyperarcs(t)) {
+          if(m_groundHIDs.count(h))
+            m_pushTarget.insert(h);
+          
+          else if(m_oppSplitTraj.count(h)) {
+            for(auto tt : m_skeleton->GetHyperarc(h).tail) {
+              for(auto hh : m_skeleton->GetIncomingHyperarcs(tt)) {
+                if(m_groundHIDs.count(hh))
+                  m_pushTarget.insert(hh);
+              }
+            }
+          }
+        }
+      }
     }
 
     // Split groups going down separate edges ("decoupling" hyperarcs - sample 
@@ -946,6 +961,14 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
       auto cedge = CompositeSkeletonEdge(scvertex.GetGroup(), &m_indSkeleton);
       auto hid = m_skeleton->AddHyperarc(tvids, {iter.second}, cedge);
       m_splitTraj.insert(hid);
+
+      // Push start intermediate for outgoing hyperskeleton arcs
+      for(auto hd : tvids) {
+        for(auto h : m_skeleton->GetOutgoingHyperarcs(hd)) {
+          if(m_groundHIDs.count(h))
+            m_pushStart.insert(h);
+        }
+      }
     }
 
     // Merge together groups going opposite directions down a skeleton edge
@@ -967,7 +990,8 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
 
       auto hid = m_hidPaths[t+1][robots[0]];
       auto tvid = *(m_skeleton->GetHyperarc(hid).tail.begin());
-      m_skeleton->AddHyperarc(iter.second, {tvid}, cedge);
+      auto mhid = m_skeleton->AddHyperarc({tvid}, iter.second, cedge);
+      m_mergeTraj.insert(mhid);
     }
   }
 }
@@ -990,8 +1014,8 @@ GroundHyperskeleton() {
     auto svertex = m_skeleton->GetVertexType(svid);
     auto tvertex = m_skeleton->GetVertexType(tvid);
 
-    auto pushStart = !m_origStart.count(hid);
-    auto pushTarget = !m_origTarget.count(hid);
+    auto pushStart = m_pushStart.count(hid);
+    auto pushTarget = m_pushTarget.count(hid);
 
     cedge.SetIntermediates(ComputeIntermediates(svertex, tvertex, cedge, pushStart, pushTarget));
 
@@ -1004,6 +1028,7 @@ GroundHyperskeleton() {
     m_startReps[hid] = std::make_pair(grm, startVID);
 
     std::cout << "Added to start reps (" << hid << "): " << startVID << " from grm " << grm << std::endl;
+    std::cout << "Push start, target: " << pushStart << ", " << pushTarget << std::endl;
     
     s->GroundEdge(cedge);
 
@@ -1308,134 +1333,25 @@ SampleTrajectories() {
 
   // TODO::Add caching for repeated queries
 
-  // First, merge together groups going into the same skeleton vertex
-  // auto wholeGroup = this->GetMPLibrary()->GetGroupTask()->GetRobotGroup();
-  for(auto hid : m_mergeTraj) {
+  // First, split apart groups that have finished moving in opposite
+  // directions down the same skeleton edge
+  for(auto hid : m_oppSplitTraj) {
+    if(this->m_debug)
+      std::cout << "Constructing trajectory for opp split hid " << hid << std::endl;
+
     auto hyp = m_skeleton->GetHyperarc(hid);
     auto cedge = hyp.property;
     auto group = cedge.GetGroup();
-    auto grm = this->GetMPLibrary()->GetMPSolution()->GetGroupRoadmap(group);
-
-    auto start = GroupCfgType(grm);
-    for(auto v : hyp.tail) {
-      auto ihs = m_skeleton->GetIncomingHyperarcs(v);
-      if(ihs.size() > 1)
-        // Can get from m_groundHIDs (current set of working hyperarcs)
-        throw RunTimeException(WHERE) << "More than one possible feader hyperarc. I'll deal with this soon.";
-
-      auto ih = *ihs.begin();
-      if(m_endReps.count(ih)) {
-        auto rep = m_endReps.at(ih);
-        auto vertex = rep.first->GetVertex(rep.second);
-
-        for(auto robot : group->GetRobots())
-          start.SetRobotCfg(robot, vertex.GetVID(robot));
-
-        // for(auto robot : wholeGroup->GetRobots()) {
-        //   if(!group->VerifyRobotInGroup(robot)) {
-        //     auto lastTime = m_pathLengths[robot];
-        //     if(m_hidPaths[lastTime][robot] == ih)
-        //       //TODO do something with this
-        //   }
-        // }
-
-      } else {
-        // Came from a nop edge, need to go one step further back
-        auto nopTail = *(m_skeleton->GetHyperarc(ih).tail.begin());
-        auto iih = m_skeleton->GetIncomingHyperarcs(nopTail);
-        if(iih.size() > 1)
-          throw RunTimeException(WHERE) << "More than one incoming hyperarc to nop. I'll deal with this soon.";
-        
-        auto rep = m_endReps.at(*iih.begin());
-        auto vertex = rep.first->GetVertex(rep.second);
-        for(auto robot : group->GetRobots())
-          start.SetRobotCfg(robot, vertex.GetVID(robot));
-      }
-    }
-
-    // Check if there is a split afterward or if all robots go to the same edge
-    auto head = *hyp.head.begin();
-    // TODO::Remove assumption that there is always one outgoing hyperarc
-    auto ohs = *(m_skeleton->GetOutgoingHyperarcs(head).begin());
-    GroupCfgType target;
-
-    if(m_startReps.count(ohs)) {
-      // This is a hyperskeleton edge, take the start vertex
-      auto rep = m_startReps.at(ohs);
-      target = rep.first->GetVertex(rep.second);
-    } else {
-      // Sample from around the skeleton vertex
-      auto vid = SpawnVertex(grm, m_skeleton->GetVertexType(head));
-      target = grm->GetVertex(vid);
-      m_endReps[hid] = std::make_pair(grm, vid);
-    }
-
-    // Plan a path between the start and target
-    // TODO put this into a grounded hypergraph
-    auto task = std::shared_ptr<GroupTask>(new GroupTask(group));
-    for(auto r : group->GetRobots()) {
-      auto t = MPTask(r);
-
-      // Add start constraints
-      auto startCfg = start.GetRobotCfg(r);
-      auto startConstraint = std::unique_ptr<CSpaceConstraint>(new CSpaceConstraint(r,startCfg));
-      t.SetStartConstraint(std::move(startConstraint));
-
-      // Add goal constraints
-      auto goalCfg = target.GetRobotCfg(r);
-      auto goalConstraint = std::unique_ptr<CSpaceConstraint>(new CSpaceConstraint(r,goalCfg));
-      t.AddGoalConstraint(std::move(goalConstraint));
-
-      // TODO set bounds within a tighter area here
-
-      task->AddTask(t);
-    } 
-
-    this->GetMPLibrary()->Solve(this->GetMPProblem(), task.get(), 
-        this->GetMPSolution(), m_trajStrategy, LRand(),
-        this->GetNameAndLabel()+"::SampleTrajectories");
-    //delete task;
-
-    // Check if the plan was successful
-    auto path = this->GetMPSolution()->GetGroupPath(group);
-    if(!path->VIDs().size())
-      return false;
-
-    // TODO extract path from solution
-
-    AddTransitionToGroundedHypergraph(hyp.tail,hyp.head,path,task);
-  }
-
-  // Next, split apart groups going onto different skeleton edges
-  for(auto hid : m_splitTraj) {
-    auto hyp = m_skeleton->GetHyperarc(hid);
-    auto cedge = hyp.property;
-    auto group = cedge.GetGroup();
-    auto grm = this->GetMPLibrary()->GetMPSolution()->GetGroupRoadmap(group);
 
     auto tail = *hyp.tail.begin();
     auto ihs = *(m_skeleton->GetIncomingHyperarcs(tail).begin());
     auto rep = m_endReps.at(ihs);
     auto start = rep.first->GetVertex(rep.second);
-
-    auto target = GroupCfgType(grm);
-    for(auto v : hyp.head) {
-      auto ohs = m_skeleton->GetOutgoingHyperarcs(v);
-
-      if(ohs.size() > 1)
-        // Can get from m_groundHIDs (current set of working hyperarcs)
-        throw RunTimeException(WHERE) << "More than one possible outgoing hyperarc. I'll deal with this soon.";
-
-      auto oh = *ohs.begin();
-      auto rep = m_startReps.at(oh);
-      auto vertex = rep.first->GetVertex(rep.second);
-
-      for(auto robot : group->GetRobots())
-        target.SetRobotCfg(robot, vertex.GetVID(robot));
-    }
+    auto target = start;
+    m_startReps[hid] = rep;
+    m_endReps[hid] = rep;
 
     // Plan a path between the start and target
-    // TODO put this into a grounded hypergraph
     auto task = std::shared_ptr<GroupTask>(new GroupTask(group));
     for(auto r : group->GetRobots()) {
       auto t = MPTask(r);
@@ -1455,16 +1371,173 @@ SampleTrajectories() {
 
     this->GetMPLibrary()->Solve(this->GetMPProblem(), task.get(), 
         this->GetMPSolution(), m_trajStrategy, LRand(), "SampleTrajectories");
-    //delete task;
 
     // Check if the plan was successful
     auto path = this->GetMPSolution()->GetGroupPath(group);
     if(!path->VIDs().size())
       return false;
 
-    // TODO extract path from solution
+    // Extract path from solution
     AddTransitionToGroundedHypergraph(hyp.tail,hyp.head,path,task);
+  }
 
+  // Next, merge together groups going into the same skeleton vertex
+  // auto wholeGroup = this->GetMPLibrary()->GetGroupTask()->GetRobotGroup();
+  for(auto hid : m_mergeTraj) {
+    auto hyp = m_skeleton->GetHyperarc(hid);
+    if(this->m_debug) {
+      std::cout << "Sampling trajectory for merge hid " << hid << std::endl;
+      std::cout << "Tail: " << hyp.tail << ", Head: " << hyp.head << std::endl;
+    }
+
+    // auto hyp = m_skeleton->GetHyperarc(hid);
+    auto cedge = hyp.property;
+    auto group = cedge.GetGroup();
+    auto grm = this->GetMPLibrary()->GetMPSolution()->GetGroupRoadmap(group);
+
+    auto start = GroupCfgType(grm);
+    for(auto v : hyp.tail) {
+      auto ihs = m_skeleton->GetIncomingHyperarcs(v);
+      if(ihs.size() > 1)
+        // Can get from m_groundHIDs (current set of working hyperarcs)
+        throw RunTimeException(WHERE) << "More than one possible feader hyperarc. I'll deal with this soon.";
+
+      auto ih = *ihs.begin();
+
+      if(!m_endReps.count(ih))
+        throw RunTimeException(WHERE) << "Missing end rep trying to merge";
+
+      auto rep = m_endReps.at(ih);
+      auto vertex = rep.first->GetVertex(rep.second);
+      auto vgroup = vertex.GetGroup();
+
+      for(auto robot : vgroup->GetRobots()) {
+        if(group->VerifyRobotInGroup(robot)) {
+          start.SetRobotCfg(robot, vertex.GetVID(robot));
+        }
+      }
+    }
+
+    // Check if there is a split afterward or if all robots go to the same edge
+    auto head = *hyp.head.begin();
+    // TODO::Remove assumption that there is always one outgoing hyperarc
+    auto ohs = *(m_skeleton->GetOutgoingHyperarcs(head).begin());
+    GroupCfgType target;
+
+    if(m_startReps.count(ohs)) {
+      // This is a hyperskeleton edge, take the start vertex
+      auto rep = m_startReps.at(ohs);
+      target = rep.first->GetVertex(rep.second);
+      m_endReps[hid] = rep;
+    } else {
+      // Sample from around the skeleton vertex
+      auto vid = SpawnVertex(grm, m_skeleton->GetVertexType(head));
+      target = grm->GetVertex(vid);
+      m_endReps[hid] = std::make_pair(grm, vid);
+    }
+
+    // Plan a path between the start and target
+    auto task = std::shared_ptr<GroupTask>(new GroupTask(group));
+    for(auto r : group->GetRobots()) {
+      auto t = MPTask(r);
+
+      // Add start constraints
+      auto startCfg = start.GetRobotCfg(r);
+      auto startConstraint = std::unique_ptr<CSpaceConstraint>(new CSpaceConstraint(r,startCfg));
+      t.SetStartConstraint(std::move(startConstraint));
+
+      // Add goal constraints
+      auto goalCfg = target.GetRobotCfg(r);
+      auto goalConstraint = std::unique_ptr<CSpaceConstraint>(new CSpaceConstraint(r,goalCfg));
+      t.AddGoalConstraint(std::move(goalConstraint));
+
+      std::cout << "Robot: " << r->GetLabel() << std::endl;
+      std::cout << "Start: " << startCfg << std::endl;
+      std::cout << "Goal: " << goalCfg << std::endl;
+
+      task->AddTask(t);
+    } 
+
+    // Set the boundary to be a tighter region to avoid growing tree from 
+    // other nodes in the roadmap
+    auto origBounds = this->GetMPProblem()->GetEnvironment()->GetBoundary()->Clone();
+    // auto dim = origBounds->GetDimension();
+    // auto newBounds = std::unique_ptr<Boundary>(new WorkspaceBoundingSphere(dim));
+    // this->GetMPProblem()->GetEnvironment()->SetBoundary(newBounds);
+
+    this->GetMPLibrary()->Solve(this->GetMPProblem(), task.get(), 
+        this->GetMPSolution(), m_trajStrategy, LRand(),
+        this->GetNameAndLabel()+"::SampleTrajectories");
+
+    this->GetMPProblem()->GetEnvironment()->SetBoundary(std::move(origBounds));
+
+    // Check if the plan was successful
+    auto path = this->GetMPSolution()->GetGroupPath(group);
+    if(!path->VIDs().size())
+      return false;
+
+    AddTransitionToGroundedHypergraph(hyp.tail,hyp.head,path,task);
+  }
+
+  // Next, split apart groups going onto different skeleton edges
+  for(auto hid : m_splitTraj) {
+    if(this->m_debug)
+      std::cout << "Sampling trajectory for split hid " << hid << std::endl;
+
+    auto hyp = m_skeleton->GetHyperarc(hid);
+    auto cedge = hyp.property;
+    auto group = cedge.GetGroup();
+    auto grm = this->GetMPLibrary()->GetMPSolution()->GetGroupRoadmap(group);
+
+    auto tail = *hyp.tail.begin();
+    auto ihs = *(m_skeleton->GetIncomingHyperarcs(tail).begin());
+    auto rep = m_endReps.at(ihs);
+    auto start = rep.first->GetVertex(rep.second);
+    m_startReps[hid] = rep;
+
+    auto target = GroupCfgType(grm);
+    for(auto v : hyp.head) {
+      auto ohs = m_skeleton->GetOutgoingHyperarcs(v);
+
+      if(ohs.size() > 1)
+        // Can get from m_groundHIDs (current set of working hyperarcs)
+        throw RunTimeException(WHERE) << "More than one possible outgoing hyperarc. I'll deal with this soon.";
+
+      auto oh = *ohs.begin();
+      auto rep = m_startReps.at(oh);
+      auto vertex = rep.first->GetVertex(rep.second);
+
+      for(auto robot : group->GetRobots())
+        target.SetRobotCfg(robot, vertex.GetVID(robot));
+    }
+
+    // Plan a path between the start and target
+    auto task = std::shared_ptr<GroupTask>(new GroupTask(group));
+    for(auto r : group->GetRobots()) {
+      auto t = MPTask(r);
+
+      // Add start constraints
+      auto startCfg = start.GetRobotCfg(r);
+      auto startConstraint = std::unique_ptr<CSpaceConstraint>(new CSpaceConstraint(r,startCfg));
+      t.SetStartConstraint(std::move(startConstraint));
+
+      // Add goal constraints
+      auto goalCfg = target.GetRobotCfg(r);
+      auto goalConstraint = std::unique_ptr<CSpaceConstraint>(new CSpaceConstraint(r,goalCfg));
+      t.AddGoalConstraint(std::move(goalConstraint));
+
+      task->AddTask(t);
+    } 
+
+    this->GetMPLibrary()->Solve(this->GetMPProblem(), task.get(), 
+        this->GetMPSolution(), m_trajStrategy, LRand(), "SampleTrajectories");
+
+    // Check if the plan was successful
+    auto path = this->GetMPSolution()->GetGroupPath(group);
+    if(!path->VIDs().size())
+      return false;
+
+    AddTransitionToGroundedHypergraph(hyp.tail,hyp.head,path,task);
   }
 
   return true;
@@ -1506,27 +1579,98 @@ AddTransitionToGroundedHypergraph(std::set<VID> _tail, std::set<VID> _head,
   GroupPathType* _path, std::shared_ptr<GroupTask> _task) {
 
   if(this->m_debug) {
-    std::cout << "Adding hyperarc between " << _tail << " and " << _head << std::endl;
+    std::cout << "Adding grounded hyperarc between " << _tail << " and " << _head << std::endl;
   }
-
-  if(_tail.size() > 1 or _head.size() > 1)
-    throw RunTimeException(WHERE) << "Tail or head is too large... something bad happened";
 
   auto gh = dynamic_cast<GroundedHypergraph*>(this->GetStateGraph(m_groundedHypergraphLabel).get());
 
-  // Add vertices and path to grounded hypergraph
-  // Add vertices
   std::set<VID> groundedTail;
   std::set<VID> groundedHead;
 
-  auto hid = this->m_skeleton->GetHID(_head, _tail);
-  auto vertex = m_startReps.at(hid);
-  auto gVID = gh->AddVertex(vertex);
-  groundedTail.insert(gVID);
+  auto hid = m_skeleton->GetHID(_head, _tail);
 
-  vertex = m_endReps.at(hid);
-  gVID = gh->AddVertex(vertex);
-  groundedHead.insert(gVID);
+  if(_tail.size() == 1 and _head.size() == 1) {
+    if(this->m_debug)
+      std::cout << "Adding hyperskeleton edge to grounded hypergraph" << std::endl;
+
+    auto vertex = m_startReps.at(hid);
+    auto gVID = gh->AddVertex(vertex);
+    groundedTail.insert(gVID);
+
+    vertex = m_endReps.at(hid);
+    gVID = gh->AddVertex(vertex);
+    groundedHead.insert(gVID);
+  }
+  else if(_tail.size() == 1) {
+    if(this->m_debug)
+      std::cout << "Adding a split hyperarc to grounded hypergraph" << std::endl;
+
+    auto start = m_startReps.at(hid);
+    auto gVID = gh->AddVertex(start);
+    groundedTail.insert(gVID);
+    
+    if(_path->VIDs().size() == 1) {
+      // This is an opposite direction split
+      auto vertex = start.first->GetVertex(start.second);
+
+      for(auto head : _head) {
+        auto group = m_skeleton->GetVertexType(head).GetGroup();
+        auto grm = this->GetMPLibrary()->GetMPSolution()->GetGroupRoadmap(group);
+
+        auto gcfg = GroupCfgType(grm);
+        for(auto robot : group->GetRobots()) {
+          gcfg.SetRobotCfg(robot, vertex.GetVID(robot));
+        }
+
+        auto vid = grm->AddVertex(gcfg);
+        gVID = gh->AddVertex(std::make_pair(grm, vid));
+        groundedHead.insert(gVID);
+      }
+    } else {
+      // This is a split after a merge
+      auto endVID = _path->VIDs().back();
+      auto grm = start.first;
+      auto vertex = grm->GetVertex(endVID);
+
+      for(auto head : _head) {
+        auto group = m_skeleton->GetVertexType(head).GetGroup();
+        auto hgrm = this->GetMPLibrary()->GetMPSolution()->GetGroupRoadmap(group);
+
+        auto gcfg = GroupCfgType(hgrm);
+        for(auto robot : group->GetRobots()) {
+          gcfg.SetRobotCfg(robot, vertex.GetVID(robot));
+        }
+
+        auto vid = hgrm->AddVertex(gcfg);
+        auto gVID = gh->AddVertex(std::make_pair(hgrm, vid));
+        groundedHead.insert(gVID);
+      }
+    }
+  }
+  else if(_head.size() == 1) {
+    // This is a merge
+    auto rep = m_endReps.at(hid);
+    auto gVID = gh->AddVertex(rep);
+    groundedHead.insert(gVID);
+
+    auto startVID = _path->VIDs().front();
+    auto vertex = rep.first->GetVertex(startVID);
+    for(auto tail : _tail) {
+      auto group = m_skeleton->GetVertexType(tail).GetGroup();
+      auto grm = this->GetMPLibrary()->GetMPSolution()->GetGroupRoadmap(group);
+      auto gcfg = GroupCfgType(grm);
+
+      for(auto robot : group->GetRobots()) {
+        gcfg.SetRobotCfg(robot, vertex.GetVID(robot));
+      }
+
+      auto vid = grm->AddVertex(gcfg);
+      gVID = gh->AddVertex(std::make_pair(grm, vid));
+      groundedTail.insert(gVID);
+    }
+  }
+  else
+    throw RunTimeException(WHERE) << "Head and tail are both size > 1";
 
   // Add hyperarc
   GroundedHypergraph::Transition transition;

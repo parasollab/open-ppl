@@ -596,6 +596,8 @@ ComputeHeuristicValues() {
 
   // Get graph representation grounded hypergraph
   auto gh = dynamic_cast<GroundedHypergraph*>(this->GetStateGraph(m_ghLabel).get());
+  gh->Print();
+
   //auto& gh = mg->GetGroundedHypergraph();
   auto g = gh->GetReverseGraph();
 
