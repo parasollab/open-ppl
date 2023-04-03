@@ -68,6 +68,10 @@
         nShellsColl="0" nShellsFree="1" debug="false"/>
       <BridgeTestSampler label="Bridge" vcLabel="rapid" d="0.2"
         dmLabel="euclidean" useBBX="true"/> -->
+      <MixSampler label="MixSampler">
+        <Sampler label="UniformRandom" p="0.5"/>
+        <Sampler label="ObstacleBased" p="0.5"/>
+      </MixSampler>
     </Samplers>
 
     <LocalPlanners>
@@ -158,6 +162,11 @@
         <Evaluator label="NodesEval"/>
       </BasicPRM>
 
+      <BasicPRM label="MixSamplerStrat" debug="true" querySampler="UniformRandomFree">
+        <Sampler label="MixSampler" number="10" attempts="1"/>
+        <Connector label="Closest"/>
+        <Evaluator label="NodesEval"/>
+      </BasicPRM>
 
       <!-- Basic PRM restarted from an input roadmap input.map. -->
       <BasicPRM label="BasicPRM2"
@@ -243,7 +252,7 @@
 
     <!-- MPProblem allows multiple solvers to be specified and executed. -->
 
-    <Solver mpStrategyLabel="OBPRM" seed="12345678"
+    <Solver mpStrategyLabel="MixSamplerStrat" seed="12345678"
       baseFilename="example" vizmoDebug="true"/>
 
   </Library>

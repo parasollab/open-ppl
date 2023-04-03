@@ -153,6 +153,34 @@ NormalizeTheta(double _theta) {
   return val == 0 ? _theta : val - TWOPI * floor(val / TWOPI) - PI;
 }
 
+/*---------------------------- Statistical p-tests --------------------------*/
+
+bool
+binom_test(double _alpha, size_t _n, size_t _k, double _p) {
+  double p_value = 0;
+  double criticalValue = binomial(_n, _k, _p);
+
+  for (size_t i = 0; i <= _n; i++) {
+    double tempValue = binomial(_n, i, _p);
+
+    if (tempValue <= criticalValue) { p_value += tempValue; }
+  }
+
+  //std::cout << "p-value: " << p_value << std::endl;
+  if (p_value <= _alpha) { return false; }
+
+  return true;
+}
+
+/*---------------------------- Distributions --------------------------*/
+
+double
+binomial(size_t _n, size_t _k, double _p) {
+  double binomCoeff = boost::math::binomial_coefficient<double>(_n, _k);
+  double pdf = binomCoeff*std::pow(_p, _k)*std::pow(1-_p, _n - _k);
+  return pdf;
+}
+
 /*----------------------------------------------------------------------------*/
 
 std::vector<Cfg>
