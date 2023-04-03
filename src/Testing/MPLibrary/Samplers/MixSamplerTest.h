@@ -95,7 +95,7 @@ TestIndividualCfgSample() {
   // used.
 
   // Make a vector to calculate the sample instances of each of the samplers.
-  std::vector<size_t> sampleProportions(this->samplers.size(), 0);
+  std::vector<size_t> sampleProportions(this->m_samplers.size(), 0);
 
   size_t numTrials= 500;
 
@@ -113,10 +113,10 @@ TestIndividualCfgSample() {
   for(size_t i = 0; i < sampleProportions.size(); i++) {
     // n = numTrials
     // k = sampleProportions[i];
-    double p = this->samplers[i].second; //probability of success
+    double p = this->m_samplers[i].second; //probability of success
 
     // Samplers.second contains the cummulative sums, so we need to subtract
-    if (i > 0) { p = p - this->samplers[i-1].second; }
+    if (i > 0) { p = p - this->m_samplers[i-1].second; }
 
     // Conduct a binomial random variable p-test
     bool tempTest = binom_test(alpha, numTrials, sampleProportions[i], p);

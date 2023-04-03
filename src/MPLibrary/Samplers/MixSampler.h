@@ -26,9 +26,9 @@ class MixSampler : virtual public SamplerMethod<MPTraits> {
     virtual bool Sampler(CfgType& _cfg, const Boundary* const _boundary,
         vector<CfgType>& _result, vector<CfgType>& _collision);
 
-    vector<pair <string, double> > samplers; // Stores method label with cumulative probability
+    vector<pair <string, double> > m_samplers; // Stores method label with cumulative probability
 
-    pair<string, int> samplerLabels; // Stores label history and index
+    pair<string, int> m_samplerLabels; // Stores label history and index
 };
 
 template <typename MPTraits>
@@ -61,11 +61,11 @@ ParseXML(XMLNode& _node) {
         cerr << "Warning: MixSampler sampler method " << method
           << " has 0 probability." << endl;
       totalP += p;
-      samplers.push_back(make_pair(method, totalP));
+      m_samplers.push_back(make_pair(method, totalP));
     }
   }
 
-  if(samplers.empty())
+  if(m_samplers.empty())
     throw ParseException(_node.Where(),
         "You must specify at least one sampler.");
   if(totalP > 1.000001)
@@ -74,7 +74,7 @@ ParseXML(XMLNode& _node) {
   if(totalP < 0.999999) {
     cerr << "Warning: MixSampler total probability less than 1."
       "Adding extra probability to last sampler." << endl;
-    samplers[samplers.size()-1].second = 1.0;
+    m_samplers[m_samplers.size()-1].second = 1.0;
   }
 }
 
@@ -83,7 +83,7 @@ void
 MixSampler<MPTraits>::
 Print(ostream& _os) const {
   SamplerMethod<MPTraits>::Print(_os);
-  for(auto&  sampler : samplers)
+  for(auto&  sampler : m_samplers)
     cout << "\tSampler = " << sampler.first
       << ", cumulative probability = " << sampler.second << endl;
 }
@@ -96,9 +96,9 @@ Sampler(CfgType& _cfg, const Boundary* const _boundary,
     vector<CfgType>& _result, vector<CfgType>& _collision) {
   double rand = DRand();
   int samplerIndex = 0;
-  for(auto&  sampler : samplers){
+  for(auto&  sampler : m_samplers){
     if(rand < sampler.second){
-      samplerLabels = make_pair(this->GetSampler(sampler.first)->GetNameAndLabel(), samplerIndex);
+      m_samplerLabels = make_pair(this->GetSampler(sampler.first)->GetNameAndLabel(), samplerIndex);
       return this->GetSampler(sampler.first)->
         Sampler(_cfg, _boundary, _result, _collision);
     }
