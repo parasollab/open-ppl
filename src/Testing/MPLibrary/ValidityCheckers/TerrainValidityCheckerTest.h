@@ -48,16 +48,6 @@ class TerrainValidityCheckerTest : virtual public TerrainValidityChecker<MPTrait
     virtual TestResult GroupCfgValidityTest() override;
 
     ///@}
-    // ///@name Default Function Calls
-    // ///@{
-
-    // virtual std::vector<std::pair<bool,CfgType>> IndividualCfgValidity() override;
-
-    // virtual std::vector<std::pair<bool,CfgType>> GroupCfgValidityBounding() override;
-
-    // virtual std::vector<std::pair<bool,GroupCfgType>> GroupCfgValidity() override;
-
-    // ///@}s
 
     template<typename T, typename U> friend class MethodSet;
 };
@@ -130,55 +120,6 @@ IndividualCfgValidityTest() {
     }
   }
 
-  // auto& terrains = env->GetTerrains();
-  // auto& terrain = terrains["a"];
-
-  // // Sample a point in the terrain boundary
-  // CfgType cfg(robot);
-  // auto terrainBoundary = terrain.GetBoundary();
-  // cfg.GetRandomCfg(terrainBoundary);
-
-  // // Check wrong capability in terrain
-  // robot->SetCapability("b");
-  // passed = passed and !this->IsValid(cfg, "TerrainValidityCheckerTest");
-
-  // // Check correct capability in terrain
-  // robot->SetCapability("a");
-  // passed = passed and this->IsValid(cfg, "TerrainValidityCheckerTest");
-
-  // // Check correct capability out of terrain
-  // std::vector<double> dofs = {20.0, 10.0, 20.0, 0.0, 0.0, 0.0};
-  // cfg.SetData(dofs);
-  // passed = passed and !this->IsValid(cfg, "TerrainValidityCheckerTest");
-
-  // // Test inside terrain out of environment bounds
-  // terrain = terrains["b"][0];
-  // robot->SetCapability("b");
-  // cfg.GetRandomCfg(terrain.GetBoundary());
-  // passed = passed and !this->IsValid(cfg, "TerrainValidityCheckerTest");
-
-  // // Test out of terrain out of environment bounds
-  // dofs = {-25.5, 0.0, 0.0, 0.0, 0.0, 0.0};
-  // cfg.SetData(dofs);
-  // passed = passed and !this->IsValid(cfg, "TerrainValidityCheckerTest");
-
-  // // Check correct capability in obstacle
-  // terrain = terrains["c"][0];
-  // cfg.GetRandomCfg(terrain.GetBoundary());
-  // robot->SetCapability("c");
-  // passed = passed and !this->IsValid(cfg, "TerrainValidityCheckerTest");
-
-  // Make sure that every response is true.  
-  // for(auto kv : output) {
-  //   if(kv.first)
-  //     continue;
-
-  //   passed = false;
-  //   message = message + "\n\tA cfg was incorrectly labeled "
-  //             "invalid.\n";
-  //   break;
-  // }
-
   if(passed) {
     message = "IndividualCfgValidity::PASSED!\n";
   }
@@ -195,19 +136,6 @@ TerrainValidityCheckerTest<MPTraits>::
 GroupCfgValidityTest() {
   bool passed = true;
   std::string message = "";
-
-  // auto output = this->IndividualCfgValidity();
-
-  // Make sure that every response is true.  
-  // for(auto kv : output) {
-  //   if(kv.first)
-  //     continue;
-
-  //   passed = false;
-  //   message = message + "\n\tA group cfg was incorrectly labeled "
-  //             "invalid.\n";
-  //   break;
-  // }
   
   if(passed) {
     message = "GroupCfgValidity::PASSED!\n";
