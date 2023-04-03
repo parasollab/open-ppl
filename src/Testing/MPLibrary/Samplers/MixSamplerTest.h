@@ -266,7 +266,7 @@ IndividualCfgSample(size_t& _numNodes, Boundary*& _boundary, std::vector<Cfg>& _
   for (size_t i = 0; i < _numNodes; i++) {
     this->Sample(1, maxAttempts,_boundary, std::back_inserter(_cfgs),
                std::back_inserter(_cfgs));
-    int samplerIndex = this->samplerLabels.second;
+    int samplerIndex = this->m_samplerLabels.second;
     _sampleProportions[samplerIndex] += 1;
   }
 }
