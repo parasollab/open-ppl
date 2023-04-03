@@ -9,7 +9,7 @@
 /// @ingroup ValidityCheckers
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
-class TopologicalMapValidity : public ValidityCheckerMethod<MPTraits> {
+class TopologicalMapValidity : virtual public ValidityCheckerMethod<MPTraits> {
  public:
   ///@name Local Types
   ///@{
