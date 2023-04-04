@@ -32,12 +32,14 @@
 #include "MPLibrary/ValidityCheckers/AlwaysTrueValidity.h"
 #include "MPLibrary/ValidityCheckers/ComposeValidity.h"
 #include "MPLibrary/ValidityCheckers/ComposeCollision.h"
+#include "MPLibrary/ValidityCheckers/TerrainValidityChecker.h"
 
 //neighborhood finder includes
 #include "MPLibrary/NeighborhoodFinders/BruteForceNF.h"
 
 //sampler includes
 #include "MPLibrary/Samplers/BridgeTestSampler.h"
+#include "MPLibrary/Samplers/MixSampler.h"
 #include "MPLibrary/Samplers/ObstacleBasedSampler.h"
 #include "MPLibrary/Samplers/UniformRandomSampler.h"
 #include "MPLibrary/Samplers/GaussianSampler.h"
@@ -134,7 +136,8 @@ struct MPTraits {
     CollisionDetectionValidity<MPTraits>,
     AlwaysTrueValidity<MPTraits>,
     ComposeValidity<MPTraits>,
-    ComposeCollision<MPTraits>
+    ComposeCollision<MPTraits>,
+    TerrainValidityChecker<MPTraits>
       > ValidityCheckerMethodList;
 
   //types of neighborhood finders available in our world
@@ -145,8 +148,9 @@ struct MPTraits {
   //types of samplers available in our world
   typedef boost::mpl::list<
     BridgeTestSampler<MPTraits>,
+    MixSampler<MPTraits>,
     ObstacleBasedSampler<MPTraits>,
-    UniformRandomSampler<MPTraits>, 
+    UniformRandomSampler<MPTraits>,
     GaussianSampler<MPTraits>
       > SamplerMethodList;
 
