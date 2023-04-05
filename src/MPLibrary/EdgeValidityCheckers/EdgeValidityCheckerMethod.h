@@ -5,10 +5,9 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup EdgeValidityCheckers
-/// @Edge validity checkers validate an edge of the roadmap.
+/// @brief Base algorithm abstraction for \ref EdgeValidityCheckers.
 ///
-/// EdgeValidityCheckerMethod has one main method, @c ValidateEdge that takes
-/// either two cfgs or to VIDs and validates the edge between them.
+/// EdgeValidityCheckerMethod has one main method, @c ValidateEdge
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class EdgeValidityCheckerMethod : public MPBaseObject<MPTraits> {
@@ -44,15 +43,9 @@ class EdgeValidityCheckerMethod : public MPBaseObject<MPTraits> {
     ///@{
 
     /// Checks the validity of an edge
-    /// @param _u The source of the edge to validate
-    /// @param _v The target of the edge to validate
-    /// @param _collisions An empty container that will be populated with
-    ///   a list of obstacles with which the edge collides.
-    /// @return True if the edge between _u and _v does is valid.
     virtual bool ValidateEdge(VID _u, VID _v, vector<size_t>& _collisions) = 0;
-    
-    /// Cfg version of ValidateEdge 
     virtual bool ValidateEdge(CfgType& _c1, CfgType& _c2, vector<size_t>& _collisions) = 0;
+
 
     /// Setter for the report collision boolean
     /// @param _reportCollisions the new value of m_reportCollisions
