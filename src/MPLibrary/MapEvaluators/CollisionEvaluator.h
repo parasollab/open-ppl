@@ -59,9 +59,17 @@ operator()() {
 
   for (auto eit = r->edges_begin(); eit != r->edges_end(); ++eit ){
     evc->ValidateEdge(eit->source(), eit->target(), collisions);
-    cout << "the edge (" << eit->source() << ", " <<  eit->target() <<") collides with obsts: ";
+
+    CfgType c1 = r->GetVertex(eit->source());
+    CfgType c2 = r->GetVertex(eit->target());
+
+    std::cout << std::setprecision(4);
+
+    cout << "the edge (" << c1[0] << ", " << c1[1] <<", " << c1[2] <<") --> (" << c2[0] << ", " << c2[1] <<", " << c2[2] <<")" << endl;
+
+    cout << "collides with obsts: ";
     for (auto &col: collisions) {
-      cout << col;
+      cout << col << " ";
     }
     cout << endl;
   }
