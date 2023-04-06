@@ -51,8 +51,7 @@
     </ValidityCheckers>
 
     <NeighborhoodFinders>
-      <BruteForceNF label="BFNF" dmLabel="euclidean" unconnected="false" k="3"/>
-      <RandomNF label="RandomNF" dmLabel="euclidean" unconnected="false" k="3"/>
+      <BruteForceNF label="BFNF" dmLabel="euclidean" unconnected="false" k="10"/>
       <BruteForceNF label="Nearest" dmLabel="euclidean" unconnected="false"
         k="1"/>
       <BruteForceNF label="BFNFAll" dmLabel="euclidean" k="0"/>
@@ -69,10 +68,6 @@
         nShellsColl="0" nShellsFree="1" debug="false"/>
       <BridgeTestSampler label="Bridge" vcLabel="rapid" d="0.2"
         dmLabel="euclidean" useBBX="true"/> -->
-      <MixSampler label="MixSampler">
-        <Sampler label="UniformRandom" p="0.5"/>
-        <Sampler label="ObstacleBased" p="0.5"/>
-      </MixSampler>
     </Samplers>
 
     <LocalPlanners>
@@ -91,9 +86,16 @@
     <PathModifiers>
     </PathModifiers>
 
+    <EdgeValidityCheckers>
+      <IntermediatesEdgeValidityChecker label="intermediateEdgeVC"
+        lpLabel = "sl"
+        vcLabel = "pqp_solid"
+        overrideLp = "true"/>
+    </EdgeValidityCheckers>
+
     <Connectors>
       <NeighborhoodConnector label="Closest" debug="true"
-        nfLabel="RandomNF" lpLabel="sl" checkIfSameCC="false"/>
+        nfLabel="BFNF" lpLabel="sl" checkIfSameCC="false"/>
       <NeighborhoodConnector label="ToggleConnect" nfLabel="BFNF" lpLabel="sl"
         maxFailures="1" checkIfSameCC="false"/>
       <NeighborhoodConnector label="ClosestAlwaysTrue" nfLabel="BFNF"
@@ -127,7 +129,7 @@
       <PrintMapEvaluation label="PrintMap" base_name="Basic"/>
 
       <ConditionalEvaluator label="NodesEval" metric_method="NumNodes"
-        value="100" operator=">="/>
+        value="50" operator=">="/>
 
       <ConditionalEvaluator label="EdgesEval" metric_method="NumEdges"
         value="1000" operator=">"/>
@@ -145,7 +147,14 @@
         <Evaluator label="NodesEval"/>
       </ComposeEvaluator>
 
+      <ComposeEvaluator label="CollisionAfterNodes" operator="and">
+        <Evaluator label="NodesEval"/>
+        <Evaluator label="colEval"/>
+      </ComposeEvaluator>
+
       <TimeEvaluator label="TimeEval" timeout="10"/>
+
+      <CollisionEvaluator label="colEval" evcLabel="intermediateEdgeVC"/>
     </MapEvaluators>
 
     <MPStrategies>
@@ -159,15 +168,10 @@
 
       <BasicPRM label="BasicPRM1" debug="true" querySampler="UniformRandomFree">
         <Sampler label="UniformRandomFree" number="10" attempts="1"/>
-        <Connector label="Closest"/>
-        <Evaluator label="NodesEval"/>
+        <Connector label="ClosestAlwaysTrue"/>
+        <Evaluator label="CollisionAfterNodes"/>
       </BasicPRM>
 
-      <BasicPRM label="MixSamplerStrat" debug="true" querySampler="UniformRandomFree">
-        <Sampler label="MixSampler" number="10" attempts="1"/>
-        <Connector label="Closest"/>
-        <Evaluator label="NodesEval"/>
-      </BasicPRM>
 
       <!-- Basic PRM restarted from an input roadmap input.map. -->
       <BasicPRM label="BasicPRM2"
@@ -253,7 +257,7 @@
 
     <!-- MPProblem allows multiple solvers to be specified and executed. -->
 
-    <Solver mpStrategyLabel="MixSamplerStrat" seed="12345678"
+    <Solver mpStrategyLabel="BasicPRM1" seed="12345678"
       baseFilename="example" vizmoDebug="true"/>
 
   </Library>
