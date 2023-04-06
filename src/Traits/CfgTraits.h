@@ -50,6 +50,9 @@
 
 //path smoothing includes
 
+//edge validity checkers includes
+#include "MPLibrary/EdgeValidityCheckers/IntermediatesEdgeValidityChecker.h"
+
 //connector includes
 #include "MPLibrary/Connectors/NeighborhoodConnector.h"
 #include "MPLibrary/Connectors/CCsConnector.h"
@@ -70,6 +73,7 @@
 #include "MPLibrary/MapEvaluators/QueryMethod.h"
 #include "MPLibrary/MapEvaluators/SIPPMethod.h"
 #include "MPLibrary/MapEvaluators/TimeEvaluator.h"
+#include "MPLibrary/MapEvaluators/CollisionEvaluator.h"
 
 //mp strategies includes
 #include "MPLibrary/MPStrategies/AdaptiveRRT.h"
@@ -164,6 +168,10 @@ struct MPTraits {
   typedef boost::mpl::list<
       > PathModifierMethodList;
 
+  //types of edge validity checkers available in our world
+  typedef boost::mpl::list<
+    IntermediatesEdgeValidityChecker<MPTraits>
+      > EdgeValidityCheckerMethodList;
 
   //types of connectors available in our world
   typedef boost::mpl::list<
@@ -190,7 +198,8 @@ struct MPTraits {
     PrintMapEvaluation<MPTraits>,
     QueryMethod<MPTraits>,
     SIPPMethod<MPTraits>,
-    TimeEvaluator<MPTraits>
+    TimeEvaluator<MPTraits>,
+    CollisionEvaluator<MPTraits>
       > MapEvaluatorMethodList;
 
   //types of motion planning strategies available in our world

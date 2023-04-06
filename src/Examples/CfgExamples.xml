@@ -86,6 +86,13 @@
     <PathModifiers>
     </PathModifiers>
 
+    <EdgeValidityCheckers>
+      <IntermediatesEdgeValidityChecker label="intermediateEdgeVC"
+        lpLabel = "sl"
+        vcLabel = "pqp_solid"
+        overrideLp = "true"/>
+    </EdgeValidityCheckers>
+
     <Connectors>
       <NeighborhoodConnector label="Closest" debug="true"
         nfLabel="BFNF" lpLabel="sl" checkIfSameCC="false"/>
@@ -122,7 +129,7 @@
       <PrintMapEvaluation label="PrintMap" base_name="Basic"/>
 
       <ConditionalEvaluator label="NodesEval" metric_method="NumNodes"
-        value="100" operator=">="/>
+        value="50" operator=">="/>
 
       <ConditionalEvaluator label="EdgesEval" metric_method="NumEdges"
         value="1000" operator=">"/>
@@ -140,7 +147,14 @@
         <Evaluator label="NodesEval"/>
       </ComposeEvaluator>
 
+      <ComposeEvaluator label="CollisionAfterNodes" operator="and">
+        <Evaluator label="NodesEval"/>
+        <Evaluator label="colEval"/>
+      </ComposeEvaluator>
+
       <TimeEvaluator label="TimeEval" timeout="10"/>
+
+      <CollisionEvaluator label="colEval" evcLabel="intermediateEdgeVC"/>
     </MapEvaluators>
 
     <MPStrategies>
@@ -154,8 +168,8 @@
 
       <BasicPRM label="BasicPRM1" debug="true" querySampler="UniformRandomFree">
         <Sampler label="UniformRandomFree" number="10" attempts="1"/>
-        <Connector label="Closest"/>
-        <Evaluator label="NodesEval"/>
+        <Connector label="ClosestAlwaysTrue"/>
+        <Evaluator label="CollisionAfterNodes"/>
       </BasicPRM>
 
 
@@ -243,7 +257,7 @@
 
     <!-- MPProblem allows multiple solvers to be specified and executed. -->
 
-    <Solver mpStrategyLabel="OBPRM" seed="12345678"
+    <Solver mpStrategyLabel="BasicPRM1" seed="12345678"
       baseFilename="example" vizmoDebug="true"/>
 
   </Library>
