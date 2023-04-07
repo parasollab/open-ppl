@@ -6,7 +6,13 @@
   <Problem baseFilename="tmp_examples">
 
     <Environment filename="../Examples/3D/3d.env"
-      frictionCoefficient="0" gravity="0 0 0"/>
+      frictionCoefficient="0" gravity="0 0 0">
+
+      <Terrain capability="a">
+        <Boundary limits="[-1:1 ; -1:1 ; -1:1 ; -1:1 ; -1:1 ; -1:1]"
+          space="cspace" shape="box" color="magenta"/>
+      </Terrain>
+    </Environment>
 
     <Robot label="boxy1" filename="../Examples/3D/boxy.robot">
       <Agent type="pathfollowing" waypointDm="minkowski"
@@ -134,6 +140,7 @@
 
     <ValidityCheckers>
       <AlwaysTrueValidity label="alwaysTrue"/>
+      <TerrainValidity label="terrainValidity"/>
 
       <!-- Test not yet added -->
       <CollisionDetection label="pqp_solid" method="PQP_SOLID"/>
@@ -149,6 +156,10 @@
 
     <Samplers>
       <BridgeTestSampler label="BridgeTest" d="10" dmLabel="euclidean" vcLabel="pqp_solid"/>
+      <MixSampler label="MixSampler">
+        <Sampler label="OBPRM" p=0.5/>
+        <Sampler label="UniformRandom" p=0.5/>
+      </MixSampler>
       <ObstacleBasedSampler label="OBPRM" vcLabel="rapid" useBBX="false"
         pointSelection="cspace" dmLabel="euclidean" stepSize="0.0"
         nShellsColl="10" nShellsFree="10" debug="false" />
