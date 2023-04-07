@@ -159,6 +159,10 @@
       <StraightLine label="slAlwaysTrue" binaryEvaluation="true"
             vcLabel="alwaysTrue"/>
       <StraightLine label="sl" binaryEvaluation="true" vcLabel="rapid"/>
+      <HierarchicalLP label="hierarchical">
+        <LocalPlanner method="sl"/>
+        <LocalPlanner method="slAlwaysTrue"/>
+      </HierarchicalLP>
     </LocalPlanners>
 
     <Extenders>
@@ -174,6 +178,7 @@
         nfLabel="BFNF" lpLabel="slAlwaysTrue" checkIfSameCC="false"/>
       <NeighborhoodConnector label="ClosestAlwaysTrue" nfLabel="BFNF"
       lpLabel="slAlwaysTrue" checkIfSameCC="false"/>
+      <NeighborhoodConnector label="ClosestHierarchical" debug="true" nfLabel="BFNF" lpLabel="hierarchical" checkIfSameCC="false"/>
       <RewireConnector label="Rewire" nfLabel="Nearest4" lpLabel="slAlwaysTrue"/>
     </Connectors>
 

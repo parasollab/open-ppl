@@ -44,6 +44,7 @@
 
 //local planner includes
 #include "MPLibrary/LocalPlanners/StraightLine.h"
+#include "MPLibrary/LocalPlanners/HierarchicalLP.h"
 
 //extenders includes
 #include "MPLibrary/Extenders/BasicExtender.h"
@@ -152,7 +153,8 @@ struct MPTraits {
 
   //types of local planners available in our world
   typedef boost::mpl::list<
-    StraightLine<MPTraits>
+    StraightLine<MPTraits>,
+    HierarchicalLP<MPTraits>
       > LocalPlannerMethodList;
 
   //types of extenders avaible in our world
