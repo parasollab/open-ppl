@@ -15,7 +15,7 @@ build:
     VCPKG_DIR: /opt/vcpkg/scripts/buildsystems/vcpkg.cmake
   script:
     - cmake -B debug_build -S . -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_TOOLCHAIN_FILE=$VCPKG_DIR -DCODE_COVERAGE=ON
-    - cmake --build debug_build
+#    - cmake --build debug_build
     - cmake --build debug_build --target generate_doxygen_docs
     - cmake --build debug_build --target tests
   timeout: 3 hours
