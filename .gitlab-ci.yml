@@ -12,6 +12,8 @@ build:
   only:
     - ari-merge
   variables:
+    VCPKG_BINARY_CACHE_PATH: $CI_PROJECT_DIR/vcpkg_cache
+    VCPKG_ROOT: $CI_PROJECT_DIR/vcpkg
     VCPKG_DIR: /opt/vcpkg/scripts/buildsystems/vcpkg.cmake
   script:
     - cmake -B debug_build -S . -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_TOOLCHAIN_FILE=$VCPKG_DIR -DCODE_COVERAGE=ON
@@ -22,8 +24,7 @@ build:
   cache:
     key: vcpkg-cache
     paths:
-      - /opt/vcpkg/packages/
-      - /root/.cache/vcpkg/archives
+      - vcpkg_cache/
   artifacts:
     paths:
       - debug_build/.ninja_log
