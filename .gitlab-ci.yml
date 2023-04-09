@@ -18,6 +18,7 @@ build:
     - cmake --build debug_build
     - cmake --build debug_build --target generate_doxygen_docs
     - cmake --build debug_build --target tests
+  timeout: 3 hours
   cache:
     key: vcpkg-cache
     paths:
