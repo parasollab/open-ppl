@@ -5,7 +5,7 @@
        'baseFilename in the Problem node is for Simulator stat output only. -->
   <Problem baseFilename="RRTStar.0">
 
-    <Environment filename="../Envs/3D/3d.env"
+    <Environment filename="../../../Examples/3D/3d.env"
       frictionCoefficient="0" gravity="0 0 0"/>
 
     <Robot label="boxy" filename="../Envs/3D/boxy.robot">
@@ -16,7 +16,7 @@
         waypointThreshold=".05"/>
     </Robot>
 
-    <Robot label="coordinator" virtual="true" filename="../Envs/3D/boxy.robot" manipulator="false">
+    <Robot label="coordinator" virtual="true" filename="../../../Examples/3D/boxy.robot" manipulator="false">
       <Agent type="coordinator" dmLabel="minkowski" debug="true">
         <Member label="boxy"/>
         <StepFunction type="defaultcoordinator" debug="true"/>

@@ -10,6 +10,6 @@ find_package(CGAL CONFIG REQUIRED)
 include_directories(${MATHTOOL_PATH})
 include_directories(${CGAL_INCLUDE_DIRS})
 
-add_library(${PROJECT_NAME} IModel.cpp ModelFactory.cpp MovieBYULoader.cpp ObjLoader.cpp BVHDataLoader.cpp)
+add_library(${PROJECT_NAME} STATIC IModel.cpp ModelFactory.cpp MovieBYULoader.cpp ObjLoader.cpp BVHDataLoader.cpp)
 
-link_libraries(${PROJECT_NAME} PRIVATE ${CGAL_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} PUBLIC ${CGAL_LIBRARIES})

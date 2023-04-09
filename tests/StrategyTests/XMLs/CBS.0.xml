@@ -5,30 +5,30 @@
        'baseFilename in the Problem node is for Simulator stat output only. -->
   <Problem baseFilename="MultiRobotExample">
 
-    <Environment filename="../Envs/3D/mr-3d.xml"/>
+    <Environment filename="../../../Examples/3D/mr-3d.xml"/>
 
-    <Robot  label="boxy-0" filename="../Envs/3D/iCreate.xml">
+    <Robot  label="boxy-0" filename="../../../Examples/3D/iCreate.xml">
       <Agent type="child" waypointDm="euclidean" waypointThreshold=".05" debug="true"/>
 	  </Robot>
-	  <Robot  label="boxy-1" filename="../Envs/3D/iCreate.xml">
+	  <Robot  label="boxy-1" filename="../../../Examples/3D/iCreate.xml">
       <Agent type="child" waypointDm="euclidean" waypointThreshold=".05" debug="true"/>
 	  </Robot>
-	  <Robot  label="boxy-2" filename="../Envs/3D/iCreate.xml">
+	  <Robot  label="boxy-2" filename="../../../Examples/3D/iCreate.xml">
       <Agent type="child" waypointDm="euclidean" waypointThreshold=".05" debug="true"/>
 	  </Robot>
-	  <Robot  label="boxy-3" filename="../Envs/3D/iCreate.xml">
+	  <Robot  label="boxy-3" filename="../../../Examples/3D/iCreate.xml">
       <Agent type="child" waypointDm="euclidean" waypointThreshold=".05" debug="true"/>
 	  </Robot>
-	  <Robot  label="boxy-4" filename="../Envs/3D/iCreate.xml">
+	  <Robot  label="boxy-4" filename="../../../Examples/3D/iCreate.xml">
       <Agent type="child" waypointDm="euclidean" waypointThreshold=".05" debug="true"/>
 	  </Robot>
-	  <Robot  label="boxy-5" filename="../Envs/3D/iCreate.xml">
+	  <Robot  label="boxy-5" filename="../../../Examples/3D/iCreate.xml">
       <Agent type="child" waypointDm="euclidean" waypointThreshold=".05" debug="true"/>
 	  </Robot>
-	  <Robot  label="boxy-6" filename="../Envs/3D/iCreate.xml">
+	  <Robot  label="boxy-6" filename="../../../Examples/3D/iCreate.xml">
       <Agent type="child" waypointDm="euclidean" waypointThreshold=".05" debug="true"/>
 	  </Robot>
-	  <Robot  label="boxy-7" filename="../Envs/3D/iCreate.xml">
+	  <Robot  label="boxy-7" filename="../../../Examples/3D/iCreate.xml">
       <Agent type="child" waypointDm="euclidean" waypointThreshold=".05" debug="true"/>
 	  </Robot>
 

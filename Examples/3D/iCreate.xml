@@ -1,0 +1,31 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Robot maxLinearVelocity=".5" maxAngularVelocity="1.04">
+  <!--
+       This robot XML describes physically realistic settings for an iCreate
+       robot. Each direction is modeled as a separate actuator to support
+       continuous controls with a deadzone in the middle.
+  -->
+
+  <MultiBody type="active">
+    <Base filename="icreate.obj" color="0 1 0 1" type="planar"
+      movement="rotational" mass="1"/>
+  </MultiBody>
+
+  <Actuator label="forward" maxMagnitude="5"
+    limits=".1:.5 0:0 0:0" type="velocity"/>
+
+  <Actuator label="reverse" maxMagnitude="5"
+    limits="-.5:-.1 0:0 0:0" type="velocity"/>
+
+  <Actuator label="left" maxMagnitude="1.04"
+    limits="0:0 0:0 .2:1.04" type="velocity"/>
+
+  <Actuator label="right" maxMagnitude="1.04"
+    limits="0:0 0:0 -1.04:-.2" type="velocity"/>
+
+  <Actuator label="null" maxMagnitude="1.04"
+    limits="0:0 0:0 0:0" type="velocity"/>
+
+  <Controller type="icreatecontroller" debug="false"/>
+
+</Robot>

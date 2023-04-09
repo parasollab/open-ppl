@@ -1,0 +1,191 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<MotionPlanning warnings="true" warningsAsErrors="true" print="false">
+
+  <!-- Here we specify input files, such as environment and query. The
+       'baseFilename in the Problem node is for Simulator stat output only. -->
+  <Problem baseFilename="tmp_examples">
+
+    <Environment filename="3D/3d.env"
+      frictionCoefficient="0" gravity="0 0 0"/>
+
+    <Robot label="boxy" filename="3D/boxy.robot">
+      <!--
+      <Agent type="planning"/>
+      -->
+      <Agent type="pathfollowing" waypointDm="minkowski"
+        waypointThreshold=".05"/>
+    </Robot>
+
+    <Robot label="coordinator" virtual="true" filename="3D/boxy.robot" manipulator="false">
+      <Agent type="coordinator" dmLabel="minkowski" debug="true">
+        <Member label="boxy"/>
+        <StepFunction type="defaultcoordinator" debug="true"/>
+      </Agent>
+    </Robot>
+
+    <Task label="startLocation" robot="boxy">
+      <StartConstraints>
+        <CSpaceConstraint point="0 0 0 0 0 0"/>
+      </StartConstraints>
+    </Task>
+
+    <Task label="coordinatorTask" robot="coordinator">
+      <StartConstraints>
+        <CSpaceConstraint point="0 0 0 0 0 0"/>
+      </StartConstraints>
+    </Task>
+
+    <Decomposition label="main" taskLabel="first" coordinator="coordinator">
+      <SemanticTask label="first">
+        <Task label="query1" robot="boxy">
+          <StartConstraints>
+            <CSpaceConstraint point="0 5 0 0 0 0"/>
+          </StartConstraints>
+
+          <GoalConstraints>
+            <CSpaceConstraint point="0 -5 0 0.2 0.8 0.5"/>
+          </GoalConstraints>
+        </Task>
+      </SemanticTask>
+    </Decomposition>
+
+  </Problem>
+
+  <!-- Set available algorithms and parameters. -->
+  <Library>
+
+    <DistanceMetrics>
+      <Euclidean label="euclidean"/>
+      <Minkowski label="minkowski" r1="3.0" r2="3.0" r3="0.333"
+        normalize="false"/>
+      <Manhattan label="manhattan"/>
+    </DistanceMetrics>
+
+    <ValidityCheckers>
+      <CollisionDetection label="bounding" method="BoundingSpheres"/>
+      <AlwaysTrueValidity label="alwaysTrue"/>
+      <CollisionDetection label="rapid" method="RAPID"/>
+      <CollisionDetection label="pqp" method="PQP"/>
+      <CollisionDetection label="pqp_solid" method="PQP_SOLID"/>
+    </ValidityCheckers>
+
+    <NeighborhoodFinders>
+      <BruteForceNF label="Nearest" dmLabel="euclidean" unconnected="false"
+        k="1"/>
+      <BruteForceNF label="Closest" dmLabel="euclidean" unconnected="true"
+        k="6"/>
+    </NeighborhoodFinders>
+
+    <Samplers>
+      <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
+      <UniformRandomSampler label="UniformRandomFree" vcLabel="pqp_solid"/>
+      <BridgeTestSampler label="BridgeTest" vcLabel="alwaysTrue" d="10" dmLabel="euclidean" />
+    </Samplers>
+
+    <LocalPlanners>
+      <StraightLine label="sl" binaryEvaluation="true" vcLabel="pqp_solid" dmLabel="euclidean"/>
+    </LocalPlanners>
+
+    <Extenders>
+      <BasicExtender label="BERO" debug="false" dmLabel="euclidean"
+        vcLabel="pqp_solid" maxDist="4." minDist=".01"/>
+    </Extenders>
+
+    <PathModifiers>
+    </PathModifiers>
+
+    <Connectors>
+      <NeighborhoodConnector label="Closest" debug="true"
+        nfLabel="Nearest" lpLabel="sl" checkIfSameCC="false"/>
+      <RewireConnector label="Rewire" nfLabel="Closest" lpLabel="sl"/>
+    </Connectors>
+
+    <Metrics>
+    </Metrics>
+
+    <MapEvaluators>
+      <QueryMethod label="Query" debug="false"
+        graphSearchAlg="dijkstras"/>
+    </MapEvaluators>
+
+    <MPStrategies>
+      <AdaptiveRRT label="AdaptiveRRT" debug="true"
+        querySampler="UniformRandom" samplerLabel="UniformRandom"
+        nfLabel="Nearest" extenderLabel="BERO"
+        growGoals="false" growthFocus="0.01" m="1"
+        goalDmLabel="minkowski" goalThreshold="5"
+        wallPenalty=0.5 gamma=0.5 cost="reward">
+
+        <GrowthSet threshold="0.0">
+          <Extender label="BERO"/>
+        </GrowthSet>
+        <Evaluator label="QueryMethod"/>
+      </AdaptiveRRT>
+
+      <BasicRRTStrategy label="RRT" debug="false"
+        querySampler="UniformRandomFree" samplerLabel="UniformRandomFree"
+        nfLabel="Nearest" extenderLabel="BERO"
+        growGoals="false" growthFocus="0.01" m="1"
+        goalDmLabel="euclidean" goalThreshold="5">
+        <Evaluator label="Query"/>
+      </BasicRRTStrategy>
+
+      <!-- RRT Star -->
+      <BasicRRTStrategy label="RRTstar" debug="false"
+        querySampler="UniformRandomFree" samplerLabel="UniformRandomFree"
+        nfLabel="Nearest" extenderLabel="BERO"
+        growGoals="false" growthFocus="0.01" m="1"
+        goalDmLabel="euclidean" goalThreshold="5" connectorLabel="Rewire">
+        <Evaluator label="Query"/>
+      </BasicRRTStrategy>
+
+      <!-- Toggle PRM-->
+      <TogglePRMStrategy label="TogglePRM" vcLabel="pqp_solid" priority="true">
+        <Sampler label="UniformRandomFree" number="10" attempts="1"/>
+        <Connector label="Closest"/>
+        <ColConnector label="Closest"/>
+        <Evaluator label="Query"/>
+      </TogglePRMStrategy>
+      
+    </MPStrategies>
+
+    <MPTools>
+    </MPTools>
+
+    <!-- MPProblem allows multiple solvers to be specified and executed. -->
+
+    <Solver mpStrategyLabel="RRT" seed="12345678"
+      baseFilename="example" vizmoDebug="true"/> 
+    <Solver mpStrategyLabel="RRTstar" seed="12345"
+      baseFilename="RRTstar" vizmoDebug="true"/> 
+
+  </Library>
+
+  <TMPLibrary>
+    <TMPStrategies>
+      <SimpleMotionMethod label="SimpleMotion" teLabel="motionEval"/>
+    </TMPStrategies>
+
+    <PoIPlacementMethods>
+    </PoIPlacementMethods>
+
+    <TaskEvaluators>
+      <SimpleMotionEvaluator label="motionEval"/>
+    </TaskEvaluators>
+
+    <TaskDecomposers>
+    </TaskDecomposers>
+
+    <TaskAllocators>
+    </TaskAllocators>
+
+    <StateGraphs>
+    </StateGraphs>
+
+    <TMPTools>
+    </TMPTools>
+
+    <Solver tmpStrategyLabel="SimpleMotion" baseFilename="tmp_examples"/>
+  </TMPLibrary>
+
+</MotionPlanning>
