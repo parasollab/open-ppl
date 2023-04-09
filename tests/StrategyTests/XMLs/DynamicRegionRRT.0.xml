@@ -4,8 +4,8 @@
   <!-- Here we specify input files, such as environment and query. The
        'baseFilename in the Problem node is for Simulator stat output only. -->
   <Problem>
-    <Environment filename="../Envs/3D/hallway.xml" />
-    <Robot label="boxy" filename="../Envs/3D/iCreate.xml"/> 
+    <Environment filename="../../../Examples/3D/hallway.xml" />
+    <Robot label="boxy" filename="../../../Examples/3D/iCreate.xml"/>
 
     <Task label="query" robot="boxy">
       <StartConstraints>

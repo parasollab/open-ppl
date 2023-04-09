@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.24)
 set(CMAKE_CXX_STANDARD 17)
 #add_definitions(-D_GLIBCXX_USE_CXX11_ABI=0)
 
-project(pmpl VERSION 1.0.0)
+project(ppl VERSION 1.0.0)
 
 set(ROBOT_DEF "PMPCfg" CACHE STRING "Robot Type")
 add_definitions(-D${ROBOT_DEF})
@@ -17,8 +17,8 @@ option(BUILD_MATLAB "Build with MatLab support" OFF)
 # work from Matthew Bulluck's parallel branch.
 option(BUILD_PARALLEL "Build parallel version of PMPL" OFF)
 
-option(BUILD_TESTS "Build and Run Tests" OFF)
-option(BUILD_DOCS "Build Documentation" OFF)
+option(BUILD_TESTS "Build and Run Tests" ON)
+option(BUILD_DOCS "Build Documentation" ON)
 
 add_compile_definitions(VIZMO_MAP)
 add_compile_definitions(CGAL_NO_ASSERTIONS)
@@ -66,15 +66,16 @@ find_package(CGAL CONFIG REQUIRED)
 find_package(OpenCV CONFIG REQUIRED)
 find_package(Eigen3 CONFIG REQUIRED)
 find_package(tinyxml CONFIG REQUIRED)
-find_package(Bullet CONFIG REQUIRED)
+find_package(Bullet CONFIG REQUIRED
+        LinearMath Bullet3Common BulletDynamics BulletSoftBody BulletCollision BulletInverseDynamics)
 find_package(dlib CONFIG REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
-find_package(pqp)
+find_package(pqp QUIET)
 
 add_subdirectory(src)
 include_directories(src)
 
-# TODO Remove, Added Build Parallel
+# TOOD Parallel Build (inclde libstapl.a)
 include_directories(lib/stapl)
 include_directories(lib/stapl/stapl)
 
@@ -103,7 +104,7 @@ endif()
 # Build Catch2 Tests
 if(BUILD_TESTS)
     enable_testing()
-    find_package(Catch2 CONFIG REQUIRED)
+    find_package(Catch2 3 REQUIRED)
     add_subdirectory(tests)
 endif()
 
@@ -118,50 +119,69 @@ endif()
 # define target name variables
 set(PPL_EXECUTABLE ppl_executable)
 set(PPL_LIBRARY ppl_library)
-set(PMPL_EXECUTABLE pmpl_executable)
-set(PMPL_LIBRARY pmpl_library)
-# TODO add last target (Simulator?)
+set(PPL_MP_LIBRARY ppl_mp_library)
+set(PPL_MP_EXECUTABLE ppl_mp_executable)
+set(SIMULATOR simulator)
+set(TESTS tests)
 
 # build [base object library]
 add_library(objlib OBJECT ${PMPL_SRCS})
 set_target_properties(objlib PROPERTIES VERSION ${PROJECT_VERSION})
-target_link_libraries(objlib PRIVATE unofficial-tinyxml::unofficial-tinyxml LinearMath Bullet3Common
-        BulletDynamics BulletSoftBody BulletCollision BulletInverseDynamics)
-target_link_directories(objlib PRIVATE ${BULLET_LIBRARY_DIRS})
+target_link_libraries(objlib PUBLIC BulletSoftBody BulletDynamics BulletCollision LinearMath Bullet3Common
+        BulletInverseDynamics unofficial-tinyxml::unofficial-tinyxml)
+target_link_directories(objlib PUBLIC ${BULLET_LIBRARY_DIRS})
 
-# build [pmpl library]
-add_library(${PMPL_LIBRARY} ${HARDWARE_SRCS} ${TASK_SRCS} $<TARGET_OBJECTS:objlib>)
+# build [ppl library]
+add_library(${PPL_LIBRARY} STATIC ${HARDWARE_SRCS} ${TASK_SRCS} $<TARGET_OBJECTS:objlib>)
 
-# [pmpl library] - Link external packages
-target_link_libraries(${PMPL_LIBRARY} PRIVATE LinearMath Bullet3Common BulletDynamics
-        BulletSoftBody BulletCollision BulletInverseDynamics CGAL::CGAL dlib::dlib
-        Eigen3::Eigen nlohmann_json::nlohmann_json Qt6::Core Qt6::Gui Qt6::OpenGL Qt6::Widgets
-        Qt6::OpenGLWidgets)
+# build [ppl_mp library]
+add_library(${PPL_MP_LIBRARY} STATIC ${HARDWARE_SRCS} $<TARGET_OBJECTS:objlib>)
 
-target_link_libraries(${PMPL_LIBRARY} PRIVATE ${OPENGL_LIBRARIES} ${GLUT_LIBRARY})
+# [ppl library] - Link external packages
+target_link_libraries(${PPL_LIBRARY} PUBLIC BulletSoftBody BulletDynamics BulletCollision LinearMath Bullet3Common
+        BulletInverseDynamics CGAL::CGAL dlib::dlib Eigen3::Eigen
+        nlohmann_json::nlohmann_json Qt6::Core Qt6::Gui Qt6::OpenGL Qt6::Widgets
+        Qt6::OpenGLWidgets unofficial-tinyxml::unofficial-tinyxml)
 
-# [pmpl library] - Link internal built packages
-target_link_libraries(${PMPL_LIBRARY} PRIVATE glutils nonstd sandbox RAPID tetgen pqp modelloader)
+target_link_libraries(${PPL_LIBRARY} PUBLIC ${OPENGL_LIBRARIES} ${GLUT_LIBRARY})
 
-# [pmpl library] - Link conditional packages
+# [ppl library] - Link internal built packages
+target_link_libraries(${PPL_LIBRARY} PUBLIC PQP glutils nonstd sandbox RAPID tetgen modelloader ${PQP_LIBRARIES})
+
+# [ppl library] - needed due to issue with bullet library
+target_link_directories(${PPL_LIBRARY} PUBLIC ${BULLET_LIBRARY_DIRS})
+set_target_properties(${PPL_LIBRARY} PROPERTIES OUTPUT_NAME ppl)
+
+set_target_properties(${PPL_MP_LIBRARY} PROPERTIES OUTPUT_NAME ppl_mp)
+
+# build [ppl executable]
+add_executable(${PPL_EXECUTABLE} src/main.cpp)
+target_link_libraries(${PPL_EXECUTABLE} PRIVATE ${PPL_LIBRARY})
+
+#target_link_libraries(${PPL_EXECUTABLE} unofficial-tinyxml::unofficial-tinyxml LinearMath Bullet3Common BulletDynamics
+#        BulletSoftBody BulletCollision BulletInverseDynamics)
+target_link_directories(${PPL_EXECUTABLE} PRIVATE ${BULLET_LIBRARY_DIRS})
+set_target_properties(${PPL_EXECUTABLE} PROPERTIES OUTPUT_NAME ppl)
+
+# build [ppl-tpl executable]
+add_executable(${PPL_MP_EXECUTABLE} src/tmp_main.cpp)
+target_link_libraries(${PPL_MP_EXECUTABLE} PRIVATE ${PPL_MP_LIBRARY})
+set_target_properties(${PPL_MP_EXECUTABLE} PROPERTIES OUTPUT_NAME ppl_mp)
+
+# build [sim executable]
+add_executable(${SIMULATOR} src/sim_main.cpp)
+target_link_libraries(${SIMULATOR} PRIVATE ${PPL_LIBRARY})
+set_target_properties(${PPL_MP_EXECUTABLE} PROPERTIES OUTPUT_NAME sim)
+
+# build [tests]
 if(BUILD_TESTS)
-    target_link_libraries(${PMPL_LIBRARY} PRIVATE Catch2::Catch2 Catch2::Catch2WithMain)
+    add_executable(${TESTS} tests/tests_main.cpp)
+    target_link_libraries(${TESTS} PRIVATE ${PPL_LIBRARY})
+    target_link_libraries(${TESTS} PRIVATE Catch2::Catch2)
+    set_target_properties(${TESTS} PROPERTIES OUTPUT_NAME ppl_tests)
 endif()
 
-# [pmpl library] - needed due to issue with bullet library
-target_link_directories(${PMPL_LIBRARY} PRIVATE ${BULLET_LIBRARY_DIRS})
-
-set_target_properties(${PMPL_LIBRARY} PROPERTIES OUTPUT_NAME pmpl)
-
-# build [pmpl executable]
-add_executable(${PMPL_EXECUTABLE} src/main.cpp)
-target_link_libraries(${PMPL_EXECUTABLE} ${PMPLLIB})
-target_link_libraries(${PMPL_EXECUTABLE} unofficial-tinyxml::unofficial-tinyxml LinearMath Bullet3Common BulletDynamics
-        BulletSoftBody BulletCollision BulletInverseDynamics)
-target_link_directories(${PMPL_EXECUTABLE} PRIVATE ${BULLET_LIBRARY_DIRS})
-set_target_properties(${PMPL_EXECUTABLE} PROPERTIES OUTPUT_NAME pmpl)
-
-# package pmpl library for distribution
-install(TARGETS ${PMPL_LIBRARY}
+# package ppl library for distribution
+install(TARGETS ${PPL_LIBRARY}
             LIBRARY DESTINATION lib
             PUBLIC_HEADER DESTINATION include)

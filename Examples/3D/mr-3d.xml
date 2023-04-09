@@ -1,0 +1,40 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Environment frictionCoefficient=".01" gravity="0 0 0"
+  positionRes=".05" orientationRes=".2">
+
+  <Boundary space="workspace" shape="box" limits="[-5.4:5.4 ; -5.4:5.4 ; -0.1:0.1]"/>
+
+  <MultiBody type="passive">
+    <Base filename="robot.obj" comAdjustment="com" type="fixed"
+      color="0 0 1 1" transform="0 2.5 0 0 0 0"/>
+  </MultiBody>
+  <MultiBody type="passive">
+    <Base filename="robot.obj" comAdjustment="com" type="fixed"
+      color="0 0 1 1" transform="0 .83 0 0 0 0"/>
+  </MultiBody>
+  <MultiBody type="passive">
+    <Base filename="robot.obj" comAdjustment="com" type="fixed"
+      color="0 0 1 1" transform="0 -2.5 0 0 0 0"/>
+  </MultiBody>
+  <MultiBody type="passive">
+    <Base filename="robot.obj" comAdjustment="com" type="fixed"
+      color="0 0 1 1" transform="0 -.83 0 0 0 0"/>
+  </MultiBody>
+  <MultiBody type="passive">
+    <Base filename="robot.obj" comAdjustment="com" type="fixed"
+      color="0 0 1 1" transform="2.5 0 0 0 0 0"/>
+  </MultiBody>
+  <MultiBody type="passive">
+    <Base filename="robot.obj" comAdjustment="com" type="fixed"
+      color="0 0 1 1" transform=".83 0 0 0 0 0"/>
+  </MultiBody>
+  <MultiBody type="passive">
+    <Base filename="robot.obj" comAdjustment="com" type="fixed"
+      color="0 0 1 1" transform="-2.5 0 0 0 0 0"/>
+  </MultiBody>
+  <MultiBody type="passive">
+    <Base filename="robot.obj" comAdjustment="com" type="fixed"
+      color="0 0 1 1" transform="-.83 0 0 0 0 0"/>
+  </MultiBody>
+
+</Environment>

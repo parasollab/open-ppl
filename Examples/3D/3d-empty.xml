@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Environment frictionCoefficient=".01" gravity="0 0 0"
+  positionRes=".05" orientationRes=".2">
+
+  <Boundary space="workspace" shape="box" limits="[-5.4:5.4 ; -5.4:5.4 ; -0.1:0.1]"/>
+
+</Environment>

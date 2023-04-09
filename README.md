@@ -111,9 +111,14 @@ Alternate installation instructions available at https://docs.conan.io/en/latest
 pip install conan
 ```
 
+Make sure that the installed version of conan is > 2.0
+```bash
+conan --version
+```
+
 #### Install conan packages
 ```bash
-conan install . --install-folder cmake-build-release --build=missing -e CONAN_CMAKE_GENERATOR=Ninja -c tools.system.package_manager:mode=install -c tools.system.package_manager:sudo=true
+conan install . --output-folder=cmake-build-release --build=missing -c tools.system.package_manager:mode=install -c tools.system.package_manager:sudo=true
 ```
 
 #### Build pmpl with conan
@@ -122,15 +127,6 @@ cmake . -DCMAKE_TOOLCHAIN_FILE=cmake-build-release/conan_toolchain.cmake
 cmake --build .
 ```
 
-<!---
-### CGAL Runtime Error
-There is currently a bug in the CGAL library which causes a runtime assertion in pmpl.  In order to work around this, after cmake has been configured and vcpkg has downloaded the CGAL library, you will need to comment out lines 171 and 172 of  the file 
-build/vcpkg_installed/x64-linux/include/CGAL/Interval_nt.h, which read as follows:
-```
-    CGAL_assertion_msg( (!is_valid(i)) || (!is_valid(s)) || (!(i>s)),
-              "Variable used before being initialized (or CGAL bug)");
-```
---->
 
 ## Docker
 Alternatively a docker file is provided, with the above instructions pre-built.
@@ -149,4 +145,9 @@ The executable built resides in /pmp/build/pmpl_exec within the docker container
 
 ## Tests
 
-**TODO** Update Test Instructions
+To run tests start by building the test target
+```bash
+cmake --build . --target tests
+```
+
+Then run the Catch2v3 test executable
