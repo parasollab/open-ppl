@@ -14,23 +14,6 @@
 #include "MPProblem/MPProblem.h"
 #include "MPLibrary/PMPL.h"
 
-#include "Traits/TestTraits.h"
-
-#include "Behaviors/Agents/Agent.h"
-#include "Behaviors/Agents/Coordinator.h"               // src
-#include "MPLibrary/MPLibraryTests.h"
-#include "TMPLibrary/TMPLibraryTests.h"
-#include "Geometry/GeometryTests.h"
-#include "Behaviors/BehaviorsTests.h"
-#include "TMPLibrary/Solution/Plan.h"                   // src
-#include "MPProblem/MPProblemTests.h"
-#include "MPProblem/MPTask.h"                           // src
-#include "MPProblem/GroupTask.h"                        // src
-#include "MPProblem/Robot/Robot.h"                      // src
-#include "MPProblem/TaskHierarchy/Decomposition.h"      // src
-#include "MPProblem/TaskHierarchy/SemanticTask.h"       // src
-#include "Utilities/PMPLExceptions.h"                   // src
-
 namespace fs = std::filesystem;
 
 const std::string STRATEGY_TESTS = "../tests/StrategyTests/";
