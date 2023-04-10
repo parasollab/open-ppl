@@ -61,9 +61,8 @@ strategy-test-job:
     - lcov --remove coverage.info '/usr/*' --output-file coverage.filtered.info
     - lcov --list coverage.filtered.info
   artifacts:
-    reports:
-      coverage_report:
-        path: build/coverage.filtered.info
+      paths:
+        - build/coverage.filtered.info
 
 publish-doc-job:
   stage: deploy
