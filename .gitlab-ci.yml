@@ -16,10 +16,10 @@ build:
     VCPKG_ROOT: $CI_PROJECT_DIR/vcpkg
     VCPKG_DIR: /opt/vcpkg/scripts/buildsystems/vcpkg.cmake
   script:
-    - cmake -B debug_build -S . -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_TOOLCHAIN_FILE=$VCPKG_DIR -DCODE_COVERAGE=ON
-#    - cmake --build debug_build
-    - cmake --build debug_build --target generate_doxygen_docs
-    - cmake --build debug_build --target tests
+    - cmake -B build -S . -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_TOOLCHAIN_FILE=$VCPKG_DIR -DCODE_COVERAGE=ON
+#    - cmake --build build
+    - cmake --build build --target generate_doxygen_docs
+    - cmake --build build --target tests
   timeout: 3 hours
   cache:
     key: vcpkg-cache
@@ -27,9 +27,8 @@ build:
       - vcpkg_cache/
   artifacts:
     paths:
-      - debug_build
-#      - debug_build/.ninja_log
-#      - debug_build/docs/Doxygen/html
+      - build/.ninja_log
+      - build/docs/Doxygen/html
 
 unit-test-job:
   stage: test
@@ -41,7 +40,7 @@ unit-test-job:
     - ari-merge
     - release-stage-one
   script:
-    - cd debug_build
+    - cd build
     - ls
 
 strategy-test-job:
@@ -54,8 +53,17 @@ strategy-test-job:
     - ari-merge
     - release-stage-one
   script:
-    - cd debug_build
+    - cmake -B build -S . -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_TOOLCHAIN_FILE=$VCPKG_DIR -DCODE_COVERAGE=ON
+    - cmake --build build --target tests
+    - cd build
     - ./ppl_tests -F BasicTests
+    - lcov --capture --directory . --output-file coverage.info
+    - lcov --remove coverage.info '/usr/*' --output-file coverage.filtered.info
+    - lcov --list coverage.filtered.info
+  artifacts:
+    reports:
+      coverage_report:
+        path: build/coverage.filtered.info
 
 publish-doc-job:
   stage: deploy

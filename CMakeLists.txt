@@ -18,6 +18,7 @@ option(BUILD_MATLAB "Build with MatLab support" OFF)
 option(BUILD_PARALLEL "Build parallel version of PMPL" OFF)
 
 option(BUILD_TESTS "Build and Run Tests" ON)
+option(CODE_COVERAGE "Enable code coverage reporting" ON)
 option(BUILD_DOCS "Build Documentation" ON)
 
 add_compile_definitions(VIZMO_MAP)
@@ -106,6 +107,15 @@ if(BUILD_TESTS)
     enable_testing()
     find_package(Catch2 3 REQUIRED)
     add_subdirectory(tests)
+
+    if(CODE_COVERAGE)
+        if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+            message("Enabling code coverage")
+            set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage")
+        else()
+            message(WARNING "Unsupported compiler for code coverage. Supported compilers: GCC, Clang")
+        endif()
+    endif()
 endif()
 
 # Recursively add sources (Not Used ATM)
