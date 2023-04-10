@@ -38,7 +38,7 @@ unit-test-job:
     - ari-merge
     - release-stage-one
   script:
-    - debug_build/ppl_tests -F BasicTests
+    - ls
 
 strategy-test-job:
   stage: test
@@ -48,7 +48,8 @@ strategy-test-job:
     - ari-merge
     - release-stage-one
   script:
-    - ls
+    - cd debug_build
+    - ./ppl_tests -F BasicTests
 
 publish-doc-job:
   stage: deploy
