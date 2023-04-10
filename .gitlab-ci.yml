@@ -38,6 +38,7 @@ unit-test-job:
     - ari-merge
     - release-stage-one
   script:
+    - cd debug_build
     - ls
 
 strategy-test-job:
