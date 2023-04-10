@@ -27,8 +27,9 @@ build:
       - vcpkg_cache/
   artifacts:
     paths:
-      - debug_build/.ninja_log
-      - debug_build/docs/Doxygen/html
+      - debug_build
+#      - debug_build/.ninja_log
+#      - debug_build/docs/Doxygen/html
 
 unit-test-job:
   stage: test
