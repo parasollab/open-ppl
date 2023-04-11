@@ -65,7 +65,7 @@ strategy-test-job:
   artifacts:
     name: ${CI_JOB_NAME}-${CI_COMMIT_REF_NAME}-${CI_COMMIT_SHA}
     reports:
-      junit: junit.xml
+      junit: build/junit.xml
       coverage_report:
         coverage_format: cobertura
         path: build/coverage.xml
