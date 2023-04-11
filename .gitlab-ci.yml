@@ -60,10 +60,12 @@ strategy-test-job:
     - ./ppl_tests -F BasicTests
     - lcov --capture --directory . --output-file coverage.info
     - lcov --remove coverage.info '/usr/*' --output-file coverage.filtered.info
-    - lcov --list coverage.filtered.info
+    - gcovr -r .. --xml -o coverage.xml -e '/usr/*'
   artifacts:
-      paths:
-        - build/coverage.filtered.info
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: build/coverage.xml
 
 publish-doc-job:
   stage: deploy
