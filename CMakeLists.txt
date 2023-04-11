@@ -189,6 +189,9 @@ if(BUILD_TESTS)
     target_link_libraries(${TESTS} PRIVATE ${PPL_LIBRARY})
     target_link_libraries(${TESTS} PRIVATE Catch2::Catch2)
     set_target_properties(${TESTS} PROPERTIES OUTPUT_NAME ppl_tests)
+    include(CTest)
+    include(Catch)
+    catch_discover_tests(${TESTS})
 endif()
 
 # package ppl library for distribution
