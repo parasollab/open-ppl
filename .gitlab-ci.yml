@@ -59,8 +59,9 @@ strategy-test-job:
     - cd build
     - ./ppl_tests -F BasicTests
     - lcov --capture --directory . --output-file coverage.info
-    - lcov --remove coverage.info '/usr/*' --output-file coverage.filtered.info
-    - gcovr -r .. --xml -o coverage.xml -e '/usr/*'
+    - lcov --remove coverage.info '/usr/*' '*/vcpkg_installed/*' --output-file coverage.filtered.info
+    - gcovr --xml-pretty --exclude-unreachable-branches --print-summary -o coverage.xml --root ${CI_PROJECT_DIR}
+  coverage: /^\s*lines:\s*\d+.\d+\%/
   artifacts:
     reports:
       coverage_report:
