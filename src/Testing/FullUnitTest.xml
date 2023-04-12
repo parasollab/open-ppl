@@ -134,7 +134,7 @@
 
     <ValidityCheckers>
       <AlwaysTrueValidity label="alwaysTrue"/>
-
+      <ObstacleClearance label="obst_clrnc" clearanceThreshold="2" vcLabel="pqp_solid"/>
       <!-- Test not yet added -->
       <CollisionDetection label="pqp_solid" method="PQP_SOLID"/>
       <CollisionDetection label="rapid" method="RAPID"/>
