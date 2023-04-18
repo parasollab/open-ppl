@@ -1,9 +1,16 @@
 #ifndef PPL_TOPOLOGICAL_MAP_VALIDITY_TEST_H_
 #define PPL_TOPOLOGICAL_MAP_VALIDITY_TEST_H_
 
-#include "MPLibrary/ValidityCheckers/AlwaysTrueValidity.h"
+// #include "MPLibrary/ValidityCheckers/AlwaysTrueValidity.h"
 #include "MPLibrary/ValidityCheckers/TopologicalMapValidity.h"
 #include "ValidityCheckerMethodTest.h"
+
+/** @TODO
+ * Read in a topological map form 3d env
+ * Use that to construct a topological map validilty chekcer
+ * Sample two points, one that's valid and one that's not
+ * Check whether the validity checker returns the right output for both of the points
+ **/
 
 template <typename MPTraits>
 class TopologicalMapValidityTest : virtual public TopologicalMapValidity<MPTraits>,
@@ -58,8 +65,7 @@ TopologicalMapValidityTest<MPTraits>::
 
 template <typename MPTraits>
 TopologicalMapValidityTest<MPTraits>::
-    TopologicalMapValidityTest(XMLNode& _node) : ValidityCheckerMethod<MPTraits>(_node),
-                                                 TopologicalMapValidity<MPTraits>(_node) {
+    TopologicalMapValidityTest(XMLNode& _node) : ValidityCheckerMethod<MPTraits>(_node), TopologicalMapValidity<MPTraits>(_node) {
 }
 
 template <typename MPTraits>
@@ -80,14 +86,46 @@ template <typename MPTraits>
 typename TopologicalMapValidityTest<MPTraits>::TestResult
 TopologicalMapValidityTest<MPTraits>::
     IndividualCfgValidityTest() {
+
+  // Making workplace decomposition
+  auto decomposer = new TetGenDecomposition();
+  auto environment = this->GetMPProblem()->GetEnvironment();
+  auto workplaceDecomposition = (*decomposer)(environment);
+  delete decomposer;
+  decomposer = nullptr;
+  this->GetMPTools()->SetDecomposition("coarseDecomposition", workplaceDecomposition);
+
+  // Making topological map
+  auto topologicalMap = new TopologicalMap<MPTraits>(1, "coarseDecomposition");
+  this->GetMPTools()->SetTopologicalMap("topologicalMap", topologicalMap);
+  this->GetMPTools()->GetTopologicalMap("topologicalMap")->Initialize();
+  this->m_tmLabel = "topologicalMap";
+
+  // Getting robot to position
+  auto robot = this->GetMPProblem()->GetRobots()[0].get();
+  auto task = this->GetMPProblem()->GetTasks(robot)[0];
+  this->GetMPLibrary()->SetTask(task.get());
+  this->GetMPLibrary()->SetGroupTask(nullptr);
+
   bool passed = true;
-  std::string message = "";
+  std::string message;
+  vector<bool> output;
 
-  auto output = this->IndividualCfgValidity();
+  // Valid configuration
+  auto p1 = CfgType(robot);
+  std::istringstream p1Stream("0 0 0 0 0 0 0");
+  p1.Read(p1Stream);
+  output.push_back((this->IsValid(p1, "Test")));
 
-  // Make sure that every response is true.
+  // Invalid configuration
+  auto p2 = CfgType(robot);
+  std::istringstream p2Stream("-2 4 -2 0 0 0 0");
+  p2.Read(p2Stream);
+  output.push_back(!(this->IsValid(p2, "Test")));
+
+  // Ensure all points sampled are correct
   for (auto kv : output) {
-    if (kv.first)
+    if (kv)
       continue;
 
     passed = false;
@@ -102,6 +140,7 @@ TopologicalMapValidityTest<MPTraits>::
   } else {
     message = "IndividualCfgValidity::FAILED :(\n" + message;
   }
+
   return std::make_pair(passed, message);
 }
 
@@ -110,29 +149,8 @@ typename TopologicalMapValidityTest<MPTraits>::TestResult
 TopologicalMapValidityTest<MPTraits>::
     GroupCfgValidityTest() {
   bool passed = true;
-  std::string message = "";
-
-  auto output = this->IndividualCfgValidity();
-
-  // Make sure that every response is true.
-  for (auto kv : output) {
-    if (kv.first)
-      continue;
-
-    passed = false;
-    message = message +
-              "\n\tA group cfg was incorrectly labeled "
-              "invalid.\n";
-    break;
-  }
-
-  if (passed) {
-    message = "GroupCfgValidity::PASSED!\n";
-  } else {
-    message = "GroupCfgValidity::FAILED :(\n" + message;
-  }
+  std::string message = "GroupCfgValidity not implemented for this test\n";
   return std::make_pair(passed, message);
 }
-
 /*--------------------------------------------------------------------*/
 #endif

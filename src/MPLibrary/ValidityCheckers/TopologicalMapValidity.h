@@ -1,8 +1,8 @@
 #ifndef PMPL_TOPOLOGICAL_MAP_VALIDITY_H
 #define PMPL_TOPOLOGICAL_MAP_VALIDITY_H
 
+#include "MPLibrary/MPTools/TetGenDecomposition.h"
 #include "ValidityCheckerMethod.h"
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Considers configurations valid iff they are 'contained' by a region in a
 /// topological map.
@@ -27,7 +27,9 @@ class TopologicalMapValidity : virtual public ValidityCheckerMethod<MPTraits> {
   ///@}
   ///@name ValidityChecker Interface
   ///@{
-
+  void setTMLabel(string label) {
+    m_tmLabel = label;
+  }
   virtual bool IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo,
                            const std::string& _caller) override;
 
@@ -36,7 +38,6 @@ class TopologicalMapValidity : virtual public ValidityCheckerMethod<MPTraits> {
  protected:
   ///@name Internal State
   ///@{
-
   std::string m_tmLabel;  ///< The topological map label.
 
   ///@}
@@ -55,7 +56,7 @@ TopologicalMapValidity<MPTraits>::
     TopologicalMapValidity(XMLNode& _node) : ValidityCheckerMethod<MPTraits>(_node) {
   this->SetName("TopologicalMapValidity");
 
-  m_tmLabel = _node.Read("tmLabel", true, "", "The topological map to use.");
+  m_tmLabel = _node.Read("tmLabel", false, "", "The topological map to use.");
 }
 
 /*------------------------- ValidityChecker Interface ------------------------*/
@@ -64,9 +65,7 @@ template <typename MPTraits>
 bool TopologicalMapValidity<MPTraits>::
     IsValidImpl(CfgType& _cfg, CDInfo&, const std::string& _caller) {
   this->GetStatClass()->IncCfgIsColl(_caller);
-
   auto tm = this->GetMPTools()->GetTopologicalMap(m_tmLabel);
-
   // Position the robots within the environment.
   _cfg.ConfigureRobot();
 
