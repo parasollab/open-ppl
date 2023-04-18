@@ -843,10 +843,8 @@ TryGoalExtension(const VID _newVID, std::unordered_map<Robot*,const Boundary* co
     return;
   }
 
-
-
   // Try to extend towards the target.
-  const VID extended = this->Extend(_newVID, targetGroupCfg);
+  const VID extended = this->Extend(_newVID, targetGroupCfg, false);
   if(extended == INVALID_VID)
     return;
 
@@ -862,6 +860,8 @@ TryGoalExtension(const VID _newVID, std::unordered_map<Robot*,const Boundary* co
   if(reached) {
     if(this->m_debug)
       std::cout << "\tExtension reached goal boundary." << std::endl;
+
+    this->GetGroupRoadmap()->WriteCompositeGraph("debugcrrt.map", this->GetMPProblem()->GetEnvironment());
     return;
   }
 

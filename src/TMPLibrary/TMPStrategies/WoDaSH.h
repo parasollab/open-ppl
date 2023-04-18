@@ -31,6 +31,8 @@ class WoDaSH : public TMPStrategyMethod {
     typedef std::map<Robot*, const Boundary*>   BoundaryMap;
     typedef std::map<Robot*, Vector3d>          VectorMap;
 
+    typedef std::pair<GroupRoadmapType*, VID> RepresentativeVertex;
+
     typedef Condition::State                 State;
     typedef std::set<std::string>            RoleSet;
 
@@ -43,8 +45,6 @@ class WoDaSH : public TMPStrategyMethod {
 
     typedef CompositeState<WorkspaceSkeleton>  CompositeSkeletonVertex;
     typedef CompositeEdge<WorkspaceSkeleton>   CompositeSkeletonEdge;
-    typedef HypergraphWorkspaceSkeleton<CompositeSkeletonVertex, 
-            CompositeSkeletonEdge> HypergraphSkeletonType;
     typedef size_t HID;
 
     ///@}
@@ -58,6 +58,63 @@ class WoDaSH : public TMPStrategyMethod {
     typedef std::pair<std::pair<VID, VID>, size_t>             CBSConstraint;
     typedef CBSNode<Robot,CBSConstraint,CBSSolution>           CBSNodeType;
 
+    ///@}
+    ///@name Hyperskeleton Types
+    ///@{
+
+    enum class HyperskeletonArcType {
+      Movement, ///< Move along a skeleton edge
+      Couple,   ///< Merge two groups going in the opposite direction on same edge
+      Decouple, ///< Split two groups of robots moving in opposite directions
+      Merge,    ///< Merge together groups coming into the same vertex
+      Split     ///< Split groups going out from a merge onto different edges
+    };
+
+    struct HyperskeletonArc {
+      CompositeSkeletonEdge edge;
+      bool pushStart{false};
+      bool pushTarget{false};
+      HyperskeletonArcType type;
+
+      RepresentativeVertex startRep;
+      RepresentativeVertex endRep;
+
+      HyperskeletonArc() {}
+
+      HyperskeletonArc(CompositeSkeletonEdge _edge, bool _pushStart, bool _pushTarget,
+                       HyperskeletonArcType _type, RepresentativeVertex _start,
+                       RepresentativeVertex _end) : edge(_edge), pushStart(_pushStart),
+                       pushTarget(_pushTarget), type(_type), startRep(_start), endRep(_end) {}
+      
+      HyperskeletonArc(CompositeSkeletonEdge _edge, HyperskeletonArcType _type) :
+          edge(_edge), type(_type) {}
+    }
+
+    struct HyperskeletonPath {
+      std::unordered_set<HID> movementHyperarcs;
+      std::unordered_set<HID> coupleHyperarcs;
+      std::unordered_set<HID> decoupleHyperarcs;
+      std::unordered_set<HID> mergeHyperarcs;
+      std::unordered_set<HID> splitHyperarcs;
+
+      std::unordered_map<HID, std::unordered_map<Robot*, HID>> predecessors;
+      std::unordered_map<HID, std::unordered_map<Robot*, HID>> successors;
+
+      HyperskeletonPath() {}
+
+      void Reset() {
+        movementHyperarcs.clear();
+        coupleHyperarcs.clear();
+        decoupleHyperarcs.clear();
+        mergeHyperarcs.clear();
+        splitHyperarcs.clear();
+        predecessors.clear();
+        successors.clear();
+      }
+    }
+
+    typedef Hypergraph<CompositeSkeletonVertex,
+                       HyperskeletonArc> HypergraphSkeletonType;
 
     ///@} 
     ///@name Construction
@@ -162,18 +219,7 @@ class WoDaSH : public TMPStrategyMethod {
     std::unordered_map<size_t, std::unordered_map<Robot*, HID>> m_hidPaths;
     std::unordered_map<Robot*, size_t> m_pathLengths;
 
-    std::unordered_set<HID> m_groundHIDs;
-    std::unordered_set<HID> m_oppSplitTraj;
-    std::unordered_set<HID> m_mergeTraj;
-    std::unordered_set<HID> m_splitTraj;
-
-    std::unordered_set<HID> m_pushStart;
-    std::unordered_set<HID> m_pushTarget;
-
-    // TODO::Think about if we will ever have more than one grounded instance of a WHS vertex
-    // Start and end VIDs for each hyperskeleton hyperarc
-    std::unordered_map<HID, std::pair<GroupRoadmapType*, VID>> m_startReps;
-    std::unordered_map<HID, std::pair<GroupRoadmapType*, VID>> m_endReps;
+    HyperskeletonPath m_path;
 
     /// The dynamic sampling regions will have radius equal to this times the
     /// robot's bounding sphere radius.
