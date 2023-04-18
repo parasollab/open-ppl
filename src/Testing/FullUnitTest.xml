@@ -142,8 +142,6 @@
       <AlwaysTrueValidity label="alwaysTrue"/>
       <TerrainValidity label="terrainValidity"/>
       <TopologicalMapValidity label="topologicalMapValidity"/>
-      <!-- <TerrainValidity label="terrainValidity"/> -->
-      <TopologicalMapValidity label="TopologicalMapValidityChecker" tmLabel="test"/>
       <!-- Test not yet added -->
       <CollisionDetection label="pqp_solid" method="PQP_SOLID"/>
       <CollisionDetection label="rapid" method="RAPID"/>
