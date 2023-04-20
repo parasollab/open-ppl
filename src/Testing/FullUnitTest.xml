@@ -142,6 +142,7 @@
       <AlwaysTrueValidity label="alwaysTrue"/>
       <TerrainValidity label="terrainValidity"/>
       <TopologicalMapValidity label="topologicalMapValidity"/>
+      
       <!-- Test not yet added -->
       <CollisionDetection label="pqp_solid" method="PQP_SOLID"/>
       <CollisionDetection label="rapid" method="RAPID"/>
@@ -162,7 +163,7 @@
       </MixSampler>
       <ObstacleBasedSampler label="OBPRM" vcLabel="rapid" useBBX="false"
         pointSelection="cspace" dmLabel="euclidean" stepSize="0.0"
-        nShellsColl="10" nShellsFree="10" debug="false" /> -->
+        nShellsColl="10" nShellsFree="10" debug="false" />
       <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
     </Samplers>
 
@@ -246,11 +247,6 @@
       <MedialAxisUtility vcLabel="pqp_solid"
         dmLabel="euclidean" clearanceType="exact" penetrationType="exact"
         useBBX="true" positionalDofsOnly="true" clearanceRays="300" penetrationRayFactor="1"/>
-
-      <!-- For topological map validity checker -->
-      <TetGenDecomposition label="coarse" debug="false" switches="pnQ"/>
-      <TopologicalMap label="tm-coarse" decompositionLabel="coarse" gridSize=".5"/>
-
     </MPTools>
 
     <!-- MPProblem allows multiple solvers to be specified and executed. -->
