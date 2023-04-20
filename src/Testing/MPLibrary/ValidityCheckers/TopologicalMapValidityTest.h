@@ -140,7 +140,6 @@ TopologicalMapValidityTest<MPTraits>::
   } else {
     message = "IndividualCfgValidity::FAILED :(\n" + message;
   }
-
   return std::make_pair(passed, message);
 }
 

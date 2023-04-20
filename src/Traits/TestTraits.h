@@ -31,7 +31,7 @@
 #include "Testing/MPLibrary/ValidityCheckers/CollisionDetection/InsideSpheresCollisionDetectionTest.h"
 #include "Testing/MPLibrary/ValidityCheckers/TerrainValidityCheckerTest.h"
 
-//neighborhood finder includes
+// neighborhood finder includes
 #include "Testing/MPLibrary/ValidityCheckers/TopologicalMapValidityTest.h"
 // neighborhood finder includes
 #include "Testing/MPLibrary/NeighborhoodFinders/BruteForceNFTest.h"
@@ -43,8 +43,8 @@
 #include "Testing/MPLibrary/Samplers/UniformRandomSamplerTest.h"
 
 // local planner includes
-#include "Testing/MPLibrary/LocalPlanners/StraightLineTest.h"
 #include "Testing/MPLibrary/LocalPlanners/HierarchicalLPTest.h"
+#include "Testing/MPLibrary/LocalPlanners/StraightLineTest.h"
 
 // extenders includes
 #include "Testing/MPLibrary/Extenders/BasicExtenderTest.h"
@@ -142,9 +142,9 @@ struct MPTraits {
 
   // types of local planners available in our world
   typedef boost::mpl::list<
-    // StraightLine<MPTraits>
-      HierarchicalLPTest<MPTraits>
-      > LocalPlannerMethodList;
+      // StraightLine<MPTraits>
+      HierarchicalLPTest<MPTraits>>
+      LocalPlannerMethodList;
 
   // types of extenders avaible in our world
   typedef boost::mpl::list<
