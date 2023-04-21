@@ -50,6 +50,7 @@
 
 //extenders includes
 #include "MPLibrary/Extenders/BasicExtender.h"
+#include "MPLibrary/Extenders/RotationThenTranslation.h"
 
 //path smoothing includes
 
@@ -164,7 +165,8 @@ struct MPTraits {
 
   //types of extenders avaible in our world
   typedef boost::mpl::list<
-    BasicExtender<MPTraits>
+    BasicExtender<MPTraits>,
+    RotationThenTranslation<MPTraits>
       > ExtenderMethodList;
 
   //types of path smoothing available in our world
