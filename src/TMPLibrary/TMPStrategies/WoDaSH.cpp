@@ -1621,101 +1621,73 @@ WoDaSH::
 AddTransitionToGroundedHypergraph(std::set<VID> _tail, std::set<VID> _head,
   GroupPathType* _path, std::shared_ptr<GroupTask> _task) {
 
-  // TODO redo all of this!!! (maybe)
-
   if(this->m_debug) {
     std::cout << "Adding grounded hyperarc between " << _tail << " and " << _head << std::endl;
   }
 
-  auto gh = dynamic_cast<GroundedHypergraph*>(this->GetStateGraph(m_groundedHypergraphLabel).get());
+  auto gh = dynamic_cast<GroundedHypergraph*>(this->GetSpathCosttateGraph(m_groundedHypergraphLabel).get());
 
   std::set<VID> groundedTail;
   std::set<VID> groundedHead;
 
   auto hid = m_skeleton->GetHID(_head, _tail);
+  auto arc = m_skeleton->GetHyperarcType(hid);
 
-  if(_tail.size() == 1 and _head.size() == 1) {
+  if(arc.type == HyperskeletonArcType::Movement) {
     if(this->m_debug)
       std::cout << "Adding hyperskeleton edge to grounded hypergraph" << std::endl;
 
-    auto vertex = m_startReps.at(hid);
+    auto vertex = arc.startRep;
     auto gVID = gh->AddVertex(vertex);
     groundedTail.insert(gVID);
 
-    vertex = m_endReps.at(hid);
+    vertex = arc.endRep;
     gVID = gh->AddVertex(vertex);
     groundedHead.insert(gVID);
   }
-  else if(_tail.size() == 1) {
+  else {
     if(this->m_debug)
-      std::cout << "Adding a split hyperarc to grounded hypergraph" << std::endl;
+      std::cout << "Adding composition arc to grounded hypergraph" << std::endl;
 
-    auto start = m_startReps.at(hid);
-    auto gVID = gh->AddVertex(start);
-    groundedTail.insert(gVID);
-    
-    if(_path->VIDs().size() == 1) {
-      // This is an opposite direction split
-      auto vertex = start.first->GetVertex(start.second);
+    auto grm = _path->GetGroupRoadmap();
+    auto vid = _path->VIDs().front();
+    auto fullTail = grm->GetVertex(vid);
 
-      for(auto head : _head) {
-        auto group = m_skeleton->GetVertexType(head).GetGroup();
-        auto grm = this->GetMPLibrary()->GetMPSolution()->GetGroupRoadmap(group);
+    // Split the vertex at the front of the path to get a grounded tail set
+    for(auto t : _tail) {
+      auto compState = m_skeleton->GetVertexType(t);
+      auto group = compState.GetRobotGroup();
+      auto subgroup = this->GetMPLibrary()->GetMPSolution()->GetGroupRoadmap(group);
 
-        auto gcfg = GroupCfgType(grm);
-        for(auto robot : group->GetRobots()) {
-          gcfg.SetRobotCfg(robot, vertex.GetVID(robot));
-        }
-
-        auto vid = grm->AddVertex(gcfg);
-        gVID = gh->AddVertex(std::make_pair(grm, vid));
-        groundedHead.insert(gVID);
-      }
-    } else {
-      // This is a split after a merge
-      auto endVID = _path->VIDs().back();
-      auto grm = start.first;
-      auto vertex = grm->GetVertex(endVID);
-
-      for(auto head : _head) {
-        auto group = m_skeleton->GetVertexType(head).GetGroup();
-        auto hgrm = this->GetMPLibrary()->GetMPSolution()->GetGroupRoadmap(group);
-
-        auto gcfg = GroupCfgType(hgrm);
-        for(auto robot : group->GetRobots()) {
-          gcfg.SetRobotCfg(robot, vertex.GetVID(robot));
-        }
-
-        auto vid = hgrm->AddVertex(gcfg);
-        auto gVID = gh->AddVertex(std::make_pair(hgrm, vid));
-        groundedHead.insert(gVID);
-      }
-    }
-  }
-  else if(_head.size() == 1) {
-    // This is a merge
-    auto rep = m_endReps.at(hid);
-    auto gVID = gh->AddVertex(rep);
-    groundedHead.insert(gVID);
-
-    auto startVID = _path->VIDs().front();
-    auto vertex = rep.first->GetVertex(startVID);
-    for(auto tail : _tail) {
-      auto group = m_skeleton->GetVertexType(tail).GetGroup();
-      auto grm = this->GetMPLibrary()->GetMPSolution()->GetGroupRoadmap(group);
-      auto gcfg = GroupCfgType(grm);
-
-      for(auto robot : group->GetRobots()) {
-        gcfg.SetRobotCfg(robot, vertex.GetVID(robot));
-      }
-
-      auto vid = grm->AddVertex(gcfg);
-      gVID = gh->AddVertex(std::make_pair(grm, vid));
+      auto subgcfg = GroupCfgType(subgrm);
+      for(auto robot : group->GetRobots())
+        subgcfg.SetRobotCfg(robot, fullTail.GetVID(robot));
+      
+      auto subvid = subgrm->AddVertex(subgcfg);
+      auto vertex = std::make_pair(subgrm, subvid);
+      auto gVID = gh->AddVertex(vertex);
       groundedTail.insert(gVID);
     }
+
+    vid = _path->VIDs().back();
+    auto fullHead = grm->GetVertex(vid);
+
+    // Split the vertex at the back of the path to get a grounded head set
+    for(auto h : _head) {
+      auto compState = m_skeleton->GetVertexType(t);
+      auto group = compState.GetRobotGroup();
+      auto subgroup = this->GetMPLibrary()->GetMPSolution()->GetGroupRoadmap(group);
+
+      auto subgcfg = GroupCfgType(subgrm);
+      for(auto robot : group->GetRobots())
+        subgcfg.SetRobotCfg(robot, fullHead.GetVID(robot));
+      
+      auto subvid = subgrm->AddVertex(subgcfg);
+      auto vertex = std::make_pair(subgrm, subvid);
+      auto gVID = gh->AddVertex(vertex);
+      groundedHead.insert(gVID);
+    }
   }
-  else
-    throw RunTimeException(WHERE) << "Head and tail are both size > 1";
 
   // Add hyperarc
   GroundedHypergraph::Transition transition;
