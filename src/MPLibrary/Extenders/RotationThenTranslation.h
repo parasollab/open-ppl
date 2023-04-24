@@ -59,7 +59,7 @@ RotationThenTranslation() {
 
 template <typename MPTraits>
 RotationThenTranslation<MPTraits>::
-RotationThenTranslation(XMLNode& _node) : BasicExtender<MPTraits>(_node) {
+RotationThenTranslation(XMLNode& _node) :ExtenderMethod<MPTraits>(_node), BasicExtender<MPTraits>(_node) {
   this->SetName("RotationThenTranslation");
 }
 
