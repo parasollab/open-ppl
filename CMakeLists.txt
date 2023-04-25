@@ -38,9 +38,9 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 # Add Packages (needs to be installed)
 find_package(OpenGL REQUIRED)
 find_package(GLUT REQUIRED)
-find_package(Qt6 CONFIG REQUIRED COMPONENTS Core Gui Widgets OpenGL OpenGLWidgets)
+find_package(Qt6 CONFIG COMPONENTS Core Gui Widgets OpenGL OpenGLWidgets REQUIRED)
 
-set(CMAKE_PREFIX_PATH ${QT_ROOT})
+# set(CMAKE_PREFIX_PATH ${QT_ROOT})
 
 # support for pthreads (if needed in future)
 #set(THREADS_PREFER_PTHREAD_FLAG ON)
@@ -137,6 +137,7 @@ set(TESTS tests)
 # build [base object library]
 add_library(objlib OBJECT ${PMPL_SRCS})
 set_target_properties(objlib PROPERTIES VERSION ${PROJECT_VERSION})
+# bullet order is very specific, do not modify
 target_link_libraries(objlib PUBLIC BulletSoftBody BulletDynamics BulletCollision LinearMath Bullet3Common
         BulletInverseDynamics unofficial-tinyxml::unofficial-tinyxml)
 target_link_directories(objlib PUBLIC ${BULLET_LIBRARY_DIRS})
@@ -148,13 +149,12 @@ add_library(${PPL_LIBRARY} STATIC ${HARDWARE_SRCS} ${TASK_SRCS} $<TARGET_OBJECTS
 add_library(${PPL_MP_LIBRARY} STATIC ${HARDWARE_SRCS} $<TARGET_OBJECTS:objlib>)
 
 # [ppl library] - Link external packages
+# bullet order is very specific, do not modify
 target_link_libraries(${PPL_LIBRARY} PUBLIC BulletSoftBody BulletDynamics BulletCollision LinearMath Bullet3Common
         BulletInverseDynamics CGAL::CGAL dlib::dlib Eigen3::Eigen
         nlohmann_json::nlohmann_json Qt6::Core Qt6::Gui Qt6::OpenGL Qt6::Widgets
         Qt6::OpenGLWidgets unofficial-tinyxml::unofficial-tinyxml)
-
 target_link_libraries(${PPL_LIBRARY} PUBLIC ${OPENGL_LIBRARIES} ${GLUT_LIBRARY})
-
 # [ppl library] - Link internal built packages
 target_link_libraries(${PPL_LIBRARY} PUBLIC PQP glutils nonstd sandbox RAPID tetgen modelloader ${PQP_LIBRARIES})
 
@@ -162,6 +162,17 @@ target_link_libraries(${PPL_LIBRARY} PUBLIC PQP glutils nonstd sandbox RAPID tet
 target_link_directories(${PPL_LIBRARY} PUBLIC ${BULLET_LIBRARY_DIRS})
 set_target_properties(${PPL_LIBRARY} PROPERTIES OUTPUT_NAME ppl)
 
+# [ppl_mp library] - Link external packages
+target_link_libraries(${PPL_MP_LIBRARY} PUBLIC BulletSoftBody BulletDynamics BulletCollision LinearMath Bullet3Common
+        BulletInverseDynamics CGAL::CGAL dlib::dlib Eigen3::Eigen
+        nlohmann_json::nlohmann_json Qt6::Core Qt6::Gui Qt6::OpenGL Qt6::Widgets
+        Qt6::OpenGLWidgets unofficial-tinyxml::unofficial-tinyxml)
+target_link_libraries(${PPL_MP_LIBRARY} PUBLIC ${OPENGL_LIBRARIES} ${GLUT_LIBRARY})
+# [ppl library] - Link internal built packages
+target_link_libraries(${PPL_MP_LIBRARY} PUBLIC PQP glutils nonstd sandbox RAPID tetgen modelloader ${PQP_LIBRARIES})
+
+# [ppl library] - needed due to issue with bullet library
+target_link_directories(${PPL_MP_LIBRARY} PUBLIC ${BULLET_LIBRARY_DIRS})
 set_target_properties(${PPL_MP_LIBRARY} PROPERTIES OUTPUT_NAME ppl_mp)
 
 # build [ppl executable]
@@ -173,7 +184,7 @@ target_link_libraries(${PPL_EXECUTABLE} PRIVATE ${PPL_LIBRARY})
 target_link_directories(${PPL_EXECUTABLE} PRIVATE ${BULLET_LIBRARY_DIRS})
 set_target_properties(${PPL_EXECUTABLE} PROPERTIES OUTPUT_NAME ppl)
 
-# build [ppl-tpl executable]
+# build [ppl_mp executable]
 add_executable(${PPL_MP_EXECUTABLE} src/tmp_main.cpp)
 target_link_libraries(${PPL_MP_EXECUTABLE} PRIVATE ${PPL_MP_LIBRARY})
 set_target_properties(${PPL_MP_EXECUTABLE} PROPERTIES OUTPUT_NAME ppl_mp)

@@ -5,8 +5,6 @@
 #include "MPLibrary/MPSolution.h"
 #include "MPLibrary/MPTools/MPTools.h"
 
-#include "Testing/MPLibrary/MPLibraryTests.h"
-
 #include "ConfigurationSpace/LocalObstacleMap.h"
 #include "ConfigurationSpace/CompositeGraph.h"
 #include "ConfigurationSpace/GroupCfg.h"
