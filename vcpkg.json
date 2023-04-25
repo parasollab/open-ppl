@@ -11,10 +11,12 @@
     {"name": "nlohmann-json", "version>=":  "3.10.5#3"},
     {"name": "dlib", "version>=": "19.24"},
     {"name": "pqp", "version>=": "1.3#6"},
-    {"name": "qtbase", "version>=": "6.3.1"},
+    {"name": "qtbase", "version>=": "6.3.2"},
+    {"name": "qttools", "version>=": "6.3.2"},
     {"name": "catch2", "version>=": "3.1.0#1"},
     {"name": "gmp", "version>=": "6.2.1#17"},
     {"name": "mpfr", "version>=": "4.1.0#4"},
-    "tinyxml" ]
+    {"name":  "tinyxml","version>=": "2.6.2#9"}
+      ]
 }
 

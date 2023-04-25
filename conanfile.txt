@@ -12,7 +12,7 @@ catch2/3.3.2
 
 dlib/19.24
 cgal/5.5.1
-opencv/4.5.5
+opencv/4.5.5c
 qt/6.4.2
 
 # dependencies for above packages (explicit multi-version conflict resolution)
