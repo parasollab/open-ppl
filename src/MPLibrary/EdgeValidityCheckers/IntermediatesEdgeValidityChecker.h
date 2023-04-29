@@ -27,6 +27,14 @@ class IntermediatesEdgeValidityChecker : public EdgeValidityCheckerMethod<MPTrai
 
     void Initialize() override;
 
+
+    /// Checks the validity of an edge using a set of intermediate cfgs
+    /// each validated independently.
+    /// @param _u The source of the edge to validate
+    /// @param _v The target of the edge to validate
+    /// @param _collisions An empty container that will be populated with
+    ///   a list of obstacles with which the edge collides.
+    /// @return True if all of the intermediate cfgs are in free space.
     bool ValidateEdge(VID _u, VID _v, vector<size_t>& _collisions) override;
     bool ValidateEdge(CfgType& _c1, CfgType& _c2, vector<size_t>& _collisions) override;
 
@@ -36,8 +44,12 @@ class IntermediatesEdgeValidityChecker : public EdgeValidityCheckerMethod<MPTrai
     ///@{
 
 
-    /// @TODO
-    /// @note Clears the vector _collisions 
+    /// @ Checks a set of intermediate cfgs for collisions, and populates the collisions
+    ///   vector with the indices of obstacles in collision with these cfgs.
+    /// @param _intermediates A vector of intermediate cfgs.
+    /// @param _collisions A vector to be populated with the indices of obstacles in collision
+    ///   with the cfgs.
+    /// @note Clears the vector _collisions before populating it
     bool ReportIntermediateCollisions(vector<CfgType>& _intermediates, vector<size_t>& _collisions);
 
     ///@}
