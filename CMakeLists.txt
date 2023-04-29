@@ -176,7 +176,7 @@ target_link_directories(${PPL_MP_LIBRARY} PUBLIC ${BULLET_LIBRARY_DIRS})
 set_target_properties(${PPL_MP_LIBRARY} PROPERTIES OUTPUT_NAME ppl_mp)
 
 # build [ppl executable]
-add_executable(${PPL_EXECUTABLE} src/main.cpp)
+add_executable(${PPL_EXECUTABLE} src/tmp_main.cpp)
 target_link_libraries(${PPL_EXECUTABLE} PRIVATE ${PPL_LIBRARY})
 
 #target_link_libraries(${PPL_EXECUTABLE} unofficial-tinyxml::unofficial-tinyxml LinearMath Bullet3Common BulletDynamics
@@ -185,7 +185,7 @@ target_link_directories(${PPL_EXECUTABLE} PRIVATE ${BULLET_LIBRARY_DIRS})
 set_target_properties(${PPL_EXECUTABLE} PROPERTIES OUTPUT_NAME ppl)
 
 # build [ppl_mp executable]
-add_executable(${PPL_MP_EXECUTABLE} src/tmp_main.cpp)
+add_executable(${PPL_MP_EXECUTABLE} src/main.cpp)
 target_link_libraries(${PPL_MP_EXECUTABLE} PRIVATE ${PPL_MP_LIBRARY})
 set_target_properties(${PPL_MP_EXECUTABLE} PROPERTIES OUTPUT_NAME ppl_mp)
 
