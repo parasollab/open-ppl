@@ -79,14 +79,29 @@ sudo apt install cmake
 Full instructions available at https://vcpkg.io/en/getting-started.html
 
 ```bash
-git clone https://github.com/Microsoft/vcpkg.git
-./vcpkg/bootstrap-vcpkg.sh
+cd /opt
+```
+```bash
+sudo git clone https://github.com/Microsoft/vcpkg.git
+```
+```bash
+sudo chmod 777 /opt/vcpkg && sudo chmod 666 vcpkg/.vcpkg-root
+```
+```bash
+sudo ./vcpkg/bootstrap-vcpkg.sh
 ```
 
 #### Build pmpl with vcpkg
 Run cmake, specify build type (e.g. Release or Debug), generator (e.g. Ninja), vcpkg installation path, source path, output path
+cd into the cloned repo
 ```bash
-cmake -DCMAKE_BUILD_TYPE=Debug -G Ninja -DCMAKE_TOOLCHAIN_FILE=/opt/vcpkg/scripts/buildsystems/vcpkg.cmake -S /pmpl -B /pmpl/build
+cd pmpl
+```
+```bash
+/usr/bin/cmake -DCMAKE_BUILD_TYPE=Debug -G Ninja -DCMAKE_TOOLCHAIN_FILE=/opt/vcpkg/scripts/buildsystems/vcpkg.cmake -S . -B build
+```
+```bash
+/usr/bin/cmake --build build
 ```
 
 ### Install and build using Conan
