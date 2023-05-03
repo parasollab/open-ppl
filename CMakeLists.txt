@@ -192,7 +192,7 @@ set_target_properties(${PPL_MP_EXECUTABLE} PROPERTIES OUTPUT_NAME ppl_mp)
 # build [sim executable]
 add_executable(${SIMULATOR} src/sim_main.cpp)
 target_link_libraries(${SIMULATOR} PRIVATE ${PPL_LIBRARY})
-set_target_properties(${PPL_MP_EXECUTABLE} PROPERTIES OUTPUT_NAME sim)
+set_target_properties(${SIMULATOR} PROPERTIES OUTPUT_NAME sim)
 
 # build [tests]
 if(BUILD_TESTS)
