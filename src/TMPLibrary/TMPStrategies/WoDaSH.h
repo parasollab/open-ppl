@@ -32,6 +32,7 @@ class WoDaSH : public TMPStrategyMethod {
     typedef std::map<Robot*, Vector3d>          VectorMap;
 
     typedef std::pair<GroupRoadmapType*, VID> RepresentativeVertex;
+    typedef std::pair<bool, size_t>           BoolHID;
 
     typedef Condition::State                 State;
     typedef std::set<std::string>            RoleSet;
@@ -88,7 +89,47 @@ class WoDaSH : public TMPStrategyMethod {
       
       HyperskeletonArc(CompositeSkeletonEdge _edge, HyperskeletonArcType _type) :
           edge(_edge), type(_type) {}
-    }
+
+      bool operator==(const HyperskeletonArc& _arc) {
+        return !(*this != _arc);
+      }
+
+      bool operator!=(const HyperskeletonArc& _arc) {
+        if(edge != _arc.edge)
+          return true;
+        
+        if(pushStart != _arc.pushStart or pushTarget != _arc.pushTarget)
+          return true;
+        
+        if(type != _arc.type)
+          return true;
+        
+        if(startRep != _arc.startRep or endRep != _arc.endRep)
+          return true;
+        
+        return false;
+      }
+
+      friend std::ostream& operator<<(std::ostream& _os, const HyperskeletonArc& _arc) {
+        _os << "Composite Edge: " << _arc.edge
+            << ", pushStart: " << _arc.pushStart
+            << ", pushTarget: " << _arc.pushTarget
+            << ", type: ";
+
+        switch(_arc.type) {
+          case HyperskeletonArcType::Movement: _os << "Movement";
+          case HyperskeletonArcType::Couple: _os << "Couple";
+          case HyperskeletonArcType::Decouple: _os << "Decouple";
+          case HyperskeletonArcType::Merge: _os << "Merge";
+          case HyperskeletonArcType::Split: _os << "Split";
+        }
+
+        _os << ", startRep: " << _arc.startRep
+            << ", endRep: " << _arc.endRep;
+
+        return _os;
+      }
+    };
 
     struct HyperskeletonPath {
       std::unordered_set<HID> movementHyperarcs;
@@ -97,8 +138,8 @@ class WoDaSH : public TMPStrategyMethod {
       std::unordered_set<HID> mergeHyperarcs;
       std::unordered_set<HID> splitHyperarcs;
 
-      std::unordered_map<HID, std::unordered_map<Robot*, HID>> predecessors;
-      std::unordered_map<HID, std::unordered_map<Robot*, HID>> successors;
+      std::unordered_map<HID, std::unordered_map<Robot*, BoolHID>> predecessors;
+      std::unordered_map<HID, std::unordered_map<Robot*, BoolHID>> successors;
 
       HyperskeletonPath() {}
 
@@ -111,7 +152,7 @@ class WoDaSH : public TMPStrategyMethod {
         predecessors.clear();
         successors.clear();
       }
-    }
+    };
 
     typedef Hypergraph<CompositeSkeletonVertex,
                        HyperskeletonArc> HypergraphSkeletonType;
@@ -216,7 +257,12 @@ class WoDaSH : public TMPStrategyMethod {
     std::map<Robot*, PropertyMap<std::vector<double>,double>*> m_annotationMap; 
 
     std::unique_ptr<HypergraphSkeletonType> m_skeleton;
-    std::unordered_map<size_t, std::unordered_map<Robot*, HID>> m_hidPaths;
+
+    // TODO update everything to account for this change (false, vid for waiting)
+    std::unordered_map<size_t, std::unordered_map<Robot*, BoolHID>> m_hidPaths;
+
+    // Map hyperskeleton vertex to a represenative group configuration
+    std::unordered_map<VID, RepresentativeVertex> m_waitingReps;
     std::unordered_map<Robot*, size_t> m_pathLengths;
 
     HyperskeletonPath m_path;
