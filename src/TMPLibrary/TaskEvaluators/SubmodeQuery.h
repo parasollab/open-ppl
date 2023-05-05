@@ -63,6 +63,9 @@ class SubmodeQuery : public TaskEvaluatorMethod {
 
     void AddSchedulingConstraint(SemanticTask* _task, SemanticTask* _constraint);
 
+    void SetGroundedStart(size_t _vid);
+    void SetGroundedGoal(size_t _vid);
+
   protected:
 
     ///@name Helper Functions
@@ -130,13 +133,15 @@ class SubmodeQuery : public TaskEvaluatorMethod {
     /// Map from grounded hypergraph hyperarcs to action extended partial groundings
     std::unordered_map<size_t,std::vector<PartiallyGroundedHyperarc>> m_partiallyGroundedHyperarcs;
 
+    size_t m_groundedStartVID{0};
+    size_t m_groundedGoalVID{1};
     size_t m_goalVID;
 
     std::unordered_map<SemanticTask*,size_t> m_vertexTasks;
     std::unordered_map<SemanticTask*,size_t> m_hyperarcTasks;
 
     /// Map from grouneded hypergraph vertex to heuristic value
-    std::unordered_map<size_t,double> m_costToGoMap; 
+    std::unordered_map<size_t,double> m_costToGoMap;
 
     std::unordered_map<size_t,double> m_searchTimeHeuristicMap;
 

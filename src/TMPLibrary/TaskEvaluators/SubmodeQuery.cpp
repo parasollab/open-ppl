@@ -118,6 +118,18 @@ AddSchedulingConstraint(SemanticTask* _task, SemanticTask* _constraint) {
   m_constraintMap[t].insert(c);
 }
 
+void
+SubmodeQuery::
+SetGroundedStart(size_t _vid) {
+  m_groundedStartVID = _vid;
+}
+
+void
+SubmodeQuery::
+SetGroundedGoal(size_t _vid) {
+  m_groundedGoalVID = _vid;
+}
+
 /*----------------------------- Helper Functions ---------------------------*/
 
 bool
@@ -685,7 +697,7 @@ HyperpathQuery() {
   ComputeHeuristicValues();
 
   // TODO::Change to check start vertex for each goal specified robot/object
-  if(m_costToGoMap.at(0) == 0)
+  if(m_costToGoMap.at(m_groundedStartVID) == 0)
     throw RunTimeException(WHERE) << "Start not connected to goal.";
 
   // Define hyperpath query functors
@@ -728,7 +740,7 @@ HyperpathQuery() {
 
   if(m_pq.empty()) {
     m_goalVID = MAX_UINT;
-    auto output = SBTDijkstraWithFrontier(&m_actionExtendedHypergraph,0,weight,termination,forwardStar,heuristic);
+    auto output = SBTDijkstraWithFrontier(&m_actionExtendedHypergraph,m_groundedStartVID,weight,termination,forwardStar,heuristic);
     m_mbt = output.first;
     m_pq = output.second;
   }
@@ -753,7 +765,7 @@ HyperpathTermination(const size_t& _vid, const MBTOutput& _mbt) {
 
   // Assuming grounded goal is vid 1
   auto groundedVID = m_actionExtendedHypergraph.GetVertexType(_vid).groundedVID;
-  if(groundedVID == 1) {
+  if(groundedVID == m_groundedGoalVID) {
     m_goalVID = _vid;
     return SSSHPTermination::EndSearch;
   }
