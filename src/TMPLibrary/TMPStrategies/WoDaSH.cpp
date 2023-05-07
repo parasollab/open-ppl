@@ -100,6 +100,7 @@ Initialize() {
     auto groupTask = st->GetGroupMotionTask();
     this->GetMPLibrary()->SetGroupTask(groupTask.get());
     this->GetMPLibrary()->SetMPSolution(this->GetMPSolution());
+    m_wholeGroup = groupTask->GetRobotGroup();
   }
 
   // TODO actually use this (for now just using global)
@@ -722,6 +723,8 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
 
   m_path.Reset();
 
+  std::set<VID> skeletonStarts;
+  std::set<VID> skeletonGoals;
   std::vector<std::unordered_map<std::pair<VID, VID>, std::vector<Robot*>>> hyperarcGroups;
   for(size_t t = 0; t < maxTimestep - 1; t++) {
     std::unordered_map<Robot*, SkeletonEdgeDescriptor> individualEdges;
@@ -741,7 +744,12 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
 
       // group with robots going both ways on this edge
       auto sVID = std::min(source, target);
+      if(t == 0)
+        skeletonStarts.insert(sVID);
+
       auto tVID = std::max(source, target);
+      if(t == maxTimestep - 2)
+        skeletonGoals.insert(tVID);
 
       edgeGroups[std::make_pair(sVID, tVID)].push_back(robot);
       std::cout << edgeGroups.size() << std::endl;
@@ -807,6 +815,25 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
       }
     }
   }
+
+  // Connect the start and goal to the preskeleton and postskeleton vertices
+  auto preCfg = CompositeSkeletonVertex(m_wholeGroup, &m_indSkeleton);
+  for(auto robot : m_wholeGroup->GetRobots())
+    preCfg.SetRobotCfg(robot, PRESKELETON);
+  auto preVID = m_skeleton->AddVertex(preCfg);
+
+  auto preEdge = CompositeSkeletonEdge(m_wholeGroup, &m_indSkeleton);
+  auto preArc = HyperskeletonArc(preEdge, HyperskeletonArcType::Decouple);
+  m_skeletonSource = m_skeleton->AddHyperarc({preVID}, skeletonStarts, preArc);
+
+  auto postCfg = CompositeSkeletonVertex(m_wholeGroup, &m_indSkeleton);
+  for(auto robot : m_wholeGroup->GetRobots())
+    postCfg.SetRobotCfg(robot, POSTSKELETON);
+  auto postVID = m_skeleton->AddVertex(postCfg);
+
+  auto postEdge = CompositeSkeletonEdge(m_wholeGroup, &m_indSkeleton);
+  auto postArc = HyperskeletonArc(preEdge, HyperskeletonArcType::Couple);
+  m_skeletonSink = m_skeleton->AddHyperarc(skeletonGoals, {postVID}, postArc);
 
   // Now construct the "composition" hyperperarcs to transition b/w groups
   for(size_t t = 0; t < maxTimestep - 2; t++) {
@@ -1383,7 +1410,7 @@ MakeBoundary(Robot* _robot, const Point3d _indV) {
     return CSpaceBoundingSphere({_indV[0], _indV[1]}, radius);
 }
 
-void
+bool
 WoDaSH::
 ConnectToSkeleton() {
   auto group = this->GetMPLibrary()->GetGroupTask()->GetRobotGroup();
@@ -1393,7 +1420,9 @@ ConnectToSkeleton() {
   auto sVID = s->GenerateStart(m_sampler);
   auto start = this->GetMPLibrary()->GetGroupRoadmap()->GetVertex(sVID);
 
-  auto stask = new GroupTask(group);
+  auto stask = std::shared_ptr<GroupTask>(new GroupTask(group));
+  std::set<RepresentativeVertex> groundedTail;
+  std::set<RepresentativeVertex> groundedHead;
   for(auto r : group->GetRobots()) {
     auto t = MPTask(r);
 
@@ -1413,8 +1442,16 @@ ConnectToSkeleton() {
 
     auto& arc = m_skeleton->GetHyperarcType(outHID);
     auto target = arc.startRep.first->GetVertex(arc.startRep.second);
+    groundedHead.insert(arc.startRep);
 
     // Add start constraints
+    auto group = AddGroup({r});
+    auto grm = this->GetMPLibrary()->GetMPSolution()->GetGroupRoadmap(group);
+    auto groupStart = GroupCfgType(grm);
+    groupStart.SetRobotCfg(r, start.GetVID(r));
+    auto groupVID = grm->AddVertex(groupStart);
+    groundedTail.insert(std::make_pair(grm, groupVID));
+
     auto startCfg = start.GetRobotCfg(r);
     auto startConstraint = std::unique_ptr<CSpaceConstraint>(new CSpaceConstraint(r,startCfg));
     t.SetStartConstraint(std::move(startConstraint));
@@ -1427,16 +1464,23 @@ ConnectToSkeleton() {
     stask->AddTask(t);
   } 
 
-  this->GetMPLibrary()->Solve(this->GetMPProblem(), stask, 
+  this->GetMPLibrary()->Solve(this->GetMPProblem(), stask.get(), 
       this->GetMPSolution(), m_trajStrategy, LRand(), "ConnectToSkeleton");
-  delete stask;
+
+  // Check if the plan was successful
+  auto path = this->GetMPSolution()->GetGroupPath(group);
+  if(!path->VIDs().size())
+    return false;
+
+  // Add the path from this to the grounded hypergraph
+  AddTransitionToGroundedHypergraph(groundedTail, groundedHead, path, stask);
 
   // Connect the goal position to the last skeleton vertex for each of the robots
   auto gVIDs = s->GenerateGoals(m_sampler);
   auto gVID = *gVIDs.begin();
   auto goal = this->GetMPLibrary()->GetGroupRoadmap()->GetVertex(gVID);
 
-  auto gtask = new GroupTask(group);
+  auto gtask = std::shared_ptr<GroupTask>(new GroupTask(group));
   for(auto r : group->GetRobots()) {
     auto t = MPTask(r);
 
@@ -1474,9 +1518,12 @@ ConnectToSkeleton() {
     gtask->AddTask(t);
   } 
 
-  this->GetMPLibrary()->Solve(this->GetMPProblem(), gtask, 
+  this->GetMPLibrary()->Solve(this->GetMPProblem(), gtask.get(), 
       this->GetMPSolution(), m_trajStrategy, LRand(), "ConnectToSkeleton");
-  delete gtask;
+
+  // TODO add this path to the grounded hypergraph
+
+  return true;
 }
 
 bool
@@ -1849,4 +1896,39 @@ AddTransitionToGroundedHypergraph(std::set<VID> _tail, std::set<VID> _head,
   transition.cost = pathCost;
   return gh->AddTransition(groundedTail,groundedHead,transition);
 }
+
+
+WoDaSH::HID
+WoDaSH::
+AddTransitionToGroundedHypergraph(std::set<RepresentativeVertex> _tail, 
+  std::set<RepresentativeVertex> _head, GroupPathType* _path, 
+  std::shared_ptr<GroupTask> _task) {
+  
+  auto gh = dynamic_cast<GroundedHypergraph*>(
+    this->GetStateGraph(m_groundedHypergraphLabel).get());
+
+  std::set<VID> groundedTail;
+  for(auto vertex : _tail) {
+    auto vid = gh->AddVertex(vertex);
+    groundedTail.insert(vid);
+  }
+
+  std::set<VID> groundedHead;
+  for(auto vertex : _head) {
+    auto vid = gh->AddVertex(vertex);
+    groundedHead.insert(vid);
+  }
+
+  // Add hyperarc
+  GroundedHypergraph::Transition transition;
+  transition.taskSet = {{_task}};
+  // Decide if cost is length or timesteps
+  auto pathCost = _path->TimeSteps();
+  auto pathStart = _path->VIDs().front();
+  auto pathEnd = _path->VIDs().back();
+  transition.compositeImplicitPath = std::make_pair(pathStart,pathEnd);
+  transition.cost = pathCost;
+  return gh->AddTransition(groundedTail,groundedHead,transition);
+}
+
 /*------------------------------------------------------------*/

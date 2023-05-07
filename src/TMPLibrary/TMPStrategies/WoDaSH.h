@@ -11,6 +11,14 @@
 #include "Workspace/WorkspaceSkeleton.h"
 #include "Workspace/HypergraphWorkspaceSkeleton.h"
 
+// Different "invalid" vids for off-skeleton starts and goals
+#ifndef PRESKELETON
+#define PRESKELETON SIZE_MAX-1
+#endif
+#ifndef POSTSKELETON
+#define POSTSKELETON SIZE_MAX-2
+#endif
+
 class Action;
 class Interaction;
 class Boundary;
@@ -222,12 +230,16 @@ class WoDaSH : public TMPStrategyMethod {
                         const bool pushStart=false,
                         const bool pushTarget=false);
 
-    void ConnectToSkeleton();
+    bool ConnectToSkeleton();
 
     RobotGroup* AddGroup(std::vector<Robot*> _robots);
 
     HID AddTransitionToGroundedHypergraph(std::set<VID> _tail, std::set<VID> _head, 
       GroupPathType* _path, std::shared_ptr<GroupTask> _task);
+
+    HID AddTransitionToGroundedHypergraph(std::set<RepresentativeVertex> _tail, 
+      std::set<RepresentativeVertex> _head, GroupPathType* _path, 
+      std::shared_ptr<GroupTask> _task);
 
     ///@}
     ///@name Internal State
@@ -243,6 +255,8 @@ class WoDaSH : public TMPStrategyMethod {
     std::unordered_map<Robot*, MPTask*> m_taskMap;
     std::unordered_map<RobotGroup*, GroupRoadmapType> m_roadmaps;
 
+    RobotGroup* m_wholeGroup{nullptr};
+
     WorkspaceSkeleton m_indSkeleton;
     std::string m_skeletonFilename;        ///< The output file for the skeleton graph
     std::string m_skeletonIO;              ///< Option to read or write the skeleton
@@ -257,6 +271,8 @@ class WoDaSH : public TMPStrategyMethod {
     std::map<Robot*, PropertyMap<std::vector<double>,double>*> m_annotationMap; 
 
     std::unique_ptr<HypergraphSkeletonType> m_skeleton;
+    VID m_skeletonSource{INVALID_VID};
+    VID m_skeletonSink{INVALID_VID};
 
     // TODO update everything to account for this change (false, vid for waiting)
     std::unordered_map<size_t, std::unordered_map<Robot*, BoolHID>> m_hidPaths;
