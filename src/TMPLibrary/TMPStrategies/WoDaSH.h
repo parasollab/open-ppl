@@ -140,7 +140,7 @@ class WoDaSH : public TMPStrategyMethod {
     };
 
     struct HyperskeletonPath {
-      std::unordered_set<HID> movementHyperarcs;
+      std::set<HID> movementHyperarcs; // Want these to ground in order
       std::unordered_set<HID> coupleHyperarcs;
       std::unordered_set<HID> decoupleHyperarcs;
       std::unordered_set<HID> mergeHyperarcs;
@@ -256,6 +256,7 @@ class WoDaSH : public TMPStrategyMethod {
     std::unordered_map<RobotGroup*, GroupRoadmapType> m_roadmaps;
 
     RobotGroup* m_wholeGroup{nullptr};
+    GroupTask* m_wholeTask{nullptr};
 
     WorkspaceSkeleton m_indSkeleton;
     std::string m_skeletonFilename;        ///< The output file for the skeleton graph

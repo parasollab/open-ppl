@@ -19,6 +19,7 @@
 #include "TMPLibrary/Solution/Plan.h"
 #include "TMPLibrary/TaskEvaluators/TaskEvaluatorMethod.h"
 #include "TMPLibrary/TaskEvaluators/ScheduledCBS.h"
+#include "TMPLibrary/TaskEvaluators/SubmodeQuery.h"
 
 #include "MPLibrary/MPStrategies/CompositeDynamicRegionRRT.h"
 #include "Utilities/CBS.h"
@@ -101,6 +102,7 @@ Initialize() {
     this->GetMPLibrary()->SetGroupTask(groupTask.get());
     this->GetMPLibrary()->SetMPSolution(this->GetMPSolution());
     m_wholeGroup = groupTask->GetRobotGroup();
+    m_wholeTask = groupTask.get();
   }
 
   // TODO actually use this (for now just using global)
@@ -174,6 +176,7 @@ PlanTasks() {
       auto mapfSol = MAPFSolution();
       ConstructHyperpath(mapfSol);
       success = GroundHyperskeleton();
+      success = success and ConnectToSkeleton(); // TODO impose vertex constraints if this fails
     }
     std::cout << "successfully found a path for each robot." << std::endl;
 
@@ -817,23 +820,23 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
   }
 
   // Connect the start and goal to the preskeleton and postskeleton vertices
-  auto preCfg = CompositeSkeletonVertex(m_wholeGroup, &m_indSkeleton);
-  for(auto robot : m_wholeGroup->GetRobots())
-    preCfg.SetRobotCfg(robot, PRESKELETON);
-  auto preVID = m_skeleton->AddVertex(preCfg);
+  // auto preCfg = CompositeSkeletonVertex(m_wholeGroup, &m_indSkeleton);
+  // for(auto robot : m_wholeGroup->GetRobots())
+  //   preCfg.SetRobotCfg(robot, PRESKELETON);
+  // auto preVID = m_skeleton->AddVertex(preCfg);
 
-  auto preEdge = CompositeSkeletonEdge(m_wholeGroup, &m_indSkeleton);
-  auto preArc = HyperskeletonArc(preEdge, HyperskeletonArcType::Decouple);
-  m_skeletonSource = m_skeleton->AddHyperarc({preVID}, skeletonStarts, preArc);
+  // auto preEdge = CompositeSkeletonEdge(m_wholeGroup, &m_indSkeleton);
+  // auto preArc = HyperskeletonArc(preEdge, HyperskeletonArcType::Decouple);
+  // m_skeletonSource = m_skeleton->AddHyperarc({preVID}, skeletonStarts, preArc);
 
-  auto postCfg = CompositeSkeletonVertex(m_wholeGroup, &m_indSkeleton);
-  for(auto robot : m_wholeGroup->GetRobots())
-    postCfg.SetRobotCfg(robot, POSTSKELETON);
-  auto postVID = m_skeleton->AddVertex(postCfg);
+  // auto postCfg = CompositeSkeletonVertex(m_wholeGroup, &m_indSkeleton);
+  // for(auto robot : m_wholeGroup->GetRobots())
+  //   postCfg.SetRobotCfg(robot, POSTSKELETON);
+  // auto postVID = m_skeleton->AddVertex(postCfg);
 
-  auto postEdge = CompositeSkeletonEdge(m_wholeGroup, &m_indSkeleton);
-  auto postArc = HyperskeletonArc(preEdge, HyperskeletonArcType::Couple);
-  m_skeletonSink = m_skeleton->AddHyperarc(skeletonGoals, {postVID}, postArc);
+  // auto postEdge = CompositeSkeletonEdge(m_wholeGroup, &m_indSkeleton);
+  // auto postArc = HyperskeletonArc(preEdge, HyperskeletonArcType::Couple);
+  // m_skeletonSink = m_skeleton->AddHyperarc(skeletonGoals, {postVID}, postArc);
 
   // Now construct the "composition" hyperperarcs to transition b/w groups
   for(size_t t = 0; t < maxTimestep - 2; t++) {
@@ -1174,12 +1177,27 @@ GroundHyperskeleton() {
     this->GetMPLibrary()->SetGroupTask(groupTask.get());
 
     // Check if we're waiting at a vertex before this, if so, take representative
+    // Also check if there's a movement hyperarc before this, if so, take the
+    // End representative
     if(m_waitingReps.count(svid) and !pushStart) {
       hyperarc.property.startRep = m_waitingReps.at(svid);
     } else {
-      auto grm = this->GetMPLibrary()->GetGroupRoadmap();
-      auto startVID = SpawnVertex(grm, cedge);
-      hyperarc.property.startRep = std::make_pair(grm, startVID);
+      bool found = false;
+      for(auto ih : m_skeleton->GetIncomingHyperarcs(svid)) {
+        auto& arc = m_skeleton->GetHyperarcType(ih);
+        if(arc.type == HyperskeletonArcType::Movement and 
+            m_path.movementHyperarcs.count(ih) and !arc.pushTarget) {
+          found = true;
+          hyperarc.property.startRep = arc.endRep;
+          break;
+        }
+      }
+
+      if(!found) {
+        auto grm = this->GetMPLibrary()->GetGroupRoadmap();
+        auto startVID = SpawnVertex(grm, cedge);
+        hyperarc.property.startRep = std::make_pair(grm, startVID);
+      }
     }
     
     s->GroundEdge(cedge);
@@ -1413,45 +1431,35 @@ MakeBoundary(Robot* _robot, const Point3d _indV) {
 bool
 WoDaSH::
 ConnectToSkeleton() {
-  auto group = this->GetMPLibrary()->GetGroupTask()->GetRobotGroup();
+  this->GetMPLibrary()->SetGroupTask(m_wholeTask);
+  auto wholeGRM = this->GetMPLibrary()->GetGroupRoadmap();
 
   // Connect the start position to the first skeleton vertex for each of the robots
   auto s = this->GetMPLibrary()->GetMPStrategy(m_trajStrategy);
   auto sVID = s->GenerateStart(m_sampler);
-  auto start = this->GetMPLibrary()->GetGroupRoadmap()->GetVertex(sVID);
+  auto start = wholeGRM->GetVertex(sVID);
 
-  auto stask = std::shared_ptr<GroupTask>(new GroupTask(group));
-  std::set<RepresentativeVertex> groundedTail;
+  auto stask = std::shared_ptr<GroupTask>(new GroupTask(m_wholeGroup));
+  std::set<RepresentativeVertex> groundedTail = {std::make_pair(wholeGRM, sVID)};
   std::set<RepresentativeVertex> groundedHead;
-  for(auto r : group->GetRobots()) {
+  for(auto r : m_wholeGroup->GetRobots()) {
     auto t = MPTask(r);
 
-    // Get the first vertex on a skeleton edge
-    // TODO for now assuming that each robot must move at least once
-    auto hid = m_hidPaths[0][r];
-    auto outHID = hid.second;
+    // Get the first vertex on a skeleton edge (or vertex if waiting)
+    GroupCfgType target;
+    auto hid = m_hidPaths[0].at(r);
+    std::cout << "start hid is " << hid << std::endl;
     if(!hid.first) {
-      for(auto oh : m_skeleton->GetOutgoingHyperarcs(hid.second)) {
-        auto arc = m_skeleton->GetHyperarcType(oh);
-        if(arc.type == HyperskeletonArcType::Movement) {
-          outHID = oh;
-          break;
-        }
-      }
+      auto rep = m_waitingReps.at(hid.second);
+      target = rep.first->GetVertex(rep.second);
+      groundedHead.insert(rep);
+    } else {
+      auto& arc = m_skeleton->GetHyperarcType(hid.second);
+      target = arc.startRep.first->GetVertex(arc.startRep.second);
+      groundedHead.insert(arc.startRep);
     }
 
-    auto& arc = m_skeleton->GetHyperarcType(outHID);
-    auto target = arc.startRep.first->GetVertex(arc.startRep.second);
-    groundedHead.insert(arc.startRep);
-
     // Add start constraints
-    auto group = AddGroup({r});
-    auto grm = this->GetMPLibrary()->GetMPSolution()->GetGroupRoadmap(group);
-    auto groupStart = GroupCfgType(grm);
-    groupStart.SetRobotCfg(r, start.GetVID(r));
-    auto groupVID = grm->AddVertex(groupStart);
-    groundedTail.insert(std::make_pair(grm, groupVID));
-
     auto startCfg = start.GetRobotCfg(r);
     auto startConstraint = std::unique_ptr<CSpaceConstraint>(new CSpaceConstraint(r,startCfg));
     t.SetStartConstraint(std::move(startConstraint));
@@ -1468,42 +1476,44 @@ ConnectToSkeleton() {
       this->GetMPSolution(), m_trajStrategy, LRand(), "ConnectToSkeleton");
 
   // Check if the plan was successful
-  auto path = this->GetMPSolution()->GetGroupPath(group);
+  auto path = this->GetMPSolution()->GetGroupPath(m_wholeGroup);
   if(!path->VIDs().size())
     return false;
 
   // Add the path from this to the grounded hypergraph
-  AddTransitionToGroundedHypergraph(groundedTail, groundedHead, path, stask);
+  auto ghid = AddTransitionToGroundedHypergraph(groundedTail, groundedHead, path, stask);
+  auto gh = dynamic_cast<GroundedHypergraph*>(
+    this->GetStateGraph(m_groundedHypergraphLabel).get());
+  auto gsVID = *gh->GetHyperarc(ghid).tail.begin();
+  auto sq = dynamic_cast<SubmodeQuery*>(this->GetTaskEvaluator(m_teLabel).get());
+  sq->SetGroundedStart(gsVID);
 
   // Connect the goal position to the last skeleton vertex for each of the robots
   auto gVIDs = s->GenerateGoals(m_sampler);
   auto gVID = *gVIDs.begin();
   auto goal = this->GetMPLibrary()->GetGroupRoadmap()->GetVertex(gVID);
 
-  auto gtask = std::shared_ptr<GroupTask>(new GroupTask(group));
-  for(auto r : group->GetRobots()) {
+  auto gtask = std::shared_ptr<GroupTask>(new GroupTask(m_wholeGroup));
+  groundedHead.clear();
+  groundedTail.clear();
+  groundedHead.insert(std::make_pair(wholeGRM, gVID));
+  for(auto r : m_wholeGroup->GetRobots()) {
     auto t = MPTask(r);
 
-    // Get the last vertex on a skeleton edge
+    // Get the last vertex on a skeleton edge (or vertex if waiting)
     auto time = m_hidPaths.size() - 1;
-    while(!m_hidPaths[time].count(r))
-      time--;
+    auto hid = m_hidPaths[time].at(r);
 
-    // TODO for now assuming that each robot moves at least once
-    auto hid = m_hidPaths[time][r];
-    auto inHID = hid.second;
+    GroupCfgType endSkel;
     if(!hid.first) {
-      for(auto ih : m_skeleton->GetIncomingHyperarcs(hid.second)) {
-        auto arc = m_skeleton->GetHyperarcType(ih);
-        if(arc.type == HyperskeletonArcType::Movement) {
-          inHID = ih;
-          break;
-        }
-      }
+      auto rep = m_waitingReps.at(hid.second);
+      endSkel = rep.first->GetVertex(rep.second);
+      groundedTail.insert(rep);
+    } else {
+      auto& arc = m_skeleton->GetHyperarcType(hid.second);
+      endSkel = arc.endRep.first->GetVertex(arc.endRep.second);
+      groundedTail.insert(arc.endRep);
     }
-
-    auto& arc = m_skeleton->GetHyperarcType(inHID);
-    auto endSkel = arc.endRep.first->GetVertex(arc.endRep.second);
 
     // Add start constraints
     auto startCfg = endSkel.GetRobotCfg(r);
@@ -1521,7 +1531,15 @@ ConnectToSkeleton() {
   this->GetMPLibrary()->Solve(this->GetMPProblem(), gtask.get(), 
       this->GetMPSolution(), m_trajStrategy, LRand(), "ConnectToSkeleton");
 
-  // TODO add this path to the grounded hypergraph
+  // Check if the plan was successful
+  path = this->GetMPSolution()->GetGroupPath(m_wholeGroup);
+  if(!path->VIDs().size())
+    return false;
+
+  // Add the path from this to the grounded hypergraph
+  ghid = AddTransitionToGroundedHypergraph(groundedTail, groundedHead, path, gtask);
+  auto ggVID = *gh->GetHyperarc(ghid).head.begin();
+  sq->SetGroundedGoal(ggVID);
 
   return true;
 }
@@ -1547,7 +1565,6 @@ SampleTrajectories() {
     auto inArc = m_skeleton->GetHyperarcType(ihs);
 
     auto start = inArc.endRep.first->GetVertex(inArc.endRep.second);
-    auto target = start;
 
     // Plan a path between the start and target - should be empty path
     auto task = std::shared_ptr<GroupTask>(new GroupTask(group));
@@ -1559,9 +1576,35 @@ SampleTrajectories() {
       auto startConstraint = std::unique_ptr<CSpaceConstraint>(new CSpaceConstraint(r,startCfg));
       t.SetStartConstraint(std::move(startConstraint));
 
+      // TODO make this less ugly
+      // Get the head vertex that has this robot
+      CfgType target;
+      bool found = false;
+      for(auto h : hyp.head) {
+        auto compVert = m_skeleton->GetVertexType(h);
+
+        if(compVert.GetGroup()->VerifyRobotInGroup(r)) {
+          for(auto oh : m_skeleton->GetOutgoingHyperarcs(h)) {
+            auto& arc = m_skeleton->GetHyperarcType(oh);
+
+            if(arc.type == HyperskeletonArcType::Movement and 
+              m_path.movementHyperarcs.count(oh)) {
+              
+              found = true;
+              auto gcfg = arc.startRep.first->GetVertex(arc.startRep.second);
+              target = gcfg.GetRobotCfg(r);
+              break;
+            }
+          }
+          break;
+        }
+      }
+
+      if(!found)
+        target = start.GetRobotCfg(r);
+
       // Add goal constraints
-      auto goalCfg = target.GetRobotCfg(r);
-      auto goalConstraint = std::unique_ptr<CSpaceConstraint>(new CSpaceConstraint(r,goalCfg));
+      auto goalConstraint = std::unique_ptr<CSpaceConstraint>(new CSpaceConstraint(r,target));
       t.AddGoalConstraint(std::move(goalConstraint));
 
       task->AddTask(t);
@@ -1750,7 +1793,7 @@ SampleTrajectories() {
   // along the same edge. Single node paths.
   for(auto hid : m_path.coupleHyperarcs) {
     if(this->m_debug)
-      std::cout << "Constructing trajectory for opp mereg hid " << hid << std::endl;
+      std::cout << "Constructing trajectory for opp merge hid " << hid << std::endl;
 
     auto hyp = m_skeleton->GetHyperarc(hid);
     auto cedge = hyp.property.edge;
@@ -1760,17 +1803,43 @@ SampleTrajectories() {
     auto ohs = *(m_skeleton->GetOutgoingHyperarcs(head).begin());
     auto outArc = m_skeleton->GetHyperarcType(ohs);
 
-    auto start = outArc.startRep.first->GetVertex(outArc.startRep.second);
-    auto target = start;
+    auto target = outArc.startRep.first->GetVertex(outArc.startRep.second);
 
     // Plan a path between the start and target - should be empty path
     auto task = std::shared_ptr<GroupTask>(new GroupTask(group));
     for(auto r : group->GetRobots()) {
       auto t = MPTask(r);
 
+      // TODO make this less ugly
+      // See if there is a movement hyperarc coming into this, if so, take
+      // the start from there
+      CfgType start;
+      bool found = false;
+      for(auto t : hyp.tail) {
+        auto compVert = m_skeleton->GetVertexType(t);
+
+        if(compVert.GetGroup()->VerifyRobotInGroup(r)) {
+          for(auto ih : m_skeleton->GetIncomingHyperarcs(t)) {
+            auto& arc = m_skeleton->GetHyperarcType(ih);
+
+            if(arc.type == HyperskeletonArcType::Movement and 
+              m_path.movementHyperarcs.count(ih)) {
+              
+              found = true;
+              auto gcfg = arc.endRep.first->GetVertex(arc.endRep.second);
+              start = gcfg.GetRobotCfg(r);
+              break;
+            }
+          }
+          break;
+        }
+      }
+
+      if(!found)
+        start = target.GetRobotCfg(r);
+
       // Add start constraints
-      auto startCfg = start.GetRobotCfg(r);
-      auto startConstraint = std::unique_ptr<CSpaceConstraint>(new CSpaceConstraint(r,startCfg));
+      auto startConstraint = std::unique_ptr<CSpaceConstraint>(new CSpaceConstraint(r,start));
       t.SetStartConstraint(std::move(startConstraint));
 
       // Add goal constraints
@@ -1821,7 +1890,8 @@ AddTransitionToGroundedHypergraph(std::set<VID> _tail, std::set<VID> _head,
     std::cout << "Adding grounded hyperarc between " << _tail << " and " << _head << std::endl;
   }
 
-  auto gh = dynamic_cast<GroundedHypergraph*>(this->GetStateGraph(m_groundedHypergraphLabel).get());
+  auto gh = dynamic_cast<GroundedHypergraph*>(
+    this->GetStateGraph(m_groundedHypergraphLabel).get());
 
   std::set<VID> groundedTail;
   std::set<VID> groundedHead;

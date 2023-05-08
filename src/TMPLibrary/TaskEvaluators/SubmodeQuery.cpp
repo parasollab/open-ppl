@@ -666,7 +666,7 @@ ComputeHeuristicValues() {
   });
 
   // Run dijkstra backwards from sink
-  std::vector<size_t> starts = {1};
+  std::vector<size_t> starts = {m_groundedGoalVID};
   auto output = DijkstraSSSP(g,starts,weight,termination);
 
   // Save output distances as heuristic values
