@@ -14,3 +14,17 @@ set(HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/matvec.H
         ${CMAKE_CURRENT_SOURCE_DIR}/RAPID.H)
 
 add_library(${PROJECT_NAME} ${SRCS})
+
+install(TARGETS RAPID
+        EXPORT RapidTargets
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib
+        RUNTIME DESTINATION bin
+        INCLUDES DESTINATION include
+)
+
+install(EXPORT RapidTargets
+        FILE RapidTargets.cmake
+        NAMESPACE RAPID::
+        DESTINATION lib/cmake/rapid
+)

@@ -36,3 +36,18 @@ target_link_libraries(${PROJECT_NAME} PRIVATE Qt6::Core Qt6::Gui Qt6::OpenGL Qt6
 target_link_libraries(${PROJECT_NAME} PRIVATE glutils)
 target_link_libraries(${PROJECT_NAME} PRIVATE nonstd)
 target_link_libraries(${PROJECT_NAME} PRIVATE ${OPENGL_LIBRARIES} ${GLUT_LIBRARY})
+
+
+install(TARGETS sandbox
+        EXPORT SandboxTargets
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib
+        RUNTIME DESTINATION bin
+        INCLUDES DESTINATION include
+)
+
+install(EXPORT SandboxTargets
+        FILE SandboxTargets.cmake
+        NAMESPACE SANDBOX::
+        DESTINATION lib/cmake/sandbox
+)

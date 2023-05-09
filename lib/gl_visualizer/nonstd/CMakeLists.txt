@@ -52,3 +52,17 @@ file(GLOB_RECURSE SRCS ${PROJECT_SOURCE_DIR}/*.cpp
         ${PROJECT_SOURCE_DIR}/*.h)
 
 add_library(${PROJECT_NAME} ${SRCS})
+
+install(TARGETS nonstd
+        EXPORT NonStdTargets
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib
+        RUNTIME DESTINATION bin
+        INCLUDES DESTINATION include
+)
+
+install(EXPORT NonStdTargets
+        FILE NonStdTargets.cmake
+        NAMESPACE NONSTD::
+        DESTINATION lib/cmake/nonstd
+)

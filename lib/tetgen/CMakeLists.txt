@@ -16,3 +16,18 @@ if(BUILD_EXECUTABLE)
   add_executable(tetgen_exec tetgen.cxx predicates.cxx)
   set_target_properties(tetgen_exec PROPERTIES OUTPUT_NAME tetgen)
 endif()
+
+
+install(TARGETS tetgen
+        EXPORT TetgenTargets
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib
+        RUNTIME DESTINATION bin
+        INCLUDES DESTINATION include
+)
+
+install(EXPORT TetgenTargets
+        FILE TetgenTargets.cmake
+        NAMESPACE TETGEN::
+        DESTINATION lib/cmake/tetgen
+)

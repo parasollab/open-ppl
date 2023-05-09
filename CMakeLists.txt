@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.24)
 set(CMAKE_CXX_STANDARD 17)
 #add_definitions(-D_GLIBCXX_USE_CXX11_ABI=0)
 
-project(ppl VERSION 1.0.0)
+project(ppl VERSION 1.0.1)
 
 set(ROBOT_DEF "PMPCfg" CACHE STRING "Robot Type")
 add_definitions(-D${ROBOT_DEF})
@@ -34,6 +34,9 @@ set(CMAKE_AUTOUIC ON)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
+
+# ------------- add ppl dependencies --------------
 
 # Add Packages (needs to be installed)
 find_package(OpenGL REQUIRED)
@@ -83,7 +86,6 @@ include_directories(lib/stapl/stapl)
 include_directories(${Qt6Widgets_INCLUDE_DIRS})
 include_directories(${Qt6OpenGLWidgets_INCLUDE_DIRS})
 
-# use target_include_directories() if needed for specific targets only
 include_directories(include/mathtool)
 
 include_directories(include/LKH/SRC/INCLUDE)
@@ -96,11 +98,13 @@ include_directories(lib/tetgen)
 include_directories(lib/modelloader)
 include_directories(lib/RAPID)
 
+# -------------  build ppl targets  --------------
+
 # Build Documentation
-#if(BUILD_DOCS)
-#    find_package(Doxygen REQUIRED dot OPTIONAL_COMPONENTS mscgen dia)
-#    add_subdirectory(docs)
-#endif()
+if(BUILD_DOCS)
+    find_package(Doxygen REQUIRED dot OPTIONAL_COMPONENTS mscgen dia)
+    add_subdirectory(docs)
+endif()
 
 # Build Catch2 Tests
 if(BUILD_TESTS)
@@ -141,7 +145,7 @@ set_target_properties(objlib PROPERTIES VERSION ${PROJECT_VERSION})
 # bullet order is very specific, do not modify
 target_link_libraries(objlib PUBLIC BulletSoftBody BulletDynamics BulletCollision LinearMath Bullet3Common
         BulletInverseDynamics unofficial-tinyxml::unofficial-tinyxml)
-target_link_directories(objlib PUBLIC ${BULLET_LIBRARY_DIRS})
+#target_link_directories(objlib PUBLIC ${BULLET_LIBRARY_DIRS})
 
 # build [ppl library]
 add_library(${PPL_LIBRARY} STATIC ${HARDWARE_SRCS} ${TASK_SRCS} $<TARGET_OBJECTS:objlib>)
@@ -160,7 +164,7 @@ target_link_libraries(${PPL_LIBRARY} PUBLIC ${OPENGL_LIBRARIES} ${GLUT_LIBRARY})
 target_link_libraries(${PPL_LIBRARY} PUBLIC PQP glutils nonstd sandbox RAPID tetgen modelloader ${PQP_LIBRARIES})
 
 # [ppl library] - needed due to issue with bullet library
-target_link_directories(${PPL_LIBRARY} PUBLIC ${BULLET_LIBRARY_DIRS})
+#target_link_directories(${PPL_LIBRARY} PUBLIC ${BULLET_LIBRARY_DIRS})
 set_target_properties(${PPL_LIBRARY} PROPERTIES OUTPUT_NAME ppl)
 
 # [ppl_mp library] - Link external packages
@@ -173,7 +177,7 @@ target_link_libraries(${PPL_MP_LIBRARY} PUBLIC ${OPENGL_LIBRARIES} ${GLUT_LIBRAR
 target_link_libraries(${PPL_MP_LIBRARY} PUBLIC PQP glutils nonstd sandbox RAPID tetgen modelloader ${PQP_LIBRARIES})
 
 # [ppl library] - needed due to issue with bullet library
-target_link_directories(${PPL_MP_LIBRARY} PUBLIC ${BULLET_LIBRARY_DIRS})
+#target_link_directories(${PPL_MP_LIBRARY} PUBLIC ${BULLET_LIBRARY_DIRS})
 set_target_properties(${PPL_MP_LIBRARY} PROPERTIES OUTPUT_NAME ppl_mp)
 
 # build [ppl executable]
@@ -182,7 +186,7 @@ target_link_libraries(${PPL_EXECUTABLE} PRIVATE ${PPL_LIBRARY})
 
 #target_link_libraries(${PPL_EXECUTABLE} unofficial-tinyxml::unofficial-tinyxml LinearMath Bullet3Common BulletDynamics
 #        BulletSoftBody BulletCollision BulletInverseDynamics)
-target_link_directories(${PPL_EXECUTABLE} PRIVATE ${BULLET_LIBRARY_DIRS})
+#target_link_directories(${PPL_EXECUTABLE} PRIVATE ${BULLET_LIBRARY_DIRS})
 set_target_properties(${PPL_EXECUTABLE} PROPERTIES OUTPUT_NAME ppl)
 
 # build [ppl_mp executable]
@@ -193,7 +197,7 @@ set_target_properties(${PPL_MP_EXECUTABLE} PROPERTIES OUTPUT_NAME ppl_mp)
 # build [sim executable]
 add_executable(${SIMULATOR} src/sim_main.cpp)
 target_link_libraries(${SIMULATOR} PRIVATE ${PPL_LIBRARY})
-set_target_properties(${PPL_MP_EXECUTABLE} PROPERTIES OUTPUT_NAME sim)
+set_target_properties(${SIMULATOR} PROPERTIES OUTPUT_NAME sim)
 
 # build [tests]
 if(BUILD_TESTS)
@@ -210,7 +214,30 @@ add_executable(${PPL_XML_EXECUTABLE} src/xml_main.cpp)
 target_link_libraries(${PPL_XML_EXECUTABLE} PRIVATE ${PPL_LIBRARY})
 
 
-# package ppl library for distribution
-install(TARGETS ${PPL_LIBRARY}
-            LIBRARY DESTINATION lib
-            PUBLIC_HEADER DESTINATION include)
+# -------------  package ppl library for distribution --------------
+message("Generating targets for packaging")
+include(GNUInstallDirs)
+set(INSTALL_CONFIGDIR ${CMAKE_INSTALL_LIBDIR}/cmake/ppl)
+
+install(TARGETS ${PPL_LIBRAY} EXPORT PPLTargets)
+install(TARGETS ${PPL_MP_LIBRARY} EXPORT PPLTargets)
+
+install(EXPORT PPLTargets
+        FILE PPLTargets.cmake
+        NAMESPACE ppl::
+        DESTINATION ${INSTALL_CONFIGDIR})
+
+# Create a ConfigVersion.cmake
+include(CMakePackageConfigHelpers)
+write_basic_package_version_file("${CMAKE_CURRENT_BINARY_DIR}/PPLConfigVersion.cmake"
+                                    VERSION ${PPL_VERSION}
+                                    COMPATIBILITY AnyNewerVersion)
+
+configure_package_config_file(${CMAKE_CURRENT_LIST_DIR}/cmake/PPLConfig.cmake.in
+                             ${CMAKE_CURRENT_BINARY_DIR}/PPLConfig.cmake
+                              INSTALL_DESTINATION ${INSTALL_CONFIGDIR})
+
+install(FILES
+        ${CMAKE_CURRENT_BINARY_DIR}/PPLConfig.cmake
+        ${CMAKE_CURRENT_BINARY_DIR}/PPLConfigVersion.cmake
+        DESTINATION ${INSTALL_CONFIGDIR})

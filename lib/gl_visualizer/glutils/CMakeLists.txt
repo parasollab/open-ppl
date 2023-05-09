@@ -53,3 +53,18 @@ file(GLOB_RECURSE SRCS ${PROJECT_SOURCE_DIR}/*.cpp
 add_library(${PROJECT_NAME} ${SRCS})
 
 target_link_libraries(${PROJECT_NAME} PRIVATE nonstd)
+
+
+install(TARGETS glutils
+        EXPORT GlUtilsTargets
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib
+        RUNTIME DESTINATION bin
+        INCLUDES DESTINATION include
+)
+
+install(EXPORT GlUtilsTargets
+        FILE GlUtilsTargets.cmake
+        NAMESPACE GLUTILS::
+        DESTINATION lib/cmake/glutils
+)

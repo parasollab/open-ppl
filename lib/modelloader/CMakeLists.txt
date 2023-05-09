@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.17)
+cmake_minimum_required(VERSION 3.24)
 #set(CMAKE_CXX_STANDARD 17)
 
 project(modelloader)
@@ -13,3 +13,17 @@ include_directories(${CGAL_INCLUDE_DIRS})
 add_library(${PROJECT_NAME} STATIC IModel.cpp ModelFactory.cpp MovieBYULoader.cpp ObjLoader.cpp BVHDataLoader.cpp)
 
 target_link_libraries(${PROJECT_NAME} PUBLIC ${CGAL_LIBRARIES})
+
+install(TARGETS modelloader
+        EXPORT ModelLoaderTargets
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib
+        RUNTIME DESTINATION bin
+        INCLUDES DESTINATION include
+)
+
+install(EXPORT ModelLoaderTargets
+        FILE ModelLoaderTargets.cmake
+        NAMESPACE MODELLOADER::
+        DESTINATION lib/cmake/modelloader
+)
