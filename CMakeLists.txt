@@ -136,6 +136,7 @@ set(PPL_LIBRARY ppl_library)
 set(PPL_MP_LIBRARY ppl_mp_library)
 set(PPL_MP_EXECUTABLE ppl_mp_executable)
 set(SIMULATOR simulator)
+set(PPL_XML_EXECUTABLE ppl_xml_executable)
 set(TESTS tests)
 
 # build [base object library]
@@ -208,6 +209,10 @@ if(BUILD_TESTS)
     include(Catch)
     catch_discover_tests(${TESTS})
 endif()
+
+add_executable(${PPL_XML_EXECUTABLE} src/xml_main.cpp)
+target_link_libraries(${PPL_XML_EXECUTABLE} PRIVATE ${PPL_LIBRARY})
+
 
 # -------------  package ppl library for distribution --------------
 message("Generating targets for packaging")

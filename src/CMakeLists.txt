@@ -48,6 +48,11 @@ set(SIM_SRCS
         PARENT_SCOPE
         )
 
+set(XML_SRCS
+        $(CMAKE_CURRENT_SOURCE_DIR)/xml_main.cpp
+        PARENT_SCOPE
+        )
+
 set(MASTER_SRCS
         $(CMAKE_CURRENT_SOURCE_DIR)/master_node_main.cpp
         PARENT_SCOPE

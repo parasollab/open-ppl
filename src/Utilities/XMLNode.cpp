@@ -18,6 +18,19 @@ XMLNode(const std::string& _filename, const std::string& _desiredNode) :
         " Note that TinyXML's error reporting is really terrible. This could "
         "mean anything from encoding problems to duplicated node attributes.");
 
+  FindNode(_desiredNode);
+}
+
+XMLNode::
+XMLNode(const std::string& filename, std::shared_ptr<TiXmlDocument> doc, const std::string& desiredNode) :
+    m_filename(filename), m_doc(doc) {
+
+    FindNode(desiredNode);
+}
+
+void
+XMLNode::
+FindNode(const std::string& _desiredNode) {
   // Define a DFS search to locate the desired node in the XML tree.
   std::function<TiXmlNode*(TiXmlNode* const)> findNode =
       [&findNode, &_desiredNode](TiXmlNode* const _node) -> TiXmlNode* {
@@ -45,7 +58,7 @@ XMLNode(const std::string& _filename, const std::string& _desiredNode) :
   // Search the XML node tree for the node with the desired description.
   m_node = findNode(m_doc->RootElement());
   if(!m_node)
-    throw ParseException(_filename, "Unable to find XML node '" + _desiredNode +
+    throw ParseException(m_filename, "Unable to find XML node '" + _desiredNode +
         "'.");
 }
 
