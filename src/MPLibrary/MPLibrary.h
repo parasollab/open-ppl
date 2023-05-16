@@ -114,6 +114,8 @@ class MPLibraryType
 
     MPLibraryType(const std::string& _filename);
 
+    MPLibraryType(XMLNode& planningLibraryNode);
+
     virtual ~MPLibraryType();
 
     ///@}
@@ -123,6 +125,8 @@ class MPLibraryType
     /// Read an XML file to set the algorithms and parameters in this instance.
     /// @param _filename The XML file name.
     void ReadXMLFile(const std::string& _filename);
+
+    void ProcessXML(XMLNode &node);
 
     ///@}
     ///@name Distance Metric Accessors
@@ -519,6 +523,13 @@ MPLibraryType(const std::string& _filename) : MPLibraryType() {
 
 template <typename MPTraits>
 MPLibraryType<MPTraits>::
+MPLibraryType(XMLNode& planningLibraryNode) : MPLibraryType() {
+  ProcessXML(planningLibraryNode);
+}
+
+
+template <typename MPTraits>
+MPLibraryType<MPTraits>::
 ~MPLibraryType() {
   delete m_distanceMetrics;
   delete m_validityCheckers;
@@ -602,27 +613,33 @@ ReadXMLFile(const std::string& _filename) {
   if(!planningLibrary)
     throw ParseException(WHERE) << "Cannot find MPLibrary node in XML file '"
                                 << _filename << "'.";
+  ProcessXML(*planningLibrary);
+}
+
+template <typename MPTraits>
+void
+MPLibraryType<MPTraits>::
+ProcessXML(XMLNode& planningLibraryNode) {
 
   // Parse the library node to set algorithms and parameters.
-  for(auto& child : *planningLibrary)
+  for(auto& child : planningLibraryNode)
     ParseChild(child);
 
   // Ensure we have at least one solver.
   if(m_solvers.empty())
-    throw ParseException(WHERE) << "Cannot find Solver node in XML file '"
-                                << _filename << "'.";
+    throw ParseException(WHERE) << "Cannot find Solver node in XML node '.";
 
   // Print XML details if requested.
-  bool print = mpNode.Read("print", false, false, "Print all XML input");
+  bool print = planningLibraryNode.Read("print", false, false, "Print all XML input");
   if(print)
     Print(cout);
 
   // Handle XML warnings/errors.
-  bool warnings = mpNode.Read("warnings", false, false, "Report warnings");
+  bool warnings = planningLibraryNode.Read("warnings", false, false, "Report warnings");
   if(warnings) {
-    bool warningsAsErrors = mpNode.Read("warningsAsErrors", false, false,
+    bool warningsAsErrors = planningLibraryNode.Read("warningsAsErrors", false, false,
         "XML warnings considered errors");
-    planningLibrary->WarnAll(warningsAsErrors);
+    planningLibraryNode.WarnAll(warningsAsErrors);
   }
 }
 

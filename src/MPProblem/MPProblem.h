@@ -45,6 +45,10 @@ class MPProblem
     /// @param _filename The name of the XML file.
     explicit MPProblem(const std::string& _filename);
 
+    /// Instantiate an MPProblem from an XML strings.
+    /// @param _mpNode, _input Strings containing the XML to be parsed.
+    explicit MPProblem(XMLNode _mpNode, XMLNode _input);
+
     MPProblem(const MPProblem& _other); ///< Copy.
     MPProblem(MPProblem&& _other) = delete;
 
@@ -67,6 +71,10 @@ class MPProblem
     /// Read an XML file.
     /// @param _filename The XML file name.
     void ReadXMLFile(const std::string& _filename);
+
+    /// Initialize MPProblem based on XMLNodes.
+    /// @param _filename The XML file name.
+    void ProcessXML(XMLNode mpNode, XMLNode input);
 
     ///@}
     ///@name Environment Accessors

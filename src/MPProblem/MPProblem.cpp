@@ -24,10 +24,22 @@ MPProblem() = default;
 
 
 MPProblem::
-MPProblem(const string& _filename) {
-  ReadXMLFile(_filename);
+MPProblem(const string& filename) {
+  size_t sl = filename.rfind("/");
+  m_filePath = filename.substr(0, sl == string::npos ? 0 : sl + 1);
+  m_xmlFilename = filename;
+
+  // Open the XML and get the root and input nodes.
+  XMLNode mpNode(filename, "MotionPlanning");
+  XMLNode input(filename, "Problem");
+
+  ProcessXML(mpNode, input);
 }
 
+MPProblem::
+MPProblem(XMLNode _mpNode, XMLNode _input) {
+  ProcessXML(_mpNode, _input);
+}
 
 MPProblem::
 MPProblem(const MPProblem& _other) {
@@ -108,16 +120,8 @@ GetXMLFilename() const {
 
 void
 MPProblem::
-ReadXMLFile(const string& _filename) {
+ProcessXML(XMLNode mpNode, XMLNode input) {
   const bool envIsSet = m_environment.get();
-
-  size_t sl = _filename.rfind("/");
-  m_filePath = _filename.substr(0, sl == string::npos ? 0 : sl + 1);
-  m_xmlFilename = _filename;
-
-  // Open the XML and get the root and input nodes.
-  XMLNode mpNode(_filename, "MotionPlanning");
-  XMLNode input(_filename, "Problem");
 
   // Check the input node for a base filename. This will only be used by the
   // simulator at present (will be overwritten for individual planning runs).
@@ -169,6 +173,22 @@ ReadXMLFile(const string& _filename) {
 
   // Compute the environment resolution.
   GetEnvironment()->ComputeResolution(GetRobots());
+}
+
+
+void
+MPProblem::
+ReadXMLFile(const string& _filename) {
+
+  size_t sl = _filename.rfind("/");
+  m_filePath = _filename.substr(0, sl == string::npos ? 0 : sl + 1);
+  m_xmlFilename = _filename;
+
+  // Open the XML and get the root and input nodes.
+  XMLNode mpNode(_filename, "MotionPlanning");
+  XMLNode input(_filename, "Problem");
+
+  ProcessXML(mpNode, input);
 }
 
 /*----------------------------- Environment Accessors ------------------------*/
