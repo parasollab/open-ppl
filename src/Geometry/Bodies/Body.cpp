@@ -156,6 +156,11 @@ Body(MultiBody* const _owner, XMLNode& _node)
       std::numeric_limits<double>::min(), std::numeric_limits<double>::max(),
       "Mass of the body.");
 
+  // Read weight.
+  m_weight = _node.Read("weight", false, 1.,
+      std::numeric_limits<double>::min(), std::numeric_limits<double>::max(),
+      "Mathematical property for general use.");
+
   // Read body type.
   std::string type = _node.Read("type", true, "",
       "Type of the body (volumetric, planar, fixed, or joint.");
@@ -228,6 +233,7 @@ operator=(const Body& _other) {
   m_worldPolyhedron       = _other.m_worldPolyhedron;
   m_worldPolyhedronCached = _other.m_worldPolyhedronCached;
   m_mass                  = _other.m_mass;
+  m_weight                = _other.m_weight;
   m_moment                = _other.m_moment;
   m_comAdjust             = _other.m_comAdjust;
 
@@ -333,6 +339,12 @@ size_t
 Body::
 GetIndex() const noexcept {
   return m_index;
+}
+
+double
+Body::
+GetWeight() const {
+  return m_weight;
 }
 
 /*----------------------------- Body Properties ------------------------------*/
@@ -763,6 +775,15 @@ Read(std::istream& _is, CountingStreamBuffer& _cbs) {
         if(c != ')')
           throw ParseException(_cbs.Where(), "Invalid specification of texture.");
       }
+    }
+    else if(c == 'w') {
+      _is >> c; //read w(
+      if(c != '(')
+        throw ParseException(_cbs.Where(), "Invalid specification of weight.");
+      m_weight = ReadField<double>(_is, _cbs, "Invalid specification of weight.");
+      _is >> c; //read )
+      if(c != ')')
+        throw ParseException(_cbs.Where(), "Invalid specification of weight.");
     }
     // Put back - for possible -x translation.
     else {
