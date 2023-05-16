@@ -110,6 +110,7 @@ set(PMPL_SRCS_EXCL
 
 set(PMPL_SRCS
         ${CMAKE_CURRENT_SOURCE_DIR}/Behaviors/Agents/Agent.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/Behaviors/Agents/AgentFactory_pmpl.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Behaviors/Controllers/CarlikeNeedleController.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Behaviors/Controllers/ControllerMethod.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Behaviors/Controllers/ControlSetGenerators.cpp
@@ -159,6 +160,7 @@ set(PMPL_SRCS
         ${CMAKE_CURRENT_SOURCE_DIR}/MPProblem/Robot/Actuator.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/MPProblem/Robot/Control.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/MPProblem/Robot/Robot.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/MPProblem/Robot/HardwareInterfaces/RobotCommandQueue_pmpl.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/MPProblem/RobotGroup/RobotGroup.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/MPProblem/TaskHierarchy/Decomposition.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/MPProblem/TaskHierarchy/SemanticTask.cpp
