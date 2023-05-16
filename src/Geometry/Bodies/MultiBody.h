@@ -190,6 +190,9 @@ class MultiBody {
     /// Get the movement type of the base body.
     Body::MovementType GetBaseMovementType() const noexcept;
 
+    /// Get the weight of the MultiBody.
+    double GetWeight() const;
+        
     ///@}
     ///@name Geometric Properties
     ///@{
