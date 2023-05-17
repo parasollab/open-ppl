@@ -74,6 +74,7 @@
 #include "MPLibrary/MapEvaluators/QueryMethod.h"
 #include "MPLibrary/MapEvaluators/SIPPMethod.h"
 #include "MPLibrary/MapEvaluators/TimeEvaluator.h"
+#include "MPLibrary/MapEvaluators/PathEvaluator.h"
 #include "MPLibrary/MapEvaluators/CollisionEvaluator.h"
 
 //mp strategies includes
@@ -200,6 +201,7 @@ struct MPTraits {
     PrintMapEvaluation<MPTraits>,
     QueryMethod<MPTraits>,
     SIPPMethod<MPTraits>,
+    PathEvaluator<MPTraits>,
     TimeEvaluator<MPTraits>,
     CollisionEvaluator<MPTraits>
       > MapEvaluatorMethodList;
