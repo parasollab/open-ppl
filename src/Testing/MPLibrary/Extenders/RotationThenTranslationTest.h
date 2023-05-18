@@ -68,39 +68,50 @@ IndividualRobotExtendTests() {
   bool passed = true;
   std::string message = "";
 
-  // Start and End CfgType
-  // x = 0, y = 0
-  // to x = 0, y = 3.85714, x rotation = 0.55556
-  // should be true (can rotate and translate)
+  auto dm = this->GetDistanceMetric("euclidean");
   CfgType c = this->GetIndividualCfg();
+
+  // TEST: Test scenario where rotation first causes collision
+  c[0] = -10.6;
+  c[1] = 0.9;
+  c[5] = 0.0;
   const CfgType startCfg = CfgType(c);
-  c[1] += 3.85714;
-  c[3] += 0.55556;
+  c[0] = 10.6;
+  c[1] = 0.9;
+  c[5] = 0.5;
   const CfgType endCfg = CfgType(c);
   //New CfgType and lpOutput for storing the result of Extend
+
   CfgType newCfg;
   LPOutput<MPTraits> lpOuput;
 
   // Rotate and Extend from startCfg to endCfg
   bool result = this->Extend(startCfg, endCfg, newCfg, lpOuput);
+  
+  // Check that the configuration 
+  bool reached = result && dm->Distance(newCfg, endCfg) < 0.01;
 
-  if (result) {
+  if (reached) {
     passed = false;
     message = message + "\n\tThe configuration successfully rotated and extended when it was not supposed to extend successfully.\n";
   }
 
-  // x = 0, y = 0.85714
-  // to x = 0, y = 3.85714, x rotation = 0.55556
-  // should be false (cannot rotate because it will hit the obstacle while trying to rotate)
-  c[1] = 0.85714;
-  c[3] = 0;
+  // TEST: Test scenario where simultaneous rotation and translation (or translation then rotation) would
+  // result in collision with object
+  c[0] = 10.6;
+  c[1] = 0.0;
+  c[5] = 0.0;
   const CfgType startCfg2 = CfgType(c);
-  c[0] = 3.0;
-  c[3] = 0.55556;
+  c[0] = 10.6;
+  c[1] = 3.0;
+  c[5] = 0.5;
   const CfgType endCfg2 = CfgType(c);
   result = this->Extend(startCfg2, endCfg2, newCfg, lpOuput);
+  
+  // Check that the configuration reached the goal
+  reached = result && dm->Distance(newCfg, endCfg2) < 0.01;
 
-    if (result) {
+  if (!reached) {
     passed = false;
     message = message + "\n\tThe configuration successfully rotated and extended when it was not supposed to rotate successfully.\n";
   }
