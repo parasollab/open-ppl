@@ -7,7 +7,6 @@
 *.slo
 *.lo
 *.o
-*.obj
 
 # generated make/cmake files
 CMakeSettings.json
