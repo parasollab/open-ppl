@@ -152,6 +152,7 @@
       <BruteForceNF label="Nearest" dmLabel="euclidean" unconnected="false" k="1"/>
       <BruteForceNF label="Nearest4" dmLabel="euclidean" unconnected="true" k="4"/>
       <BruteForceNF label="BFNF" dmLabel="euclidean" unconnected="false" k="10"/>
+      <RandomNF label = "RandomTest" dmLabel="euclidean" unconnected="false" k="2"/>
     </NeighborhoodFinders>
 
     <Samplers>
