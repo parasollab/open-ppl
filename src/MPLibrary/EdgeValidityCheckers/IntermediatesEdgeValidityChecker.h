@@ -79,8 +79,6 @@ class IntermediatesEdgeValidityChecker : public EdgeValidityCheckerMethod<MPTrai
                                       ///<  collision detection validity checker.
     bool m_overideLp{false};          ///< Flag for using a different local planner than the one
                                       ///<  stored in the roadmap edges
-    bool m_weightByClearamce{false};  ///< Flag for overriding edge weights with clearance
-
 };
 
 template <typename MPTraits>
