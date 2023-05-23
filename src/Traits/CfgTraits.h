@@ -32,27 +32,28 @@
 #include "MPLibrary/ValidityCheckers/AlwaysTrueValidity.h"
 #include "MPLibrary/ValidityCheckers/ComposeValidity.h"
 #include "MPLibrary/ValidityCheckers/ComposeCollision.h"
+#include "MPLibrary/ValidityCheckers/TerrainValidityChecker.h"
 
 //neighborhood finder includes
 #include "MPLibrary/NeighborhoodFinders/BruteForceNF.h"
-#include "MPLibrary/NeighborhoodFinders/RadiusNF.h"
+#include "MPLibrary/NeighborhoodFinders/RandomNF.h"
 
 //sampler includes
 #include "MPLibrary/Samplers/BridgeTestSampler.h"
+#include "MPLibrary/Samplers/MixSampler.h"
 #include "MPLibrary/Samplers/ObstacleBasedSampler.h"
 #include "MPLibrary/Samplers/UniformRandomSampler.h"
 #include "MPLibrary/Samplers/GaussianSampler.h"
 
 //local planner includes
 #include "MPLibrary/LocalPlanners/StraightLine.h"
+#include "MPLibrary/LocalPlanners/HierarchicalLP.h"
 
 //extenders includes
 #include "MPLibrary/Extenders/BasicExtender.h"
+#include "MPLibrary/Extenders/RotationThenTranslation.h"
 
 //path smoothing includes
-
-//edge validity checkers includes
-#include "MPLibrary/EdgeValidityCheckers/IntermediatesEdgeValidityChecker.h"
 
 //connector includes
 #include "MPLibrary/Connectors/NeighborhoodConnector.h"
@@ -74,8 +75,6 @@
 #include "MPLibrary/MapEvaluators/QueryMethod.h"
 #include "MPLibrary/MapEvaluators/SIPPMethod.h"
 #include "MPLibrary/MapEvaluators/TimeEvaluator.h"
-#include "MPLibrary/MapEvaluators/PathEvaluator.h"
-#include "MPLibrary/MapEvaluators/CollisionEvaluator.h"
 
 //mp strategies includes
 #include "MPLibrary/MPStrategies/AdaptiveRRT.h"
@@ -85,6 +84,7 @@
 #include "MPLibrary/MPStrategies/BasicRRTStrategy.h"
 #include "MPLibrary/MPStrategies/DynamicRegionRRT.h"
 #include "MPLibrary/MPStrategies/DynamicRegionsPRM.h"
+#include "MPLibrary/MPStrategies/Syclop.h"
 #include "MPLibrary/MPStrategies/GroupDecoupledStrategy.h"
 #include "MPLibrary/MPStrategies/GroupStrategyMethod.h"
 #include "MPLibrary/MPStrategies/TogglePRMStrategy.h"
@@ -140,41 +140,41 @@ struct MPTraits {
     CollisionDetectionValidity<MPTraits>,
     AlwaysTrueValidity<MPTraits>,
     ComposeValidity<MPTraits>,
-    ComposeCollision<MPTraits>
+    ComposeCollision<MPTraits>,
+    TerrainValidityChecker<MPTraits>
       > ValidityCheckerMethodList;
 
   //types of neighborhood finders available in our world
   typedef boost::mpl::list<
     BruteForceNF<MPTraits>,
-    RadiusNF<MPTraits>
+    RandomNF<MPTraits>
       > NeighborhoodFinderMethodList;
 
   //types of samplers available in our world
   typedef boost::mpl::list<
     BridgeTestSampler<MPTraits>,
+    MixSampler<MPTraits>,
     ObstacleBasedSampler<MPTraits>,
-    UniformRandomSampler<MPTraits>, 
+    UniformRandomSampler<MPTraits>,
     GaussianSampler<MPTraits>
       > SamplerMethodList;
 
   //types of local planners available in our world
   typedef boost::mpl::list<
-    StraightLine<MPTraits>
+    StraightLine<MPTraits>,
+    HierarchicalLP<MPTraits>
       > LocalPlannerMethodList;
 
   //types of extenders avaible in our world
   typedef boost::mpl::list<
-    BasicExtender<MPTraits>
+    BasicExtender<MPTraits>,
+    RotationThenTranslation<MPTraits>
       > ExtenderMethodList;
 
   //types of path smoothing available in our world
   typedef boost::mpl::list<
       > PathModifierMethodList;
 
-  //types of edge validity checkers available in our world
-  typedef boost::mpl::list<
-    IntermediatesEdgeValidityChecker<MPTraits>
-      > EdgeValidityCheckerMethodList;
 
   //types of connectors available in our world
   typedef boost::mpl::list<
@@ -201,9 +201,7 @@ struct MPTraits {
     PrintMapEvaluation<MPTraits>,
     QueryMethod<MPTraits>,
     SIPPMethod<MPTraits>,
-    PathEvaluator<MPTraits>,
-    TimeEvaluator<MPTraits>,
-    CollisionEvaluator<MPTraits>
+    TimeEvaluator<MPTraits>
       > MapEvaluatorMethodList;
 
   //types of motion planning strategies available in our world
@@ -217,6 +215,7 @@ struct MPTraits {
     EET<MPTraits>,
     GroupDecoupledStrategy<MPTraits>,
     GroupStrategyMethod<MPTraits>,
+    Syclop<MPTraits>,
     TogglePRMStrategy<MPTraits>,
     ValidationStrategy<MPTraits>
       > MPStrategyMethodList;

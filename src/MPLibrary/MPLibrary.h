@@ -21,7 +21,6 @@
 #include "MPLibrary/MPTools/MPTools.h"
 #include "MPLibrary/NeighborhoodFinders/NeighborhoodFinderMethod.h"
 #include "MPLibrary/PathModifiers/PathModifierMethod.h"
-#include "MPLibrary/EdgeValidityCheckers/EdgeValidityCheckerMethod.h"
 #include "MPLibrary/Samplers/SamplerMethod.h"
 #include "MPLibrary/ValidityCheckers/CollisionDetectionValidity.h"
 #include "MPLibrary/ValidityCheckers/ValidityCheckerMethod.h"
@@ -85,8 +84,6 @@ class MPLibraryType
     typedef MethodSet<MPTraits, LocalPlannerMethod<MPTraits>>   LocalPlannerSet;
     typedef MethodSet<MPTraits, ExtenderMethod<MPTraits>>       ExtenderSet;
     typedef MethodSet<MPTraits, PathModifierMethod<MPTraits>>   PathModifierSet;
-    typedef MethodSet<MPTraits, EdgeValidityCheckerMethod<MPTraits>>
-                                                                EdgeValidityCheckerSet;
     typedef MethodSet<MPTraits, ConnectorMethod<MPTraits>>      ConnectorSet;
     typedef MethodSet<MPTraits, MetricMethod<MPTraits>>         MetricSet;
     typedef MethodSet<MPTraits, MapEvaluatorMethod<MPTraits>>   MapEvaluatorSet;
@@ -104,8 +101,6 @@ class MPLibraryType
     typedef typename LocalPlannerSet::MethodPointer    LocalPlannerPointer;
     typedef typename ExtenderSet::MethodPointer        ExtenderPointer;
     typedef typename PathModifierSet::MethodPointer    PathModifierPointer;
-    typedef typename EdgeValidityCheckerSet::MethodPointer
-                                                       EdgeValidityCheckerPointer;
     typedef typename ConnectorSet::MethodPointer       ConnectorPointer;
     typedef typename MetricSet::MethodPointer          MetricPointer;
     typedef typename MapEvaluatorSet::MethodPointer    MapEvaluatorPointer;
@@ -213,18 +208,6 @@ class MPLibraryType
       m_pathModifiers->AddMethod(_ps, _l);
     }
 
-    ///@}
-    ///@name Edge Validity Checker Accessors
-    ///@{
-
-    EdgeValidityCheckerPointer GetEdgeValidityChecker(const std::string& _l) {
-      return m_edgeValidityCheckers->GetMethod(_l);
-    }
-    void AddEdgeValidityChecker(EdgeValidityCheckerPointer _ps, const std::string& _l) {
-      m_edgeValidityCheckers->AddMethod(_ps, _l);
-    }
-
-    ///@}
     ///@}
     ///@name Connector Accessors
     ///@{
@@ -480,18 +463,17 @@ class MPLibraryType
     /// Method sets hold and offer access to the motion planning objects of the
     /// corresponding type.
 
-    DistanceMetricSet*      m_distanceMetrics{nullptr};
-    ValidityCheckerSet*     m_validityCheckers{nullptr};
-    NeighborhoodFinderSet*  m_neighborhoodFinders{nullptr};
-    SamplerSet*             m_samplers{nullptr};
-    LocalPlannerSet*        m_localPlanners{nullptr};
-    ExtenderSet*            m_extenders{nullptr};
-    PathModifierSet*        m_pathModifiers{nullptr};
-    EdgeValidityCheckerSet* m_edgeValidityCheckers{nullptr};
-    ConnectorSet*           m_connectors{nullptr};
-    MetricSet*              m_metrics{nullptr};
-    MapEvaluatorSet*        m_mapEvaluators{nullptr};
-    MPStrategySet*          m_mpStrategies{nullptr};
+    DistanceMetricSet*     m_distanceMetrics{nullptr};
+    ValidityCheckerSet*    m_validityCheckers{nullptr};
+    NeighborhoodFinderSet* m_neighborhoodFinders{nullptr};
+    SamplerSet*            m_samplers{nullptr};
+    LocalPlannerSet*       m_localPlanners{nullptr};
+    ExtenderSet*           m_extenders{nullptr};
+    PathModifierSet*       m_pathModifiers{nullptr};
+    ConnectorSet*          m_connectors{nullptr};
+    MetricSet*             m_metrics{nullptr};
+    MapEvaluatorSet*       m_mapEvaluators{nullptr};
+    MPStrategySet*         m_mpStrategies{nullptr};
 
     ///@}
 };
@@ -515,8 +497,6 @@ MPLibraryType() {
       typename MPTraits::ExtenderMethodList(), "Extenders");
   m_pathModifiers = new PathModifierSet(this,
       typename MPTraits::PathModifierMethodList(), "PathModifiers");
-  m_edgeValidityCheckers = new EdgeValidityCheckerSet(this,
-      typename MPTraits::EdgeValidityCheckerMethodList(), "EdgeValidityCheckers");
   m_connectors = new ConnectorSet(this,
       typename MPTraits::ConnectorMethodList(), "Connectors");
   m_metrics = new MetricSet(this,
@@ -547,7 +527,6 @@ MPLibraryType<MPTraits>::
   delete m_localPlanners;
   delete m_extenders;
   delete m_pathModifiers;
-  delete m_edgeValidityCheckers;
   delete m_connectors;
   delete m_metrics;
   delete m_mapEvaluators;
@@ -578,7 +557,6 @@ Initialize() {
   m_localPlanners->Initialize();
   m_extenders->Initialize();
   m_pathModifiers->Initialize();
-  m_edgeValidityCheckers->Initialize();
   m_connectors->Initialize();
   m_metrics->Initialize();
   m_mapEvaluators->Initialize();
@@ -681,10 +659,6 @@ ParseChild(XMLNode& _node) {
     m_pathModifiers->ParseXML(_node);
     return true;
   }
-  else if(_node.Name() == "EdgeValidityCheckers") {
-    m_edgeValidityCheckers->ParseXML(_node);
-    return true;
-  }
   else if(_node.Name() == "Connectors") {
     m_connectors->ParseXML(_node);
     return true;
@@ -740,7 +714,6 @@ Print(ostream& _os) const {
   m_localPlanners->Print(_os);
   m_extenders->Print(_os);
   m_pathModifiers->Print(_os);
-  m_edgeValidityCheckers->Print(_os);
   m_connectors->Print(_os);
   m_metrics->Print(_os);
   m_mapEvaluators->Print(_os);
