@@ -231,7 +231,9 @@ intermediateClearance(vector<CfgType>& _intermediates) {
 
       cd->IsMultiBodyCollision(obstInfo, robotMultiBody, obstMultiBody, callee);
 
-      clearance = std::min(obstInfo.m_minDist - obstMultiBody->GetWeight(), clearance); 
+      double weightedNewClearance = std::max(obstInfo.m_minDist - obstMultiBody->GetWeight(), 0.0);
+
+      clearance = std::min(weightedNewClearance, clearance); 
 
     }
     

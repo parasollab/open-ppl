@@ -130,7 +130,6 @@ StaticPathWeight(EI& _ei,
 
   VID source = _ei->source();
   VID target = _ei->target();
-  std::cout << source << " " << target << std::endl;
   double edgeWeight = -1;
 
   // if (m_seenEdges.count(_ei) > 0) {
@@ -143,7 +142,7 @@ StaticPathWeight(EI& _ei,
 
    
 
-  return _sourceDistance + edgeWeight;
+  return std::max(_sourceDistance, edgeWeight);
 }
 
 

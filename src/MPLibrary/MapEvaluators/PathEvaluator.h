@@ -23,6 +23,9 @@ class PathEvaluator : public MapEvaluatorMethod<MPTraits> {
 
     typedef typename MPTraits::RoadmapType          RoadmapType;
     typedef typename RoadmapType::VID               VID;
+    typedef typename MPTraits::CfgType              CfgType;
+    typedef typename MPTraits::Path                    Path;
+
 
     ///@}
     ///@name Construction
@@ -53,7 +56,10 @@ class PathEvaluator : public MapEvaluatorMethod<MPTraits> {
 
     private:
 
+    double GetMinClearance(Path* path);
+
     std::string m_cuLabel{};
+    std::string m_ievcLabel{};
 
     // Why copy/paste when you could write a million helper functions instead?
     void AddToStats(std::string key, int value);
@@ -79,6 +85,7 @@ PathEvaluator(XMLNode& _node) : MapEvaluatorMethod<MPTraits>(_node) {
   this->SetName("PathEvaluator");
 
   m_cuLabel = _node.Read("cuLabel", false, "", "Clearance Utility label");
+  m_ievcLabel = _node.Read("ievcLabel", false, "", "Intermediate Edge VC label");
 //   m_scLabel = _node.Read("scLabel", false, "", "Segment Clearance Tool label");
 }
 
@@ -108,7 +115,7 @@ operator()() {
     }
 
     // Path length and size
-    AddToStats("PathLength", path->Length());
+    AddToStats("TotalEdgeWeight", path->Length());
     AddToStats("PathSize", path->Size());
 
     // Clearance (pure)
@@ -124,6 +131,11 @@ operator()() {
 
     // TODO: Risk-weighted path clearance.
 
+    if (!m_ievcLabel.empty()) {
+        double minClearance = GetMinClearance(path);
+        AddToStats("Min Clearance", minClearance);
+    }
+
     // TODO: Sensitivity to rotation.
 
     // TODO: Min Clearance on ideal rotation.
@@ -137,34 +149,56 @@ operator()() {
 
 /*--------------------------- Helper Methods ---------------------------------*/
 
+
+template <typename MPTraits>
+double
+PathEvaluator<MPTraits>::
+GetMinClearance(Path* _path) {  
+
+  auto vc = this->GetEdgeValidityChecker(m_ievcLabel);
+  auto vids = _path->VIDs();
+
+  double minClearance = MAX_DBL;
+  for(auto start = vids.begin(); start + 1 < vids.end(); ++start) {
+    double clearance = vc->AssignClearanceWeight(*start, *(start+1));
+
+    if (clearance < minClearance) {
+        minClearance = clearance;
+    }
+  }
+
+  return minClearance;
+}
+
+    
 template <typename MPTraits>
 void
 PathEvaluator<MPTraits>::
-AddToStats(std::string key, double value) {
-    std::string statKey = "PathEvaluator::" + key;
-    this->GetStatClass()->SetStat(statKey, value);
-    std::cout << statKey << "\t" << value << std::endl;
+AddToStats(std::string _key, double _value) {
+    std::string statKey = "PathEvaluator::" + _key;
+    this->GetStatClass()->SetStat(statKey, _value);
+    std::cout << statKey << "\t" << _value << std::endl;
 } 
 
 template <typename MPTraits>
 void
 PathEvaluator<MPTraits>::
-AddToStats(std::string key, int value) {
-    AddToStats(key, (double)value);
+AddToStats(std::string _key, int _value) {
+    AddToStats(_key, (double)_value);
 }
 
 template <typename MPTraits>
 void
 PathEvaluator<MPTraits>::
-AddToStats(std::string key, size_t value) {
-    AddToStats(key, (double)value);
+AddToStats(std::string _key, size_t _value) {
+    AddToStats(_key, (double)_value);
 }
 
 template <typename MPTraits>
 void
 PathEvaluator<MPTraits>::
-AddToStats(std::string key, bool value) {
-    AddToStats(key, (double)value);
+AddToStats(std::string _key, bool _value) {
+    AddToStats(_key, (double)_value);
 }
 
 
