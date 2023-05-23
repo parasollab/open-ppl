@@ -43,8 +43,8 @@ class ClearanceQuery : virtual public QueryMethod<MPTraits> {
 
     /// Set an alternate path weight function to use when searching the roadmap
     /// @param _f The path weight function to use.
-    virtual void SetPathWeightFunction(SSSPPathWeightFunction<RoadmapType> _f)
-        override;
+    // virtual void SetPathWeightFunction(SSSPPathWeightFunction<RoadmapType> _f)
+    //     override;
 
     ///@}
 
@@ -62,10 +62,10 @@ class ClearanceQuery : virtual public QueryMethod<MPTraits> {
         const double _sourceDistance, const double _targetDistance) const
         override;
 
-    virtual double DynamicPathWeight(
-        typename RoadmapType::adj_edge_iterator& _ei,
-        const double _sourceDistance, const double _targetDistance) const
-        override;
+    // virtual double DynamicPathWeight(
+    //     typename RoadmapType::adj_edge_iterator& _ei,
+    //     const double _sourceDistance, const double _targetDistance) const
+    //     override;
 
     ///@}
 
@@ -117,6 +117,7 @@ template <typename MPTraits>
 void
 ClearanceQuery<MPTraits>::
 Reset(RoadmapType* const _r) {
+  QueryMethod<MPTraits>::Reset(_r);
   m_seenEdges.clear();
 }
 
@@ -136,7 +137,7 @@ StaticPathWeight(EI& _ei,
   //   edgeWeight = _ei->property().GetWeight();
   // } else {
     auto vc = this->GetEdgeValidityChecker(m_edgeIntermediateVCLabel);
-    edgeWeight = vc->AssignClearanceWeight(source, target);
+    edgeWeight = 1./vc->AssignClearanceWeight(source, target);
   //   m_seenEdges.insert(_ei);
   // }
 

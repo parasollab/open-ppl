@@ -1,4 +1,4 @@
 1
-point.g Volumetric Translational
+robot.g Volumetric Translational
 Connections
 0

@@ -45,7 +45,7 @@
     </ValidityCheckers>
 
     <EdgeValidityCheckers>
-      <IntermediatesEdgeValidityCheckers label="IEVC" lpLabel="sl" vcLabel="pqp"/>
+      <IntermediatesEdgeValidityChecker label="IEVC" lpLabel="sl" vcLabel="pqp"/>
     </EdgeValidityCheckers>
 
     <NeighborhoodFinders>
@@ -61,7 +61,7 @@
     </Samplers>
 
     <LocalPlanners>
-      <StraightLine label="sl" binaryEvaluation="true" vcLabel="rapid"/>
+      <StraightLine label="sl" binaryEvaluation="true" vcLabel="pqp_solid"/>
       <StraightLine label="slAlwaysTrue" binaryEvaluation="true"
         vcLabel="alwaysTrue"/>
     </LocalPlanners>
@@ -77,7 +77,7 @@
     </PathModifiers>
 
     <Connectors>
-      <NeighborhoodConnector label="Closest" debug="false"
+      <NeighborhoodConnector label="Closest" debug="true" 
         nfLabel="BFNF" lpLabel="sl" checkIfSameCC="false"/>
       <NeighborhoodConnector label="ToggleConnect" nfLabel="BFNF" lpLabel="sl"
         maxFailures="1" checkIfSameCC="false"/>
@@ -102,7 +102,7 @@
         graphSearchAlg="dijkstras" safeIntervalToolLabel="SI"/>
 
       <ConditionalEvaluator label="NodesEval" metric_method="NumNodes"
-        value="600" operator=">="/>
+        value="1500" operator=">="/>
 
       <ConditionalEvaluator label="EdgesEval" metric_method="NumEdges"
         value="1000" operator=">"/>
@@ -141,7 +141,7 @@
       <BasicPRM label="BasicPRM1-clearance" debug="true" querySampler="UniformRandomFree">
         <Sampler label="UniformRandomFree" number="15" attempts="1"/>
         <Connector label="Closest"/>
-        <Evaluator label="ClearancePathEvaluatedQuery"/>
+        <Evaluator label="ClearanceQuery"/>
       </BasicPRM>
 
     </MPStrategies>
@@ -188,8 +188,8 @@
 
     <!-- MPProblem allows multiple solvers to be specified and executed. -->
 
-    <Solver mpStrategyLabel="BasicPRM1-simple" seed="1234678"
-      baseFilename="stackedz-simple" vizmoDebug="false"/>
+    <Solver mpStrategyLabel="BasicPRM1-clearance" seed="1234678"
+      baseFilename="stackedz-clearance" vizmoDebug="false"/>
 
   </Library>
 
