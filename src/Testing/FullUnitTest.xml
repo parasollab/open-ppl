@@ -140,6 +140,7 @@
 
     <ValidityCheckers>
       <AlwaysTrueValidity label="alwaysTrue"/>
+      <ObstacleClearance label="obst_clrnc" clearanceThreshold="2" vcLabel="pqp_solid"/>
       <TerrainValidity label="terrainValidity"/>
 
       <!-- Test not yet added -->
