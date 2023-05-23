@@ -74,6 +74,7 @@
 #include "MPLibrary/MapEvaluators/QueryMethod.h"
 #include "MPLibrary/MapEvaluators/SIPPMethod.h"
 #include "MPLibrary/MapEvaluators/TimeEvaluator.h"
+#include "MPLibrary/MapEvaluators/NegateEvaluator.h"
 
 // mp strategies includes
 #include "MPLibrary/MPStrategies/AdaptiveRRT.h"
@@ -198,6 +199,7 @@ struct MPTraits {
       ConditionalEvaluator<MPTraits>,
       LazyQuery<MPTraits>,
       MinimumDistanceEvaluator<MPTraits>,
+      NegateEvaluator<MPTraits>,
       PrintMapEvaluation<MPTraits>,
       QueryMethod<MPTraits>,
       SIPPMethod<MPTraits>,

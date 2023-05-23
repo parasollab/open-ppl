@@ -211,7 +211,7 @@
         <Resolution mult="16"/>
         <Resolution mult="1"/>
       </LazyQuery>
-
+      <NegateEvaluator label="Neg" evalLabel="Query"/>
       <QueryMethod label="Query" debug="false"
         graphSearchAlg="dijkstras" safeIntervalToolLabel="SI"/>
       <MinimumDistanceEvaluator label="MinDist" minDist="10" dmLabel="euclidean"/>

@@ -65,6 +65,8 @@
 #include "Testing/MPLibrary/MapEvaluators/LazyQueryTest.h"
 #include "Testing/MPLibrary/MapEvaluators/MinimumDistanceEvaluatorTest.h"
 #include "Testing/MPLibrary/MapEvaluators/QueryMethodTest.h"
+#include "Testing/MPLibrary/MapEvaluators/NegateEvaluatorTest.h"
+
 // mp strategies includes
 #include "MPLibrary/MPStrategies/ValidationStrategy.h"
 
