@@ -28,13 +28,15 @@
 // validity checker includes
 #include "MPLibrary/ValidityCheckers/AlwaysTrueValidity.h"
 #include "MPLibrary/ValidityCheckers/CollisionDetectionValidity.h"
-#include "MPLibrary/ValidityCheckers/ComposeCollision.h"
 #include "MPLibrary/ValidityCheckers/ComposeValidity.h"
+#include "MPLibrary/ValidityCheckers/ComposeCollision.h"
+#include "MPLibrary/ValidityCheckers/ObstacleClearanceValidity.h"
 #include "MPLibrary/ValidityCheckers/TerrainValidityChecker.h"
 #include "MPLibrary/ValidityCheckers/TopologicalMapValidity.h"
 
 // neighborhood finder includes
 #include "MPLibrary/NeighborhoodFinders/BruteForceNF.h"
+#include "MPLibrary/NeighborhoodFinders/RandomNF.h"
 
 // sampler includes
 #include "MPLibrary/Samplers/BridgeTestSampler.h"
@@ -49,6 +51,7 @@
 
 // extenders includes
 #include "MPLibrary/Extenders/BasicExtender.h"
+#include "MPLibrary/Extenders/RotationThenTranslation.h"
 
 // path smoothing includes
 
@@ -68,10 +71,12 @@
 #include "MPLibrary/MapEvaluators/ConditionalEvaluator.h"
 #include "MPLibrary/MapEvaluators/GroupQuery.h"
 #include "MPLibrary/MapEvaluators/LazyQuery.h"
+#include "MPLibrary/MapEvaluators/MinimumDistanceEvaluator.h"
 #include "MPLibrary/MapEvaluators/PrintMapEvaluation.h"
 #include "MPLibrary/MapEvaluators/QueryMethod.h"
 #include "MPLibrary/MapEvaluators/SIPPMethod.h"
 #include "MPLibrary/MapEvaluators/TimeEvaluator.h"
+#include "MPLibrary/MapEvaluators/NegateEvaluator.h"
 
 // mp strategies includes
 #include "MPLibrary/MPStrategies/AdaptiveRRT.h"
@@ -137,23 +142,25 @@ struct MPTraits {
       AlwaysTrueValidity<MPTraits>,
       ComposeValidity<MPTraits>,
       ComposeCollision<MPTraits>,
+      ObstacleClearanceValidity<MPTraits>
       TerrainValidityChecker<MPTraits>,
       TopologicalMapValidity<MPTraits>>
       ValidityCheckerMethodList;
 
   // types of neighborhood finders available in our world
   typedef boost::mpl::list<
-      BruteForceNF<MPTraits>>
-      NeighborhoodFinderMethodList;
+    BruteForceNF<MPTraits>,
+    RandomNF<MPTraits>
+      > NeighborhoodFinderMethodList;
 
   // types of samplers available in our world
   typedef boost::mpl::list<
-      BridgeTestSampler<MPTraits>,
-      MixSampler<MPTraits>,
-      ObstacleBasedSampler<MPTraits>,
-      UniformRandomSampler<MPTraits>,
-      GaussianSampler<MPTraits>>
-      SamplerMethodList;
+    BridgeTestSampler<MPTraits>,
+    MixSampler<MPTraits>,
+    ObstacleBasedSampler<MPTraits>,
+    UniformRandomSampler<MPTraits>,
+    GaussianSampler<MPTraits>
+      > SamplerMethodList;
 
   // types of local planners available in our world
   typedef boost::mpl::list<
@@ -163,8 +170,13 @@ struct MPTraits {
 
   // types of extenders avaible in our world
   typedef boost::mpl::list<
-      BasicExtender<MPTraits>>
-      ExtenderMethodList;
+    BasicExtender<MPTraits>,
+    RotationThenTranslation<MPTraits>
+      > ExtenderMethodList;
+
+  //types of path smoothing available in our world
+  typedef boost::mpl::list<
+      > PathModifierMethodList;
 
   // types of path smoothing available in our world
   typedef boost::mpl::list<> PathModifierMethodList;
@@ -190,6 +202,8 @@ struct MPTraits {
       ComposeEvaluator<MPTraits>,
       ConditionalEvaluator<MPTraits>,
       LazyQuery<MPTraits>,
+      MinimumDistanceEvaluator<MPTraits>,
+      NegateEvaluator<MPTraits>,
       PrintMapEvaluation<MPTraits>,
       QueryMethod<MPTraits>,
       SIPPMethod<MPTraits>,

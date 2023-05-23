@@ -51,7 +51,8 @@
     </ValidityCheckers>
 
     <NeighborhoodFinders>
-      <BruteForceNF label="BFNF" dmLabel="euclidean" unconnected="false" k="10"/>
+      <BruteForceNF label="BFNF" dmLabel="euclidean" unconnected="false" k="3"/>
+      <RandomNF label="RandomNF" dmLabel="euclidean" unconnected="false" k="3"/>
       <BruteForceNF label="Nearest" dmLabel="euclidean" unconnected="false"
         k="1"/>
       <BruteForceNF label="BFNFAll" dmLabel="euclidean" k="0"/>
@@ -92,7 +93,7 @@
 
     <Connectors>
       <NeighborhoodConnector label="Closest" debug="true"
-        nfLabel="BFNF" lpLabel="sl" checkIfSameCC="false"/>
+        nfLabel="RandomNF" lpLabel="sl" checkIfSameCC="false"/>
       <NeighborhoodConnector label="ToggleConnect" nfLabel="BFNF" lpLabel="sl"
         maxFailures="1" checkIfSameCC="false"/>
       <NeighborhoodConnector label="ClosestAlwaysTrue" nfLabel="BFNF"
