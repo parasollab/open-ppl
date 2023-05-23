@@ -29,20 +29,25 @@
 #include "Testing/MPLibrary/ValidityCheckers/AlwaysTrueValidityTest.h"
 #include "Testing/MPLibrary/ValidityCheckers/CollisionDetection/BoundingSpheresCollisionDetectionTest.h"
 #include "Testing/MPLibrary/ValidityCheckers/CollisionDetection/InsideSpheresCollisionDetectionTest.h"
+#include "Testing/MPLibrary/ValidityCheckers/TerrainValidityCheckerTest.h"
 
 // neighborhood finder includes
 #include "Testing/MPLibrary/NeighborhoodFinders/BruteForceNFTest.h"
+#include "Testing/MPLibrary/NeighborhoodFinders/RandomNFTest.h"
 
 // sampler includes
 #include "Testing/MPLibrary/Samplers/BridgeTestSamplerTest.h"
+#include "Testing/MPLibrary/Samplers/MixSamplerTest.h"
 #include "Testing/MPLibrary/Samplers/ObstacleBasedSamplerTest.h"
 #include "Testing/MPLibrary/Samplers/UniformRandomSamplerTest.h"
 
 // local planner includes
 #include "Testing/MPLibrary/LocalPlanners/StraightLineTest.h"
+#include "Testing/MPLibrary/LocalPlanners/HierarchicalLPTest.h"
 
 // extenders includes
 #include "Testing/MPLibrary/Extenders/BasicExtenderTest.h"
+#include "Testing/MPLibrary/Extenders/RotationThenTranslationTest.h"
 
 // path smoothing includes
 
@@ -117,31 +122,35 @@ struct MPTraits {
 
   // types of validity checkers available in our world
   typedef boost::mpl::list<
-      AlwaysTrueValidityTest<MPTraits>>
-      ValidityCheckerMethodList;
+      AlwaysTrueValidityTest<MPTraits>,
+      TerrainValidityCheckerTest<MPTraits>
+      > ValidityCheckerMethodList;
 
   // types of neighborhood finders available in our world
   typedef boost::mpl::list<
-      BruteForceNFTest<MPTraits>>
-      NeighborhoodFinderMethodList;
+      BruteForceNFTest<MPTraits>,
+      RandomNFTest<MPTraits>
+      > NeighborhoodFinderMethodList;
 
   // types of samplers available in our world
   typedef boost::mpl::list<
       BridgeTestSamplerTest<MPTraits>,
+      MixSamplerTest<MPTraits>,
       ObstacleBasedSamplerTest<MPTraits>,
       UniformRandomSamplerTest<MPTraits>>
       SamplerMethodList;
 
   // types of local planners available in our world
   typedef boost::mpl::list<
-      // StraightLine<MPTraits>
-      >
-      LocalPlannerMethodList;
+    // StraightLine<MPTraits>
+      HierarchicalLPTest<MPTraits>
+      > LocalPlannerMethodList;
 
   // types of extenders avaible in our world
   typedef boost::mpl::list<
-      BasicExtenderTest<MPTraits>>
-      ExtenderMethodList;
+      BasicExtenderTest<MPTraits>,
+      RotationThenTranslationTest<MPTraits>
+      > ExtenderMethodList;
 
   // types of path smoothing available in our world
   typedef boost::mpl::list<> PathModifierMethodList;
