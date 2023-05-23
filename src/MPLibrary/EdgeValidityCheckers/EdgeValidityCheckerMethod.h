@@ -61,6 +61,14 @@ class EdgeValidityCheckerMethod : public MPBaseObject<MPTraits> {
     }
 
 
+    /// Determines the clearance of the edge given by two VIDs, and assigns it
+    ///   as the weight of the edge
+    /// @param _u The source of the edge
+    /// @param _v The target of the edge
+    /// @return The clearance of the edge
+    /// @note Takes into account weighted obstacles
+    virtual double AssignClearanceWeight(VID _u, VID _v) = 0;
+    
   protected:
     ///@}
     ///@name Internal State
