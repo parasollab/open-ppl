@@ -339,7 +339,7 @@ class Body {
     mutable bool m_worldPolyhedronCached{false}; ///< Is world polyhedron cached?
 
     double m_mass{1};                        ///< Mass of Body
-    double m_weight;                         ///< A mathematical property for 
+    double m_weight{0.0};                    ///< A mathematical property for 
                                              ///< general use
     Matrix3x3 m_moment;                      ///< Moment of Inertia
     GMSPolyhedron::COMAdjust m_comAdjust{GMSPolyhedron::COMAdjust::COM};
