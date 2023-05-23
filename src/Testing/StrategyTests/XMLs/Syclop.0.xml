@@ -6,18 +6,21 @@
 
     <Task label="query" robot="boxy">
       <StartConstraints>
-        <CSpaceConstraint point="0 0 0 0 0 0"/>
+        <CSpaceConstraint point="-1.76356600000000014e+01  -2.67442000000000002e+00   4.06977000000000011e+00   0.00000000000000000e+00   0.00000000000000000e+00   0.00000000000000000e+00"/>
       </StartConstraints>
 
       <GoalConstraints>
-        <CSpaceConstraint point="20 5 10 0.2 0.8 0.5"/>
+        <CSpaceConstraint point="1.29845000000000006e+01   2.67442000000000002e+00   1.14341100000000004e+01   0.00000000000000000e+00   0.00000000000000000e+00   0.00000000000000000e+00"/>
       </GoalConstraints>
+
     </Task>
   </Problem>
 
   <Library>
     <DistanceMetrics>
       <Euclidean label="euclidean"/>
+      <WeightedEuclidean label="euclideanPosition" posWeight="1" rotWeight="0"
+                            velWeight="0" avlWeight="0"/>
     </DistanceMetrics>
 
     <ValidityCheckers>
@@ -43,20 +46,39 @@
     </Extenders>
 
     <MapEvaluators>
-      <RRTQuery label="RRTQuery"
-        nfLabel="Nearest" exLabel="BERO" fullRecreatePath="false" debug="true"/>
+      <TimeEvaluator label="TimeEval" timeout="10"/>
+      <QueryMethod label="Query" debug="false"
+        graphSearchAlg="dijkstras" safeIntervalToolLabel="SI"/>
     </MapEvaluators>
 
     <MPStrategies>
-      <Syclop label="Syclop"
-        numRoots="1" m="1" growthFocus="0.01" dmLabel="euclidean"
-        nfLabel="Nearest" vcLabel="rapid" gtype="UNDIRECTED_TREE" debug="true"
-        extenderLabel="BERO">
-        <Evaluator label="RRTQuery"/>
+      <Syclop label="Syclop" debug="false"
+        querySampler="UniformRandomFree" samplerLabel="UniformRandom"
+        nfLabel="Nearest" extenderLabel="BERO"
+        tmLabel="tm-coarse"
+        growGoals="false" growthFocus="0.01"
+        goalDmLabel="euclideanPosition" goalThreshold="4">
+        <Evaluator label="Query"/>
       </Syclop>
-    </MPStrategies>
 
-    <Solver mpStrategyLabel="Syclop" seed="0" baseFilename="../Scratch/Syclop"/>
+      <ValidationStrategy label="Test" target="Syclop" debug="true">
+        <GoldStandard robot="boxy" type="roadmap"
+          filename="../Outputs/Syclop.0.query.map"/>
+      </ValidationStrategy>
+  </MPStrategies>
+
+    <MPTools>
+      <TetGenDecomposition label="coarse" debug="false" switches="pnqQ"
+        io="read" baseFilename="../Envs/3D/quality"/>
+      <TopologicalMap label="tm-coarse" decompositionLabel="coarse"
+        gridSize="1"/>
+    </MPTools>
+
+    <!-- <Solver mpStrategyLabel="Syclop" seed="0"
+      baseFilename="../Outputs/Syclop" vizmoDebug="true"/> -->
+
+    <Solver mpStrategyLabel="Test" seed="0"
+      baseFilename="../Scratch/Syclop"/> 
 
   </Library>
 
