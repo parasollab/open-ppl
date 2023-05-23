@@ -32,6 +32,7 @@
 #include "MPLibrary/ValidityCheckers/ComposeCollision.h"
 #include "MPLibrary/ValidityCheckers/ObstacleClearanceValidity.h"
 #include "MPLibrary/ValidityCheckers/TerrainValidityChecker.h"
+#include "MPLibrary/ValidityCheckers/TopologicalMapValidity.h"
 
 // neighborhood finder includes
 #include "MPLibrary/NeighborhoodFinders/BruteForceNF.h"
@@ -39,14 +40,14 @@
 
 // sampler includes
 #include "MPLibrary/Samplers/BridgeTestSampler.h"
+#include "MPLibrary/Samplers/GaussianSampler.h"
 #include "MPLibrary/Samplers/MixSampler.h"
 #include "MPLibrary/Samplers/ObstacleBasedSampler.h"
 #include "MPLibrary/Samplers/UniformRandomSampler.h"
-#include "MPLibrary/Samplers/GaussianSampler.h"
 
 // local planner includes
-#include "MPLibrary/LocalPlanners/StraightLine.h"
 #include "MPLibrary/LocalPlanners/HierarchicalLP.h"
+#include "MPLibrary/LocalPlanners/StraightLine.h"
 
 // extenders includes
 #include "MPLibrary/Extenders/BasicExtender.h"
@@ -79,15 +80,15 @@
 
 // mp strategies includes
 #include "MPLibrary/MPStrategies/AdaptiveRRT.h"
-#include "MPLibrary/MPStrategies/GroupPRM.h"
-#include "MPLibrary/MPStrategies/EET.h"
 #include "MPLibrary/MPStrategies/BasicPRM.h"
 #include "MPLibrary/MPStrategies/BasicRRTStrategy.h"
 #include "MPLibrary/MPStrategies/DynamicRegionRRT.h"
 #include "MPLibrary/MPStrategies/DynamicRegionsPRM.h"
-#include "MPLibrary/MPStrategies/Syclop.h"
+#include "MPLibrary/MPStrategies/EET.h"
 #include "MPLibrary/MPStrategies/GroupDecoupledStrategy.h"
+#include "MPLibrary/MPStrategies/GroupPRM.h"
 #include "MPLibrary/MPStrategies/GroupStrategyMethod.h"
+#include "MPLibrary/MPStrategies/Syclop.h"
 #include "MPLibrary/MPStrategies/TogglePRMStrategy.h"
 #include "MPLibrary/MPStrategies/ValidationStrategy.h"
 
@@ -137,13 +138,14 @@ struct MPTraits {
 
   // types of validity checkers available in our world
   typedef boost::mpl::list<
-    CollisionDetectionValidity<MPTraits>,
-    AlwaysTrueValidity<MPTraits>,
-    ComposeValidity<MPTraits>,
-    ComposeCollision<MPTraits>,
-    ObstacleClearanceValidity<MPTraits>
-    TerrainValidityChecker<MPTraits>
-      > ValidityCheckerMethodList;
+      CollisionDetectionValidity<MPTraits>,
+      AlwaysTrueValidity<MPTraits>,
+      ComposeValidity<MPTraits>,
+      ComposeCollision<MPTraits>,
+      ObstacleClearanceValidity<MPTraits>
+      TerrainValidityChecker<MPTraits>,
+      TopologicalMapValidity<MPTraits>>
+      ValidityCheckerMethodList;
 
   // types of neighborhood finders available in our world
   typedef boost::mpl::list<
@@ -162,9 +164,9 @@ struct MPTraits {
 
   // types of local planners available in our world
   typedef boost::mpl::list<
-    StraightLine<MPTraits>,
-    HierarchicalLP<MPTraits>
-      > LocalPlannerMethodList;
+      StraightLine<MPTraits>,
+      HierarchicalLP<MPTraits>>
+      LocalPlannerMethodList;
 
   // types of extenders avaible in our world
   typedef boost::mpl::list<
@@ -210,21 +212,19 @@ struct MPTraits {
 
   // types of motion planning strategies available in our world
   typedef boost::mpl::list<
-    AdaptiveRRT<MPTraits>,
-    GroupPRM<MPTraits>,
-    BasicPRM<MPTraits>,
-    BasicRRTStrategy<MPTraits>,
-    DynamicRegionRRT<MPTraits>,
-    DynamicRegionsPRM<MPTraits>,
-    EET<MPTraits>,
-    GroupDecoupledStrategy<MPTraits>,
-    GroupStrategyMethod<MPTraits>,
-    Syclop<MPTraits>,
-    TogglePRMStrategy<MPTraits>,
-    ValidationStrategy<MPTraits>
-      > MPStrategyMethodList;
-
-
+      AdaptiveRRT<MPTraits>,
+      GroupPRM<MPTraits>,
+      BasicPRM<MPTraits>,
+      BasicRRTStrategy<MPTraits>,
+      DynamicRegionRRT<MPTraits>,
+      DynamicRegionsPRM<MPTraits>,
+      EET<MPTraits>,
+      GroupDecoupledStrategy<MPTraits>,
+      GroupStrategyMethod<MPTraits>,
+      Syclop<MPTraits>,
+      TogglePRMStrategy<MPTraits>,
+      ValidationStrategy<MPTraits>>
+      MPStrategyMethodList;
 };
 
 #endif
