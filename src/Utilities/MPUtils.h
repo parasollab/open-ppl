@@ -18,6 +18,9 @@ using namespace mathtool;
 
 #include "IOUtils.h"
 
+#include <boost/math/special_functions/binomial.hpp>
+#include <boost/math/special_functions/factorials.hpp>
+
 class Cfg;
 class Robot;
 
@@ -184,6 +187,32 @@ ClosestPtOnLineSegment(const CfgType& _ref, const CfgType& _p1,
   else
     return b * (bDotC / bSquared) + _p1;
 }
+
+/*---------------------------- Statistical p-tests --------------------------*/
+
+/// Given a significance level, the number of trials, the number of successes
+/// and the probability of success. Conduct a two-sided p-test.
+/// @param _alpha The reference configuration.
+/// @param _n  The number of trials conducted
+/// @param _k  The number of trial successes
+/// @param _p  The probability of success for the null.
+/// The assumed true value of success
+/// @return If we fail to reject the null (true) 
+/// and if we have enough evidence to reject the null (false).
+bool
+binom_test(double _alpha, size_t _n, size_t _k, double _p);
+
+
+/*---------------------------- Distributions --------------------------*/
+
+/// Given the number of trials, the number of successes, and the probability
+/// of success, returns the probability density function evaluated k.
+/// @param _n The number of trials
+/// @param _k The number of successes we are interested in
+/// @param _p The probability of success
+/// @return   The pdf of a binomial random variable evaluated at binom(n,k)
+double
+binomial(size_t _n, size_t _k, double _p);
 
 /*----------------------------- Other Random Stuff ---------------------------*/
 
