@@ -1,8 +1,8 @@
 #ifndef PMPL_TOPOLOGICAL_MAP_VALIDITY_H
 #define PMPL_TOPOLOGICAL_MAP_VALIDITY_H
 
-#include "MPLibrary/MPTools/TetGenDecomposition.h"
 #include "ValidityCheckerMethod.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Considers configurations valid iff they are 'contained' by a region in a
 /// topological map.
@@ -10,7 +10,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class TopologicalMapValidity : virtual public ValidityCheckerMethod<MPTraits> {
+
  public:
+
   ///@name Local Types
   ///@{
 
@@ -27,17 +29,17 @@ class TopologicalMapValidity : virtual public ValidityCheckerMethod<MPTraits> {
   ///@}
   ///@name ValidityChecker Interface
   ///@{
-  void setTMLabel(string label) {
-    m_tmLabel = label;
-  }
+
   virtual bool IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo,
                            const std::string& _caller) override;
 
   ///@}
 
  protected:
+
   ///@name Internal State
   ///@{
+  
   std::string m_tmLabel;  ///< The topological map label.
 
   ///@}
@@ -47,13 +49,13 @@ class TopologicalMapValidity : virtual public ValidityCheckerMethod<MPTraits> {
 
 template <typename MPTraits>
 TopologicalMapValidity<MPTraits>::
-    TopologicalMapValidity() {
+TopologicalMapValidity() {
   this->SetName("TopologicalMapValidity");
 }
 
 template <typename MPTraits>
 TopologicalMapValidity<MPTraits>::
-    TopologicalMapValidity(XMLNode& _node) : ValidityCheckerMethod<MPTraits>(_node) {
+TopologicalMapValidity(XMLNode& _node) : ValidityCheckerMethod<MPTraits>(_node) {
   this->SetName("TopologicalMapValidity");
 
   m_tmLabel = _node.Read("tmLabel", false, "", "The topological map to use.");
@@ -63,9 +65,11 @@ TopologicalMapValidity<MPTraits>::
 
 template <typename MPTraits>
 bool TopologicalMapValidity<MPTraits>::
-    IsValidImpl(CfgType& _cfg, CDInfo&, const std::string& _caller) {
+IsValidImpl(CfgType& _cfg, CDInfo&, const std::string& _caller) {
+
   this->GetStatClass()->IncCfgIsColl(_caller);
   auto tm = this->GetMPTools()->GetTopologicalMap(m_tmLabel);
+
   // Position the robots within the environment.
   _cfg.ConfigureRobot();
 

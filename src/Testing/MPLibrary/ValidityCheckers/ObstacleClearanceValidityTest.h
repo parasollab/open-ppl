@@ -35,6 +35,7 @@ class ObstacleClearanceValidityTest : virtual public ObstacleClearanceValidity<M
         const std::string& _callName) override;
 
     virtual std::vector<std::pair<bool,CfgType>> IndividualCfgValidity() override;
+
     ///@}
 
   private:
@@ -47,9 +48,6 @@ class ObstacleClearanceValidityTest : virtual public ObstacleClearanceValidity<M
     virtual TestResult GroupCfgValidityTest() override;
 
     ///@}
-
-    //using ObstacleClearanceValidity<MPTraits>::m_name;
-    template<typename T, typename U> friend class MethodSet;
 
 };
 

@@ -18,6 +18,8 @@ class NegateEvaluator : virtual public MapEvaluatorMethod<MPTraits> {
 
     NegateEvaluator();
 
+    NegateEvaluator(const std::string& _meLabel);
+
     NegateEvaluator(XMLNode& _node);
 
     virtual ~NegateEvaluator() = default;
@@ -36,7 +38,7 @@ class NegateEvaluator : virtual public MapEvaluatorMethod<MPTraits> {
 
     ///@}
 
-  private:
+  protected:
 
     ///@name Internal State
     ///@{
@@ -53,6 +55,15 @@ template <typename MPTraits>
 NegateEvaluator<MPTraits>::
 NegateEvaluator() {
   this->SetName("NegateEvaluator");
+}
+
+
+template <typename MPTraits>
+NegateEvaluator<MPTraits>::
+NegateEvaluator(const std::string& _meLabel) {
+  this->SetName("NegateEvaluator");
+
+  m_meLabel = _meLabel;
 }
 
 

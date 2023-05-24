@@ -1,11 +1,12 @@
 #ifndef PPL_TOPOLOGICAL_MAP_VALIDITY_TEST_H_
 #define PPL_TOPOLOGICAL_MAP_VALIDITY_TEST_H_
 
-// #include "MPLibrary/ValidityCheckers/AlwaysTrueValidity.h"
 #include "MPLibrary/ValidityCheckers/TopologicalMapValidity.h"
 #include "ValidityCheckerMethodTest.h"
 
-/** @TODO
+#include "MPLibrary/MPTools/TetGenDecomposition.h"
+
+/**
  * Read in a topological map form 3d env
  * Use that to construct a topological map validilty chekcer
  * Sample two points, one that's valid and one that's not
@@ -52,31 +53,28 @@ class TopologicalMapValidityTest : virtual public TopologicalMapValidity<MPTrait
 
   ///@}
 
-  // using AlwaysTrueValidity<MPTraits>::m_name;
-  template <typename T, typename U>
-  friend class MethodSet;
 };
 
 /*--------------------------- Construction ---------------------------*/
 
 template <typename MPTraits>
 TopologicalMapValidityTest<MPTraits>::
-    TopologicalMapValidityTest() : TopologicalMapValidity<MPTraits>() {}
+TopologicalMapValidityTest() : TopologicalMapValidity<MPTraits>() {}
 
 template <typename MPTraits>
 TopologicalMapValidityTest<MPTraits>::
-    TopologicalMapValidityTest(XMLNode& _node) : ValidityCheckerMethod<MPTraits>(_node), TopologicalMapValidity<MPTraits>(_node) {
-}
+TopologicalMapValidityTest(XMLNode& _node) : ValidityCheckerMethod<MPTraits>(_node), 
+                                             TopologicalMapValidity<MPTraits>(_node) {}
 
 template <typename MPTraits>
 TopologicalMapValidityTest<MPTraits>::
-    ~TopologicalMapValidityTest() {}
+~TopologicalMapValidityTest() {}
 
 /*---------------------------- Interface -----------------------------*/
 
 template <typename MPTraits>
 bool TopologicalMapValidityTest<MPTraits>::
-    IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo, const std::string& _callName) {
+IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo, const std::string& _callName) {
   return TopologicalMapValidity<MPTraits>::IsValidImpl(_cfg, _cdInfo, _callName);
 }
 
@@ -85,7 +83,7 @@ bool TopologicalMapValidityTest<MPTraits>::
 template <typename MPTraits>
 typename TopologicalMapValidityTest<MPTraits>::TestResult
 TopologicalMapValidityTest<MPTraits>::
-    IndividualCfgValidityTest() {
+IndividualCfgValidityTest() {
 
   // Making workplace decomposition
   auto decomposer = new TetGenDecomposition();
@@ -146,7 +144,7 @@ TopologicalMapValidityTest<MPTraits>::
 template <typename MPTraits>
 typename TopologicalMapValidityTest<MPTraits>::TestResult
 TopologicalMapValidityTest<MPTraits>::
-    GroupCfgValidityTest() {
+GroupCfgValidityTest() {
   bool passed = true;
   std::string message = "GroupCfgValidity not implemented for this test\n";
   return std::make_pair(passed, message);

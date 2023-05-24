@@ -79,6 +79,7 @@ MinimumDistanceEvaluatorTest<MPTraits>::
     MainFunctionTest() {
   bool passed = true;
   std::string message;
+  
   // // Test Individual Robot Functionality
   SingleSetup();
 

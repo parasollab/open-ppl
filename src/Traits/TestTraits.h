@@ -127,7 +127,7 @@ struct MPTraits {
   // types of validity checkers available in our world
   typedef boost::mpl::list<
       AlwaysTrueValidityTest<MPTraits>,
-      ObstacleClearanceValidityTest<MPTraits>
+      ObstacleClearanceValidityTest<MPTraits>,
       TerrainValidityCheckerTest<MPTraits>,
       TopologicalMapValidityTest<MPTraits>>
       ValidityCheckerMethodList;
@@ -159,7 +159,8 @@ struct MPTraits {
       > ExtenderMethodList;
 
   // types of path smoothing available in our world
-  typedef boost::mpl::list<> PathModifierMethodList;
+  typedef boost::mpl::list<
+      > PathModifierMethodList;
 
   // types of connectors available in our world
   typedef boost::mpl::list<

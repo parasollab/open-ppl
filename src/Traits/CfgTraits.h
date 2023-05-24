@@ -142,7 +142,7 @@ struct MPTraits {
       AlwaysTrueValidity<MPTraits>,
       ComposeValidity<MPTraits>,
       ComposeCollision<MPTraits>,
-      ObstacleClearanceValidity<MPTraits>
+      ObstacleClearanceValidity<MPTraits>,
       TerrainValidityChecker<MPTraits>,
       TopologicalMapValidity<MPTraits>>
       ValidityCheckerMethodList;
@@ -177,9 +177,6 @@ struct MPTraits {
   //types of path smoothing available in our world
   typedef boost::mpl::list<
       > PathModifierMethodList;
-
-  // types of path smoothing available in our world
-  typedef boost::mpl::list<> PathModifierMethodList;
 
   // types of connectors available in our world
   typedef boost::mpl::list<
