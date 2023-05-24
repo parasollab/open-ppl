@@ -57,9 +57,11 @@ class PathEvaluator : public MapEvaluatorMethod<MPTraits> {
     private:
 
     double GetMinClearance(Path* path);
+    double GetPathLength(Path* path);
 
     std::string m_cuLabel{};
     std::string m_ievcLabel{};
+    std::string m_dmLabel{};
 
     // Why copy/paste when you could write a million helper functions instead?
     void AddToStats(std::string key, int value);
@@ -87,6 +89,8 @@ PathEvaluator(XMLNode& _node) : MapEvaluatorMethod<MPTraits>(_node) {
   m_cuLabel = _node.Read("cuLabel", false, "", "Clearance Utility label");
   m_ievcLabel = _node.Read("ievcLabel", false, "", "Intermediate Edge VC label");
 //   m_scLabel = _node.Read("scLabel", false, "", "Segment Clearance Tool label");
+  m_dmLabel = _node.Read("dmLabel", false, "", "Distance Metric label");
+
 }
 
 /*------------------------- MPBaseObject Interface ---------------------------*/
@@ -114,9 +118,14 @@ operator()() {
         return true;
     }
 
-    // Path length and size
+    // Edge Weight and size
     AddToStats("TotalEdgeWeight", path->Length());
     AddToStats("PathSize", path->Size());
+
+    // Actual Path Length
+    if (!m_dmLabel.empty()) {
+        AddToStats("Actual Path Length", GetPathLength(path));
+    }
 
     // Clearance (pure)
     if (!m_cuLabel.empty()) {
@@ -148,6 +157,27 @@ operator()() {
 }
 
 /*--------------------------- Helper Methods ---------------------------------*/
+
+
+template <typename MPTraits>
+double
+PathEvaluator<MPTraits>::
+GetPathLength(Path* _path) {  
+  auto r = this->GetRoadmap();
+  auto dm = this->GetDistanceMetric(m_dmLabel);
+  auto vids = _path->VIDs();
+
+  double dist = 0;
+  for(auto start = vids.begin(); start + 1 < vids.end(); ++start) {
+      auto cfg1 = r->GetVertex(*start);
+      auto cfg2 = r->GetVertex(*(start+1));
+      
+      dist += dm->Distance(cfg1, cfg2);
+  }
+
+  return dist;
+}
+
 
 
 template <typename MPTraits>
