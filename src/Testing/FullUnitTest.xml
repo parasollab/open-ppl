@@ -142,6 +142,7 @@
       <AlwaysTrueValidity label="alwaysTrue"/>
       <ObstacleClearance label="obst_clrnc" clearanceThreshold="2" vcLabel="pqp_solid"/>
       <TerrainValidity label="terrainValidity"/>
+      <NodeClearanceValidity label="ncValidity" delta="3" nfLabel="Nearest4"/>
       <TopologicalMapValidity label="topologicalMapValidity"/>
       
       <!-- Test not yet added -->

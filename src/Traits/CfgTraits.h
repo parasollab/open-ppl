@@ -30,6 +30,7 @@
 #include "MPLibrary/ValidityCheckers/CollisionDetectionValidity.h"
 #include "MPLibrary/ValidityCheckers/ComposeValidity.h"
 #include "MPLibrary/ValidityCheckers/ComposeCollision.h"
+#include "MPLibrary/ValidityCheckers/NodeClearanceValidity.h"
 #include "MPLibrary/ValidityCheckers/ObstacleClearanceValidity.h"
 #include "MPLibrary/ValidityCheckers/TerrainValidityChecker.h"
 #include "MPLibrary/ValidityCheckers/TopologicalMapValidity.h"
@@ -142,6 +143,7 @@ struct MPTraits {
       AlwaysTrueValidity<MPTraits>,
       ComposeValidity<MPTraits>,
       ComposeCollision<MPTraits>,
+      NodeClearanceValidity<MPTraits>,
       ObstacleClearanceValidity<MPTraits>,
       TerrainValidityChecker<MPTraits>,
       TopologicalMapValidity<MPTraits>>
