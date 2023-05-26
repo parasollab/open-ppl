@@ -27,6 +27,7 @@
 // validity checker includes
 #include "MPLibrary/ValidityCheckers/CollisionDetectionValidity.h"
 #include "Testing/MPLibrary/ValidityCheckers/AlwaysTrueValidityTest.h"
+#include "Testing/MPLibrary/ValidityCheckers/NodeClearanceValidityTest.h"
 #include "Testing/MPLibrary/ValidityCheckers/ObstacleClearanceValidityTest.h"
 #include "Testing/MPLibrary/ValidityCheckers/CollisionDetection/BoundingSpheresCollisionDetectionTest.h"
 #include "Testing/MPLibrary/ValidityCheckers/CollisionDetection/InsideSpheresCollisionDetectionTest.h"
@@ -127,6 +128,7 @@ struct MPTraits {
   // types of validity checkers available in our world
   typedef boost::mpl::list<
       AlwaysTrueValidityTest<MPTraits>,
+      NodeClearanceValidityTest<MPTraits>,
       ObstacleClearanceValidityTest<MPTraits>,
       TerrainValidityCheckerTest<MPTraits>,
       TopologicalMapValidityTest<MPTraits>>
