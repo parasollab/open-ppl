@@ -6,10 +6,8 @@
 #include <string>
 
 ////////////////////////////////////////////////////////////////////////////////
-/// A stop-watch like evaluator that returns false after a set amount of time.
-///
-/// This class maintains a separate clock for each instance. For a global clock
-/// use ConditionalEvaluator with the TimeMetric.
+/// This class calculates various metrics for the path found by another MapEval.
+/// Note: this class does not run Dijkstra's.  
 ///
 /// @ingroup MapEvaluators
 ////////////////////////////////////////////////////////////////////////////////
@@ -63,7 +61,7 @@ class PathEvaluator : public MapEvaluatorMethod<MPTraits> {
     std::string m_ievcLabel{};
     std::string m_dmLabel{};
 
-    // Why copy/paste when you could write a million helper functions instead?
+    // Why copy/paste when you could write a bunch of helper functions instead?
     void AddToStats(std::string key, int value);
     void AddToStats(std::string key, double value);
     void AddToStats(std::string key, bool value);
@@ -138,19 +136,11 @@ operator()() {
         AddToStats("MaxClearance", cs.m_max);
     } 
 
-    // TODO: Risk-weighted path clearance.
-
+    // Risk-weighted path clearance.
     if (!m_ievcLabel.empty()) {
         double minClearance = GetMinClearance(path);
         AddToStats("Min Clearance", minClearance);
     }
-
-    // TODO: Sensitivity to rotation.
-
-    // TODO: Min Clearance on ideal rotation.
-
-    // TODO: x-sectional min/average width.
-
 
     return true;
 
