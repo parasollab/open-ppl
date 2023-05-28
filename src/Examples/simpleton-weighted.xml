@@ -94,7 +94,7 @@
     </Metrics>
 
     <MapEvaluators>
-      <PathEvaluator label="PE" ievcLabel="IEVC"/>
+      <PathEvaluator label="PE" ievcLabel="IEVC" dmLabel="euclidean"/>
 
       <ClearanceQuery label="ClearanceQuery" eivcLabel="IEVC"/>
 
