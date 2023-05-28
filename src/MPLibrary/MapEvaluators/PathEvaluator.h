@@ -54,8 +54,11 @@ class PathEvaluator : public MapEvaluatorMethod<MPTraits> {
 
     private:
 
-    double GetMinClearance(Path* path);
-    double GetPathLength(Path* path);
+    /// Returns the Min Clearance of the path. 
+    double GetMinClearance(const Path* path);
+
+    /// Returns the total path length (using the distance metric).
+    double GetPathLength(const Path* path);
 
     std::string m_cuLabel{};
     std::string m_ievcLabel{};
@@ -107,7 +110,7 @@ template <typename MPTraits>
 bool
 PathEvaluator<MPTraits>::
 operator()() {
-    auto path = this->GetMPSolution()->GetPath();
+    const Path* path = this->GetMPSolution()->GetPath();
 
     if(!path || path->Empty()) {
         if(this->m_debug)
@@ -148,11 +151,12 @@ operator()() {
 
 /*--------------------------- Helper Methods ---------------------------------*/
 
-
 template <typename MPTraits>
 double
 PathEvaluator<MPTraits>::
-GetPathLength(Path* _path) {  
+GetPathLength(const Path* _path) {  
+  assert(!m_dmLabel.empty());
+
   auto r = this->GetRoadmap();
   auto dm = this->GetDistanceMetric(m_dmLabel);
   auto vids = _path->VIDs();
@@ -168,12 +172,11 @@ GetPathLength(Path* _path) {
   return dist;
 }
 
-
-
 template <typename MPTraits>
 double
 PathEvaluator<MPTraits>::
-GetMinClearance(Path* _path) {  
+GetMinClearance(const Path* _path) {  
+  assert(!m_ievcLabel.empty());
 
   auto vc = this->GetEdgeValidityChecker(m_ievcLabel);
   auto vids = _path->VIDs();
@@ -190,6 +193,7 @@ GetMinClearance(Path* _path) {
   return minClearance;
 }
 
+/*-------------------- Add to Stats Methods --------------------------*/
     
 template <typename MPTraits>
 void
