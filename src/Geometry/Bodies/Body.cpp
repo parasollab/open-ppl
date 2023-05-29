@@ -776,6 +776,7 @@ Read(std::istream& _is, CountingStreamBuffer& _cbs) {
           throw ParseException(_cbs.Where(), "Invalid specification of texture.");
       }
     }
+    // Parse weight:
     else if(c == 'w') {
       _is >> c; //read w(
       if(c != '(')

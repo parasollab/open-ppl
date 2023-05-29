@@ -87,21 +87,9 @@ operator()() {
       CfgType c1 = r->GetVertex(pathVIDs[i]);
       CfgType c2 = r->GetVertex(pathVIDs[i+1]);
 
-
       for (auto &col: collisions) {
         collisionIndicators[col] = true;
       }
-
-      // std::cout << std::setprecision(4);
-
-      // cout << "the edge (" << c1[0] << ", " << c1[1] <<", " << c1[2] <<") --> (" << c2[0] << ", " << c2[1] <<", " << c2[2] <<")" << endl;
-
-      // cout << "collides with obsts: ";
-      // for (auto &col: collisions) {
-      //   cout << col << " ";
-      // }
-      // cout << endl;
-
     }
   }
 

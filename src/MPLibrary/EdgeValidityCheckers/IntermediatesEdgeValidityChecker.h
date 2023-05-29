@@ -33,18 +33,18 @@ class IntermediatesEdgeValidityChecker : public EdgeValidityCheckerMethod<MPTrai
     /// @param _u The source of the edge to validate
     /// @param _v The target of the edge to validate
     /// @param _collisions An empty container that will be populated with
-    ///   a list of obstacles with which the edge collides.
+    ///   a list of indices of obstacles with which the edge collides.
     /// @return True if all of the intermediate cfgs are in free space.
     bool ValidateEdge(VID _u, VID _v, vector<size_t>& _collisions) override;
     bool ValidateEdge(CfgType& _c1, CfgType& _c2, vector<size_t>& _collisions) override;
 
-    /// Determines the clearance of the edge given by two VIDs, and assigns it
-    ///   as the weight of the edge
+    /// Determines the clearance of the edge given by two VIDs.
     /// @param _u The source of the edge
     /// @param _v The target of the edge
     /// @return The clearance of the edge
     /// @note Takes into account weighted obstacles
-    double AssignClearanceWeight(VID _u, VID _v);
+    double EdgeWeightedClearance(VID _u, VID _v);
+    double EdgeWeightedClearance(CfgType& _c1, CfgType& _c2);
 
 
   private:
@@ -53,13 +53,16 @@ class IntermediatesEdgeValidityChecker : public EdgeValidityCheckerMethod<MPTrai
     ///@{
 
 
-    /// Checks a set of intermediate cfgs for collisions, and populates the collisions
-    ///   vector with the indices of obstacles in collision with these cfgs.
+    /// Calls a collision detector for a set of intermediate cfgs , and can 
+    ///   populate the collisions vector with the indices of obstacles in collision
+    ///   with these cfgs or report the clearance.
     /// @param _intermediates A vector of intermediate cfgs.
     /// @param _collisions A vector to be populated with the indices of obstacles in collision
     ///   with the cfgs.
+    /// @return -/+ 1.0 to report invalid/valid if used for collision reporting, and
+    ///   otherwise returns the weighted clearance of the edge.
     /// @note Clears the vector _collisions before populating it
-    bool ReportIntermediateCollisions(vector<CfgType>& _intermediates, vector<size_t>& _collisions);
+    double HandleIntermediates(vector<CfgType>& _intermediates, vector<size_t>& _collisions, bool _reportClearance = false);
 
     /// @todo Maybe can get a nicer implementation using a clearance map of CDInfo
     /// Iterates over a set of intermediates in order to find the minimum weighted clearance
@@ -132,7 +135,9 @@ ValidateEdge(VID _source, VID _target, vector<size_t>& _collisions) {
       throw RunTimeException(WHERE, "Edge local planner did not provide intermediates.\
                                             Consider overriding edge local planners.");
 
-    return ReportIntermediateCollisions(intermediates, _collisions);
+    bool res = (HandleIntermediates(intermediates, _collisions) > 0) ? true : false;
+
+    return res;
   }
 
 }
@@ -149,14 +154,17 @@ ValidateEdge(CfgType& _c1, CfgType& _c2, vector<size_t>& _collisions) {
 
   vector<CfgType> intermediates = lp->BlindPath({_c1, _c2}, env->GetPositionRes(), env->GetOrientationRes());
   
-  return ReportIntermediateCollisions(intermediates, _collisions);
+  bool res = (HandleIntermediates(intermediates, _collisions) > 0) ? true : false;
+
+  return res;
 
 }
+
 
 template <typename MPTraits>
 double
 IntermediatesEdgeValidityChecker<MPTraits>::
-AssignClearanceWeight(VID _u, VID _v) {
+EdgeWeightedClearance(VID _u, VID _v) {
 
   vector<CfgType> intermediates;
 
@@ -167,11 +175,7 @@ AssignClearanceWeight(VID _u, VID _v) {
     CfgType c1 = r->GetVertex(_u);
     CfgType c2 = r->GetVertex(_v);
 
-    LocalPlannerMethod<MPTraits>* lp = this->GetLocalPlanner(m_lpLabel);
-
-    Environment* env = this->GetEnvironment();
-
-    intermediates = lp->BlindPath({c1, c2}, env->GetPositionRes(), env->GetOrientationRes());
+    return EdgeWeightedClearance(c1, c2);
     
   }
 
@@ -183,13 +187,9 @@ AssignClearanceWeight(VID _u, VID _v) {
                                             Consider overriding edge local planners.");
   }
 
-  double clearance = intermediateClearance(intermediates);
+  vector<size_t> collisions = {};
 
-  EI edge;
-
-  r->GetEdge(_u, _v, edge);
-
-  edge->property().SetWeight(clearance);
+  double clearance = HandleIntermediates(intermediates, collisions, true);
 
   return clearance;
 }
@@ -198,62 +198,36 @@ AssignClearanceWeight(VID _u, VID _v) {
 template <typename MPTraits>
 double
 IntermediatesEdgeValidityChecker<MPTraits>::
-intermediateClearance(vector<CfgType>& _intermediates) {
+EdgeWeightedClearance(CfgType& _c1, CfgType& _c2) {
 
-  double clearance = MAX_DBL;
+  LocalPlannerMethod<MPTraits>* lp = this->GetLocalPlanner(m_lpLabel);
 
-  /// @todo pqp_solid is currently the only implemented cllision checking validity
-  /// checker supporting clearance queries 
-  ValidityCheckerMethod<MPTraits>* vc = this->GetValidityChecker("pqp_solid");
+  Environment* env = this->GetEnvironment();
 
-  auto cd = dynamic_cast<CollisionDetectionValidityMethod<MPTraits>*>(vc);
+  vector<CfgType> intermediates = lp->BlindPath({_c1, _c2}, env->GetPositionRes(), env->GetOrientationRes());
 
-  auto env = this->GetEnvironment();
-
-  const string callee = this->GetNameAndLabel() + "::IntermediatesEdgeValidityChecker";
-
-  size_t numObst = env->NumObstacles();
-
-  CDInfo obstInfo;
-
-  for (auto &cfg: _intermediates) {
-
-    auto robot = cfg.GetRobot();
-    cfg.ConfigureRobot();
-
-    const MultiBody* robotMultiBody = robot->GetMultiBody();
-
-    for (size_t i = 0; i < numObst; i++) {
-
-      obstInfo.ResetVars(true);
-
-      MultiBody* obstMultiBody = env->GetObstacle(i);
-
-      cd->IsMultiBodyCollision(obstInfo, robotMultiBody, obstMultiBody, callee);
-
-      double weightedNewClearance = std::max(obstInfo.m_minDist - obstMultiBody->GetWeight(), 0.0);
-
-      clearance = std::min(weightedNewClearance, clearance); 
-
-    }
-    
-  }
+  vector<size_t> collisions = {};
+  
+  double clearance = HandleIntermediates(intermediates, collisions, true);
 
   return clearance;
+
 }
 
 
-
 template <typename MPTraits>
-bool
+double
 IntermediatesEdgeValidityChecker<MPTraits>::
-ReportIntermediateCollisions(vector<CfgType>& _intermediates, vector<size_t>& _collisions) {
+HandleIntermediates(vector<CfgType>& _intermediates, vector<size_t>& _collisions, bool _reportClearance) {
 
-  bool res = true;
+  double res = 1.0;
 
   _collisions.clear();
 
-  ValidityCheckerMethod<MPTraits>* vc = this->GetValidityChecker(m_vcLabel);
+  /// @todo pqp_solid is currently the only implemented cllision checking validity
+  /// checker supporting clearance queries 
+  ValidityCheckerMethod<MPTraits>* vc = (_reportClearance)? this->GetValidityChecker("pqp_solid") :
+                                                            this->GetValidityChecker(m_vcLabel);
 
   // This is the reason why a collision detection validity checker is required
   auto cd = dynamic_cast<CollisionDetectionValidityMethod<MPTraits>*>(vc);
@@ -278,24 +252,35 @@ ReportIntermediateCollisions(vector<CfgType>& _intermediates, vector<size_t>& _c
     const MultiBody* robotMultiBody = robot->GetMultiBody();
 
     for (size_t i = 0; i < numObst; i++) {
-
       obstInfo.ResetVars(true);
 
-      inCollision = cd->IsMultiBodyCollision(obstInfo,
-        robotMultiBody, env->GetObstacle(i), callee);
+      MultiBody* obstMultiBody = env->GetObstacle(i);
 
-      if (inCollision){
-        collisionIndicators[i] = true;
-        res = false;
+      inCollision = cd->IsMultiBodyCollision(obstInfo, robotMultiBody, obstMultiBody, callee);
+
+
+      if (_reportClearance){
+        double weightedNewClearance = std::max(obstInfo.m_minDist - obstMultiBody->GetWeight(), 0.0);
+
+        res = std::min(weightedNewClearance, res); 
       }
-    }
-    
+      else {
+        if (inCollision){
+          collisionIndicators[i] = true;
+          res = -1.0;
+        }
+      }
+    }  
   }
 
-  for (size_t i = 0; i < numObst; i++){
-    if (collisionIndicators[i])
-      _collisions.push_back(i);
+    
+  if (!_reportClearance) { 
+    for (size_t i = 0; i < numObst; i++){
+      if (collisionIndicators[i])
+        _collisions.push_back(i);
+    }
   }
+
   return res;
 
 }

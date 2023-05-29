@@ -481,7 +481,7 @@ GetBaseMovementType() const noexcept {
 double
 MultiBody::
 GetWeight() const {
-  double res = 0;
+  double res = 0.0;
   for (auto body : m_bodies) {
     res += body.GetWeight();
   }

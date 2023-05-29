@@ -8,7 +8,7 @@
 /// @Edge validity checkers validate an edge of the roadmap.
 ///
 /// EdgeValidityCheckerMethod has one main method, @c ValidateEdge that takes
-/// either two cfgs or to VIDs and validates the edge between them.
+/// either two Cfgs or two VIDs and validates the edge between them.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class EdgeValidityCheckerMethod : public MPBaseObject<MPTraits> {
@@ -67,7 +67,10 @@ class EdgeValidityCheckerMethod : public MPBaseObject<MPTraits> {
     /// @param _v The target of the edge
     /// @return The clearance of the edge
     /// @note Takes into account weighted obstacles
-    virtual double AssignClearanceWeight(VID _u, VID _v) = 0;
+    virtual double EdgeWeightedClearance(VID _u, VID _v) = 0;
+
+    /// Cfg version of EdgeWeightedClearance 
+    virtual double EdgeWeightedClearance(CfgType& _c1, CfgType& _c2) = 0;
     
   protected:
     ///@}
