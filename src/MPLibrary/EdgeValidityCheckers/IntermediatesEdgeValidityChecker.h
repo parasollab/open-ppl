@@ -220,7 +220,7 @@ double
 IntermediatesEdgeValidityChecker<MPTraits>::
 HandleIntermediates(vector<CfgType>& _intermediates, vector<size_t>& _collisions, bool _reportClearance) {
 
-  double res = 1.0;
+  double res = _reportClearance ? MAX_DBL : 1.0;
 
   _collisions.clear();
 
@@ -257,7 +257,6 @@ HandleIntermediates(vector<CfgType>& _intermediates, vector<size_t>& _collisions
       MultiBody* obstMultiBody = env->GetObstacle(i);
 
       inCollision = cd->IsMultiBodyCollision(obstInfo, robotMultiBody, obstMultiBody, callee);
-
 
       if (_reportClearance){
         double weightedNewClearance = std::max(obstInfo.m_minDist - obstMultiBody->GetWeight(), 0.0);
