@@ -449,6 +449,10 @@ QueryPath(SemanticTask* _task, const size_t _startTime,
              LRand(),this->GetNameAndLabel()+"::"+_task->GetLabel());
 
   auto path = solution->GetGroupPath(group);
+  std::cout << "found path: " << path->VIDs() << std::endl;
+
+  // TODO For some reason, this needs to be called or else weird stuff happens...
+  std::cout << "times: " << path->TimeSteps() << std::endl;
   if(path->VIDs().size() == 0)
     return nullptr;
 
@@ -770,7 +774,94 @@ ScheduledCBS::
 ConvertToPlan(const Node& _node, Plan* _plan) {
   _plan->SetCost(_node.cost);
 
+  for(auto kv : _node.solutionMap) {
+    std::cout << kv.first->GetLabel() << " final path: " << kv.second->VIDs() << std::endl;
+    std::cout << kv.first->GetLabel() << " wait times: " << kv.second->GetWaitTimes() << std::endl;
+    for(auto d : kv.first->GetDependencies()) {
+      for(auto dd : d.second) {
+        std::cout << "Dependency: " << dd->GetLabel() << std::endl;
+      }
+    }
+  }
+
   //TODO::Convert node to plan
+
+  // Topological sort semantic tasks in solution map by dependency
+  std::unordered_set<SemanticTask*> visited;
+  std::vector<SemanticTask*> sortedTasks;
+  for(auto kv : _node.solutionMap) {
+    VisitTask(kv.first, visited, sortedTasks);
+  }
+  std::cout << "sorted tasks: " << sortedTasks << std::endl;
+
+  // Find the path for each individual robot
+  std::unordered_map<Robot*, std::vector<Cfg>> cfgPaths;
+  std::unordered_map<Robot*, std::vector<Cfg>> cfgsWithWait;
+  size_t longestPath = 0;
+  for(auto task : sortedTasks) {
+    auto groupPath = _node.solutionMap.at(task);
+    auto cfgs = groupPath->Cfgs();
+    auto waits = groupPath->GetWaitTimes();
+    
+    for(auto robot : groupPath->GetRoadmap()->GetGroup()->GetRobots()) {
+      for(size_t i = 0; i < cfgs.size(); i++) {
+        auto cfg = cfgs[i].GetRobotCfg(robot);
+        cfgPaths[robot].push_back(cfg);
+        cfgsWithWait[robot].push_back(cfg);
+
+        for(size_t t = waits[i]; t > 0; t--) {
+          cfgsWithWait[robot].push_back(cfg);
+        }
+      }
+
+      longestPath = std::max(longestPath, cfgsWithWait[robot].size());
+    }
+  }
+
+  // Write the individual path for each robot
+  auto base = this->GetBaseFilename();
+  for(auto kv : cfgPaths) {
+    ::WritePath(base + "." + kv.first->GetLabel() + ".rdmp.path", kv.second);
+  }
+
+  //TODO::We shouldn't require this to be set to the full group...
+  auto group = this->GetMPLibrary()->GetGroupTask()->GetRobotGroup();
+
+  // Form group cfgs for each timestep
+  std::vector<GroupCfgType> groupCfgs;
+  for(size_t t = 0; t < longestPath; t++) {
+    auto gcfg = GroupCfgType(group);
+    for(auto kv : cfgsWithWait) {
+      auto robot = kv.first;
+      Cfg cfg = kv.second.size() > t ? kv.second.at(t) : *kv.second.end();
+      gcfg.SetRobotCfg(robot, std::move(cfg));
+    }
+    groupCfgs.push_back(gcfg);
+  }
+
+  #ifdef GROUP_MAP
+    ::WritePath(base + ".rdmp.path", groupCfgs);
+  #endif
+}
+
+void
+ScheduledCBS::
+VisitTask(SemanticTask* _task, std::unordered_set<SemanticTask*>& _visited, 
+  std::vector<SemanticTask*>& _sorted) { 
+
+  if(!_visited.count(_task)) {
+    _visited.insert(_task);
+
+    for(auto d : _task->GetDependencies()) {
+      //TODO::Do we need to care about the type of dependency?
+      for(auto dd : d.second) {
+        VisitTask(dd, _visited, _sorted);
+      }
+    }
+
+    _sorted.push_back(_task);
+  } else if(std::find(_sorted.begin(), _sorted.end(), _task) == _sorted.end())
+    throw RunTimeException(WHERE) << "Circular dependency bad :(";
 }
 
 size_t

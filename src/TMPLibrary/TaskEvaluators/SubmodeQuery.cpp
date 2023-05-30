@@ -25,7 +25,7 @@ SubmodeQuery(XMLNode& _node) : TaskEvaluatorMethod(_node) {
   m_writeHypergraph = _node.Read("writeHypergraph",false,m_writeHypergraph,
                       "Flag to write hypergraphs to output files.");
 
-  m_mgLabel = _node.Read("mgLabel",true,"","Mode Graph Label");
+  m_mgLabel = _node.Read("mgLabel",false,"","Mode Graph Label");
 
   m_ghLabel = _node.Read("ghLabel",true,"","Grounded Hypergraph Label.");
 }
@@ -118,18 +118,6 @@ AddSchedulingConstraint(SemanticTask* _task, SemanticTask* _constraint) {
   m_constraintMap[t].insert(c);
 }
 
-void
-SubmodeQuery::
-SetGroundedStart(size_t _vid) {
-  m_groundedStartVID = _vid;
-}
-
-void
-SubmodeQuery::
-SetGroundedGoal(size_t _vid) {
-  m_groundedGoalVID = _vid;
-}
-
 /*----------------------------- Helper Functions ---------------------------*/
 
 bool
@@ -137,6 +125,8 @@ SubmodeQuery::
 Run(Plan* _plan) {
 
   //Initialize();
+
+  std::cout << "SUBMODE QUERY RUN CALLED" << std::endl;
 
   auto plan = this->GetPlan();
   auto stats = plan->GetStatClass();
@@ -152,6 +142,8 @@ Run(Plan* _plan) {
   source.groundedVID = 0;
   auto sourceVID = m_actionExtendedHypergraph.AddVertex(source);
   m_vertexMap[source.groundedVID].insert(sourceVID);
+
+  std::cout << "TE Size " << m_actionExtendedHypergraph.Size() << std::endl;
 
   HyperpathQuery();
 
@@ -613,6 +605,11 @@ ComputeHeuristicValues() {
   //auto& gh = mg->GetGroundedHypergraph();
   auto g = gh->GetReverseGraph();
 
+  std::cout << "reverse graph vids: " << g->GetAllVIDs() << std::endl;
+  for(auto iter=g->edges_begin(); iter!=g->edges_end(); iter++) {
+    std::cout << "s: " << iter->source() << " t: " << iter->target() << std::endl;
+  }
+
   // Setup dijkstra functions
   SSSPTerminationCriterion<GroundedHypergraph::GH::GraphType> termination(
     [this](typename GroundedHypergraph::GH::GraphType::vertex_iterator& _vi,
@@ -624,10 +621,29 @@ ComputeHeuristicValues() {
 
     auto group = grm->GetGroup();
 
-    for(auto robot : group->GetRobots()) {
-      if(robot->GetMultiBody()->IsPassive())
-        return SSSPTermination::Continue;
+    // From the decomposition, get the set of all motion tasks, from those
+    // get the robots with goal conditions specified. If robot has/is in the 
+    // goal condition, keep going
+    auto plan = this->GetPlan();
+    auto decomp = plan->GetDecomposition();
+    auto sTasks = decomp->GetGroupMotionTasks();
+
+    for(auto st : sTasks) {
+      auto groupTask = st->GetGroupMotionTask();
+
+      for(auto robot : group->GetRobots()) {
+        for(auto& task : *groupTask) {
+          if(task.GetRobot() == robot and task.GetGoalConstraints().size() > 0) {
+            return SSSPTermination::Continue;
+          }
+        }
+      }
     }
+
+    // for(auto robot : group->GetRobots()) {
+    //   if(robot->GetMultiBody()->IsPassive())
+    //     return SSSPTermination::Continue;
+    // }
 
     return SSSPTermination::EndBranch;
   });
@@ -640,19 +656,50 @@ ComputeHeuristicValues() {
     auto target = _ei->target();
     auto grm = g->GetVertex(target).first;
 
-    bool hasObject = false;
+    // bool hasObject = false;
+
+    // if(grm) {
+    //   auto group = grm->GetGroup();
+    //   for(auto robot : group->GetRobots()) {
+    //     if(robot->GetMultiBody()->IsPassive()) {
+    //       hasObject = true;
+    //       break;
+    //     }
+    //   }
+    // }
+
+    // if(!hasObject and grm)
+    //   return std::numeric_limits<double>::infinity();
+
+    // From the decomposition, get the set of all motion tasks, from those
+    // get the robots with goal conditions specified. If robot has/is in the 
+    // goal condition, keep going
+    bool inGoal = false;
+
+    auto plan = this->GetPlan();
+    auto decomp = plan->GetDecomposition();
+    auto sTasks = decomp->GetGroupMotionTasks();
 
     if(grm) {
       auto group = grm->GetGroup();
-      for(auto robot : group->GetRobots()) {
-        if(robot->GetMultiBody()->IsPassive()) {
-          hasObject = true;
-          break;
+
+      for(auto st : sTasks) {
+        auto groupTask = st->GetGroupMotionTask();
+
+        for(auto robot : group->GetRobots()) {
+          for(auto& task : *groupTask) {
+            if(task.GetRobot() == robot and task.GetGoalConstraints().size() > 0) {
+              inGoal = true;
+              break;
+            }
+          }
+          if(inGoal)
+            break;
         }
       }
     }
 
-    if(!hasObject and grm)
+    if(!inGoal and grm)
       return std::numeric_limits<double>::infinity();
 
     auto groundedHA = _ei->property();
@@ -666,7 +713,7 @@ ComputeHeuristicValues() {
   });
 
   // Run dijkstra backwards from sink
-  std::vector<size_t> starts = {m_groundedGoalVID};
+  std::vector<size_t> starts = {1};
   auto output = DijkstraSSSP(g,starts,weight,termination);
 
   // Save output distances as heuristic values
@@ -697,7 +744,7 @@ HyperpathQuery() {
   ComputeHeuristicValues();
 
   // TODO::Change to check start vertex for each goal specified robot/object
-  if(m_costToGoMap.at(m_groundedStartVID) == 0)
+  if(m_costToGoMap.at(0) == 0)
     throw RunTimeException(WHERE) << "Start not connected to goal.";
 
   // Define hyperpath query functors
@@ -740,7 +787,7 @@ HyperpathQuery() {
 
   if(m_pq.empty()) {
     m_goalVID = MAX_UINT;
-    auto output = SBTDijkstraWithFrontier(&m_actionExtendedHypergraph,m_groundedStartVID,weight,termination,forwardStar,heuristic);
+    auto output = SBTDijkstraWithFrontier(&m_actionExtendedHypergraph,0,weight,termination,forwardStar,heuristic);
     m_mbt = output.first;
     m_pq = output.second;
   }
@@ -765,7 +812,7 @@ HyperpathTermination(const size_t& _vid, const MBTOutput& _mbt) {
 
   // Assuming grounded goal is vid 1
   auto groundedVID = m_actionExtendedHypergraph.GetVertexType(_vid).groundedVID;
-  if(groundedVID == m_groundedGoalVID) {
+  if(groundedVID == 1) {
     m_goalVID = _vid;
     return SSSHPTermination::EndSearch;
   }
@@ -811,7 +858,7 @@ HyperpathForwardStar(const size_t& _vid, ActionExtendedHypergraph* _h) {
 
   m_computedFS.insert(_vid);
 
-  auto mg = dynamic_cast<ModeGraph*>(this->GetStateGraph(m_mgLabel).get());
+  // auto mg = dynamic_cast<ModeGraph*>(this->GetStateGraph(m_mgLabel).get());
   auto gh = dynamic_cast<GroundedHypergraph*>(this->GetStateGraph(m_ghLabel).get());
   //auto& gh = mg->GetGroundedHypergraph();
 
@@ -820,57 +867,57 @@ HyperpathForwardStar(const size_t& _vid, ActionExtendedHypergraph* _h) {
 
   // Check if vid's parent was in the same mode
   // Used for inter mode blocks
-  size_t blockedMode = MAX_UINT;
+  // size_t blockedMode = MAX_UINT;
 
   // Extra for blocking reverse actions
-  std::vector<size_t> blockedVertices;
+  // std::vector<size_t> blockedVertices;
 
-  auto vertexMode = mg->GetModeOfGroundedVID(groundedVID);
-  auto incoming  = _h->GetIncomingHyperarcs(_vid);
-  if(incoming.size() > 0) {
-    auto hid = *(incoming.begin());
-    auto hyperarc = _h->GetHyperarc(hid);
-    auto tail = hyperarc.tail;
-    if(tail.size() == 1) {
-      auto parent = *(tail.begin());
-      auto parentVertex = _h->GetVertexType(parent);
-      auto parentMode = mg->GetModeOfGroundedVID(parentVertex.groundedVID);
-      if(vertexMode == parentMode)
-        blockedMode = vertexMode;
-    }
+  // auto vertexMode = mg->GetModeOfGroundedVID(groundedVID);
+  // auto incoming  = _h->GetIncomingHyperarcs(_vid);
+  // if(incoming.size() > 0) {
+  //   auto hid = *(incoming.begin());
+  //   auto hyperarc = _h->GetHyperarc(hid);
+  //   auto tail = hyperarc.tail;
+  //   if(tail.size() == 1) {
+  //     auto parent = *(tail.begin());
+  //     auto parentVertex = _h->GetVertexType(parent);
+  //     auto parentMode = mg->GetModeOfGroundedVID(parentVertex.groundedVID);
+  //     if(vertexMode == parentMode)
+  //       blockedMode = vertexMode;
+  //   }
 
-    for(auto parent : tail) {
-      auto parentVertex = _h->GetVertexType(parent);
-      auto gvid = parentVertex.groundedVID;
-      blockedVertices.push_back(gvid);
-    }
-  }
+  //   for(auto parent : tail) {
+  //     auto parentVertex = _h->GetVertexType(parent);
+  //     auto gvid = parentVertex.groundedVID;
+  //     blockedVertices.push_back(gvid);
+  //   }
+  // }
 
   //TODO::Adding code to make it monotonic - decide if we want this or not
-  auto& modeHypergraph = mg->GetModeHypergraph();
-  std::set<size_t> visitedObjectRobotModes;
-  for(auto hid : aev.history) {
-    auto hyperarc = _h->GetHyperarc(hid);
-    for(auto v : hyperarc.tail) {
-      auto gvid  =_h->GetVertexType(v).groundedVID;
-      auto mvid = mg->GetModeOfGroundedVID(gvid);
-      if(mvid == MAX_UINT)
-        break;
+  // auto& modeHypergraph = mg->GetModeHypergraph();
+  // std::set<size_t> visitedObjectRobotModes;
+  // for(auto hid : aev.history) {
+  //   auto hyperarc = _h->GetHyperarc(hid);
+  //   for(auto v : hyperarc.tail) {
+  //     auto gvid  =_h->GetVertexType(v).groundedVID;
+  //     auto mvid = mg->GetModeOfGroundedVID(gvid);
+  //     if(mvid == MAX_UINT)
+  //       break;
 
-      auto mode = modeHypergraph.GetVertexType(mvid);
+  //     auto mode = modeHypergraph.GetVertexType(mvid);
       
-      //TODO::Change this to look instead at robots with task specificiations
-      if(mode->robotGroup->Size() == 1)
-        continue;
+  //     //TODO::Change this to look instead at robots with task specificiations
+  //     if(mode->robotGroup->Size() == 1)
+  //       continue;
 
-      for(auto robot : mode->robotGroup->GetRobots()) {
-        if(robot->GetMultiBody()->IsPassive()) {
-          visitedObjectRobotModes.insert(mvid);
-          break;
-        }
-      }
-    }
-  }
+  //     for(auto robot : mode->robotGroup->GetRobots()) {
+  //       if(robot->GetMultiBody()->IsPassive()) {
+  //         visitedObjectRobotModes.insert(mvid);
+  //         break;
+  //       }
+  //     }
+  //   }
+  // }
 
   std::set<size_t> fullyGroundedHyperarcs;
 
@@ -884,41 +931,41 @@ HyperpathForwardStar(const size_t& _vid, ActionExtendedHypergraph* _h) {
     //  std::cout << "HAS SEEN THE GOAL!!!" << std::endl;
 
     // TODO::Decide if we want monotonic
-    bool monotonic = true;
-    for(auto v : head) {
-      auto mvid = mg->GetModeOfGroundedVID(v);
-      if(visitedObjectRobotModes.count(mvid)) {
-        monotonic = false;
-        break;
-      }
-    }
+    // bool monotonic = true;
+    // for(auto v : head) {
+    //   auto mvid = mg->GetModeOfGroundedVID(v);
+    //   if(visitedObjectRobotModes.count(mvid)) {
+    //     monotonic = false;
+    //     break;
+    //   }
+    // }
 
-    if(!monotonic)
-      continue;
+    // if(!monotonic)
+    //   continue;
 
-    // If this hyperarc is the reverse of the one that entered the vertex, continue;
-    if(blockedVertices.size() == head.size() and !m_reverseActions and monotonic) {
-      bool match = true;
-      for(auto vid : blockedVertices) {
-        if(head.count(vid))
-          continue;
+    // // If this hyperarc is the reverse of the one that entered the vertex, continue;
+    // if(blockedVertices.size() == head.size() and !m_reverseActions and monotonic) {
+    //   bool match = true;
+    //   for(auto vid : blockedVertices) {
+    //     if(head.count(vid))
+    //       continue;
 
-        match = false;
-      }
+    //     match = false;
+    //   }
   
-      if(match)
-        continue;
-    }
+    //   if(match)
+    //     continue;
+    // }
 
     // If this vertex's parent is in the same submode,
     // ensure that there is not an additional transition within
     // that submode.
-    if(head.size() == 1 and blockedMode != MAX_UINT) {
-      auto groundedHead = *(head.begin());
-      auto headModeVID = mg->GetModeOfGroundedVID(groundedHead);
-      if(headModeVID == blockedMode)
-        continue;
-    }
+    // if(head.size() == 1 and blockedMode != MAX_UINT) {
+    //   auto groundedHead = *(head.begin());
+    //   auto headModeVID = mg->GetModeOfGroundedVID(groundedHead);
+    //   if(headModeVID == blockedMode)
+    //     continue;
+    // }
 
     // Add brand new action extended hyperarc for this vid
     // It will get filled in and check for full grounding in loop
@@ -982,12 +1029,16 @@ double
 SubmodeQuery::
 HyperpathHeuristic(const size_t& _target) {
 
-  auto mg = dynamic_cast<ModeGraph*>(this->GetStateGraph(m_mgLabel).get());
+  std::cout << "called heuristic with target " << _target << std::endl;
+
+  // auto mg = dynamic_cast<ModeGraph*>(this->GetStateGraph(m_mgLabel).get());
   auto gh = dynamic_cast<GroundedHypergraph*>(this->GetStateGraph(m_ghLabel).get());
   //auto& gh = mg->GetGroundedHypergraph();
 
   auto aev = m_actionExtendedHypergraph.GetVertexType(_target);
   auto vid = aev.groundedVID;
+
+  std::cout << "aev has grounded vid " << vid << std::endl;
 
   auto grm = gh->GetVertex(vid).first;
   if(!grm) {
@@ -1016,6 +1067,14 @@ HyperpathHeuristic(const size_t& _target) {
   // TODO::Adjust for proper trajectory cost
   double heuristic = m_searchTimeHeuristicMap[parent] - hyperarc.cost;
   //double heuristic = m_searchTimeHeuristicMap[parent] - 1;
+
+  // HACKING THIS SO I CAN DEBUG OTHER STUFF - NEED TO MAKE SURE THIS IS OK
+  m_searchTimeHeuristicMap[_target] = heuristic;
+  if(hasRobot) 
+    return heuristic + 0.1;
+  return heuristic;
+
+  #if 0
 
   // Check if this vertex is entering or exiting a submode 
   auto groundedParentVID = m_actionExtendedHypergraph.GetVertexType(parent).groundedVID;
@@ -1071,6 +1130,8 @@ HyperpathHeuristic(const size_t& _target) {
   if(hasRobot) 
     return heuristic + 0.1;
   return heuristic;
+
+  #endif
 
   /*
   auto group = grm->GetGroup();

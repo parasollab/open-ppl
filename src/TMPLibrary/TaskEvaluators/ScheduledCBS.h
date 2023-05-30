@@ -94,6 +94,9 @@ class ScheduledCBS : public TaskEvaluatorMethod {
 
     void ConvertToPlan(const Node& _node, Plan* _plan);
 
+    void VisitTask(SemanticTask* _task, std::unordered_set<SemanticTask*>& _visited, 
+                   std::vector<SemanticTask*>& _sorted);
+
     size_t FindStartTime(SemanticTask* _task, std::set<SemanticTask*> _solved, 
                          std::map<SemanticTask*,size_t> _endTimes);
 

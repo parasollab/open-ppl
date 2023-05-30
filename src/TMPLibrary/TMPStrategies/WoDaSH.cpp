@@ -168,6 +168,9 @@ PlanTasks() {
   auto me = dynamic_cast<ScheduledCBS*>(this->GetTaskEvaluator(m_motionEvaluator).get());
   me->Initialize();
 
+  // Get start and goal in the grounded hypergraph
+  GroundStartAndGoal();
+
   auto plan = this->GetPlan();
 
   do {
@@ -179,7 +182,8 @@ PlanTasks() {
       success = success and ConnectToSkeleton(); // TODO impose vertex constraints if this fails
     }
     std::cout << "successfully found a path for each robot." << std::endl;
-
+    this->GetMPLibrary()->SetGroupTask(m_wholeTask);
+    
   } while(!te->operator()() or !me->operator()(plan));
 }
 
@@ -715,6 +719,40 @@ MAPFSolution() {
   return solution.solutionMap;
 }
 
+
+void
+WoDaSH::
+GroundStartAndGoal() {
+  this->GetMPSolution()->AddRobotGroup(m_wholeTask->GetRobotGroup());
+  this->GetMPLibrary()->SetGroupTask(m_wholeTask);
+  auto wholeGRM = this->GetMPLibrary()->GetGroupRoadmap();
+
+  auto gh = dynamic_cast<GroundedHypergraph*>(
+    this->GetStateGraph(m_groundedHypergraphLabel).get());
+
+  // Get the virtual source and sink
+  GroundedHypergraph::Transition transition;
+  auto vsource = gh->AddVertex(std::make_pair(nullptr, 0));
+  auto vsink = gh->AddVertex(std::make_pair(nullptr, 1));
+  std::cout << "vsource " << vsource << ", vsink " << vsink << std::endl;
+
+  // Get the start position for all robots
+  auto s = this->GetMPLibrary()->GetMPStrategy(m_trajStrategy);
+  // s->Initialize();
+  auto sVID = s->GenerateStart(m_sampler);
+  m_groundedStartVID = gh->AddVertex(std::make_pair(wholeGRM, sVID));
+  gh->AddTransition({vsource}, {m_groundedStartVID}, transition);
+  std::cout << "grounded start " << m_groundedStartVID << std::endl;
+
+  // Get the goal position for all robots
+  auto gVIDs = s->GenerateGoals(m_sampler);
+  auto gVID = *gVIDs.begin();
+  m_groundedGoalVID = gh->AddVertex(std::make_pair(wholeGRM, gVID));
+  gh->AddTransition({m_groundedGoalVID}, {vsink}, transition);
+  std::cout << "grounded goal " << m_groundedGoalVID << std::endl;
+}
+
+
 void
 WoDaSH::
 ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
@@ -1152,8 +1190,6 @@ WoDaSH::
 GroundHyperskeleton() {
   // TODO cast this to avoid having to change MPStratgy interface?
   auto s = this->GetMPLibrary()->GetMPStrategy(m_drStrategy);
-  
-  auto originalTask = this->GetMPLibrary()->GetGroupTask();
 
   for(auto hid : m_path.movementHyperarcs) {
     auto& hyperarc = m_skeleton->GetHyperarc(hid);
@@ -1246,7 +1282,7 @@ GroundHyperskeleton() {
     AddTransitionToGroundedHypergraph(hyperarc.tail,hyperarc.head,path,task);
   }
 
-  this->GetMPLibrary()->SetGroupTask(originalTask);
+  this->GetMPLibrary()->SetGroupTask(m_wholeTask);
 
   std::cout << "Successfully grounded " << m_path.movementHyperarcs.size() 
             << " edges, sampling trajectories..." << std::endl;
@@ -1432,15 +1468,15 @@ bool
 WoDaSH::
 ConnectToSkeleton() {
   this->GetMPLibrary()->SetGroupTask(m_wholeTask);
-  auto wholeGRM = this->GetMPLibrary()->GetGroupRoadmap();
+  auto gh = dynamic_cast<GroundedHypergraph*>(
+    this->GetStateGraph(m_groundedHypergraphLabel).get());
 
   // Connect the start position to the first skeleton vertex for each of the robots
-  auto s = this->GetMPLibrary()->GetMPStrategy(m_trajStrategy);
-  auto sVID = s->GenerateStart(m_sampler);
-  auto start = wholeGRM->GetVertex(sVID);
-
   auto stask = std::shared_ptr<GroupTask>(new GroupTask(m_wholeGroup));
-  std::set<RepresentativeVertex> groundedTail = {std::make_pair(wholeGRM, sVID)};
+  auto gStart = gh->GetVertex(m_groundedStartVID);
+  auto start = gStart.first->GetVertex(gStart.second);
+
+  std::set<RepresentativeVertex> groundedTail = {gStart};
   std::set<RepresentativeVertex> groundedHead;
   for(auto r : m_wholeGroup->GetRobots()) {
     auto t = MPTask(r);
@@ -1481,22 +1517,16 @@ ConnectToSkeleton() {
     return false;
 
   // Add the path from this to the grounded hypergraph
-  auto ghid = AddTransitionToGroundedHypergraph(groundedTail, groundedHead, path, stask);
-  auto gh = dynamic_cast<GroundedHypergraph*>(
-    this->GetStateGraph(m_groundedHypergraphLabel).get());
-  auto gsVID = *gh->GetHyperarc(ghid).tail.begin();
-  auto sq = dynamic_cast<SubmodeQuery*>(this->GetTaskEvaluator(m_teLabel).get());
-  sq->SetGroundedStart(gsVID);
+  AddTransitionToGroundedHypergraph(groundedTail, groundedHead, path, stask);
 
   // Connect the goal position to the last skeleton vertex for each of the robots
-  auto gVIDs = s->GenerateGoals(m_sampler);
-  auto gVID = *gVIDs.begin();
-  auto goal = this->GetMPLibrary()->GetGroupRoadmap()->GetVertex(gVID);
-
   auto gtask = std::shared_ptr<GroupTask>(new GroupTask(m_wholeGroup));
   groundedHead.clear();
   groundedTail.clear();
-  groundedHead.insert(std::make_pair(wholeGRM, gVID));
+
+  auto gGoal = gh->GetVertex(m_groundedGoalVID);
+  auto goal = gGoal.first->GetVertex(gGoal.second);
+  groundedHead.insert(gGoal);
   for(auto r : m_wholeGroup->GetRobots()) {
     auto t = MPTask(r);
 
@@ -1537,9 +1567,7 @@ ConnectToSkeleton() {
     return false;
 
   // Add the path from this to the grounded hypergraph
-  ghid = AddTransitionToGroundedHypergraph(groundedTail, groundedHead, path, gtask);
-  auto ggVID = *gh->GetHyperarc(ghid).head.begin();
-  sq->SetGroundedGoal(ggVID);
+  AddTransitionToGroundedHypergraph(groundedTail, groundedHead, path, gtask);
 
   return true;
 }
