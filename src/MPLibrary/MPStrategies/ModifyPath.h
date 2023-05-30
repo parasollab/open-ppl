@@ -4,9 +4,8 @@
 #include "MPStrategyMethod.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-/// TODO
+/// This is a strategy that allows us to use PathModifiers. 
 /// @ingroup MotionPlanningStrategies
-/// @internal This strategy is configured for pausible execution.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class ModifyPath : public MPStrategyMethod<MPTraits> {
@@ -46,7 +45,7 @@ ModifyPath(XMLNode& _node) :
   MPStrategyMethod<MPTraits>(_node) {
     this->SetName("ModifyPath");
     m_pathFile = _node.Read("pathFile", true, "", "Path Filename");
-    m_mapFile = _node.Read("mapFile", false, "", "Map Filename");
+    m_mapFile = _node.Read("mapFile", true, "", "Map Filename");
     m_pmLabel = _node.Read("pmLabel", true, "", "Path modifier label");
   }
 
