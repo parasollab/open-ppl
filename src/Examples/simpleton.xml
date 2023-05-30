@@ -74,6 +74,7 @@
     </Extenders>
 
     <PathModifiers>
+      <ShortcuttingPathModifier label="shortcutting" lpLabel="sl"/>
     </PathModifiers>
 
     <Connectors>
@@ -94,7 +95,7 @@
     </Metrics>
 
     <MapEvaluators>
-      <PathEvaluator label="PE" ievcLabel="IEVC"/>
+      <PathEvaluator label="PE" eivcLabel="IEVC"/>
 
       <ClearanceQuery label="ClearanceQuery" eivcLabel="IEVC"/>
 
@@ -102,7 +103,7 @@
         graphSearchAlg="dijkstras" safeIntervalToolLabel="SI"/>
 
       <ConditionalEvaluator label="NodesEval" metric_method="NumNodes"
-        value="200" operator=">="/>
+        value="500" operator=">="/>
 
       <ConditionalEvaluator label="EdgesEval" metric_method="NumEdges"
         value="1000" operator=">"/>
@@ -142,7 +143,12 @@
         <Sampler label="UniformRandomFree" number="15" attempts="1"/>
         <Connector label="Closest"/>
         <Evaluator label="ClearancePathEvaluatedQuery"/>
-      </BasicPRM>
+      </BasicPRM> 
+      
+      <ModifyPath label="PathModify" debug="true" pmLabel="shortcutting" 
+        pathFile="simpleton-clearance.1234678.query.path"
+        mapFile="simpleton-clearance.1234678.query.map">
+      </ModifyPath>
 
     </MPStrategies>
 
@@ -159,6 +165,8 @@
 
     <Solver mpStrategyLabel="BasicPRM-clearance" seed="1234678"
       baseFilename="simpleton-clearance" vizmoDebug="true"/>
+    <Solver mpStrategyLabel="PathModify" seed="1234678"
+      baseFilename="simpleton-clearance-modified" vizmoDebug="true"/>
 
   </Library>
 

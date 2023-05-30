@@ -8,7 +8,7 @@
     <Environment filename="Stacked_Z/tunnel.env"
       frictionCoefficient="0" gravity="0 0 0"/>
 
-    <Robot label="boxy" filename="simpleton/lrobot.obj">
+    <Robot label="boxy" filename="Stacked_Z/lrobot.obj">
       <!--
       <Agent type="planning"/>
       -->
@@ -19,13 +19,13 @@
     <Task label="query" robot="boxy">
       <StartConstraints>
         <!-- WARNING Support for multiple constraints is not yet implemented! -->
-        <CSpaceConstraint point="0 0 8 0 0 0"/>
+        <CSpaceConstraint point="0 2 -8 0 0 0"/>
       </StartConstraints>
 
       <GoalConstraints>
         <!-- Here multiple constraints indicates a compound goal. Each constraint
              represents a single intermediate goal. -->
-        <CSpaceConstraint point="-2 0 -8 0 0 0"/>
+        <CSpaceConstraint point="0 2 8 0 0 0"/>
       </GoalConstraints>
     </Task>
 
@@ -49,9 +49,8 @@
     </EdgeValidityCheckers>
 
     <NeighborhoodFinders>
-      <BruteForceNF label="BFNF" dmLabel="euclidean" unconnected="false" k="7"/>
-      <BruteForceNF label="Nearest" dmLabel="euclidean" unconnected="false"
-        k="1"/>
+      <BruteForceNF label="BFNF" dmLabel="euclidean" unconnected="false" k="6"/>
+      <BruteForceNF label="Nearest" dmLabel="euclidean" unconnected="false" k="1"/>
       <BruteForceNF label="BFNFAll" dmLabel="euclidean" k="0"/>
     </NeighborhoodFinders>
 
@@ -74,6 +73,7 @@
     </Extenders>
 
     <PathModifiers>
+      <ShortcuttingPathModifier label="shortcutting" lpLabel="sl"/>
     </PathModifiers>
 
     <Connectors>
@@ -94,7 +94,7 @@
     </Metrics>
 
     <MapEvaluators>
-      <PathEvaluator label="PE" ievcLabel="IEVC" dmLabel="euclidean"/>
+      <PathEvaluator label="PE" eivcLabel="IEVC" dmLabel="euclidean"/>
 
       <ClearanceQuery label="ClearanceQuery" eivcLabel="IEVC"/>
 
@@ -102,12 +102,12 @@
         graphSearchAlg="dijkstras" safeIntervalToolLabel="SI"/>
 
       <ConditionalEvaluator label="NodesEval" metric_method="NumNodes"
-        value="15000" operator=">="/>
+        value="30000" operator=">="/>
 
       <ConditionalEvaluator label="EdgesEval" metric_method="NumEdges"
         value="1000" operator=">"/>
 
-      <ComposeEvaluator label="ClearanceBoundedQuery" operator="and">
+      <ComposeEvaluator label="ClearanceNodesQuery" operator="and">
         <Evaluator label="NodesEval"/>
         <Evaluator label="ClearanceQuery"/>
       </ComposeEvaluator>
@@ -123,11 +123,16 @@
       </ComposeEvaluator>
 
       <ComposeEvaluator label="ClearancePathEvaluatedQuery" operator="and">
-        <Evaluator label="ClearanceBoundedQuery"/>
+        <Evaluator label="ClearanceNodesQuery"/>
         <Evaluator label="PE"/>
       </ComposeEvaluator>
 
-      <TimeEvaluator label="TimeEval" timeout="10"/>
+      <ComposeEvaluator label="BoundedClearancePathEvaluatedQuery" operator="or">
+        <Evaluator label="ClearancePathEvaluatedQuery"/>
+        <Evaluator label="TimeEval"/>
+      </ComposeEvaluator>
+
+      <TimeEvaluator label="TimeEval" timeout="86400"/>
     </MapEvaluators>
 
     <MPStrategies>
@@ -141,8 +146,13 @@
       <BasicPRM label="BasicPRM-clearance" debug="true" querySampler="UniformRandomFree">
         <Sampler label="UniformRandomFree" number="15" attempts="1"/>
         <Connector label="Closest"/>
-        <Evaluator label="ClearancePathEvaluatedQuery"/>
+        <Evaluator label="BoundedClearancePathEvaluatedQuery"/>
       </BasicPRM>
+
+      <ModifyPath label="PathModify" debug="true" pmLabel="shortcutting" 
+        pathFile="ztunnel-clearance.1234678.query.path"
+        mapFile="ztunnel-clearance.1234678.query.map">
+      </ModifyPath>
 
     </MPStrategies>
 
@@ -190,6 +200,8 @@
 
     <Solver mpStrategyLabel="BasicPRM-clearance" seed="1234678"
       baseFilename="ztunnel-clearance" vizmoDebug="true"/>
+    <Solver mpStrategyLabel="PathModify" seed="1234678"
+      baseFilename="ztunnel-clearance-pm" vizmoDebug="true"/>
 
   </Library>
 
