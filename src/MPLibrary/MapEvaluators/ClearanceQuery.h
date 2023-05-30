@@ -37,17 +37,6 @@ class ClearanceQuery : virtual public QueryMethod<MPTraits> {
 
     virtual void Initialize() override;
 
-    ///@}
-    ///@name QueryMethod Overrides
-    ///@{
-
-    /// Set an alternate path weight function to use when searching the roadmap
-    /// @param _f The path weight function to use.
-    // virtual void SetPathWeightFunction(SSSPPathWeightFunction<RoadmapType> _f)
-    //     override;
-
-    ///@}
-
   protected:
 
     ///@name QueryMethod Overrides
@@ -57,15 +46,11 @@ class ClearanceQuery : virtual public QueryMethod<MPTraits> {
     /// @param _r The roadmap to use.
     virtual void Reset(RoadmapType* const _r) override;
 
+    /// Set the path weights as minimum 1/clearance.
     virtual double StaticPathWeight(
         typename RoadmapType::adj_edge_iterator& _ei,
         const double _sourceDistance, const double _targetDistance) const
         override;
-
-    // virtual double DynamicPathWeight(
-    //     typename RoadmapType::adj_edge_iterator& _ei,
-    //     const double _sourceDistance, const double _targetDistance) const
-    //     override;
 
     ///@}
 
@@ -88,9 +73,8 @@ ClearanceQuery<MPTraits>::
 ClearanceQuery(XMLNode& _node) : MapEvaluatorMethod<MPTraits>(_node), QueryMethod<MPTraits>(_node) {
   this->SetName("ClearanceQuery");
 
-  m_edgeIntermediateVCLabel = _node.Read("eivcLabel", true, "", "the edge intermediate VC label for weighted clearance checking");
-
-
+  m_edgeIntermediateVCLabel = _node.Read("eivcLabel", true, "",
+         "the edge intermediate VC label for weighted clearance checking");
 }
 
 /*--------------------------- MPBaseObject Overrides -------------------------*/
@@ -121,30 +105,21 @@ Reset(RoadmapType* const _r) {
   m_seenEdges.clear();
 }
 
-
 template <typename MPTraits>
 double
 ClearanceQuery<MPTraits>::
-StaticPathWeight(EI& _ei,
-    const double _sourceDistance, const double _targetDistance) const {
-
-  VID source = _ei->source();
-  VID target = _ei->target();
-  double edgeWeight = -1;
-
-  // if (m_seenEdges.count(_ei) > 0) {
-  //   edgeWeight = _ei->property().GetWeight();
-  // } else {
+StaticPathWeight(EI& _ei, 
+  const double _sourceDistance, const double _targetDistance) const {
     auto vc = this->GetEdgeValidityChecker(m_edgeIntermediateVCLabel);
-    edgeWeight = 1./vc->AssignClearanceWeight(source, target);
-  //   m_seenEdges.insert(_ei);
-  // }
 
-   
+    VID source = _ei->source();
+    VID target = _ei->target();
 
-  return std::max(_sourceDistance, edgeWeight);
+    // This line can be adjusted to any other weight as user desires.
+    double edgeWeight = 1./vc->EdgeWeightedClearance(source, target);  
+
+    return std::max(_sourceDistance, edgeWeight);
 }
-
 
 /*----------------------------------------------------------------------------*/
 

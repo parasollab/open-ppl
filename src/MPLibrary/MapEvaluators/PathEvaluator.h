@@ -54,14 +54,17 @@ class PathEvaluator : public MapEvaluatorMethod<MPTraits> {
 
     private:
 
-    /// Returns the Min Clearance of the path. 
-    double GetMinClearance(const Path* path);
+    /// Returns a vector of length 3:
+    /// [0] is the min clearance
+    /// [1] is the max clearance
+    /// [2] is the average clearance.  
+    std::vector<double> GetClearanceStats(const Path* path);
 
     /// Returns the total path length (using the distance metric).
     double GetPathLength(const Path* path);
 
     std::string m_cuLabel{};
-    std::string m_ievcLabel{};
+    std::string m_eivcLabel{};
     std::string m_dmLabel{};
 
     // Why copy/paste when you could write a bunch of helper functions instead?
@@ -88,7 +91,7 @@ PathEvaluator(XMLNode& _node) : MapEvaluatorMethod<MPTraits>(_node) {
   this->SetName("PathEvaluator");
 
   m_cuLabel = _node.Read("cuLabel", false, "", "Clearance Utility label");
-  m_ievcLabel = _node.Read("ievcLabel", false, "", "Intermediate Edge VC label");
+  m_eivcLabel = _node.Read("eivcLabel", false, "", "Intermediate Edge VC label");
 //   m_scLabel = _node.Read("scLabel", false, "", "Segment Clearance Tool label");
   m_dmLabel = _node.Read("dmLabel", false, "", "Distance Metric label");
 
@@ -140,13 +143,14 @@ operator()() {
     } 
 
     // Risk-weighted path clearance.
-    if (!m_ievcLabel.empty()) {
-        double minClearance = GetMinClearance(path);
-        AddToStats("Min Clearance", minClearance);
+    if (!m_eivcLabel.empty()) {
+        auto clearances = GetClearanceStats(path);
+        AddToStats("RiskWeightedMinClearance", clearances[0]);
+        AddToStats("RiskWeightedMaxClearance", clearances[1]);
+        AddToStats("RiskWeightedAvgClearance", clearances[2]);
     }
 
     return true;
-
 }
 
 /*--------------------------- Helper Methods ---------------------------------*/
@@ -173,24 +177,26 @@ GetPathLength(const Path* _path) {
 }
 
 template <typename MPTraits>
-double
+std::vector<double>
 PathEvaluator<MPTraits>::
-GetMinClearance(const Path* _path) {  
-  assert(!m_ievcLabel.empty());
+GetClearanceStats(const Path* _path) {  
+  assert(!m_eivcLabel.empty());
 
-  auto vc = this->GetEdgeValidityChecker(m_ievcLabel);
+  auto vc = this->GetEdgeValidityChecker(m_eivcLabel);
   auto vids = _path->VIDs();
 
   double minClearance = MAX_DBL;
+  double maxClearance = 0;
+  double clearanceSum = 0;
   for(auto start = vids.begin(); start + 1 < vids.end(); ++start) {
-    double clearance = vc->AssignClearanceWeight(*start, *(start+1));
+    double clearance = vc->EdgeWeightedClearance(*start, *(start+1));
 
-    if (clearance < minClearance) {
-        minClearance = clearance;
-    }
+    clearanceSum += clearance;
+    minClearance = (clearance < minClearance) ? clearance : minClearance;
+    maxClearance = (clearance > maxClearance) ? clearance : maxClearance;
   }
 
-  return minClearance;
+  return {minClearance, maxClearance, clearanceSum/_path->Size()};
 }
 
 /*-------------------- Add to Stats Methods --------------------------*/
