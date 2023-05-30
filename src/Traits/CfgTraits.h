@@ -50,6 +50,7 @@
 #include "MPLibrary/Extenders/BasicExtender.h"
 
 //path smoothing includes
+#include "MPLibrary/PathModifiers/ShortcuttingPathModifier.h"
 
 //edge validity checkers includes
 #include "MPLibrary/EdgeValidityCheckers/IntermediatesEdgeValidityChecker.h"
@@ -89,6 +90,7 @@
 #include "MPLibrary/MPStrategies/GroupDecoupledStrategy.h"
 #include "MPLibrary/MPStrategies/GroupStrategyMethod.h"
 #include "MPLibrary/MPStrategies/TogglePRMStrategy.h"
+#include "MPLibrary/MPStrategies/ModifyPath.h"
 #include "MPLibrary/MPStrategies/ValidationStrategy.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -170,6 +172,7 @@ struct MPTraits {
 
   //types of path smoothing available in our world
   typedef boost::mpl::list<
+    ShortcuttingPathModifier<MPTraits>
       > PathModifierMethodList;
 
   //types of edge validity checkers available in our world
@@ -217,6 +220,7 @@ struct MPTraits {
     DynamicRegionRRT<MPTraits>,
     DynamicRegionsPRM<MPTraits>,
     EET<MPTraits>,
+    ModifyPath<MPTraits>,
     GroupDecoupledStrategy<MPTraits>,
     GroupStrategyMethod<MPTraits>,
     TogglePRMStrategy<MPTraits>,
