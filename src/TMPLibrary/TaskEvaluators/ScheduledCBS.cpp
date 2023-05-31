@@ -833,7 +833,7 @@ ConvertToPlan(const Node& _node, Plan* _plan) {
     auto gcfg = GroupCfgType(group);
     for(auto kv : cfgsWithWait) {
       auto robot = kv.first;
-      Cfg cfg = kv.second.size() > t ? kv.second.at(t) : *kv.second.end();
+      Cfg cfg = kv.second.size() > t ? kv.second.at(t) : kv.second.at(kv.second.size() - 1);
       gcfg.SetRobotCfg(robot, std::move(cfg));
     }
     groupCfgs.push_back(gcfg);
