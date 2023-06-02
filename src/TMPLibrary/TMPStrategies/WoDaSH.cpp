@@ -46,6 +46,8 @@ WoDaSH(XMLNode& _node) : TMPStrategyMethod(_node) {
   m_sampler = _node.Read("sampler", true, "",
           "The sampler to use to generate spawn vertices on edges");
 
+  m_mapf = _node.Read("mapf", false, "cbs", "MAPF method (cbs or pbs)");
+
   m_replanMethod = _node.Read("replanMethod", false, "global", 
           "How to get the next best MAPF solution (global, resume, or lazy");
 
@@ -277,7 +279,6 @@ BuildSkeleton() {
 void
 WoDaSH::
 InitializeCostToGo() {
-  ///@todo find a way to use the implementation in cdr
   // Assumes the same skeleton for each of the robots
   auto ws = m_indSkeleton;
   auto robots = this->GetMPLibrary()->GetGroupTask()->GetRobotGroup()->GetRobots();
@@ -313,9 +314,8 @@ InitializeCostToGo() {
 std::vector<std::pair<Robot*, typename WoDaSH::CBSConstraint>>
 WoDaSH::
 ValidationFunction(CBSNodeType& _node) {
-  ///@todo find a way to use the implementation in cdr
-  // auto stats = this->GetStatClass();
-  // MethodTimer mt(stats,this->GetNameAndLabel() + "::ValidationFunction");
+  auto stats = this->GetPlan()->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::ValidationFunction");
 
   size_t maxTimestep = 0;
   for(auto kv : _node.solutionMap) {
@@ -326,11 +326,11 @@ ValidationFunction(CBSNodeType& _node) {
   std::unordered_map<std::pair<VID, VID>, 
       std::unordered_map<size_t, double>> edgeCapacity;
 
-  // Check the global constraints from edges that failed to ground
-  std::unordered_map<std::pair<VID, VID>, size_t> edgeOccupancy;
-
   // new constraints of form (robot, ((vid, vid), time))
   std::vector<std::pair<Robot*, CBSConstraint>> constraints;
+
+  // Check the global constraints from edges that failed to ground
+  std::unordered_map<size_t, std::unordered_map<size_t, size_t>> edgeOccupancy;
 
   // iterate through robots first to get the remaining capacity
   for(size_t i = 0; i < maxTimestep; i++) {
@@ -346,25 +346,33 @@ ValidationFunction(CBSNodeType& _node) {
       auto t = std::min(i+1,path.size()-1);
       auto target = path[t];
 
-      // Get the edge in the individual skeleton
-      if(source != target) {
-        // order such that source < target
-        auto sVID = std::min(source, target);
-        auto tVID = std::max(source, target);
+      // order such that source < target
+      VID sVID;
+      VID tVID;
+      if(source < target) {
+        sVID = source;
+        tVID = target;
+      } else {
+        sVID = target;
+        tVID = source;
+      }
 
-        // Check if this robot is in a failed group
-        for(auto iter : m_failedEdges) {
-          auto edge = iter.first;
-          auto group = iter.second;
-
-          if(edge.first == sVID and edge.second == tVID and group->VerifyRobotInGroup(robot)) {
-            if(edgeOccupancy.count(edge))
-              edgeOccupancy[edge]++;
+      // Check if this robot is in a failed group
+      for(size_t j = 0; j < m_failedEdges.size(); j++) {
+        if(m_failedEdges[j].count(robot)) {
+          if(m_failedEdges[j][robot].first == sVID and 
+                m_failedEdges[j][robot].second == tVID) {
+            if(edgeOccupancy.count(i) and edgeOccupancy[i].count(j))
+              edgeOccupancy[i][j]++;
             else
-              edgeOccupancy[edge] = 1;
+              edgeOccupancy[i][j] = 1;
           }
         }
+      }
 
+      // Get the edge in the individual skeleton
+      if(source != target) {
+      
         WorkspaceSkeleton::adj_edge_iterator ei;
         m_indSkeleton.GetEdge(sVID, tVID, ei);
         auto eid = ei->descriptor();
@@ -421,6 +429,9 @@ ValidationFunction(CBSNodeType& _node) {
 
   // Form a constraint for every robot, vid, timestep that has below 0 capacity remaining
   for(size_t i = 0; i < maxTimestep; i++) {
+    std::unordered_set<Robot*> addedEdgeConstraint;
+    std::unordered_set<Robot*> addedVertexConstraint;
+
     for(auto iter = _node.solutionMap.begin(); iter != _node.solutionMap.end(); iter++) {
 
       // Find the VID of this robot at time i
@@ -429,7 +440,7 @@ ValidationFunction(CBSNodeType& _node) {
 
       auto s = std::min(i, path.size()-1);
       auto source = path[s];
-      auto t = std::min(i+1,path.size()-1);
+      auto t = std::min(i+1, path.size()-1);
       auto target = path[t];
 
       // order such that source < target
@@ -437,22 +448,43 @@ ValidationFunction(CBSNodeType& _node) {
       auto tVID = std::max(source, target);
       auto edgePair = std::make_pair(sVID, tVID);
 
-      // Check for an edge
-      if(source != target) {
-        // Check the capacity of the vertex
-        if(edgeCapacity.at(edgePair).at(i) < 0) {
-          constraints.push_back(std::make_pair(robot, std::make_pair(edgePair, i)));
-        } else if(edgeOccupancy.count(edgePair)) {
-          auto group = m_failedEdges.at(edgePair);
-          if(group->VerifyRobotInGroup(robot))
-            constraints.push_back(std::make_pair(robot, std::make_pair(edgePair, i)));
-        }
-      }
-
       // Check the capacity of the source vertex
       if(vertexCapacity.at(source).at(i) < 0) {
         auto vPair = std::make_pair(source, SIZE_MAX);
         constraints.push_back(std::make_pair(robot, std::make_pair(vPair, i)));
+        addedVertexConstraint.insert(robot);
+      }
+
+      // Check for an edge
+      if(source != target) {
+        // Check the capacity of the edge
+        if(edgeCapacity.at(edgePair).at(i) < 0) {
+          constraints.push_back(std::make_pair(robot, std::make_pair(edgePair, i)));
+          addedEdgeConstraint.insert(robot);
+        }
+      }
+    
+      if(!edgeOccupancy.count(i))
+        continue;
+
+      for(auto ed : edgeOccupancy.at(i)) {
+        if(ed.second == m_failedEdges.at(ed.first).size() and m_failedEdges[ed.first].count(robot)) {
+          auto edgePair = m_failedEdges[ed.first][robot];
+          auto source = edgePair.first;
+          auto target = edgePair.second;
+
+          // Add vertex constraint if waiting on failed edge
+          if(source == target and !addedVertexConstraint.count(robot)) {
+            auto vPair = std::make_pair(source, SIZE_MAX);
+            constraints.push_back(std::make_pair(robot, std::make_pair(vPair, i)));
+          }
+
+          // Otherwise add edge constraint
+          if(source != target and !addedEdgeConstraint.count(robot)) {
+            auto edgePair = std::make_pair(source, target);
+            constraints.push_back(std::make_pair(robot, std::make_pair(edgePair, i)));
+          }
+        }
       }
     }
   }
@@ -460,15 +492,15 @@ ValidationFunction(CBSNodeType& _node) {
   return constraints;
 }
 
+
 std::vector<typename WoDaSH::CBSNodeType> 
 WoDaSH::
 SplitNodeFunction(CBSNodeType& _node,
         std::vector<std::pair<Robot*,CBSConstraint>> _constraints,
         CBSLowLevelPlanner<Robot,CBSConstraint,CBSSolution>& _lowLevel,
         CBSCostFunction<Robot,CBSConstraint,CBSSolution>& _cost) {
-          ///@todo find a way to use the implementation in cdr
-  // auto stats = this->GetStatClass();
-  // MethodTimer mt(stats,this->GetNameAndLabel() + "::SplitNodeFunction");
+  auto stats = this->GetPlan()->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::SplitNodeFunction");
 
   std::vector<CBSNodeType> newNodes;
 
@@ -499,9 +531,8 @@ SplitNodeFunction(CBSNodeType& _node,
 bool
 WoDaSH::
 LowLevelPlanner(CBSNodeType& _node, Robot* _robot) {
-  ///@todo find a way to use the implementation in cdr
-  // auto stats = this->GetStatClass();
-  // MethodTimer mt(stats,this->GetNameAndLabel() + "::LowLevelPlanner");
+  auto stats = this->GetPlan()->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::LowLevelPlanner");
 
   auto constraints = _node.constraintMap[_robot];
   auto h = std::shared_ptr<HeuristicSearch>(new HeuristicSearch(_robot));
@@ -509,8 +540,6 @@ LowLevelPlanner(CBSNodeType& _node, Robot* _robot) {
   // Get the start and goal vids in the individual skeleton
   auto start = m_skeletonStarts.at(_robot);
   auto goal = m_skeletonGoals.at(_robot);
-
-  std::cout << _robot->GetLabel() << " s: " << start << " g: " << goal << std::endl;
 
   // Check that start does not violate a constraint and get min end time
   size_t minEndTimestep = 0;
@@ -560,7 +589,13 @@ LowLevelPlanner(CBSNodeType& _node, Robot* _robot) {
       for(auto constraint : constraints) {
         // Check if the edge violates a constraint
         if(sVID == constraint.first.first and tVID == constraint.first.second) {
-          if (timestep == constraint.second) {
+          if(timestep == constraint.second) {
+            return std::numeric_limits<double>::infinity();
+          }
+        }
+
+        if(source == constraint.first.first and target == constraint.first.second) {
+          if(timestep == constraint.second) {
             return std::numeric_limits<double>::infinity();
           }
         }
@@ -569,12 +604,15 @@ LowLevelPlanner(CBSNodeType& _node, Robot* _robot) {
         if(constraint.first.second != SIZE_MAX)
           continue;
 
-        // Check for vertex constraint
-        if(source != constraint.first.first)
-          continue;
-    
-        if(timestep == constraint.second)
+        // Check for a conflict at the source
+        if(source == constraint.first.first and timestep == constraint.second) {
           return std::numeric_limits<double>::infinity();
+        }
+
+        // Check for a conflict at the target
+        if(target == constraint.first.first and timestep+1 == constraint.second) {
+          return std::numeric_limits<double>::infinity();
+        }
       }
 
       return _sourceDistance + _ei->property();
@@ -605,17 +643,11 @@ LowLevelPlanner(CBSNodeType& _node, Robot* _robot) {
       for(auto eit = vit->begin(); eit != vit->end(); eit++) {
         auto target = eit->target();
         auto neighbor = std::make_pair(target,timestep+1);
-        // auto edge = eit->property();
 
         // Use atomic edges
         auto nvid = _h->AddVertex(neighbor);
         _h->AddEdge(_vid,nvid,1.0);
       }
-
-      // Add a waiting edge
-      auto neighbor = std::make_pair(gvid,timestep+1);
-      auto nvid = _h->AddVertex(neighbor);
-      _h->AddEdge(_vid,nvid,1.0);
     }
   );
 
@@ -649,12 +681,13 @@ LowLevelPlanner(CBSNodeType& _node, Robot* _robot) {
   return true;
 }
 
+
+template <typename NodeType>
 double
 WoDaSH::
-CostFunction(CBSNodeType& _node) {
-  ///@todo find a way to use the implementation in cdr
-  // auto stats = this->GetStatClass();
-  // MethodTimer mt(stats,this->GetNameAndLabel() + "::CostFunction");
+CostFunction(NodeType& _node) {
+  auto stats = this->GetPlan()->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::CostFunction");
 
   // For now, treat an edge as having cost 1, use makespan
   double cost = 0;
@@ -668,43 +701,82 @@ CostFunction(CBSNodeType& _node) {
 std::unordered_map<Robot*, typename WoDaSH::CBSSolution*>
 WoDaSH::
 MAPFSolution() {
-  ///@todo find a way to use the implementation in cdr
-  // auto stats = this->GetStatClass();
-  // MethodTimer mt(stats, this->GetNameAndLabel() + "::ComputeMAPFHeuristic");
+  auto plan = this->GetPlan();
+  auto stats = plan->GetStatClass();
+  MethodTimer mt(stats, this->GetNameAndLabel() + "::MAPFSolution");
 
-  // Configure CBS Functions
-  CBSLowLevelPlanner<Robot,CBSConstraint,CBSSolution> lowLevel(
-    [this](CBSNodeType& _node, Robot* _task) {
-      return this->LowLevelPlanner(_node,_task);
-    }
-  );
-
-  CBSValidationFunction<Robot,CBSConstraint,CBSSolution> validation(
-    [this](CBSNodeType& _node) {
-      return this->ValidationFunction(_node);
-    }
-  );
-
-  CBSCostFunction<Robot,CBSConstraint,CBSSolution> cost(
-    [this](CBSNodeType& _node) {
-      return this->CostFunction(_node);
-    }
-  );
-
-  CBSSplitNodeFunction<Robot,CBSConstraint,CBSSolution> splitNode(
-    [this](CBSNodeType& _node, std::vector<std::pair<Robot*,CBSConstraint>> _constraints,
-           CBSLowLevelPlanner<Robot,CBSConstraint,CBSSolution>& _lowLevel,
-           CBSCostFunction<Robot,CBSConstraint,CBSSolution>& _cost) {
-      return this->SplitNodeFunction(_node,_constraints,_lowLevel,_cost);
-    }
-  );
-
+  std::unordered_map<Robot*, CBSSolution*> solution;
   auto robots = this->GetMPLibrary()->GetGroupTask()->GetRobotGroup()->GetRobots();
-  CBSNodeType solution = CBS(robots,validation,splitNode,lowLevel,cost);
+
+  // Configure CBS/PBS Functions
+  if(m_mapf == "cbs") {
+    CBSLowLevelPlanner<Robot,CBSConstraint,CBSSolution> lowLevel(
+      [this](CBSNodeType& _node, Robot* _task) {
+        return this->LowLevelPlanner(_node,_task);
+      }
+    );
+
+    CBSValidationFunction<Robot,CBSConstraint,CBSSolution> validation(
+      [this](CBSNodeType& _node) {
+        return this->ValidationFunction(_node);
+      }
+    );
+
+    CBSCostFunction<Robot,CBSConstraint,CBSSolution> cost(
+      [this](CBSNodeType& _node) {
+        return this->CostFunction<CBSNodeType>(_node);
+      }
+    );
+
+    CBSSplitNodeFunction<Robot,CBSConstraint,CBSSolution> splitNode(
+      [this](CBSNodeType& _node, std::vector<std::pair<Robot*,CBSConstraint>> _constraints,
+            CBSLowLevelPlanner<Robot,CBSConstraint,CBSSolution>& _lowLevel,
+            CBSCostFunction<Robot,CBSConstraint,CBSSolution>& _cost) {
+        return this->SplitNodeFunction(_node,_constraints,_lowLevel,_cost);
+      }
+    );
+
+    auto robots = this->GetMPLibrary()->GetGroupTask()->GetRobotGroup()->GetRobots();
+    CBSNodeType sol = CBS(robots,validation,splitNode,lowLevel,cost);
+    solution = sol.solutionMap;
+
+  } else if(m_mapf == "pbs") {
+    std::cout << "pbs" << std::endl;
+    // CBSLowLevelPlanner<Robot,OrderingConstraint,CBSSolution> lowLevel(
+    //   [this](PBSNodeType& _node, Robot* _task) {
+    //     return this->LowLevelPlanner(_node,_task);
+    //   }
+    // );
+
+    // CBSValidationFunction<Robot,OrderingConstraint,CBSSolution> validation(
+    //   [this](PBSNodeType& _node) {
+    //     return this->ValidationFunction(_node);
+    //   }
+    // );
+
+    // CBSSplitNodeFunction<Robot,OrderingConstraint,CBSSolution> splitNode(
+    //   [this](PBSNodeType& _node, std::vector<std::pair<Robot*,OrderingConstraint>> _constraints,
+    //         CBSLowLevelPlanner<Robot,OrderingConstraint,CBSSolution>& _lowLevel,
+    //         CBSCostFunction<Robot,OrderingConstraint,CBSSolution>& _cost) {
+    //     return this->SplitNodeFunction(_node,_constraints,_lowLevel,_cost);
+    //   }
+    // );
+
+    // CBSCostFunction<Robot,OrderingConstraint,CBSSolution> cost(
+    //   [this](PBSNodeType& _node) {
+    //     return this->CostFunction<PBSNodeType>(_node);
+    //   }
+    // );
+
+    // auto sol = CBS(robots,validation,splitNode,lowLevel,cost);
+    // solution = sol.solutionMap;
+  } else {
+    throw RunTimeException(WHERE) << "Unknown MAPF method. Options are cbs and pbs.";
+  }
 
   if(this->m_debug) {
     std::cout << "Heuristic Paths" << std::endl;
-    for(auto kv : solution.solutionMap) {
+    for(auto kv : solution) {
       auto robot = kv.first;
       auto path = *kv.second;
       std::cout << "\t" << robot->GetLabel() << ": ";
@@ -713,10 +785,9 @@ MAPFSolution() {
       }
       std::cout << std::endl;
     }
-    std::cout << "Heuristic Cost: " << solution.cost << std::endl;
   }
 
-  return solution.solutionMap;
+  return solution;
 }
 
 
@@ -1246,8 +1317,16 @@ GroundHyperskeleton() {
     if(!FinishedEdge(cedge, lastVertex)) {
       std::cout << "Failed to ground HID " << hid << ", replanning..." << std::endl;
       // Couldn't finish edge, need to replan hyperpath.
-      auto ed = cedge.GetEdgeDescriptors()[0];
-      m_failedEdges.emplace(std::make_pair(ed.source(), ed.target()), cedge.GetGroup());
+      auto eds = cedge.GetEdgeDescriptors();
+
+      // Keep track of failed edges
+      std::unordered_map<Robot*, std::pair<VID, VID>> edges;
+      auto rs = cedge.GetGroup()->GetRobots();
+      for(size_t r = 0; r < rs.size(); r++) {
+        edges.emplace(rs[r], std::make_pair(eds[r].source(), eds[r].target()));
+      }
+      
+      m_failedEdges.push_back(edges);
       return false;
     }
     

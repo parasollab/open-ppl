@@ -50,7 +50,7 @@ class WoDaSH : public TMPStrategyMethod {
     typedef size_t HID;
 
     ///@}
-    ///@name CBS Types
+    ///@name MAPF Types
     ///@{
 
     typedef GenericStateGraph<std::pair<size_t,size_t>,double> HeuristicSearch;
@@ -59,6 +59,9 @@ class WoDaSH : public TMPStrategyMethod {
     // ((vid, vid=INVAILD_VID), time)
     typedef std::pair<std::pair<VID, VID>, size_t>             CBSConstraint;
     typedef CBSNode<Robot,CBSConstraint,CBSSolution>           CBSNodeType;
+
+    typedef Robot* OrderingConstraint;
+    typedef CBSNode<Robot, OrderingConstraint, CBSSolution>    PBSNodeType;
 
     ///@}
     ///@name Hyperskeleton Types
@@ -196,7 +199,8 @@ class WoDaSH : public TMPStrategyMethod {
     
     bool LowLevelPlanner(CBSNodeType& _node, Robot* _robot);
 
-    double CostFunction(CBSNodeType& _node);
+    template <typename NodeType>
+    double CostFunction(NodeType& _node);
 
     /// Generate a set of paths through the implicit skeleton using CBS
     std::unordered_map<Robot*, CBSSolution*> MAPFSolution();
@@ -245,6 +249,7 @@ class WoDaSH : public TMPStrategyMethod {
 
     std::string m_sampler; // Sampler to generate spawn vertices
 
+    std::string m_mapf{"cbs"};
     std::string m_replanMethod{"global"}; // How to deal with constraints when replanning MAPF solution
 
     std::unordered_map<Robot*, MPTask*> m_taskMap;
@@ -299,7 +304,8 @@ class WoDaSH : public TMPStrategyMethod {
     VID m_groundedGoalVID{INVALID_VID};
 
     // Constraints from hyperarcs that failed to ground
-    std::unordered_map<std::pair<VID, VID>, RobotGroup*> m_failedEdges;
+    std::vector<std::unordered_map<Robot*, std::pair<VID, VID>>> m_failedEdges;
+    // std::unordered_map<std::pair<VID, VID>, RobotGroup*> m_failedEdges;
 
     // Map from workspace hyper-skeleton VID to all grounded instances of itself
     std::unordered_map<VID,std::unordered_set<VID>> m_vertexGroundingMap;
