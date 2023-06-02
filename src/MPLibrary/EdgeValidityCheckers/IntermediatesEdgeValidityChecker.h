@@ -8,7 +8,7 @@
 /// @brief Validates an edge by calling a local planner and collision checking
 /// all intermediates created by that local planner separately. 
 /// 
-/// @note Assumes that the validity chacker is a collision detection validity
+/// @note Assumes that the validity checker is a collision detection validity
 /// checker.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
