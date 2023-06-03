@@ -698,6 +698,516 @@ CostFunction(NodeType& _node) {
   return cost;
 }
 
+std::vector<typename WoDaSH::PBSNodeType> 
+WoDaSH::
+SplitNodeFunction(PBSNodeType& _node,
+        std::vector<std::pair<Robot*,OrderingConstraint>> _constraints,
+        CBSLowLevelPlanner<Robot,OrderingConstraint,CBSSolution>& _lowLevel,
+        CBSCostFunction<Robot,OrderingConstraint,CBSSolution>& _cost) {
+  auto stats = this->GetPlan()->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::SplitNodeFunction");
+
+  std::vector<PBSNodeType> children;
+
+  for(auto constraintPair : _constraints) {
+    auto robot = constraintPair.first;
+    auto constraint = constraintPair.second;
+    auto child = _node;
+
+    // Double check that constraints don't make a circular dependency
+    if(CheckCircularDependency(robot,constraint,child.constraintMap))
+      continue;
+    
+    child.constraintMap[robot].insert(constraint);
+
+    if(!_lowLevel(child, robot))
+      continue;
+
+    child.cost = _cost(child);
+    children.push_back(child);
+  }
+
+  return children;
+}
+
+bool
+WoDaSH::
+CheckCircularDependency(Robot* _robot, const OrderingConstraint& _newConstraint, 
+                const std::map<Robot*,std::set<OrderingConstraint>>& _constraints) {
+
+  // Check for duplicate constraints
+  if(_constraints.at(_robot).count(_newConstraint))
+    return true;
+
+  // Grow tree from new constraint and see if see if a cycle is formed
+  std::queue<OrderingConstraint> queue;
+  queue.push(_newConstraint);
+
+  while(!queue.empty()) {
+    auto r = queue.front();
+    queue.pop();
+    auto constraints = _constraints.at(r);
+
+    for(auto c : constraints) {
+      if(c == _robot)
+        return true;
+
+      queue.push(c);
+    }
+  }
+
+  return false;
+}
+
+bool
+WoDaSH::
+LowLevelPlanner(PBSNodeType& _node, Robot* _robot) {
+  auto stats = this->GetPlan()->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::LowLevelPlanner");
+
+  std::set<Robot*> needsToReplan,hasReplanned;
+  needsToReplan.insert(_robot);
+  std::vector<VID>* pathCopy = nullptr;
+
+  AddDependencies(needsToReplan,_robot,_node);
+
+  Robot* robot = nullptr;
+  while(hasReplanned.size() != needsToReplan.size()) {
+
+    for(auto r : needsToReplan) {
+      if(hasReplanned.count(r))
+        continue;
+
+      bool ready = true;
+      for(auto c : _node.constraintMap.at(r)) {
+        if(!needsToReplan.count(c) or hasReplanned.count(c))
+          continue;
+
+        ready = false;
+        break;
+      }
+
+      if(!ready)
+        continue;
+
+      robot = r;
+      break;
+    }
+
+
+    auto h = std::shared_ptr<HeuristicSearch>(new HeuristicSearch(robot));
+
+    // Get the start and goal vids in the individual skeleton
+    auto start = m_skeletonStarts.at(_robot);
+    auto goal = m_skeletonGoals.at(_robot);
+
+    // Check that start does not violate a constraint and get min end time
+    size_t minEndTimestep = 0;
+    for(auto kv : _node.solutionMap) {
+      auto path = kv.second;
+      if(path)
+        minEndTimestep = std::max(minEndTimestep, path->size() - 1);
+    }
+
+    // Distance from each skeleton vertex to the goal
+    auto dist2go = m_distanceMap.at(robot);
+    auto g = &m_indSkeleton;
+    auto annot = m_annotationMap.at(robot);
+
+    auto startVertex = std::make_pair(start,0);
+    auto startVID = h->AddVertex(startVertex);
+
+    auto f = m_failedEdges;
+
+    SSSPTerminationCriterion<HeuristicSearch> termination(
+      [goal,minEndTimestep](typename HeuristicSearch::vertex_iterator& _vi,
+            const SSSPOutput<HeuristicSearch>& _sssp) {
+        
+        auto vertex = _vi->property();
+
+        if(goal == vertex.first and minEndTimestep <= vertex.second)
+          return SSSPTermination::EndSearch;
+
+        return SSSPTermination::Continue;
+      }
+    );
+
+    SSSPPathWeightFunction<HeuristicSearch> weight(
+      [_node,robot,annot,f,g,h](typename HeuristicSearch::adj_edge_iterator& _ei,
+        const double _sourceDistance,
+        const double _targetDistance) {
+      
+        auto source = h->GetVertex(_ei->source()).first;
+        auto target = h->GetVertex(_ei->target()).first;
+        auto timestep = h->GetVertex(_ei->source()).second;
+
+        double edgeUsage = robot->GetMultiBody()->GetBoundingSphereRadius();
+        double sourceUsage = robot->GetMultiBody()->GetBoundingSphereRadius();
+        double targetUsage = robot->GetMultiBody()->GetBoundingSphereRadius();
+
+        // Preserve transitivity by adding dependencies of dependencies
+        auto constraints = _node.constraintMap.at(robot);
+        std::queue<OrderingConstraint> addConst;
+        for(auto c : constraints)
+          addConst.push(c);
+
+        while(!addConst.empty()) {
+          auto c = addConst.front();
+          for(auto d : _node.constraintMap.at(c)) {
+            if(!constraints.count(d)) {
+              constraints.insert(d);
+              addConst.push(d);
+            }
+          }
+          addConst.pop();
+        }
+
+        for(auto r : constraints) {
+          auto path = *_node.solutionMap.at(r);
+
+          auto time = timestep >= path.size() ? path.size() - 1 : timestep;
+          auto nextTime = timestep + 1 >= path.size() ? path.size() - 1 : timestep + 1;
+          auto ps = path.at(time);
+          auto pt = path.at(nextTime);
+
+          // Check the capacity at the start vertex and target vertex
+          if(ps == source)
+            sourceUsage += r->GetMultiBody()->GetBoundingSphereRadius();
+
+          if(pt == target)
+            targetUsage += r->GetMultiBody()->GetBoundingSphereRadius();
+
+          // Check the capacity on the edge
+          if(ps == pt or source == target)
+            continue;
+
+          if((source == ps and target == pt) or (source == pt and target == ps))
+            edgeUsage += r->GetMultiBody()->GetBoundingSphereRadius();
+        }
+
+        if(sourceUsage > annot->GetVertexProperty(source))
+          return std::numeric_limits<double>::infinity();
+        
+        if(targetUsage > annot->GetVertexProperty(target))
+          return std::numeric_limits<double>::infinity();
+        
+        if(source != target) {
+          WorkspaceSkeleton::adj_edge_iterator ei;
+          g->GetEdge(source, target, ei);
+          auto eid = ei->descriptor();
+
+          auto dists = annot->GetEdgeProperty(eid);
+          auto minDist = *std::min_element(dists.begin(), dists.end());
+          
+          if(edgeUsage > minDist)
+            return std::numeric_limits<double>::infinity();
+        }
+
+        // Check that not all of the robots are trying to traverse a failed edge
+        for(auto ed : f) {
+          if(!ed.count(robot))
+            continue;
+
+          if(ed[robot].first != source)
+              continue;
+          if(ed[robot].second != target)
+              continue;
+
+          size_t matchedConstraint = 1;
+
+          for(auto kv : _node.solutionMap) {
+            auto r = kv.first;
+
+            if(r == robot or kv.second == nullptr or !ed.count(r))
+              continue;
+
+            auto path = *kv.second;
+            auto s = std::min(timestep, path.size()-1);
+            auto rsource = path[s];
+            auto t = std::min(timestep+1, path.size()-1);
+            auto rtarget = path[t];
+
+            if(ed[r].first != rsource)
+              continue;
+            if(ed[r].second != rtarget)
+              continue;
+
+            matchedConstraint++;
+          }
+
+          if(matchedConstraint == ed.size())
+            return std::numeric_limits<double>::infinity();
+        }
+
+        return _sourceDistance + _ei->property();
+      }
+    );
+
+    SSSPHeuristicFunction<HeuristicSearch> heuristic(
+      [dist2go](const HeuristicSearch* _h, 
+        typename HeuristicSearch::vertex_descriptor _source,
+        typename HeuristicSearch::vertex_descriptor _target) {
+
+        // Distance to go heuristic
+        auto vertex = _h->GetVertex(_target);
+        double toGo = dist2go.at(vertex.first);
+
+        return std::max(0.0,toGo);
+      }
+    );
+
+    SSSPNeighborsFunction<HeuristicSearch> neighbors(
+      [g](HeuristicSearch* _h, typename HeuristicSearch::vertex_descriptor _vid) {
+        auto vertex = _h->GetVertex(_vid);
+        auto gvid = vertex.first;
+        auto timestep = vertex.second;
+        
+        auto vit = g->find_vertex(gvid);
+        auto sourceProp = vit->property();
+
+        for(auto eit = vit->begin(); eit != vit->end(); eit++) {
+          auto target = eit->target();
+          auto targetProp = g->find_vertex(target)->property();
+          auto neighbor = std::make_pair(target,timestep+1);
+
+          // Add a small cost for waiting so no edge has 0 weight
+          auto nvid = _h->AddVertex(neighbor);
+          auto dist = (targetProp - sourceProp).norm();
+          _h->AddEdge(_vid,nvid,std::max(dist, 0.0000001));
+        }
+      }
+    );
+
+    std::vector<size_t> starts = {startVID};
+    std::vector<size_t> goals = {goal};
+
+    auto sssp = AStarSSSP(h.get(),starts,goals,weight,heuristic,neighbors,termination);
+
+    // Check that a path was found
+    const size_t last = sssp.ordering.back();
+    if(h->GetVertex(last).first != goal or h->GetVertex(last).second < minEndTimestep) {
+      if(this->m_debug) {
+        std::cout << "Failed to find a path for " << robot->GetLabel() << std::endl;
+      }
+      pathCopy = nullptr;
+      break;
+    }
+
+    // Reconstruct the path
+    std::vector<size_t> path = {h->GetVertex(last).first};
+    auto current = last;
+    do {
+      current = sssp.parent.at(current);
+      path.push_back(h->GetVertex(current).first);
+    } while(current != startVID);
+    std::reverse(path.begin(),path.end());
+
+    // Save path in solution
+    _node.solutionMap[robot] = new vector<size_t>();
+    *(_node.solutionMap[robot]) = path;
+    pathCopy = _node.solutionMap[robot];
+
+    hasReplanned.insert(robot);
+  }
+
+  return pathCopy != nullptr and pathCopy->size();
+}
+
+void
+WoDaSH::
+AddDependencies(std::set<Robot*>& _needsToReplan, Robot* _robot, const PBSNodeType& _node) {
+  for(auto iter : _node.constraintMap) {
+     auto r = iter.first;
+     auto dep = iter.second;
+     if(dep.count(_robot)) {
+      if(!_needsToReplan.count(r)) {
+        _needsToReplan.insert(r);
+        AddDependencies(_needsToReplan, r, _node);
+      }
+     }
+  }
+}
+
+std::vector<std::pair<Robot*, typename WoDaSH::OrderingConstraint>>
+WoDaSH::
+ValidationFunction(PBSNodeType& _node) {
+  auto stats = this->GetPlan()->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::ValidationFunction");
+
+  size_t maxTimestep = 0;
+  for(auto kv : _node.solutionMap) {
+    maxTimestep = std::max(maxTimestep,kv.second->size());
+  }
+
+  std::unordered_map<VID, std::unordered_map<size_t, double>> vertexCapacity;
+  std::unordered_map<std::pair<VID, VID>, 
+      std::unordered_map<size_t, double>> edgeCapacity;
+
+  // new constraints of form (robot, robot)
+  std::vector<std::pair<Robot*, OrderingConstraint>> constraints;
+
+  // iterate through robots first to get the remaining capacity
+  for(size_t i = 0; i < maxTimestep; i++) {
+    for(auto iter = _node.solutionMap.begin(); iter != _node.solutionMap.end(); iter++) {
+      auto robot = iter->first;
+      auto path = *(iter->second);
+
+      // source vertex (current timestep)
+      auto s = std::min(i, path.size()-1);
+      auto source = path[s];
+
+      // target vertex (next timestep)
+      auto t = std::min(i+1,path.size()-1);
+      auto target = path[t];
+
+      // Get the edge in the individual skeleton
+      if(source != target) {
+        // order such that source < target
+        auto sVID = std::min(source, target);
+        auto tVID = std::max(source, target);
+
+        WorkspaceSkeleton::adj_edge_iterator ei;
+        m_indSkeleton.GetEdge(sVID, tVID, ei);
+        auto eid = ei->descriptor();
+        auto edgePair = std::make_pair(sVID, tVID);
+
+        // Check if this edge has been added
+        if(edgeCapacity.find(edgePair) != edgeCapacity.end()) {
+          // Check if this timestep has been added
+          if(edgeCapacity.at(edgePair).find(i) != edgeCapacity.at(edgePair).end()) {
+            // This edge and time are in the map, decrease the capacity as needed
+            edgeCapacity[edgePair][i] -= robot->GetMultiBody()->GetBoundingSphereRadius();
+          } else {
+            // This time is not in the map, add it with the remaining capacity
+            auto ds = m_annotationMap.at(robot)->GetEdgeProperty(eid);
+            auto d = *std::min_element(ds.begin(), ds.end());
+            d -= robot->GetMultiBody()->GetBoundingSphereRadius();
+            edgeCapacity[edgePair].emplace(std::make_pair(i, d));
+          }
+        } else {
+          // This edge needs to be added
+          auto ds = m_annotationMap.at(robot)->GetEdgeProperty(eid);
+          auto d = *std::min_element(ds.begin(), ds.end());
+          d -= robot->GetMultiBody()->GetBoundingSphereRadius();
+
+          std::unordered_map<size_t, double> eMap;
+          eMap.emplace(i, d);
+          edgeCapacity.emplace(std::make_pair(edgePair, eMap));
+        }
+      }
+      
+      // Check if this source vid has been added yet
+      if(vertexCapacity.find(source) != vertexCapacity.end()) {
+        // Check if this timestep has been added
+        if(vertexCapacity.at(source).find(i) != vertexCapacity.at(source).end()) {
+          // This vid and time are in the map, decrease the capacity as needed
+          vertexCapacity[source][i] -= robot->GetMultiBody()->GetBoundingSphereRadius();
+        } else {
+          // This time is not in the map, add it with the remaining capacity
+          auto d = m_annotationMap.at(robot)->GetVertexProperty(source);
+          d -= robot->GetMultiBody()->GetBoundingSphereRadius();
+          vertexCapacity[source].emplace(std::make_pair(i, d));
+        }
+      } else {
+        // This vid needs to be added
+        auto d = m_annotationMap.at(robot)->GetVertexProperty(source);
+        d -= robot->GetMultiBody()->GetBoundingSphereRadius();
+
+        std::unordered_map<size_t, double> vMap;
+        vMap.emplace(i, d);
+        vertexCapacity.emplace(std::make_pair(source, vMap));
+      }
+    }
+  }
+
+  // Form a constraint for every robot, vid that has below 0 capacity remaining
+  for(size_t i = 0; i < maxTimestep; i++) {
+
+    VID conflictSource = INVALID_VID;
+    VID conflictTarget = INVALID_VID;
+    for(auto iter = _node.solutionMap.begin(); iter != _node.solutionMap.end(); iter++) {
+
+      // Find the VID of this robot at time i
+      auto path = *(iter->second);
+
+      auto s = std::min(i, path.size()-1);
+      auto source = path[s];
+      auto t = std::min(i+1, path.size()-1);
+      auto target = path[t];
+
+      // order such that source < target
+      auto sVID = std::min(source, target);
+      auto tVID = std::max(source, target);
+      auto edgePair = std::make_pair(sVID, tVID);
+
+      // Check the capacity of the source vertex
+      if(vertexCapacity.at(source).at(i) < 0) {
+        conflictSource = source;
+        break;
+      }
+
+      // Check for an edge
+      else if(source != target) {
+        // Check the capacity of the vertex
+        if(edgeCapacity.at(edgePair).at(i) < 0) {
+          conflictSource = sVID;
+          conflictTarget = tVID;
+          break;
+        }
+      }
+    }
+
+    std::vector<Robot*> robots;
+    if(conflictSource != INVALID_VID and conflictTarget == INVALID_VID) {
+      for(auto iter = _node.solutionMap.begin(); iter != _node.solutionMap.end(); iter++) {
+
+        // Find the VID of this robot at time i
+        auto robot = iter->first;
+        auto path = *(iter->second);
+
+        auto s = std::min(i, path.size()-1);
+        auto source = path[s];
+
+        if(source == conflictSource)
+          robots.push_back(robot);
+      }
+    }
+
+    else if(conflictSource != INVALID_VID and conflictTarget != INVALID_VID) {
+      for(auto iter = _node.solutionMap.begin(); iter != _node.solutionMap.end(); iter++) {
+
+        // Find the VID of this robot at time i
+        auto robot = iter->first;
+        auto path = *(iter->second);
+
+        auto s = std::min(i, path.size()-1);
+        auto source = path[s];
+        auto t = std::min(i+1, path.size()-1);
+        auto target = path[t];
+
+        // order such that source < target
+        auto sVID = std::min(source, target);
+        auto tVID = std::max(source, target);
+
+        if(sVID == conflictSource and tVID == conflictTarget)
+          robots.push_back(robot);
+      }
+    }
+
+    if(robots.size()) {
+      for(size_t k = 0; k < robots.size(); k++) {
+        for(size_t l = k+1; l < robots.size(); l++) {
+          constraints.push_back(std::make_pair(robots.at(k), robots.at(l)));
+          constraints.push_back(std::make_pair(robots.at(l), robots.at(k)));
+        }
+      }
+      break;
+    }
+  }
+
+  return constraints;
+}
+
 std::unordered_map<Robot*, typename WoDaSH::CBSSolution*>
 WoDaSH::
 MAPFSolution() {
@@ -741,35 +1251,34 @@ MAPFSolution() {
     solution = sol.solutionMap;
 
   } else if(m_mapf == "pbs") {
-    std::cout << "pbs" << std::endl;
-    // CBSLowLevelPlanner<Robot,OrderingConstraint,CBSSolution> lowLevel(
-    //   [this](PBSNodeType& _node, Robot* _task) {
-    //     return this->LowLevelPlanner(_node,_task);
-    //   }
-    // );
+    CBSLowLevelPlanner<Robot,OrderingConstraint,CBSSolution> lowLevel(
+      [this](PBSNodeType& _node, Robot* _task) {
+        return this->LowLevelPlanner(_node,_task);
+      }
+    );
 
-    // CBSValidationFunction<Robot,OrderingConstraint,CBSSolution> validation(
-    //   [this](PBSNodeType& _node) {
-    //     return this->ValidationFunction(_node);
-    //   }
-    // );
+    CBSValidationFunction<Robot,OrderingConstraint,CBSSolution> validation(
+      [this](PBSNodeType& _node) {
+        return this->ValidationFunction(_node);
+      }
+    );
 
-    // CBSSplitNodeFunction<Robot,OrderingConstraint,CBSSolution> splitNode(
-    //   [this](PBSNodeType& _node, std::vector<std::pair<Robot*,OrderingConstraint>> _constraints,
-    //         CBSLowLevelPlanner<Robot,OrderingConstraint,CBSSolution>& _lowLevel,
-    //         CBSCostFunction<Robot,OrderingConstraint,CBSSolution>& _cost) {
-    //     return this->SplitNodeFunction(_node,_constraints,_lowLevel,_cost);
-    //   }
-    // );
+    CBSSplitNodeFunction<Robot,OrderingConstraint,CBSSolution> splitNode(
+      [this](PBSNodeType& _node, std::vector<std::pair<Robot*,OrderingConstraint>> _constraints,
+            CBSLowLevelPlanner<Robot,OrderingConstraint,CBSSolution>& _lowLevel,
+            CBSCostFunction<Robot,OrderingConstraint,CBSSolution>& _cost) {
+        return this->SplitNodeFunction(_node,_constraints,_lowLevel,_cost);
+      }
+    );
 
-    // CBSCostFunction<Robot,OrderingConstraint,CBSSolution> cost(
-    //   [this](PBSNodeType& _node) {
-    //     return this->CostFunction<PBSNodeType>(_node);
-    //   }
-    // );
+    CBSCostFunction<Robot,OrderingConstraint,CBSSolution> cost(
+      [this](PBSNodeType& _node) {
+        return this->CostFunction<PBSNodeType>(_node);
+      }
+    );
 
-    // auto sol = CBS(robots,validation,splitNode,lowLevel,cost);
-    // solution = sol.solutionMap;
+    auto sol = CBS(robots,validation,splitNode,lowLevel,cost);
+    solution = sol.solutionMap;
   } else {
     throw RunTimeException(WHERE) << "Unknown MAPF method. Options are cbs and pbs.";
   }

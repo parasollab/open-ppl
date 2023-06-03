@@ -202,6 +202,31 @@ class WoDaSH : public TMPStrategyMethod {
     template <typename NodeType>
     double CostFunction(NodeType& _node);
 
+    /// Forms new PBS nodes from new constraints.
+    std::vector<PBSNodeType> SplitNodeFunction(PBSNodeType& _node,
+        std::vector<std::pair<Robot*,OrderingConstraint>> _constraints,
+        CBSLowLevelPlanner<Robot,OrderingConstraint,CBSSolution>& _lowLevel,
+        CBSCostFunction<Robot,OrderingConstraint,CBSSolution>& _cost);
+
+    /// Evaluate whether a set of priorities has a circular dependency.
+    /// @param _robot The robot which the new constraint applies to.
+    /// @param _newConstraint The new constraint which will be added.
+    /// @param _constraints The existing priority constraints.
+    /// @return Whether the new constraint adds a circular dependency.
+    bool CheckCircularDependency(Robot* _robot, const OrderingConstraint& _newConstraint, 
+                const std::map<Robot*,std::set<OrderingConstraint>>& _constraints);
+
+    /// Finds a low level solution for a robot over the workspace skeleton for PBS.
+    bool LowLevelPlanner(PBSNodeType& _node, Robot* _robot);
+
+    /// Specify that robots that depend on _robot must also replan.
+    void AddDependencies(std::set<Robot*>& _needsToReplan, Robot* _robot,
+                const PBSNodeType& _node);
+
+    /// Finds conflicts in a PBS solution.
+    std::vector<std::pair<Robot*,OrderingConstraint>> 
+    ValidationFunction(PBSNodeType& _node);
+
     /// Generate a set of paths through the implicit skeleton using CBS
     std::unordered_map<Robot*, CBSSolution*> MAPFSolution();
 
