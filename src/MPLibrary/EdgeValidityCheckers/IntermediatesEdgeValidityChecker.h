@@ -258,6 +258,10 @@ HandleIntermediates(vector<CfgType>& _intermediates, vector<size_t>& _collisions
 
       inCollision = cd->IsMultiBodyCollision(obstInfo, robotMultiBody, obstMultiBody, callee);
 
+      /// registering collisions and clearance according to flags.
+      if (this->m_reportCollisions && inCollision) {
+        collisionIndicators[i] = true;
+      }
       if (_reportClearance){
         double weightedNewClearance = std::max(obstInfo.m_minDist - obstMultiBody->GetWeight(), 0.0);
 
@@ -265,7 +269,6 @@ HandleIntermediates(vector<CfgType>& _intermediates, vector<size_t>& _collisions
       }
       else {
         if (inCollision){
-          collisionIndicators[i] = true;
           res = -1.0;
         }
       }
@@ -273,7 +276,7 @@ HandleIntermediates(vector<CfgType>& _intermediates, vector<size_t>& _collisions
   }
 
     
-  if (!_reportClearance) { 
+  if (this->m_reportCollisions) { 
     for (size_t i = 0; i < numObst; i++){
       if (collisionIndicators[i])
         _collisions.push_back(i);
