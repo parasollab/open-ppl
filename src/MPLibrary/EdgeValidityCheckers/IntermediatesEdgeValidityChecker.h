@@ -229,16 +229,18 @@ HandleIntermediates(vector<CfgType>& _intermediates, vector<size_t>& _collisions
   ValidityCheckerMethod<MPTraits>* vc = (_reportClearance)? this->GetValidityChecker("pqp_solid") :
                                                             this->GetValidityChecker(m_vcLabel);
 
-  // This is the reason why a collision detection validity checker is required
+  /// This is the reason why a collision detection validity checker is required
   auto cd = dynamic_cast<CollisionDetectionValidityMethod<MPTraits>*>(vc);
 
   auto env = this->GetEnvironment();
 
-  const string callee = this->GetNameAndLabel() + "::IntermediatesEdgeValidityChecker";
-
   size_t numObst = env->NumObstacles();
 
+  /// Set of flags for collision reporting
   vector<bool> collisionIndicators = vector<bool>(numObst, false);
+
+  /// Preparing arguments for a CD call
+  const string callee = this->GetNameAndLabel() + "::IntermediatesEdgeValidityChecker";
 
   CDInfo obstInfo;
 
