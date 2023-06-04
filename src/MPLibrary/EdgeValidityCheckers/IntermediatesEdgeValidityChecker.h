@@ -101,7 +101,7 @@ EdgeValidityCheckerMethod<MPTraits>(_node) {
 
   m_vcLabel = _node.Read("vcLabel", false, "", "The validity label.");
 
-  m_overideLp = _node.Read("overrideLp", false, false, "Overide local planner stored in edge");
+  m_overideLp = _node.Read("overrideLp", false, m_overrideLp, "Overide local planner stored in edge");
 
 }
 
