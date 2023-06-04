@@ -159,7 +159,7 @@ Body(MultiBody* const _owner, XMLNode& _node)
   // Read weight.
   m_weight = _node.Read("weight", false, 0.0,
       std::numeric_limits<double>::min(), std::numeric_limits<double>::max(),
-      "Mathematical property for general use.");
+      "Denotes \'weight\' of object, to be used for mathematical calculations (for physical weight, use \'mass\')");
 
   // Read body type.
   std::string type = _node.Read("type", true, "",
