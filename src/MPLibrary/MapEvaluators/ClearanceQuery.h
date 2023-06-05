@@ -54,9 +54,14 @@ class ClearanceQuery : virtual public QueryMethod<MPTraits> {
 
     ///@}
 
-    std::set<EI> m_seenEdges;
-
     std::string m_edgeIntermediateVCLabel;
+
+  private:
+    void CacheEdge(VID _u, VID _v, double _value) const;
+
+    std::map<std::pair<VID, VID>, double>* m_cachedEdges; // Cache pairs of edges so we don't 
+                                                         // need to call Edge Validity checker 
+                                                         // on them again. 
 };
 
 /*------------------------------- Construction -------------------------------*/
@@ -65,6 +70,7 @@ template <typename MPTraits>
 ClearanceQuery<MPTraits>::
 ClearanceQuery() : QueryMethod<MPTraits>() {
   this->SetName("ClearanceQuery");
+  m_cachedEdges = new std::map<std::pair<VID, VID>, double>;
 }
 
 
@@ -102,7 +108,8 @@ void
 ClearanceQuery<MPTraits>::
 Reset(RoadmapType* const _r) {
   QueryMethod<MPTraits>::Reset(_r);
-  m_seenEdges.clear();
+  m_cachedEdges = new std::map<std::pair<VID, VID>, double>;
+  m_cachedEdges->clear();
 }
 
 template <typename MPTraits>
@@ -115,12 +122,53 @@ StaticPathWeight(EI& _ei,
     VID source = _ei->source();
     VID target = _ei->target();
 
-    // This line can be adjusted to any other weight as user desires.
-    double edgeWeight = 1./vc->EdgeWeightedClearance(source, target);  
+    // This calculation can be any other weight as user desires.
+    double clearance = 0;
+
+    std::pair<VID, VID> st(source, target);
+    std::pair<VID, VID> ts(target, source);
+    if (m_cachedEdges->count(st) == 1 || m_cachedEdges->count(ts) == 1) {
+        if (this->m_debug) {
+            std::cout << "Edge " << source << ", " << target << " already cached." <<std::endl;
+        }
+        
+        clearance = m_cachedEdges->at(st);
+    } else {
+        clearance = vc->EdgeWeightedClearance(source, target); 
+		    CacheEdge(source, target, clearance);
+    }
+    
+    double edgeWeight = 1./clearance;
+
+    if (clearance == 0) {
+        edgeWeight = MAX_DBL;       
+    }
+
+    if(this->m_debug) {
+        std::cout << "Edge weighted clearance " << clearance;
+        std::cout << "; vids " << source << " " << target << std::endl;
+    }
 
     return std::max(_sourceDistance, edgeWeight);
 }
 
 /*----------------------------------------------------------------------------*/
+
+template <typename MPTraits>
+void
+ClearanceQuery<MPTraits>::
+CacheEdge(VID _u, VID _v, double _value) const {
+    std::pair<VID, VID> uv (_u, _v);
+    std::pair<VID, VID> vu (_v, _u);
+
+    m_cachedEdges->emplace(uv, _value);
+    m_cachedEdges->emplace(vu, _value);
+
+    if (this->m_debug) {
+        std::cout << "Cached edge " << _u << ", " << _v << ". " ;
+        std::cout << m_cachedEdges->size() << " edges cached." << std::endl;
+    }
+
+}
 
 #endif
