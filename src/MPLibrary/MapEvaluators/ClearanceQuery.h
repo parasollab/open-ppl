@@ -5,6 +5,15 @@
 #include <map>
 #include <set>
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// Finds path using weighted clearance rather than path length. 
+/// 
+/// @note We use 1/clearance as path weights; this can be changed as programmer 
+///   sees fit in StaticPathWeight. 
+///
+/// @ingroup MapEvaluators
+////////////////////////////////////////////////////////////////////////////////
 template <typename MPTraits>
 class ClearanceQuery : virtual public QueryMethod<MPTraits> {
 
@@ -54,14 +63,13 @@ class ClearanceQuery : virtual public QueryMethod<MPTraits> {
 
     ///@}
 
-    std::string m_edgeIntermediateVCLabel;
+    std::string m_edgeIntermediateVCLabel; // EdgeIntermediate Validity Checker (for weighted clearance)
 
   private:
+    /// "Cache" edges so we don't need to recheck them using the collision checker. 
     void CacheEdge(VID _u, VID _v, double _value) const;
 
-    std::map<std::pair<VID, VID>, double>* m_cachedEdges; // Cache pairs of edges so we don't 
-                                                         // need to call Edge Validity checker 
-                                                         // on them again. 
+    std::map<std::pair<VID, VID>, double>* m_cachedEdges; // map that acts as the "cache"; filled in CacheEdge() 
 };
 
 /*------------------------------- Construction -------------------------------*/
