@@ -31,3 +31,5 @@ install(EXPORT TetgenTargets
         NAMESPACE TETGEN::
         DESTINATION lib/cmake/tetgen
 )
+
+install(FILES tetgen.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/tetgen)

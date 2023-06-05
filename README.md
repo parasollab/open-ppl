@@ -98,10 +98,10 @@ cd into the cloned repo
 cd pmpl
 ```
 ```bash
-/usr/bin/cmake -DCMAKE_BUILD_TYPE=Debug -G Ninja -DCMAKE_TOOLCHAIN_FILE=/opt/vcpkg/scripts/buildsystems/vcpkg.cmake -S . -B build
+cmake -DCMAKE_BUILD_TYPE=Debug -G Ninja -DCMAKE_TOOLCHAIN_FILE=/opt/vcpkg/scripts/buildsystems/vcpkg.cmake -S . -B build
 ```
 ```bash
-/usr/bin/cmake --build build
+cmake --build build
 ```
 
 ### Install and build using Conan
@@ -118,14 +118,17 @@ conan --version
 
 #### Install conan packages
 ```bash
-conan install . --output-folder=cmake-build-release --build=missing -c tools.system.package_manager:mode=install -c tools.system.package_manager:sudo=true
+conan install . --output-folder=build --build=missing -c tools.system.package_manager:mode=install -c tools.system.package_manager:sudo=true
 ```
 
 #### Build pmpl with conan
 ```bash
-cmake . -DCMAKE_TOOLCHAIN_FILE=cmake-build-release/conan_toolchain.cmake
-cmake --build .
+cmake -DCMAKE_BUILD_TYPE=Debug -G Ninja -DCMAKE_TOOLCHAIN_FILE=cmake-build-release/conan_toolchain.cmake -S . -B build
 ```
+```bash
+cmake --build build
+```
+
 
 
 ## Docker
@@ -145,9 +148,21 @@ The executable built resides in /pmp/build/pmpl_exec within the docker container
 
 ## Tests
 
-To run tests start by building the test target
+### To run tests start by building the test target
 ```bash
-cmake --build . --target tests
+cmake --build build --target tests
 ```
 
-Then run the Catch2v3 test executable
+### You can run the by running CTest
+```bash
+cd build
+ctest --output-on-failure
+```
+
+this will run the Basic PRM Tests by default
+
+### Or by running the generated test executable
+```bash
+cd build
+./ppl_tests -F CfgTests
+```

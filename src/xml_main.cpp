@@ -61,23 +61,6 @@ main(int _argc, char** _argv) {
       problem->GetTasks(problem->GetRobotGroups().front().get()).empty()))
     throw RunTimeException(WHERE) << "No tasks were specified!";
 
-/*   // Add another task
-  const std::string task_xml ="    <Task label=\"query\" robot=\"boxy\">"
-      "<StartConstraints>"
-          "<CSpaceConstraint point=\"-5 0 0 0 0 0\" />"
-"         </StartConstraints>"
-"      <GoalConstraints>"
-"         <CSpaceConstraint point=\"5 1 0 0 0 0\" />"
-"      </GoalConstraints>"
-"    </Task>";
- 
-  auto task_node = XMLNode("task", task_xml, "Task");
-  auto new_task = new MPTask(problem, task_node);
-
-  // Solve Task
-  pmpl->Solve(problem, new_task);
-*/
-
   // Release resources.
   delete problem;
   delete pmpl;

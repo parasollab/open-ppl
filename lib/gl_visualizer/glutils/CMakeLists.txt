@@ -3,6 +3,9 @@ set(CMAKE_CXX_STANDARD 17)
 
 project(glutils)
 
+include(CMakePackageConfigHelpers)
+include(GNUInstallDirs)
+
 get_filename_component(NONSTD_PATH ../nonstd ABSOLUTE)
 include_directories(${NONSTD_PATH})
 
@@ -67,4 +70,14 @@ install(EXPORT GlUtilsTargets
         FILE GlUtilsTargets.cmake
         NAMESPACE GLUTILS::
         DESTINATION lib/cmake/glutils
+)
+
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/glutils
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+        FILES_MATCHING PATTERN "*.h"
+)
+
+install(DIRECTORY ${CMAKE_SOURCE_DIR}
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+        FILES_MATCHING PATTERN "*.h"
 )

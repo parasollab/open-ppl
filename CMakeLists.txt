@@ -145,7 +145,6 @@ set_target_properties(objlib PROPERTIES VERSION ${PROJECT_VERSION})
 # bullet order is very specific, do not modify
 target_link_libraries(objlib PUBLIC BulletSoftBody BulletDynamics BulletCollision LinearMath Bullet3Common
         BulletInverseDynamics unofficial-tinyxml::unofficial-tinyxml)
-#target_link_directories(objlib PUBLIC ${BULLET_LIBRARY_DIRS})
 
 # build [ppl library]
 add_library(${PPL_LIBRARY} STATIC ${HARDWARE_SRCS} ${TASK_SRCS} $<TARGET_OBJECTS:objlib>)
@@ -162,9 +161,6 @@ target_link_libraries(${PPL_LIBRARY} PUBLIC BulletSoftBody BulletDynamics Bullet
 target_link_libraries(${PPL_LIBRARY} PUBLIC ${OPENGL_LIBRARIES} ${GLUT_LIBRARY})
 # [ppl library] - Link internal built packages
 target_link_libraries(${PPL_LIBRARY} PUBLIC PQP glutils nonstd sandbox RAPID tetgen modelloader ${PQP_LIBRARIES})
-
-# [ppl library] - needed due to issue with bullet library
-#target_link_directories(${PPL_LIBRARY} PUBLIC ${BULLET_LIBRARY_DIRS})
 set_target_properties(${PPL_LIBRARY} PROPERTIES OUTPUT_NAME ppl)
 
 # [ppl_mp library] - Link external packages
@@ -173,20 +169,14 @@ target_link_libraries(${PPL_MP_LIBRARY} PUBLIC BulletSoftBody BulletDynamics Bul
         nlohmann_json::nlohmann_json Qt6::Core Qt6::Gui Qt6::OpenGL Qt6::Widgets
         Qt6::OpenGLWidgets unofficial-tinyxml::unofficial-tinyxml)
 target_link_libraries(${PPL_MP_LIBRARY} PUBLIC ${OPENGL_LIBRARIES} ${GLUT_LIBRARY})
+
 # [ppl library] - Link internal built packages
 target_link_libraries(${PPL_MP_LIBRARY} PUBLIC PQP glutils nonstd sandbox RAPID tetgen modelloader ${PQP_LIBRARIES})
-
-# [ppl library] - needed due to issue with bullet library
-#target_link_directories(${PPL_MP_LIBRARY} PUBLIC ${BULLET_LIBRARY_DIRS})
 set_target_properties(${PPL_MP_LIBRARY} PROPERTIES OUTPUT_NAME ppl_mp)
 
 # build [ppl executable]
 add_executable(${PPL_EXECUTABLE} src/tmp_main.cpp)
 target_link_libraries(${PPL_EXECUTABLE} PRIVATE ${PPL_LIBRARY})
-
-#target_link_libraries(${PPL_EXECUTABLE} unofficial-tinyxml::unofficial-tinyxml LinearMath Bullet3Common BulletDynamics
-#        BulletSoftBody BulletCollision BulletInverseDynamics)
-#target_link_directories(${PPL_EXECUTABLE} PRIVATE ${BULLET_LIBRARY_DIRS})
 set_target_properties(${PPL_EXECUTABLE} PROPERTIES OUTPUT_NAME ppl)
 
 # build [ppl_mp executable]
@@ -219,8 +209,18 @@ message("Generating targets for packaging")
 include(GNUInstallDirs)
 set(INSTALL_CONFIGDIR ${CMAKE_INSTALL_LIBDIR}/cmake/ppl)
 
-install(TARGETS ${PPL_LIBRAY} EXPORT PPLTargets)
+install(TARGETS ${PPL_LIBRARY} EXPORT PPLTargets)
 install(TARGETS ${PPL_MP_LIBRARY} EXPORT PPLTargets)
+
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/include
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+        FILES_MATCHING PATTERN "*.h"
+)
+
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/src
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+        FILES_MATCHING PATTERN "*.h"
+)
 
 install(EXPORT PPLTargets
         FILE PPLTargets.cmake

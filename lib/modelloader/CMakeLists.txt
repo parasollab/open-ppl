@@ -3,6 +3,9 @@ cmake_minimum_required(VERSION 3.24)
 
 project(modelloader)
 
+include(CMakePackageConfigHelpers)
+include(GNUInstallDirs)
+
 get_filename_component(MATHTOOL_PATH ../../include/mathtool ABSOLUTE)
 
 find_package(CGAL CONFIG REQUIRED)
@@ -26,4 +29,9 @@ install(EXPORT ModelLoaderTargets
         FILE ModelLoaderTargets.cmake
         NAMESPACE MODELLOADER::
         DESTINATION lib/cmake/modelloader
+)
+
+install(DIRECTORY ${CMAKE_SOURCE_DIR}
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/modelloader
+        FILES_MATCHING PATTERN "*.h"
 )

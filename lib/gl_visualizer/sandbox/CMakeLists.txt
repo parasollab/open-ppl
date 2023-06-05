@@ -3,6 +3,9 @@ set(CMAKE_CXX_STANDARD 17)
 
 project(sandbox)
 
+include(CMakePackageConfigHelpers)
+include(GNUInstallDirs)
+
 # used by CMake to scan the header and source files at build time and invoke moc accordingly.
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
@@ -50,4 +53,9 @@ install(EXPORT SandboxTargets
         FILE SandboxTargets.cmake
         NAMESPACE SANDBOX::
         DESTINATION lib/cmake/sandbox
+)
+
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/sandbox
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+        FILES_MATCHING PATTERN "*.h"
 )

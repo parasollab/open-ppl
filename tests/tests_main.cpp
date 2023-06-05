@@ -23,7 +23,7 @@ const std::string OUTPUT_DIR = "Scratch/";
 std::filesystem::path xmldir = fs::weakly_canonical(fs::absolute(STRATEGY_TESTS + XML_DIR));
 std::filesystem::path output =  fs::weakly_canonical(fs::absolute(STRATEGY_TESTS + OUTPUT_DIR));
 
-std::string tests_file;
+std::string tests_file = "BasicTests"; // If not specified default to BasicTests
 
 int RunXMLTest(const std::string& xml_file) {
     std::string xml_path{ xmldir.u8string() + "/" + xml_file};
@@ -146,8 +146,7 @@ int main( int argc, char* argv[] ) {
 
     session.cli( cli );
 
-    // Parse the command lineBasicPRM.0.xml BasicPRM.0.map
-
+    // Parse the command line, e.g.: BasicPRM.0.xml BasicPRM.0.map
     int returnCode = session.applyCommandLine( argc, argv );
     if( returnCode != 0 ) // Indicates a command line error
         return returnCode;
