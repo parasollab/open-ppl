@@ -1487,6 +1487,9 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
 
         auto source = path.size() > t ? path.at(t) : path.at(path.size() - 1);
         auto target = path.size() > t + 1 ? path.at(t+1) : path.at(path.size() - 1);
+        // auto nextTarget = path.size() > t + 2 ? path.at(t+2) : path.at(path.size() - 1);
+
+        std::cout << "deciding dec robot " << robot->GetLabel() << "" << source << " " << target  << std::endl;
 
         auto edgePair = std::make_pair(source, target);
         splitGroups[edgePair].push_back(robot);
@@ -1550,8 +1553,8 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
         continue;
       }
 
-      for(auto hid : predVIDs) {
-        auto grobots = m_skeleton->GetHyperarcType(hid).edge.GetGroup()->GetRobots();
+      for(auto vid : predVIDs) {
+        auto grobots = m_skeleton->GetVertexType(vid).GetGroup()->GetRobots();
         robots.insert(robots.end(), grobots.begin(), grobots.end());
       }
 
@@ -1602,6 +1605,9 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
           for(auto ih : m_skeleton->GetIncomingHyperarcs(t)) {
             if(m_path.movementHyperarcs.count(ih) or m_path.decoupleHyperarcs.count(ih)) {
               for(auto robot : group->GetRobots()) {
+                if(!m_path.predecessors.at(ih).count(robot))
+                  continue;
+                  
                 auto boolhid = m_path.predecessors.at(ih).at(robot);
                 m_path.predecessors[hid].emplace(robot, boolhid);
               }
