@@ -80,7 +80,7 @@ class IntermediatesEdgeValidityChecker : public EdgeValidityCheckerMethod<MPTrai
 
     string m_vcLabel;                 ///< the validity checker label. Must be a label of a
                                       ///<  collision detection validity checker.
-    bool m_overideLp{false};          ///< Flag for using a different local planner than the one
+    bool m_overrideLp{false};          ///< Flag for using a different local planner than the one
                                       ///<  stored in the roadmap edges
 };
 
@@ -101,7 +101,7 @@ EdgeValidityCheckerMethod<MPTraits>(_node) {
 
   m_vcLabel = _node.Read("vcLabel", false, "", "The validity label.");
 
-  m_overideLp = _node.Read("overrideLp", false, m_overrideLp, "Overide local planner stored in edge");
+  m_overrideLp = _node.Read("overrideLp", false, m_overrideLp, "Overide local planner stored in edge");
 
 }
 
@@ -121,7 +121,7 @@ ValidateEdge(VID _source, VID _target, vector<size_t>& _collisions) {
 
   RoadmapType* r = this->GetRoadmap();
 
-  if (m_overideLp){
+  if (m_overrideLp){
     CfgType c1 = r->GetVertex(_source);
     CfgType c2 = r->GetVertex(_target);
 
@@ -170,7 +170,7 @@ EdgeWeightedClearance(VID _u, VID _v) {
 
   RoadmapType* r = this->GetRoadmap();
 
-  if (m_overideLp){
+  if (m_overrideLp){
     
     CfgType c1 = r->GetVertex(_u);
     CfgType c2 = r->GetVertex(_v);
