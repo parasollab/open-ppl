@@ -22,7 +22,7 @@ class PathEvaluator : public MapEvaluatorMethod<MPTraits> {
     typedef typename MPTraits::RoadmapType          RoadmapType;
     typedef typename RoadmapType::VID               VID;
     typedef typename MPTraits::CfgType              CfgType;
-    typedef typename MPTraits::Path                    Path;
+    typedef typename MPTraits::Path                 Path;
 
 
     ///@}
@@ -63,11 +63,15 @@ class PathEvaluator : public MapEvaluatorMethod<MPTraits> {
     /// Returns the total path length (using the distance metric).
     double GetPathLength(const Path* path);
 
-    std::string m_cuLabel{};
-    std::string m_eivcLabel{};
-    std::string m_dmLabel{};
+    /// Variables fill by XML:
+    std::string m_cuLabel{}; // Clearance Utility (MPTool)
+    std::string m_eivcLabel{}; // Edge Intermediate Validity Checker
+    std::string m_dmLabel{}; // Distance Metric 
 
     // Why copy/paste when you could write a bunch of helper functions instead?
+    // Each of these functions adds (key, value) to this's stat class
+    // and prints them to std::cout. 
+    // You can find statistics in the .stat output file. 
     void AddToStats(std::string key, int value);
     void AddToStats(std::string key, double value);
     void AddToStats(std::string key, bool value);
@@ -92,7 +96,6 @@ PathEvaluator(XMLNode& _node) : MapEvaluatorMethod<MPTraits>(_node) {
 
   m_cuLabel = _node.Read("cuLabel", false, "", "Clearance Utility label");
   m_eivcLabel = _node.Read("eivcLabel", false, "", "Intermediate Edge VC label");
-//   m_scLabel = _node.Read("scLabel", false, "", "Segment Clearance Tool label");
   m_dmLabel = _node.Read("dmLabel", false, "", "Distance Metric label");
 
 }
@@ -117,7 +120,7 @@ operator()() {
 
     if(!path || path->Empty()) {
         if(this->m_debug)
-        std::cout << "Path was not found. No Path evaluation can be done. " << std::endl;
+          std::cout << "Path was not found. No Path evaluation can be done. " << std::endl;
         
         return true;
     }

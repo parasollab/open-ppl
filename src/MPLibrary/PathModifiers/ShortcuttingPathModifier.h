@@ -171,7 +171,6 @@ ModifyImpl(RoadmapType* _graph, vector<CfgType>& _path, vector<CfgType>& _newPat
       << " is empty. Aborting smoothing operation(s)." << endl;
     return false;
   }
-
 }
 
 #endif
