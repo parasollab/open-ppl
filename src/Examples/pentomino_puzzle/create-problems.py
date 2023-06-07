@@ -1,21 +1,45 @@
 ################################################################################
 # generate-problems.py
 #
-# Description: TODO
+# Description: Creates and runs a problem for every component in the environment.
+#  Then outputs the life-cycle metric if requested.
 #
-# Usage: TODO
+# Usage: Output depends on the input given. Always generates the problem output
+#  files.
+#  -Requires a config file. This is a json file which specifies:
+#       -'seedfile-name': the path to the problem xml seed file.
+#       -'xmlfile-name': the file prefix to use for the ouput problem xml files.
+#       -'envfile-name': the file prefix to use for the output env files.
+#       -'basefile-name': the file prefix to use for the pmpl generated output
+#                         files (refered to as basefile in problem xmls).
+#       -'robot-name': the file prefix for the given robots (robots must be
+#                      named <robot-name>#.robot, where # ranges from 0 to the
+#                      total number of robots - 1.
+#       -'obj-base': the path to directory containing all .obj files.
+#       -'seed': the random seed to be used for pmpl.
+#       -'start-configs': ordered list of the starting configurations for each
+#                         robot (i.e. first element is robot0.robot start)
+#       -'goal-configs': ordered list of the goal configurations for each
+#                        robot (i.e. first element is robot0.robot goal)
+#       -'weights': ordered list of the component weights for life-cycle metric.
+#  -If given a path to pmpl executable, runs the executable on the generated
+#   problems.
+#  -If -o arguement is given, computes and prints to console life-cycle metric.
 ################################################################################
 
 import json
 import os
 
-#TODO - add short descriptions to functions
+
 #TODO - should we add the weights to the .env file?
+
+# Writes an individual component to an output file.
 def WritePassiveComponent(piece, color, pos, out):
   out.write('Passive\ncomponents/' + str(piece) + '.obj -c(' + color +
             ') -a(none) ' + pos + '\n\n')
 
 
+# Writes the env file (either vizmo version, or pmpl version using vizmo flag).
 def WriteEnvFile(piece, poses, config, vizmo):
   filename = config['envfile-name'] + str(piece)
   if vizmo:
@@ -42,6 +66,7 @@ def WriteEnvFile(piece, poses, config, vizmo):
       WritePassiveComponent(i, '0 1 0 .3', p, envfile)
 
 
+# Writes the problem xml file.
 def WriteXMLFile(piece, config):
   basefile = config['basefile-name'] + str(piece)
   envfile = config['envfile-name'] + str(piece) + '.env'
@@ -53,8 +78,6 @@ def WriteXMLFile(piece, config):
   seedfile = config['seedfile-name']
   xmlfile = config['xmlfile-name'] + str(piece) + '.xml'
 
-
-  # @TODO Why is seedfile playing a part in this?
   os.system('cat ' + seedfile
     + '| sed "s|@@basefile-name@@|' + basefile + '|g"'
     + '| sed "s|@@envfile-name@@|' + envfile + '|g"'
@@ -71,8 +94,8 @@ def Main():
   import argparse
   parser = argparse.ArgumentParser()
 
-  parser.add_argument('-c', '--config-file', required=True, help='file containing the configuration') #TODO should it be "path to..." ?
-  parser.add_argument('-p', '--pmpl-exec', required=False, help='the pmpl executable') #TODO should it be "path to..." ?
+  parser.add_argument('-c', '--config-file', required=True, help='path to file containing the configuration')
+  parser.add_argument('-p', '--pmpl-exec', required=False, help='path to the pmpl executable')
   parser.add_argument('-o', '--compute-output', action='store_true', required=False, help='should the output be computed?')
 
   args = parser.parse_args()
