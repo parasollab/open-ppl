@@ -72,11 +72,10 @@ class PathEvaluator : public MapEvaluatorMethod<MPTraits> {
     // Each of these functions adds (key, value) to this's stat class
     // and prints them to std::cout. 
     // You can find statistics in the .stat output file. 
-    void AddToStats(std::string key, int value);
-    void AddToStats(std::string key, double value);
-    void AddToStats(std::string key, bool value);
-    void AddToStats(std::string key, size_t value);
-    void AddToStats(std::string key, std::string value);
+    void AddToStats(std::string _key, double _value);
+    inline void AddToStats(std::string _key, int _value) { AddToStats(_key, (double)_value); };
+    inline void AddToStats(std::string _key, bool _value) { AddToStats(_key, (double)_value); };
+    inline void AddToStats(std::string _key, size_t _value) { AddToStats(_key, (double)_value); };
 
 
 };
@@ -212,27 +211,5 @@ AddToStats(std::string _key, double _value) {
     this->GetStatClass()->SetStat(statKey, _value);
     std::cout << statKey << "\t" << _value << std::endl;
 } 
-
-template <typename MPTraits>
-void
-PathEvaluator<MPTraits>::
-AddToStats(std::string _key, int _value) {
-    AddToStats(_key, (double)_value);
-}
-
-template <typename MPTraits>
-void
-PathEvaluator<MPTraits>::
-AddToStats(std::string _key, size_t _value) {
-    AddToStats(_key, (double)_value);
-}
-
-template <typename MPTraits>
-void
-PathEvaluator<MPTraits>::
-AddToStats(std::string _key, bool _value) {
-    AddToStats(_key, (double)_value);
-}
-
 
 #endif
