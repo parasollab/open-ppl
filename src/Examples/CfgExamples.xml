@@ -19,13 +19,13 @@
     <Task label="query" robot="boxy">
       <StartConstraints>
         <!-- WARNING Support for multiple constraints is not yet implemented! -->
-        <CSpaceConstraint point="0 0 0 0 0 0"/>
+        <CSpaceConstraint point="0 10 0 0 0 0"/>
       </StartConstraints>
 
       <GoalConstraints>
         <!-- Here multiple constraints indicates a compound goal. Each constraint
              represents a single intermediate goal. -->
-        <CSpaceConstraint point="20 5 10 0.2 0.8 0.5"/>
+        <CSpaceConstraint point="0 -10 0 0.2 0.8 0.5"/>
       </GoalConstraints>
     </Task>
 
@@ -51,10 +51,11 @@
     </ValidityCheckers>
 
     <NeighborhoodFinders>
-      <BruteForceNF label="BFNF" dmLabel="euclidean" unconnected="false" k="10"/>
+      <BruteForceNF label="BFNF" dmLabel="euclidean" unconnected="false" k="4"/>
       <BruteForceNF label="Nearest" dmLabel="euclidean" unconnected="false"
         k="1"/>
       <BruteForceNF label="BFNFAll" dmLabel="euclidean" k="0"/>
+      <RadiusNF label="RNF" dmLabel="euclidean" radius="8"/>
     </NeighborhoodFinders>
 
     <Samplers>
@@ -72,6 +73,8 @@
         <Sampler label="UniformRandom" p="0.5"/>
         <Sampler label="ObstacleBased" p="0.5"/>
       </MixSampler>
+
+   
     </Samplers>
 
     <LocalPlanners>
@@ -90,12 +93,19 @@
     <PathModifiers>
     </PathModifiers>
 
+    <EdgeValidityCheckers>
+      <IntermediatesEdgeValidityChecker label="intermediateEdgeVC"
+        lpLabel = "sl"
+        vcLabel = "pqp_solid"
+        overrideLp = "true"/>
+    </EdgeValidityCheckers>
+
     <Connectors>
       <NeighborhoodConnector label="Closest" debug="true"
         nfLabel="BFNF" lpLabel="sl" checkIfSameCC="false"/>
       <NeighborhoodConnector label="ToggleConnect" nfLabel="BFNF" lpLabel="sl"
         maxFailures="1" checkIfSameCC="false"/>
-      <NeighborhoodConnector label="ClosestAlwaysTrue" nfLabel="BFNF"
+      <NeighborhoodConnector label="ClosestAlwaysTrue" nfLabel="RNF"
         lpLabel="slAlwaysTrue" checkIfSameCC="false"/>
       <NeighborhoodConnector label="AllToAll" nfLabel="BFNFAll" lpLabel="sl"
         checkIfSameCC="false"/>
@@ -126,7 +136,7 @@
       <PrintMapEvaluation label="PrintMap" base_name="Basic"/>
 
       <ConditionalEvaluator label="NodesEval" metric_method="NumNodes"
-        value="100" operator=">="/>
+        value="50" operator=">="/>
 
       <ConditionalEvaluator label="EdgesEval" metric_method="NumEdges"
         value="1000" operator=">"/>
@@ -144,10 +154,27 @@
         <Evaluator label="NodesEval"/>
       </ComposeEvaluator>
 
+      <ComposeEvaluator label="QueryAfterNodes" operator="and">
+        <Evaluator label="NodesEval"/>
+        <Evaluator label="Query"/>
+      </ComposeEvaluator>
+
+      <ComposeEvaluator label="CollisionAfterQueryAfterNodes" operator="and">
+        <Evaluator label="QueryAfterNodes"/>
+        <Evaluator label="colEval"/>
+      </ComposeEvaluator>
+
       <TimeEvaluator label="TimeEval" timeout="10"/>
+
+      <CollisionEvaluator label="colEval" evcLabel="intermediateEdgeVC"/>
     </MapEvaluators>
 
     <MPStrategies>
+      <BasicPRM label="MixSamplerStrat" debug="true" querySampler="UniformRandomFree">
+        <Sampler label="MixSampler" number="10" attempts="1"/>
+        <Connector label="Closest"/>
+        <Evaluator label="NodesEval"/>
+      </BasicPRM>
 
       <!-- Basic PRM where num samples is based on Number -->
       <BasicPRM label="OBPRM" debug="true" querySampler="UniformRandomFree">
@@ -157,16 +184,11 @@
       </BasicPRM>
 
       <BasicPRM label="BasicPRM1" debug="true" querySampler="UniformRandomFree">
-        <Sampler label="UniformRandomFree" number="10" attempts="1"/>
-        <Connector label="Closest"/>
-        <Evaluator label="NodesEval"/>
+        <Sampler label="UniformRandomFree" number="25" attempts="1"/>
+        <Connector label="ClosestAlwaysTrue"/>
+        <Evaluator label="CollisionAfterQueryAfterNodes"/>
       </BasicPRM>
 
-      <BasicPRM label="MixSamplerStrat" debug="true" querySampler="UniformRandomFree">
-        <Sampler label="MixSampler" number="10" attempts="1"/>
-        <Connector label="Closest"/>
-        <Evaluator label="NodesEval"/>
-      </BasicPRM>
 
       <!-- Basic PRM restarted from an input roadmap input.map. -->
       <BasicPRM label="BasicPRM2"
@@ -252,14 +274,13 @@
 
     <!-- MPProblem allows multiple solvers to be specified and executed. -->
 
-    <Solver mpStrategyLabel="MixSamplerStrat" seed="12345678"
+    <Solver mpStrategyLabel="BasicPRM1" seed="12345678"
       baseFilename="example" vizmoDebug="true"/>
 
   </Library>
 
   <TMPLibrary>
     <TMPStrategies>
-      <SimpleMotionMethod label="SimpleMotion" teLabel="motionEval" />
     </TMPStrategies>
 
     <TaskEvaluators>

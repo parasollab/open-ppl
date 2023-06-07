@@ -54,6 +54,8 @@ class MPBaseObject {
     typedef typename MPLibrary::LocalPlannerPointer    LocalPlannerPointer;
     typedef typename MPLibrary::ExtenderPointer        ExtenderPointer;
     typedef typename MPLibrary::PathModifierPointer    PathModifierPointer;
+    typedef typename MPLibrary::EdgeValidityCheckerPointer    
+                                                       EdgeValidityCheckerPointer;
     typedef typename MPLibrary::ConnectorPointer       ConnectorPointer;
     typedef typename MPLibrary::MetricPointer          MetricPointer;
     typedef typename MPLibrary::MapEvaluatorPointer    MapEvaluatorPointer;
@@ -153,6 +155,9 @@ class MPBaseObject {
 
     /// Get a path modifier by label from the owning MPLibrary.
     PathModifierPointer GetPathModifier(const std::string&) const noexcept;
+
+    /// Get a path modifier by label from the owning MPLibrary.
+    EdgeValidityCheckerPointer GetEdgeValidityChecker(const std::string&) const noexcept;
 
     /// Get a connector by label from the owning MPLibrary.
     ConnectorPointer GetConnector(const std::string&) const noexcept;
@@ -389,6 +394,15 @@ typename MPBaseObject<MPTraits>::PathModifierPointer
 MPBaseObject<MPTraits>::
 GetPathModifier(const std::string& _label) const noexcept {
   return m_library->GetPathModifier(_label);
+}
+
+
+template <typename MPTraits>
+inline
+typename MPBaseObject<MPTraits>::EdgeValidityCheckerPointer
+MPBaseObject<MPTraits>::
+GetEdgeValidityChecker(const std::string& _label) const noexcept {
+  return m_library->GetEdgeValidityChecker(_label);
 }
 
 

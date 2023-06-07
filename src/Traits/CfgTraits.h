@@ -32,14 +32,15 @@
 #include "MPLibrary/ValidityCheckers/AlwaysTrueValidity.h"
 #include "MPLibrary/ValidityCheckers/ComposeValidity.h"
 #include "MPLibrary/ValidityCheckers/ComposeCollision.h"
-#include "MPLibrary/ValidityCheckers/TerrainValidityChecker.h"
+#include "MPLibrary/ValidityCheckers/TerrainValidityChecker.h" 
 
 //neighborhood finder includes
 #include "MPLibrary/NeighborhoodFinders/BruteForceNF.h"
+#include "MPLibrary/NeighborhoodFinders/RadiusNF.h"
 
 //sampler includes
 #include "MPLibrary/Samplers/BridgeTestSampler.h"
-#include "MPLibrary/Samplers/MixSampler.h"
+#include "MPLibrary/Samplers/MixSampler.h" 
 #include "MPLibrary/Samplers/ObstacleBasedSampler.h"
 #include "MPLibrary/Samplers/UniformRandomSampler.h"
 #include "MPLibrary/Samplers/GaussianSampler.h"
@@ -51,6 +52,10 @@
 #include "MPLibrary/Extenders/BasicExtender.h"
 
 //path smoothing includes
+#include "MPLibrary/PathModifiers/ShortcuttingPathModifier.h"
+
+//edge validity checkers includes
+#include "MPLibrary/EdgeValidityCheckers/IntermediatesEdgeValidityChecker.h"
 
 //connector includes
 #include "MPLibrary/Connectors/NeighborhoodConnector.h"
@@ -68,10 +73,13 @@
 #include "MPLibrary/MapEvaluators/ComposeEvaluator.h"
 #include "MPLibrary/MapEvaluators/ConditionalEvaluator.h"
 #include "MPLibrary/MapEvaluators/LazyQuery.h"
+#include "MPLibrary/MapEvaluators/ClearanceQuery.h"
 #include "MPLibrary/MapEvaluators/PrintMapEvaluation.h"
 #include "MPLibrary/MapEvaluators/QueryMethod.h"
 #include "MPLibrary/MapEvaluators/SIPPMethod.h"
 #include "MPLibrary/MapEvaluators/TimeEvaluator.h"
+#include "MPLibrary/MapEvaluators/PathEvaluator.h"
+#include "MPLibrary/MapEvaluators/CollisionEvaluator.h"
 
 //mp strategies includes
 #include "MPLibrary/MPStrategies/AdaptiveRRT.h"
@@ -84,6 +92,7 @@
 #include "MPLibrary/MPStrategies/GroupDecoupledStrategy.h"
 #include "MPLibrary/MPStrategies/GroupStrategyMethod.h"
 #include "MPLibrary/MPStrategies/TogglePRMStrategy.h"
+#include "MPLibrary/MPStrategies/ModifyPath.h"
 #include "MPLibrary/MPStrategies/ValidationStrategy.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -138,19 +147,20 @@ struct MPTraits {
     ComposeValidity<MPTraits>,
     ComposeCollision<MPTraits>,
     TerrainValidityChecker<MPTraits>
-      > ValidityCheckerMethodList;
+     > ValidityCheckerMethodList;
 
   //types of neighborhood finders available in our world
   typedef boost::mpl::list<
-    BruteForceNF<MPTraits>
+    BruteForceNF<MPTraits>,
+    RadiusNF<MPTraits>
       > NeighborhoodFinderMethodList;
 
   //types of samplers available in our world
   typedef boost::mpl::list<
     BridgeTestSampler<MPTraits>,
-    MixSampler<MPTraits>,
+    MixSampler<MPTraits>, 
     ObstacleBasedSampler<MPTraits>,
-    UniformRandomSampler<MPTraits>,
+    UniformRandomSampler<MPTraits>, 
     GaussianSampler<MPTraits>
       > SamplerMethodList;
 
@@ -166,8 +176,13 @@ struct MPTraits {
 
   //types of path smoothing available in our world
   typedef boost::mpl::list<
+    ShortcuttingPathModifier<MPTraits>
       > PathModifierMethodList;
 
+  //types of edge validity checkers available in our world
+  typedef boost::mpl::list<
+    IntermediatesEdgeValidityChecker<MPTraits>
+      > EdgeValidityCheckerMethodList;
 
   //types of connectors available in our world
   typedef boost::mpl::list<
@@ -191,10 +206,13 @@ struct MPTraits {
     ComposeEvaluator<MPTraits>,
     ConditionalEvaluator<MPTraits>,
     LazyQuery<MPTraits>,
+    ClearanceQuery<MPTraits>,
     PrintMapEvaluation<MPTraits>,
     QueryMethod<MPTraits>,
     SIPPMethod<MPTraits>,
-    TimeEvaluator<MPTraits>
+    PathEvaluator<MPTraits>,
+    TimeEvaluator<MPTraits>,
+    CollisionEvaluator<MPTraits>
       > MapEvaluatorMethodList;
 
   //types of motion planning strategies available in our world
@@ -206,6 +224,7 @@ struct MPTraits {
     DynamicRegionRRT<MPTraits>,
     DynamicRegionsPRM<MPTraits>,
     EET<MPTraits>,
+    ModifyPath<MPTraits>,
     GroupDecoupledStrategy<MPTraits>,
     GroupStrategyMethod<MPTraits>,
     TogglePRMStrategy<MPTraits>,
@@ -216,3 +235,5 @@ struct MPTraits {
 };
 
 #endif
+
+
