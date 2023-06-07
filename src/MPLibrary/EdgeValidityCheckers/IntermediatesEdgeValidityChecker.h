@@ -27,8 +27,25 @@ class IntermediatesEdgeValidityChecker : public EdgeValidityCheckerMethod<MPTrai
 
     void Initialize() override;
 
+
+    /// Checks the validity of an edge using a set of intermediate cfgs
+    /// each validated independently.
+    /// @param _u The source of the edge to validate
+    /// @param _v The target of the edge to validate
+    /// @param _collisions An empty container that will be populated with
+    ///   a list of obstacles with which the edge collides.
+    /// @return True if all of the intermediate cfgs are in free space.
     bool ValidateEdge(VID _u, VID _v, vector<size_t>& _collisions) override;
     bool ValidateEdge(CfgType& _c1, CfgType& _c2, vector<size_t>& _collisions) override;
+
+    /// Determines the clearance of the edge given by two VIDs, and assigns it
+    ///   as the weight of the edge
+    /// @param _u The source of the edge
+    /// @param _v The target of the edge
+    /// @return The clearance of the edge
+    /// @note Takes into account weighted obstacles
+    double AssignClearanceWeight(VID _u, VID _v);
+
 
   private:
 
@@ -36,9 +53,19 @@ class IntermediatesEdgeValidityChecker : public EdgeValidityCheckerMethod<MPTrai
     ///@{
 
 
-    /// @TODO
-    /// @note Clears the vector _collisions 
+    /// Checks a set of intermediate cfgs for collisions, and populates the collisions
+    ///   vector with the indices of obstacles in collision with these cfgs.
+    /// @param _intermediates A vector of intermediate cfgs.
+    /// @param _collisions A vector to be populated with the indices of obstacles in collision
+    ///   with the cfgs.
+    /// @note Clears the vector _collisions before populating it
     bool ReportIntermediateCollisions(vector<CfgType>& _intermediates, vector<size_t>& _collisions);
+
+    /// @todo Maybe can get a nicer implementation using a clearance map of CDInfo
+    /// Iterates over a set of intermediates in order to find the minimum weighted clearance
+    /// @param _intermediates A vector of intermediate cfgs.
+    /// @return The minimum weighted clearance
+    double intermediateClearance(vector<CfgType>& _intermediates);
 
     ///@}
     ///@name member variables
@@ -46,13 +73,12 @@ class IntermediatesEdgeValidityChecker : public EdgeValidityCheckerMethod<MPTrai
 
     ///@}
 
-    string m_lpLabel;               ///< the local planner label
+    string m_lpLabel;                 ///< the local planner label
 
-    string m_vcLabel;               ///< the validity checker label. Must be a label of a
-                                    ///<  collision detection validity checker.
-    bool m_overideLp{false};        ///< Flag for using a different local planner than the one
-                                    ///<  stored in the roadmap edges
-
+    string m_vcLabel;                 ///< the validity checker label. Must be a label of a
+                                      ///<  collision detection validity checker.
+    bool m_overideLp{false};          ///< Flag for using a different local planner than the one
+                                      ///<  stored in the roadmap edges
 };
 
 template <typename MPTraits>
@@ -127,6 +153,94 @@ ValidateEdge(CfgType& _c1, CfgType& _c2, vector<size_t>& _collisions) {
 
 }
 
+template <typename MPTraits>
+double
+IntermediatesEdgeValidityChecker<MPTraits>::
+AssignClearanceWeight(VID _u, VID _v) {
+
+  vector<CfgType> intermediates;
+
+  RoadmapType* r = this->GetRoadmap();
+
+  if (m_overideLp){
+    
+    CfgType c1 = r->GetVertex(_u);
+    CfgType c2 = r->GetVertex(_v);
+
+    LocalPlannerMethod<MPTraits>* lp = this->GetLocalPlanner(m_lpLabel);
+
+    Environment* env = this->GetEnvironment();
+
+    intermediates = lp->BlindPath({c1, c2}, env->GetPositionRes(), env->GetOrientationRes());
+    
+  }
+
+  else{
+    intermediates = this->GetMPLibrary()->ReconstructEdge(r, _u, _v);
+
+    if (intermediates.size() == 0 )
+      throw RunTimeException(WHERE, "Edge local planner did not provide intermediates.\
+                                            Consider overriding edge local planners.");
+  }
+
+  double clearance = intermediateClearance(intermediates);
+
+  EI edge;
+
+  r->GetEdge(_u, _v, edge);
+
+  edge->property().SetWeight(clearance);
+
+  return clearance;
+}
+
+
+template <typename MPTraits>
+double
+IntermediatesEdgeValidityChecker<MPTraits>::
+intermediateClearance(vector<CfgType>& _intermediates) {
+
+  double clearance = MAX_DBL;
+
+  /// @todo pqp_solid is currently the only implemented cllision checking validity
+  /// checker supporting clearance queries 
+  ValidityCheckerMethod<MPTraits>* vc = this->GetValidityChecker("pqp_solid");
+
+  auto cd = dynamic_cast<CollisionDetectionValidityMethod<MPTraits>*>(vc);
+
+  auto env = this->GetEnvironment();
+
+  const string callee = this->GetNameAndLabel() + "::IntermediatesEdgeValidityChecker";
+
+  size_t numObst = env->NumObstacles();
+
+  CDInfo obstInfo;
+
+  for (auto &cfg: _intermediates) {
+
+    auto robot = cfg.GetRobot();
+    cfg.ConfigureRobot();
+
+    const MultiBody* robotMultiBody = robot->GetMultiBody();
+
+    for (size_t i = 0; i < numObst; i++) {
+
+      obstInfo.ResetVars(true);
+
+      MultiBody* obstMultiBody = env->GetObstacle(i);
+
+      cd->IsMultiBodyCollision(obstInfo, robotMultiBody, obstMultiBody, callee);
+
+      clearance = std::min(obstInfo.m_minDist - obstMultiBody->GetWeight(), clearance); 
+
+    }
+    
+  }
+
+  return clearance;
+}
+
+
 
 template <typename MPTraits>
 bool
@@ -165,8 +279,6 @@ ReportIntermediateCollisions(vector<CfgType>& _intermediates, vector<size_t>& _c
 
       obstInfo.ResetVars(true);
 
-      //@todo can maybe report penetration depth here in order to provide 
-      //  additional information
       inCollision = cd->IsMultiBodyCollision(obstInfo,
         robotMultiBody, env->GetObstacle(i), callee);
 
