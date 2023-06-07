@@ -162,14 +162,12 @@ struct MPTraits {
 
   //types of local planners available in our world
   typedef boost::mpl::list<
-    StraightLine<MPTraits>, 
-    HierarchicalLP<MPTraits>
+    StraightLine<MPTraits>
       > LocalPlannerMethodList;
 
   //types of extenders avaible in our world
   typedef boost::mpl::list<
-    BasicExtender<MPTraits>, 
-    RotationThenTranslation<MPTraits>
+    BasicExtender<MPTraits>
       > ExtenderMethodList;
 
   //types of path smoothing available in our world
