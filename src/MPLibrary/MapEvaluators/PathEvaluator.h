@@ -65,7 +65,7 @@ class PathEvaluator : public MapEvaluatorMethod<MPTraits> {
 
     /// Variables fill by XML:
     std::string m_cuLabel{}; // Clearance Utility (MPTool)
-    std::string m_eivcLabel{}; // Edge Intermediate Validity Checker
+    std::string m_ievcLabel{}; // Edge Intermediate Validity Checker
     std::string m_dmLabel{}; // Distance Metric 
 
     // Why copy/paste when you could write a bunch of helper functions instead?
@@ -94,7 +94,7 @@ PathEvaluator(XMLNode& _node) : MapEvaluatorMethod<MPTraits>(_node) {
   this->SetName("PathEvaluator");
 
   m_cuLabel = _node.Read("cuLabel", false, "", "Clearance Utility label");
-  m_eivcLabel = _node.Read("eivcLabel", false, "", "Intermediate Edge VC label");
+  m_ievcLabel = _node.Read("ievcLabel", false, "", "Intermediate Edge VC label");
   m_dmLabel = _node.Read("dmLabel", false, "", "Distance Metric label");
 
 }
@@ -145,7 +145,7 @@ operator()() {
     } 
 
     // Risk-weighted path clearance.
-    if (!m_eivcLabel.empty()) {
+    if (!m_ievcLabel.empty()) {
         auto clearances = GetClearanceStats(path);
         AddToStats("RiskWeightedMinClearance", clearances[0]);
         AddToStats("RiskWeightedMaxClearance", clearances[1]);
@@ -182,9 +182,9 @@ template <typename MPTraits>
 std::vector<double>
 PathEvaluator<MPTraits>::
 GetClearanceStats(const Path* _path) {  
-  assert(!m_eivcLabel.empty());
+  assert(!m_ievcLabel.empty());
 
-  auto vc = this->GetEdgeValidityChecker(m_eivcLabel);
+  auto vc = this->GetEdgeValidityChecker(m_ievcLabel);
   auto vids = _path->VIDs();
 
   double minClearance = MAX_DBL;

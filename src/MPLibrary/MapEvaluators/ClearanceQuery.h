@@ -87,7 +87,7 @@ ClearanceQuery<MPTraits>::
 ClearanceQuery(XMLNode& _node) : MapEvaluatorMethod<MPTraits>(_node), QueryMethod<MPTraits>(_node) {
   this->SetName("ClearanceQuery");
 
-  m_edgeIntermediateVCLabel = _node.Read("eivcLabel", true, "",
+  m_edgeIntermediateVCLabel = _node.Read("ievcLabel", true, "",
          "the edge intermediate VC label for weighted clearance checking");
 }
 
