@@ -89,9 +89,10 @@
 
     <EdgeValidityCheckers>
       <IntermediatesEdgeValidityChecker label="intermediateEdgeVC"
-        lpLabel = "sl"
-        vcLabel = "pqp_solid"
-        overrideLp = "false"/>
+        lpLabel="sl"
+        vcLabel="pqp_solid"
+        overrideLp="false"
+        reportCols="true"/>
     </EdgeValidityCheckers>
 
     <Connectors>
