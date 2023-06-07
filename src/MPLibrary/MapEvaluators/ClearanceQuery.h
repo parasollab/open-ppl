@@ -63,7 +63,7 @@ class ClearanceQuery : virtual public QueryMethod<MPTraits> {
 
     ///@}
 
-    std::string m_edgeIntermediateVCLabel; // EdgeIntermediate Validity Checker (for weighted clearance)
+    std::string m_intermediateEdgeVCLabel; // EdgeIntermediate Validity Checker (for weighted clearance)
 
   private:
     /// "Cache" edges so we don't need to recheck them using the collision checker. 
@@ -87,7 +87,7 @@ ClearanceQuery<MPTraits>::
 ClearanceQuery(XMLNode& _node) : MapEvaluatorMethod<MPTraits>(_node), QueryMethod<MPTraits>(_node) {
   this->SetName("ClearanceQuery");
 
-  m_edgeIntermediateVCLabel = _node.Read("ievcLabel", true, "",
+  m_intermediateEdgeVCLabel = _node.Read("ievcLabel", true, "",
          "the edge intermediate VC label for weighted clearance checking");
 }
 
@@ -125,7 +125,7 @@ double
 ClearanceQuery<MPTraits>::
 StaticPathWeight(EI& _ei, 
   const double _sourceDistance, const double _targetDistance) const {
-    auto vc = this->GetEdgeValidityChecker(m_edgeIntermediateVCLabel);
+    auto vc = this->GetEdgeValidityChecker(m_intermediateEdgeVCLabel);
 
     VID source = _ei->source();
     VID target = _ei->target();

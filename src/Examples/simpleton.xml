@@ -95,9 +95,9 @@
     </Metrics>
 
     <MapEvaluators>
-      <PathEvaluator label="PE" eivcLabel="IEVC"/>
+      <PathEvaluator label="PE" ievcLabel="IEVC"/>
 
-      <ClearanceQuery label="ClearanceQuery" eivcLabel="IEVC"/>
+      <ClearanceQuery label="ClearanceQuery" ievcLabel="IEVC"/>
 
       <QueryMethod label="Query" debug="false"
         graphSearchAlg="dijkstras" safeIntervalToolLabel="SI"/>

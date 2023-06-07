@@ -65,7 +65,7 @@ class PathEvaluator : public MapEvaluatorMethod<MPTraits> {
 
     /// Variables fill by XML:
     std::string m_cuLabel{}; // Clearance Utility (MPTool)
-    std::string m_ievcLabel{}; // Edge Intermediate Validity Checker
+    std::string m_ievcLabel{}; // Intermediates Edge Validity Checker
     std::string m_dmLabel{}; // Distance Metric 
 
     // Why copy/paste when you could write a bunch of helper functions instead?
