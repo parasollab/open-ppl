@@ -5,10 +5,10 @@
        'baseFilename in the Problem node is for Simulator stat output only. -->
   <Problem baseFilename="example">
 
-    <Environment filename="simpleton/tunnel-weighted.env"
+    <Environment filename="simple-tunnel/tunnel-weighted.env"
       frictionCoefficient="0" gravity="0 0 0"/>
 
-    <Robot label="boxy" filename="simpleton/robot.obj">
+    <Robot label="boxy" filename="simple-tunnel/robot.obj">
       <!--
       <Agent type="planning"/>
       -->
@@ -157,8 +157,8 @@
 
     <!-- MPProblem allows multiple solvers to be specified and executed. -->
 
-    <Solver mpStrategyLabel="BasicPRM-clearance-weighted" seed="1234678"
-      baseFilename="simpleton-clearance-weighted" vizmoDebug="true"/>
+    <Solver mpStrategyLabel="BasicPRM-clearance" seed="1234678"
+      baseFilename="simple-tunnel-clearance-weighted" vizmoDebug="true"/>
 
   </Library>
 
