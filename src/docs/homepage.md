@@ -17,3 +17,5 @@ We also have:
  - [Query Evaluators](\ref QueryMethod): Query techniques on graphs. Most run Dijkstra's algorithm. 
  - [Metrics](\ref MetricMethod): ???
  - [Path Modifiers](\ref PathModifierMethod): Modifiers for paths, after they are found. 
+
+ If you are looking for something specific, `Files->File List` provides a list of all our files in source code hierarchy, and `Data Structures->Data Structures Index` provides a list of all data structures in the library. 
