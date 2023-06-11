@@ -150,3 +150,9 @@ The executable built resides in /pmp/build/pmpl_exec within the docker container
 ## Tests
 
 **TODO** Update Test Instructions
+
+## Documentation
+We use `doxygen` for documentation. `cd` into the `src/` directory, then run:
+```bash
+doxygen
+```
