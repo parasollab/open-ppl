@@ -1493,6 +1493,8 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
   thvids.reserve(maxTimestep - 1);
 
   // Construct the first movement hyperarc
+  shvids.push_back(std::unordered_map<std::pair<VID, VID>, VID>());
+  thvids.push_back(std::unordered_map<std::pair<VID, VID>, VID>());
   for(auto iter : movementGroups.at(0)) {
     auto edge = iter.first;
     auto robots = iter.second;
@@ -1505,8 +1507,8 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
     auto unitDisp = disp / disp.norm();
 
     auto group = AddGroup(robots);
-    auto compSource = CompositeSkeletonVertex(group);
-    auto compTarget = CompositeSkeletonVertex(group);
+    auto compSource = CompositeSkeletonVertex(group, &m_indSkeleton);
+    auto compTarget = CompositeSkeletonVertex(group, &m_indSkeleton);
 
     // Push the starts (or don't) of robots going along the edge
     if(pushStart.count(0) and pushStart[0].count(source)) {
@@ -1627,7 +1629,7 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
     }
 
     // Connect the source and target with a hyperarc
-    auto compEdge = CompositeSkeletonEdge(group);
+    auto compEdge = CompositeSkeletonEdge(group, &m_indSkeleton);
     ComputeIntermediates(_mapfSolution, (size_t)0, compSource, compTarget, compEdge);
     auto arc = HyperskeletonArc(compEdge, HyperskeletonArcType::Movement);
     auto hid = m_skeleton->AddHyperarc({tvid}, {svid}, arc);
@@ -1652,6 +1654,8 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
   svids.reserve(maxTimestep - 1);
 
   for(size_t t = 0; t < maxTimestep - 2; t++) {
+    shvids.push_back(std::unordered_map<std::pair<VID, VID>, VID>());
+    thvids.push_back(std::unordered_map<std::pair<VID, VID>, VID>());
 
     // Construct the outgoing movement hyperarc
     for(auto iter : movementGroups.at(t+1)) {
@@ -1666,8 +1670,8 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
       auto unitDisp = disp / disp.norm();
 
       auto group = AddGroup(robots);
-      auto compSource = CompositeSkeletonVertex(group);
-      auto compTarget = CompositeSkeletonVertex(group);
+      auto compSource = CompositeSkeletonVertex(group, &m_indSkeleton);
+      auto compTarget = CompositeSkeletonVertex(group, &m_indSkeleton);
 
       // Push the starts (or don't) of robots going along the edge
       if(pushStart.count(t+1) and pushStart[t+1].count(source)) {
@@ -1787,7 +1791,7 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
       }
 
       // Connect the source and target with a hyperarc
-      auto compEdge = CompositeSkeletonEdge(group);
+      auto compEdge = CompositeSkeletonEdge(group, &m_indSkeleton);
       ComputeIntermediates(_mapfSolution, t, compSource, compTarget, compEdge);
       auto arc = HyperskeletonArc(compEdge, HyperskeletonArcType::Movement);
       auto hid = m_skeleton->AddHyperarc({tvid}, {svid}, arc);
@@ -1803,6 +1807,8 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
 
     // Construct the decouple hyperarcs at this timestep
     for(auto iter : movementGroups.at(t)) {
+      dvids.push_back(std::unordered_map<VID, std::set<VID>>());
+
       auto edge = iter.first;
       auto robots = iter.second;
       auto source = edge.first;
@@ -1865,6 +1871,8 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
 
     // Construct the merge hyperarcs
     for(auto iter : dvids.at(t)) {
+      mvids.push_back(std::unordered_map<VID, VID>());
+
       auto skelVID = iter.first;
       auto hvids = iter.second;
 
@@ -1882,7 +1890,7 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
       }
 
       auto group = AddGroup(robots);
-      auto compV = CompositeSkeletonVertex(group);
+      auto compV = CompositeSkeletonVertex(group, &m_indSkeleton);
       for(auto r : robots) {
         compV.SetRobotCfg(r, skelVID);
       }
@@ -1943,6 +1951,8 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
 
     // Construct the split hyperarcs
     for(auto iter : mvids.at(t)) {
+      svids.push_back(std::unordered_map<std::pair<VID, VID>, VID>());
+
       auto skelVID = iter.first;
       auto hvid = iter.second;
 
@@ -1967,7 +1977,7 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
         auto nextVertex = m_skeleton->GetVertexType(nextV);
 
         auto group = AddGroup(rs);
-        auto compV = CompositeSkeletonVertex(group);
+        auto compV = CompositeSkeletonVertex(group, &m_indSkeleton);
 
         for(auto r : rs) {
           Point3d cfg = nextVertex.GetRobotCfg(r);
