@@ -156,3 +156,4 @@ We use `doxygen` for documentation. `cd` into the `src/` directory, then run:
 ```bash
 doxygen
 ```
+Then open `../doxygen/html/index.html`
