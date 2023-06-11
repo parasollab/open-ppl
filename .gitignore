@@ -25,5 +25,4 @@ tests/StrategyTests/Scratch/*.map
 tests/StrategyTests/Scratch/*.path
 
 # doxygen-generated files
-src/html/*
-src/latex/*
+doxygen/*
