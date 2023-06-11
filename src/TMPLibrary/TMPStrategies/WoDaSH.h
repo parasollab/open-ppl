@@ -77,8 +77,6 @@ class WoDaSH : public TMPStrategyMethod {
 
     struct HyperskeletonArc {
       CompositeSkeletonEdge edge;
-      bool pushStart{false};
-      bool pushTarget{false};
       HyperskeletonArcType type;
 
       RepresentativeVertex startRep;
@@ -88,8 +86,8 @@ class WoDaSH : public TMPStrategyMethod {
 
       HyperskeletonArc(CompositeSkeletonEdge _edge, bool _pushStart, bool _pushTarget,
                        HyperskeletonArcType _type, RepresentativeVertex _start,
-                       RepresentativeVertex _end) : edge(_edge), pushStart(_pushStart),
-                       pushTarget(_pushTarget), type(_type), startRep(_start), endRep(_end) {}
+                       RepresentativeVertex _end) : edge(_edge), type(_type), 
+                       startRep(_start), endRep(_end) {}
       
       HyperskeletonArc(CompositeSkeletonEdge _edge, HyperskeletonArcType _type) :
           edge(_edge), type(_type) {}
@@ -100,9 +98,6 @@ class WoDaSH : public TMPStrategyMethod {
 
       bool operator!=(const HyperskeletonArc& _arc) {
         if(edge != _arc.edge)
-          return true;
-        
-        if(pushStart != _arc.pushStart or pushTarget != _arc.pushTarget)
           return true;
         
         if(type != _arc.type)
@@ -116,8 +111,6 @@ class WoDaSH : public TMPStrategyMethod {
 
       friend std::ostream& operator<<(std::ostream& _os, const HyperskeletonArc& _arc) {
         _os << "Composite Edge: " << _arc.edge
-            << ", pushStart: " << _arc.pushStart
-            << ", pushTarget: " << _arc.pushTarget
             << ", type: ";
 
         switch(_arc.type) {
@@ -252,6 +245,13 @@ class WoDaSH : public TMPStrategyMethod {
                         const bool pushStart=false,
                         const bool pushTarget=false);
 
+    void
+    ComputeIntermediates(std::unordered_map<Robot*, CBSSolution*> _mapfSolution, 
+                        size_t _timestep,
+                        CompositeSkeletonVertex& _compSource, 
+                        CompositeSkeletonVertex& _compTarget, 
+                        CompositeSkeletonEdge& _compEdge);
+
     bool ConnectToSkeleton();
 
     void GroundStartAndGoal();
@@ -331,6 +331,10 @@ class WoDaSH : public TMPStrategyMethod {
     // Constraints from hyperarcs that failed to ground
     std::vector<std::unordered_map<Robot*, std::pair<VID, VID>>> m_failedEdges;
     // std::unordered_map<std::pair<VID, VID>, RobotGroup*> m_failedEdges;
+
+    // Cache composition hyperarcs that have already been grounded for 
+    // repeated queries
+    std::unordered_set<HID> m_cachedTrajs;
 
     // Map from workspace hyper-skeleton VID to all grounded instances of itself
     std::unordered_map<VID,std::unordered_set<VID>> m_vertexGroundingMap;
