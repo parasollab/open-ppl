@@ -1354,7 +1354,6 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
       auto path = *kv.second;
 
       std::cout << robot->GetLabel() << std::endl;
-      std::cout << path << std::endl;
 
       auto source = path.size() > t ? path.at(t) : path.at(path.size() - 1);
       auto target = path.size() > t + 1 ? path.at(t+1) : path.at(path.size() - 1);
@@ -1378,7 +1377,6 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
         ed = m_indSkeleton.AddEdge(source, target);
       }
       individualEdges.emplace(robot, ed);
-      std::cout << individualEdges.size() << std::endl;
     }
     movementGroups.push_back(edgeGroups);
   }
@@ -1560,10 +1558,11 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
 
     // Push the targets (or don't) of robots going along the edge
     if(pushTarget.count(0) and pushTarget[0].count(target)) {
+      std::cout << "pushing target " << target << std::endl;
       for(auto robot : robots) {
         // Get the point in workspace of the source skeleton vertex
         auto path = *_mapfSolution[robot];
-        auto time = std::max((size_t)1, path.size() - 1);
+        auto time = std::min((size_t)1, path.size() - 1);
         auto skelVID = path.at(time);
         if(skelVID != target)
           continue;
@@ -1572,15 +1571,18 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
         push = std::min(push, disp.norm() / 2.0);
         auto skelTarget = targetVal - push * unitDisp;
         compTarget.SetRobotCfg(robot, std::move(skelTarget));
+        std::cout << "pushed " << robot->GetLabel() << " " << push << " to " << skelTarget << std::endl;
       }
     } else {
       for(auto robot : robots) {
         // Get the point in workspace of the source skeleton vertex
         auto path = *_mapfSolution[robot];
-        auto time = std::max((size_t)1, path.size() - 1);
+        auto time = std::min((size_t)1, path.size() - 1);
         auto skelVID = path.at(time);
         if(skelVID != target)
           continue;
+
+        std::cout << "didn't push " << robot->GetLabel() << std::endl;
 
         compTarget.SetRobotCfg(robot, skelVID);
       }
@@ -1588,10 +1590,11 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
 
     // Push the targets (or don't) of robots going in the opposite direction
     if(pushTarget.count(0) and pushTarget[0].count(source)) {
+      std::cout << "pushing target (source)" << std::endl;
       for(auto robot : robots) {
         // Get the point in workspace of the source skeleton vertex
         auto path = *_mapfSolution[robot];
-        auto time = std::max((size_t)1, path.size() - 1);
+        auto time = std::min((size_t)1, path.size() - 1);
         auto skelVID = path.at(time);
         if(skelVID != source)
           continue;
@@ -1600,17 +1603,19 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
         push = std::min(push, disp.norm() / 2.0);
         auto skelTarget = sourceVal + push * unitDisp;
         compTarget.SetRobotCfg(robot, std::move(skelTarget));
+        std::cout << "pushed " << robot->GetLabel() << " " << push << " to " << skelTarget << std::endl;
       }
     } else {
       for(auto robot : robots) {
         // Get the point in workspace of the source skeleton vertex
         auto path = *_mapfSolution[robot];
-        auto time = std::max((size_t)1, path.size() - 1);
+        auto time = std::min((size_t)1, path.size() - 1);
         auto skelVID = path.at(time);
         if(skelVID != source)
           continue;
 
         compTarget.SetRobotCfg(robot, skelVID);
+        std::cout << "didn't push " << robot->GetLabel() << std::endl;
       }
     }
 
@@ -1677,7 +1682,9 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
       if(pushStart.count(t+1) and pushStart[t+1].count(source)) {
         for(auto robot : robots) {
           // Get the point in workspace of the source skeleton vertex
-          auto skelVID = (*_mapfSolution[robot]).at(t+1);
+          auto path = *_mapfSolution[robot];
+          auto time = std::min(t+1, path.size());
+          auto skelVID = path.at(time);
           if(skelVID != source)
             continue;
 
@@ -1689,7 +1696,9 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
       } else {
         for(auto robot : robots) {
           // Get the point in workspace of the source skeleton vertex
-          auto skelVID = (*_mapfSolution[robot]).at(t+1);
+          auto path = *_mapfSolution[robot];
+          auto time = std::min(t+1, path.size());
+          auto skelVID = path.at(time);
           if(skelVID != source)
             continue;
 
@@ -1701,7 +1710,9 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
       if(pushStart.count(t+1) and pushStart[t+1].count(target)) {
         for(auto robot : robots) {
           // Get the point in workspace of the source skeleton vertex
-          auto skelVID = (*_mapfSolution[robot]).at(t+1);
+          auto path = *_mapfSolution[robot];
+          auto time = std::min(t+1, path.size());
+          auto skelVID = path.at(time);
           if(skelVID != target)
             continue;
 
@@ -1713,7 +1724,9 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
       } else {
         for(auto robot : robots) {
           // Get the point in workspace of the source skeleton vertex
-          auto skelVID = (*_mapfSolution[robot]).at(t+1);
+          auto path = *_mapfSolution[robot];
+          auto time = std::min(t+1, path.size());
+          auto skelVID = path.at(time);
           if(skelVID != target)
             continue;
 
@@ -1726,7 +1739,7 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
         for(auto robot : robots) {
           // Get the point in workspace of the source skeleton vertex
           auto path = *_mapfSolution[robot];
-          auto time = std::max(t+2, path.size() - 1);
+          auto time = std::min(t+2, path.size() - 1);
           auto skelVID = path.at(time);
           if(skelVID != target)
             continue;
@@ -1740,7 +1753,7 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
         for(auto robot : robots) {
           // Get the point in workspace of the source skeleton vertex
           auto path = *_mapfSolution[robot];
-          auto time = std::max(t+2, path.size() - 1);
+          auto time = std::min(t+2, path.size() - 1);
           auto skelVID = path.at(time);
           if(skelVID != target)
             continue;
@@ -1754,7 +1767,7 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
         for(auto robot : robots) {
           // Get the point in workspace of the source skeleton vertex
           auto path = *_mapfSolution[robot];
-          auto time = std::max(t+2, path.size() - 1);
+          auto time = std::min(t+2, path.size() - 1);
           auto skelVID = path.at(time);
           if(skelVID != source)
             continue;
@@ -1768,7 +1781,7 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
         for(auto robot : robots) {
           // Get the point in workspace of the source skeleton vertex
           auto path = *_mapfSolution[robot];
-          auto time = std::max(t+2, path.size() - 1);
+          auto time = std::min(t+2, path.size() - 1);
           auto skelVID = path.at(time);
           if(skelVID != source)
             continue;
@@ -2160,8 +2173,8 @@ ComputeIntermediates(std::unordered_map<Robot*, CBSSolution*> _mapfSolution,
   double maxDist = 0;
   for(auto robot : robots) {
     auto path = *_mapfSolution[robot];
-    auto stime = std::max(_timestep, path.size()-1);
-    auto ttime = std::max(_timestep+1, path.size()-1);
+    auto stime = std::min(_timestep, path.size()-1);
+    auto ttime = std::min(_timestep+1, path.size()-1);
     auto skelSource = path.at(stime);
     auto skelTarget = path.at(ttime);
 
@@ -2172,6 +2185,9 @@ ComputeIntermediates(std::unordered_map<Robot*, CBSSolution*> _mapfSolution,
 
     auto disp = target - start;
     const auto dist = (disp).norm();
+
+    std::cout << robot->GetLabel() << " start: " << start << " target: " << target << " dist " << dist << std::endl;
+    std::cout << "vids: " << skelSource << " " << skelTarget << std::endl;
 
     if(dist < intLength)
       displacements.push_back({0., 0., 0.});
