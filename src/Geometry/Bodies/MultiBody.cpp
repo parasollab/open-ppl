@@ -478,6 +478,16 @@ GetBaseMovementType() const noexcept {
   return m_baseMovement;
 }
 
+double
+MultiBody::
+GetWeight() const {
+  double res = 0.0;
+  for (auto body : m_bodies) {
+    res += body.GetWeight();
+  }
+  return res;
+}
+
 /*--------------------------- Geometric Properties ---------------------------*/
 
 const Vector3d&

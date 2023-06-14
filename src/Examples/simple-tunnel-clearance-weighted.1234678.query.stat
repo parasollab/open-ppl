@@ -1,0 +1,66 @@
+Roadmap Statistics:
+
+  Number of Nodes: 208
+  Number of Edges: 2624
+
+  There are 1 connected components:
+    CC[0]: 208 (vid 0)
+
+
+Sampler Statistics                                            Attempts Successes
+
+  UniformRandomSampler::UniformRandomFree                          257       208
+  All Samplers                                                     257       208
+  Success Rate: 80.9%
+
+
+Local Planner Statistics                        Attempts Connections    CD Calls
+
+  StraightLine::sl                                  2046        2014     1246802
+
+
+Collision Detection Calls                                                  Count
+
+  StraightLine::sl::IsConnectedSLBinary                                  1246802
+  UniformRandomSampler::UniformRandomFree::Sampler                           257
+  All Collision Detectors                                                1247059
+
+
+Other Statistics                                                           Value
+
+  ClearanceQuery::ClearanceQuery::FoundPath                                    1
+  Graph Search                                                                 1
+  PathEvaluator::Actual Path Length                                         39.8
+  PathEvaluator::PathSize                                                     10
+  PathEvaluator::RiskWeightedAvgClearance                                   1.74
+  PathEvaluator::RiskWeightedMaxClearance                                   4.52
+  PathEvaluator::RiskWeightedMinClearance                                  0.293
+  PathEvaluator::TotalEdgeWeight                                            39.8
+  QueryMethod::Query::FoundPath                                                0
+
+
+Averages                                                         Value     Count
+
+  NeighborhoodConnector::Closest::CacheHitRatio                      0      1444
+
+
+Clock Name                                                        Time (Seconds)
+
+  BasicPRM::BasicPRM-clearance::Connect                                     21.4
+  BasicPRM::BasicPRM-clearance::EvaluateMap                                 47.2
+  BasicPRM::BasicPRM-clearance::GenerateGoals                                  0
+  BasicPRM::BasicPRM-clearance::GenerateStart                                  0
+  BasicPRM::BasicPRM-clearance::InitAndRun                                  68.6
+  BasicPRM::BasicPRM-clearance::Initialize                               0.00771
+  BasicPRM::BasicPRM-clearance::Run                                         68.6
+  BasicPRM::BasicPRM-clearance::Sample                                         0
+  BruteForceNF::BFNF::FindNeighbors                                       0.0777
+  CCTracker::AddEdge                                                           0
+  CCTracker::AddVertex                                                         0
+  ComposeEvaluator::ClearancePathEvaluatedQuery                             47.2
+  MPLibrary::Initialize                                                        0
+  NeighborhoodConnector::Closest::Connect                                   21.4
+  QueryMethod::GeneratePath                                                 46.7
+  StraightLine::sl::IsConnected                                             23.1
+  Total Running Time                                                           0
+  UniformRandomSampler::UniformRandomFree::Sample                              0
