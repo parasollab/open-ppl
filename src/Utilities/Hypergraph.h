@@ -60,7 +60,8 @@ class Hypergraph {
     ///@{
 
     virtual size_t AddHyperarc(std::set<size_t> _head, std::set<size_t> _tail,
-                       HyperarcType _hyperarc, bool _overWrite = false);
+                       HyperarcType _hyperarc, bool _overWrite = false, 
+                       bool _returnExisting = false);
 
     Hyperarc& GetHyperarc(size_t _hid);
 
@@ -216,7 +217,7 @@ template <typename VertexType, typename HyperarcType>
 size_t 
 Hypergraph<VertexType,HyperarcType>::
 AddHyperarc(std::set<size_t> _head, std::set<size_t> _tail,
-            HyperarcType _hyperarc, bool _overWrite) {
+            HyperarcType _hyperarc, bool _overWrite, bool _returnExisting) {
 
   // Check if hyperarc already exists
   if(!_head.empty()) {
@@ -230,9 +231,13 @@ AddHyperarc(std::set<size_t> _head, std::set<size_t> _tail,
         if(hyperarc.property != _hyperarc) {
           if(_overWrite)
             m_hyperarcMap[hid].property = _hyperarc;
-          else 
+          else {
+            if(_returnExisting)
+              return hid;
+
             throw RunTimeException(WHERE) << "Tried to add a different value for the hyperarc: "
                                         << hyperarc.hid;
+          }
         }
         return hyperarc.hid;
       }

@@ -195,7 +195,7 @@ class CompositeDynamicRegionRRT : virtual public GroupRRTStrategy<MPTraits> {
     ///@name Hack for WoDaSH
     ///@{
 
-    virtual void GroundEdge(const CompositeSkeletonEdge _edge) override;
+    virtual void GroundEdge(const CompositeSkeletonEdge& _edge) override;
 
     ///@}
 
@@ -2184,7 +2184,7 @@ GetAdjacentRobots(const VectorMap _centers) {
 template <typename MPTraits>
 void
 CompositeDynamicRegionRRT<MPTraits>::
-GroundEdge(const CompositeSkeletonEdge _edge){
+GroundEdge(const CompositeSkeletonEdge& _edge){
   MethodTimer mt(this->GetStatClass(), this->GetNameAndLabel() + "::GroundEdge");
 
   m_groundEdge = true;

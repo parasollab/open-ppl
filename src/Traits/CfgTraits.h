@@ -96,6 +96,7 @@
 #include "MPLibrary/MPStrategies/BasicPRM.h"
 #include "MPLibrary/MPStrategies/BasicRRTStrategy.h"
 #include "MPLibrary/MPStrategies/CompositeDynamicRegionRRT.h"
+#include "MPLibrary/MPStrategies/CDRRRTLite.h"
 #include "MPLibrary/MPStrategies/DynamicRegionRRT.h"
 #include "MPLibrary/MPStrategies/DynamicRegionsPRM.h"
 #include "MPLibrary/MPStrategies/EvaluateMapStrategy.h"
@@ -245,6 +246,7 @@ struct MPTraits {
     BasicPRM<MPTraits>,
     BasicRRTStrategy<MPTraits>,
     CompositeDynamicRegionRRT<MPTraits>,
+    CDRRRTLite<MPTraits>,
     DynamicRegionRRT<MPTraits>,
     DynamicRegionsPRM<MPTraits>,
     EvaluateMapStrategy<MPTraits>,
