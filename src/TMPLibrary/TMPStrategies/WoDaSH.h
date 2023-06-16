@@ -129,7 +129,8 @@ class WoDaSH : public TMPStrategyMethod {
     };
 
     struct HyperskeletonPath {
-      std::set<HID> movementHyperarcs; // Want these to ground in order
+      std::vector<VID> buildMovementHyperarcs; // Want to ground these in order
+      std::unordered_set<HID> movementHyperarcs;
       std::unordered_set<HID> coupleHyperarcs;
       std::unordered_set<HID> decoupleHyperarcs;
       std::unordered_set<HID> mergeHyperarcs;
@@ -141,6 +142,7 @@ class WoDaSH : public TMPStrategyMethod {
       HyperskeletonPath() {}
 
       void Reset() {
+        buildMovementHyperarcs.clear();
         movementHyperarcs.clear();
         coupleHyperarcs.clear();
         decoupleHyperarcs.clear();
@@ -257,6 +259,8 @@ class WoDaSH : public TMPStrategyMethod {
     void GroundStartAndGoal();
 
     RobotGroup* AddGroup(std::vector<Robot*> _robots);
+
+    void SetVirtualExcept(RobotGroup* _group=nullptr);
 
     HID AddTransitionToGroundedHypergraph(std::set<VID> _tail, std::set<VID> _head, 
       GroupPathType* _path, std::shared_ptr<GroupTask> _task);

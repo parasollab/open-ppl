@@ -219,6 +219,9 @@ Hypergraph<VertexType,HyperarcType>::
 AddHyperarc(std::set<size_t> _head, std::set<size_t> _tail,
             HyperarcType _hyperarc, bool _overWrite, bool _returnExisting) {
 
+  if(_head == _tail)
+    throw RunTimeException(WHERE) << "Tried to add hyperarc between same head/tail";
+
   // Check if hyperarc already exists
   if(!_head.empty()) {
     auto vid = *(_head.begin());
