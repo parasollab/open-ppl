@@ -126,8 +126,6 @@ Run(Plan* _plan) {
 
   //Initialize();
 
-  std::cout << "SUBMODE QUERY RUN CALLED" << std::endl;
-
   auto plan = this->GetPlan();
   auto stats = plan->GetStatClass();
   MethodTimer mt(stats,this->GetNameAndLabel() + "::Run");
@@ -142,8 +140,6 @@ Run(Plan* _plan) {
   source.groundedVID = 0;
   auto sourceVID = m_actionExtendedHypergraph.AddVertex(source);
   m_vertexMap[source.groundedVID].insert(sourceVID);
-
-  std::cout << "TE Size " << m_actionExtendedHypergraph.Size() << std::endl;
 
   HyperpathQuery();
 
@@ -605,11 +601,6 @@ ComputeHeuristicValues() {
   //auto& gh = mg->GetGroundedHypergraph();
   auto g = gh->GetReverseGraph();
 
-  std::cout << "reverse graph vids: " << g->GetAllVIDs() << std::endl;
-  for(auto iter=g->edges_begin(); iter!=g->edges_end(); iter++) {
-    std::cout << "s: " << iter->source() << " t: " << iter->target() << std::endl;
-  }
-
   // Setup dijkstra functions
   SSSPTerminationCriterion<GroundedHypergraph::GH::GraphType> termination(
     [this](typename GroundedHypergraph::GH::GraphType::vertex_iterator& _vi,
@@ -1029,16 +1020,12 @@ double
 SubmodeQuery::
 HyperpathHeuristic(const size_t& _target) {
 
-  std::cout << "called heuristic with target " << _target << std::endl;
-
   // auto mg = dynamic_cast<ModeGraph*>(this->GetStateGraph(m_mgLabel).get());
   auto gh = dynamic_cast<GroundedHypergraph*>(this->GetStateGraph(m_ghLabel).get());
   //auto& gh = mg->GetGroundedHypergraph();
 
   auto aev = m_actionExtendedHypergraph.GetVertexType(_target);
   auto vid = aev.groundedVID;
-
-  std::cout << "aev has grounded vid " << vid << std::endl;
 
   auto grm = gh->GetVertex(vid).first;
   if(!grm) {

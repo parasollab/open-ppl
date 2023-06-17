@@ -102,6 +102,8 @@ WoDaSH::
 void
 WoDaSH::
 Initialize() {
+  auto stats = this->GetPlan()->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::Initialize");
 
   {
     auto plan = this->GetPlan();
@@ -172,6 +174,9 @@ Initialize() {
 void
 WoDaSH::
 PlanTasks() {
+  auto stats = this->GetPlan()->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::PlanTasks");
+
   auto te = this->GetTaskEvaluator(m_teLabel);
   te->Initialize();
 
@@ -194,7 +199,9 @@ PlanTasks() {
       success = GroundHyperskeleton();
       success = success and ConnectToSkeleton(); // TODO impose vertex constraints if this fails
     }
-    std::cout << "successfully found a path for each robot." << std::endl;
+    if(this->m_debug)
+      std::cout << "successfully found a path for each robot." << std::endl;
+
     this->GetMPLibrary()->SetGroupTask(m_wholeTask);
     
   } while(!te->operator()() or !me->operator()(plan));
@@ -205,8 +212,8 @@ PlanTasks() {
 void
 WoDaSH::
 BuildSkeleton() {
-  // auto stats = this->GetStatClass();
-  // MethodTimer mt(stats, this->GetNameAndLabel() + "::BuildSkeleton");
+  auto stats = this->GetPlan()->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::BuildSkeleton");
 
   // Get robots.
   auto robots = this->GetMPLibrary()->GetGroupTask()->GetRobotGroup()->GetRobots();
@@ -299,6 +306,9 @@ BuildSkeleton() {
 void
 WoDaSH::
 InitializeCostToGo() {
+  auto stats = this->GetPlan()->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::InitializeCostToGo");
+
   // Assumes the same skeleton for each of the robots
   auto ws = m_indSkeleton;
   auto robots = this->GetMPLibrary()->GetGroupTask()->GetRobotGroup()->GetRobots();
@@ -757,6 +767,8 @@ bool
 WoDaSH::
 CheckCircularDependency(Robot* _robot, const OrderingConstraint& _newConstraint, 
                 const std::map<Robot*,std::set<OrderingConstraint>>& _constraints) {
+  auto stats = this->GetPlan()->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::CheckCircularDependency");
 
   // Check for duplicate constraints
   if(_constraints.at(_robot).count(_newConstraint))
@@ -996,7 +1008,7 @@ LowLevelPlanner(PBSNodeType& _node, Robot* _robot) {
           // Add a small cost for waiting so no edge has 0 weight
           auto nvid = _h->AddVertex(neighbor);
           auto dist = (targetProp - sourceProp).norm();
-          _h->AddEdge(_vid,nvid,std::max(dist, 0.0000001));
+          _h->AddEdge(_vid,nvid,1.0+dist);
         }
       }
     );
@@ -1039,6 +1051,9 @@ LowLevelPlanner(PBSNodeType& _node, Robot* _robot) {
 void
 WoDaSH::
 AddDependencies(std::set<Robot*>& _needsToReplan, Robot* _robot, const PBSNodeType& _node) {
+  auto stats = this->GetPlan()->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::AddDependencies");
+
   for(auto iter : _node.constraintMap) {
      auto r = iter.first;
      auto dep = iter.second;
@@ -1326,6 +1341,9 @@ MAPFSolution() {
 void
 WoDaSH::
 GroundStartAndGoal() {
+  auto stats = this->GetPlan()->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::GroundStartAndGoal");
+
   this->GetMPSolution()->AddRobotGroup(m_wholeTask->GetRobotGroup());
   this->GetMPLibrary()->SetGroupTask(m_wholeTask);
   auto wholeGRM = this->GetMPLibrary()->GetGroupRoadmap();
@@ -1337,7 +1355,6 @@ GroundStartAndGoal() {
   GroundedHypergraph::Transition transition;
   auto vsource = gh->AddVertex(std::make_pair(nullptr, 0));
   auto vsink = gh->AddVertex(std::make_pair(nullptr, 1));
-  std::cout << "vsource " << vsource << ", vsink " << vsink << std::endl;
 
   // Get the start position for all robots
   auto s = this->GetMPLibrary()->GetMPStrategy(m_trajStrategy);
@@ -1345,20 +1362,21 @@ GroundStartAndGoal() {
   auto sVID = s->GenerateStart(m_sampler);
   m_groundedStartVID = gh->AddVertex(std::make_pair(wholeGRM, sVID));
   gh->AddTransition({vsource}, {m_groundedStartVID}, transition);
-  std::cout << "grounded start " << m_groundedStartVID << std::endl;
 
   // Get the goal position for all robots
   auto gVIDs = s->GenerateGoals(m_sampler);
   auto gVID = *gVIDs.begin();
   m_groundedGoalVID = gh->AddVertex(std::make_pair(wholeGRM, gVID));
   gh->AddTransition({m_groundedGoalVID}, {vsink}, transition);
-  std::cout << "grounded goal " << m_groundedGoalVID << std::endl;
 }
 
 
 void
 WoDaSH::
 ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
+  auto stats = this->GetPlan()->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::ConstructHyperpath");
+
   // First construct the "movement" hyperarcs along skeleton edges
   size_t maxTimestep = 0;
   for(auto kv : _mapfSolution) {
@@ -1379,12 +1397,8 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
       auto robot = kv.first;
       auto path = *kv.second;
 
-      std::cout << robot->GetLabel() << std::endl;
-
       auto source = path.size() > t ? path.at(t) : path.at(path.size() - 1);
       auto target = path.size() > t + 1 ? path.at(t+1) : path.at(path.size() - 1);
-
-      std::cout << source << " " << target << std::endl;
 
       // group with robots going both ways on this edge
       auto sVID = std::min(source, target);
@@ -1583,8 +1597,7 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
     }
 
     // Push the targets (or don't) of robots going along the edge
-    if(pushTarget.count(0) and pushTarget[0].count(target)) {
-      std::cout << "pushing target " << target << std::endl;
+    if(source != target and pushTarget.count(0) and pushTarget[0].count(target)) {
       for(auto robot : robots) {
         // Get the point in workspace of the source skeleton vertex
         auto path = *_mapfSolution[robot];
@@ -1597,7 +1610,6 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
         push = std::min(push, disp.norm() / 2.0);
         auto skelTarget = targetVal - push * unitDisp;
         compTarget.SetRobotCfg(robot, std::move(skelTarget));
-        std::cout << "pushed " << robot->GetLabel() << " " << push << " to " << skelTarget << std::endl;
       }
     } else {
       for(auto robot : robots) {
@@ -1608,15 +1620,12 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
         if(skelVID != target)
           continue;
 
-        std::cout << "didn't push " << robot->GetLabel() << std::endl;
-
         compTarget.SetRobotCfg(robot, skelVID);
       }
     }
 
     // Push the targets (or don't) of robots going in the opposite direction
-    if(pushTarget.count(0) and pushTarget[0].count(source)) {
-      std::cout << "pushing target (source)" << std::endl;
+    if(source != target and pushTarget.count(0) and pushTarget[0].count(source)) {
       for(auto robot : robots) {
         // Get the point in workspace of the source skeleton vertex
         auto path = *_mapfSolution[robot];
@@ -1629,7 +1638,6 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
         push = std::min(push, disp.norm() / 2.0);
         auto skelTarget = sourceVal + push * unitDisp;
         compTarget.SetRobotCfg(robot, std::move(skelTarget));
-        std::cout << "pushed " << robot->GetLabel() << " " << push << "from" << sourceVal << " to " << skelTarget << std::endl;
       }
     } else {
       for(auto robot : robots) {
@@ -1641,7 +1649,6 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
           continue;
 
         compTarget.SetRobotCfg(robot, skelVID);
-        std::cout << "didn't push " << robot->GetLabel() << std::endl;
       }
     }
 
@@ -1715,8 +1722,6 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
           if(skelVID != source)
             continue;
 
-          std::cout << "pushing start (source) " << robot->GetLabel() << std::endl;
-
           auto push = m_regionRadius.at(robot) * sqrt(2);
           push = std::min(push, disp.norm() / 2.0);
           auto skelStart = sourceVal + push * unitDisp;
@@ -1749,8 +1754,6 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
           push = std::min(push, disp.norm() / 2.0);
           auto skelStart = targetVal - push * unitDisp;
           compSource.SetRobotCfg(robot, std::move(skelStart));
-
-          std::cout << "pushing start (target) " << robot->GetLabel() << std::endl;
         }
       } else {
         for(auto robot : robots) {
@@ -1766,7 +1769,7 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
       }
 
       // Push the targets (or don't) of robots going along the edge
-      if(pushTarget.count(t+1) and pushTarget[t+1].count(target)) {
+      if(source != target and pushTarget.count(t+1) and pushTarget[t+1].count(target)) {
         for(auto robot : robots) {
           // Get the point in workspace of the source skeleton vertex
           auto path = *_mapfSolution[robot];
@@ -1779,8 +1782,6 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
           push = std::min(push, disp.norm() / 2.0);
           auto skelTarget = targetVal - push * unitDisp;
           compTarget.SetRobotCfg(robot, std::move(skelTarget));
-
-          std::cout << "pushing target (target) " << robot->GetLabel() << std::endl;
         }
       } else {
         for(auto robot : robots) {
@@ -1796,7 +1797,7 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
       }
 
       // Push the targets (or don't) of robots going in the opposite direction
-      if(pushTarget.count(t+1) and pushTarget[t+1].count(source)) {
+      if(source != target and pushTarget.count(t+1) and pushTarget[t+1].count(source)) {
         for(auto robot : robots) {
           // Get the point in workspace of the source skeleton vertex
           auto path = *_mapfSolution[robot];
@@ -1809,8 +1810,6 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
           push = std::min(push, disp.norm() / 2.0);
           auto skelTarget = sourceVal + push * unitDisp;
           compTarget.SetRobotCfg(robot, std::move(skelTarget));
-
-          std::cout << "pushing target (source) " << skelVID << " " << robot->GetLabel() << std::endl;
         }
       } else {
         for(auto robot : robots) {
@@ -1899,7 +1898,8 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
         auto hid = m_skeleton->AddHyperarc({tvid1, tvid2}, {svid}, arc, false, true);
         m_path.decoupleHyperarcs.insert(hid);
 
-        std::cout << "decoupled 2 groups" << std::endl;
+        if(this->m_debug)
+          std::cout << "Decoupled 2 groups at time " << t << std::endl;
 
         // Set the predecessor movement hyperarc
         for(auto ih : m_skeleton->GetIncomingHyperarcs(svid)) {
@@ -1953,7 +1953,8 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
       auto hid = m_skeleton->AddHyperarc({tvid}, hvids, arc, false, true);
       m_path.mergeHyperarcs.insert(hid);
 
-      std::cout << "merged " << hvids.size() << " groups" << std::endl;
+      if(this->m_debug)
+        std::cout << "Merged " << hvids.size() << " groups at time" << t << std::endl;
 
       // Set the predecessor map for each robot
       for(auto v : hvids) {
@@ -1962,7 +1963,6 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
           // First check if any split hyperarcs are incoming (this means we're
           // currently waiting)
           if(m_path.splitHyperarcs.count(ih)) {
-            std::cout << "found merge after wait" << std::endl;
             // We are waiting, check if we have a representative vertex here
             // if not, sample one
             if(!m_waitingReps.count(tvid)) {
@@ -1988,12 +1988,9 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
         if(!foundSplit) {
           for(auto ih : m_skeleton->GetIncomingHyperarcs(v)) {
             if(m_path.movementHyperarcs.count(ih) or m_path.decoupleHyperarcs.count(ih)) {
-              std::cout << "hid " << hid << " incoming " << ih << std::endl;
               for(auto robot : group->GetRobots()) {
                 if(!m_path.predecessors.at(ih).count(robot))
                   continue;
-
-                std::cout << "robot " << robot->GetLabel() << std::endl;
                   
                 auto boolhid = m_path.predecessors.at(ih).at(robot);
                 m_path.predecessors[hid].emplace(robot, boolhid);
@@ -2052,12 +2049,12 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
       auto hid = m_skeleton->AddHyperarc(splitVIDs, {hvid}, arc, false, true);
       m_path.splitHyperarcs.insert(hid);
 
-      std::cout << "split " << splitVIDs.size() << " groups" << std::endl;
+      if(this->m_debug)
+        std::cout << "Split " << splitVIDs.size() << " groups at time " << t << std::endl;
 
       // Set the successor map for each robot
       // This will be overwritten for merges going back into a split
       for(auto robot : robots) {
-        std::cout << "setting successor for hid " << hid << " to " << m_hidPaths[t+1][robot];
         m_path.successors[hid][robot] = m_hidPaths.at(t+1).at(robot);
       }
     }
@@ -2083,7 +2080,8 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
         auto hid = m_skeleton->AddHyperarc({thvid}, {s1, s2}, arc, false, true);
         m_path.coupleHyperarcs.insert(hid);
 
-        std::cout << "coupled 2 groups" << std::endl;
+        if(this->m_debug)
+          std::cout << "Coupled 2 groups at time " << t << std::endl;
 
         // Set the successor map for each robot in this couple arc
         for(auto robot : robots)
@@ -2096,6 +2094,9 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
 bool
 WoDaSH::
 GroundHyperskeleton() {
+  auto stats = this->GetPlan()->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::GroundHyperskeleton");
+
   // TODO cast this to avoid having to change MPStratgy interface?
   auto s = this->GetMPLibrary()->GetMPStrategy(m_drStrategy);
 
@@ -2116,7 +2117,6 @@ GroundHyperskeleton() {
     // Also check if there's a movement hyperarc before this, if so, take the
     // End representative
     if(m_waitingReps.count(svid)) {
-      std::cout << "FOUND WAITING on grm " << m_waitingReps.at(svid).first << std::endl;
       hyperarc.property.startRep = m_waitingReps.at(svid);
     } else {
       bool found = false;
@@ -2126,7 +2126,6 @@ GroundHyperskeleton() {
             m_path.movementHyperarcs.count(ih)) {
           found = true;
           hyperarc.property.startRep = arc.endRep;
-          std::cout << "FOUND END REP at grm " << arc.endRep.first << "hid " << ih << std::endl;
           break;
         }
       }
@@ -2135,11 +2134,8 @@ GroundHyperskeleton() {
         auto grm = this->GetMPLibrary()->GetGroupRoadmap(cedge.GetGroup());
         auto startVID = SpawnVertex(grm, cedge);
         hyperarc.property.startRep = std::make_pair(grm, startVID);
-        std::cout << "SPAWNED VERT ON " << grm << std::endl;
       }
     }
-
-    std::cout << "before " << cedge.GetNumIntermediates() << std::endl;
     
     // Set the task
     ///@todo Does it matter what task this is? There could be many
@@ -2154,12 +2150,11 @@ GroundHyperskeleton() {
     auto lastVID = grm->GetLastVID();
     auto lastVertex = grm->GetVertex(lastVID);
     if(!FinishedEdge(cedge, lastVertex)) {
-      std::cout << "Failed to ground HID " << hid << ", replanning..." << std::endl;
+      if(this->m_debug)
+        std::cout << "Failed to ground HID " << hid << ", replanning..." << std::endl;
+
       // Couldn't finish edge, need to replan hyperpath.
       auto eds = cedge.GetEdgeDescriptors();
-      std::cout << "eds: " << std::endl;
-      for(auto ed : eds)
-        std::cout << "s " << ed.source() << ", t " << ed.target() << std::endl;
 
       // Keep track of failed edges
       std::unordered_map<Robot*, std::pair<VID, VID>> edges;
@@ -2178,7 +2173,8 @@ GroundHyperskeleton() {
       return false;
     }
     
-    std::cout << "Successfully grounded HID " << hid << std::endl;
+    if(this->m_debug)
+      std::cout << "Successfully grounded HID " << hid << std::endl;
     hyperarc.property.endRep = std::make_pair(grm, lastVID);
 
     // Convert vids into a task and path to save in grounded hypergraph
@@ -2212,8 +2208,9 @@ GroundHyperskeleton() {
   this->GetMPLibrary()->SetGroupTask(m_wholeTask);
   SetVirtualExcept();
 
-  std::cout << "Successfully grounded " << m_path.movementHyperarcs.size() 
-            << " edges, sampling trajectories..." << std::endl;
+  if(this->m_debug)
+    std::cout << "Successfully grounded " << m_path.movementHyperarcs.size() 
+              << " edges, sampling trajectories..." << std::endl;
 
   return SampleTrajectories();
 }
@@ -2225,6 +2222,9 @@ ComputeIntermediates(std::unordered_map<Robot*, CBSSolution*> _mapfSolution,
                      CompositeSkeletonVertex& _compSource, 
                      CompositeSkeletonVertex& _compTarget, 
                      CompositeSkeletonEdge& _compEdge) {
+  auto stats = this->GetPlan()->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::ComputeIntermediates");
+
   // Assume straight line edges
   auto robots = _compSource.GetGroup()->GetRobots();
 
@@ -2254,9 +2254,6 @@ ComputeIntermediates(std::unordered_map<Robot*, CBSSolution*> _mapfSolution,
 
     auto disp = target - start;
     const auto dist = (disp).norm();
-
-    std::cout << robot->GetLabel() << " start: " << start << " target: " << target << " dist " << dist << std::endl;
-    std::cout << "vids: " << skelSource << " " << skelTarget << std::endl;
 
     if(dist < intLength)
       displacements.push_back({0., 0., 0.});
@@ -2300,74 +2297,12 @@ ComputeIntermediates(std::unordered_map<Robot*, CBSSolution*> _mapfSolution,
   _compEdge.SetIntermediates(inters);
 }
 
-std::vector<typename WoDaSH::CompositeSkeletonVertex>
-WoDaSH::
-ComputeIntermediates(const CompositeSkeletonVertex _source, 
-                     const CompositeSkeletonVertex _target,
-                     CompositeSkeletonEdge _edge,
-                     const bool pushStart, const bool pushTarget) {
-  // Assume straight lines. Per existing merging rules, robots should only
-  // be merged if they are on the same edge (going either direction), so we
-  // don't need to consider different individual edge lengths
-
-  auto robots = _edge.GetGroup()->GetRobots();
-  auto& edgeDescriptors = _edge.GetEdgeDescriptors();
-  
-  auto robotRadius = robots[0]->GetMultiBody()->GetBoundingSphereRadius();
-  auto intLength = robotRadius * m_intermediateFactor;
-
-  std::vector<Point3d> starts;
-  std::vector<Point3d> displacements;
-  for(size_t i = 0; i < robots.size(); ++i) {
-    auto start = m_indSkeleton.find_vertex(edgeDescriptors[i].source())->property();
-    auto target = m_indSkeleton.find_vertex(edgeDescriptors[i].target())->property();
-
-    auto disp = target - start;
-    auto unitDisp = disp / disp.norm();
-    if(pushStart) {
-      auto push = m_regionRadius.at(robots[i]) * sqrt(2.);
-      push = std::min(push, disp.norm() / 2.);
-      start += unitDisp * push;
-    }
-
-    if(pushTarget) {
-      auto push = m_regionRadius.at(robots[i]) * sqrt(2.);
-      push = std::min(push, disp.norm() / 2.);
-      target -= unitDisp * push;
-    }
-
-    starts.push_back(start);
-    disp = target - start;
-
-    if(disp.norm() < intLength)
-      displacements.push_back({0., 0., 0.});
-    else
-      displacements.push_back(disp);
-  }
-  auto edgeDist = std::max(displacements[0].norm(), 1e-7);
-  auto numInter = (int)ceil(edgeDist / intLength);
-
-  // Set the intermediate values along the edge
-  std::vector<CompositeSkeletonVertex> inters;
-  for(int i = 0; i <= numInter; ++i){
-    auto v = CompositeSkeletonVertex(_edge.GetGroup());
-
-    for(size_t r = 0; r < robots.size(); r++) {
-      Point3d d = {i * displacements[r][0]/numInter, 
-                  i * displacements[r][1]/numInter,
-                  i * displacements[r][2]/numInter};
-      v.SetRobotCfg(r, starts[r] + d);
-    }
-
-    inters.push_back(v);
-  }
-
-  return inters;
-}
-
 size_t
 WoDaSH::
 SpawnVertex(GroupRoadmapType* _grm, CompositeSkeletonEdge _edge) {
+  auto stats = this->GetPlan()->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::SpawnVertex");
+
   this->GetMPLibrary()->SetGroupTask(m_groupTaskMap.at(_edge.GetGroup()));
   SetVirtualExcept(_edge.GetGroup());
 
@@ -2405,6 +2340,9 @@ SpawnVertex(GroupRoadmapType* _grm, CompositeSkeletonEdge _edge) {
 size_t
 WoDaSH::
 SpawnVertex(GroupRoadmapType* _grm, CompositeSkeletonVertex _vertex) {
+  auto stats = this->GetPlan()->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::SpawnVertex");
+
   this->GetMPLibrary()->SetGroupTask(m_groupTaskMap[_vertex.GetGroup()]);
   SetVirtualExcept(_vertex.GetGroup());
 
@@ -2440,6 +2378,9 @@ SpawnVertex(GroupRoadmapType* _grm, CompositeSkeletonVertex _vertex) {
 bool
 WoDaSH::
 FinishedEdge(CompositeSkeletonEdge _edge, const GroupCfgType& _groupCfg) {
+  auto stats = this->GetPlan()->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::FinishedEdge");
+
   auto inter = _edge.GetIntermediates().at(_edge.GetNumIntermediates() - 1);
   auto robots = _edge.GetGroup()->GetRobots();
 
@@ -2473,6 +2414,9 @@ FinishedEdge(CompositeSkeletonEdge _edge, const GroupCfgType& _groupCfg) {
 CSpaceBoundingSphere
 WoDaSH::
 MakeBoundary(Robot* _robot, const Point3d _indV) {
+  auto stats = this->GetPlan()->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::MakeBoundary");
+
   const bool threeD = _robot->GetMultiBody()->GetBaseType()
                    == Body::Type::Volumetric;
 
@@ -2489,6 +2433,9 @@ MakeBoundary(Robot* _robot, const Point3d _indV) {
 bool
 WoDaSH::
 ConnectToSkeleton() {
+  auto stats = this->GetPlan()->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::ConnectToSkeleton");
+
   this->GetMPLibrary()->SetGroupTask(m_wholeTask);
   SetVirtualExcept();
   auto gh = dynamic_cast<GroundedHypergraph*>(
@@ -2507,7 +2454,6 @@ ConnectToSkeleton() {
     // Get the first vertex on a skeleton edge (or vertex if waiting)
     GroupCfgType target;
     auto hid = m_hidPaths[0].at(r);
-    std::cout << "start hid is " << hid << std::endl;
     if(!hid.first) {
       auto rep = m_waitingReps.at(hid.second);
       target = rep.first->GetVertex(rep.second);
@@ -2531,6 +2477,8 @@ ConnectToSkeleton() {
     stask->AddTask(t);
   } 
 
+  auto s = this->GetMPLibrary()->GetMPStrategy(m_trajStrategy);
+  s->ResetGrowthOptions();
   this->GetMPLibrary()->Solve(this->GetMPProblem(), stask.get(), 
       this->GetMPSolution(), m_trajStrategy, LRand(), "ConnectToSkeleton");
 
@@ -2589,6 +2537,7 @@ ConnectToSkeleton() {
     gtask->AddTask(t);
   } 
 
+  s->ResetGrowthOptions();
   this->GetMPLibrary()->Solve(this->GetMPProblem(), gtask.get(), 
       this->GetMPSolution(), m_trajStrategy, LRand(), "ConnectToSkeleton");
 
@@ -2606,6 +2555,8 @@ ConnectToSkeleton() {
 bool
 WoDaSH::
 SampleTrajectories() {
+  auto stats = this->GetPlan()->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::SampleTrajectories");
 
   // First, split apart groups that have finished moving in opposite
   // directions down the same skeleton edge. Single node paths.
@@ -2675,6 +2626,8 @@ SampleTrajectories() {
     } 
 
     SetVirtualExcept(group);
+    auto s = this->GetMPLibrary()->GetMPStrategy(m_trajStrategy);
+    s->ResetGrowthOptions();
     this->GetMPLibrary()->Solve(this->GetMPProblem(), task.get(), 
         this->GetMPSolution(), m_trajStrategy, LRand(), "SampleTrajectories");
 
@@ -2766,8 +2719,6 @@ SampleTrajectories() {
     auto endVID = grm->AddVertex(target);
     hyp.property.endRep = std::make_pair(grm, endVID);
     
-    std::cout << "set the end rep for hid " << hid << " to " << hyp.property.endRep.first << ", " << hyp.property.endRep.second << std::endl;
-
     // Plan a path between the start and target
     auto task = std::shared_ptr<GroupTask>(new GroupTask(group));
     for(auto r : group->GetRobots()) {
@@ -2783,29 +2734,19 @@ SampleTrajectories() {
       auto goalConstraint = std::unique_ptr<CSpaceConstraint>(new CSpaceConstraint(r,goalCfg));
       t.AddGoalConstraint(std::move(goalConstraint));
 
-      std::cout << "Robot: " << r->GetLabel() << std::endl;
-      std::cout << "Start: " << startCfg << std::endl;
-      std::cout << "Goal: " << goalCfg << std::endl;
-
       task->AddTask(t);
     } 
-
-    // Set the boundary to be a tighter region to avoid growing tree from 
-    // other nodes in the roadmap
-    // auto origBounds = this->GetMPProblem()->GetEnvironment()->GetBoundary()->Clone();
-    // auto dim = origBounds->GetDimension();
-    // auto newBounds = std::unique_ptr<Boundary>(new WorkspaceBoundingSphere(dim));
-    // this->GetMPProblem()->GetEnvironment()->SetBoundary(newBounds);
 
     bool failed = false;
 
     SetVirtualExcept(group);
+    auto s = this->GetMPLibrary()->GetMPStrategy(m_trajStrategy);
+    s->ResetGrowthOptions();
     try {
       this->GetMPLibrary()->Solve(this->GetMPProblem(), task.get(), 
           this->GetMPSolution(), m_trajStrategy, LRand(),
           this->GetNameAndLabel()+"::SampleTrajectories");
     } catch(std::exception& _e) {
-      std::cout << "exception on merge task" << std::endl;
       failed = true;
     }
 
@@ -2814,7 +2755,7 @@ SampleTrajectories() {
     // Check if the plan was successful
     auto path = this->GetMPSolution()->GetGroupPath(group);
     if(!path->VIDs().size()) {
-      std::cout << "failed merge" << std::endl;
+      std::cout << "Failed merge hid " << hid << std::endl;
       failed = true;
     }
 
@@ -2970,18 +2911,19 @@ SampleTrajectories() {
     bool failed = false;
 
     SetVirtualExcept(group);
+    auto s = this->GetMPLibrary()->GetMPStrategy(m_trajStrategy);
+    s->ResetGrowthOptions();
     try {
       this->GetMPLibrary()->Solve(this->GetMPProblem(), task.get(), 
           this->GetMPSolution(), m_trajStrategy, LRand(), "SampleTrajectories");
     } catch(std::exception& _e) {
-      std::cout << "exception on split task" << std::endl;
       failed = true;
     }
 
     // Check if the plan was successful
     auto path = this->GetMPSolution()->GetGroupPath(group);
     if(!path->VIDs().size()) {
-      std::cout << "failed split" << std::endl;
+      std::cout << "Failed split hid " << hid << std::endl;
       failed = true;
     }
 
@@ -3068,6 +3010,8 @@ SampleTrajectories() {
     } 
 
     SetVirtualExcept(group);
+    auto s = this->GetMPLibrary()->GetMPStrategy(m_trajStrategy);
+    s->ResetGrowthOptions();
     this->GetMPLibrary()->Solve(this->GetMPProblem(), task.get(), 
         this->GetMPSolution(), m_trajStrategy, LRand(), "SampleTrajectories");
 
@@ -3089,6 +3033,9 @@ SampleTrajectories() {
 void
 WoDaSH::
 SetVirtualExcept(RobotGroup* _group) {
+  auto stats = this->GetPlan()->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::SetVirtualExcept");
+
   // If no group provided, set all to non-virtual
   if(_group == nullptr) {
     for(auto robot : m_wholeGroup->GetRobots())
@@ -3107,11 +3054,13 @@ SetVirtualExcept(RobotGroup* _group) {
 RobotGroup*
 WoDaSH::
 AddGroup(std::vector<Robot*> _robots) {
+  auto stats = this->GetPlan()->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::AddGroup");
+
   auto group = this->GetMPProblem()->AddRobotGroup(_robots, "");
   this->GetMPLibrary()->GetMPSolution()->AddRobotGroup(group);
 
   if(this->GetMPProblem()->GetTasks(group).size() < 1) {
-    std::cout << "GOOD GOT INSIDE" << std::endl;
     std::unique_ptr<GroupTask> gt = std::unique_ptr<GroupTask>(new GroupTask(group));
     for (auto robot : _robots)
       gt->AddTask(*m_taskMap[robot]);
@@ -3128,6 +3077,8 @@ WoDaSH::HID
 WoDaSH::
 AddTransitionToGroundedHypergraph(std::set<VID> _tail, std::set<VID> _head,
   GroupPathType* _path, std::shared_ptr<GroupTask> _task) {
+  auto stats = this->GetPlan()->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::AddTransitionToGroundedHypergraph");
 
   if(this->m_debug) {
     std::cout << "Adding grounded hyperarc between " << _tail << " and " << _head << std::endl;
@@ -3216,6 +3167,8 @@ WoDaSH::
 AddTransitionToGroundedHypergraph(std::set<RepresentativeVertex> _tail, 
   std::set<RepresentativeVertex> _head, GroupPathType* _path, 
   std::shared_ptr<GroupTask> _task) {
+  auto stats = this->GetPlan()->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::AddTransitionToGroundedHypergraph");
   
   auto gh = dynamic_cast<GroundedHypergraph*>(
     this->GetStateGraph(m_groundedHypergraphLabel).get());

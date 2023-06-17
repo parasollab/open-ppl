@@ -81,7 +81,8 @@ class MPStrategyMethod : public MPBaseObject<MPTraits> {
     void EnableOutputFiles(const bool _enable = true);
 
     // Temporary hack for WoDaSH - will be removed soon
-    virtual void GroundEdge(const CompositeSkeletonEdge _edge) {};
+    virtual void GroundEdge(const CompositeSkeletonEdge& _edge) {};
+    virtual void ResetGrowthOptions() {};
 
     ///@}
     ///@name Start/Goal Generation

@@ -79,8 +79,6 @@ class CDRRRTLite : virtual public GroupRRTStrategy<MPTraits> {
 
       SamplingRegion(const CompositeSkeletonEdge& _edge) : 
             edge(_edge) {
-        std::cout << "inside set in " << _edge.GetNumIntermediates() << std::endl;
-        std::cout << "inside set out " << edge.GetNumIntermediates() << std::endl;
         activeRobots = _edge.GetActiveRobots();
       }
 
@@ -550,8 +548,6 @@ void
 CDRRRTLite<MPTraits>::
 GroundEdge(const CompositeSkeletonEdge& _edge){
   MethodTimer mt(this->GetStatClass(), this->GetNameAndLabel() + "::GroundEdge");
-
-  std::cout << "ground edge int " << _edge.GetNumIntermediates() << std::endl;
 
   m_done = false;
   m_region = SamplingRegion(_edge);

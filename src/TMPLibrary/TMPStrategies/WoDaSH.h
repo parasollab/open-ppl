@@ -240,13 +240,6 @@ class WoDaSH : public TMPStrategyMethod {
 
     bool FinishedEdge(CompositeSkeletonEdge _edge, const GroupCfgType& _groupCfg);
 
-    std::vector<CompositeSkeletonVertex>
-    ComputeIntermediates(const CompositeSkeletonVertex _source, 
-                        const CompositeSkeletonVertex _target,
-                        CompositeSkeletonEdge _edge,
-                        const bool pushStart=false,
-                        const bool pushTarget=false);
-
     void
     ComputeIntermediates(std::unordered_map<Robot*, CBSSolution*> _mapfSolution, 
                         size_t _timestep,

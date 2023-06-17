@@ -449,10 +449,9 @@ QueryPath(SemanticTask* _task, const size_t _startTime,
              LRand(),this->GetNameAndLabel()+"::"+_task->GetLabel());
 
   auto path = solution->GetGroupPath(group);
-  std::cout << "found path: " << path->VIDs() << std::endl;
 
   // TODO For some reason, this needs to be called or else weird stuff happens...
-  std::cout << "times: " << path->TimeSteps() << std::endl;
+  path->TimeSteps();
   if(path->VIDs().size() == 0)
     return nullptr;
 
@@ -636,10 +635,9 @@ FindConflicts(Node& _node, bool _getAll) {
                           << path2->VIDs() << std::endl
                           << path2->GetWaitTimes() << std::endl << std::endl;
   
-              }
-
-              std::cout << "COLLISION BETWEEN SLACKS OF "
+                std::cout << "COLLISION BETWEEN SLACKS OF "
                         << slack1 << " AND " << slack2 << std::endl; 
+              }
 
               collidingTasks.insert(task2);
 
@@ -774,16 +772,6 @@ ScheduledCBS::
 ConvertToPlan(const Node& _node, Plan* _plan) {
   _plan->SetCost(_node.cost);
 
-  for(auto kv : _node.solutionMap) {
-    std::cout << kv.first->GetLabel() << " final path: " << kv.second->VIDs() << std::endl;
-    std::cout << kv.first->GetLabel() << " wait times: " << kv.second->GetWaitTimes() << std::endl;
-    for(auto d : kv.first->GetDependencies()) {
-      for(auto dd : d.second) {
-        std::cout << "Dependency: " << dd->GetLabel() << std::endl;
-      }
-    }
-  }
-
   //TODO::Convert node to plan
 
   // Topological sort semantic tasks in solution map by dependency
@@ -792,7 +780,6 @@ ConvertToPlan(const Node& _node, Plan* _plan) {
   for(auto kv : _node.solutionMap) {
     VisitTask(kv.first, visited, sortedTasks);
   }
-  std::cout << "sorted tasks: " << sortedTasks << std::endl;
 
   // Find the path for each individual robot
   std::unordered_map<Robot*, std::vector<Cfg>> cfgPaths;
