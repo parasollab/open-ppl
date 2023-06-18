@@ -1713,7 +1713,7 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
       auto compTarget = CompositeSkeletonVertex(group, &m_indSkeleton);
 
       // Push the starts (or don't) of robots going along the edge
-      if(pushStart.count(t+1) and pushStart[t+1].count(source)) {
+      if(source != target and pushStart.count(t+1) and pushStart[t+1].count(source)) {
         for(auto robot : robots) {
           // Get the point in workspace of the source skeleton vertex
           auto path = *_mapfSolution[robot];
@@ -1741,7 +1741,7 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
       }
 
       // Push the starts (or don't) of robots going in the opposite direction
-      if(pushStart.count(t+1) and pushStart[t+1].count(target)) {
+      if(source != target and pushStart.count(t+1) and pushStart[t+1].count(target)) {
         for(auto robot : robots) {
           // Get the point in workspace of the source skeleton vertex
           auto path = *_mapfSolution[robot];
@@ -2074,8 +2074,8 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
         auto arc = HyperskeletonArc(compEdge, HyperskeletonArcType::Couple);
         auto thvid = shvids[t+1][edge];
 
-        auto s1 = svids[t].count(edge);
-        auto s2 = svids[t].count(oppEdge);
+        auto s1 = svids[t].at(edge);
+        auto s2 = svids[t].at(oppEdge);
 
         auto hid = m_skeleton->AddHyperarc({thvid}, {s1, s2}, arc, false, true);
         m_path.coupleHyperarcs.insert(hid);
@@ -2120,6 +2120,7 @@ GroundHyperskeleton() {
       hyperarc.property.startRep = m_waitingReps.at(svid);
     } else {
       bool found = false;
+      std::unordered_map<Robot*, VID> coupled;
       for(auto ih : m_skeleton->GetIncomingHyperarcs(svid)) {
         auto& arc = m_skeleton->GetHyperarcType(ih);
         if(arc.type == HyperskeletonArcType::Movement and 
@@ -2127,7 +2128,35 @@ GroundHyperskeleton() {
           found = true;
           hyperarc.property.startRep = arc.endRep;
           break;
+        } else if(arc.type == HyperskeletonArcType::Couple and
+            m_path.coupleHyperarcs.count(ih)) {
+
+          auto tail = m_skeleton->GetHyperarc(ih).tail;
+          for(auto t : tail) {
+            for(auto iih : m_skeleton->GetIncomingHyperarcs(t)) {
+              auto& inArc = m_skeleton->GetHyperarcType(iih);
+              if(inArc.type == HyperskeletonArcType::Movement and 
+                  m_path.movementHyperarcs.count(iih)) {
+                  
+                auto vertex = inArc.endRep.first->GetVertex(inArc.endRep.second);
+                for(auto r : inArc.edge.GetGroup()->GetRobots()) {
+                  coupled[r] = vertex.GetVID(r);
+                }
+              }
+            }
+          }
         }
+      }
+
+      if(coupled.size() == cedge.GetGroup()->Size()) {
+        auto grm = this->GetMPLibrary()->GetGroupRoadmap(cedge.GetGroup());
+        auto gcfg = GroupCfgType(grm);
+        for(auto iter : coupled) {
+          gcfg.SetRobotCfg(iter.first, iter.second);
+        }
+        auto gvid = grm->AddVertex(gcfg);
+        hyperarc.property.startRep = std::make_pair(grm, gvid);
+        found = true;
       }
 
       if(!found) {
@@ -2142,6 +2171,8 @@ GroundHyperskeleton() {
     this->GetMPLibrary()->SetGroupTask(m_groupTaskMap[cedge.GetGroup()]);
     SetVirtualExcept(cedge.GetGroup());
 
+    s->ResetGrowthOptions();
+    s->AddGrowthOption(hyperarc.property.startRep.second);
     s->GroundEdge(cedge);
 
     // Check if this was successful
@@ -2750,12 +2781,11 @@ SampleTrajectories() {
       failed = true;
     }
 
-    // this->GetMPProblem()->GetEnvironment()->SetBoundary(std::move(origBounds));
-
     // Check if the plan was successful
     auto path = this->GetMPSolution()->GetGroupPath(group);
     if(!path->VIDs().size()) {
-      std::cout << "Failed merge hid " << hid << std::endl;
+      if(this->m_debug)
+        std::cout << "Failed merge hid " << hid << std::endl;
       failed = true;
     }
 
@@ -2923,7 +2953,8 @@ SampleTrajectories() {
     // Check if the plan was successful
     auto path = this->GetMPSolution()->GetGroupPath(group);
     if(!path->VIDs().size()) {
-      std::cout << "Failed split hid " << hid << std::endl;
+      if(this->m_debug)
+        std::cout << "Failed split hid " << hid << std::endl;
       failed = true;
     }
 
@@ -2951,10 +2982,13 @@ SampleTrajectories() {
       continue;
     }
 
-    if(this->m_debug)
-      std::cout << "Constructing trajectory for opp merge hid " << hid << std::endl;
-
     auto hyp = m_skeleton->GetHyperarc(hid);
+
+    if(this->m_debug) {
+      std::cout << "Constructing trajectory for opp merge hid " << hid << std::endl;
+      std::cout << "Tail: " << hyp.tail << ", Head: " << hyp.head << std::endl;
+    }
+
     auto cedge = hyp.property.edge;
     auto group = cedge.GetGroup();
 

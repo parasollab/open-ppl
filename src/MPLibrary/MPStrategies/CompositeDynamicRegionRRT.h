@@ -41,6 +41,8 @@ class CompositeDynamicRegionRRT : virtual public GroupRRTStrategy<MPTraits> {
     typedef typename GroupRoadmapType::VID      VID;
     
     typedef typename std::map<Robot*, VID>      VIDMap;
+    typedef typename std::vector<VID>           VIDSet;
+    typedef typename std::pair<VID, size_t>     VIDTime;
 
     typedef std::vector<Point3d>                PointSet;
     // typedef std::vector<Vector3d>               VectorSet;
@@ -72,6 +74,9 @@ class CompositeDynamicRegionRRT : virtual public GroupRRTStrategy<MPTraits> {
     typedef std::pair<std::pair<SkeletonVertexDescriptor, SkeletonVertexDescriptor>, size_t> CBSConstraint;
     typedef CBSNode<Robot,CBSConstraint,CBSSolution>           CBSNodeType;
 
+    typedef Robot* OrderingConstraint;
+    typedef CBSNode<Robot, OrderingConstraint, CBSSolution>         PBSNodeType;
+
     ///@}
     ///@name Local Types
     ///@{
@@ -83,9 +88,8 @@ class CompositeDynamicRegionRRT : virtual public GroupRRTStrategy<MPTraits> {
 
       ///@name Internal State
       ///@{
-      
-      SkeletonEdgeIterator edgeIterator;
-      CompositeSkeletonEdge edge;
+
+      SkeletonEdgeIterator edgeIterator; ///< Iterator to region's edge.
 
       size_t edgeIndex{0};   ///< Which edge point are we at?
       double attempts{1};    ///< Number of attempts to extend into this region.
@@ -97,15 +101,10 @@ class CompositeDynamicRegionRRT : virtual public GroupRRTStrategy<MPTraits> {
 
       ///@}
 
-      SamplingRegion(SkeletonEdgeIterator& _eit, const double _cost) : 
-          edgeIterator(_eit), cost(_cost) {
-        edge = _eit->property();
-        activeRobots = edge.GetActiveRobots();
-      }
-
-      SamplingRegion(const CompositeSkeletonEdge _edge, const double _cost) : 
-            edge(_edge), cost(_cost) {
-        activeRobots = _edge.GetActiveRobots();
+      SamplingRegion(const SkeletonEdgeIterator& _eit, const double _cost) : 
+            edgeIterator(_eit), cost(_cost) {
+        auto ei = _eit;
+        activeRobots = ei->property().GetActiveRobots();
       }
 
       /// Track the success rate of extending into this region.
@@ -132,7 +131,7 @@ class CompositeDynamicRegionRRT : virtual public GroupRRTStrategy<MPTraits> {
       /// Get the center of this region.
       const VectorMap GetCenter() const noexcept {
         VectorMap center;
-        auto compState = edge.GetIntermediates()[edgeIndex];
+        auto compState = (*edgeIterator).property().GetIntermediates()[edgeIndex];
 
         for(auto r : compState.GetRobots()) {
           center.insert(std::pair<Robot*, Vector3d>(r, compState.GetRobotCfg(r)));
@@ -143,7 +142,7 @@ class CompositeDynamicRegionRRT : virtual public GroupRRTStrategy<MPTraits> {
 
       /// Check if this region is at the last point on its skeleton edge.
       bool LastPoint() const noexcept {
-        return edgeIndex == edge.GetNumIntermediates() - 1;
+        return edgeIndex == (*edgeIterator).property().GetNumIntermediates() - 1;
       }
 
       /// Advance this region to the next skeleton edge point.
@@ -154,7 +153,7 @@ class CompositeDynamicRegionRRT : virtual public GroupRRTStrategy<MPTraits> {
       /// Assignment operator
       SamplingRegion& operator=(const SamplingRegion& _region) {
         if(this != &_region) {
-          edge == _region.edge;
+          edgeIterator = _region.edgeIterator;
           edgeIndex = _region.edgeIndex;
           attempts = _region.attempts;
           successes = _region.successes;
@@ -170,13 +169,13 @@ class CompositeDynamicRegionRRT : virtual public GroupRRTStrategy<MPTraits> {
         // const bool att = attempts == _region.attempts;
         // const bool succ = successes == _region.successes;
         // return eit and idx and att and succ;
-        return edge == _region.edge;
+        return edgeIterator == _region.edgeIterator;
       }
 
     };
 
     ///@}
-    ///@name Construction
+    ///@ Construction
     ///@{
 
     CompositeDynamicRegionRRT();
@@ -192,18 +191,14 @@ class CompositeDynamicRegionRRT : virtual public GroupRRTStrategy<MPTraits> {
     virtual void Print(std::ostream& _os) const override;
 
     ///@}
-    ///@name Hack for WoDaSH
-    ///@{
-
-    virtual void GroundEdge(const CompositeSkeletonEdge& _edge) override;
-
-    ///@}
 
   protected:
     ///@name MPStrategyMethod Overrides
     ///@{
 
     virtual void Initialize() override;
+
+    virtual void Finalize() override;
 
     ///@}
     ///@name GroupRRTStrategy Overrides
@@ -232,6 +227,9 @@ class CompositeDynamicRegionRRT : virtual public GroupRRTStrategy<MPTraits> {
 
     double ComputeMAPFHeuristic(const CompositeSkeletonVertex _vertex);
 
+    void ComputeMAPFPaths(const VID _vid);
+
+    // CBS versions
     double CostFunction(CBSNodeType& _node);
 
     std::vector<CBSNodeType> SplitNodeFunction(CBSNodeType& _node,
@@ -243,8 +241,25 @@ class CompositeDynamicRegionRRT : virtual public GroupRRTStrategy<MPTraits> {
 
     std::vector<std::pair<Robot*,CBSConstraint>> ValidationFunction(CBSNodeType& _node);
 
+    // PBS versions
+    double CostFunction(PBSNodeType& _node);
+
+    std::vector<PBSNodeType> SplitNodeFunction(PBSNodeType& _node,
+        std::vector<std::pair<Robot*,OrderingConstraint>> _constraints,
+        CBSLowLevelPlanner<Robot,OrderingConstraint,CBSSolution>& _lowLevel,
+        CBSCostFunction<Robot,OrderingConstraint,CBSSolution>& _cost);
+
+    bool CheckCircularDependency(Robot* _robot, const OrderingConstraint& _newConstraint, 
+                const std::map<Robot*,std::set<OrderingConstraint>>& _constraints);
+
+    bool LowLevelPlanner(PBSNodeType& _node, Robot* _robot);
+
+    void AddDependencies(std::set<Robot*>& _needsToReplan, Robot* _robot, const PBSNodeType& _node);
+
+    std::vector<std::pair<Robot*,OrderingConstraint>> ValidationFunction(PBSNodeType& _node);
+
     // Add the next best region to m_regions
-    void NextBestRegion();
+    void NextBestRegion(const bool replan=false);
 
     /// Sample a configuration from within a sampling region using the sampler
     /// given in m_samplerLabel.
@@ -269,9 +284,11 @@ class CompositeDynamicRegionRRT : virtual public GroupRRTStrategy<MPTraits> {
     bool IsTouching(const GroupCfgType& _cfg, SamplingRegion& _region);
 
     /// Calculate the boundary around a sampling region.
+    /// @param _robot The robot to make the region for.
     /// @param _v The center of the sampling region.
+    /// @param _deflate Deflate the boundary radius to account for penetration?
     /// @return The boundary with center _v and radius m_regionRadius.
-    CSpaceBoundingSphere MakeBoundary(Robot* _robot, const VectorMap _v);
+    CSpaceBoundingSphere MakeBoundary(Robot* _robot, const VectorMap _v, const bool _deflate=false);
 
     ///@}
     ///@name Skeleton and Workspace
@@ -367,6 +384,16 @@ class CompositeDynamicRegionRRT : virtual public GroupRRTStrategy<MPTraits> {
     /// The set of active dynamic sampling regions and associated metadata.
     std::vector<SamplingRegion> m_regions;
 
+    std::queue<SkeletonEdgeDescriptor> m_nextEdges;
+    std::unordered_set<size_t> m_traversedEdges;
+    std::unordered_map<VIDTime, VIDTime> m_predecessorVIDs;
+    VID m_failedVID{INVALID_VID};
+    size_t m_timestep{0};
+    std::set<std::pair<VID, VID>> m_failedEDs;
+
+    std::string m_replanOrder{"back"};
+    std::unordered_map<VID, size_t> m_replanAttempts;
+
     /// The current VIDs we are exploring
     std::unordered_map<size_t, size_t> m_backtrace; // map current to predecessor vid
     // SkeletonVertexDescriptor m_currentVID{SIZE_MAX};
@@ -386,7 +413,8 @@ class CompositeDynamicRegionRRT : virtual public GroupRRTStrategy<MPTraits> {
     std::unordered_map<SkeletonVertexDescriptor, bool> m_explored;
 
     /// Cache heuristic costs for each edge
-    std::map<VIDMap, double> m_costs; // TODO - for speedup, make this unordered and add a hash function
+    // std::map<VIDMap, double> m_costs; // TODO - for speedup, make this unordered and add a hash function
+    std::unordered_map<VIDSet, double, boost::hash<std::vector<size_t>>> m_costs;
 
     std::unordered_map<SkeletonVertexDescriptor, std::multimap<double, SkeletonEdgeDescriptor>> m_bestEdges;
     size_t m_maxEdges{10};
@@ -409,8 +437,14 @@ class CompositeDynamicRegionRRT : virtual public GroupRRTStrategy<MPTraits> {
     double m_penetrationFactor{1};
 
     bool m_abortOnFail{true};
+    bool m_cache{true};
 
-    bool m_groundEdge{false}; // Is this object only used to ground one edge?
+    int m_mapfCount{0};
+    int m_createRegsCalls{0};
+
+    std::string m_mapf{"CBS"};
+    double m_split{0.};
+    bool m_deflate{false};
 
     ///@}
 };
@@ -473,8 +507,19 @@ CompositeDynamicRegionRRT(XMLNode& _node) : GroupRRTStrategy<MPTraits>(_node) {
   m_penetrationFactor = _node.Read("penetration", true,
       m_penetrationFactor, std::numeric_limits<double>::min(), 1.,
       "Fraction of bounding sphere penetration that is considered touching");
+  
+  m_replanOrder = _node.Read("replanOrder", false, "back", "Replan from the front or back.");
 
   m_abortOnFail = _node.Read("abortOnFail", false, true, "Abort when all edges fail?");
+
+  m_cache = _node.Read("cache", false, true, "Cache CBS calls?");
+
+  m_mapf = _node.Read("mapf", false, "CBS", "MAPF method to use (CBS or PBS)");
+
+  m_split = _node.Read("split", false, 0., 0., std::numeric_limits<double>::max(), 
+      "Split the skeleton into equal pieces?");
+
+  m_deflate = _node.Read("deflate", false, false, "Deflate region radius during sampling?");
 }
 
 /*--------------------------- MPBaseObject Overrides -------------------------*/
@@ -501,7 +546,11 @@ CompositeDynamicRegionRRT<MPTraits>::Print(std::ostream& _os) const {
   _os << "\tRegion Factor: " << m_regionFactor << std::endl;
   _os << "\tPenetration Factor: " << m_penetrationFactor << std::endl;
   _os << "\tExploration Factor: " << m_explore << std::endl;
+  _os << "\tReplan Order: " << m_replanOrder << std::endl;
   _os << "\tAbort on Edge Failure: " << m_abortOnFail << std::endl;
+
+  _os << "\tMAPF Method: " << m_mapf << std::endl;
+  _os << "\tSplit Skeleton Edges: " << m_split << std::endl;
 }
 
 /*---------------------------- MPStrategy Overrides --------------------------*/
@@ -514,6 +563,9 @@ CompositeDynamicRegionRRT<MPTraits>::Initialize(){
   MethodTimer mt(this->GetStatClass(),
         this->GetNameAndLabel() + "::InitializeRoadmap");
 
+  this->GetStatClass()->SetStat(this->GetNameAndLabel() + "::MAPFHeuristicCalls", 0);
+  this->GetStatClass()->SetStat(this->GetNameAndLabel() + "::CreateRegionsCalls", 0);
+
   // Check that only one direction is being extended.
   if(this->m_numDirections > 1)
     throw RunTimeException(WHERE) << "Extending more than one direction "
@@ -523,6 +575,9 @@ CompositeDynamicRegionRRT<MPTraits>::Initialize(){
 
   if(this->m_goalDmLabel.empty())
     throw RunTimeException(WHERE) << "Goal distance metric label is required.";
+
+  if(m_mapf != "CBS" and m_mapf != "PBS")
+    throw RunTimeException(WHERE) << "Unknown MAPF method provided (options are CBS or PBS)";
 
   auto groupTask = this->GetGroupTask();
 
@@ -543,6 +598,8 @@ CompositeDynamicRegionRRT<MPTraits>::Initialize(){
   if(!m_initialized) {
     m_initialized = true;
     BuildSkeleton();
+
+    // (*m_annotationMap.begin()).second->WriteAnnotation(this->GetBaseFilename() + ".annotations.graph");
 
     // Get the individual skeleton vids closest to the start and goal
     std::vector<SkeletonVertexDescriptor> goalSkelVIDs;
@@ -603,7 +660,9 @@ CompositeDynamicRegionRRT<MPTraits>::Initialize(){
     InitializeCostToGo();
 
     const auto compVID = m_skeleton->AddVertex(vertex);
-    const auto compIter = m_skeleton->find_vertex(compVID);
+    auto vidTime = std::make_pair(compVID, m_timestep);
+    m_predecessorVIDs[vidTime] = std::make_pair(INVALID_VID, 0);
+    m_replanAttempts[compVID] = 1;
 
     // Mark all nodes unvisited.
     m_visited.clear();
@@ -612,8 +671,19 @@ CompositeDynamicRegionRRT<MPTraits>::Initialize(){
 
     // Find the vertex nearest to start and create regions for each outgoing
     // edge.
-    CreateRegions(compIter, m_maxRegions);
+    ComputeMAPFPaths(compVID);
+    NextBestRegion();
   }
+}
+
+
+template <typename MPTraits>
+void
+CompositeDynamicRegionRRT<MPTraits>::
+Finalize() {
+  this->GetStatClass()->SetStat(this->GetNameAndLabel() + "::MAPFHeuristicCalls", m_mapfCount);
+  this->GetStatClass()->SetStat(this->GetNameAndLabel() + "::CreateRegionsCalls", m_createRegsCalls);
+  GroupRRTStrategy<MPTraits>::Finalize();
 }
 
 /*------------------------ GroupRRTStrategy Overrides ------------------------*/
@@ -629,25 +699,29 @@ SelectTarget() {
   GroupCfgType gcfg(grm);
 
   // Iterate through all regions to see if max sample fails has been exceeded.
-  int numReplace = 0;
+  m_failedVID = INVALID_VID;
   for(auto iter = m_regions.begin(); iter != m_regions.end(); ) {
+    auto eit = iter->edgeIterator;
     auto fails = iter->attempts - iter->successes;
 
     if(fails > m_maxSampleFails) {
       if(this->m_debug)
-        std::cout << "Exceeded maximum number of failures. Deleting region." << std::endl;
+        std::cout << "Exceeded maximum number of failures. Deleting region on edge from "
+                  << eit->source() << " to "
+                  << eit->target() << std::endl;
 
+      m_failedEDs.insert(std::make_pair(eit->source(), eit->target()));
       iter = m_regions.erase(iter);
-      numReplace++;
+      m_failedVID = eit->source();
     } else 
       ++iter;
   }
 
   // Construct replacement regions for any that failed too many times.
-  for(auto i = 0; i < numReplace; i++) {
+  if(m_failedVID != INVALID_VID) {
     if(this->m_debug)
-      std::cout << "Replacing region..." << std::endl;
-    NextBestRegion();
+      std::cout << "Replacing region for target VID " << m_failedVID << std::endl;
+    NextBestRegion(true);
   }
 
   bool notFound = true;
@@ -663,14 +737,25 @@ SelectTarget() {
       // Check if a valid cfg was found
       m_lastRegionIdx = regionIdx;
       auto result = Sample(&m_regions[regionIdx]);
+      m_regions[m_lastRegionIdx].IncrementAttempts();
+
       notFound = not result.first;
-      if(notFound)
+      if(notFound) {
+        auto region = m_regions[regionIdx];
+        if((region.attempts - region.successes) > m_maxSampleFails) {
+          m_failedVID = region.edgeIterator->source();
+
+          if(this->m_debug)
+            std::cout << "Replacing region for target VID " << m_failedVID << std::endl;
+
+          m_regions.clear();
+          NextBestRegion(true);
+        }
         continue;
+      }
+        
       gcfg = result.second;
     }
-
-    if(m_lastRegionIdx > -1)
-      m_regions[m_lastRegionIdx].IncrementAttempts();
   }
 
   m_checkRegions = true;
@@ -730,10 +815,10 @@ std::pair<bool, typename MPTraits::GroupCfgType>
 CompositeDynamicRegionRRT<MPTraits>::
 Sample(SamplingRegion* _region) {
   if (this->m_debug) {
-    std::cout << "\tSampling from region"
-              << " (intermediate "
+    std::cout << "\tSampling from region with center at on edge "
+              << _region->edgeIterator->id() << " (intermediate "
               << _region->edgeIndex << "/"
-              << _region->edge.GetNumIntermediates()
+              << _region->edgeIterator->property().GetNumIntermediates()
               << "), success rate so far "
               << _region->successes << " / " << _region->attempts
               << ", using sampler '" << this->m_samplerLabel << "'." << std::endl;
@@ -750,7 +835,7 @@ Sample(SamplingRegion* _region) {
 
   std::vector<CSpaceBoundingSphere> bounds;
   for(auto robot : robots) {
-    bounds.push_back(MakeBoundary(robot, center));
+    bounds.push_back(MakeBoundary(robot, center, m_deflate));
   }
 
   BoundaryMap boundMap;
@@ -857,7 +942,7 @@ IsTouching(const GroupCfgType& _groupCfg, SamplingRegion& _region) {
 template <typename MPTraits>
 CSpaceBoundingSphere
 CompositeDynamicRegionRRT<MPTraits>::
-MakeBoundary(Robot* _robot, const VectorMap _v) {
+MakeBoundary(Robot* _robot, const VectorMap _v, const bool _deflate) {
   auto stats = this->GetStatClass();
   MethodTimer mt(stats, this->GetNameAndLabel() + "::MakeBoundary");
 
@@ -866,9 +951,13 @@ MakeBoundary(Robot* _robot, const VectorMap _v) {
 
   auto indV = _v.at(_robot);
 
+  double radius = m_regionRadius.at(_robot);
+  if(_deflate)
+    radius -= m_penetrationFactor * _robot->GetMultiBody()->GetBoundingSphereRadius();
+
   // I'm not sure what the boundary code might do with a negative radius. Bound
   // it below at zero just in case.
-  const double radius = std::max(0., m_regionRadius.at(_robot));
+  radius = std::max(0., radius);
 
   if (threeD)
     return CSpaceBoundingSphere({indV[0], indV[1], indV[2]}, radius);
@@ -910,7 +999,6 @@ BuildSkeleton() {
         // Create the workspace skeleton.
         auto sk = mcs.GetSkeleton();
         m_individualSkeleton = sk.first;
-        m_individualSkeleton.DoubleEdges();
       }
       else if(m_skeletonType == "reeb") {
         // Create a workspace skeleton using a reeb graph.
@@ -923,7 +1011,6 @@ BuildSkeleton() {
 
         // Create the workspace skeleton.
         m_individualSkeleton = reeb.GetSkeleton();
-        m_individualSkeleton.DoubleEdges();
       }
       else
         throw ParseException(WHERE) << "Unrecognized skeleton type '"
@@ -945,12 +1032,24 @@ BuildSkeleton() {
       MedialAxis2D ma(polyhedra, env->GetBoundary());
       ma.BuildMedialAxis();
       m_individualSkeleton = get<0>(ma.GetSkeleton(1)); // 1 for free space.
-      m_individualSkeleton.DoubleEdges();
     }
   }
 
+  if(m_split > 0) {
+    double maxLength = m_split * robots[0]->GetMultiBody()->GetBoundingSphereRadius();
+    m_individualSkeleton.RefineEdges(maxLength);
+    // m_individualSkeleton.Write(this->GetBaseFilename() + ".split.graph");
+  }
+  m_individualSkeleton.DoubleEdges();
+
   // Get the clearance annotations
-  auto annot = ClearanceAnnotatedSkeleton(this, &m_individualSkeleton, false);
+  auto annot = ClearanceAnnotatedSkeleton(this, &m_individualSkeleton, true);
+
+  // Add self edges for waiting
+  for(auto vid : m_individualSkeleton.GetAllVIDs()) {
+    std::vector<Point3d> p = {};
+    m_individualSkeleton.AddEdge(vid, vid, p);
+  }
 
   std::vector<WorkspaceSkeleton*> ws;
   for (size_t i = 0; i < robots.size(); ++i) {
@@ -1380,6 +1479,11 @@ ValidationFunction(CBSNodeType& _node) {
 
   // Form a constraint for every robot, vid, timestep that has below 0 capacity remaining
   for(size_t i = 0; i < maxTimestep; i++) {
+    std::unordered_set<Robot*> addedEdgeConstraint;
+    std::unordered_set<Robot*> addedVertexConstraint;
+
+    std::unordered_map<Robot*, VID> starts;
+    std::unordered_map<Robot*, VID> targets;
     for(auto iter = _node.solutionMap.begin(); iter != _node.solutionMap.end(); iter++) {
 
       // Find the VID of this robot at time i
@@ -1388,27 +1492,272 @@ ValidationFunction(CBSNodeType& _node) {
 
       auto s = std::min(i, path.size()-1);
       auto source = path[s];
-      auto t = std::min(i+1,path.size()-1);
+      auto t = std::min(i+1, path.size()-1);
       auto target = path[t];
+
+      starts[robot] = source;
+      targets[robot] = target;
 
       // order such that source < target
       auto sVID = std::min(source, target);
       auto tVID = std::max(source, target);
       auto edgePair = std::make_pair(sVID, tVID);
 
+      // Check the capacity of the source vertex
+      if(vertexCapacity.at(source).at(i) < 0) {
+        auto vPair = std::make_pair(source, SIZE_MAX);
+        constraints.push_back(std::make_pair(robot, std::make_pair(vPair, i)));
+        addedVertexConstraint.insert(robot);
+      }
+
       // Check for an edge
       if(source != target) {
         // Check the capacity of the vertex
         if(edgeCapacity.at(edgePair).at(i) < 0) {
           constraints.push_back(std::make_pair(robot, std::make_pair(edgePair, i)));
+          addedEdgeConstraint.insert(robot);
         }
       }
+    }
+
+    for(auto ed : m_failedEDs) {
+      auto startV = m_skeleton->GetVertex(ed.first);
+      auto targetV = m_skeleton->GetVertex(ed.second);
+
+      size_t matchedConstraint = 0;
+
+      auto robots = this->GetGroupTask()->GetRobotGroup()->GetRobots();
+      for(auto robot : robots) {
+        auto start = starts.at(robot);
+        auto target = targets.at(robot);
+
+        if(startV.GetVID(robot) != start)
+          continue;
+        if(targetV.GetVID(robot) != target)
+          continue;
+
+        matchedConstraint++;
+      }
+
+      if(matchedConstraint == robots.size()) {
+        for(auto robot : robots) {
+          auto start = starts.at(robot);
+          auto target = targets.at(robot);
+
+          if(start == target and !addedVertexConstraint.count(robot)) {
+            auto vPair = std::make_pair(start, SIZE_MAX);
+            constraints.push_back(std::make_pair(robot, std::make_pair(vPair, i)));
+          }
+
+          if(start != target and !addedEdgeConstraint.count(robot)) {
+            auto edgePair = std::make_pair(start, target);
+            constraints.push_back(std::make_pair(robot, std::make_pair(edgePair, i)));
+          }
+        }
+      }
+    }
+  }
+
+  return constraints;
+}
+
+
+template <typename MPTraits>
+std::vector<std::pair<Robot*, typename CompositeDynamicRegionRRT<MPTraits>::OrderingConstraint>>
+CompositeDynamicRegionRRT<MPTraits>::
+ValidationFunction(PBSNodeType& _node) {
+  auto stats = this->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::ValidationFunction");
+
+  // std::cout << "VALIDATION" << std::endl;
+
+  size_t maxTimestep = 0;
+  for(auto kv : _node.solutionMap) {
+    maxTimestep = std::max(maxTimestep,kv.second->size());
+    // std::cout << kv.first->GetLabel() << ": " << *kv.second << std::endl;
+  }
+
+  // std::cout << "\tConstraints" << std::endl;
+  // for(auto kv : _node.constraintMap) {
+  //   std::cout << kv.first->GetLabel() << ": {";
+  //   for(auto r : kv.second) {
+  //     std::cout << r->GetLabel() << " ";
+  //   }
+  //   std::cout << "}" << std::endl;
+  // }
+
+  std::unordered_map<SkeletonVertexDescriptor, std::unordered_map<size_t, double>> vertexCapacity;
+  std::unordered_map<std::pair<SkeletonVertexDescriptor, SkeletonVertexDescriptor>, 
+      std::unordered_map<size_t, double>> edgeCapacity;
+
+  // new constraints of form (robot, robot)
+  std::vector<std::pair<Robot*, OrderingConstraint>> constraints;
+
+  // iterate through robots first to get the remaining capacity
+  for(size_t i = 0; i < maxTimestep; i++) {
+    for(auto iter = _node.solutionMap.begin(); iter != _node.solutionMap.end(); iter++) {
+      auto robot = iter->first;
+      auto path = *(iter->second);
+
+      // source vertex (current timestep)
+      auto s = std::min(i, path.size()-1);
+      auto source = path[s];
+
+      // target vertex (next timestep)
+      auto t = std::min(i+1,path.size()-1);
+      auto target = path[t];
+
+      // Get the edge in the individual skeleton
+      if(source != target) {
+        // order such that source < target
+        auto sVID = std::min(source, target);
+        auto tVID = std::max(source, target);
+
+        auto robotIdx = m_skeleton->GetGroup()->GetGroupIndex(robot);
+        WorkspaceSkeleton::adj_edge_iterator ei;
+        m_skeleton->GetIndividualGraph(robotIdx)->GetEdge(sVID, tVID, ei);
+        auto eid = ei->descriptor();
+        auto edgePair = std::make_pair(sVID, tVID);
+
+        // Check if this edge has been added
+        if(edgeCapacity.find(edgePair) != edgeCapacity.end()) {
+          // Check if this timestep has been added
+          if(edgeCapacity.at(edgePair).find(i) != edgeCapacity.at(edgePair).end()) {
+            // This edge and time are in the map, decrease the capacity as needed
+            edgeCapacity[edgePair][i] -= robot->GetMultiBody()->GetBoundingSphereRadius();
+          } else {
+            // This time is not in the map, add it with the remaining capacity
+            auto ds = m_annotationMap.at(robot)->GetEdgeProperty(eid);
+            auto d = *std::min_element(ds.begin(), ds.end());
+            d -= robot->GetMultiBody()->GetBoundingSphereRadius();
+            edgeCapacity[edgePair].emplace(std::make_pair(i, d));
+          }
+        } else {
+          // This edge needs to be added
+          auto ds = m_annotationMap.at(robot)->GetEdgeProperty(eid);
+          auto d = *std::min_element(ds.begin(), ds.end());
+          d -= robot->GetMultiBody()->GetBoundingSphereRadius();
+
+          std::unordered_map<size_t, double> eMap;
+          eMap.emplace(i, d);
+          edgeCapacity.emplace(std::make_pair(edgePair, eMap));
+        }
+      }
+      
+      // Check if this source vid has been added yet
+      if(vertexCapacity.find(source) != vertexCapacity.end()) {
+        // Check if this timestep has been added
+        if(vertexCapacity.at(source).find(i) != vertexCapacity.at(source).end()) {
+          // This vid and time are in the map, decrease the capacity as needed
+          vertexCapacity[source][i] -= robot->GetMultiBody()->GetBoundingSphereRadius();
+        } else {
+          // This time is not in the map, add it with the remaining capacity
+          auto d = m_annotationMap.at(robot)->GetVertexProperty(source);
+          d -= robot->GetMultiBody()->GetBoundingSphereRadius();
+          vertexCapacity[source].emplace(std::make_pair(i, d));
+        }
+      } else {
+        // This vid needs to be added
+        auto d = m_annotationMap.at(robot)->GetVertexProperty(source);
+        d -= robot->GetMultiBody()->GetBoundingSphereRadius();
+
+        std::unordered_map<size_t, double> vMap;
+        vMap.emplace(i, d);
+        vertexCapacity.emplace(std::make_pair(source, vMap));
+      }
+    }
+  }
+
+  // Form a constraint for every robot, vid that has below 0 capacity remaining
+  for(size_t i = 0; i < maxTimestep; i++) {
+    std::unordered_map<Robot*, VID> starts;
+    std::unordered_map<Robot*, VID> targets;
+
+    VID conflictSource = INVALID_VID;
+    VID conflictTarget = INVALID_VID;
+    for(auto iter = _node.solutionMap.begin(); iter != _node.solutionMap.end(); iter++) {
+
+      // Find the VID of this robot at time i
+      auto robot = iter->first;
+      auto path = *(iter->second);
+
+      auto s = std::min(i, path.size()-1);
+      auto source = path[s];
+      auto t = std::min(i+1, path.size()-1);
+      auto target = path[t];
+
+      starts[robot] = source;
+      targets[robot] = target;
+
+      // order such that source < target
+      auto sVID = std::min(source, target);
+      auto tVID = std::max(source, target);
+      auto edgePair = std::make_pair(sVID, tVID);
 
       // Check the capacity of the source vertex
       if(vertexCapacity.at(source).at(i) < 0) {
-        auto vPair = std::make_pair(source, SIZE_MAX);
-        constraints.push_back(std::make_pair(robot, std::make_pair(vPair, i)));
+        conflictSource = source;
+        break;
       }
+
+      // Check for an edge
+      else if(source != target) {
+        // Check the capacity of the vertex
+        if(edgeCapacity.at(edgePair).at(i) < 0) {
+          conflictSource = sVID;
+          conflictTarget = tVID;
+          break;
+        }
+      }
+    }
+
+    // std::cout << "Time: " << i << " " << conflictSource << " " << conflictTarget << std::endl;
+
+    std::vector<Robot*> robots;
+    if(conflictSource != INVALID_VID and conflictTarget == INVALID_VID) {
+      for(auto iter = _node.solutionMap.begin(); iter != _node.solutionMap.end(); iter++) {
+
+        // Find the VID of this robot at time i
+        auto robot = iter->first;
+        auto path = *(iter->second);
+
+        auto s = std::min(i, path.size()-1);
+        auto source = path[s];
+
+        if(source == conflictSource)
+          robots.push_back(robot);
+      }
+    }
+
+    else if(conflictSource != INVALID_VID and conflictTarget != INVALID_VID) {
+      for(auto iter = _node.solutionMap.begin(); iter != _node.solutionMap.end(); iter++) {
+
+        // Find the VID of this robot at time i
+        auto robot = iter->first;
+        auto path = *(iter->second);
+
+        auto s = std::min(i, path.size()-1);
+        auto source = path[s];
+        auto t = std::min(i+1, path.size()-1);
+        auto target = path[t];
+
+        // order such that source < target
+        auto sVID = std::min(source, target);
+        auto tVID = std::max(source, target);
+
+        if(sVID == conflictSource and tVID == conflictTarget)
+          robots.push_back(robot);
+      }
+    }
+
+    if(robots.size()) {
+      for(size_t k = 0; k < robots.size(); k++) {
+        for(size_t l = k+1; l < robots.size(); l++) {
+          constraints.push_back(std::make_pair(robots.at(k), robots.at(l)));
+          constraints.push_back(std::make_pair(robots.at(l), robots.at(k)));
+        }
+      }
+      break;
     }
   }
 
@@ -1450,6 +1799,71 @@ SplitNodeFunction(CBSNodeType& _node,
   }
 
   return newNodes;
+}
+
+
+template <typename MPTraits>
+std::vector<typename CompositeDynamicRegionRRT<MPTraits>::PBSNodeType> 
+CompositeDynamicRegionRRT<MPTraits>::
+SplitNodeFunction(PBSNodeType& _node,
+        std::vector<std::pair<Robot*,OrderingConstraint>> _constraints,
+        CBSLowLevelPlanner<Robot,OrderingConstraint,CBSSolution>& _lowLevel,
+        CBSCostFunction<Robot,OrderingConstraint,CBSSolution>& _cost) {
+  auto stats = this->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::SplitNodeFunction");
+
+  std::vector<PBSNodeType> children;
+
+  for(auto constraintPair : _constraints) {
+    auto robot = constraintPair.first;
+    auto constraint = constraintPair.second;
+    auto child = _node;
+
+    // Double check that constraints don't make a circular dependency
+    if(CheckCircularDependency(robot,constraint,child.constraintMap))
+      continue;
+    
+    child.constraintMap[robot].insert(constraint);
+
+    if(!_lowLevel(child, robot))
+      continue;
+
+    child.cost = _cost(child);
+    children.push_back(child);
+  }
+
+  return children;
+}
+
+
+template <typename MPTraits>
+bool
+CompositeDynamicRegionRRT<MPTraits>::
+CheckCircularDependency(Robot* _robot, const OrderingConstraint& _newConstraint, 
+                const std::map<Robot*,std::set<OrderingConstraint>>& _constraints) {
+
+  // Check for duplicate constraints
+  if(_constraints.at(_robot).count(_newConstraint))
+    return true;
+
+  // Grow tree from new constraint and see if see if a cycle is formed
+  std::queue<OrderingConstraint> queue;
+  queue.push(_newConstraint);
+
+  while(!queue.empty()) {
+    auto r = queue.front();
+    queue.pop();
+    auto constraints = _constraints.at(r);
+
+    for(auto c : constraints) {
+      if(c == _robot)
+        return true;
+
+      queue.push(c);
+    }
+  }
+
+  return false;
 }
 
 
@@ -1517,7 +1931,13 @@ LowLevelPlanner(CBSNodeType& _node, Robot* _robot) {
       for(auto constraint : constraints) {
         // Check if the edge violates a constraint
         if(sVID == constraint.first.first and tVID == constraint.first.second) {
-          if (timestep == constraint.second) {
+          if(timestep == constraint.second) {
+            return std::numeric_limits<double>::infinity();
+          }
+        }
+
+        if(source == constraint.first.first and target == constraint.first.second) {
+          if(timestep == constraint.second) {
             return std::numeric_limits<double>::infinity();
           }
         }
@@ -1526,12 +1946,15 @@ LowLevelPlanner(CBSNodeType& _node, Robot* _robot) {
         if(constraint.first.second != SIZE_MAX)
           continue;
 
-        // Check for vertex constraint
-        if(source != constraint.first.first)
-          continue;
-    
-        if(timestep == constraint.second)
+        // Check for a conflict at the source
+        if(source == constraint.first.first and timestep == constraint.second) {
           return std::numeric_limits<double>::infinity();
+        }
+
+        // Check for a conflict at the target
+        if(target == constraint.first.first and timestep+1 == constraint.second) {
+          return std::numeric_limits<double>::infinity();
+        }
       }
 
       return _sourceDistance + _ei->property();
@@ -1603,6 +2026,283 @@ LowLevelPlanner(CBSNodeType& _node, Robot* _robot) {
 
 
 template <typename MPTraits>
+bool
+CompositeDynamicRegionRRT<MPTraits>::
+LowLevelPlanner(PBSNodeType& _node, Robot* _robot) {
+  auto stats = this->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::LowLevelPlanner");
+
+  std::set<Robot*> needsToReplan,hasReplanned;
+  needsToReplan.insert(_robot);
+  std::vector<VID>* pathCopy = nullptr;
+
+  AddDependencies(needsToReplan,_robot,_node);
+
+  Robot* robot = nullptr;
+  while(hasReplanned.size() != needsToReplan.size()) {
+
+    for(auto r : needsToReplan) {
+      if(hasReplanned.count(r))
+        continue;
+
+      bool ready = true;
+      for(auto c : _node.constraintMap.at(r)) {
+        if(!needsToReplan.count(c) or hasReplanned.count(c))
+          continue;
+
+        ready = false;
+        break;
+      }
+
+      if(!ready)
+        continue;
+
+      robot = r;
+      break;
+    }
+
+
+    auto h = std::shared_ptr<HeuristicSearch>(new HeuristicSearch(robot));
+    auto robotIdx = m_skeleton->GetGroup()->GetGroupIndex(robot);
+
+    // Get the start and goal vids in the individual skeleton
+    auto start = m_MAPFStarts.at(robot);
+    auto goal = m_skeletonQuery.second.at(robotIdx);
+
+    // Check that start does not violate a consfalsetraint and get min end time
+    size_t minEndTimestep = 0;
+    for(auto kv : _node.solutionMap) {
+      auto path = kv.second;
+      if(path)
+        minEndTimestep = std::max(minEndTimestep, path->size() - 1);
+    }
+
+    // Distance from each skeleton vertex to the goal
+    auto dist2go = m_distanceMap.at(robot);
+    auto g = m_skeleton->GetIndividualGraph(robotIdx);
+    auto annot = m_annotationMap.at(robot);
+
+    auto startVertex = std::make_pair(start,0);
+    auto startVID = h->AddVertex(startVertex);
+
+    auto f = m_failedEDs;
+    auto s = m_skeleton;
+
+    SSSPTerminationCriterion<HeuristicSearch> termination(
+      [goal,minEndTimestep](typename HeuristicSearch::vertex_iterator& _vi,
+            const SSSPOutput<HeuristicSearch>& _sssp) {
+        
+        auto vertex = _vi->property();
+
+        if(goal == vertex.first and minEndTimestep <= vertex.second)
+          return SSSPTermination::EndSearch;
+
+        return SSSPTermination::Continue;
+      }
+    );
+
+    SSSPPathWeightFunction<HeuristicSearch> weight(
+      [_node,robot,annot,f,s,g,h](typename HeuristicSearch::adj_edge_iterator& _ei,
+        const double _sourceDistance,
+        const double _targetDistance) {
+      
+        auto source = h->GetVertex(_ei->source()).first;
+        auto target = h->GetVertex(_ei->target()).first;
+        auto timestep = h->GetVertex(_ei->source()).second;
+
+        double edgeUsage = robot->GetMultiBody()->GetBoundingSphereRadius();
+        double sourceUsage = robot->GetMultiBody()->GetBoundingSphereRadius();
+        double targetUsage = robot->GetMultiBody()->GetBoundingSphereRadius();
+
+        // Preserve transitivity by adding dependencies of dependencies
+        auto constraints = _node.constraintMap.at(robot);
+        std::queue<OrderingConstraint> addConst;
+        for(auto c : constraints)
+          addConst.push(c);
+
+        while(!addConst.empty()) {
+          auto c = addConst.front();
+          for(auto d : _node.constraintMap.at(c)) {
+            if(!constraints.count(d)) {
+              constraints.insert(d);
+              addConst.push(d);
+            }
+          }
+          addConst.pop();
+        }
+
+        for(auto r : constraints) {
+          auto path = *_node.solutionMap.at(r);
+
+          auto time = timestep >= path.size() ? path.size() - 1 : timestep;
+          auto nextTime = timestep + 1 >= path.size() ? path.size() - 1 : timestep + 1;
+          auto ps = path.at(time);
+          auto pt = path.at(nextTime);
+
+          // Check the capacity at the start vertex and target vertex
+          if(ps == source)
+            sourceUsage += r->GetMultiBody()->GetBoundingSphereRadius();
+
+          if(pt == target)
+            targetUsage += r->GetMultiBody()->GetBoundingSphereRadius();
+
+          // Check the capacity on the edge
+          if(ps == pt or source == target)
+            continue;
+
+          if((source == ps and target == pt) or (source == pt and target == ps))
+            edgeUsage += r->GetMultiBody()->GetBoundingSphereRadius();
+        }
+
+        if(sourceUsage > annot->GetVertexProperty(source))
+          return std::numeric_limits<double>::infinity();
+        
+        if(targetUsage > annot->GetVertexProperty(target))
+          return std::numeric_limits<double>::infinity();
+        
+        if(source != target) {
+          WorkspaceSkeleton::adj_edge_iterator ei;
+          g->GetEdge(source, target, ei);
+          auto eid = ei->descriptor();
+
+          auto dists = annot->GetEdgeProperty(eid);
+          auto minDist = *std::min_element(dists.begin(), dists.end());
+
+          // std::cout << "edge usage: " << edgeUsage << " " << minDist << std::endl;
+          
+          if(edgeUsage > minDist)
+            return std::numeric_limits<double>::infinity();
+        }
+
+        // Check that not all of the robots are trying to traverse a failed edge
+        for(auto ed : f) {
+          auto startV = s->GetVertex(ed.first);
+          auto targetV = s->GetVertex(ed.second);
+
+          if(startV.GetVID(robot) != source)
+              continue;
+          if(targetV.GetVID(robot) != target)
+              continue;
+
+          size_t matchedConstraint = 1;
+
+          for(auto kv : _node.solutionMap) {
+            auto r = kv.first;
+
+            if(r == robot or kv.second == nullptr)
+              continue;
+
+            auto path = *kv.second;
+            auto s = std::min(timestep, path.size()-1);
+            auto rsource = path[s];
+            auto t = std::min(timestep+1, path.size()-1);
+            auto rtarget = path[t];
+
+            if(startV.GetVID(r) != rsource)
+              continue;
+            if(targetV.GetVID(r) != rtarget)
+              continue;
+
+            matchedConstraint++;
+          }
+
+          if(matchedConstraint == _node.solutionMap.size())
+            return std::numeric_limits<double>::infinity();
+        }
+
+        return _sourceDistance + _ei->property();
+      }
+    );
+
+    SSSPHeuristicFunction<HeuristicSearch> heuristic(
+      [dist2go](const HeuristicSearch* _h, 
+        typename HeuristicSearch::vertex_descriptor _source,
+        typename HeuristicSearch::vertex_descriptor _target) {
+
+        // Distance to go heuristic
+        auto vertex = _h->GetVertex(_target);
+        double toGo = dist2go.at(vertex.first);
+
+        return std::max(0.0,toGo);
+      }
+    );
+
+    SSSPNeighborsFunction<HeuristicSearch> neighbors(
+      [g](HeuristicSearch* _h, typename HeuristicSearch::vertex_descriptor _vid) {
+        auto vertex = _h->GetVertex(_vid);
+        auto gvid = vertex.first;
+        auto timestep = vertex.second;
+        
+        auto vit = g->find_vertex(gvid);
+        auto sourceProp = vit->property();
+
+        for(auto eit = vit->begin(); eit != vit->end(); eit++) {
+          auto target = eit->target();
+          auto targetProp = g->find_vertex(target)->property();
+          auto neighbor = std::make_pair(target,timestep+1);
+
+          // Add a small cost for waiting so no edge has 0 weight
+          auto nvid = _h->AddVertex(neighbor);
+          auto dist = (targetProp - sourceProp).norm();
+          _h->AddEdge(_vid,nvid,std::max(dist, 0.0000001));
+        }
+      }
+    );
+
+    std::vector<size_t> starts = {startVID};
+    std::vector<size_t> goals = {goal};
+
+    auto sssp = AStarSSSP(h.get(),starts,goals,weight,heuristic,neighbors,termination);
+
+    // Check that a path was found
+    const size_t last = sssp.ordering.back();
+    if(h->GetVertex(last).first != goal or h->GetVertex(last).second < minEndTimestep) {
+      if(this->m_debug) {
+        std::cout << "Failed to find a path for " << robot->GetLabel() << std::endl;
+      }
+      pathCopy = nullptr;
+      break;
+    }
+
+    // Reconstruct the path
+    std::vector<size_t> path = {h->GetVertex(last).first};
+    auto current = last;
+    do {
+      current = sssp.parent.at(current);
+      path.push_back(h->GetVertex(current).first);
+    } while(current != startVID);
+    std::reverse(path.begin(),path.end());
+
+    // Save path in solution
+    _node.solutionMap[robot] = new vector<size_t>();
+    *(_node.solutionMap[robot]) = path;
+    pathCopy = _node.solutionMap[robot];
+
+    hasReplanned.insert(robot);
+  }
+
+  return pathCopy != nullptr and pathCopy->size();
+}
+
+
+template <typename MPTraits>
+void
+CompositeDynamicRegionRRT<MPTraits>::
+AddDependencies(std::set<Robot*>& _needsToReplan, Robot* _robot, const PBSNodeType& _node) {
+  for(auto iter : _node.constraintMap) {
+     auto r = iter.first;
+     auto dep = iter.second;
+     if(dep.count(_robot)) {
+      if(!_needsToReplan.count(r)) {
+        _needsToReplan.insert(r);
+        AddDependencies(_needsToReplan, r, _node);
+      }
+     }
+  }
+}
+
+
+template <typename MPTraits>
 double
 CompositeDynamicRegionRRT<MPTraits>::
 CostFunction(CBSNodeType& _node) {
@@ -1633,9 +2333,39 @@ CostFunction(CBSNodeType& _node) {
 template <typename MPTraits>
 double
 CompositeDynamicRegionRRT<MPTraits>::
+CostFunction(PBSNodeType& _node) {
+  auto stats = this->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::CostFunction");
+
+  // For now, treat an edge as having cost 1, use makespan
+
+  double cost = 0;
+  for(auto kv : _node.solutionMap) {
+    cost = std::max(cost,double(kv.second->size()));
+    // double pathLength = 0;
+    // const auto& path = *kv.second;
+    // for(size_t i = 1; i < path.size(); i++) {
+    //   auto source = path[i-1];
+    //   auto target = path[i];
+    //   auto edge = g->GetEdge(source,target);
+    //   pathLength += edge;
+    // }
+    // //cost += pathLength;
+    // cost = std::max(cost,pathLength);
+  }
+
+  return cost;
+}
+
+
+template <typename MPTraits>
+double
+CompositeDynamicRegionRRT<MPTraits>::
 ComputeMAPFHeuristic(const CompositeSkeletonVertex _vertex) {
   auto stats = this->GetStatClass();
   MethodTimer mt(stats, this->GetNameAndLabel() + "::ComputeMAPFHeuristic");
+
+  m_mapfCount++;
 
   for(auto robot : m_skeleton->GetGroup()->GetRobots()) {
     auto indVID = _vertex.GetVID(robot);
@@ -1669,30 +2399,32 @@ ComputeMAPFHeuristic(const CompositeSkeletonVertex _vertex) {
     }
   );
 
-  std::vector<Robot*> robots = m_skeleton->GetGroup()->GetRobots();
+  std::vector<Robot*> robots = this->GetGroupTask()->GetRobotGroup()->GetRobots();
   CBSNodeType solution = CBS(robots,validation,splitNode,lowLevel,cost);
 
-  // Cache results to reduce calls to CBS.
-  std::vector<VIDMap> vertices;
-  vertices.resize(int(solution.cost));
+  size_t maxTimestep = 0;
   for(auto kv : solution.solutionMap) {
-    auto robot = kv.first;
-    auto path = *kv.second;
-    for(size_t i = 0; i < path.size(); i++)
-      vertices.at(i).emplace(std::make_pair(robot, path.at(i)));
-
-    for(size_t i = path.size(); i < (size_t) solution.cost; i++)
-      vertices.at(i).emplace(std::make_pair(robot, path.at(path.size() - 1)));
+    maxTimestep = std::max(maxTimestep,kv.second->size());
   }
 
-  double subcost = solution.cost;
-  for(auto vset : vertices) {
-    // Stop caching if we've reached a previously discovered path.
-    if(m_costs.find(vset) != m_costs.end())
-      break;
+  // Cache results to reduce calls to CBS.
+  if(m_cache) {
+    double subcost = solution.cost;
+    for(size_t i = 0; i < maxTimestep; i++) {
+      std::vector<VID> vertex = {};
 
-    m_costs.emplace(std::make_pair(vset, subcost));
-    subcost = subcost - 1.0;
+      for(auto robot : robots) {
+        auto path = *solution.solutionMap[robot];
+        auto v = i < path.size() ? path.at(i) : path.at(path.size() - 1);
+        vertex.push_back(v);
+      }
+
+      if(m_costs.count(vertex))
+        break;
+      
+      m_costs.emplace(std::make_pair(vertex, subcost));
+      subcost -= 1.0;
+    }
   }
 
   if(this->m_debug) {
@@ -1710,6 +2442,159 @@ ComputeMAPFHeuristic(const CompositeSkeletonVertex _vertex) {
   }
 
   return solution.cost;
+}
+
+
+template <typename MPTraits>
+void
+CompositeDynamicRegionRRT<MPTraits>::
+ComputeMAPFPaths(const VID _vid) {
+  auto stats = this->GetStatClass();
+  MethodTimer mt(stats, this->GetNameAndLabel() + "::ComputeMAPFHPaths");
+
+  m_mapfCount++;
+
+  auto robots = this->GetGroupTask()->GetRobotGroup()->GetRobots();
+  auto vertex = m_skeleton->GetVertex(_vid);
+  for(auto robot : robots) {
+    auto indVID = vertex.GetVID(robot);
+    m_MAPFStarts[robot] = indVID;
+  }
+
+  // Configure CBS Functions
+  std::unordered_map<Robot*, CBSSolution*> solution;
+
+  if(m_mapf == "CBS") {
+    CBSLowLevelPlanner<Robot,CBSConstraint,CBSSolution> lowLevel(
+      [this](CBSNodeType& _node, Robot* _task) {
+        return this->LowLevelPlanner(_node,_task);
+      }
+    );
+
+    CBSValidationFunction<Robot,CBSConstraint,CBSSolution> validation(
+      [this](CBSNodeType& _node) {
+        return this->ValidationFunction(_node);
+      }
+    );
+
+    CBSSplitNodeFunction<Robot,CBSConstraint,CBSSolution> splitNode(
+      [this](CBSNodeType& _node, std::vector<std::pair<Robot*,CBSConstraint>> _constraints,
+            CBSLowLevelPlanner<Robot,CBSConstraint,CBSSolution>& _lowLevel,
+            CBSCostFunction<Robot,CBSConstraint,CBSSolution>& _cost) {
+        return this->SplitNodeFunction(_node,_constraints,_lowLevel,_cost);
+      }
+    );
+
+    CBSCostFunction<Robot,CBSConstraint,CBSSolution> cost(
+      [this](CBSNodeType& _node) {
+        return this->CostFunction(_node);
+      }
+    );
+
+    auto sol = CBS(robots,validation,splitNode,lowLevel,cost);
+    solution = sol.solutionMap;
+  } 
+  else {
+    CBSLowLevelPlanner<Robot,OrderingConstraint,CBSSolution> lowLevel(
+      [this](PBSNodeType& _node, Robot* _task) {
+        return this->LowLevelPlanner(_node,_task);
+      }
+    );
+
+    CBSValidationFunction<Robot,OrderingConstraint,CBSSolution> validation(
+      [this](PBSNodeType& _node) {
+        return this->ValidationFunction(_node);
+      }
+    );
+
+    CBSSplitNodeFunction<Robot,OrderingConstraint,CBSSolution> splitNode(
+      [this](PBSNodeType& _node, std::vector<std::pair<Robot*,OrderingConstraint>> _constraints,
+            CBSLowLevelPlanner<Robot,OrderingConstraint,CBSSolution>& _lowLevel,
+            CBSCostFunction<Robot,OrderingConstraint,CBSSolution>& _cost) {
+        return this->SplitNodeFunction(_node,_constraints,_lowLevel,_cost);
+      }
+    );
+
+    CBSCostFunction<Robot,OrderingConstraint,CBSSolution> cost(
+      [this](PBSNodeType& _node) {
+        return this->CostFunction(_node);
+      }
+    );
+
+    auto sol = CBS(robots,validation,splitNode,lowLevel,cost);
+    solution = sol.solutionMap;
+  }
+
+  size_t maxTimestep = 0;
+  for(auto kv : solution) {
+    maxTimestep = std::max(maxTimestep,kv.second->size());
+  }
+
+  // Construct path through the composite skeleton
+  auto lastVID = _vid;
+  auto time = m_timestep;
+
+  std::queue<SkeletonEdgeDescriptor> empty;
+  std::swap(m_nextEdges, empty);
+
+  for(size_t i = 1; i < maxTimestep; i++) {
+    auto cv = CompositeSkeletonVertex(m_skeleton);
+    auto edge = CompositeSkeletonEdge(m_skeleton, 1.);
+
+    auto lastVertex = m_skeleton->GetVertex(lastVID);
+
+    for(auto robot : robots) {
+      auto path = *solution[robot];
+      auto tVID = i < path.size() ? path.at(i) : path.at(path.size() - 1);
+      cv.SetRobotCfg(robot, tVID);
+
+      auto sVID = lastVertex.GetVID(robot);
+
+      WorkspaceSkeleton::CEI ei;
+      WorkspaceSkeleton::CVI vi;
+      auto eid = WorkspaceSkeleton::EID(sVID, tVID);
+      m_individualSkeleton.find_edge(eid, vi, ei);
+      eid = ei->descriptor();
+      edge.SetEdge(robot, eid);
+    }
+
+    auto vid = m_skeleton->AddVertex(cv);
+    if(lastVID == vid) {
+      continue;
+    }
+
+    auto ed = m_skeleton->AddEdge(lastVID, vid, edge);
+    auto vidTime = std::make_pair(vid, time + 1);
+    m_predecessorVIDs[vidTime] = std::make_pair(lastVID, time);
+
+    if(ed.id() == std::numeric_limits<size_t>::max()) {
+      typename CompositeSkeletonType::CEI ei;
+      typename CompositeSkeletonType::CVI vi;
+      auto eid = typename CompositeSkeletonType::EID(lastVID, vid);
+      m_skeleton->find_edge(eid, vi, ei);
+
+      m_nextEdges.push(ei->descriptor());
+    } else {
+      m_nextEdges.push(ed);
+    }
+
+    lastVID = vid;
+    time++;
+  }
+
+  if(this->m_debug) {
+    std::cout << "Heuristic Paths" << std::endl;
+    for(auto kv : solution) {
+      auto robot = kv.first;
+      auto path = *kv.second;
+      std::cout << "\t" << robot->GetLabel() << ": ";
+      for(auto vid : path) {
+        std::cout << vid << ", ";
+      }
+      std::cout << std::endl;
+    }
+    std::cout << "Next edges size: " << m_nextEdges.size() << std::endl;
+  }
 }
 
 
@@ -1750,6 +2635,8 @@ CompositeDynamicRegionRRT<MPTraits>::
 CreateRegions(const SkeletonVertexIterator _iter, const size_t _maxRegions) {
   MethodTimer mt(this->GetStatClass(),
         this->GetNameAndLabel() + "::CreateRegions");
+  
+  m_createRegsCalls++;
 
   const auto descriptor = _iter->descriptor();
   // Skip skeleton nodes that are already visited.
@@ -1869,7 +2756,7 @@ CreateRegions(const SkeletonVertexIterator _iter, const size_t _maxRegions) {
 
         // The remaining clearance is the min clearance minus robot size
         minDist -= m_skeleton->GetGroup()->GetRobot(i)->GetMultiBody()->
-                   GetBoundingSphereRadius();
+                   GetBoundingSphereRadius() * 2;
         edgeClearance.insert(std::make_pair(std::make_pair(sVID, tVID), minDist));
 
         if(minDist < 0) {
@@ -1897,13 +2784,13 @@ CreateRegions(const SkeletonVertexIterator _iter, const size_t _maxRegions) {
     auto eid = m_skeleton->AddEdge(descriptor,vid,edge);
 
     // Check if the heuristic cost has been cached, otherwise calculate it.
-    VIDMap vertices;
-    for(auto r : vertex.GetRobots()) {
-      vertices.emplace(std::make_pair(r, vertex.GetVID(r)));
+    VIDSet vertices;
+    for(auto r : this->GetGroupTask()->GetRobotGroup()->GetRobots()) {
+      vertices.push_back(vertex.GetVID(r));
     }
 
     double cost;
-    if(m_costs.find(vertices) == m_costs.end()) {
+    if(!m_costs.count(vertices)) {
       cost = ComputeMAPFHeuristic(vertex);
       
       if(this->m_debug)
@@ -1981,28 +2868,84 @@ CreateRegions(const SkeletonVertexIterator _iter, const size_t _maxRegions) {
 template <typename MPTraits>
 void
 CompositeDynamicRegionRRT<MPTraits>::
-NextBestRegion() {
-  // If there are no remaining edges, then throw exception
-  if(m_abortOnFail and m_edgeQueue.size() < 1)
-    throw RunTimeException(WHERE) << "Ran out of new regions to create. Aborting";
-  else if(m_edgeQueue.size() < 1)
-    return;
+NextBestRegion(const bool replan) {
+  if(replan and m_replanOrder == "front") {
+    if(this->m_debug)
+      std::cout << "Replanning path from the front..." << std::endl;
 
-  // Get the next lowest cost edge from the queue
-  auto eidIter = m_edgeQueue.begin();
+    ComputeMAPFPaths(0);
+  }
+
+  if(replan and m_replanOrder == "back") {
+
+    if(this->m_debug)
+      std::cout << "Replanning with iterative backtracking" << std::endl;
+
+    bool success = false;
+    auto replanVID = m_failedVID;
+    while(!success) {
+
+      // Backtrack to the last viable vertex
+      while(replanVID != INVALID_VID and m_replanAttempts[replanVID] >= m_maxEdges) {
+        if(this->m_debug)
+          std::cout << "VID " << replanVID 
+                    << " exceeded max replan attempts, backtracking"
+                    << std::endl;
+
+        auto vidTime = std::make_pair(replanVID, m_timestep);
+        vidTime = m_predecessorVIDs.at(vidTime);
+        replanVID = vidTime.first;
+        m_timestep = vidTime.second;
+      }
+
+      if(m_abortOnFail and replanVID == INVALID_VID)
+        throw RunTimeException(WHERE) << "Ran out of new regions to create. Aborting...";
+
+      // If failed at the start, stay here
+      if(this->m_debug)
+        std::cout << "Replanning path from VID "
+                  << (replanVID == INVALID_VID ? 0 : replanVID)
+                  << "..." << std::endl;
+
+      if(replanVID == INVALID_VID)
+        ComputeMAPFPaths(0);
+      else
+        ComputeMAPFPaths(replanVID);
+
+      m_replanAttempts[replanVID]++;
+      success = m_nextEdges.size() > 0;
+      if(!success)
+        m_replanAttempts[replanVID] = m_maxEdges;
+    }
+  }
+
+  // Get the next edge from the queue
+  auto ed = m_nextEdges.front();
+  while(!m_nextEdges.empty() and m_traversedEdges.count(ed.id())) {
+    m_nextEdges.pop();
+    ed = m_nextEdges.front();
+    m_timestep++;
+  }
+
+  if(m_nextEdges.empty()) {
+    if(this->m_debug)
+      std::cout << "Traversed all edges in the computed MAPF solution. Reverting to Composite RRT"
+                << std::endl;
+    return;
+  }
+
   SkeletonVertexIterator vi;
   SkeletonEdgeIterator eit;
-  m_skeleton->find_edge(eidIter->second, vi, eit);
+  m_skeleton->find_edge(ed, vi, eit);
 
-  auto cost = eidIter->first;
-  m_regions.push_back(SamplingRegion(eit, eidIter->first));
+  m_regions.push_back(SamplingRegion(eit, 1.));
 
-  // Delete this edge in the map so it can't be chosen again
-  m_edgeQueue.erase(eidIter);
+  // Delete this edge so it can't be chosen again
+  m_nextEdges.pop();
 
   if(this->m_debug)
-    std::cout << "Added new region on next best edge from " << eit->source()
-              << " to " << eit->target() << " with cost " << cost << std::endl;
+    std::cout << "Added new region on next edge from " << eit->source()
+              << " to " << eit->target() << std::endl;
 }
 
 
@@ -2021,18 +2964,17 @@ AdvanceRegions(const GroupCfgType& _cfg) {
   std::queue<SkeletonVertexDescriptor> newlyReachedVertices;
 
   // Keep track of edge iterators that need to be replaced
-  std::queue<SkeletonVertexDescriptor> replaceVertices;
+  // std::queue<SkeletonVertexDescriptor> replaceVertices;
+
+  // Only check sibling regions to the one we just advanced
+  SkeletonVertexDescriptor sourceVID = m_regions[m_lastRegionIdx].edgeIterator->source();
 
   // Iterate through all existing regions to see which should be advanced.
   for(auto iter = m_regions.begin(); iter != m_regions.end(); ) {
 
-    if(!m_groundEdge) {
-      // Only check sibling regions to the one we just advanced
-      auto sourceVID = m_regions[m_lastRegionIdx].edgeIterator->source();
-      if(iter->edgeIterator->source() != sourceVID) {
-        ++iter;
-        continue;
-      }
+    if(iter->edgeIterator->source() != sourceVID) {
+      ++iter;
+      continue;
     }
 
     // Advance this region until the robot at _cfg is no longer touching it.
@@ -2041,43 +2983,49 @@ AdvanceRegions(const GroupCfgType& _cfg) {
       continue;
     }
 
-    if(m_groundEdge) {
-      m_regions.erase(iter);
-      return;
-    }
-
     // We have reached the end of this region's edge. Delete it and save the
     // target vertex. to spawn new regions.
     auto eit = iter->edgeIterator;
-    const auto target = eit->target();
-    iter = m_regions.erase(iter);
+    m_traversedEdges.insert(eit->id());
+    m_timestep++;
 
-    if(m_visited.find(target) == m_visited.end() or !m_visited.at(target))
-      newlyReachedVertices.push(target);
-    else
-      replaceVertices.push(eit->source());
+    const auto target = eit->target();
+    newlyReachedVertices.push(target);
+
+    iter = m_regions.erase(iter);
   }
 
-  while(!replaceVertices.empty()) {
-    replaceVertices.pop();
+  while(!newlyReachedVertices.empty()) {
+    newlyReachedVertices.pop();
     NextBestRegion();
   }
 
+  //   if(m_visited.find(target) == m_visited.end() or !m_visited.at(target))
+  //     newlyReachedVertices.push(target);
+  //   else
+  //     replaceVertices.push(eit->source());
+  // }
+
+  // while(!replaceVertices.empty()) {
+  //   replaceVertices.pop();
+  //   NextBestRegion();
+  // }
+
   // TODO advance new regions
-  while(!newlyReachedVertices.empty()) {
-    // Pop the next vertex off the queue.
-    SkeletonVertexDescriptor targetVD = newlyReachedVertices.front();
-    SkeletonVertexIterator target = m_skeleton->find_vertex(targetVD);
-    newlyReachedVertices.pop();
+  // while(!newlyReachedVertices.empty()) {
+  //   // Pop the next vertex off the queue.
+  //   SkeletonVertexDescriptor targetVD = newlyReachedVertices.front();
+  //   SkeletonVertexIterator target = m_skeleton->find_vertex(targetVD);
+  //   newlyReachedVertices.pop();
 
-    // Create regions at this vertex.
-    const size_t numRegions = (size_t)std::max((int)m_maxRegions - (int)m_regions.size(), 0);
-    std::vector<SamplingRegion> newRegions = CreateRegions(target, numRegions);
+  //   // Create regions at this vertex.
+  //   const size_t numRegions = (size_t)std::max((int)m_maxRegions - (int)m_regions.size(), 0);
+  //   std::vector<SamplingRegion> newRegions = CreateRegions(target, numRegions);
 
-    // If there weren't any new regions created, replace it with the next best
-    if(newRegions.size() < 1 and numRegions > 0)
-      NextBestRegion();
-  }
+  //   // If there weren't any new regions created, replace it with the next best
+  //   if(newRegions.size() < 1 and numRegions > 0)
+  //     NextBestRegion();
+  // }
 
   // TODO come back to this later
   // Create new regions for each newly reached vertex.
@@ -2116,7 +3064,8 @@ bool
 CompositeDynamicRegionRRT<MPTraits>::
 AdvanceRegionToCompletion(const GroupCfgType& _cfg, SamplingRegion* _region) {
   // Find the edge path this region is traversing.
-  const auto path = _region->edge.GetIntermediates();
+  auto eit = _region->edgeIterator;
+  const auto path = eit->property().GetIntermediates();
   size_t& i = _region->edgeIndex;
 
   if(this->m_debug)
@@ -2178,36 +3127,6 @@ GetAdjacentRobots(const VectorMap _centers) {
   }
 
   return robotMap;
-}
-
-
-template <typename MPTraits>
-void
-CompositeDynamicRegionRRT<MPTraits>::
-GroundEdge(const CompositeSkeletonEdge& _edge){
-  MethodTimer mt(this->GetStatClass(), this->GetNameAndLabel() + "::GroundEdge");
-
-  m_groundEdge = true;
-  m_regions.clear();
-
-  // Get region radii.
-  auto groupTask = this->GetGroupTask();
-
-  // Disable velocity biasing if a robot is holonomic.
-  for(auto& task : *groupTask) {
-    auto robot = task.GetRobot();
-    m_velocityBiasing &= robot->IsNonholonomic();
-
-    const double robotRadius = robot->GetMultiBody()->
-                               GetBoundingSphereRadius() * m_regionFactor;
-    m_regionRadius.insert(std::pair<Robot*, const double>(robot, robotRadius));
-  }
-
-  auto region = SamplingRegion(_edge, 1.0);
-  m_regions.push_back(region);
-
-  while(m_regions.size())
-    this->Iterate();
 }
 
 #endif

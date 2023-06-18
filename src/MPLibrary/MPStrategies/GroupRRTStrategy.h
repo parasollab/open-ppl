@@ -86,6 +86,7 @@ class GroupRRTStrategy : public GroupStrategyMethod<MPTraits> {
     virtual void Initialize() override;
     virtual void Iterate() override;
     virtual void ResetGrowthOptions() override;
+    virtual void AddGrowthOption(const VID _vid) override;
 
     ///@}
     ///@name Direction Helpers
@@ -573,8 +574,11 @@ FindNearestNeighbor(const GroupCfgType& _cfg, const VertexSet* const _candidates
   if(_candidates)
     nf->FindNeighbors(g, _cfg, *_candidates, std::back_inserter(neighbors));
   else {
-    if(m_restrictGrowth)
+    if(m_restrictGrowth) {
+      if(this->m_debug)
+        std::cout << "Restricted growth options to " << m_vids << std::endl;
       nf->FindNeighbors(g, _cfg, m_vids, std::back_inserter(neighbors));
+    }
     else
       nf->FindNeighbors(g, _cfg, std::back_inserter(neighbors));
   }
@@ -1006,6 +1010,13 @@ void
 GroupRRTStrategy<MPTraits>::
 ResetGrowthOptions() {
   m_vids.clear();
+}
+
+template <typename MPTraits>
+void
+GroupRRTStrategy<MPTraits>::
+AddGrowthOption(const VID _vid) {
+  m_vids.insert(_vid);
 }
 
 /*----------------------------------------------------------------------------*/

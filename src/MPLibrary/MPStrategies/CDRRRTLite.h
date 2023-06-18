@@ -311,7 +311,9 @@ Iterate() {
   if(t.GetGroup() == nullptr)
     return;
 
-  this->ExpandTree(target);
+  auto vid = this->ExpandTree(target);
+  if(vid != INVALID_VID and this->m_restrictGrowth)
+    this->m_vids.insert(vid);
 }
 
 /*------------------------ GroupRRTStrategy Overrides ------------------------*/
