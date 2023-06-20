@@ -1530,174 +1530,11 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
   std::vector<std::unordered_map<std::pair<VID, VID>, VID>> thvids;
   thvids.reserve(maxTimestep - 1);
 
-  // Construct the first movement hyperarc
-  shvids.push_back(std::unordered_map<std::pair<VID, VID>, VID>());
-  thvids.push_back(std::unordered_map<std::pair<VID, VID>, VID>());
-  for(auto iter : movementGroups.at(0)) {
-    auto edge = iter.first;
-    auto robots = iter.second;
-    auto source = edge.first;
-    auto target = edge.second;
-
-    auto sourceVal = m_indSkeleton.GetVertex(source);
-    auto targetVal = m_indSkeleton.GetVertex(target);
-    auto disp = targetVal - sourceVal;
-    auto unitDisp = disp / disp.norm();
-
-    auto group = AddGroup(robots);
-    auto compSource = CompositeSkeletonVertex(group, &m_indSkeleton);
-    auto compTarget = CompositeSkeletonVertex(group, &m_indSkeleton);
-
-    // Push the starts (or don't) of robots going along the edge
-    if(pushStart.count(0) and pushStart[0].count(source)) {
-      for(auto robot : robots) {
-        // Get the point in workspace of the source skeleton vertex
-        auto skelVID = (*_mapfSolution[robot]).at(0);
-        if(skelVID != source)
-          continue;
-
-        auto push = m_regionRadius.at(robot) * sqrt(2);
-        push = std::min(push, disp.norm() / 2.0);
-        auto skelStart = sourceVal + push * unitDisp;
-        compSource.SetRobotCfg(robot, std::move(skelStart));
-      }
-    } else {
-      for(auto robot : robots) {
-        // Get the point in workspace of the source skeleton vertex
-        auto skelVID = (*_mapfSolution[robot]).at(0);
-        if(skelVID != source)
-          continue;
-
-        compSource.SetRobotCfg(robot, skelVID);
-      }
-    }
-
-    // Push the starts (or don't) of robots going in the opposite direction
-    if(pushStart.count(0) and pushStart[0].count(target)) {
-      for(auto robot : robots) {
-        // Get the point in workspace of the source skeleton vertex
-        auto skelVID = (*_mapfSolution[robot]).at(0);
-        if(skelVID != target)
-          continue;
-
-        auto push = m_regionRadius.at(robot) * sqrt(2);
-        push = std::min(push, disp.norm() / 2.0);
-        auto skelStart = targetVal - push * unitDisp;
-        compSource.SetRobotCfg(robot, std::move(skelStart));
-      }
-    } else {
-      for(auto robot : robots) {
-        // Get the point in workspace of the source skeleton vertex
-        auto skelVID = (*_mapfSolution[robot]).at(0);
-        if(skelVID != target)
-          continue;
-
-        compSource.SetRobotCfg(robot, skelVID);
-      }
-    }
-
-    // Push the targets (or don't) of robots going along the edge
-    if(source != target and pushTarget.count(0) and pushTarget[0].count(target)) {
-      for(auto robot : robots) {
-        // Get the point in workspace of the source skeleton vertex
-        auto path = *_mapfSolution[robot];
-        auto time = std::min((size_t)1, path.size() - 1);
-        auto skelVID = path.at(time);
-        if(skelVID != target)
-          continue;
-
-        auto push = m_regionRadius.at(robot) * sqrt(2);
-        push = std::min(push, disp.norm() / 2.0);
-        auto skelTarget = targetVal - push * unitDisp;
-        compTarget.SetRobotCfg(robot, std::move(skelTarget));
-      }
-    } else {
-      for(auto robot : robots) {
-        // Get the point in workspace of the source skeleton vertex
-        auto path = *_mapfSolution[robot];
-        auto time = std::min((size_t)1, path.size() - 1);
-        auto skelVID = path.at(time);
-        if(skelVID != target)
-          continue;
-
-        compTarget.SetRobotCfg(robot, skelVID);
-      }
-    }
-
-    // Push the targets (or don't) of robots going in the opposite direction
-    if(source != target and pushTarget.count(0) and pushTarget[0].count(source)) {
-      for(auto robot : robots) {
-        // Get the point in workspace of the source skeleton vertex
-        auto path = *_mapfSolution[robot];
-        auto time = std::min((size_t)1, path.size() - 1);
-        auto skelVID = path.at(time);
-        if(skelVID != source)
-          continue;
-
-        auto push = m_regionRadius.at(robot) * sqrt(2);
-        push = std::min(push, disp.norm() / 2.0);
-        auto skelTarget = sourceVal + push * unitDisp;
-        compTarget.SetRobotCfg(robot, std::move(skelTarget));
-      }
-    } else {
-      for(auto robot : robots) {
-        // Get the point in workspace of the source skeleton vertex
-        auto path = *_mapfSolution[robot];
-        auto time = std::min((size_t)1, path.size() - 1);
-        auto skelVID = path.at(time);
-        if(skelVID != source)
-          continue;
-
-        compTarget.SetRobotCfg(robot, skelVID);
-      }
-    }
-
-    // Add the source and target to the hyperskeleton
-    auto svid = m_skeleton->AddVertex(compSource);
-    auto tvid = m_skeleton->AddVertex(compTarget);
-    shvids[0].emplace(edge, svid);
-    thvids[0].emplace(edge, tvid);
-
-    // If source and target are the same, the group is waiting
-    if(svid == tvid) {
-      for(auto robot : group->GetRobots())
-        m_hidPaths[0][robot] = std::make_pair(false, svid);
-      
-      continue;
-    }
-
-    // Connect the source and target with a hyperarc
-    auto compEdge = CompositeSkeletonEdge(group, &m_indSkeleton);
-    ComputeIntermediates(_mapfSolution, (size_t)0, compSource, compTarget, compEdge);
-    auto arc = HyperskeletonArc(compEdge, HyperskeletonArcType::Movement);
-    auto hid = m_skeleton->AddHyperarc({tvid}, {svid}, arc, false, true);
-    m_path.movementHyperarcs.insert(hid);
-    m_path.buildMovementHyperarcs.push_back(hid);
-
-    // For ease of future use, set predecessor and successor to self
-    for(auto robot : group->GetRobots()) {
-      m_path.predecessors[hid].emplace(robot, std::make_pair(true, hid));
-      m_path.successors[hid].emplace(robot, std::make_pair(true, hid));
-      m_hidPaths[0][robot] = std::make_pair(true, hid);
-    }
-  }
-  
-  // Create rest of the hyperskeleton vertices and hyperarcs
-  std::vector<std::unordered_map<VID, std::set<VID>>> dvids;
-  dvids.reserve(maxTimestep - 1);
-
-  std::vector<std::unordered_map<VID, VID>> mvids;
-  mvids.reserve(maxTimestep - 1);
-
-  std::vector<std::unordered_map<std::pair<VID, VID>, VID>> svids;
-  svids.reserve(maxTimestep - 1);
-
-  for(size_t t = 0; t < maxTimestep - 2; t++) {
+  // Construct the movement hyperarcs
+  for(size_t t = 0; t < maxTimestep - 1; t++) {
     shvids.push_back(std::unordered_map<std::pair<VID, VID>, VID>());
     thvids.push_back(std::unordered_map<std::pair<VID, VID>, VID>());
-
-    // Construct the outgoing movement hyperarc
-    for(auto iter : movementGroups.at(t+1)) {
+    for(auto iter : movementGroups.at(t)) {
       auto edge = iter.first;
       auto robots = iter.second;
       auto source = edge.first;
@@ -1713,12 +1550,10 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
       auto compTarget = CompositeSkeletonVertex(group, &m_indSkeleton);
 
       // Push the starts (or don't) of robots going along the edge
-      if(source != target and pushStart.count(t+1) and pushStart[t+1].count(source)) {
+      if(source != target and pushStart.count(t) and pushStart[t].count(source)) {
         for(auto robot : robots) {
           // Get the point in workspace of the source skeleton vertex
-          auto path = *_mapfSolution[robot];
-          auto time = std::min(t+1, path.size() - 1);
-          auto skelVID = path.at(time);
+          auto skelVID = (*_mapfSolution[robot]).at(t);
           if(skelVID != source)
             continue;
 
@@ -1730,9 +1565,7 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
       } else {
         for(auto robot : robots) {
           // Get the point in workspace of the source skeleton vertex
-          auto path = *_mapfSolution[robot];
-          auto time = std::min(t+1, path.size() - 1);
-          auto skelVID = path.at(time);
+          auto skelVID = (*_mapfSolution[robot]).at(t);
           if(skelVID != source)
             continue;
 
@@ -1741,12 +1574,10 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
       }
 
       // Push the starts (or don't) of robots going in the opposite direction
-      if(source != target and pushStart.count(t+1) and pushStart[t+1].count(target)) {
+      if(source != target and pushStart.count(t) and pushStart[t].count(target)) {
         for(auto robot : robots) {
           // Get the point in workspace of the source skeleton vertex
-          auto path = *_mapfSolution[robot];
-          auto time = std::min(t+1, path.size() - 1);
-          auto skelVID = path.at(time);
+          auto skelVID = (*_mapfSolution[robot]).at(t);
           if(skelVID != target)
             continue;
 
@@ -1758,9 +1589,7 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
       } else {
         for(auto robot : robots) {
           // Get the point in workspace of the source skeleton vertex
-          auto path = *_mapfSolution[robot];
-          auto time = std::min(t+1, path.size() - 1);
-          auto skelVID = path.at(time);
+          auto skelVID = (*_mapfSolution[robot]).at(t);
           if(skelVID != target)
             continue;
 
@@ -1769,11 +1598,11 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
       }
 
       // Push the targets (or don't) of robots going along the edge
-      if(source != target and pushTarget.count(t+1) and pushTarget[t+1].count(target)) {
+      if(source != target and pushTarget.count(t) and pushTarget[t].count(target)) {
         for(auto robot : robots) {
           // Get the point in workspace of the source skeleton vertex
           auto path = *_mapfSolution[robot];
-          auto time = std::min(t+2, path.size() - 1);
+          auto time = std::min(t+1, path.size() - 1);
           auto skelVID = path.at(time);
           if(skelVID != target)
             continue;
@@ -1787,7 +1616,7 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
         for(auto robot : robots) {
           // Get the point in workspace of the source skeleton vertex
           auto path = *_mapfSolution[robot];
-          auto time = std::min(t+2, path.size() - 1);
+          auto time = std::min(t+1, path.size() - 1);
           auto skelVID = path.at(time);
           if(skelVID != target)
             continue;
@@ -1797,11 +1626,11 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
       }
 
       // Push the targets (or don't) of robots going in the opposite direction
-      if(source != target and pushTarget.count(t+1) and pushTarget[t+1].count(source)) {
+      if(source != target and pushTarget.count(t) and pushTarget[t].count(source)) {
         for(auto robot : robots) {
           // Get the point in workspace of the source skeleton vertex
           auto path = *_mapfSolution[robot];
-          auto time = std::min(t+2, path.size() - 1);
+          auto time = std::min(t+1, path.size() - 1);
           auto skelVID = path.at(time);
           if(skelVID != source)
             continue;
@@ -1815,7 +1644,7 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
         for(auto robot : robots) {
           // Get the point in workspace of the source skeleton vertex
           auto path = *_mapfSolution[robot];
-          auto time = std::min(t+2, path.size() - 1);
+          auto time = std::min(t+1, path.size() - 1);
           auto skelVID = path.at(time);
           if(skelVID != source)
             continue;
@@ -1827,19 +1656,20 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
       // Add the source and target to the hyperskeleton
       auto svid = m_skeleton->AddVertex(compSource);
       auto tvid = m_skeleton->AddVertex(compTarget);
-      shvids[t+1].emplace(edge, svid);
-      thvids[t+1].emplace(edge, tvid);
+      shvids[t].emplace(edge, svid);
+      thvids[t].emplace(edge, tvid);
 
+      // If source and target are the same, the group is waiting
       if(svid == tvid) {
         for(auto robot : group->GetRobots())
-          m_hidPaths[t+1][robot] = std::make_pair(false, svid);
+          m_hidPaths[t][robot] = std::make_pair(false, svid);
         
         continue;
       }
 
       // Connect the source and target with a hyperarc
       auto compEdge = CompositeSkeletonEdge(group, &m_indSkeleton);
-      ComputeIntermediates(_mapfSolution, t+1, compSource, compTarget, compEdge);
+      ComputeIntermediates(_mapfSolution, t, compSource, compTarget, compEdge);
       auto arc = HyperskeletonArc(compEdge, HyperskeletonArcType::Movement);
       auto hid = m_skeleton->AddHyperarc({tvid}, {svid}, arc, false, true);
       m_path.movementHyperarcs.insert(hid);
@@ -1849,10 +1679,22 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
       for(auto robot : group->GetRobots()) {
         m_path.predecessors[hid].emplace(robot, std::make_pair(true, hid));
         m_path.successors[hid].emplace(robot, std::make_pair(true, hid));
-        m_hidPaths[t+1][robot] = std::make_pair(true, hid);
+        m_hidPaths[t][robot] = std::make_pair(true, hid);
       }
     }
+  }
 
+  // Create rest of the hyperskeleton vertices and hyperarcs
+  std::vector<std::unordered_map<VID, std::set<VID>>> dvids;
+  dvids.reserve(maxTimestep - 1);
+
+  std::vector<std::unordered_map<VID, VID>> mvids;
+  mvids.reserve(maxTimestep - 1);
+
+  std::vector<std::unordered_map<std::pair<VID, VID>, VID>> svids;
+  svids.reserve(maxTimestep - 1);
+
+  for(size_t t = 0; t < maxTimestep - 2; t++) {
     // Construct the decouple hyperarcs at this timestep
     for(auto iter : movementGroups.at(t)) {
       dvids.push_back(std::unordered_map<VID, std::set<VID>>());
@@ -2019,6 +1861,7 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
 
       std::set<VID> splitVIDs;
       std::vector<Robot*> robots;
+      std::unordered_map<Robot*, VID> splitVIDMap;
       for(auto iter : splitGroups[t][skelVID]) {
         auto target = iter.first;
         auto rs = iter.second;
@@ -2040,6 +1883,9 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
 
         auto spvid = m_skeleton->AddVertex(compV);
         splitVIDs.insert(spvid);
+        for(auto r : rs)
+          splitVIDMap[r] = spvid;
+
         svids[t].emplace(std::make_pair(skelVID, target), spvid);
       }
 
@@ -2054,8 +1900,41 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
 
       // Set the successor map for each robot
       // This will be overwritten for merges going back into a split
-      for(auto robot : robots) {
-        m_path.successors[hid][robot] = m_hidPaths.at(t+1).at(robot);
+      for(auto iter : splitVIDMap) {
+        auto robot = iter.first;
+        auto svid = iter.second;
+
+        if(m_hidPaths.at(t+1).at(robot).first) {
+          m_path.successors[hid][robot] = m_hidPaths.at(t+1).at(robot);
+          continue;
+        }
+
+        // Make sure we are actually waiting, if hidPaths says waiting
+        auto found = false;
+        for(auto oh : m_skeleton->GetOutgoingHyperarcs(svid)) {
+          auto arc = m_skeleton->GetHyperarcType(oh);
+          if(arc.type == HyperskeletonArcType::Movement and m_path.movementHyperarcs.count(oh)) {
+            found = true;
+            m_path.successors[hid][robot] = std::make_pair(true, oh);
+            break;
+          } else if(arc.type == HyperskeletonArcType::Couple and m_path.coupleHyperarcs.count(oh)) {
+            auto head = *m_skeleton->GetHyperarc(oh).head.begin();
+            for(auto ooh : m_skeleton->GetOutgoingHyperarcs(head)) {
+              auto outArc = m_skeleton->GetHyperarcType(ooh);
+              if(outArc.type == HyperskeletonArcType::Movement and m_path.movementHyperarcs.count(ooh)) {
+                found = true;
+                m_path.successors[hid][robot] = std::make_pair(true, ooh);
+                break;
+              }
+            }
+            if(found)
+              break;
+          }
+        }
+
+        if(!found) {
+          m_path.successors[hid][robot] = m_hidPaths.at(t+1).at(robot);
+        }
       }
     }
 
