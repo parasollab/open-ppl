@@ -2346,6 +2346,9 @@ ConnectToSkeleton() {
   auto stats = this->GetPlan()->GetStatClass();
   MethodTimer mt(stats,this->GetNameAndLabel() + "::ConnectToSkeleton");
 
+  if(this->m_debug)
+    std::cout << "Attempting to connect start and goal to skeleton..." << std::endl;
+
   this->GetMPLibrary()->SetGroupTask(m_wholeTask);
   SetVirtualExcept();
   auto gh = dynamic_cast<GroundedHypergraph*>(
@@ -2394,8 +2397,11 @@ ConnectToSkeleton() {
 
   // Check if the plan was successful
   auto path = this->GetMPSolution()->GetGroupPath(m_wholeGroup);
-  if(!path->VIDs().size())
+  if(!path->VIDs().size()) {
+    if(this->m_debug)
+      std::cout << "Failed to connect the start to the skeleton." << std::endl;
     return false;
+  }
 
   // Add the path from this to the grounded hypergraph
   AddTransitionToGroundedHypergraph(groundedTail, groundedHead, path, stask);
@@ -2453,8 +2459,11 @@ ConnectToSkeleton() {
 
   // Check if the plan was successful
   path = this->GetMPSolution()->GetGroupPath(m_wholeGroup);
-  if(!path->VIDs().size())
+  if(!path->VIDs().size()) {
+    if(this->m_debug)
+      std::cout << "Failed to connect the goal to the skeleton" << std::endl;
     return false;
+  }
 
   // Add the path from this to the grounded hypergraph
   AddTransitionToGroundedHypergraph(groundedTail, groundedHead, path, gtask);
