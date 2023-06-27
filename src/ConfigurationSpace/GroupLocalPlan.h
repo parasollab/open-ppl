@@ -130,8 +130,6 @@ class GroupLocalPlan : public CompositeEdge<GraphType> {
     /// The group cfg intermediates along this group local plan.
     GroupCfgPath m_cfgIntermediates;
 
-    size_t m_timesteps;
-
     ///@}
 
 };
