@@ -16,6 +16,7 @@ cmake-*/
 include/**/cmake-*/
 lib/**/cmake-*/
 lib/gl_visualizer/**/cmake-*/
+.vscode
 
 src/Examples/example*
 src/Examples
@@ -35,3 +36,5 @@ conanbuildinfo.cmake
 conanbuildinfo.txt
 conaninfo.txt
 graph_info.json
+.vscode/launch.json
+.vscode/settings.json

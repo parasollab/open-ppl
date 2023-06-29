@@ -7,6 +7,11 @@ option(BUILD_LIBRARY    "Build libtetgen library" ON)
 if(BUILD_LIBRARY)
   add_library(tetgen STATIC tetgen.cxx predicates.cxx)
   target_compile_definitions(tetgen PRIVATE -DTETLIBRARY)
+  target_include_directories(tetgen
+    PUBLIC 
+    $<INSTALL_INTERFACE:include>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+  )
   # Generate position independent code
   set_target_properties(tetgen PROPERTIES POSITION_INDEPENDENT_CODE ON)
 endif()
@@ -28,8 +33,14 @@ install(TARGETS tetgen
 
 install(EXPORT TetgenTargets
         FILE TetgenTargets.cmake
-        NAMESPACE TETGEN::
+        NAMESPACE Tetgen::
         DESTINATION lib/cmake/tetgen
 )
 
-install(FILES tetgen.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/tetgen)
+install(FILES 
+tetgen.h 
+DESTINATION "include/tetgen")
+
+install(FILES
+${CMAKE_CURRENT_SOURCE_DIR}/cmake/TetgenConfig.cmake
+DESTINATION "lib/cmake/tetgen" )

@@ -30,7 +30,7 @@ add_compile_definitions(CGAL_NO_WARNINGS)
 # used by CMake to scan the header and source files at build time and invoke moc accordingly.
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
-set(CMAKE_AUTOUIC ON)
+set(CMAKE_AUTOUIC OFF)  #https://github.com/CGAL/cgal/issues/5899
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
@@ -72,9 +72,9 @@ find_package(Eigen3 CONFIG REQUIRED)
 find_package(tinyxml CONFIG REQUIRED)
 find_package(Bullet CONFIG REQUIRED
         LinearMath Bullet3Common BulletDynamics BulletSoftBody BulletCollision BulletInverseDynamics)
-find_package(dlib CONFIG REQUIRED)
+#find_package(dlib CONFIG REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
-find_package(pqp QUIET)
+#find_package(pqp QUIET)
 
 add_subdirectory(src)
 include_directories(src)
@@ -86,17 +86,14 @@ include_directories(lib/stapl/stapl)
 include_directories(${Qt6Widgets_INCLUDE_DIRS})
 include_directories(${Qt6OpenGLWidgets_INCLUDE_DIRS})
 
-include_directories(include/mathtool)
+#include_directories(include/mathtool)
 
-include_directories(include/LKH/SRC/INCLUDE)
+#include_directories(include/LKH/SRC/INCLUDE)
 
 include_directories(lib/gl_visualizer/sandbox)
 include_directories(lib/gl_visualizer/glutils)
 include_directories(lib/gl_visualizer/nonstd)
 
-include_directories(lib/tetgen)
-include_directories(lib/modelloader)
-include_directories(lib/RAPID)
 
 # -------------  build ppl targets  --------------
 
@@ -142,9 +139,39 @@ set(TESTS tests)
 # build [base object library]
 add_library(objlib OBJECT ${PMPL_SRCS})
 set_target_properties(objlib PROPERTIES VERSION ${PROJECT_VERSION})
+target_include_directories(objlib 
+        PUBLIC 
+        tetgen PQP::PQP 
+        PRIVATE RAPID)
+
+target_include_directories(objlib 
+        PUBLIC 
+        $<INSTALL_INTERFACE:include>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/mathtool>
+)
+target_include_directories(objlib 
+        PUBLIC 
+        $<INSTALL_INTERFACE:include>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/LKH/SRC/INCLUDE>
+)
+
+target_include_directories(objlib 
+PUBLIC 
+$<INSTALL_INTERFACE:include>
+$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+)
+
 # bullet order is very specific, do not modify
-target_link_libraries(objlib PUBLIC BulletSoftBody BulletDynamics BulletCollision LinearMath Bullet3Common
-        BulletInverseDynamics unofficial-tinyxml::unofficial-tinyxml)
+target_link_libraries(objlib 
+        PUBLIC BulletSoftBody BulletDynamics BulletCollision LinearMath Bullet3Common
+        BulletInverseDynamics unofficial-tinyxml::unofficial-tinyxml modelloader 
+        PRIVATE RAPID tetgen )
+        
+target_include_directories(objlib
+PUBLIC
+$<INSTALL_INTERFACE:include/mathtool>
+$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>/mathtool>
+)
 
 # build [ppl library]
 add_library(${PPL_LIBRARY} STATIC ${HARDWARE_SRCS} ${TASK_SRCS} $<TARGET_OBJECTS:objlib>)
@@ -152,26 +179,37 @@ add_library(${PPL_LIBRARY} STATIC ${HARDWARE_SRCS} ${TASK_SRCS} $<TARGET_OBJECTS
 # build [ppl_mp library]
 add_library(${PPL_MP_LIBRARY} STATIC ${HARDWARE_SRCS} $<TARGET_OBJECTS:objlib>)
 
+target_include_directories(${PPL_LIBRARY}
+PUBLIC
+$<INSTALL_INTERFACE:include/mathtool>
+$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>/mathtool>
+)
+target_include_directories(${PPL_MP_LIBRARY}
+PUBLIC
+$<INSTALL_INTERFACE:include/mathtool>
+$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>/mathtool>
+)
+
 # [ppl library] - Link external packages
 # bullet order is very specific, do not modify
 target_link_libraries(${PPL_LIBRARY} PUBLIC BulletSoftBody BulletDynamics BulletCollision LinearMath Bullet3Common
-        BulletInverseDynamics CGAL::CGAL dlib::dlib Eigen3::Eigen
+        BulletInverseDynamics CGAL::CGAL Eigen3::Eigen
         nlohmann_json::nlohmann_json Qt6::Core Qt6::Gui Qt6::OpenGL Qt6::Widgets
         Qt6::OpenGLWidgets unofficial-tinyxml::unofficial-tinyxml)
 target_link_libraries(${PPL_LIBRARY} PUBLIC ${OPENGL_LIBRARIES} ${GLUT_LIBRARY})
 # [ppl library] - Link internal built packages
-target_link_libraries(${PPL_LIBRARY} PUBLIC PQP glutils nonstd sandbox RAPID tetgen modelloader ${PQP_LIBRARIES})
+target_link_libraries(${PPL_LIBRARY} PUBLIC PQP glutils nonstd sandbox ${PQP_LIBRARIES})
 set_target_properties(${PPL_LIBRARY} PROPERTIES OUTPUT_NAME ppl)
 
 # [ppl_mp library] - Link external packages
 target_link_libraries(${PPL_MP_LIBRARY} PUBLIC BulletSoftBody BulletDynamics BulletCollision LinearMath Bullet3Common
-        BulletInverseDynamics CGAL::CGAL dlib::dlib Eigen3::Eigen
+        BulletInverseDynamics CGAL::CGAL Eigen3::Eigen
         nlohmann_json::nlohmann_json Qt6::Core Qt6::Gui Qt6::OpenGL Qt6::Widgets
         Qt6::OpenGLWidgets unofficial-tinyxml::unofficial-tinyxml)
 target_link_libraries(${PPL_MP_LIBRARY} PUBLIC ${OPENGL_LIBRARIES} ${GLUT_LIBRARY})
 
 # [ppl library] - Link internal built packages
-target_link_libraries(${PPL_MP_LIBRARY} PUBLIC PQP glutils nonstd sandbox RAPID tetgen modelloader ${PQP_LIBRARIES})
+target_link_libraries(${PPL_MP_LIBRARY} PUBLIC PQP glutils nonstd sandbox RAPID tetgen ${PQP_LIBRARIES})
 set_target_properties(${PPL_MP_LIBRARY} PROPERTIES OUTPUT_NAME ppl_mp)
 
 # build [ppl executable]
@@ -207,25 +245,51 @@ target_link_libraries(${PPL_XML_EXECUTABLE} PRIVATE ${PPL_LIBRARY})
 # -------------  package ppl library for distribution --------------
 message("Generating targets for packaging")
 include(GNUInstallDirs)
-set(INSTALL_CONFIGDIR ${CMAKE_INSTALL_LIBDIR}/cmake/ppl)
-
-install(TARGETS ${PPL_LIBRARY} EXPORT PPLTargets)
-install(TARGETS ${PPL_MP_LIBRARY} EXPORT PPLTargets)
-
-install(DIRECTORY ${CMAKE_SOURCE_DIR}/include
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-        FILES_MATCHING PATTERN "*.h"
+target_include_directories(${PPL_LIBRARY}
+PUBLIC
+$<INSTALL_INTERFACE:include>
+$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+)
+target_include_directories(${PPL_MP_LIBRARY}
+PUBLIC
+$<INSTALL_INTERFACE:include>
+$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 )
 
+
+#set(INSTALL_CONFIGDIR ${CMAKE_INSTALL_LIBDIR}/cmake/ppl)
+
+install(TARGETS ${PPL_LIBRARY} 
+        EXPORT PPLTargets
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib)
+
+install(TARGETS ${PPL_MP_LIBRARY} 
+        EXPORT PPLTargets
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib)
+
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/include
+        DESTINATION "include/ppl"
+        FILES_MATCHING PATTERN "*.h"
+)
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/include/LKH/SRC/INCLUDE
+        DESTINATION "include"
+        FILES_MATCHING PATTERN "*.h"
+)
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/include/mathtool
+        DESTINATION "include/mathtool"
+        FILES_MATCHING PATTERN "*.h"
+)
 install(DIRECTORY ${CMAKE_SOURCE_DIR}/src
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+        DESTINATION "include/ppl"
         FILES_MATCHING PATTERN "*.h"
 )
 
 install(EXPORT PPLTargets
         FILE PPLTargets.cmake
         NAMESPACE ppl::
-        DESTINATION ${INSTALL_CONFIGDIR})
+        DESTINATION "lib/cmake/ppl")
 
 # Create a ConfigVersion.cmake
 include(CMakePackageConfigHelpers)
@@ -235,9 +299,9 @@ write_basic_package_version_file("${CMAKE_CURRENT_BINARY_DIR}/PPLConfigVersion.c
 
 configure_package_config_file(${CMAKE_CURRENT_LIST_DIR}/cmake/PPLConfig.cmake.in
                              ${CMAKE_CURRENT_BINARY_DIR}/PPLConfig.cmake
-                              INSTALL_DESTINATION ${INSTALL_CONFIGDIR})
+                              INSTALL_DESTINATION "lib/cmake/ppl")
 
 install(FILES
         ${CMAKE_CURRENT_BINARY_DIR}/PPLConfig.cmake
         ${CMAKE_CURRENT_BINARY_DIR}/PPLConfigVersion.cmake
-        DESTINATION ${INSTALL_CONFIGDIR})
+        DESTINATION "lib/cmake/ppl")

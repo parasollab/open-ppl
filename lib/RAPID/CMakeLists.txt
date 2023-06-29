@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.24)
-project(RAPID)
+
+project(RAPID LANGUAGES CXX)
 
 include(CMakePackageConfigHelpers)
 include(GNUInstallDirs)
@@ -16,7 +17,13 @@ set(HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/matvec.H
              ${CMAKE_CURRENT_SOURCE_DIR}/overlap.H
              ${CMAKE_CURRENT_SOURCE_DIR}/RAPID.H)
 
-add_library(${PROJECT_NAME} ${SRCS})
+add_library(${PROJECT_NAME} ${SRCS} ${HEADERS})
+
+target_include_directories(${PROJECT_NAME}
+PUBLIC
+$<INSTALL_INTERFACE:include>
+$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+)
 
 install(TARGETS RAPID
         EXPORT RapidTargets
@@ -33,3 +40,7 @@ install(EXPORT RapidTargets
 )
 
 install(FILES ${HEADERS} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rapid)
+
+install(FILES
+${CMAKE_CURRENT_SOURCE_DIR}/cmake/RAPIDConfig.cmake
+DESTINATION "lib/cmake/rapid" )

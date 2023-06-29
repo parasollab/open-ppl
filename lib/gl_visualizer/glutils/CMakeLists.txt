@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.24)
 set(CMAKE_CXX_STANDARD 17)
 
-project(glutils)
 
 include(CMakePackageConfigHelpers)
 include(GNUInstallDirs)
@@ -55,29 +54,31 @@ file(GLOB_RECURSE SRCS ${PROJECT_SOURCE_DIR}/*.cpp
 
 add_library(${PROJECT_NAME} ${SRCS})
 
-target_link_libraries(${PROJECT_NAME} PRIVATE nonstd)
+target_link_libraries(${PROJECT_NAME}
+        PRIVATE nonstd)
 
 
-install(TARGETS glutils
-        EXPORT GlUtilsTargets
+install(TARGETS ${PROJECT_NAME}
+        EXPORT GlUtils-export
         LIBRARY DESTINATION lib
         ARCHIVE DESTINATION lib
         RUNTIME DESTINATION bin
         INCLUDES DESTINATION include
 )
 
-install(EXPORT GlUtilsTargets
-        FILE GlUtilsTargets.cmake
+install(EXPORT GlUtils-export
+        FILE glutilsTargets.cmake
         NAMESPACE GLUTILS::
         DESTINATION lib/cmake/glutils
 )
 
-install(DIRECTORY ${CMAKE_SOURCE_DIR}/glutils
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/glutils
+        DESTINATION "include/glutils"
         FILES_MATCHING PATTERN "*.h"
 )
 
-install(DIRECTORY ${CMAKE_SOURCE_DIR}
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        DESTINATION "include"
         FILES_MATCHING PATTERN "*.h"
 )
