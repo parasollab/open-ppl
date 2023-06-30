@@ -41,6 +41,4 @@ install(EXPORT RapidTargets
 
 install(FILES ${HEADERS} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/rapid)
 
-install(FILES
-${CMAKE_CURRENT_SOURCE_DIR}/cmake/RAPIDConfig.cmake
-DESTINATION "lib/cmake/rapid" )
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/cmake/RapidConfig.cmake DESTINATION lib/cmake/rapid )

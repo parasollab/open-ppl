@@ -32,13 +32,13 @@ if(BUILD_GLUTILS_DOCS)
             COMMENT "Generating API documentation with Doxygen"
             VERBATIM)
 
-    doxygen_add_docs(docs ${PROJECT_SOURCE_DIR}/include/ ${PROJECT_SOURCE_DIR}/INSTALL.md  ${PROJECT_SOURCE_DIR}/CHANGELOG.md
+    doxygen_add_docs(docs ${CMAKE_CURRENT_SOURCE_DIR}/include/ ${CMAKE_CURRENT_SOURCE_DIR}/INSTALL.md  ${CMAKE_CURRENT_SOURCE_DIR}/CHANGELOG.md
             ALL
             COMMENT "Generate documentation with Doxygen")
 
     install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/html DESTINATION share/doc)
 
-    doxygen_add_docs(doxygen ${PROJECT_SOURCE_DIR} COMMENT "Generate man pages")
+    doxygen_add_docs(doxygen ${CMAKE_CURRENT_SOURCE_DIR} COMMENT "Generate man pages")
 endif()
 
 if(BUILD_GLUTILS_TESTS)
@@ -47,31 +47,34 @@ if(BUILD_GLUTILS_TESTS)
 endif()
 
 
-file(GLOB_RECURSE SRCS ${PROJECT_SOURCE_DIR}/*.cpp
-        ${PROJECT_SOURCE_DIR}/glutils/*.cpp
-        ${PROJECT_SOURCE_DIR}/glutils/*.h
-        ${PROJECT_SOURCE_DIR}/*.h)
+file(GLOB_RECURSE SRCS ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/glutils/*.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/glutils/*.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/*.h)
 
-add_library(${PROJECT_NAME} ${SRCS})
+add_library(glutils ${SRCS})
 
-target_link_libraries(${PROJECT_NAME}
+target_link_libraries(glutils
         PRIVATE nonstd)
 
+target_include_directories(glutils 
+        PUBLIC 
+        $<INSTALL_INTERFACE:include>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+)
+target_include_directories(glutils 
+        PUBLIC 
+        $<INSTALL_INTERFACE:include/glutils>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/glutils>
+)
 
-install(TARGETS ${PROJECT_NAME}
-        EXPORT GlUtils-export
+install(TARGETS glutils
+        EXPORT GlUtilsTargets
         LIBRARY DESTINATION lib
         ARCHIVE DESTINATION lib
         RUNTIME DESTINATION bin
         INCLUDES DESTINATION include
 )
-
-install(EXPORT GlUtils-export
-        FILE glutilsTargets.cmake
-        NAMESPACE GLUTILS::
-        DESTINATION lib/cmake/glutils
-)
-
 
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/glutils
         DESTINATION "include/glutils"
@@ -82,3 +85,13 @@ install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         DESTINATION "include"
         FILES_MATCHING PATTERN "*.h"
 )
+
+install(EXPORT GlUtilsTargets
+        FILE glutilsTargets.cmake
+        NAMESPACE GLUTILS::
+        DESTINATION lib/cmake/glutils
+)
+
+install(FILES
+        ${CMAKE_CURRENT_SOURCE_DIR}/cmake/glutilsConfig.cmake
+        DESTINATION lib/cmake/glutils )

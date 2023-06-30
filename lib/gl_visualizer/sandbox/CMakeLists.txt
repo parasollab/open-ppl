@@ -7,7 +7,7 @@ include(GNUInstallDirs)
 # used by CMake to scan the header and source files at build time and invoke moc accordingly.
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
-set(CMAKE_AUTOUIC OFF)  # https://github.com/CGAL/cgal/issues/5899
+set(CMAKE_AUTOUIC ON)  # https://github.com/CGAL/cgal/issues/5899
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
@@ -25,22 +25,22 @@ include_directories(${Qt6OpenGLWidgets_INCLUDE_DIRS})
 
 set(CMAKE_PREFIX_PATH ${QT_ROOT})
 
-file(GLOB_RECURSE SRCS ${PROJECT_SOURCE_DIR}/sandbox/*.cpp
-        ${PROJECT_SOURCE_DIR}/sandbox/gui/*.cpp
-        ${PROJECT_SOURCE_DIR}/sandbox/gui/*.h
-        ${PROJECT_SOURCE_DIR}/sandbox/*.h)
+file(GLOB_RECURSE SRCS ${CMAKE_CURRENT_SOURCE_DIR}/sandbox/*.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/sandbox/gui/*.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/sandbox/gui/*.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/sandbox/*.h)
 
 add_library(sandbox ${SRCS})
 
 target_include_directories(sandbox
-PUBLIC 
-$<INSTALL_INTERFACE:include>
-$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/sandbox>
+        PUBLIC 
+        $<INSTALL_INTERFACE:include>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/sandbox>
 )
 
 target_link_libraries(sandbox PRIVATE Qt6::Core Qt6::Gui Qt6::OpenGL Qt6::Widgets Qt6::OpenGLWidgets)
-target_link_libraries(sandbox PRIVATE glutils)
-target_link_libraries(sandbox PRIVATE nonstd)
+target_link_libraries(sandbox PUBLIC glutils)
+target_link_libraries(sandbox PUBLIC nonstd)
 target_link_libraries(sandbox PRIVATE ${OPENGL_LIBRARIES} ${GLUT_LIBRARY})
 
 
@@ -52,13 +52,17 @@ install(TARGETS sandbox
         INCLUDES DESTINATION include
 )
 
- install(EXPORT SandboxTargets
-         FILE SandboxTargets.cmake
-         NAMESPACE SANDBOX::
-         DESTINATION lib/cmake/sandbox
- )
-
 install(DIRECTORY ${CMAKE_SOURCE_DIR}/sandbox
         DESTINATION include/sandbox
         FILES_MATCHING PATTERN "*.h"
 )
+
+ install(EXPORT SandboxTargets
+         FILE sandboxTargets.cmake
+         NAMESPACE SANDBOX::
+         DESTINATION lib/cmake/sandbox
+ )
+
+ install(FILES
+        ${CMAKE_CURRENT_SOURCE_DIR}/cmake/sandboxConfig.cmake
+        DESTINATION lib/cmake/sandbox )
