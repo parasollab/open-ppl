@@ -288,6 +288,12 @@ GetOutgoingHyperarcs(const VID& _vid) {
   return m_hypergraph->GetOutgoingHyperarcs(_vid);
 }
 
+const std::set<GroundedHypergraph::HID>
+GroundedHypergraph::
+GetIncomingHyperarcs(const VID& _vid) {
+  return m_hypergraph->GetIncomingHyperarcs(_vid);
+}
+
 /*------------------------- Miscellaneous Accessors --------------------------*/
 
 GroundedHypergraph::GH::GraphType*

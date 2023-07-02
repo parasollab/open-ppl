@@ -123,6 +123,8 @@ class GroundedHypergraph : public StateGraph {
 
     const std::set<HID> GetOutgoingHyperarcs(const VID& _vid);
 
+    const std::set<HID> GetIncomingHyperarcs(const VID& _vid);
+
     void Print();
 
     ///@}
