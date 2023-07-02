@@ -177,9 +177,6 @@ PlanTasks() {
   auto stats = this->GetPlan()->GetStatClass();
   MethodTimer mt(stats,this->GetNameAndLabel() + "::PlanTasks");
 
-  auto te = this->GetTaskEvaluator(m_teLabel);
-  te->Initialize();
-
   auto me = dynamic_cast<ScheduledCBS*>(this->GetTaskEvaluator(m_motionEvaluator).get());
   me->Initialize();
 
@@ -202,9 +199,10 @@ PlanTasks() {
     if(this->m_debug)
       std::cout << "successfully found a path for each robot." << std::endl;
 
+    ConvertToPlan(m_path.groundedSolution);
     this->GetMPLibrary()->SetGroupTask(m_wholeTask);
     
-  } while(!te->operator()() or !me->operator()(plan));
+  } while(!me->operator()(plan));
 }
 
 /*--------------------- Helper Functions ---------------------*/
@@ -1353,6 +1351,7 @@ GroundStartAndGoal() {
 
   // Get the virtual source and sink
   GroundedHypergraph::Transition transition;
+  transition.cost = 0;
   auto vsource = gh->AddVertex(std::make_pair(nullptr, 0));
   auto vsink = gh->AddVertex(std::make_pair(nullptr, 1));
 
@@ -1984,8 +1983,10 @@ GroundHyperskeleton() {
 
     // Don't try to re-ground an edge
     if(hyperarc.property.startRep.first != nullptr and 
-       hyperarc.property.endRep.first != nullptr)
+       hyperarc.property.endRep.first != nullptr) {
+      m_path.groundedSolution.insert(m_skeletonToGrounded.at(hid));
       continue;
+    }
 
     auto& cedge = hyperarc.property.edge;
 
@@ -2112,7 +2113,9 @@ GroundHyperskeleton() {
     // Save grounded edge
     auto path = this->GetMPLibrary()->GetGroupPath(grm->GetGroup());
     
-    AddTransitionToGroundedHypergraph(hyperarc.tail,hyperarc.head,path,task);
+    auto ghid = AddTransitionToGroundedHypergraph(hyperarc.tail,hyperarc.head,path,task);
+    m_skeletonToGrounded[hid] = ghid;
+    m_path.groundedSolution.insert(ghid);
   }
 
   this->GetMPLibrary()->SetGroupTask(m_wholeTask);
@@ -2404,7 +2407,8 @@ ConnectToSkeleton() {
   }
 
   // Add the path from this to the grounded hypergraph
-  AddTransitionToGroundedHypergraph(groundedTail, groundedHead, path, stask);
+  auto ghid = AddTransitionToGroundedHypergraph(groundedTail, groundedHead, path, stask);
+  m_path.groundedSolution.insert(ghid);
 
   // Connect the goal position to the last skeleton vertex for each of the robots
   auto gtask = std::shared_ptr<GroupTask>(new GroupTask(m_wholeGroup));
@@ -2466,7 +2470,8 @@ ConnectToSkeleton() {
   }
 
   // Add the path from this to the grounded hypergraph
-  AddTransitionToGroundedHypergraph(groundedTail, groundedHead, path, gtask);
+  ghid = AddTransitionToGroundedHypergraph(groundedTail, groundedHead, path, gtask);
+  m_path.groundedSolution.insert(ghid);
 
   return true;
 }
@@ -2484,6 +2489,7 @@ SampleTrajectories() {
       if(this->m_debug)
         std::cout << "Already have trajectory for hid " << hid << std::endl;
 
+      m_path.groundedSolution.insert(m_skeletonToGrounded.at(hid));
       continue;
     }
 
@@ -2557,8 +2563,10 @@ SampleTrajectories() {
     }
 
     // Extract path from solution
-    AddTransitionToGroundedHypergraph(hyp.tail,hyp.head,path,task);
+    auto ghid = AddTransitionToGroundedHypergraph(hyp.tail,hyp.head,path,task);
     m_cachedTrajs.insert(hid);
+    m_skeletonToGrounded[hid] = ghid;
+    m_path.groundedSolution.insert(ghid);
   }
 
   // Next, merge together groups going into the same skeleton vertex
@@ -2567,6 +2575,7 @@ SampleTrajectories() {
       if(this->m_debug)
         std::cout << "Already have trajectory for hid " << hid << std::endl;
 
+      m_path.groundedSolution.insert(m_skeletonToGrounded.at(hid));
       continue;
     }
 
@@ -2725,8 +2734,10 @@ SampleTrajectories() {
       return false;
     }
 
-    AddTransitionToGroundedHypergraph(hyp.tail,hyp.head,path,task);
+    auto ghid = AddTransitionToGroundedHypergraph(hyp.tail,hyp.head,path,task);
     m_cachedTrajs.insert(hid);
+    m_skeletonToGrounded[hid] = ghid;
+    m_path.groundedSolution.insert(ghid);
   }
 
   // Next, split apart groups going onto different skeleton edges
@@ -2735,6 +2746,7 @@ SampleTrajectories() {
       if(this->m_debug)
         std::cout << "Already have trajectory for hid " << hid << std::endl;
 
+      m_path.groundedSolution.insert(m_skeletonToGrounded.at(hid));
       continue;
     }
 
@@ -2856,8 +2868,10 @@ SampleTrajectories() {
       return false;
     }
 
-    AddTransitionToGroundedHypergraph(hyp.tail,hyp.head,path,task);
+    auto ghid = AddTransitionToGroundedHypergraph(hyp.tail,hyp.head,path,task);
     m_cachedTrajs.insert(hid);
+    m_skeletonToGrounded[hid] = ghid;
+    m_path.groundedSolution.insert(ghid);
   }
 
   // Finally, merge together groups that are going in the opposite direction
@@ -2867,6 +2881,7 @@ SampleTrajectories() {
       if(this->m_debug)
         std::cout << "Already have trajectory for hid " << hid << std::endl;
 
+      m_path.groundedSolution.insert(m_skeletonToGrounded.at(hid));
       continue;
     }
 
@@ -2943,8 +2958,10 @@ SampleTrajectories() {
       throw RunTimeException(WHERE) << "Failed couple :(";
 
     // Extract path from solution
-    AddTransitionToGroundedHypergraph(hyp.tail,hyp.head,path,task);
+    auto ghid = AddTransitionToGroundedHypergraph(hyp.tail,hyp.head,path,task);
     m_cachedTrajs.insert(hid);
+    m_skeletonToGrounded[hid] = ghid;
+    m_path.groundedSolution.insert(ghid);
   }
 
   this->GetMPLibrary()->SetGroupTask(m_wholeTask);
@@ -3080,7 +3097,8 @@ AddTransitionToGroundedHypergraph(std::set<VID> _tail, std::set<VID> _head,
   auto pathEnd = _path->VIDs().back();
   transition.compositeImplicitPath = std::make_pair(pathStart,pathEnd);
   transition.cost = pathCost;
-  return gh->AddTransition(groundedTail,groundedHead,transition);
+  auto ghid = gh->AddTransition(groundedTail,groundedHead,transition);
+  return ghid;
 }
 
 
@@ -3116,7 +3134,151 @@ AddTransitionToGroundedHypergraph(std::set<RepresentativeVertex> _tail,
   auto pathEnd = _path->VIDs().back();
   transition.compositeImplicitPath = std::make_pair(pathStart,pathEnd);
   transition.cost = pathCost;
-  return gh->AddTransition(groundedTail,groundedHead,transition);
+  auto ghid = gh->AddTransition(groundedTail,groundedHead,transition);
+  return ghid;
+}
+
+void
+WoDaSH::
+ConvertToPlan(std::unordered_set<HID> _path) {
+  auto plan = this->GetPlan();
+  auto stats = plan->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::ConvertToPlan");
+
+  auto gh = dynamic_cast<GroundedHypergraph*>(this->GetStateGraph(m_groundedHypergraphLabel).get());
+
+  auto path = OrderPath(_path);
+
+  // Note: This implementation assumes that the input path is ordered already
+  // and includes hyperarcs to/from the virtual source/sink
+  // Create the first task from the source
+  auto top = std::shared_ptr<SemanticTask>(new SemanticTask());
+  Decomposition* decomp = new Decomposition(top);
+
+  // Map of initial tasks for each group and a flag indicating if it has 
+  // been used as a precedence constraint for any tasks yet.
+  std::unordered_map<RobotGroup*,std::pair<bool,SemanticTask*>> initialTasks;
+
+  auto hyperarc = gh->GetHyperarc(path.at(0));
+  for(auto vid : hyperarc.tail) {
+    auto vertex = gh->GetVertex(vid);
+    auto grm = vertex.first;
+    auto group = grm->GetGroup();
+    auto gcfg = grm->GetVertex(vertex.second);
+    auto task = std::shared_ptr<GroupTask>(new GroupTask(group));
+    for(auto robot : group->GetRobots()) {
+      auto cfg = gcfg.GetRobotCfg(robot);
+      auto start = std::unique_ptr<CSpaceConstraint>(new CSpaceConstraint(robot,cfg));
+      auto goal = std::unique_ptr<CSpaceConstraint>(new CSpaceConstraint(robot,cfg));
+      MPTask t(robot);
+      t.SetStartConstraint(std::move(start));
+      t.AddGoalConstraint(std::move(goal));
+      task->AddTask(t);
+    }
+    const std::string label = group->GetLabel()+ ":InitialPath"; 
+    auto st = std::shared_ptr<SemanticTask>(new SemanticTask(label,top.get(),decomp,
+        SemanticTask::SubtaskRelation::AND,false,true,task));
+    decomp->AddTask(st);
+    initialTasks[group] = std::make_pair(false,st.get());
+  }
+
+  // Save last set of tasks in each hyperarc
+  std::unordered_map<size_t, SemanticTask*> hyperarcTaskMap;
+
+  for(auto hid : path) {
+    if(this->m_debug)
+      std::cout << "Creating semantic tasks for hyperarc: " << hid << std::endl;
+
+    // Get grounded hypergraph hyperarc
+    auto hyperarc = gh->GetTransition(hid);
+    auto tail = gh->GetHyperarc(hid).tail;
+
+    for(auto& groupTasks : hyperarc.taskSet) { // There should only be one
+      if(groupTasks.size() > 1)
+        throw RunTimeException(WHERE) << "More than 1 task in task set :(";
+
+      auto& groupTask = *groupTasks.begin();
+      const std::string label = std::to_string(hid) + ":"
+                                + groupTask->GetRobotGroup()->GetLabel() + ":"
+                                + groupTask->GetLabel();
+      auto task = std::shared_ptr<SemanticTask>(new SemanticTask(label,top.get(),decomp,
+                SemanticTask::SubtaskRelation::AND,false,true,groupTask));
+      decomp->AddTask(task);
+      hyperarcTaskMap[hid] = task.get();
+
+      for(auto f : hyperarc.taskFormations[groupTask.get()])
+        task->AddFormation(f);
+      
+      // Add dependencies for the hyperarcs that came before
+      for(auto t : tail) {
+        for(auto inhid : gh->GetIncomingHyperarcs(t)) {
+          if(!_path.count(inhid))
+            continue;
+
+          if(hyperarcTaskMap.count(inhid)) {
+            auto previous = hyperarcTaskMap[inhid];
+            task->AddDependency(previous,SemanticTask::DependencyType::Completion);
+          }
+        }
+      }
+      // Check if group has been given initial dependency
+      auto& init = initialTasks[groupTask->GetRobotGroup()];
+      if(init.first or !init.second)
+        continue;
+
+      // If not, assign the dependency
+      task->AddDependency(init.second,SemanticTask::DependencyType::Completion);
+      init.first = true;
+    }
+  }
+
+  plan->SetDecomposition(decomp);
+}
+
+std::vector<WoDaSH::HID>
+WoDaSH::
+OrderPath(std::unordered_set<HID> _path) {
+  auto plan = this->GetPlan();
+  auto stats = plan->GetStatClass();
+  MethodTimer mt(stats,this->GetNameAndLabel() + "::OrderPath");
+
+  auto gh = dynamic_cast<GroundedHypergraph*>(this->GetStateGraph(m_groundedHypergraphLabel).get());
+
+  std::unordered_set<HID> used;
+  std::vector<HID> ordered;
+
+  while(ordered.size() != _path.size()) {
+    for(auto hid : _path) {
+      if(used.count(hid))
+        continue;
+
+      // Check if all incoming to tail set are in the ordered path
+      auto hyperarc = gh->GetHyperarc(hid);
+      bool ready = true;
+      for(auto vid : hyperarc.tail) {
+        for(auto inhid : gh->GetIncomingHyperarcs(vid)) {
+          if(!_path.count(inhid))
+            continue;
+          
+          if(!used.count(inhid)) {
+            ready = false;
+            break;
+          }
+        }
+        if(!ready)
+          break;
+      }
+
+      // Skip if the entire tail set is not in the ordered path
+      if(!ready)
+        continue;
+
+      ordered.push_back(hid);
+      used.insert(hid);
+    }
+  }
+
+  return ordered; 
 }
 
 /*------------------------------------------------------------*/

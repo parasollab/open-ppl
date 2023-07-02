@@ -139,6 +139,8 @@ class WoDaSH : public TMPStrategyMethod {
       std::unordered_map<HID, std::unordered_map<Robot*, BoolHID>> predecessors;
       std::unordered_map<HID, std::unordered_map<Robot*, BoolHID>> successors;
 
+      std::unordered_set<HID> groundedSolution; // Path through grounded hypergraph
+
       HyperskeletonPath() {}
 
       void Reset() {
@@ -150,6 +152,7 @@ class WoDaSH : public TMPStrategyMethod {
         splitHyperarcs.clear();
         predecessors.clear();
         successors.clear();
+        groundedSolution.clear();
       }
     };
 
@@ -262,6 +265,10 @@ class WoDaSH : public TMPStrategyMethod {
       std::set<RepresentativeVertex> _head, GroupPathType* _path, 
       std::shared_ptr<GroupTask> _task);
 
+    void ConvertToPlan(std::unordered_set<HID> _path);
+
+    std::vector<HID> OrderPath(std::unordered_set<HID> _path);
+
     ///@}
     ///@name Internal State
     ///@{
@@ -305,6 +312,8 @@ class WoDaSH : public TMPStrategyMethod {
     std::unordered_map<Robot*, size_t> m_pathLengths;
 
     HyperskeletonPath m_path;
+
+    std::unordered_map<HID, HID> m_skeletonToGrounded;
 
     /// The dynamic sampling regions will have radius equal to this times the
     /// robot's bounding sphere radius.
