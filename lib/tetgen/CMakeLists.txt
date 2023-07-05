@@ -28,7 +28,6 @@ install(TARGETS tetgen
         LIBRARY DESTINATION lib
         ARCHIVE DESTINATION lib
         RUNTIME DESTINATION bin
-        INCLUDES DESTINATION include
 )
 
 install(EXPORT TetgenTargets
@@ -39,7 +38,7 @@ install(EXPORT TetgenTargets
 
 install(FILES 
 tetgen.h 
-DESTINATION "include/tetgen")
+DESTINATION "include")
 
 install(FILES
 ${CMAKE_CURRENT_SOURCE_DIR}/cmake/TetgenConfig.cmake

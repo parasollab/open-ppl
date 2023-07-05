@@ -56,9 +56,8 @@ add_subdirectory(lib/PQP)
 add_subdirectory(lib/modelloader)
 add_subdirectory(lib/RAPID)
 
-add_subdirectory(lib/gl_visualizer/nonstd)
-add_subdirectory(lib/gl_visualizer/glutils)
-add_subdirectory(lib/gl_visualizer/sandbox)
+add_subdirectory(lib/gl_visualizer)
+
 
 # Resolve local packages
 set(STAPL_PATH lib/stapl)
@@ -72,23 +71,16 @@ find_package(Eigen3 CONFIG REQUIRED)
 find_package(tinyxml CONFIG REQUIRED)
 find_package(Bullet CONFIG REQUIRED
         LinearMath Bullet3Common BulletDynamics BulletSoftBody BulletCollision BulletInverseDynamics)
-#find_package(dlib CONFIG REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
-#find_package(pqp QUIET)
 
 add_subdirectory(src)
-include_directories(src)
 
 # TOOD Parallel Build (inclde libstapl.a)
-include_directories(lib/stapl)
-include_directories(lib/stapl/stapl)
+# include_directories(lib/stapl)
+# include_directories(lib/stapl/stapl)
 
 include_directories(${Qt6Widgets_INCLUDE_DIRS})
 include_directories(${Qt6OpenGLWidgets_INCLUDE_DIRS})
-
-#include_directories(include/mathtool)
-
-#include_directories(include/LKH/SRC/INCLUDE)
 
 include_directories(lib/gl_visualizer/sandbox)
 include_directories(lib/gl_visualizer/glutils)
@@ -119,9 +111,6 @@ if(BUILD_TESTS)
     endif()
 endif()
 
-# Recursively add sources (Not Used ATM)
-file(GLOB_RECURSE SRCS src/*.cpp src/*.h)
-
 # include visual studio required file for 'or' and 'and' keywords
 if(MSVC)
     add_definitions(/FI"iso646.h")
@@ -145,10 +134,47 @@ target_include_directories(objlib
         $<INSTALL_INTERFACE:include>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/mathtool>
 )
+
+target_include_directories(objlib 
+        PUBLIC 
+        $<INSTALL_INTERFACE:include>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
+)
+
 target_include_directories(objlib 
         PUBLIC 
         $<INSTALL_INTERFACE:include>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/LKH/SRC/INCLUDE>
+)
+
+target_include_directories(objlib 
+        PUBLIC 
+        $<INSTALL_INTERFACE:include>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/lib/stapl>
+)
+
+target_include_directories(objlib 
+        PUBLIC 
+        $<INSTALL_INTERFACE:include>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/lib/stapl/stapl>
+)
+
+target_include_directories(objlib 
+        PUBLIC 
+        $<INSTALL_INTERFACE:include>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/lib/glvisualizer/nonstd>
+)
+
+target_include_directories(objlib 
+        PUBLIC 
+        $<INSTALL_INTERFACE:include>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/lib/glvisualizer/glutils>
+)
+
+target_include_directories(objlib 
+        PUBLIC 
+        $<INSTALL_INTERFACE:include>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/lib/glvisualizer/sandbox>
 )
 
 # bullet order is very specific, do not modify
@@ -158,11 +184,16 @@ target_link_libraries(objlib
         RAPID tetgen PQP)
 
 # build [ppl library]
-add_library(${PPL_LIBRARY} STATIC ${HARDWARE_SRCS} ${TASK_SRCS} $<TARGET_OBJECTS:objlib>)
+add_library(${PPL_LIBRARY} STATIC ${HARDWARE_SRCS} ${TASK_SRCS})
 
 # build [ppl_mp library]
-add_library(${PPL_MP_LIBRARY} STATIC ${HARDWARE_SRCS} $<TARGET_OBJECTS:objlib>)
+add_library(${PPL_MP_LIBRARY} STATIC ${HARDWARE_SRCS})
 
+target_include_directories(${PPL_LIBRARY}
+        PUBLIC 
+        $<INSTALL_INTERFACE:include>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
+)
 target_include_directories(${PPL_LIBRARY}
         PUBLIC
         $<INSTALL_INTERFACE:include>
@@ -174,20 +205,25 @@ target_include_directories(${PPL_LIBRARY}
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/LKH/SRC/INCLUDE>
 )
 
+target_include_directories(${PPL_MP_LIBRARY} 
+        PUBLIC 
+        $<INSTALL_INTERFACE:include>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
+)
 target_include_directories(${PPL_MP_LIBRARY}
         PUBLIC
         $<INSTALL_INTERFACE:include>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/mathtool>
 )
 target_include_directories(${PPL_MP_LIBRARY} 
-        PUBLIC 
+        PUBLIC
         $<INSTALL_INTERFACE:include>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/LKH/SRC/INCLUDE>
 )
 
 # [ppl library] - Link external packages
 # bullet order is very specific, do not modify
-target_link_libraries(${PPL_LIBRARY} PUBLIC BulletSoftBody BulletDynamics BulletCollision LinearMath Bullet3Common
+target_link_libraries(${PPL_LIBRARY} PUBLIC objlib BulletSoftBody BulletDynamics BulletCollision LinearMath Bullet3Common
         BulletInverseDynamics CGAL::CGAL Eigen3::Eigen
         nlohmann_json::nlohmann_json Qt6::Core Qt6::Gui Qt6::OpenGL Qt6::Widgets
         Qt6::OpenGLWidgets unofficial-tinyxml::unofficial-tinyxml)
@@ -197,7 +233,7 @@ target_link_libraries(${PPL_LIBRARY} PUBLIC modelloader RAPID tetgen PQP glutils
 set_target_properties(${PPL_LIBRARY} PROPERTIES OUTPUT_NAME ppl)
 
 # [ppl_mp library] - Link external packages
-target_link_libraries(${PPL_MP_LIBRARY} PUBLIC BulletSoftBody BulletDynamics BulletCollision LinearMath Bullet3Common
+target_link_libraries(${PPL_MP_LIBRARY} PUBLIC objlib BulletSoftBody BulletDynamics BulletCollision LinearMath Bullet3Common
         BulletInverseDynamics CGAL::CGAL Eigen3::Eigen
         nlohmann_json::nlohmann_json Qt6::Core Qt6::Gui Qt6::OpenGL Qt6::Widgets
         Qt6::OpenGLWidgets unofficial-tinyxml::unofficial-tinyxml)
@@ -240,39 +276,27 @@ target_link_libraries(${PPL_XML_EXECUTABLE} PRIVATE ${PPL_LIBRARY})
 # -------------  package ppl library for distribution --------------
 message("Generating targets for packaging")
 include(GNUInstallDirs)
-target_include_directories(${PPL_LIBRARY}
-PUBLIC
-$<INSTALL_INTERFACE:include>
-$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-)
-target_include_directories(${PPL_MP_LIBRARY}
-PUBLIC
-$<INSTALL_INTERFACE:include>
-$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-)
+# target_include_directories(${PPL_XML_EXECUTABLE}
+# PUBLIC
+# $<INSTALL_INTERFACE:include>
+# $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+# )
+# target_include_directories(${PPL_MP_LIBRARY}
+# PUBLIC
+# $<INSTALL_INTERFACE:include>
+# $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+# )
 
 
 #set(INSTALL_CONFIGDIR ${CMAKE_INSTALL_LIBDIR}/cmake/ppl)
 
-install(TARGETS ${PPL_LIBRARY} ${PPL_MP_LIBRARY} 
+install(TARGETS ${PPL_LIBRARY} ${PPL_MP_LIBRARY} objlib
         EXPORT PPLTargets
         LIBRARY DESTINATION lib
         ARCHIVE DESTINATION lib)
 
-install(DIRECTORY ${CMAKE_SOURCE_DIR}/include
-        DESTINATION "include/ppl"
-        FILES_MATCHING PATTERN "*.h"
-)
-install(DIRECTORY ${CMAKE_SOURCE_DIR}/include/LKH/SRC/INCLUDE
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src/
         DESTINATION "include"
-        FILES_MATCHING PATTERN "*.h"
-)
-install(DIRECTORY ${CMAKE_SOURCE_DIR}/include/mathtool
-        DESTINATION "include/mathtool"
-        FILES_MATCHING PATTERN "*.h"
-)
-install(DIRECTORY ${CMAKE_SOURCE_DIR}/src
-        DESTINATION "include/ppl"
         FILES_MATCHING PATTERN "*.h"
 )
 
@@ -287,11 +311,19 @@ write_basic_package_version_file("${CMAKE_CURRENT_BINARY_DIR}/PPLConfigVersion.c
                                     VERSION ${PPL_VERSION}
                                     COMPATIBILITY AnyNewerVersion)
 
-configure_package_config_file(${CMAKE_CURRENT_LIST_DIR}/cmake/PPLConfig.cmake.in
-                             ${CMAKE_CURRENT_BINARY_DIR}/PPLConfig.cmake
-                              INSTALL_DESTINATION "lib/cmake/ppl")
+# configure_package_config_file(${CMAKE_CURRENT_LIST_DIR}/cmake/PPLConfig.cmake.in
+#                              ${CMAKE_CURRENT_BINARY_DIR}/PPLConfig.cmake
+#                               INSTALL_DESTINATION "lib/cmake/ppl")
+
+# install(FILES
+#         ${CMAKE_CURRENT_BINARY_DIR}/PPLConfig.cmake
+#         ${CMAKE_CURRENT_BINARY_DIR}/PPLConfigVersion.cmake
+#         DESTINATION "lib/cmake/ppl")
 
 install(FILES
-        ${CMAKE_CURRENT_BINARY_DIR}/PPLConfig.cmake
         ${CMAKE_CURRENT_BINARY_DIR}/PPLConfigVersion.cmake
         DESTINATION "lib/cmake/ppl")
+
+install(FILES
+        ${CMAKE_CURRENT_SOURCE_DIR}/cmake/PPLConfig.cmake
+        DESTINATION "lib/cmake/ppl" )

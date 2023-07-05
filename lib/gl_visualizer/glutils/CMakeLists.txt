@@ -48,9 +48,7 @@ endif()
 
 
 file(GLOB_RECURSE SRCS ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/glutils/*.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/glutils/*.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/*.h)
+        ${CMAKE_CURRENT_SOURCE_DIR}/glutils/*.cpp)
 
 add_library(glutils ${SRCS})
 
@@ -59,39 +57,15 @@ target_link_libraries(glutils
 
 target_include_directories(glutils 
         PUBLIC 
-        $<INSTALL_INTERFACE:include>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
 )
 target_include_directories(glutils 
         PUBLIC 
-        $<INSTALL_INTERFACE:include/glutils>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/glutils>
 )
 
-install(TARGETS glutils
-        EXPORT GlUtilsTargets
-        LIBRARY DESTINATION lib
-        ARCHIVE DESTINATION lib
-        RUNTIME DESTINATION bin
-        INCLUDES DESTINATION include
-)
 
-install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/glutils
-        DESTINATION "include/glutils"
-        FILES_MATCHING PATTERN "*.h"
-)
-
-install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-        DESTINATION "include"
-        FILES_MATCHING PATTERN "*.h"
-)
-
-install(EXPORT GlUtilsTargets
-        FILE glutilsTargets.cmake
-        NAMESPACE GLUTILS::
-        DESTINATION lib/cmake/glutils
-)
-
-install(FILES
-        ${CMAKE_CURRENT_SOURCE_DIR}/cmake/glutilsConfig.cmake
-        DESTINATION lib/cmake/glutils )
+# install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+#         DESTINATION "include"
+#         FILES_MATCHING PATTERN "*.h"
+# )

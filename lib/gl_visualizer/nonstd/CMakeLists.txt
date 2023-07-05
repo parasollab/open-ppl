@@ -56,35 +56,12 @@ file(GLOB_RECURSE SRCS ${PROJECT_SOURCE_DIR}/*.cpp
 add_library(nonstd ${SRCS})
 
 target_include_directories(nonstd 
-        PUBLIC 
-        $<INSTALL_INTERFACE:include>
+        PUBLIC
+        $<INSTALL_INTERFACE:include> 
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
 )
 
-install(TARGETS nonstd
-        EXPORT NonStdTargets
-        LIBRARY DESTINATION lib
-        ARCHIVE DESTINATION lib
-        RUNTIME DESTINATION bin
-        INCLUDES DESTINATION include
-)
-
-install(EXPORT NonStdTargets
-        FILE nonstdTargets.cmake
-        NAMESPACE NONSTD::
-        DESTINATION lib/cmake/nonstd
-)
-
-install(FILES
-${CMAKE_CURRENT_SOURCE_DIR}/cmake/nonstdConfig.cmake
-DESTINATION "lib/cmake/nonstd" )
-
-install(DIRECTORY ${CMAKE_SOURCE_DIR}
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        DESTINATION include/nonstd
         FILES_MATCHING PATTERN "*.h"
 )
-
-# install(DIRECTORY ${CMAKE_SOURCE_DIR}/nonstd
-#         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/nonstd
-#         FILES_MATCHING PATTERN "*.h"
-# )

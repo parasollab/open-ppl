@@ -34,7 +34,7 @@ add_library(sandbox ${SRCS})
 
 target_include_directories(sandbox
         PUBLIC 
-        $<INSTALL_INTERFACE:include>
+        $<INSTALL_INTERFACE:include/sandbox>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/sandbox>
 )
 
@@ -43,26 +43,7 @@ target_link_libraries(sandbox PUBLIC glutils)
 target_link_libraries(sandbox PUBLIC nonstd)
 target_link_libraries(sandbox PRIVATE ${OPENGL_LIBRARIES} ${GLUT_LIBRARY})
 
-
-install(TARGETS sandbox
-        EXPORT SandboxTargets
-        LIBRARY DESTINATION lib
-        ARCHIVE DESTINATION lib
-        RUNTIME DESTINATION bin
-        INCLUDES DESTINATION include
-)
-
-install(DIRECTORY ${CMAKE_SOURCE_DIR}/sandbox
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/sandbox
         DESTINATION include/sandbox
         FILES_MATCHING PATTERN "*.h"
 )
-
- install(EXPORT SandboxTargets
-         FILE sandboxTargets.cmake
-         NAMESPACE SANDBOX::
-         DESTINATION lib/cmake/sandbox
- )
-
- install(FILES
-        ${CMAKE_CURRENT_SOURCE_DIR}/cmake/sandboxConfig.cmake
-        DESTINATION lib/cmake/sandbox )

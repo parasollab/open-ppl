@@ -20,7 +20,7 @@ $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
 
 target_include_directories(modelloader
 PUBLIC
-$<INSTALL_INTERFACE:include/ppl/mathtool>
+$<INSTALL_INTERFACE:include>
 $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../include/mathtool>
 )
 
@@ -28,10 +28,9 @@ target_link_libraries(modelloader PUBLIC CGAL::CGAL)
 
 install(TARGETS modelloader
         EXPORT ModelLoaderTargets
-        LIBRARY DESTINATION lib
-        ARCHIVE DESTINATION lib
-        RUNTIME DESTINATION bin
-        INCLUDES DESTINATION include
+        ARCHIVE DESTINATION  "${CMAKE_INSTALL_LIBDIR}"
+        LIBRARY DESTINATION  "${CMAKE_INSTALL_LIBDIR}"
+
 )
 
 install(EXPORT ModelLoaderTargets
@@ -46,5 +45,5 @@ install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
 install(FILES
-${CMAKE_CURRENT_SOURCE_DIR}/cmake/ModelLoaderConfig.cmake
+${CMAKE_CURRENT_SOURCE_DIR}/cmake/modelloaderConfig.cmake
 DESTINATION "lib/cmake/modelloader" )
