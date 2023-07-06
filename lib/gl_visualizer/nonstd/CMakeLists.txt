@@ -57,11 +57,11 @@ add_library(nonstd ${SRCS})
 
 target_include_directories(nonstd 
         PUBLIC
-        $<INSTALL_INTERFACE:include> 
+        $<INSTALL_INTERFACE:include/nonstd> 
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
 )
 
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-        DESTINATION include/nonstd
+        DESTINATION include
         FILES_MATCHING PATTERN "*.h"
 )

@@ -57,15 +57,11 @@ target_link_libraries(glutils
 
 target_include_directories(glutils 
         PUBLIC 
+        $<INSTALL_INTERFACE:include/glutils> 
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
 )
-target_include_directories(glutils 
-        PUBLIC 
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/glutils>
+
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        DESTINATION "include"
+        FILES_MATCHING PATTERN "*.h"
 )
-
-
-# install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-#         DESTINATION "include"
-#         FILES_MATCHING PATTERN "*.h"
-# )

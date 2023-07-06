@@ -14,13 +14,13 @@ add_library(modelloader STATIC IModel.cpp ModelFactory.cpp MovieBYULoader.cpp Ob
 
 target_include_directories(modelloader
 PUBLIC
-$<INSTALL_INTERFACE:include>
+$<INSTALL_INTERFACE:include/modelloader>
 $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
 )
 
 target_include_directories(modelloader
 PUBLIC
-$<INSTALL_INTERFACE:include>
+$<INSTALL_INTERFACE:include/mathtool>
 $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../include/mathtool>
 )
 
@@ -40,7 +40,7 @@ install(EXPORT ModelLoaderTargets
 )
 
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-        DESTINATION "include/modelloader"
+        DESTINATION include
         FILES_MATCHING PATTERN "*.h"
 )
 

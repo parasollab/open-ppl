@@ -55,7 +55,6 @@ add_subdirectory(lib/tetgen)
 add_subdirectory(lib/PQP)
 add_subdirectory(lib/modelloader)
 add_subdirectory(lib/RAPID)
-
 add_subdirectory(lib/gl_visualizer)
 
 
@@ -82,9 +81,7 @@ add_subdirectory(src)
 include_directories(${Qt6Widgets_INCLUDE_DIRS})
 include_directories(${Qt6OpenGLWidgets_INCLUDE_DIRS})
 
-include_directories(lib/gl_visualizer/sandbox)
-include_directories(lib/gl_visualizer/glutils)
-include_directories(lib/gl_visualizer/nonstd)
+
 
 
 # -------------  build ppl targets  --------------
@@ -131,7 +128,7 @@ set_target_properties(objlib PROPERTIES VERSION ${PROJECT_VERSION})
 
 target_include_directories(objlib 
         PUBLIC 
-        $<INSTALL_INTERFACE:include>
+        $<INSTALL_INTERFACE:include/mathtool>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/mathtool>
 )
 
@@ -143,7 +140,7 @@ target_include_directories(objlib
 
 target_include_directories(objlib 
         PUBLIC 
-        $<INSTALL_INTERFACE:include>
+        $<INSTALL_INTERFACE:include/LKH/SRC/INCLUDE>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/LKH/SRC/INCLUDE>
 )
 
@@ -152,36 +149,18 @@ target_include_directories(objlib
         $<INSTALL_INTERFACE:include>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/lib/stapl>
 )
-
+#Must include this path specifically since the .h files are sometimes reference without canonical prefix
 target_include_directories(objlib 
         PUBLIC 
-        $<INSTALL_INTERFACE:include>
+        $<INSTALL_INTERFACE:include/stapl>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/lib/stapl/stapl>
-)
-
-target_include_directories(objlib 
-        PUBLIC 
-        $<INSTALL_INTERFACE:include>
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/lib/glvisualizer/nonstd>
-)
-
-target_include_directories(objlib 
-        PUBLIC 
-        $<INSTALL_INTERFACE:include>
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/lib/glvisualizer/glutils>
-)
-
-target_include_directories(objlib 
-        PUBLIC 
-        $<INSTALL_INTERFACE:include>
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/lib/glvisualizer/sandbox>
 )
 
 # bullet order is very specific, do not modify
 target_link_libraries(objlib 
         PUBLIC BulletSoftBody BulletDynamics BulletCollision LinearMath Bullet3Common
-        BulletInverseDynamics unofficial-tinyxml::unofficial-tinyxml modelloader 
-        RAPID tetgen PQP)
+        BulletInverseDynamics unofficial-tinyxml::unofficial-tinyxml )
+target_link_libraries(objlib PUBLIC modelloader RAPID tetgen PQP glutils nonstd sandbox)
 
 # build [ppl library]
 add_library(${PPL_LIBRARY} STATIC ${HARDWARE_SRCS} ${TASK_SRCS})
@@ -196,28 +175,28 @@ target_include_directories(${PPL_LIBRARY}
 )
 target_include_directories(${PPL_LIBRARY}
         PUBLIC
-        $<INSTALL_INTERFACE:include>
+        $<INSTALL_INTERFACE:include/mathtool>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/mathtool>
 )
 target_include_directories(${PPL_LIBRARY} 
         PUBLIC 
-        $<INSTALL_INTERFACE:include>
+        $<INSTALL_INTERFACE:include/LKH/SRC/INCLUDE>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/LKH/SRC/INCLUDE>
 )
 
 target_include_directories(${PPL_MP_LIBRARY} 
         PUBLIC 
-        $<INSTALL_INTERFACE:include>
+        $<INSTALL_INTERFACE:include/src>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
 )
 target_include_directories(${PPL_MP_LIBRARY}
         PUBLIC
-        $<INSTALL_INTERFACE:include>
+        $<INSTALL_INTERFACE:include/mathtool>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/mathtool>
 )
 target_include_directories(${PPL_MP_LIBRARY} 
         PUBLIC
-        $<INSTALL_INTERFACE:include>
+        $<INSTALL_INTERFACE:include/LKH/SRC/INCLUDE>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/LKH/SRC/INCLUDE>
 )
 
@@ -238,8 +217,7 @@ target_link_libraries(${PPL_MP_LIBRARY} PUBLIC objlib BulletSoftBody BulletDynam
         nlohmann_json::nlohmann_json Qt6::Core Qt6::Gui Qt6::OpenGL Qt6::Widgets
         Qt6::OpenGLWidgets unofficial-tinyxml::unofficial-tinyxml)
 target_link_libraries(${PPL_MP_LIBRARY} PUBLIC ${OPENGL_LIBRARIES} ${GLUT_LIBRARY})
-
-# [ppl library] - Link internal built packages
+# [ppl_mp library] - Link internal built packages
 target_link_libraries(${PPL_MP_LIBRARY} PUBLIC PQP glutils nonstd sandbox modelloader RAPID tetgen ${PQP_LIBRARIES})
 set_target_properties(${PPL_MP_LIBRARY} PROPERTIES OUTPUT_NAME ppl_mp)
 
@@ -295,15 +273,25 @@ install(TARGETS ${PPL_LIBRARY} ${PPL_MP_LIBRARY} objlib
         LIBRARY DESTINATION lib
         ARCHIVE DESTINATION lib)
 
-install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src/
-        DESTINATION "include"
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src
+        DESTINATION include
+        FILES_MATCHING PATTERN "*.h"
+)
+
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include
+        DESTINATION include
+        FILES_MATCHING PATTERN "*.h"
+)
+
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/lib/stapl
+        DESTINATION include
         FILES_MATCHING PATTERN "*.h"
 )
 
 install(EXPORT PPLTargets
         FILE PPLTargets.cmake
         NAMESPACE ppl::
-        DESTINATION "lib/cmake/ppl")
+        DESTINATION lib/cmake/ppl)
 
 # Create a ConfigVersion.cmake
 include(CMakePackageConfigHelpers)

@@ -9,7 +9,7 @@ if(BUILD_LIBRARY)
   target_compile_definitions(tetgen PRIVATE -DTETLIBRARY)
   target_include_directories(tetgen
     PUBLIC 
-    $<INSTALL_INTERFACE:include>
+    $<INSTALL_INTERFACE:include/tetgen>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
   )
   # Generate position independent code
@@ -36,9 +36,10 @@ install(EXPORT TetgenTargets
         DESTINATION lib/cmake/tetgen
 )
 
-install(FILES 
-tetgen.h 
-DESTINATION "include")
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        DESTINATION include
+        FILES_MATCHING PATTERN "*.h"
+)
 
 install(FILES
 ${CMAKE_CURRENT_SOURCE_DIR}/cmake/TetgenConfig.cmake
