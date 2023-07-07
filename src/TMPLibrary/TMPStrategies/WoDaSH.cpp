@@ -1552,7 +1552,8 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
       if(source != target and pushStart.count(t) and pushStart[t].count(source)) {
         for(auto robot : robots) {
           // Get the point in workspace of the source skeleton vertex
-          auto skelVID = (*_mapfSolution[robot]).at(t);
+          auto tt = std::min(t, _mapfSolution[robot]->size() - 1);
+          auto skelVID = (*_mapfSolution[robot]).at(tt);
           if(skelVID != source)
             continue;
 
@@ -1564,7 +1565,8 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
       } else {
         for(auto robot : robots) {
           // Get the point in workspace of the source skeleton vertex
-          auto skelVID = (*_mapfSolution[robot]).at(t);
+          auto tt = std::min(t, _mapfSolution[robot]->size() - 1);
+          auto skelVID = (*_mapfSolution[robot]).at(tt);
           if(skelVID != source)
             continue;
 
@@ -1576,7 +1578,8 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
       if(source != target and pushStart.count(t) and pushStart[t].count(target)) {
         for(auto robot : robots) {
           // Get the point in workspace of the source skeleton vertex
-          auto skelVID = (*_mapfSolution[robot]).at(t);
+          auto tt = std::min(t, _mapfSolution[robot]->size() - 1);
+          auto skelVID = (*_mapfSolution[robot]).at(tt);
           if(skelVID != target)
             continue;
 
@@ -1588,7 +1591,8 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
       } else {
         for(auto robot : robots) {
           // Get the point in workspace of the source skeleton vertex
-          auto skelVID = (*_mapfSolution[robot]).at(t);
+          auto tt = std::min(t, _mapfSolution[robot]->size() - 1);
+          auto skelVID = (*_mapfSolution[robot]).at(tt);
           if(skelVID != target)
             continue;
 
@@ -1779,6 +1783,22 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
         auto vertex = m_skeleton->GetVertexType(vid);
         auto rs = vertex.GetGroup()->GetRobots();
         robots.insert(robots.end(), rs.begin(), rs.end());
+
+        // Preliminary check if this group is waiting
+        for(auto robot : rs) {
+          if(t >= _mapfSolution[robot]->size()-1) {
+            if(this->m_debug)
+              std::cout << "Found end-of-path waiting into merge at " << t << std::endl;
+
+            if(!m_waitingReps.count(vid)) {
+              auto vertex = m_skeleton->GetVertexType(vid);
+              auto subgroup = vertex.GetGroup();
+              auto grm = this->GetMPLibrary()->GetMPSolution()->GetGroupRoadmap(subgroup);
+              auto wvid = SpawnVertex(grm, vertex);
+              m_waitingReps.emplace(vid, std::make_pair(grm, wvid));
+            }
+          }
+        }
       }
 
       auto group = AddGroup(robots);
@@ -1804,6 +1824,8 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
           // First check if any split hyperarcs are incoming (this means we're
           // currently waiting)
           if(m_path.splitHyperarcs.count(ih)) {
+            if(this->m_debug)
+              std::cout << "found split incoming to merge" << std::endl;
             // We are waiting, check if we have a representative vertex here
             // if not, sample one
             if(!m_waitingReps.count(tvid)) {
@@ -2804,8 +2826,10 @@ SampleTrajectories() {
         Cfg cfg = vertex.GetRobotCfg(robot);
         target.SetRobotCfg(robot, std::move(cfg));
 
-        auto vid = vertex.GetVID(robot);
-        outEdges[robot] = std::make_pair(vid, vid);
+        // How to get the skeleton edge here TODO
+        auto skelVertex = m_skeleton->GetVertexType(outHID.second);
+        auto svid = skelVertex.GetVID(robot);
+        outEdges[robot] = std::make_pair(svid, svid);
       } else {
         auto& outArc = m_skeleton->GetHyperarcType(outHID.second);
         auto vertex = outArc.startRep.first->GetVertex(outArc.startRep.second);
