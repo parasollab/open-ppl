@@ -1342,31 +1342,30 @@ GroundStartAndGoal() {
   auto stats = this->GetPlan()->GetStatClass();
   MethodTimer mt(stats,this->GetNameAndLabel() + "::GroundStartAndGoal");
 
-  this->GetMPSolution()->AddRobotGroup(m_wholeTask->GetRobotGroup());
-  this->GetMPLibrary()->SetGroupTask(m_wholeTask);
-  auto wholeGRM = this->GetMPLibrary()->GetGroupRoadmap();
+  // this->GetMPSolution()->AddRobotGroup(m_wholeTask->GetRobotGroup());
+  // this->GetMPLibrary()->SetGroupTask(m_wholeTask);
+  // auto wholeGRM = this->GetMPLibrary()->GetGroupRoadmap();
 
   auto gh = dynamic_cast<GroundedHypergraph*>(
     this->GetStateGraph(m_groundedHypergraphLabel).get());
 
   // Get the virtual source and sink
-  GroundedHypergraph::Transition transition;
-  transition.cost = 0;
-  auto vsource = gh->AddVertex(std::make_pair(nullptr, 0));
-  auto vsink = gh->AddVertex(std::make_pair(nullptr, 1));
+  // GroundedHypergraph::Transition transition;
+  // transition.cost = 0;
+  m_virtualSource = gh->AddVertex(std::make_pair(nullptr, 0));
+  m_virtualSink = gh->AddVertex(std::make_pair(nullptr, 1));
 
   // Get the start position for all robots
-  auto s = this->GetMPLibrary()->GetMPStrategy(m_trajStrategy);
-  // s->Initialize();
-  auto sVID = s->GenerateStart(m_sampler);
-  m_groundedStartVID = gh->AddVertex(std::make_pair(wholeGRM, sVID));
-  gh->AddTransition({vsource}, {m_groundedStartVID}, transition);
+  // auto s = this->GetMPLibrary()->GetMPStrategy(m_trajStrategy);
+  // auto sVID = s->GenerateStart(m_sampler);
+  // m_groundedStartVID = gh->AddVertex(std::make_pair(wholeGRM, sVID));
+  // gh->AddTransition({vsource}, {m_groundedStartVID}, transition);
 
-  // Get the goal position for all robots
-  auto gVIDs = s->GenerateGoals(m_sampler);
-  auto gVID = *gVIDs.begin();
-  m_groundedGoalVID = gh->AddVertex(std::make_pair(wholeGRM, gVID));
-  gh->AddTransition({m_groundedGoalVID}, {vsink}, transition);
+  // // Get the goal position for all robots
+  // auto gVIDs = s->GenerateGoals(m_sampler);
+  // auto gVID = *gVIDs.begin();
+  // m_groundedGoalVID = gh->AddVertex(std::make_pair(wholeGRM, gVID));
+  // gh->AddTransition({m_groundedGoalVID}, {vsink}, transition);
 }
 
 
@@ -2374,126 +2373,214 @@ ConnectToSkeleton() {
   if(this->m_debug)
     std::cout << "Attempting to connect start and goal to skeleton..." << std::endl;
 
-  this->GetMPLibrary()->SetGroupTask(m_wholeTask);
-  SetVirtualExcept();
   auto gh = dynamic_cast<GroundedHypergraph*>(
     this->GetStateGraph(m_groundedHypergraphLabel).get());
 
-  // Connect the start position to the first skeleton vertex for each of the robots
-  auto stask = std::shared_ptr<GroupTask>(new GroupTask(m_wholeGroup));
-  auto gStart = gh->GetVertex(m_groundedStartVID);
-  auto start = gStart.first->GetVertex(gStart.second);
+  auto s = this->GetMPLibrary()->GetMPStrategy(m_trajStrategy);
 
-  std::set<RepresentativeVertex> groundedTail = {gStart};
-  std::set<RepresentativeVertex> groundedHead;
-  for(auto r : m_wholeGroup->GetRobots()) {
-    auto t = MPTask(r);
-
-    // Get the first vertex on a skeleton edge (or vertex if waiting)
-    GroupCfgType target;
-    auto hid = m_hidPaths[0].at(r);
+  // Find the skeleton start for each decoupled group (per starting edge)
+  std::unordered_map<RobotGroup*, RepresentativeVertex> skeletonStarts;
+  for(auto robot : m_wholeGroup->GetRobots()) {
+    auto hid = m_hidPaths[0].at(robot);
+    
+    RepresentativeVertex rep;
     if(!hid.first) {
-      auto rep = m_waitingReps.at(hid.second);
-      target = rep.first->GetVertex(rep.second);
-      groundedHead.insert(rep);
+      rep = m_waitingReps.at(hid.second);
     } else {
       auto& arc = m_skeleton->GetHyperarcType(hid.second);
-      target = arc.startRep.first->GetVertex(arc.startRep.second);
-      groundedHead.insert(arc.startRep);
+      rep = arc.startRep;
     }
 
-    // Add start constraints
-    auto startCfg = start.GetRobotCfg(r);
-    auto startConstraint = std::unique_ptr<CSpaceConstraint>(new CSpaceConstraint(r,startCfg));
-    t.SetStartConstraint(std::move(startConstraint));
+    auto group = rep.first->GetGroup();
+    if(skeletonStarts.count(group) and skeletonStarts[group] != rep)
+      throw RunTimeException(WHERE) << "Robot in two places at start!";
 
-    // Add goal constraints
-    auto goalCfg = target.GetRobotCfg(r);
-    auto goalConstraint = std::unique_ptr<CSpaceConstraint>(new CSpaceConstraint(r,goalCfg));
-    t.AddGoalConstraint(std::move(goalConstraint));
-
-    stask->AddTask(t);
-  } 
-
-  auto s = this->GetMPLibrary()->GetMPStrategy(m_trajStrategy);
-  s->ResetGrowthOptions();
-  this->GetMPLibrary()->Solve(this->GetMPProblem(), stask.get(), 
-      this->GetMPSolution(), m_trajStrategy, LRand(), "ConnectToSkeleton");
-
-  // Check if the plan was successful
-  auto path = this->GetMPSolution()->GetGroupPath(m_wholeGroup);
-  if(!path->VIDs().size()) {
-    if(this->m_debug)
-      std::cout << "Failed to connect the start to the skeleton." << std::endl;
-    return false;
+    skeletonStarts[group] = rep;
   }
 
-  // Add the path from this to the grounded hypergraph
-  auto ghid = AddTransitionToGroundedHypergraph(groundedTail, groundedHead, path, stask);
-  m_path.groundedSolution.insert(ghid);
+  // Sample the starts for each group
+  std::unordered_map<RobotGroup*, VID> groundedStarts;
+  std::set<VID> groundedHead;
+  for(auto iter : skeletonStarts) {
+    auto group = iter.first;
 
-  // Connect the goal position to the last skeleton vertex for each of the robots
-  auto gtask = std::shared_ptr<GroupTask>(new GroupTask(m_wholeGroup));
-  groundedHead.clear();
-  groundedTail.clear();
+    // Set the task for that group
+    this->GetMPLibrary()->SetGroupTask(m_groupTaskMap.at(group));
+    SetVirtualExcept(group);
 
-  auto gGoal = gh->GetVertex(m_groundedGoalVID);
-  auto goal = gGoal.first->GetVertex(gGoal.second);
-  groundedHead.insert(gGoal);
-  for(auto r : m_wholeGroup->GetRobots()) {
-    auto t = MPTask(r);
+    auto svid = s->GenerateStart(m_sampler);
+    auto grm = this->GetMPLibrary()->GetMPSolution()->GetGroupRoadmap(group);
+    
+    auto gvid = gh->AddVertex(std::make_pair(grm, svid));
+    groundedStarts[group] = gvid;
+    groundedHead.insert(gvid);
+  }
 
-    // Get the last vertex on a skeleton edge (or vertex if waiting)
+  // Create the virtual transition from the source to the starts
+  GroundedHypergraph::Transition transition;
+  transition.cost = 0;
+  auto vhid = gh->GetHID({m_virtualSource}, groundedHead);
+  if(vhid == MAX_UINT)
+    vhid = gh->AddTransition({m_virtualSource}, groundedHead, transition);
+  m_path.groundedSolution.insert(vhid);
+
+  // Sample each trajectory from the start to the skeleton start per group
+  for(auto iter : skeletonStarts) {
+    auto group = iter.first;
+    auto skelRep = iter.second;
+    auto startRep = gh->GetVertex(groundedStarts.at(group));
+
+    // Check if this hyperarc already exists
+    auto head = gh->AddVertex(skelRep);
+    auto tail = groundedStarts.at(group);
+    auto ghid = gh->GetHID({tail}, {head});
+    if(ghid != MAX_UINT) {
+      m_path.groundedSolution.insert(ghid);
+      continue;
+    }
+
+    auto task = std::shared_ptr<GroupTask>(new GroupTask(group));
+    for(auto robot : group->GetRobots()) {
+      auto t = MPTask(robot);
+
+      auto startCfg = startRep.first->GetVertex(startRep.second).GetRobotCfg(robot);
+      auto goalCfg = skelRep.first->GetVertex(skelRep.second).GetRobotCfg(robot);
+
+      auto startConstraint = std::unique_ptr<CSpaceConstraint>(new CSpaceConstraint(robot,startCfg));
+      t.SetStartConstraint(std::move(startConstraint));
+
+      auto goalConstraint = std::unique_ptr<CSpaceConstraint>(new CSpaceConstraint(robot,goalCfg));
+      t.AddGoalConstraint(std::move(goalConstraint));
+
+      task->AddTask(t);
+    }
+
+    this->GetMPLibrary()->SetGroupTask(m_groupTaskMap.at(group));
+    SetVirtualExcept(group);
+
+    s->ResetGrowthOptions();
+    this->GetMPLibrary()->Solve(this->GetMPProblem(), task.get(), 
+      this->GetMPSolution(), m_trajStrategy, LRand(), "ConnectToSkeleton");
+
+    // Check if the plan was successful
+    auto path = this->GetMPSolution()->GetGroupPath(group);
+    if(!path->VIDs().size()) {
+      if(this->m_debug)
+        std::cout << "Failed to connect the start to the skeleton." << std::endl;
+      return false;
+    }
+
+    ghid = AddTransitionToGroundedHypergraph({startRep}, {skelRep}, path, task);
+    m_path.groundedSolution.insert(ghid);
+  }
+
+  // Find the skeleton targets for each group
+  std::unordered_map<RobotGroup*, RepresentativeVertex> skeletonGoals;
+  for(auto robot : m_wholeGroup->GetRobots()) {
+    
     auto time = m_hidPaths.size() - 1;
-    auto hid = m_hidPaths[time].at(r);
-
-    GroupCfgType endSkel;
+    auto hid = m_hidPaths[time].at(robot);
+    
+    RepresentativeVertex rep;
     if(!hid.first) {
-      // Get the last incoming movement hyperarc
-      for(auto ihs : m_skeleton->GetIncomingHyperarcs(hid.second)) {
-        auto arc = m_skeleton->GetHyperarcType(ihs);
-        if(arc.type == HyperskeletonArcType::Movement and 
-                        m_path.movementHyperarcs.count(ihs)) {
-
-          endSkel = arc.endRep.first->GetVertex(arc.endRep.second);
-          groundedTail.insert(arc.endRep);
-          break;
+      if(m_waitingReps.count(hid.second))
+        rep = m_waitingReps.at(hid.second);
+      else {
+        // Get the last incoming movement hyperarc
+        for(auto ihs : m_skeleton->GetIncomingHyperarcs(hid.second)) {
+          auto arc = m_skeleton->GetHyperarcType(ihs);
+          if(arc.type == HyperskeletonArcType::Movement and 
+                          m_path.movementHyperarcs.count(ihs)) {
+            rep = arc.endRep;
+            break;
+          }
         }
       }
     } else {
       auto& arc = m_skeleton->GetHyperarcType(hid.second);
-      endSkel = arc.endRep.first->GetVertex(arc.endRep.second);
-      groundedTail.insert(arc.endRep);
+      rep = arc.endRep;
     }
 
-    // Add start constraints
-    auto startCfg = endSkel.GetRobotCfg(r);
-    auto startConstraint = std::unique_ptr<CSpaceConstraint>(new CSpaceConstraint(r,startCfg));
-    t.SetStartConstraint(std::move(startConstraint));
+    auto group = rep.first->GetGroup();
+    if(skeletonGoals.count(group) and skeletonGoals[group] != rep)
+      throw RunTimeException(WHERE) << "Robot in two places at goal!";
 
-    // Add goal constraints
-    auto goalCfg = goal.GetRobotCfg(r);
-    auto goalConstraint = std::unique_ptr<CSpaceConstraint>(new CSpaceConstraint(r,goalCfg));
-    t.AddGoalConstraint(std::move(goalConstraint));
-
-    gtask->AddTask(t);
-  } 
-
-  s->ResetGrowthOptions();
-  this->GetMPLibrary()->Solve(this->GetMPProblem(), gtask.get(), 
-      this->GetMPSolution(), m_trajStrategy, LRand(), "ConnectToSkeleton");
-
-  // Check if the plan was successful
-  path = this->GetMPSolution()->GetGroupPath(m_wholeGroup);
-  if(!path->VIDs().size()) {
-    if(this->m_debug)
-      std::cout << "Failed to connect the goal to the skeleton" << std::endl;
-    return false;
+    skeletonGoals[group] = rep;
   }
 
-  // Add the path from this to the grounded hypergraph
-  ghid = AddTransitionToGroundedHypergraph(groundedTail, groundedHead, path, gtask);
-  m_path.groundedSolution.insert(ghid);
+  // Sample the starts for each group
+  std::unordered_map<RobotGroup*, VID> groundedGoals;
+  std::set<VID> groundedTail;
+  for(auto iter : skeletonGoals) {
+    auto group = iter.first;
+
+    // Set the task for that group
+    this->GetMPLibrary()->SetGroupTask(m_groupTaskMap.at(group));
+    SetVirtualExcept(group);
+
+    auto tvid = s->GenerateGoals(m_sampler).at(0);
+    auto grm = this->GetMPLibrary()->GetMPSolution()->GetGroupRoadmap(group);
+    
+    auto gvid = gh->AddVertex(std::make_pair(grm, tvid));
+    groundedGoals[group] = gvid;
+    groundedTail.insert(gvid);
+  }
+
+  // Create the virtual transition from the source to the starts
+  vhid = gh->GetHID(groundedTail, {m_virtualSink});
+  if(vhid == MAX_UINT)
+    gh->AddTransition(groundedTail, {m_virtualSink}, transition);
+  // m_path.groundedSolution.insert(vhid);
+
+  // Sample each trajectory from the goal to the skeleton goal per group
+  for(auto iter : skeletonGoals) {
+    auto group = iter.first;
+    auto skelRep = iter.second;
+    auto goalRep = gh->GetVertex(groundedGoals.at(group));
+
+    // Check if this hyperarc already exists
+    auto tail = gh->AddVertex(skelRep);
+    auto head = groundedGoals.at(group);
+    auto ghid = gh->GetHID({tail}, {head});
+    if(ghid != MAX_UINT) {
+      m_path.groundedSolution.insert(ghid);
+      continue;
+    }
+
+    auto task = std::shared_ptr<GroupTask>(new GroupTask(group));
+    for(auto robot : group->GetRobots()) {
+      auto t = MPTask(robot);
+
+      auto startCfg = skelRep.first->GetVertex(skelRep.second).GetRobotCfg(robot);
+      auto goalCfg = goalRep.first->GetVertex(goalRep.second).GetRobotCfg(robot);
+
+      auto startConstraint = std::unique_ptr<CSpaceConstraint>(new CSpaceConstraint(robot,startCfg));
+      t.SetStartConstraint(std::move(startConstraint));
+
+      auto goalConstraint = std::unique_ptr<CSpaceConstraint>(new CSpaceConstraint(robot,goalCfg));
+      t.AddGoalConstraint(std::move(goalConstraint));
+
+      task->AddTask(t);
+    }
+
+    this->GetMPLibrary()->SetGroupTask(m_groupTaskMap.at(group));
+    SetVirtualExcept(group);
+
+    s->ResetGrowthOptions();
+    this->GetMPLibrary()->Solve(this->GetMPProblem(), task.get(), 
+      this->GetMPSolution(), m_trajStrategy, LRand(), "ConnectToSkeleton");
+
+    // Check if the plan was successful
+    auto path = this->GetMPSolution()->GetGroupPath(group);
+    if(!path->VIDs().size()) {
+      if(this->m_debug)
+        std::cout << "Failed to connect the goal to the skeleton." << std::endl;
+      return false;
+    }
+
+    ghid = AddTransitionToGroundedHypergraph({skelRep}, {goalRep}, path, task);
+    m_path.groundedSolution.insert(ghid);
+  }
 
   return true;
 }
@@ -3171,6 +3258,11 @@ ConvertToPlan(std::unordered_set<HID> _path) {
 
   auto gh = dynamic_cast<GroundedHypergraph*>(this->GetStateGraph(m_groundedHypergraphLabel).get());
 
+  if(this->m_debug) {
+    std::cout << "Grounded Hypergraph: " << std::endl;
+    gh->Print();
+  }
+
   auto path = OrderPath(_path);
 
   // Note: This implementation assumes that the input path is ordered already
@@ -3184,7 +3276,7 @@ ConvertToPlan(std::unordered_set<HID> _path) {
   std::unordered_map<RobotGroup*,std::pair<bool,SemanticTask*>> initialTasks;
 
   auto hyperarc = gh->GetHyperarc(path.at(0));
-  for(auto vid : hyperarc.tail) {
+  for(auto vid : hyperarc.head) {
     auto vertex = gh->GetVertex(vid);
     auto grm = vertex.first;
     auto group = grm->GetGroup();
@@ -3199,12 +3291,13 @@ ConvertToPlan(std::unordered_set<HID> _path) {
       t.AddGoalConstraint(std::move(goal));
       task->AddTask(t);
     }
-    const std::string label = group->GetLabel()+ ":InitialPath"; 
+    const std::string label = "vid" + std::to_string(vid) + ":InitialPath"; 
     auto st = std::shared_ptr<SemanticTask>(new SemanticTask(label,top.get(),decomp,
         SemanticTask::SubtaskRelation::AND,false,true,task));
     decomp->AddTask(st);
     initialTasks[group] = std::make_pair(false,st.get());
   }
+  path.erase(path.begin()); // remove the virtual source
 
   // Save last set of tasks in each hyperarc
   std::unordered_map<size_t, SemanticTask*> hyperarcTaskMap;
@@ -3242,6 +3335,10 @@ ConvertToPlan(std::unordered_set<HID> _path) {
           if(hyperarcTaskMap.count(inhid)) {
             auto previous = hyperarcTaskMap[inhid];
             task->AddDependency(previous,SemanticTask::DependencyType::Completion);
+
+            if(this->m_debug) {
+              std::cout << "Added dependency on previous hid " << inhid << std::endl;
+            }
           }
         }
       }
@@ -3253,6 +3350,9 @@ ConvertToPlan(std::unordered_set<HID> _path) {
       // If not, assign the dependency
       task->AddDependency(init.second,SemanticTask::DependencyType::Completion);
       init.first = true;
+
+      if(this->m_debug)
+        std::cout << "Added dependency on initial task " << init.second << std::endl;
     }
   }
 

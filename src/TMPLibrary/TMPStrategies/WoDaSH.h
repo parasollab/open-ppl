@@ -336,6 +336,9 @@ class WoDaSH : public TMPStrategyMethod {
     VID m_groundedStartVID{INVALID_VID};
     VID m_groundedGoalVID{INVALID_VID};
 
+    VID m_virtualSource{INVALID_VID};
+    VID m_virtualSink{INVALID_VID};
+
     // Constraints from hyperarcs that failed to ground
     std::vector<std::unordered_map<Robot*, std::pair<VID, VID>>> m_failedEdges;
     // std::unordered_map<std::pair<VID, VID>, RobotGroup*> m_failedEdges;
