@@ -2046,7 +2046,29 @@ GroundHyperskeleton() {
               }
             }
           }
+        } else if(arc.type == HyperskeletonArcType::Decouple and 
+            m_path.decoupleHyperarcs.count(ih)) {
+
+          // Add end representative from last movement to new group roadmap
+          auto dvid = *m_skeleton->GetHyperarc(ih).tail.begin();
+          for(auto iih : m_skeleton->GetIncomingHyperarcs(dvid)) {
+            auto inArc = m_skeleton->GetHyperarcType(iih);
+            found = true;
+
+            auto grm = this->GetMPLibrary()->GetGroupRoadmap(cedge.GetGroup());
+            auto incfg = inArc.endRep.first->GetVertex(inArc.endRep.second);
+            auto gcfg = GroupCfgType(grm);
+            for(auto robot : cedge.GetGroup()->GetRobots()) {
+              gcfg.SetRobotCfg(robot, incfg.GetVID(robot));
+            }
+
+            auto vid = grm->AddVertex(gcfg);
+            hyperarc.property.startRep = std::make_pair(grm, vid);
+            break;
+          }
         }
+        if(found)
+          break;
       }
 
       if(coupled.size() == cedge.GetGroup()->Size()) {
