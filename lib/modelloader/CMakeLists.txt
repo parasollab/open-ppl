@@ -13,15 +13,15 @@ include_directories(${CGAL_INCLUDE_DIRS})
 add_library(modelloader STATIC IModel.cpp ModelFactory.cpp MovieBYULoader.cpp ObjLoader.cpp BVHDataLoader.cpp)
 
 target_include_directories(modelloader
-PUBLIC
-$<INSTALL_INTERFACE:include/modelloader>
-$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+        PUBLIC
+        $<INSTALL_INTERFACE:include/modelloader>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
 )
 
 target_include_directories(modelloader
-PUBLIC
-$<INSTALL_INTERFACE:include/mathtool>
-$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../include/mathtool>
+        PUBLIC
+        $<INSTALL_INTERFACE:include/mathtool>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../include/mathtool>
 )
 
 target_link_libraries(modelloader PUBLIC CGAL::CGAL)
@@ -30,7 +30,6 @@ install(TARGETS modelloader
         EXPORT ModelLoaderTargets
         ARCHIVE DESTINATION  "${CMAKE_INSTALL_LIBDIR}"
         LIBRARY DESTINATION  "${CMAKE_INSTALL_LIBDIR}"
-
 )
 
 install(EXPORT ModelLoaderTargets

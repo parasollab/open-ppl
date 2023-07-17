@@ -82,7 +82,7 @@ publish-doc-job:
   script:
     - ls
 
-create_package:
+create_package_conan:
   stage: deploy
   when: manual
   only:
@@ -92,7 +92,7 @@ create_package:
     - linux
   script:
     - conan remote add gitlab https://gitlab.engr.illinois.edu/api/v4/projects/25350/packages/conan
-    - conan new ppl/1.0.1 -t
+    - conan new ppl/1.1.0 -t
     - conan create . parasol+pmpl+ppl/stable
-    - CONAN_LOGIN_USERNAME=conan_pat CONAN_PASSWORD=${CI_JOB_TOKEN} conan upload ppl/1.0.1@parasol-group+parasol+pmpl+ppl/stable --all --remote=gitlab
+    - CONAN_LOGIN_USERNAME=conan_pat CONAN_PASSWORD=${CI_JOB_TOKEN} conan upload ppl/1.1.0@parasol-group+parasol+pmpl+ppl/stable --all --remote=gitlab
   environment: production

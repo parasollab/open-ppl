@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.24)
 set(CMAKE_CXX_STANDARD 17)
 #add_definitions(-D_GLIBCXX_USE_CXX11_ABI=0)
 
-project(ppl VERSION 1.0.1)
+project(ppl VERSION 1.1.0)
 
 set(ROBOT_DEF "PMPCfg" CACHE STRING "Robot Type")
 add_definitions(-D${ROBOT_DEF})
@@ -149,7 +149,7 @@ target_include_directories(objlib
         $<INSTALL_INTERFACE:include>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/lib/stapl>
 )
-#Must include this path specifically since the .h files are sometimes reference without canonical prefix
+# Must include this path specifically since the .h files are sometimes reference without canonical prefix
 target_include_directories(objlib 
         PUBLIC 
         $<INSTALL_INTERFACE:include/stapl>
@@ -254,19 +254,6 @@ target_link_libraries(${PPL_XML_EXECUTABLE} PRIVATE ${PPL_LIBRARY})
 # -------------  package ppl library for distribution --------------
 message("Generating targets for packaging")
 include(GNUInstallDirs)
-# target_include_directories(${PPL_XML_EXECUTABLE}
-# PUBLIC
-# $<INSTALL_INTERFACE:include>
-# $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-# )
-# target_include_directories(${PPL_MP_LIBRARY}
-# PUBLIC
-# $<INSTALL_INTERFACE:include>
-# $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-# )
-
-
-#set(INSTALL_CONFIGDIR ${CMAKE_INSTALL_LIBDIR}/cmake/ppl)
 
 install(TARGETS ${PPL_LIBRARY} ${PPL_MP_LIBRARY} objlib
         EXPORT PPLTargets
@@ -298,15 +285,6 @@ include(CMakePackageConfigHelpers)
 write_basic_package_version_file("${CMAKE_CURRENT_BINARY_DIR}/PPLConfigVersion.cmake"
                                     VERSION ${PPL_VERSION}
                                     COMPATIBILITY AnyNewerVersion)
-
-# configure_package_config_file(${CMAKE_CURRENT_LIST_DIR}/cmake/PPLConfig.cmake.in
-#                              ${CMAKE_CURRENT_BINARY_DIR}/PPLConfig.cmake
-#                               INSTALL_DESTINATION "lib/cmake/ppl")
-
-# install(FILES
-#         ${CMAKE_CURRENT_BINARY_DIR}/PPLConfig.cmake
-#         ${CMAKE_CURRENT_BINARY_DIR}/PPLConfigVersion.cmake
-#         DESTINATION "lib/cmake/ppl")
 
 install(FILES
         ${CMAKE_CURRENT_BINARY_DIR}/PPLConfigVersion.cmake

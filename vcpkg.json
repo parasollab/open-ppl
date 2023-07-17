@@ -1,7 +1,9 @@
 {
   "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
   "name": "ppl",
-  "version": "1.0.0",
+  "version": "1.1.0",
+  "description": "Parasol Planning Library",
+  "homepage": "https://parasollab.web.illinois.edu/resources/",
   "builtin-baseline": "f93ba152d55e1d243160e690bc302ffe8638358e",
   "dependencies": [
     {"name": "opencv", "version>=": "4.5.5"},
@@ -16,7 +18,7 @@
     {"name": "catch2", "version>=": "3.1.0#1"},
     {"name": "gmp", "version>=": "6.2.1#17"},
     {"name": "mpfr", "version>=": "4.1.0#4"},
-    {"name":  "tinyxml","version>=": "2.6.2#9"}
+    {"name": "tinyxml","version>=": "2.6.2#9"}
       ]
 }
 

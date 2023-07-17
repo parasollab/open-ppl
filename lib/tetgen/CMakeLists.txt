@@ -42,5 +42,5 @@ install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
 install(FILES
-${CMAKE_CURRENT_SOURCE_DIR}/cmake/TetgenConfig.cmake
-DESTINATION "lib/cmake/tetgen" )
+        ${CMAKE_CURRENT_SOURCE_DIR}/cmake/TetgenConfig.cmake
+        DESTINATION "lib/cmake/tetgen" )
