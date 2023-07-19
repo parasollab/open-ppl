@@ -156,6 +156,10 @@ target_include_directories(objlib
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/lib/stapl/stapl>
 )
 
+target_compile_options(objlib PRIVATE
+  -Wno-terminate
+)
+
 # bullet order is very specific, do not modify
 target_link_libraries(objlib 
         PUBLIC BulletSoftBody BulletDynamics BulletCollision LinearMath Bullet3Common
@@ -165,8 +169,16 @@ target_link_libraries(objlib PUBLIC modelloader RAPID tetgen PQP glutils nonstd 
 # build [ppl library]
 add_library(${PPL_LIBRARY} STATIC ${HARDWARE_SRCS} ${TASK_SRCS})
 
+target_compile_options(${PPL_LIBRARY} PRIVATE
+  -Wno-terminate
+)
+
 # build [ppl_mp library]
 add_library(${PPL_MP_LIBRARY} STATIC ${HARDWARE_SRCS})
+
+target_compile_options(${PPL_MP_LIBRARY} PRIVATE
+  -Wno-terminate
+)
 
 target_include_directories(${PPL_LIBRARY}
         PUBLIC 
