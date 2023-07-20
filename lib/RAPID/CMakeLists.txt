@@ -34,8 +34,9 @@ install(EXPORT RapidTargets
 )
 
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-        DESTINATION "include"
+        DESTINATION include
         FILES_MATCHING PATTERN "*.h"
 )
 
-install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/cmake/RapidConfig.cmake DESTINATION lib/cmake/rapid )
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/cmake/RapidConfig.cmake 
+        DESTINATION share/${PROJECT_NAME} )

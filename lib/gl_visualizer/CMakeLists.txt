@@ -11,15 +11,15 @@ install(TARGETS nonstd glutils sandbox
         EXPORT GLVisTargets
         LIBRARY DESTINATION lib
         ARCHIVE DESTINATION lib
-        INCLUDES DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}" 
+        INCLUDES DESTINATION include
 )
 
 install(EXPORT GLVisTargets
         FILE glvisTargets.cmake
         NAMESPACE GLVIS::
-        DESTINATION lib/cmake/glvis
+        DESTINATION lib/cmake/${PROJECT_NAME}
 )
 
 install(FILES
-        ${CMAKE_CURRENT_SOURCE_DIR}/cmake/glvisConfig.cmake
-        DESTINATION lib/cmake/glvis )
+        ${CMAKE_CURRENT_SOURCE_DIR}/cmake/gl_visualiserConfig.cmake
+        DESTINATION share/${PROJECT_NAME} )

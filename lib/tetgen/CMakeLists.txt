@@ -41,6 +41,5 @@ install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         FILES_MATCHING PATTERN "*.h"
 )
 
-install(FILES
-        ${CMAKE_CURRENT_SOURCE_DIR}/cmake/TetgenConfig.cmake
-        DESTINATION "lib/cmake/tetgen" )
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/cmake/TetgenConfig.cmake
+        DESTINATION share/${PROJECT_NAME} )

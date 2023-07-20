@@ -28,8 +28,8 @@ target_link_libraries(modelloader PUBLIC CGAL::CGAL)
 
 install(TARGETS modelloader
         EXPORT ModelLoaderTargets
-        ARCHIVE DESTINATION  "${CMAKE_INSTALL_LIBDIR}"
-        LIBRARY DESTINATION  "${CMAKE_INSTALL_LIBDIR}"
+        ARCHIVE DESTINATION  lib
+        LIBRARY DESTINATION  bin
 )
 
 install(EXPORT ModelLoaderTargets
@@ -43,6 +43,5 @@ install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         FILES_MATCHING PATTERN "*.h"
 )
 
-install(FILES
-${CMAKE_CURRENT_SOURCE_DIR}/cmake/modelloaderConfig.cmake
-DESTINATION "lib/cmake/modelloader" )
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modelloaderConfig.cmake
+        DESTINATION share/modelloader )
