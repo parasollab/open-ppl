@@ -2181,17 +2181,20 @@ ComputeIntermediates(std::unordered_map<Robot*, CBSSolution*> _mapfSolution,
   auto stats = this->GetPlan()->GetStatClass();
   MethodTimer mt(stats,this->GetNameAndLabel() + "::ComputeIntermediates");
 
-  // Assume straight line edges
+  // Assume a piecewise linear edge
   auto robots = _compSource.GetGroup()->GetRobots();
 
   double diam = 0;
   for(auto robot : robots)
     diam += robot->GetMultiBody()->GetBoundingSphereRadius() * 2;
   double intLength = (diam / robots.size()) * m_intermediateFactor;
+  double tolerance = 1e-5;
 
   // Set the individual edges for each robot
-  std::vector<Point3d> starts;
-  std::vector<Point3d> displacements;
+  std::vector<double> dists;
+  std::vector<size_t> inters; // current start intermediate
+  std::vector<double> useds; // distance used between start and current position
+  std::vector<std::vector<Point3d>> edges;
   double maxDist = 0;
   for(auto robot : robots) {
     auto path = *_mapfSolution[robot];
@@ -2203,22 +2206,7 @@ ComputeIntermediates(std::unordered_map<Robot*, CBSSolution*> _mapfSolution,
     if(skelSource == skelTarget)
       throw RunTimeException(WHERE) << "Tried to add edge between same vids";
 
-    // The true source and target positions may be pushed for merging/splitting
-    auto start = _compSource.GetRobotCfg(robot);
-    auto target = _compTarget.GetRobotCfg(robot);
-    starts.push_back(start);
-
-    auto disp = target - start;
-    const auto dist = (disp).norm();
-
-    if(dist < intLength)
-      displacements.push_back({0., 0., 0.});
-    else
-      displacements.push_back(disp);
-    
-    if(dist > maxDist)
-      maxDist = dist;
-
+    // Get the workspace skeleton edge descriptor
     WorkspaceSkeleton::adj_edge_iterator ei;
     auto found = m_indSkeleton.GetEdge(skelSource, skelTarget, ei);
 
@@ -2228,29 +2216,105 @@ ComputeIntermediates(std::unordered_map<Robot*, CBSSolution*> _mapfSolution,
     else
       ed = m_indSkeleton.AddEdge(skelSource, skelTarget); // self-edge
 
+    auto edge = m_indSkeleton.GetEdge(ed);
+    edges.push_back(edge);
+    double total = 0.0;
+    for(size_t i = 0; i < edge.size()-1; i++)
+      total += (edge.at(i+1) - edge.at(i)).norm();
+
+    // The true source and target positions may be pushed for merging/splitting
+    auto start = _compSource.GetRobotCfg(robot);
+    auto target = _compTarget.GetRobotCfg(robot);
+
+    bool pushedStart = (start - m_indSkeleton.GetVertex(skelSource)).norm() > tolerance;
+    bool pushedTarget = (target - m_indSkeleton.GetVertex(skelTarget)).norm() > tolerance;
+    
+    auto pushDist = m_regionRadius.at(robot) * sqrt(2);
+    auto totalEdge = total;
+    if(pushedStart) {
+      auto pushed = std::min(pushDist, totalEdge / 2.0);
+      total -= pushed;
+
+      // Update the first intermediate to use
+      double elapsed = 0.;
+      size_t inter = 0;
+      double used = 0.;
+      while(fabs(elapsed - pushed) > tolerance) {
+        auto iterDist = (edge.at(inter+1) - edge.at(inter)).norm();
+        used = std::min(iterDist, pushed - elapsed);
+        elapsed += used;
+        if(fabs(elapsed - pushed) > tolerance) {
+          inter++;
+          used = 0;
+        }
+      }
+
+      inters.push_back(inter);
+      useds.push_back(used);
+    } else {
+      inters.push_back(0);
+      useds.push_back(0);
+    }
+
+    if(pushedTarget)
+      total -= std::min(pushDist, totalEdge / 2.0);
+
+    dists.push_back(total);
+    if(total > maxDist)
+      maxDist = total;
+
     _compEdge.SetEdge(robot, ed);
   }
 
   // Find the number of composite edge intermediates
-  std::vector<CompositeSkeletonVertex> inters;
+  std::vector<CompositeSkeletonVertex> compInters;
   int numInter = (int)ceil(maxDist/intLength);
 
+  // Make the first intermediate
+  auto v = CompositeSkeletonVertex(_compSource.GetGroup());
+  for(size_t r = 0; r < robots.size(); r++) {
+    auto inter = inters.at(r);
+    auto edge = edges.at(r);
+    auto disp = edge.at(inter+1) - edge.at(inter);
+    auto point = edge.at(inter) + (disp * useds.at(r));
+    v.SetRobotCfg(r, std::move(point));
+  }
+  compInters.push_back(v);
+
   // Set the intermediate values along the edge
-  for(int i = 0; i <= numInter; ++i){
-    auto v = CompositeSkeletonVertex(_compSource.GetGroup());
+  for(int i = 0; i < numInter; ++i){
+    auto u = CompositeSkeletonVertex(_compSource.GetGroup());
 
     for(size_t r = 0; r < robots.size(); r++) {
-      Point3d d = {i * displacements[r][0]/numInter, 
-                   i * displacements[r][1]/numInter,
-                   i * displacements[r][2]/numInter};
-      v.SetRobotCfg(r, starts[r] + d);
+      // Get the intermediate distance for this robot
+      auto intDist = dists.at(r) / numInter;
+      double elapsed = 0.;
+
+      auto inter = inters.at(r);
+      auto used = useds.at(r);
+      auto edge = edges.at(r);
+      while(fabs(elapsed - intDist) > tolerance) {
+        auto fullLength = (edge.at(inter+1) - edge.at(inter)).norm();
+        used = std::min(fullLength - used, intDist - elapsed);
+        elapsed += used;
+        if(fabs(elapsed - intDist) > tolerance) {
+          inter++;
+          used = 0.;
+        }
+      }
+      useds[r] = used;
+      inters[r] = inter;
+
+      auto disp = edge.at(inter+1) - edge.at(inter);
+      auto point = edge.at(inter) + (disp * used);
+      u.SetRobotCfg(r, std::move(point));
     }
 
-    inters.push_back(v);
+    compInters.push_back(u);
   }
 
   // Set the intermediates
-  _compEdge.SetIntermediates(inters);
+  _compEdge.SetIntermediates(compInters);
 }
 
 size_t
