@@ -33,7 +33,7 @@ install(TARGETS tetgen
 install(EXPORT TetgenTargets
         FILE TetgenTargets.cmake
         NAMESPACE Tetgen::
-        DESTINATION lib/cmake/tetgen
+        DESTINATION share/${PROJECT_NAME}
 )
 
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}

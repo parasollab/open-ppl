@@ -35,7 +35,7 @@ install(TARGETS modelloader
 install(EXPORT ModelLoaderTargets
         FILE ModelLoaderTargets.cmake
         NAMESPACE MODELLOADER::
-        DESTINATION lib/cmake/modelloader
+        DESTINATION share/modelloader
 )
 
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}

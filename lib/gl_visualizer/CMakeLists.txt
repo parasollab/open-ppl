@@ -17,7 +17,7 @@ install(TARGETS nonstd glutils sandbox
 install(EXPORT GLVisTargets
         FILE glvisTargets.cmake
         NAMESPACE GLVIS::
-        DESTINATION lib/cmake/${PROJECT_NAME}
+        DESTINATION share/${PROJECT_NAME}
 )
 
 install(FILES

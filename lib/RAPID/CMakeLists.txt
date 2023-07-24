@@ -30,7 +30,7 @@ install(TARGETS RAPID
 install(EXPORT RapidTargets
         FILE RapidTargets.cmake
         NAMESPACE RAPID::
-        DESTINATION lib/cmake/rapid
+        DESTINATION share/${PROJECT_NAME}
 )
 
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
