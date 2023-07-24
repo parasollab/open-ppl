@@ -21,5 +21,5 @@ install(EXPORT GLVisTargets
 )
 
 install(FILES
-        ${CMAKE_CURRENT_SOURCE_DIR}/cmake/gl_visualiserConfig.cmake
+        ${CMAKE_CURRENT_SOURCE_DIR}/cmake/gl_visualizerConfig.cmake
         DESTINATION share/${PROJECT_NAME} )
