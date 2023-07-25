@@ -134,7 +134,7 @@ target_include_directories(objlib
 
 target_include_directories(objlib 
         PUBLIC 
-        $<INSTALL_INTERFACE:include>
+        $<INSTALL_INTERFACE:include/ppl>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
 )
 
@@ -182,7 +182,7 @@ target_compile_options(${PPL_MP_LIBRARY} PRIVATE
 
 target_include_directories(${PPL_LIBRARY}
         PUBLIC 
-        $<INSTALL_INTERFACE:include>
+        $<INSTALL_INTERFACE:include/ppl>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
 )
 target_include_directories(${PPL_LIBRARY}
@@ -198,7 +198,7 @@ target_include_directories(${PPL_LIBRARY}
 
 target_include_directories(${PPL_MP_LIBRARY} 
         PUBLIC 
-        $<INSTALL_INTERFACE:include/src>
+        $<INSTALL_INTERFACE:include/ppl>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
 )
 target_include_directories(${PPL_MP_LIBRARY}
@@ -272,12 +272,12 @@ install(TARGETS ${PPL_LIBRARY} ${PPL_MP_LIBRARY} objlib
         LIBRARY DESTINATION lib
         ARCHIVE DESTINATION lib)
 
-install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src
-        DESTINATION include
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src/
+        DESTINATION include/ppl
         FILES_MATCHING PATTERN "*.h"
 )
 
-install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/
         DESTINATION include
         FILES_MATCHING PATTERN "*.h"
 )
