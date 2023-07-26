@@ -1,8 +1,8 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <MotionPlanning warnings="true" warningsAsErrors="true" print="false">
   <Problem>
-    <Environment filename="../Envs/3D/hallway.xml"/>
-    <Robot label="boxy" filename="../Envs/3D/iCreate.xml">
+    <Environment filename="../../../Examples/3D/hallway.xml"/>
+    <Robot label="boxy" filename="../../../Examples/3D/iCreate.xml">
       <Agent type="planning"/>
     </Robot>
 

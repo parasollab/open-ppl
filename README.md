@@ -98,10 +98,10 @@ cd into the cloned repo
 cd pmpl
 ```
 ```bash
-/usr/bin/cmake -DCMAKE_BUILD_TYPE=Debug -G Ninja -DCMAKE_TOOLCHAIN_FILE=/opt/vcpkg/scripts/buildsystems/vcpkg.cmake -S . -B build
+cmake -DCMAKE_BUILD_TYPE=Debug -G Ninja -DCMAKE_TOOLCHAIN_FILE=/opt/vcpkg/scripts/buildsystems/vcpkg.cmake -S . -B build
 ```
 ```bash
-/usr/bin/cmake --build build
+cmake --build build
 ```
 
 ### Install and build using Conan
@@ -111,26 +111,25 @@ Alternate installation instructions available at https://docs.conan.io/en/latest
 pip install conan
 ```
 
+Make sure that the installed version of conan is > 2.0
+```bash
+conan --version
+```
+
 #### Install conan packages
 ```bash
-conan install . --install-folder cmake-build-release --build=missing
+conan install . --output-folder=build --build=missing -c tools.system.package_manager:mode=install -c tools.system.package_manager:sudo=true
 ```
 
 #### Build pmpl with conan
 ```bash
-cmake . -DCMAKE_TOOLCHAIN_FILE=cmake-build-release/conan_toolchain.cmake
-cmake --build .
+cmake -DCMAKE_BUILD_TYPE=Debug -G Ninja -DCMAKE_TOOLCHAIN_FILE=cmake-build-release/conan_toolchain.cmake -S . -B build
+```
+```bash
+cmake --build build
 ```
 
-<!---
-### CGAL Runtime Error
-There is currently a bug in the CGAL library which causes a runtime assertion in pmpl.  In order to work around this, after cmake has been configured and vcpkg has downloaded the CGAL library, you will need to comment out lines 171 and 172 of  the file 
-build/vcpkg_installed/x64-linux/include/CGAL/Interval_nt.h, which read as follows:
-```
-    CGAL_assertion_msg( (!is_valid(i)) || (!is_valid(s)) || (!(i>s)),
-              "Variable used before being initialized (or CGAL bug)");
-```
---->
+
 
 ## Docker
 Alternatively a docker file is provided, with the above instructions pre-built.
@@ -149,4 +148,21 @@ The executable built resides in /pmp/build/pmpl_exec within the docker container
 
 ## Tests
 
-**TODO** Update Test Instructions
+### To run tests start by building the test target
+```bash
+cmake --build build --target tests
+```
+
+### You can run the by running CTest
+```bash
+cd build
+ctest --output-on-failure
+```
+
+this will run the Basic PRM Tests by default
+
+### Or by running the generated test executable
+```bash
+cd build
+./ppl_tests -F CfgTests
+```

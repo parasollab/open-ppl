@@ -47,6 +47,7 @@ static char rapidtag_data[] = "RAPIDTAG  file: " __FILE__ "    date: " __DATE__ 
 static void r1(char *f){  r1(f);  r1(rapidtag_data);  r1(rapid_version);}
 
 #include "matvec.H"
+#include "../PQP/src/PQP_Compile.h"
 
 inline
 double
@@ -70,9 +71,9 @@ min(double a, double b, double c)
 
 // TODO renamed project6 -> rapid_project6 to avoid conflict with PQP project, better fix in future
 int
-rapid_project6(double *ax,
-               double *p1, double *p2, double *p3,
-               double *q1, double *q2, double *q3)
+rapid_project6(PQP_REAL *ax,
+         PQP_REAL *p1, PQP_REAL *p2, PQP_REAL *p3,
+         PQP_REAL *q1, PQP_REAL *q2, PQP_REAL *q3)
 {
   double P1 = VdotV(ax, p1);
   double P2 = VdotV(ax, p2);

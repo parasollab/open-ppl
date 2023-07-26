@@ -1,17 +1,15 @@
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.24)
+project(tests)
 
 set(TEST_SRCS
-        tests_main.cpp
-        Testing/MPProblem/MPProblemTests.cpp
-        Testing/TMPLibrary/TaskAllocators/TaskAllocatorMethodTest.cpp
-        Testing/TMPLibrary/TaskDecomposers/TaskDecomposerMethodTest.cpp
-        Testing/TMPLibrary/TaskEvaluators/SimpleMotionEvaluatorTest.cpp
-        Testing/TMPLibrary/TaskEvaluators/TaskEvaluatorMethodTest.cpp
-        Testing/TMPLibrary/TMPLibraryTests.cpp
-        Testing/TestBaseObject.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/MPProblem/MPProblemTests.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/TMPLibrary/TaskAllocators/TaskAllocatorMethodTest.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/TMPLibrary/TaskDecomposers/TaskDecomposerMethodTest.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/TMPLibrary/TaskEvaluators/SimpleMotionEvaluatorTest.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/TMPLibrary/TaskEvaluators/TaskEvaluatorMethodTest.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/TMPLibrary/TMPLibraryTests.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/TestBaseObject.cpp
 
         PARENT_SCOPE
         )
-
-
 

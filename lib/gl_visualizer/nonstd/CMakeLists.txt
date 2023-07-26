@@ -3,6 +3,9 @@ set(CMAKE_CXX_STANDARD 17)
 
 project(nonstd)
 
+include(CMakePackageConfigHelpers)
+include(GNUInstallDirs)
+
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 option(BUILD_NONSTD_TESTS "Build and Run Tests" OFF)
@@ -48,7 +51,17 @@ endif()
 
 file(GLOB_RECURSE SRCS ${PROJECT_SOURCE_DIR}/*.cpp
         ${PROJECT_SOURCE_DIR}/nonstd/*.cpp
-        ${PROJECT_SOURCE_DIR}/*.h
-        ${PROJECT_SOURCE_DIR}/*.h)
+)
 
-add_library(${PROJECT_NAME} ${SRCS})
+add_library(nonstd ${SRCS})
+
+target_include_directories(nonstd 
+        PUBLIC
+        $<INSTALL_INTERFACE:include/nonstd> 
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+)
+
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        DESTINATION include
+        FILES_MATCHING PATTERN "*.h"
+)

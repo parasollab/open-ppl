@@ -7,15 +7,16 @@
 *.slo
 *.lo
 *.o
-*.obj
 
 # generated make/cmake files
+CMakeSettings.json
 build/
 out/
 cmake-*/
 include/**/cmake-*/
 lib/**/cmake-*/
 lib/gl_visualizer/**/cmake-*/
+.vscode
 
 src/Examples/example*
 src/Examples
@@ -23,3 +24,17 @@ tests/Testing/StrategyTests/Scratch*
 src/Doxygen/html
 tests/StrategyTests/Scratch/*.map
 tests/StrategyTests/Scratch/*.path
+
+# conan
+CMakeCache.txt
+CMakeFiles/
+Makefile
+bin/
+cmake_install.cmake
+conan.lock
+conanbuildinfo.cmake
+conanbuildinfo.txt
+conaninfo.txt
+graph_info.json
+.vscode/launch.json
+.vscode/settings.json

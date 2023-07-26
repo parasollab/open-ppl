@@ -39,6 +39,14 @@ class XMLNode {
     /// \p _filename is poorly formed input
     XMLNode(const std::string& _filename, const std::string& _desiredNode);
 
+    /// Construct an XML node object from an XML document.
+    /// @param _filename XML Filename (used for error messages)
+    /// @param _desiredNode Desired XML Node to make root of tree
+    ///
+    /// Will throw ParseException when \p _desiredNode cannot be found or
+    /// \p doc is not valid
+    XMLNode(const std::string& _filename, std::shared_ptr<TiXmlDocument> doc, const std::string& _desiredNode);
+
   private:
 
     /// Private constructor for use within BuildChildVector
@@ -49,6 +57,8 @@ class XMLNode {
         std::shared_ptr<TiXmlDocument> _doc);
 
     ///@}
+
+  void FindNode(const std::string& _desiredNode);
 
   public:
 
