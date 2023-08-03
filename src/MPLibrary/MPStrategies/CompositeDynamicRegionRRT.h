@@ -403,6 +403,9 @@ class CompositeDynamicRegionRRT : virtual public GroupRRTStrategy<MPTraits> {
     /// Shrink region size during sampling to account for penetration distance?
     bool m_deflate{false};
 
+    /// Use skeleton edge clearance during MAPF validity functions?
+    bool m_clearance{false};
+
     ///@}
 };
 
@@ -465,6 +468,8 @@ CompositeDynamicRegionRRT(XMLNode& _node) : GroupRRTStrategy<MPTraits>(_node) {
       "Split the skeleton into equal pieces?");
 
   m_deflate = _node.Read("deflate", false, false, "Deflate region radius during sampling?");
+
+  m_clearance = _node.Read("clearance", false, true, "Use edge clearance in validity?");
 }
 
 /*--------------------------- MPBaseObject Overrides -------------------------*/
@@ -685,7 +690,7 @@ AddNode(GroupCfgType& _newCfg) {
       std::cout << "\tAdding VID " << newVID << "."
                 << std::endl;
 
-    if(m_choseRegion == 0)
+    if(m_choseRegion)
       m_region.IncrementSuccess();
 
     // On each new sample, check if we need to advance our region and generate
@@ -1104,6 +1109,7 @@ ValidationFunction(CBSNodeType& _node) {
           // This edge needs to be added
           auto ds = m_annotationMap.at(robot)->GetEdgeProperty(eid);
           auto d = *std::min_element(ds.begin(), ds.end());
+          std::cout << "edge " << eid.source() << " to " << eid.target() << ": " << d << std::endl;
           d -= robot->GetMultiBody()->GetBoundingSphereRadius();
 
           std::unordered_map<size_t, double> eMap;
@@ -1163,14 +1169,14 @@ ValidationFunction(CBSNodeType& _node) {
       auto edgePair = std::make_pair(sVID, tVID);
 
       // Check the capacity of the source vertex
-      if(vertexCapacity.at(source).at(i) < 0) {
+      if(vertexCapacity.at(source).at(i) < 0 and m_clearance) {
         auto vPair = std::make_pair(source, SIZE_MAX);
         constraints.push_back(std::make_pair(robot, std::make_pair(vPair, i)));
         addedVertexConstraint.insert(robot);
       }
 
       // Check for an edge
-      if(source != target) {
+      if(source != target and m_clearance) {
         // Check the capacity of the vertex
         if(edgeCapacity.at(edgePair).at(i) < 0) {
           constraints.push_back(std::make_pair(robot, std::make_pair(edgePair, i)));
@@ -1342,13 +1348,13 @@ ValidationFunction(PBSNodeType& _node) {
       auto edgePair = std::make_pair(sVID, tVID);
 
       // Check the capacity of the source vertex
-      if(vertexCapacity.at(source).at(i) < 0) {
+      if(vertexCapacity.at(source).at(i) < 0 and m_clearance) {
         conflictSource = source;
         break;
       }
 
       // Check for an edge
-      else if(source != target) {
+      else if(source != target and m_clearance) {
         // Check the capacity of the vertex
         if(edgeCapacity.at(edgePair).at(i) < 0) {
           conflictSource = sVID;
