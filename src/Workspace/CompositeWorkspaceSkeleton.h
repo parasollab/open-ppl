@@ -51,7 +51,8 @@ class CompositeWorkspaceSkeleton : public CompositeGraph<Vertex, Edge> {
 
     CompositeWorkspaceSkeleton();
 
-    CompositeWorkspaceSkeleton(RobotGroup* const _g, WorkspaceSkeletonSet _skeletons);
+    CompositeWorkspaceSkeleton(RobotGroup* const _g, WorkspaceSkeletonSet _skeletons, 
+                                double intermediateFactor = 10.0);
 
     ///@}
     ///@name Locators
@@ -99,7 +100,13 @@ class CompositeWorkspaceSkeleton : public CompositeGraph<Vertex, Edge> {
     /// Overriding to suppress output
     virtual VD AddVertex(const Vertex& _v) noexcept override;
 
-    ///@}
+  ///@}
+
+  private:
+
+    double m_intermediateFactor{10.0};
+
+    
 };
 
 /*------------------------------- Construction -------------------------------*/
@@ -111,8 +118,9 @@ CompositeWorkspaceSkeleton() :
 
 template <typename Vertex, typename Edge>
 CompositeWorkspaceSkeleton<Vertex, Edge>::
-CompositeWorkspaceSkeleton(RobotGroup* const _g, WorkspaceSkeletonSet _skeletons) :
-  CompositeGraph<Vertex, Edge>(_g, _skeletons) {}
+CompositeWorkspaceSkeleton(RobotGroup* const _g, WorkspaceSkeletonSet _skeletons,
+  double intermediateFactor) : CompositeGraph<Vertex, Edge>(_g, _skeletons),
+  m_intermediateFactor(intermediateFactor) {}
 
 /*--------------------------------- Locators ---------------------------------*/
 
@@ -267,11 +275,11 @@ AddEdge(const VD _source, const VD _target, const Edge& _lp) noexcept {
   // Find the length of each individual edge and the maximum length
   const auto robots = this->GetGroup()->GetRobots();
 
-  // Intermediate length is twice the average robot diameter
+  // Intermediate length is multiple of the average robot diameter
   double diam = 0;
   for(auto robot : robots)
     diam += robot->GetMultiBody()->GetBoundingSphereRadius() * 2;
-  double intLength = (diam / robots.size()) * 10;
+  double intLength = (diam / robots.size()) * m_intermediateFactor;
   double tolerance = 1e-5;
 
   // Initialize intermediate and used length trackers

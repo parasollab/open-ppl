@@ -406,6 +406,9 @@ class CompositeDynamicRegionRRT : virtual public GroupRRTStrategy<MPTraits> {
     /// Use skeleton edge clearance during MAPF validity functions?
     bool m_clearance{false};
 
+    /// Multiple of robot bounding sphere radius to use for intermediates
+    double m_intermediateFactor{10.0};
+
     ///@}
 };
 
@@ -470,6 +473,10 @@ CompositeDynamicRegionRRT(XMLNode& _node) : GroupRRTStrategy<MPTraits>(_node) {
   m_deflate = _node.Read("deflate", false, false, "Deflate region radius during sampling?");
 
   m_clearance = _node.Read("clearance", false, true, "Use edge clearance in validity?");
+
+  m_intermediateFactor = _node.Read("intermediateFactor", false, m_intermediateFactor,
+        0.1, std::numeric_limits<double>::max(),
+        "Multiple of robot radius to use for intermediate length");
 }
 
 /*--------------------------- MPBaseObject Overrides -------------------------*/
@@ -945,7 +952,7 @@ BuildSkeleton() {
       std::cout << "Added workspace skeleton for " << robots.at(i)->GetLabel() << "." << endl;
   }
   m_skeleton = std::unique_ptr<CompositeSkeletonType>(
-    new CompositeSkeletonType(this->GetGroupTask()->GetRobotGroup(), ws));
+    new CompositeSkeletonType(this->GetGroupTask()->GetRobotGroup(), ws, m_intermediateFactor));
 
   if(m_skeletonIO == "write")
     m_individualSkeleton.Write(m_skeletonFilename);
@@ -1109,7 +1116,6 @@ ValidationFunction(CBSNodeType& _node) {
           // This edge needs to be added
           auto ds = m_annotationMap.at(robot)->GetEdgeProperty(eid);
           auto d = *std::min_element(ds.begin(), ds.end());
-          std::cout << "edge " << eid.source() << " to " << eid.target() << ": " << d << std::endl;
           d -= robot->GetMultiBody()->GetBoundingSphereRadius();
 
           std::unordered_map<size_t, double> eMap;
