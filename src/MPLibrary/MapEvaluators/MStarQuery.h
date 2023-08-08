@@ -174,6 +174,10 @@ template <typename MPTraits>
 bool
 MStarQuery<MPTraits>::
 operator()() {
+  auto stats = this->GetStatClass();
+  const std::string clockName = this->GetNameAndLabel() + "::Query";
+  MethodTimer mt(stats, clockName);
+
   m_nodeMap.clear();
   m_collisionSets.clear();
 
@@ -289,6 +293,9 @@ template <typename MPTraits>
 void
 MStarQuery<MPTraits>::
 GenerateOptimalPolicies() {
+  MethodTimer mt(this->GetStatClass(),
+      this->GetNameAndLabel() + "::GenerateOptimalPolicies");
+
   m_costToGoMap.clear();
 
   if(this->m_debug)
@@ -375,6 +382,9 @@ template <typename MPTraits>
 std::unordered_set<Robot*>
 MStarQuery<MPTraits>::
 GetCollisions(GroupCfgType& _gcfg) {
+  MethodTimer mt(this->GetStatClass(),
+      this->GetNameAndLabel() + "::GetCollisions");
+
   std::unordered_set<Robot*> collided;
   auto robots = _gcfg.GetRobots();
   auto vc = static_cast<CollisionDetectionValidityMethod<MPTraits>*>(
@@ -407,6 +417,9 @@ template <typename MPTraits>
 std::unordered_set<typename MStarQuery<MPTraits>::Node*>
 MStarQuery<MPTraits>::
 GetLimitedNeighbors(Node* _node, std::set<Node*, NodeComp>& _openSet) {
+  MethodTimer mt(this->GetStatClass(),
+      this->GetNameAndLabel() + "::GetLimitedNeighbors");
+
   std::unordered_map<Robot*, std::unordered_set<VID>> options;
   auto gcfg = this->GetGroupRoadmap()->GetVertex(_node->vid);
 
@@ -507,6 +520,7 @@ void
 MStarQuery<MPTraits>::
 BackpropCollisions(Node* _current, Node* _neighbor, 
             std::set<Node*, NodeComp>& _openSet) {
+
   auto& currentSet = m_collisionSets[_current];
   auto& neighborSet = m_collisionSets[_neighbor];
 
@@ -534,6 +548,9 @@ template <typename MPTraits>
 std::unordered_set<Robot*>
 MStarQuery<MPTraits>::
 ValidateEdge(VID _source, VID _target) {
+  MethodTimer mt(this->GetStatClass(),
+      this->GetNameAndLabel() + "::ValidateEdge");
+
   if(m_failedEdges.count(std::make_pair(_source, _target)))
     return m_failedEdges.at(std::make_pair(_source, _target));
 
