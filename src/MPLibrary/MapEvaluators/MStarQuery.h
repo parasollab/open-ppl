@@ -495,13 +495,15 @@ GetLimitedNeighbors(Node* _node, std::set<Node*, NodeComp>& _openSet) {
     if(!this->GetGroupRoadmap()->IsEdge(_node->vid, newVID)) {
       auto collided = ValidateEdge(_node->vid, newVID);
       if(collided.size() > 0) {
-        // Add the collided robots to the collision set if it's new
+        // Backpropagate collisions
         for(auto robot : collided) {
           if(!m_collisionSets.count(_node) or !m_collisionSets[_node].count(robot)) {
             m_collisionSets[_node].insert(robot);
             _openSet.insert(_node);
           }
         }
+        for(auto back : _node->backSet)
+          BackpropCollisions(back, _node, _openSet);
         continue;
       }
     }
@@ -540,7 +542,7 @@ BackpropCollisions(Node* _current, Node* _neighbor,
   }
 
   for(auto back : _current->backSet) {
-    BackpropCollisions(_current, back, _openSet);
+    BackpropCollisions(back, _current, _openSet);
   }
 }
 

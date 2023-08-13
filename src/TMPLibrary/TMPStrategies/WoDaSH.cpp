@@ -92,6 +92,8 @@ WoDaSH(XMLNode& _node) : TMPStrategyMethod(_node) {
 
   m_motionEvaluator = _node.Read("motionEvaluator",true,"",
               "Evaluator label for motion planning.");
+
+  m_clearance = _node.Read("clearance", false, true, "Use edge clearance in validity?");
 }
 
 WoDaSH::
@@ -477,14 +479,14 @@ ValidationFunction(CBSNodeType& _node) {
       auto edgePair = std::make_pair(sVID, tVID);
 
       // Check the capacity of the source vertex
-      if(vertexCapacity.at(source).at(i) < 0) {
+      if(vertexCapacity.at(source).at(i) < 0 and m_clearance) {
         auto vPair = std::make_pair(source, SIZE_MAX);
         constraints.push_back(std::make_pair(robot, std::make_pair(vPair, i)));
         addedVertexConstraint.insert(robot);
       }
 
       // Check for an edge
-      if(source != target) {
+      if(source != target and m_clearance) {
         // Check the capacity of the edge
         if(edgeCapacity.at(edgePair).at(i) < 0) {
           constraints.push_back(std::make_pair(robot, std::make_pair(edgePair, i)));
@@ -1177,13 +1179,13 @@ ValidationFunction(PBSNodeType& _node) {
       auto edgePair = std::make_pair(sVID, tVID);
 
       // Check the capacity of the source vertex
-      if(vertexCapacity.at(source).at(i) < 0) {
+      if(vertexCapacity.at(source).at(i) < 0 and m_clearance) {
         conflictSource = source;
         break;
       }
 
       // Check for an edge
-      else if(source != target) {
+      else if(source != target and m_clearance) {
         // Check the capacity of the vertex
         if(edgeCapacity.at(edgePair).at(i) < 0) {
           conflictSource = sVID;
@@ -1787,7 +1789,8 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
         for(auto robot : rs) {
           if(t >= _mapfSolution[robot]->size()-1) {
             if(this->m_debug)
-              std::cout << "Found end-of-path waiting into merge at " << t << std::endl;
+              std::cout << "Found end-of-path waiting into merge at " << t 
+                        << " " << vid << std::endl;
 
             if(!m_waitingReps.count(vid)) {
               auto vertex = m_skeleton->GetVertexType(vid);
@@ -1816,6 +1819,32 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
       if(this->m_debug)
         std::cout << "Merged " << hvids.size() << " groups at time" << t << std::endl;
 
+      // Check if there is a start of path wait coming into this merge
+      if(t == 0) {
+        for(auto v : hvids) {
+          auto rs = m_skeleton->GetVertexType(v).GetGroup()->GetRobots();
+          for(auto r : rs) {
+            auto path = *_mapfSolution[r];
+            auto ssvid = path.at(std::min(t, path.size() - 1));
+            auto stvid = path.at(std::min(t+1, path.size() - 1));
+
+            if(ssvid == stvid) {
+              if(this->m_debug)
+                std::cout << "Found " << r->GetLabel() << " waiting at start into merge" << std::endl;
+
+              m_path.predecessors[hid].emplace(r, std::make_pair(false, v));
+              if(!m_waitingReps.count(v)) {
+                auto vertex = m_skeleton->GetVertexType(v);
+                auto subgroup = vertex.GetGroup();
+                auto grm = this->GetMPLibrary()->GetMPSolution()->GetGroupRoadmap(subgroup);
+                auto vid = SpawnVertex(grm, vertex);
+                m_waitingReps.emplace(v, std::make_pair(grm, vid));
+              }
+            }
+          }
+        }
+      }
+
       // Set the predecessor map for each robot
       for(auto v : hvids) {
         bool foundSplit = false;
@@ -1824,7 +1853,7 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
           // currently waiting)
           if(m_path.splitHyperarcs.count(ih)) {
             if(this->m_debug)
-              std::cout << "found split incoming to merge" << std::endl;
+              std::cout << "found split incoming to merge " << tvid << std::endl;
             // We are waiting, check if we have a representative vertex here
             // if not, sample one
             if(!m_waitingReps.count(tvid)) {
@@ -2471,7 +2500,24 @@ ConnectToSkeleton() {
     
     RepresentativeVertex rep;
     if(!hid.first) {
-      rep = m_waitingReps.at(hid.second);
+      auto origGroup = m_skeleton->GetVertexType(hid.second).GetGroup();
+      size_t idx = 1;
+      while(!hid.first and !m_waitingReps.count(hid.second)) {
+        hid = m_hidPaths[idx].at(robot);
+        idx++;
+      }
+      if(!hid.first) {
+        rep = m_waitingReps.at(hid.second);
+        auto newGroup = m_skeleton->GetVertexType(hid.second).GetGroup();
+        if(origGroup != newGroup)
+          throw RunTimeException(WHERE) << "Group mismatch found at start";
+      } else {
+        auto& arc = m_skeleton->GetHyperarcType(hid.second);
+        rep = arc.startRep;
+        auto newGroup = rep.first->GetVertex(rep.second).GetGroup();
+        if(origGroup != newGroup)
+          throw RunTimeException(WHERE) << "Group mismatch found at start";
+      }
     } else {
       auto& arc = m_skeleton->GetHyperarcType(hid.second);
       rep = arc.startRep;
@@ -2554,6 +2600,9 @@ ConnectToSkeleton() {
       if(this->m_debug)
         std::cout << "Failed to connect the start to the skeleton." << std::endl;
       return false;
+    } else {
+      if(this->m_debug)
+        std::cout << "Successfully connected group of size " << group->Size() << std::endl;
     }
 
     ghid = AddTransitionToGroundedHypergraph({startRep}, {skelRep}, path, task);
@@ -2565,11 +2614,12 @@ ConnectToSkeleton() {
   for(auto robot : m_wholeGroup->GetRobots()) {
     
     auto time = m_hidPaths.size() - 1;
-    auto hid = m_hidPaths[time].at(robot);
+    auto hid = m_hidPaths.at(time).at(robot);
     
     RepresentativeVertex rep;
     if(!hid.first) {
-      if(m_waitingReps.count(hid.second))
+      if(m_waitingReps.count(hid.second) and 
+            (m_waitingReps.at(hid.second).first != nullptr))
         rep = m_waitingReps.at(hid.second);
       else {
         // Get the last incoming movement hyperarc
@@ -2579,6 +2629,20 @@ ConnectToSkeleton() {
                           m_path.movementHyperarcs.count(ihs)) {
             rep = arc.endRep;
             break;
+          } else if(arc.type == HyperskeletonArcType::Decouple and 
+                          m_path.decoupleHyperarcs.count(ihs)) {
+            // Get the movement incoming to this decouple
+            auto tailVertex = *m_skeleton->GetHyperarc(ihs).tail.begin();
+            for(auto iihs : m_skeleton->GetIncomingHyperarcs(tailVertex)) {
+              auto inArc = m_skeleton->GetHyperarcType(iihs);
+              if(inArc.type == HyperskeletonArcType::Movement and 
+                          m_path.movementHyperarcs.count(iihs)) {
+                rep = inArc.endRep;
+                break;
+              }
+            }
+            if(rep.first)
+              break;
           }
         }
       }
@@ -2994,12 +3058,22 @@ SampleTrajectories() {
       auto outHID = m_path.successors.at(hid).at(robot);
       if(!outHID.first) {
         // Going back into a waiting vertex
+        if(!m_waitingReps.count(outHID.second)) {
+          if(this->m_debug)
+            std::cout << "Missing waiting rep at split, sampling " << outHID.second << std::endl;
+
+          auto vertex = m_skeleton->GetVertexType(outHID.second);
+          auto subgroup = vertex.GetGroup();
+          auto grm = this->GetMPLibrary()->GetMPSolution()->GetGroupRoadmap(subgroup);
+          auto wvid = SpawnVertex(grm, vertex);
+          m_waitingReps.emplace(outHID.second, std::make_pair(grm, wvid));
+        }
+
         auto rep = m_waitingReps.at(outHID.second);
         auto vertex = rep.first->GetVertex(rep.second);
         Cfg cfg = vertex.GetRobotCfg(robot);
         target.SetRobotCfg(robot, std::move(cfg));
 
-        // How to get the skeleton edge here TODO
         auto skelVertex = m_skeleton->GetVertexType(outHID.second);
         auto svid = skelVertex.GetVID(robot);
         outEdges[robot] = std::make_pair(svid, svid);
@@ -3128,8 +3202,26 @@ SampleTrajectories() {
         }
       }
 
-      if(!found)
+      if(!found) {
         start = target.GetRobotCfg(r);
+        // Set a waiting representative just in case it's needed in the future
+        for(auto t : hyp.tail) {
+          auto compVert = m_skeleton->GetVertexType(t);
+
+          if(compVert.GetGroup()->VerifyRobotInGroup(r)) {
+            auto subgrm = this->GetMPLibrary()->GetMPSolution()->GetGroupRoadmap(compVert.GetGroup());
+            auto waitCfg = GroupCfgType(subgrm);
+            for(auto other : compVert.GetGroup()->GetRobots()) {
+              waitCfg.SetRobotCfg(other, target.GetVID(other));
+            }
+            
+            auto waitVID = subgrm->AddVertex(waitCfg);
+            if(!m_waitingReps.count(t))
+              m_waitingReps.emplace(t, std::make_pair(subgrm, waitVID));
+            break;
+          }
+        }
+      }
 
       // Add start constraints
       auto startConstraint = std::unique_ptr<CSpaceConstraint>(new CSpaceConstraint(r,start));

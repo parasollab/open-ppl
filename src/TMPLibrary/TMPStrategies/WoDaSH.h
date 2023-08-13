@@ -350,6 +350,9 @@ class WoDaSH : public TMPStrategyMethod {
     // Map from workspace hyper-skeleton VID to all grounded instances of itself
     std::unordered_map<VID,std::unordered_set<VID>> m_vertexGroundingMap;
 
+    /// Use skeleton edge clearance during MAPF validity functions?
+    bool m_clearance{true};
+
     ///@}
 };
 
