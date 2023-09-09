@@ -2305,6 +2305,7 @@ ComputeIntermediates(std::unordered_map<Robot*, CBSSolution*> _mapfSolution,
     auto inter = inters.at(r);
     auto edge = edges.at(r);
     auto disp = edge.at(inter+1) - edge.at(inter);
+    disp = disp / disp.norm();
     auto point = edge.at(inter) + (disp * useds.at(r));
     v.SetRobotCfg(r, std::move(point));
   }
@@ -2335,6 +2336,7 @@ ComputeIntermediates(std::unordered_map<Robot*, CBSSolution*> _mapfSolution,
       inters[r] = inter;
 
       auto disp = edge.at(inter+1) - edge.at(inter);
+      disp = disp / disp.norm();
       auto point = edge.at(inter) + (disp * used);
       u.SetRobotCfg(r, std::move(point));
     }
