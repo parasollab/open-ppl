@@ -20,7 +20,7 @@ MPTask(Robot* const _robot) : m_robot(_robot) {
 
 
 MPTask::
-MPTask(MPProblem* const _problem, XMLNode& _node) {
+MPTask(MPProblem* const _problem, XMLNode& _node, Environment* _env) {
   // Parse task and robot labels.
   m_label = _node.Read("label", true, "", "Unique label for this task");
 
@@ -49,15 +49,15 @@ MPTask(MPProblem* const _problem, XMLNode& _node) {
   for(auto& child : _node) {
     if(child.Name() == "StartConstraints") {
       for(auto& grandChild : child)
-        m_startConstraint = Constraint::Factory(m_robot, grandChild);
+        m_startConstraint = Constraint::Factory(m_robot, grandChild, _env);
     }
     else if(child.Name() == "PathConstraints") {
       for(auto& grandChild : child)
-        m_pathConstraints.push_back(Constraint::Factory(m_robot, grandChild));
+        m_pathConstraints.push_back(Constraint::Factory(m_robot, grandChild, _env));
     }
     else if(child.Name() == "GoalConstraints") {
       for(auto& grandChild : child)
-        m_goalConstraints.push_back(Constraint::Factory(m_robot, grandChild));
+        m_goalConstraints.push_back(Constraint::Factory(m_robot, grandChild, _env));
     }
   }
 }

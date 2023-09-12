@@ -18,7 +18,7 @@ Constraint::
 
 std::unique_ptr<Constraint>
 Constraint::
-Factory(Robot* const _r, XMLNode& _node) {
+Factory(Robot* const _r, XMLNode& _node, Environment* _env) {
   std::unique_ptr<Constraint> output;
 
   if(_node.Name() == "CSpaceConstraint")
@@ -26,6 +26,8 @@ Factory(Robot* const _r, XMLNode& _node) {
   else if(_node.Name() == "BoundaryConstraint")
     output = std::unique_ptr<BoundaryConstraint>(
         new BoundaryConstraint(_r, _node));
+  else if(_node.Name() == "Random")
+    output = std::unique_ptr<CSpaceConstraint>(new CSpaceConstraint(_r, _node, _env));
   else
     throw RunTimeException(_node.Where()) << "Unrecognized constraint type '"
                                           << _node.Name() << "'.";
