@@ -444,7 +444,7 @@ class Cfg {
     std::string PrettyPrint(const size_t _precision = 4) const;
 
     std::string ToString() const;
-
+    
     ///@}
     ///@name Internal State with poor encapsulation
     ///@{

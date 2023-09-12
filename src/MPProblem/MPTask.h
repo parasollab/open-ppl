@@ -12,7 +12,6 @@
 class Boundary;
 class Cfg;
 class Constraint;
-class Environment;
 class MPProblem;
 class Robot;
 class XMLNode;

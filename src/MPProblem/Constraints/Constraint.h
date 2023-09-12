@@ -6,7 +6,6 @@
 
 class Boundary;
 class Cfg;
-class Environment;
 class Robot;
 class XMLNode;
 

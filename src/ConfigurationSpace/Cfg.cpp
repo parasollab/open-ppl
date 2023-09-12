@@ -1257,6 +1257,7 @@ PrettyPrint(const size_t _precision) const {
   return oss.str();
 }
 
+
 std::string
 Cfg::
 ToString() const{

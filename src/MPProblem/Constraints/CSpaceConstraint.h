@@ -7,7 +7,6 @@
 
 #include "BoundaryConstraint.h"
 
-class Environment;
 class XMLNode;
 
 

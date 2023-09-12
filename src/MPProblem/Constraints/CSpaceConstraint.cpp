@@ -40,16 +40,17 @@ CSpaceConstraint(Robot* const _r, XMLNode& _node, Environment* _env)
   /// @todo Verify that this works with constraints of lower dimension than the
   ///       robot's cspace (for partial constraint), or decide that we will not
   ///       support this and throw an error if requested.
+
   if(_env == nullptr){
     // The XML node will either describe a point or a bounding box.
     const std::string pointString = _node.Read("point", false, "", "The Cfg point"),
-                    bbxString = _node.Read("bbx", false, "", "The Cfg box");
+                      bbxString = _node.Read("bbx", false, "", "The Cfg box");
 
     if(pointString.empty() == bbxString.empty())
       throw ParseException(_node.Where()) << "A CSpaceConstraint should specify a "
                                           << "single configuration (point) or "
                                           << "bounding box (bbx), but not both.";
-    
+
     ParseBoundaryString(_r,pointString,bbxString);
   }
   else{
