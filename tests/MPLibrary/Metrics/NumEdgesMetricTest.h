@@ -2,7 +2,7 @@
 #define PPL_NUM_EDGES_METRIC_TEST_H_
 
 #include "MetricMethodTest.h"
-#include "MPLibrary/Metrics/NumEdgesMetric.h"
+#include "MPLibrary/Metrics/NumEdgesMetric.h"   //src
 
 template <typename MPTraits>
 class NumEdgesMetricTest :  virtual public NumEdgesMetric<MPTraits>,
@@ -60,15 +60,21 @@ typename NumEdgesMetricTest<MPTraits>::TestResult
 NumEdgesMetricTest<MPTraits>::
 TestMetric() {
 
+  bool passed = true;
+  std::string message = "";
+
   // Set up environment from parent
   double metric = (*this)();
   double expected = this->GetGroupTask() ? (this->GetGroupRoadmap()->get_num_edges()) : (this->GetRoadmap()->get_num_edges());
 
   // Correct value?
-  if(metric == expected){
-    return std::make_pair(true,"NumEdgesMetric::PASSED");
+    if (metric != expected) {
+    passed = false;
+    std::cout << "\n\tWrong number of edges recieved." << std::endl;
   }
-  return std::make_pair(false,"NumEdgesMetric::FAILED, Wrong number of edges recieved.");
+
+  message = "\tFINISHED TestMetric";
+  return std::make_pair(passed, message);
 }
 
 #endif

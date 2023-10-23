@@ -1,8 +1,7 @@
 #ifndef PPL_NSphere_TEST_H
 #define PPL_NSphere_TEST_H
 
-#include "Geometry/Shapes/NSphere.h"
-#include "Testing/TestBaseObject.h"
+#include "Geometry/Shapes/NSphere.h"    //src
 
 #include <cmath>
 #include <string>
@@ -12,8 +11,7 @@
 #include <vector>
 #include <functional>
 
-class NSphereTest : public NSphere,
-				public TestBaseObject {
+class NSphereTest : public NSphere {
   public: 
     ///@name LocalTypes
     ///@{
@@ -29,15 +27,9 @@ class NSphereTest : public NSphere,
     virtual ~NSphereTest();
 
     ///@}
-    ///@name Interface
-    ///@{
-
-    virtual TestResult RunTest();
-
-    ///@}
 
 
-  private:
+  public:
 
     ///@name Internal State
     ///@{
@@ -72,45 +64,14 @@ class NSphereTest : public NSphere,
 /*--------------------------- Construction ---------------------------*/
 
 
-NSphereTest::
-NSphereTest() : NSphere(1) {
+NSphereTest::NSphereTest() : NSphere(1) {
 }
-
-
-NSphereTest::
-~NSphereTest() noexcept = default;
+NSphereTest::~NSphereTest() noexcept = default;
 
 
 /*--------------------------- Tests ---------------------------*/
 
-typename NSphereTest::
-TestResult
-NSphereTest::RunTest() {
-  std::cout << "TESTS FOR NSphere" << std::endl;
-
-  // RunTestMessage(&NSphereTest::TestContains);
-  // RunTestMessage(&NSphereTest::testClerance);
-  // RunTestMessage(&NSphereTest::testClerancePoint);
-  // RunTestMessage(&NSphereTest::testSample);
-  TestResult containsTestResult = TestContains();
-  std::cout << "PASSED: "<< containsTestResult.first << std::endl << containsTestResult.second;
-
-  TestResult clearanceTestResult = TestClearance();
-  std::cout << "PASSED: "<< clearanceTestResult.first << std::endl << clearanceTestResult.second;
-
-  TestResult clearancePointTestResult = TestClearancePoint();
-  std::cout << "PASSED: "<< clearancePointTestResult.first << std::endl << clearancePointTestResult.second;
-
-  TestResult sampleTestResult = TestSample();
-  std::cout << "PASSED: "<< sampleTestResult.first << std::endl << sampleTestResult.second;
-
-  return TestResult(true, "this is for testing infrastructure");
-}
-
-
-typename NSphereTest::
-TestResult
-NSphereTest::TestContains() {
+typename NSphereTest::TestResult NSphereTest::TestContains() {
 
   int dimension = 3;
   int radius = 1;
@@ -133,28 +94,21 @@ NSphereTest::TestContains() {
 
   if (!testSphere->Contains(validP)) {
     passed = false;
-    message = message + "\n\tNSphere does not contain valid point.\n";
+    std::cout << "\n\tNSphere does not contain valid point." << std::endl;
   } 
 
   if (testSphere->Contains(invalidP)) {
     passed = false;
-    message = message + "\n\tNSphere contains invalid point.\n";
+    std::cout << "\n\tNSphere contains invalid point." << std::endl;
   }
 
-  if (passed) {
-    message = "NSphere Contains: PASSED!\n";
-  } else {
-    message = "NSphere Contains: Failed :(\n" + message;
-  }
-
+  message = "\tFINISHED TestContains";
   return std::make_pair(passed, message);
 
 } 
 
 
-typename NSphereTest::
-TestResult
-NSphereTest::TestClearance() {
+typename NSphereTest::TestResult NSphereTest::TestClearance() {
 
   int dimension = 3;
   int radius = 1;
@@ -175,22 +129,15 @@ NSphereTest::TestClearance() {
 
   if (expectedClearance != actualClearance) {
     passed = false;
-    message = message + "\n\tReturned incorrect clearance.\n";
+    std::cout << "\n\tReturned incorrect clearance." << std::endl;
   }
 
-  if (passed) {
-    message = "NSphere Clearance: PASSED!\n";
-  } else {
-    message = "NSphere Clearance: Failed :(\n" + message;
-  }
-
+  message = "\tFINISHED TestClearance";
   return std::make_pair(passed, message);
 
 } 
 
-typename NSphereTest::
-TestResult
-NSphereTest::TestClearancePoint() {
+typename NSphereTest::TestResult NSphereTest::TestClearancePoint() {
 
   int dimension = 3;
   int radius = 1;
@@ -216,27 +163,20 @@ NSphereTest::TestClearancePoint() {
     expectedClearancePoint.push_back(0);
   }
 
-  vector<double> actualClearancePoint = testsphere -> ClearancePoint(testP);
+    std::vector<double> actualClearancePoint = testsphere -> ClearancePoint(testP);
 
   if (expectedClearancePoint != actualClearancePoint) {
     passed = false;
-    message = "\n\tReturned clearance point is incorrect.\n";
+    std::cout << "\n\tReturned clearance point is incorrect." << std::endl;
   }
 
-  if (passed) {
-    message = "NSphere Clearance point: PASSED!\n";
-  } else {
-    message = "NSphere Clearance point: Failed :(\n" + message;
-  }
-
+  message = "\tFINISHED TestClearancePoint";
   return std::make_pair(passed, message);
 
 } 
 
 
-typename NSphereTest::
-TestResult
-NSphereTest::TestSample() {
+typename NSphereTest::TestResult NSphereTest::TestSample() {
 
   int dimension = 3;
   int radius = 1;
@@ -247,19 +187,14 @@ NSphereTest::TestSample() {
 
   // sample 100 random points and test if they lie within the sphere
   for (int i = 0; i < 100; i++) {
-    vector<double> randomSamplePoint = testsphere -> Sample();
+    std::vector<double> randomSamplePoint = testsphere -> Sample();
     if (!testsphere -> Contains(randomSamplePoint)) {
       passed = false;
-      message = message + "\n\tSampled point not in the sphere\n";
+      std::cout << "\n\tSampled point not in the sphere." << std::endl;
     }
   }
 
-  if (passed) {
-    message = "NSphere Sample: PASSED!\n";
-  } else {
-    message = "NSphere Sample: Failed :(\n" + message;
-  }
-
+  message = "\tFINISHED TestSample";
   return std::make_pair(passed, message);
 
 } 
@@ -267,8 +202,7 @@ NSphereTest::TestSample() {
 
 /*---------------------------- Helpers --------------------------*/
 
-NSphere* 
-NSphereTest::Construct(int dimension, int radius) {
+NSphere* NSphereTest::Construct(int dimension, int radius) {
 
   // define a valid n dimensional sphere centered at origin with a given radius
   NSphere* testSphere = new NSphere(dimension, radius);
@@ -277,12 +211,9 @@ NSphereTest::Construct(int dimension, int radius) {
 
 }
 
-void 
-NSphereTest::RunTestMessage(TestResult (*inputTestFunction)()) {
+void NSphereTest::RunTestMessage(TestResult (*inputTestFunction)()) {
   TestResult testResult = inputTestFunction();
   std::cout << "PASSED: "<< testResult.first << std::endl << testResult.second;
 }
-
-
 
 #endif

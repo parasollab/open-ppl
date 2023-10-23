@@ -1,5 +1,7 @@
 .vs/
 
+.idea/
+
 *.swp
 *.swo
 
@@ -38,3 +40,4 @@ conaninfo.txt
 graph_info.json
 .vscode/launch.json
 .vscode/settings.json
+/.vscode/

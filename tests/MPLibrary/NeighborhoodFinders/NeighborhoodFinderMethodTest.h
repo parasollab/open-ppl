@@ -1,8 +1,8 @@
 #ifndef PPL_NEIGHBORHOOD_FINDER_METHOD_TEST_H_
 #define PPL_NEIGHBORHOOD_FINDER_METHOD_TEST_H_
 
-#include "MPLibrary/NeighborhoodFinders/NeighborhoodFinderMethod.h"
-#include "Testing/TestBaseObject.h"
+#include "MPLibrary/NeighborhoodFinders/NeighborhoodFinderMethod.h" //src
+#include "../../TestBaseObject.h"
 
 template <typename MPTraits>
 class NeighborhoodFinderMethodTest : virtual public NeighborhoodFinderMethod<MPTraits>,

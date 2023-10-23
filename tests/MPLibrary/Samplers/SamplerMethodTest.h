@@ -1,8 +1,8 @@
 #ifndef PPL_SAMPLER_METHOD_TEST_H_
 #define PPL_SAMPLER_METHOD_TEST_H_
 
-#include "MPLibrary/Samplers/SamplerMethod.h"
-#include "Testing/TestBaseObject.h"
+#include "MPLibrary/Samplers/SamplerMethod.h"   //src
+#include "../../TestBaseObject.h"
 
 template <typename MPTraits>
 class SamplerMethodTest : virtual public SamplerMethod<MPTraits>, 

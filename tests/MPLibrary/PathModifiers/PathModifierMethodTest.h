@@ -1,8 +1,8 @@
 #ifndef PPL_PATH_MODIFIER_METHOD_TEST_H_
 #define PPL_PATH_MODIFIER_METHOD_TEST_H_
 
-#include "MPLibrary/PathModifiers/PathModifierMethod.h"
-#include "Testing/TestBaseObject.h"
+#include "MPLibrary/PathModifiers/PathModifierMethod.h" //src
+#include "../../TestBaseObject.h"
 
 template <typename MPTraits>
 class PathModifierMethodTest : virtual public PathModifierMethod<MPTraits>,

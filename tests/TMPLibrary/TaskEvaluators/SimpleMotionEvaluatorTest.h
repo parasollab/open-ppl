@@ -1,8 +1,8 @@
 #ifndef PPL_SIMPLE_MOTION_EVALUATOR_TEST_H_
 #define PPL_SIMPLE_MOTION_EVALUATOR_TEST_H_
 
-#include "Testing/TMPLibrary/TaskEvaluators/TaskEvaluatorMethodTest.h"
-#include "TMPLibrary/TaskEvaluators/SimpleMotionEvaluator.h"
+#include "TaskEvaluatorMethodTest.h"
+#include "TMPLibrary/TaskEvaluators/SimpleMotionEvaluator.h"    //src
 
 class SimpleMotionEvaluatorTest : virtual public SimpleMotionEvaluator, 
                                   public TaskEvaluatorMethodTest {

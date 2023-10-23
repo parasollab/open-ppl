@@ -1,8 +1,8 @@
 #ifndef PPL_LOCAL_PALLNER_METHOD_TEST_H_
 #define PPL_LOCAL_PALLNER_METHOD_TEST_H_
 
-#include "Testing/TestBaseObject.h"
-#include "MPLibrary/LocalPlanners/LocalPlannerMethod.h"
+#include "../../TestBaseObject.h"
+#include "MPLibrary/LocalPlanners/LocalPlannerMethod.h"     //src
 
 template <typename MPTraits>
 class LocalPlannerMethodTest : virtual public LocalPlannerMethod<MPTraits>,

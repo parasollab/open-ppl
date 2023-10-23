@@ -1,8 +1,8 @@
 #ifndef PPL_STRAIGHT_LINE_TEST_H_
 #define PPL_STRAIGHT_LINE_TEST_H_
 
-#include "Testing/MPLibrary/LocalPlanners/LocalPlannerMethodTest.h"
-#include "MPLibrary/LocalPlanners/StraightLine.h"
+#include "LocalPlannerMethodTest.h"
+#include "MPLibrary/LocalPlanners/StraightLine.h"           //src
 
 template <typename MPTraits>
 class StraightLineTest : virtual public StraightLine<MPTraits>,
@@ -86,8 +86,7 @@ IndividualRobotIsConnectedTest() {
 
   if (!result) {
     passed = false;
-    message = message + "\n\tLocal planner was not able to find a path between "
-              "two connectable configurations\n";
+    std::cout << "\n\tLocal planner was not able to find a path between two connectable configurations." << std::endl;
   }
 
   // Test two configurations that are not connectable because one is out of 
@@ -100,16 +99,10 @@ IndividualRobotIsConnectedTest() {
 
   if (result) {
     passed = false;
-    message = message + "\n\tLocal planner incorrectly found a path between "
-              "two unconnectable configurations\n";
+    std::cout << "\n\tLocal planner incorrectly found a path between two unconnectable configurations." << std::endl;
   }
 
-  if (passed) {
-    message = "IndividualRobotIsConnected::PASSED!\n";
-  } else {
-    message = "IndividualRobotIsConnected::FAILED :(\n" + message;
-  }
-
+  message = "\tFINISHED IndividualRobotIsConnectedTest";
   return std::make_pair(passed, message);
 }
 
@@ -165,15 +158,10 @@ IndividualRobotBlindPathTest() {
   }
 
   if (!passed) {
-    message = message + "\n\tLocal planner failed to find the correct blind path.\n";
+    std::cout << "\n\tLocal planner failed to find the correct blind path." << std::endl;
   }
 
-  if (passed) {
-    message = "IndividualRobotBlindPath::PASSED!\n";
-  } else {
-    message = "IndividualRobotBlindPath::FAILED :(\n" + message;
-  }
-
+  message = "\tFINISHED IndividualRobotBlindPathTest";
   return std::make_pair(passed, message);
 }
 
@@ -186,12 +174,7 @@ RobotGroupIsConnectedTest() {
 
   // TODO Need support for GroupCfgs
 
-  if (passed) {
-    message = "RobotGroupIsConnected::PASSED!\n";
-  } else {
-    message = "RobotGroupIsConnected::FAILED :(\n" + message;
-  }
-
+  message = "\tFINISHED RobotGroupIsConnectedTest";
   return std::make_pair(passed, message);
 }
 
@@ -204,12 +187,7 @@ RobotGroupBlindPathTest() {
 
   // TODO Need support for GroupCfgs
 
-  if (passed) {
-    message = "RobotGroupIsConnected::PASSED!\n";
-  } else {
-    message = "RobotGroupIsConnected::FAILED :(\n" + message;
-  }
-
+  message = "\tFINISHED RobotGroupBlindPathTest";
   return std::make_pair(passed, message);
 }
 

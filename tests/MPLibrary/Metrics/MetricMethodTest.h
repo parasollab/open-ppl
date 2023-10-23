@@ -1,8 +1,8 @@
 #ifndef PPL_METRIC_METHOD_TEST_H_
 #define PPL_METRIC_METHOD_TEST_H_
 
-#include "MPLibrary/Metrics/MetricMethod.h"
-#include "Testing/TestBaseObject.h"
+#include "MPLibrary/Metrics/MetricMethod.h" //src
+#include "../../TestBaseObject.h"
 
 template <typename MPTraits>
 class MetricMethodTest : virtual public MetricMethod<MPTraits>,
