@@ -1,8 +1,8 @@
 #ifndef PPL_DYNAMIC_REGION_RRT_TEST_H_
 #define PPL_DYNAMIC_REGION_RRT_TEST_H_
 
-#include "MPLibrary/MPStrategies/DynamicRegionRRT.h"
-#include "Testing/MPLibrary/MPStrategies/MPStrategyMethodTest.h"
+#include "MPLibrary/MPStrategies/DynamicRegionRRT.h"    //src
+#include "MPStrategyMethodTest.h"
 
 template <class MPTraits>
 class DynamicRegionRRTTest : virtual public DynamicRegionRRT<MPTraits>, 
@@ -107,31 +107,26 @@ TestComputeProbabilities() {
   // Check that the size of the probability distribution is correct
   if (probs.size() != 4) {
     passed = false;
-    message = message + "\n\tThe size of the probability distribution is incorrect.\n";
+    std::cout << "\n\tThe size of the probability distribution is incorrect." << std::endl;
   } else if (probs[3] != this->m_explore / probs.size()) {
     passed = false;
-    message = message + "\n\tThe probability of selecting the entire environment is incorrect.\n";
+    std::cout << "\n\tThe probability of selecting the entire environment is incorrect." << std::endl;
   }
 
   // Check that regions with a higher success rate have a higher probability
   if ((probs[1] <= probs[0]) or (probs[2] >= probs[0])) {
     passed = false;
-    message = message + "\n\tThe region selection probabilities are incorrect.\n";
+    std::cout << "\n\tThe region selection probabilities are incorrect." << std::endl;
   }
 
   // Check that the probabilities form a valid probability distribution
   if (totalProb != 1.0) {
     passed = false;
-    message = message + "\n\tThe probability distribution does not sum to 1.0.\n";
+    std::cout << "\n\tThe probability distribution does not sum to 1.0." << std::endl;
   }
 
-  if(passed) {
-    message = "ComputeProbabilities::PASSED!\n";
-  }
-  else {
-    message = "ComputeProbabilities::FAILED :(\n" + message;
-  }
-  return std::make_pair(passed,message);
+  message = "\tFINISHED TestComputeProbabilities";
+  return std::make_pair(passed, message);
 }
 
 /*--------------------------------------------------------------------*/

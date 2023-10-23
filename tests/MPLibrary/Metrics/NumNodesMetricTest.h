@@ -2,7 +2,7 @@
 #define PPL_NUM_NODES_METRIC_TEST_H_
 
 #include "MetricMethodTest.h"
-#include "MPLibrary/Metrics/NumNodesMetric.h"
+#include "MPLibrary/Metrics/NumNodesMetric.h"   //src
 
 template <typename MPTraits>
 class NumNodesMetricTest :  virtual public NumNodesMetric<MPTraits>,
@@ -59,16 +59,22 @@ template <typename MPTraits>
 typename NumNodesMetricTest<MPTraits>::TestResult
 NumNodesMetricTest<MPTraits>::
 TestMetric() {
+  bool passed = true;
+  std::string message = "";
 
   // Set up environment from parent
   double metric = (*this)();
   double expected = this->GetGroupRoadmap() ? (this->GetGroupRoadmap()->Size()) : (this->GetRoadmap()->Size());
 
   // Correct value?
-  if(metric == expected){
-    return std::make_pair(true,"NumNodesMetric::PASSED");
+    if (metric != expected) {
+    passed = false;
+    std::cout << "\n\tWrong number of nodes recieved." << std::endl;
   }
-  return std::make_pair(false,"NumNodesMetric::FAILED, Wrong number of nodes recieved.");
+
+  message = "\tFINISHED TestMetric";
+  return std::make_pair(passed, message);
+
 }
 
 #endif

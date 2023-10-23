@@ -1,8 +1,8 @@
 #ifndef PPL_TASK_ALLOCATOR_METHOD_TEST_H_
 #define PPL_TASK_ALLOCATOR_METHOD_TEST_H_
 
-#include "TMPLibrary/TaskAllocators/TaskAllocatorMethod.h"
-#include "Testing/TestBaseObject.h"
+#include "TMPLibrary/TaskAllocators/TaskAllocatorMethod.h"  //src
+#include "../../TestBaseObject.h"
 
 class TaskAllocatorMethodTest : virtual public TaskAllocatorMethod,
                                  public TestBaseObject {

@@ -1,21 +1,20 @@
 #ifndef PPL_TMP_LIBRARY_TESTS_H_
 #define PPL_TMP_LIBRARY_TESTS_H_
 
-#include "Testing/TestBaseObject.h"
-#include "TMPLibrary/TMPLibrary.h"
+#include "TMPLibrary/TMPLibrary.h"  //src
 
-#include "Testing/TMPLibrary/TaskAllocators/TaskAllocatorMethodTest.h"
-#include "Testing/TMPLibrary/TaskDecomposers/TaskDecomposerMethodTest.h"
-#include "Testing/TMPLibrary/TaskEvaluators/TaskEvaluatorMethodTest.h"
+#include "TaskAllocators/TaskAllocatorMethodTest.h"
+#include "TaskDecomposers/TaskDecomposerMethodTest.h"
+#include "TaskEvaluators/TaskEvaluatorMethodTest.h"
 
-class TMPLibraryTests : public TMPLibrary, public TestBaseObject {
+class TMPLibraryTests : public TMPLibrary {
 
   public:
 
     ///@name LocalTypes
     ///@{
 
-    typedef TestBaseObject::TestResult TestResult;
+    typedef std::pair<bool,std::string> TestResult;
 
     ///@}
     ///@name Method Set Types
@@ -39,24 +38,15 @@ class TMPLibraryTests : public TMPLibrary, public TestBaseObject {
     virtual ~TMPLibraryTests();
 
     ///@}
-    ///@name Interface
-    ///@{
 
-    virtual TestResult RunTest() override;
-
-    ///@}
-
-  private:
+  public:
 
     ///@name Helper Functions
     ///@{
 
     void InitializeMethodSets();
 
-    template <typename MethodTypeList>
-    void RunMethodSetTests(const MethodTypeList& _mtl,size_t& _passed, 
-                           size_t& failed, size_t& _total);
-
+    ///@}
     ///@name XML Helpers
     ///@{
 
@@ -85,35 +75,5 @@ class TMPLibraryTests : public TMPLibrary, public TestBaseObject {
 
     ///@}
 };
-
-template <typename MethodTypeList>
-void
-TMPLibraryTests::
-RunMethodSetTests(const MethodTypeList& _mtl, size_t& _passed, 
-                  size_t& _failed, size_t& _total) {
-
-  for(auto iter = _mtl.begin(); iter != _mtl.end(); iter++) {
-
-    std::cout << "Running test for " << iter->first << "..." << std::endl;
-
-    auto test = dynamic_cast<TestBaseObject*>(iter->second.get());
-    auto result = test->RunTest();
-
-    _total++;
-
-    if(result.first) {
-      std::cout << "PASSED!" << std::endl;
-      _passed++;
-    }
-    else {
-      std::cout << "FAILED :(" << std::endl;
-      _failed++;
-    }
-
-    if(verbose) {
-      std::cout << result.second << std::endl;
-    }    
-  }
-}
 
 #endif

@@ -1,15 +1,15 @@
 #ifndef PPL_COLLISION_DETECTION_METHOD_TEST_H_
 #define PPL_COLLISION_DETECTION_METHOD_TEST_H_
 
-#include "Geometry/Bodies/Body.h"
-#include "Geometry/Bodies/MultiBody.h"
-#include "MPProblem/Environment/Environment.h"
-#include "MPLibrary/ValidityCheckers/CollisionDetection/CDInfo.h"
-#include "ConfigurationSpace/Cfg.h"
-#include "MPProblem/MPProblem.h"
+#include "Geometry/Bodies/Body.h"               //src
+#include "Geometry/Bodies/MultiBody.h"          //src
+#include "MPProblem/Environment/Environment.h"  //src
+#include "MPLibrary/ValidityCheckers/CollisionDetection/CDInfo.h"   //src
+#include "ConfigurationSpace/Cfg.h"             //src
+#include "MPProblem/MPProblem.h"             //src
 
-#include "MPLibrary/ValidityCheckers/CollisionDetection/CollisionDetectionMethod.h"
-#include "Testing/TestBaseObject.h"
+#include "MPLibrary/ValidityCheckers/CollisionDetection/CollisionDetectionMethod.h" //src
+#include "../../../TestBaseObject.h"
 
 class CollisionDetectionMethodTest : virtual public CollisionDetectionMethod,
                                   public TestBaseObject {

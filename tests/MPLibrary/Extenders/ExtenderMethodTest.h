@@ -1,10 +1,10 @@
 #ifndef PPL_EXTENDER_METHOD_TEST_H_
 #define PPL_EXTENDER_METHOD_TEST_H_
 
-#include "MPLibrary/Extenders/ExtenderMethod.h"
-#include "MPLibrary/LocalPlanners/LPOutput.h"
-#include "MPLibrary/LocalPlanners/GroupLPOutput.h"
-#include "Testing/TestBaseObject.h"
+#include "MPLibrary/Extenders/ExtenderMethod.h"     //src
+#include "MPLibrary/LocalPlanners/LPOutput.h"       //src
+#include "MPLibrary/LocalPlanners/GroupLPOutput.h"  //src
+#include "../../TestBaseObject.h"
 
 template <typename MPTraits>
 class ExtenderMethodTest : virtual public ExtenderMethod<MPTraits>,

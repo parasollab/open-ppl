@@ -8,7 +8,7 @@
 #ifndef PPL_TEST_TRAITS_H_
   #include "Traits/CfgTraits.h"
 #else
-  #include "Traits/TestTraits.h"
+  #include "../../tests/Traits/TestTraits.h"
 #endif
 
 typedef MPTraits<Cfg> PMPLTraits;

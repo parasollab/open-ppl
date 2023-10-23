@@ -1,8 +1,8 @@
 #ifndef PPL_CONNECTOR_METHOD_TEST_H_
 #define PPL_CONNECTOR_METHOD_TEST_H_
 
-#include "MPLibrary/Connectors/RewireConnector.h"
-#include "Testing/MPLibrary/Connectors/ConnectorMethodTest.h"
+#include "MPLibrary/Connectors/RewireConnector.h"   //src
+#include "ConnectorMethodTest.h"
 
 
 template <class MPTraits>
@@ -107,7 +107,7 @@ IndividualRobotConnectTest() {
   typename MPTraits::CfgType testCfg = this->GetIndividualCfg();
   if (testCfg.PosDOF() < 2) {
     passed = false;
-    message = "\tGiven robot does not have enough PosDOFs to run the test.\n";
+    std::cout << "Given robot does not have enough PosDOFs to run the test.\n" << std::endl;
   }
 
 
@@ -156,7 +156,7 @@ IndividualRobotConnectTest() {
   if (! IndividualRobotConnectRunTest(verts, startEdges, endEdges, debug)) {
     // Test failed!
     passed = false;
-    message += "\tFailed Test1: '" + testName + "'.\n";
+    std::cout << "\n\tFailed Test1: '" <<  testName << ".'" << std::endl;
   }
 
 
@@ -228,7 +228,7 @@ IndividualRobotConnectTest() {
   if (! IndividualRobotConnectRunTest(verts, startEdges, endEdges, debug)) {
     // Test failed!
     passed = false;
-    message += "\tFailed Test2: Rewire large tree.\n";
+    std::cout << "\n\tFailed Test2: Rewire large tree." << std::endl;
   }
 
 
@@ -282,7 +282,7 @@ IndividualRobotConnectTest() {
   if (! IndividualRobotConnectRunTest(verts, startEdges, endEdges, debug)) {
     // Test failed!
     passed = false;
-    message += "\tFailed Test3: Rewire Shortest Path.\n";
+    std::cout << "\n\tFailed Test3: Rewire Shortest Path." << std::endl;
   }
 
   // Clear data structures for the next test.
@@ -292,14 +292,7 @@ IndividualRobotConnectTest() {
   endEdges.clear();
   // ///////////////////////////////////////////////////////////////////////////
 
-
-  if(passed) {
-    message = "IndividualRobotConnectTest::PASSED!\n";
-  }
-  else {
-    message = "IndividualRobotConnectTest::FAILED :(\n" + message + "\n";
-  }
-
+  message = "\tFINISHED IndividualRobotConnectTest";
   return std::make_pair(passed,message);
 }
 
@@ -364,7 +357,7 @@ RobotGroupConnectTest() {
   if (! RobotGroupConnectRunTest(verts, startEdges, endEdges, debug)) {
     // Test failed!
     passed = false;
-    message += "\tFailed Test1: '" + testName + "'.\n";
+    std::cout << "\n\tFailed Test1: '" <<  testName << ".'" << std::endl;
   }
 
 
@@ -436,7 +429,7 @@ RobotGroupConnectTest() {
   if (! RobotGroupConnectRunTest(verts, startEdges, endEdges, debug)) {
     // Test failed!
     passed = false;
-    message += "\tFailed Test2: Rewire large tree.\n";
+    std::cout << "\n\tFailed Test2: Rewire large tree." << std::endl;
   }
 
 
@@ -490,7 +483,7 @@ RobotGroupConnectTest() {
   if (! RobotGroupConnectRunTest(verts, startEdges, endEdges, debug)) {
     // Test failed!
     passed = false;
-    message += "\tFailed Test3: Rewire Shortest Path.\n";
+    std::cout << "\n\tFailed Test3: Rewire Shortest Path." << std::endl;
   }
 
   // Clear data structures for the next test.
@@ -500,14 +493,7 @@ RobotGroupConnectTest() {
   endEdges.clear();
   // ///////////////////////////////////////////////////////////////////////////
 
-
-  if(passed) {
-    message = "RobotGroupConnectTest::PASSED!\n";
-  }
-  else {
-    message = "RobotGroupConnectTest::FAILED :(\n" + message + "\n";
-  }
-
+  message = "\tFINISHED RobotGroupConnectTest";
   return std::make_pair(passed,message);
 }
 

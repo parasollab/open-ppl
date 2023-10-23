@@ -2,7 +2,7 @@
 #define PPL_BOUNDING_SPHERES_COLLISION_DETECTION_TEST_H_
 
 #include "CollisionDetectionMethodTest.h"
-#include "MPLibrary/ValidityCheckers/CollisionDetection/SpheresCollisionDetection.h"
+#include "MPLibrary/ValidityCheckers/CollisionDetection/SpheresCollisionDetection.h"    //src
 
 class BoundingSpheresCollisionDetectionTest :  public BoundingSpheres,
                                public CollisionDetectionMethodTest {
@@ -80,7 +80,7 @@ IndividualCfgValidityTest() {
   bool invalid = this->IndividualCfgValidity(cfg); // should return false
   if (!invalid){
     passed = false;
-    message = message + "\n\tA cfg was incorrectly labeled invalid.\n";
+    std::cout << "\n\tA cfg was incorrectly labeled invalid." << std::endl;
   }
 
   // place configuration inside an obstacle
@@ -90,7 +90,7 @@ IndividualCfgValidityTest() {
   invalid = this->IndividualCfgValidity(cfg); // should return true
   if (!invalid) {
     passed = false;
-    message = message + "\n\tA cfg was incorrectly labeled valid.\n";
+    std::cout << "\n\tA cfg was incorrectly labeled valid." << std::endl;
   }
 
   // place configuration away from any obstacles
@@ -101,9 +101,10 @@ IndividualCfgValidityTest() {
   invalid = this->IndividualCfgValidity(cfg); // should return false
   if (invalid) {
     passed = false;
-    message = message + "\n\tA cfg was incorrectly labeled invalid.\n";
+    std::cout << "\n\tA cfg was incorrectly labeled invalid." << std::endl;
   }
 
+  message = "\tFINISHED IndividualCfgValidityTest";
   return std::make_pair(passed,message);
 }
 
@@ -131,7 +132,7 @@ MultipleCfgValidityTest() {
   bool invalid = this->CheckCollision(cfg1.GetMultiBody(), cfg2.GetMultiBody());
   if (!invalid) {
     passed = false;
-    message = message + "\n\tA cfg was incorrectly labeled valid.\n";
+    std::cout << "\n\tA cfg was incorrectly labeled valid." << std::endl;
   }
 
   // place one configuration away
@@ -146,8 +147,10 @@ MultipleCfgValidityTest() {
   invalid = this->CheckCollision(cfg1.GetMultiBody(), cfg2.GetMultiBody());
   if (invalid) {
     passed = false;
-    message = message + "\n\tA cfg was incorrectly labeled invalid.\n";
+    std::cout << "\n\tA cfg was incorrectly labeled invalid." << std::endl;
   }
+
+  message = "\tFINISHED MultipleCfgValidityTest";
   return std::make_pair(passed,message);
 }
 

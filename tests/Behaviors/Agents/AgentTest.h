@@ -1,40 +1,31 @@
 #ifndef PPL_AGENT_TEST_H_
 #define PPL_AGENT_TEST_H_
 
-#include "Behaviors/Agents/Agent.h"
-#include "Testing/TestBaseObject.h"
+#include "Behaviors/Agents/Agent.h" //src
 
 class Robot;
 class XMLNode;
 
-class AgentTest : public Agent, 
-                  public TestBaseObject {
+class AgentTest : public Agent {
 
   public:
-    ///@name LocalTypes
-    ///@{
+      ///@name LocalTypes
+      ///@{
+            
+      typedef std::pair<bool,std::string> TestResult;
 
-    typedef std::pair<bool,std::string> TestResult;
+      ///@}
+      ///@name Construction
+      ///@{
 
-    ///@}
-    ///@name Construction
-    ///@{
+      AgentTest(Robot* const _r);
 
-    AgentTest(Robot* const _r);
+      AgentTest(Robot* const _r, XMLNode& _node);
 
-    AgentTest(Robot* const _r, XMLNode& _node);
+      AgentTest(Robot* const _r, const Agent& _a);
 
-    AgentTest(Robot* const _r, const Agent& _a);
+      virtual ~AgentTest();
 
-    virtual ~AgentTest();
-
-    ///@}
-    ///@name Interface
-    ///@{
-
-    virtual TestResult RunTest() = 0;
-
-    ///@}
 
   protected:
 
@@ -51,17 +42,13 @@ class AgentTest : public Agent,
 };
 
 /*--------------------------- Construction ---------------------------*/
-AgentTest::
-AgentTest(Robot* const _r) : Agent(_r) {}
+AgentTest::AgentTest(Robot* const _r) : Agent(_r) {}
 
-AgentTest::
-AgentTest(Robot* const _r, XMLNode& _node) : Agent(_r, _node) {}
+AgentTest::AgentTest(Robot* const _r, XMLNode& _node) : Agent(_r, _node) {}
 
-AgentTest::
-AgentTest(Robot* const _r, const Agent& _a) : Agent(_r, _a) {}
+AgentTest::AgentTest(Robot* const _r, const Agent& _a) : Agent(_r, _a) {}
 
-AgentTest::
-~AgentTest() {}
+AgentTest::~AgentTest() {}
 
 /*--------------------------------------------------------------------*/
 #endif

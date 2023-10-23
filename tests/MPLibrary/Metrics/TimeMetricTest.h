@@ -2,7 +2,7 @@
 #define PPL_TIME_METRIC_TEST_H_
 
 #include "MetricMethodTest.h"
-#include "MPLibrary/Metrics/TimeMetric.h"
+#include "MPLibrary/Metrics/TimeMetric.h"   //src
 
 template <typename MPTraits>
 class TimeMetricTest :  virtual public TimeMetric<MPTraits>,
@@ -59,6 +59,8 @@ template <typename MPTraits>
 typename TimeMetricTest<MPTraits>::TestResult
 TimeMetricTest<MPTraits>::
 TestMetric() {
+  bool passed = true;
+  std::string message = "";
 
   // // Sleep
   // sleep(10);
@@ -70,10 +72,14 @@ TestMetric() {
   // // Correct value?
 
   // Difficult to test out of context of application
-  if(true){
-    return std::make_pair(true,"TimeMetric::PASSED");
+  if (false) {
+    passed = false;
+    std::cout << "\n\tWrong time elapsed recieved." << std::endl;
   }
-  return std::make_pair(false,"TimeMetric::FAILED, Wrong time elapsed recieved.");
+
+  message = "\tFINISHED TestMetric";
+  return std::make_pair(passed, message);
+
 }
 
 #endif

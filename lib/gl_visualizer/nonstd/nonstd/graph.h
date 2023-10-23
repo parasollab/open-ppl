@@ -1238,60 +1238,51 @@ namespace nonstd {
   }
 
 
-  template <typename N, typename E>
-  template <typename NI, typename EI>
-  inline
-  graph_type<N, E>::edge_iterator_type<NI, EI>&
-  graph_type<N, E>::edge_iterator_type<NI, EI>::
-  operator++()
-  {
-    if(m_node->m_sentinel != 'b') {
-      ++m_edge;
-      validate_forward();
+    template <typename N, typename E>
+    template <typename NI, typename EI>
+    typename graph_type<N, E>::template edge_iterator_type<NI, EI>&
+    graph_type<N, E>::edge_iterator_type<NI, EI>::operator++() {
+        if(m_node->m_sentinel != 'b') {
+            ++m_edge;
+            validate_forward();
+        }
+        return *this;
     }
-    return *this;
-  }
 
 
-  template <typename N, typename E>
-  template <typename NI, typename EI>
-  inline
-  graph_type<N, E>::edge_iterator_type<NI, EI>
-  graph_type<N, E>::edge_iterator_type<NI, EI>::
-  operator++(int)
-  {
-    edge_iterator e = *this;
-    ++(*this);
-    return e;
-  }
-
-
-  template <typename N, typename E>
-  template <typename NI, typename EI>
-  inline
-  graph_type<N, E>::edge_iterator_type<NI, EI>&
-  graph_type<N, E>::edge_iterator_type<NI, EI>::
-  operator--()
-  {
-    if(m_node->m_sentinel != 'f') {
-      validate_backward();
-      --m_edge;
+    template <typename N, typename E>
+    template <typename NI, typename EI>
+    inline
+    typename graph_type<N, E>::template edge_iterator_type<NI, EI>
+    graph_type<N, E>::edge_iterator_type<NI, EI>::operator++(int) {
+        edge_iterator_type<NI, EI> e = *this; // Changed edge_iterator to edge_iterator_type<NI, EI>
+        ++(*this);
+        return e;
     }
-    return *this;
-  }
 
 
-  template <typename N, typename E>
-  template <typename NI, typename EI>
-  inline
-  graph_type<N, E>::edge_iterator_type<NI, EI>
-  graph_type<N, E>::edge_iterator_type<NI, EI>::
-  operator--(int)
-  {
-    edge_iterator e = *this;
-    --(*this);
-    return e;
-  }
+    template <typename N, typename E>
+    template <typename NI, typename EI>
+    inline
+    typename graph_type<N, E>::template edge_iterator_type<NI, EI>&
+    graph_type<N, E>::edge_iterator_type<NI, EI>::operator--() {
+        if(m_node->m_sentinel != 'f') {
+            validate_backward();
+            --m_edge;
+        }
+        return *this;
+    }
+
+
+    template <typename N, typename E>
+    template <typename NI, typename EI>
+    inline
+    typename graph_type<N, E>::template edge_iterator_type<NI, EI>
+    graph_type<N, E>::edge_iterator_type<NI, EI>::operator--(int) {
+        edge_iterator_type<NI, EI> e = *this; // Changed edge_iterator to edge_iterator_type<NI, EI>
+        --(*this);
+        return e;
+    }
 
   /*---------------------------- Comparison ----------------------------------*/
 
