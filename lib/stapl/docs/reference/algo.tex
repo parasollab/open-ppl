@@ -1,0 +1,4611 @@
+\chapter{Parallel Algorithms}
+
+STAPL parallel algorithms are organized into the following categories:
+
+\begin{itemize}
+
+\item
+Non-modifying Sequence Operations:
+search and query view elements.
+
+\begin{itemize}
+
+\item 
+Search Operations
+
+\begin{itemize}
+\item 
+Search First Matching Value (Section \ref{sec-srch-find_first})
+\item 
+Search First Value Predicate True (Section \ref{sec-srch-find_if})
+\item 
+Search for First Difference (Section \ref{sec-srch-mismatch})
+\item 
+Search Last Subview (Section \ref{sec-srch-find_end})
+\item 
+Search Adjacent and Equal Values (Section \ref{sec-srch-adj_find})
+\item 
+Search First Subview (Section \ref{sec-srch-search})
+\item 
+Search First n Matching Values (Section \ref{sec-srch-search_n})
+\end{itemize}
+
+\item 
+Summary Operations
+
+\begin{itemize}
+\item 
+Check for Partitioning (Section \ref{sec-sumry-is_part})
+\item 
+Testing for Unordered Equality (Section \ref{sec-sumry-is_perm})
+\item 
+Testing Equality (Section \ref{sec-sumry-equal})
+\end{itemize}
+
+\item 
+Extrema Operations
+
+\begin{itemize}
+\item 
+Minimum and Maximum Values (Section \ref{sec-sumry-minmax})
+\end{itemize}
+
+\item 
+Counting Operations
+
+\begin{itemize}
+\item 
+All, Any, None (Section \ref{sec-sumry-bool-red})
+\item 
+Counting Values (Section \ref{sec-sumry-diff_type})
+\end{itemize}
+
+\end{itemize}
+
+\item
+Mutating Operations:
+modify the elements referenced by a view
+
+\begin{itemize}
+\item 
+Mutating Sequence Operations
+
+\begin{itemize}
+\item 
+Copying Values (Section \ref{sec-muta-copy})
+\item 
+Assign Generated Values (Section \ref{sec-muta-generate})
+\item 
+Replace Values Accessed by Views (Section \ref{sec-muta-replace})
+\item 
+Replace and Copy Values (Section \ref{sec-muta-repl_copy})
+\item 
+Assigning a Single Value (Section \ref{sec-muta-fill})
+\item 
+for\_each (Section \ref{sec-muta-foreach})
+\item 
+Transforming Values (Section \ref{sec-muta-transform})
+\end{itemize}
+
+\item 
+Removing Operations
+
+\begin{itemize}
+\item 
+Remove Items Not Selected (Section \ref{sec-remv-keep_if})
+\item 
+Remove and Copy Values (Section \ref{sec-remv-copy_if})
+\item 
+Remove Specified Values (Section \ref{sec-remv-remove_if})
+\item 
+Remove Duplicate Values While Copying (Section \ref{sec-remv-uniq_copy})
+\item 
+Remove Duplicate Values (Section \ref{sec-remv-uniq})
+\end{itemize}
+
+\item 
+Reordering Operations 
+
+\begin{itemize}
+\item 
+Reverse Value Order (Section \ref{sec-reord-reverse})
+\item 
+Rotate Order of Values (Section \ref{sec-reord-rotate})
+\item 
+Moving Values to Front (Section \ref{sec-reord-stab_part})
+\item 
+Partition into Subviews (Section \ref{sec-reord-part_copy})
+\item 
+Reorder Values Randomly (Section \ref{sec-reord-rand_shuf})
+\end{itemize}
+
+\end{itemize}
+
+\item 
+Sorting and Related Operations:
+sort elements in a view or perform operations on sorted sequences.
+
+\begin{itemize}
+\item
+Sorting Operations 
+
+\begin{itemize}
+\item 
+Sorting All Values with Sample Sort (Section \ref{sec-sort-sample})
+\item 
+Sorting All Values (Section \ref{sec-sort-sort})
+\item 
+Reorder Values into Subgroups (Section \ref{sec-sort-n_part})
+\item 
+Partial Sort (Section \ref{sec-sort-partial})
+\item 
+Partial Sort and Copy (Section \ref{sec-sort-part_sort})
+\item 
+Sort Values with Radix Sort (Section \ref{sec-sort-radix})
+\end{itemize}
+
+\item 
+Permuting Operations 
+
+\begin{itemize}
+\item 
+Permuting Values (Section \ref{sec-sort-permute})
+\end{itemize}
+
+\item 
+Binary Search Operations
+
+\begin{itemize}
+\item 
+Searching for Value Presence (Section \ref{sec-sort-bin_srch})
+\item 
+Search First or Last Possible Position (Section \ref{sec-sort-bound})
+\item 
+Searching First and Last Position (Section \ref{sec-sort-range})
+\end{itemize}
+
+\item 
+Sorting Related Operations
+
+\begin{itemize}
+\item 
+Testing for "Less Than" (Section \ref{sec-sort-lex_comp})
+\item 
+Merge Values (Section \ref{sec-sort-merge})
+\item 
+Check Sortedneess (Section \ref{sec-sort-is_sorted})
+\end{itemize}
+
+\end{itemize}
+
+\item  
+Generalized Numeric Algorithms 
+algorithms for numeric algorithms on view elements
+
+\begin{itemize}
+\item 
+Compute Reduction of View (Section \ref{sec-num-reduce})
+\item 
+Converting Absolute to Relative Values (Section \ref{sec-num-adj_diff})
+\item 
+Compute Inner Product of Two Views (Section \ref{sec-num-inner})
+\item 
+Compute Weighted Inner Product (Section \ref{sec-num-wt_inner})
+\item 
+Compute Weighted Norm (Section \ref{sec-num-wt_norm})
+\item 
+Converting Relative to Absolute Values (Section \ref{sec-num-part_sum})
+\end{itemize}
+
+\end{itemize}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+ 
+\section{Introduction} \label{sec-intro}
+
+A Parallel algorithm is the parallel counterpart of the STL algorithm. There are three types of Parallel algorithms in STAPL:
+
+\begin{itemize}
+\item
+Parallel algorithms with semantics identical to their sequential counterparts.
+\item
+Parallel algorithms with enhanced semantics (e.g. a parallel find could return any (or all) element found, while STL find only returns the first).
+\item
+Parallel algorithms with no sequential equivalent in STL.
+\end{itemize}
+
+STL algorithms take iterators marking the start and end of an input sequence as parameters. Using STL constructs, such as the vector, this can be illustrated as follows:
+
+\begin{verbatim}
+std::vector<int> v(1000000);
+// initialize v
+std::find( v.begin(), v.end(), 0 );
+\end{verbatim}
+
+However, regular C++ arrays also support iterators, because iterators are in fact just generalized pointers:
+
+\begin{verbatim}
+int v[1000000];
+... initialize v ...
+find( &v[0], &v[1000000], 0 );
+\end{verbatim}
+
+STAPL Parallel algorithms take one or more view instances as parameters instead. For example, STL provides an algorithm to find an element in a list, find. STAPL provides find which works with views. The construction of the view over a container is an additional step, but the same view instance can be used across multiple Parallel algorithm calls and allows additional flexibility such as providing access to a portion of the container instead of the entire data set.
+
+\begin{verbatim}
+stapl::vector<int> v(1000000);
+stapl::vector_view<stapl::vector<int>> vw(v);
+// initialize v
+stapl::find( vw, 0 );
+\end{verbatim}
+
+In describing the parameters of these sets of Parallel algorithms, some conventions are used. All of the Parallel algorithms operate on sequences of input and/or output data (there are a few STL algorithms that only operate on a few elements, such as min or max, which are not parallel operations). STL generally describes this sequence using set notation as $[first, last)$, where first is an iterator to the start of a sequence and last is an iterator to the end of a sequence, and everything from the first element up to, but not including, the last element is considered part of the sequence. STAPL's views completely encapsulate this information. Hence, when describing a given Parallel algorithm, a sequence is represented as a view.
+
+Many Parallel algorithms behavior is described in terms of operator $?$, where $?$ is one of the C++ operators such as $<, >, ==$, etc. C++ allows the programmer to override the actions taken when one of the operators is called on a given class or type, and it may be helpful for the learning STAPL programmer to study this mechanism in C++. Another method that STL uses to change the default behavior of operators is to define Function Objects. These are functions or classes that implement operator() that will be used instead of the given operator. Most Parallel algorithms (and algorithms in STL), accept function objects, and in fact such flexibility lets both STL and STAPL algorithms to be adjusted to exactly what is needed, reducing the amount of code that a user needs to rewrite to obtain the desired effect.
+
+All Parallel algorithms are expressed using dependence patterns, which when combined with the functor describing the operation on a single element and the set of views to process are using to instantiate the parallel task graph, PARAGRAPH. When the PARAGRAPH instance is executed using the executor and scheduler facilities of the STAPL runtime the desired parallel computation is performed. The scheduling policy can be specified for each PARAGRAPH instance if desired, otherwise the default FIFO policy is used. Multiple PARAGRAPHS may be processed concurrently by a PARAGRAPH executor that the set of locations executing the STAPL applications use to perform work.
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{Non-modifying Sequence Operations} \label{sec-nonmod-alg}
+\index{algorithms!non-modifying}
+
+The non-modifying sequence operations do not directly modify the sequences of data they operate on. Each algorithm has two versions, one using operator $==$ for comparisons, and the other using a user-defined function object.
+
+\index{algorithms!search}
+
+\subsection{Search First Matching Value} \label{sec-srch-find_first}
+
+\subsubsection{Interface} %% \label{sec--alg-inter}
+
+\noindent
+\texttt{%
+template<typename View0, typename View1, typename Pred >
+\newline
+View0::reference 
+}
+\newline
+\textbf{find\_first\_of}%
+\texttt{%
+(View0 const \&
+\textit{view0,}%
+View1 const \&
+\textit{view1,}%
+Pred const \&
+\textit{predicate}%
+)
+}
+\vspace{0.4cm}
+ 
+\noindent
+\texttt{%
+template<typename View0, typename View1 >
+\newline
+View0::reference 
+}
+\newline
+\textbf{find\_first\_of}%
+\texttt{%
+(View0 const \&
+\textit{view0,}%
+View1 const \&
+\textit{view1}%
+)
+}
+\index{find\_first\_of()}
+
+\begin{itemize}
+\item
+Finds the first element in the input which matches any of the elements in the given view, according to the given predicate. 
+\item
+Finds the first element in the input which matches any of the elements in the given view. 
+\end{itemize}
+
+\subsubsection{Usage Example} %% \label{sec--alg-use}
+
+The following example shows how to use \texttt{find\_first\_of}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{algo/findfirst.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsubsection{Implementation} %% \label{sec--alg-impl}
+
+\textit{WRITE}
+
+\subsubsection{Performance} %% \label{sec--alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:find-first-of-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/find_first_of_alg_proc}
+\caption{find\_first\_of Algorithm Execution Time}
+\label{fig:find-first-of-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % %
+ 
+\subsection{Search First Value Predicate True} \label{sec-srch-find_if}
+
+\subsubsection{Interface} %% \label{sec--alg-inter}
+
+\noindent
+\texttt{%
+template<typename View, typename Predicate >
+\newline
+View::reference 
+}
+\newline
+\textbf{find\_if}%
+\texttt{%
+(View const \&
+\textit{view,}%
+Predicate const \&
+\textit{pred}%
+)
+}
+\index{find\_if()}
+
+\begin{itemize}
+\item
+Finds the first element in the input for which the predicate returns true, or NULL if none exist. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+template<typename View, typename Predicate >
+\newline
+View::reference 
+}
+\newline
+\textbf{find\_if\_not}%
+\texttt{%
+(View const \&
+\textit{view,}%
+Predicate const \&
+\textit{pred}%
+)
+}
+\index{find\_if\_not()}
+
+\begin{itemize}
+\item
+Finds the first element in the input for which the predicate returns false, or NULL if none exist. 
+\end{itemize}
+
+\subsubsection{Usage Example} %% \label{sec--alg-use}
+
+The following example shows how to use \texttt{find\_if}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{algo/findif.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+ 
+\subsubsection{Implementation} %% \label{sec--alg-impl}
+
+\textit{WRITE}
+
+\subsubsection{Performance} %% \label{sec--alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:find-if-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/find_if_alg_proc}
+\caption{find\_if Algorithm Execution Time}
+\label{fig:find-if-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % %
+ 
+\subsubsection{Interface} %% \label{sec--alg-inter}
+
+\noindent
+\texttt{%
+template<typename View, typename T >
+\newline
+View::reference 
+}
+\newline
+\textbf{find}%
+\texttt{%
+(View const \&
+\textit{view,}%
+T const \&
+\textit{value}%
+)
+}
+\index{find()}
+
+\begin{itemize}
+\item
+Finds the first occurrence of the given value in the input, or NULL if it is not found. 
+\end{itemize}
+
+\subsubsection{Usage Example} %% \label{sec--alg-use}
+
+The following example shows how to use \texttt{find}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{algo/find.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsubsection{Implementation} %% \label{sec--alg-impl}
+
+\textit{WRITE}
+
+\subsubsection{Performance} %% \label{sec--alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:find-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/find_alg_proc}
+\caption{find Algorithm Execution Time}
+\label{fig:find-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % %
+ 
+\subsubsection{Interface} %% \label{sec--alg-inter}
+
+\noindent
+\texttt{%
+template<typename View, typename Pred >
+\newline
+View::reference 
+}
+\newline
+\textbf{partition\_point}%
+\texttt{%
+(View const \&
+\textit{pview,}%
+Pred 
+\textit{predicate}%
+)
+}
+\index{partition\_point()}
+
+\begin{itemize}
+\item
+Finds the position of the first element for which the functor returns false, indicating the partition point. 
+\end{itemize}
+
+\subsubsection{Implementation} %% \label{sec--alg-impl}
+
+\textit{WRITE}
+
+\subsubsection{Performance} %% \label{sec--alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:part-pt-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/part_pt_alg_proc}
+\caption{partition\_point Algorithm Execution Time}
+\label{fig:part-pt-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % %
+ 
+\subsection{Search for First Difference} \label{sec-srch-mismatch}
+
+\subsubsection{Interface} %% \label{sec--alg-inter}
+
+\noindent
+\texttt{%
+template<typename View1, typename View2, typename Predicate >
+\newline
+std::pair< typename View1::reference, typename View2::reference > 
+}
+\newline
+\textbf{mismatch}%
+\texttt{%
+(View1 const \&
+\textit{view1,}%
+View2 const \&
+\textit{view2,}%
+Predicate 
+\textit{pred}%
+)
+}
+\vspace{0.4cm}
+ 
+\noindent
+\texttt{%
+template<typename View1, typename View2 >
+\newline
+std::pair< typename View1::reference, typename View2::reference > 
+}
+\newline
+\textbf{mismatch}%
+\texttt{%
+(View1 const \&
+\textit{view1,}%
+View2 const \&
+\textit{view2}%
+)
+}
+\index{mismatch()}
+
+\begin{itemize}
+\item
+Given two input views, returns the positions of the first elements which do not match. 
+\item
+Given two input views, returns the positions of the first elements which do not match. 
+\end{itemize}
+
+\subsubsection{Usage Example} %% \label{sec--alg-use}
+
+The following example shows how to use \texttt{mismatch}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{algo/mismatch.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsubsection{Implementation} %% \label{sec--alg-impl}
+
+\textit{WRITE}
+
+\subsubsection{Performance} %% \label{sec--alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:mismatch-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/mismatch_alg_proc}
+\caption{mismatch Algorithm Execution Time}
+\label{fig:mismatch-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % %
+ 
+\subsection{Search Last Subview} \label{sec-srch-find_end}
+
+\subsubsection{Interface} %% \label{sec--alg-inter}
+
+\noindent
+\texttt{%
+template<typename View1, typename View2, typename Pred >
+\newline
+View1::reference 
+}
+\newline
+\textbf{find\_end}%
+\texttt{%
+(const View1 \&
+\textit{sequence,}%
+const View2 \&
+\textit{pattern,}%
+Pred const \&
+\textit{predicate}%
+)
+}
+\vspace{0.4cm}
+
+\noindent
+\texttt{%
+template<typename View1, typename View2 >
+\newline
+View1::reference 
+}
+\newline
+\textbf{find\_end}%
+\texttt{%
+(const View1 \&
+\textit{sequence,}%
+const View2 \&
+\textit{pattern}%
+)
+}
+\index{find\_end()}
+
+\begin{itemize}
+\item
+Finds the last occurrence of the given pattern in the input sequence. 
+\item
+Finds the last occurrence of the given pattern in the input sequence. 
+\end{itemize}
+
+\subsubsection{Usage Example} %% \label{sec--alg-use}
+
+The following example shows how to use \texttt{find\_end}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{algo/findend.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsubsection{Implementation} %% \label{sec--alg-impl}
+
+\textit{WRITE}
+
+\subsubsection{Performance} %% \label{sec--alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:find-end-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/find_end_alg_proc}
+\caption{find\_end Algorithm Execution Time}
+\label{fig:find-end-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % %
+ 
+\subsection{Search Adjacent and Equal Values} \label{sec-srch-adj_find}
+
+\subsubsection{Interface} %% \label{sec--alg-inter}
+
+\noindent
+\texttt{%
+template<typename View, typename BinPredicate >
+\newline
+View::reference 
+}
+\newline
+\textbf{adjacent\_find}%
+\texttt{%
+(View 
+\textit{view,}%
+BinPredicate 
+\textit{bin\_predicate}%
+)
+}
+\vspace{0.4cm}
+
+\noindent
+\texttt{%
+template<typename View >
+\newline
+View::reference 
+}
+\newline
+\textbf{adjacent\_find}%
+\texttt{%
+(View 
+\textit{view}%
+)
+}
+\index{adjacent\_find()}
+
+\begin{itemize}
+\item
+Return the position of the first adjacent pair of equal elements. 
+\item
+Return the position of the first adjacent pair of equal elements. 
+\end{itemize}
+
+\subsubsection{Usage Example} %% \label{sec--alg-use}
+
+The following example shows how to use \texttt{adjacent\_find}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{algo/adjfind.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+ 
+\subsubsection{Implementation} %% \label{sec--alg-impl}
+
+\textit{WRITE}
+
+\subsubsection{Performance} %% \label{sec--alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:adj-find-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/adj_find_alg_proc}
+\caption{adjacent\_find Algorithm Execution Time}
+\label{fig:adj-find-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % %
+ 
+\subsection{Search First Subview} \label{sec-srch-search}
+
+\subsubsection{Interface} %% \label{sec--alg-inter}
+
+\noindent
+\texttt{%
+template<class View1, class View2, class Predicate >
+\newline
+View1::reference 
+}
+\newline
+\textbf{search}%
+\texttt{%
+(View1 
+\textit{v1,}%
+View2 
+\textit{v2,}%
+Predicate 
+\textit{pred}%
+)
+}
+\vspace{0.4cm}
+
+\noindent
+\texttt{%
+template<class View1, class View2 >
+\newline
+View1::reference 
+}
+\newline
+\textbf{search}%
+\texttt{%
+(View1 
+\textit{v1,}%
+View2 
+\textit{v2}%
+)
+}
+\index{search()}
+
+\begin{itemize}
+\item
+Return the position of the first occurrence of the given sequence within the input, or NULL if it is not found. 
+\item
+Return the position of the first occurrence of the given sequence within the input, or NULL if it is not found. 
+\end{itemize}
+
+\subsubsection{Usage Example} %% \label{sec--alg-use}
+
+The following example shows how to use \texttt{search}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{algo/search.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+ 
+\subsubsection{Implementation} %% \label{sec--alg-impl}
+
+\textit{WRITE}
+
+\subsubsection{Performance} %% \label{sec--alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:search-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/search_alg_proc}
+\caption{search Algorithm Execution Time}
+\label{fig:search-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % %
+ 
+\subsection{Search First n Matching Values} \label{sec-srch-search_n}
+
+\subsubsection{Interface} %% \label{sec--alg-inter}
+
+\noindent
+\texttt{%
+template<class View1, class Predicate >
+\newline
+View1::reference 
+}
+\newline
+\textbf{search\_n}%
+\texttt{%
+(View1 
+\textit{v1,}%
+size\_t 
+\textit{count,}%
+typename View1::value\_type 
+\textit{value,}%
+Predicate 
+\textit{pred}%
+)
+}
+\vspace{0.4cm}
+
+\noindent
+\texttt{%
+template<class View1 >
+\newline
+View1::reference 
+}
+\newline
+\textbf{search\_n}%
+\texttt{%
+(View1 
+\textit{v1,}%
+size\_t 
+\textit{count,}%
+typename View1::value\_type 
+\textit{value}%
+)
+}
+\index{search\_n()}
+
+\begin{itemize}
+\item
+Return the position of the first occurrence of a sequence of the given value which is of the given length, or NULL if none exists. 
+\item
+Return the position of the first occurrence of a sequence of the given value which is of the given length, or NULL if none exists. 
+\end{itemize}
+
+\subsubsection{Usage Example} %% \label{sec--alg-use}
+
+The following example shows how to use \texttt{search\_n}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{algo/searchn.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsubsection{Implementation} %% \label{sec--alg-impl}
+
+\textit{WRITE}
+
+\subsubsection{Performance} %% \label{sec--alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:searchn-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/search_n_alg_proc}
+\caption{search\_n Algorithm Execution Time}
+\label{fig:searchn-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\index{algorithms!summary}
+
+\subsection{Check for Partitioning} \label{sec-sumry-is_part}
+
+\subsubsection{Interface} %% \label{sec--alg-inter}
+
+\noindent
+\texttt{%
+template<typename View, typename Predicate >
+\newline
+bool 
+}
+\newline
+\textbf{is\_partitioned}%
+\texttt{%
+(View const \&
+\textit{pview,}%
+Predicate 
+\textit{predicate}%
+)
+}
+\index{is\_partitioned()}
+
+\begin{itemize}
+\item
+Decides if the input view is partitioned according to the given functor, in that all elements which return true precede all those that do not. 
+\end{itemize}
+
+\subsubsection{Usage Example} %% \label{sec--alg-use}
+
+The following example shows how to use \texttt{is\_partitioned}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{algo/ispart.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+ 
+\subsubsection{Implementation} %% \label{sec--alg-impl}
+
+\textit{WRITE}
+
+\subsubsection{Performance} %% \label{sec--alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:is-part-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/is_part_alg_proc}
+\caption{is\_partitioned Algorithm Execution Time}
+\label{fig:is-part-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % %
+ 
+\subsection{Testing for Unordered Equality} \label{sec-sumry-is_perm}
+
+\subsubsection{Interface} %% \label{sec--alg-inter}
+
+\noindent
+\texttt{%
+template<typename View1, typename View2, typename Pred >
+\newline
+bool 
+}
+\newline
+\textbf{is\_permutation}%
+\texttt{%
+(View1 const \&
+\textit{view1,}%
+View2 const \&
+\textit{view2,}%
+Pred 
+\textit{pred}%
+)
+}
+\vspace{0.4cm}
+
+\noindent
+\texttt{%
+template<typename View1, typename View2 >
+\newline
+bool 
+}
+\newline
+\textbf{is\_permutation}%
+\texttt{%
+(View1 const \&
+\textit{view1,}%
+View2 const \&
+\textit{view2}%
+)
+}
+\index{is\_permutation()}
+
+\begin{itemize}
+\item
+Computes whether all the elements in the first view are contained in the second view, even in a different order. 
+\item
+Computes whether all the elements in the first view are contained in the second view, even in a different order. 
+\end{itemize}
+
+\subsubsection{Usage Example} %% \label{sec--alg-use}
+
+The following example shows how to use \texttt{is\_permutation}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{algo/isperm.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+ 
+\subsubsection{Implementation} %% \label{sec--alg-impl}
+
+\textit{WRITE}
+
+\subsubsection{Performance} %% \label{sec--alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:is-perm-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/is_perm_alg_proc}
+\caption{is\_permutation Algorithm Execution Time}
+\label{fig:is-perm-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % %
+ 
+\subsection{Testing Equality} \label{sec-sumry-equal}
+
+\subsubsection{Interface} %% \label{sec--alg-inter}
+
+\noindent
+\texttt{%
+template<typename View0, typename View1, typename Predicate >
+\newline
+bool 
+}
+\newline
+\textbf{equal}%
+\texttt{%
+(View0 const \&
+\textit{view0,}%
+View1 const \&
+\textit{view1,}%
+Predicate 
+\textit{pred}%
+)
+}
+\vspace{0.4cm}
+
+\noindent
+\texttt{%
+template<typename View0, typename View1 >
+\newline
+bool 
+}
+\newline
+\textbf{equal}%
+\texttt{%
+(View0 const \&
+\textit{view0,}%
+View1 const \&
+\textit{view1}%
+)
+}
+\index{equal()}
+
+\begin{itemize}
+\item
+Compares the two input views and returns true if all of their elements compare pairwise equal. 
+\item
+Compares the two input views and returns true if all of their elements compare pairwise equal. 
+\end{itemize}
+
+\subsubsection{Usage Example} %% \label{sec--alg-use}
+
+The following example shows how to use \texttt{equal}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{algo/equal.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+ 
+\subsubsection{Implementation} %% \label{sec--alg-impl}
+
+\textit{WRITE}
+
+\subsubsection{Performance} %% \label{sec--alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:equal-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/equal_alg_proc}
+\caption{equal Algorithm Execution Time}
+\label{fig:equal-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\index{algorithms!extrema}
+
+\subsection{Minimum and Maximum Values} \label{sec-sumry-minmax}
+
+\subsubsection{Interface} %% \label{sec--alg-inter}
+
+\noindent
+\texttt{%
+template<typename View, typename Pred >
+\newline
+std::pair< typename View::value\_type, typename View::value\_type > 
+}
+\newline
+\textbf{minmax\_value}%
+\texttt{%
+(View const \&
+\textit{view,}%
+Pred const \&
+\textit{pred}%
+)
+}
+\index{minmax\_value()}
+
+\begin{itemize}
+\item
+Returns a pair containing the minimum and maximum values returned by the given predicate when called on all values in the input view. 
+\end{itemize}
+ 
+\subsubsection{Usage Example} %% \label{sec--alg-use}
+
+The following example shows how to use \texttt{minmax\_value}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{algo/minmaxval.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+ 
+\subsubsection{Implementation} %% \label{sec--alg-impl}
+
+\textit{WRITE}
+
+\subsubsection{Performance} %% \label{sec--alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:minmax-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/minmax_alg_proc}
+\caption{minmax\_value Algorithm Execution Time}
+\label{fig:minmax-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % %
+ 
+\subsubsection{Interface} %% \label{sec--alg-inter}
+
+\noindent
+\texttt{%
+template<typename View, typename Compare >
+\newline
+View::value\_type 
+}
+\newline
+\textbf{min\_value}%
+\texttt{%
+(View const \&
+\textit{view,}%
+Compare 
+\textit{comp}%
+)
+}
+\vspace{0.4cm}
+
+\noindent
+\texttt{%
+template<typename View >
+\newline
+View::value\_type 
+}
+\newline
+\textbf{min\_value}%
+\texttt{%
+(View const \&
+\textit{view}%
+)
+}
+\index{min\_value()}
+
+\begin{itemize}
+\item
+Finds the smallest value in the input view. 
+\item
+Finds the smallest value in the input view. 
+\end{itemize}
+
+\subsubsection{Usage Example} %% \label{sec--alg-use}
+
+The following example shows how to use \texttt{min\_value}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{algo/minvalue.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+ 
+\subsubsection{Implementation} %% \label{sec--alg-impl}
+
+\textit{WRITE}
+
+\subsubsection{Performance} %% \label{sec--alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:minval-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/minval_alg_proc}
+\caption{min\_value Algorithm Execution Time}
+\label{fig:minval-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % %
+ 
+\subsubsection{Interface} %% \label{sec--alg-inter}
+
+\noindent
+\texttt{%
+template<typename View, typename Compare >
+\newline
+View::value\_type 
+}
+\newline
+\textbf{max\_value}%
+\texttt{%
+(View const \&
+\textit{view,}%
+Compare 
+\textit{comp}%
+)
+}
+\vspace{0.4cm}
+
+\noindent
+\texttt{%
+template<typename View >
+\newline
+View::value\_type 
+}
+\newline
+\textbf{max\_value}%
+\texttt{%
+(View const \&
+\textit{view}%
+)
+}
+\index{max\_value()}
+
+\begin{itemize}
+\item
+Finds the largest value in the input view. 
+\item
+Finds the largest value in the input view. 
+\end{itemize}
+
+\subsubsection{Usage Example} %% \label{sec--alg-use}
+
+The following example shows how to use \texttt{max\_value}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{algo/maxvalue.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+ 
+\subsubsection{Implementation} %% \label{sec--alg-impl}
+
+\textit{WRITE}
+
+\subsubsection{Performance} %% \label{sec--alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:maxval-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/maxval_alg_proc}
+\caption{max\_value Algorithm Execution Time}
+\label{fig:maxval-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % %
+ 
+\subsubsection{Interface} %% \label{sec--alg-inter}
+
+\noindent
+\texttt{%
+template<typename View, typename Compare >
+\newline
+View::reference 
+}
+\newline
+\textbf{min\_element}%
+\texttt{%
+(View const \&
+\textit{view,}%
+Compare 
+\textit{comp}%
+)
+}
+\vspace{0.4cm}
+
+\noindent
+\texttt{%
+template<typename View >
+\newline
+View::reference 
+}
+\newline
+\textbf{min\_element}%
+\texttt{%
+(View const \&
+\textit{view}%
+)
+}
+\index{min\_element()}
+
+\begin{itemize}
+\item
+Finds the smallest element in the input view (or the first smallest if there are multiple
+), which compares less than any other element using the given functor. 
+\item
+Finds the smallest element in the input view (or the first smallest if there are multiple
+). 
+\end{itemize}
+
+\subsubsection{Usage Example} %% \label{sec--alg-use}
+
+The following example shows how to use \texttt{min\_element}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{algo/minelement.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+ 
+\subsubsection{Implementation} %% \label{sec--alg-impl}
+
+\textit{WRITE}
+
+\subsubsection{Performance} %% \label{sec--alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:minelem-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/minelem_alg_proc}
+\caption{min\_element Algorithm Execution Time}
+\label{fig:minelem-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % %
+ 
+\subsubsection{Interface} %% \label{sec--alg-inter}
+
+\noindent
+\texttt{%
+template<typename View, typename Compare >
+\newline
+View::reference 
+}
+\newline
+\textbf{max\_element}%
+\texttt{%
+(View const \&
+\textit{view,}%
+Compare 
+\textit{comp}%
+)
+}
+\vspace{0.4cm}
+
+\noindent
+\texttt{%
+template<typename View >
+\newline
+View::reference 
+}
+\newline
+\textbf{max\_element}%
+\texttt{%
+(View const \&
+\textit{view}%
+)
+}
+\index{max\_element()}
+
+\begin{itemize}
+\item
+Finds the largest element in the input view (or the first largest if there are multiple
+), which does not compare less than any other element using the given functor. 
+\item
+Finds the largest element in the input view (or the first largest if there are multiple). 
+\end{itemize}
+
+\subsubsection{Usage Example} %% \label{sec--alg-use}
+
+The following example shows how to use \texttt{max\_element}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{algo/maxelement.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+ 
+\subsubsection{Implementation} %% \label{sec--alg-impl}
+
+\textit{WRITE}
+
+\subsubsection{Performance} %% \label{sec--alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:maxelem-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/maxelem_alg_proc}
+\caption{max\_element Algorithm Execution Time}
+\label{fig:maxelem-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\index{algorithms!counting}
+
+\subsection{All, Any, None} \label{sec-sumry-bool-red}
+
+\subsubsection{Interface} %% \label{sec--alg-inter}
+
+\noindent
+\texttt{%
+template<typename View0, typename Pred >
+\newline
+bool 
+}
+\newline
+\textbf{all\_of}%
+\texttt{%
+(View0 const \&
+\textit{view,}%
+Pred 
+\textit{predicate}%
+)
+}
+\index{all\_of()}
+
+\begin{itemize}
+\item
+Returns true if the given predicate returns true for all of the elements in the input view. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+template<typename View0, typename Pred >
+\newline
+bool 
+}
+\newline
+\textbf{none\_of}%
+\texttt{%
+(View0 const \&
+\textit{view,}%
+Pred 
+\textit{predicate}%
+)
+}
+\index{none\_of()}
+
+\begin{itemize}
+\item
+Returns true if the given predicate returns false for all of the elements in the input view, or the view is empty. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+template<typename View0, typename Pred >
+\newline
+bool 
+}
+\newline
+\textbf{any\_of}%
+\texttt{%
+(View0 const \&
+\textit{view,}%
+Pred 
+\textit{predicate}%
+)
+}
+\index{any\_of()}
+
+\begin{itemize}
+\item
+Returns true if the given predicate returns true for any of the elements in the input view. 
+\end{itemize}
+
+\subsubsection{Usage Example} %% \label{sec--alg-use}
+
+The following example shows how to use \texttt{all\_of, none\_of, any\_of}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{algo/allanynone.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+ 
+\subsubsection{Implementation} %% \label{sec--alg-impl}
+
+\textit{WRITE}
+
+\subsubsection{Performance} %% \label{sec--alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:bool-count-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/bool_count_alg_proc}
+\caption{all\_of, any\_of, none\_of Algorithm Execution Time}
+\label{fig:bool-count-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % %
+ 
+\subsection{Counting Values} \label{sec-sumry-diff_type}
+
+\subsubsection{Interface} %%\label{sec--alg-inter}
+
+\noindent
+\texttt{%
+template<typename View, typename Predicate >
+\newline
+View::iterator::difference\_type 
+}
+\newline
+\textbf{count\_if}%
+\texttt{%
+(View const \&
+\textit{view,}%
+Predicate 
+\textit{pred}%
+)
+}
+
+\begin{itemize}
+\item
+Computes the number of elements in the input view for which the given functor returns true. 
+\end{itemize}
+
+\noindent
+\texttt{%
+template<typename View, typename T >
+\newline
+View::iterator::difference\_type 
+}
+\newline
+\textbf{count}%
+\texttt{%
+(View const \&
+\textit{view,}%
+T const \&
+\textit{value}%
+)
+}
+\vspace{0.4cm}
+\index{difference\_type()}
+ 
+\begin{itemize}
+\item
+Computes the number of elements in the input view which compare equal to the given value. 
+\item
+Computes the number of elements in the input view which compare equal to the given value. 
+\end{itemize}
+
+\subsubsection{Usage Example} %% \label{sec--alg-use}
+
+The following example shows how to use \texttt{difference\_type}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{algo/count.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+ 
+\subsubsection{Implementation} %% \label{sec--alg-impl}
+
+\textit{WRITE}
+
+\subsubsection{Performance} %% \label{sec--alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:diff-type-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/diff_type_alg_proc}
+\caption{difference\_type Algorithm Execution Time}
+\label{fig:diff-type-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{Mutating Operations} \label{sec-mutate-alg}
+\index{algorithms!mutating}
+
+Mutating algorithms modify the sequences of data that they operate on in some way. The replace(), remove(), and unique() each have two versions, one using operator $==$ for comparisons, and the other using a function object.
+
+\index{algorithms!mutating sequence}
+
+\subsection{Copying Values} \label{sec-muta-copy}
+
+\subsubsection{Interface} %% \label{sec--alg-inter}
+
+\noindent
+\texttt{%
+template<typename View0, typename View1 >
+\newline
+void 
+}
+\newline
+\textbf{copy}%
+\texttt{%
+(View0 const \&
+\textit{vw0,}%
+View1 const \&
+\textit{vw1}%
+)
+}
+\index{copy()}
+\vspace{0.4cm}
+
+\noindent
+\texttt{%
+template<typename View0, typename View1, typename Size >
+\newline
+void 
+}
+\newline
+\textbf{copy\_n}%
+\texttt{%
+(View0 const \&
+\textit{vw0,}%
+View1 const \&
+\textit{vw1,}%
+Size 
+\textit{n}%
+)
+}
+\index{copy\_n()}
+
+\begin{itemize}
+\item
+Copy the elements of the input view to the output view. 
+\item
+Copy the first n elements from the input view to the output view. 
+\end{itemize}
+ 
+\subsubsection{Usage Example} %% \label{sec--alg-use}
+
+The following example shows how to use \texttt{copy and copy\_n}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{algo/copy.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+ 
+\subsubsection{Implementation} %% \label{sec--alg-impl}
+
+\textit{WRITE}
+
+\subsubsection{Performance} %% \label{sec--alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:copy-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/copy_alg_proc}
+\caption{copy Algorithm Execution Time}
+\label{fig:copy-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % %
+
+\subsection{Assign Generated Values} \label{sec-muta-generate}
+
+\subsubsection{Interface} %% \label{sec--alg-inter}
+
+\noindent
+\texttt{%
+template<typename View, typename Generator >
+\newline
+void 
+}
+\newline
+\textbf{generate}%
+\texttt{%
+(View const \&
+\textit{view,}%
+Generator 
+\textit{gen}%
+)
+}
+\vspace{0.4cm}
+\index{generate()}
+
+\noindent
+\texttt{%
+template<typename View, typename Generator >
+\newline
+void 
+}
+\newline
+\textbf{generate\_n}%
+\texttt{%
+(View const \&
+\textit{view,}%
+size\_t 
+\textit{first\_elem,}%
+size\_t 
+\textit{n,}%
+Generator 
+\textit{gen}%
+)
+}
+\index{generate\_n()}
+
+\begin{itemize}
+\item
+Assign each value of the input view to the result of a successive call to the provided functor. 
+\item
+Assign the n values of the input view starting at the given element to the result of a successive call to the provided functor. 
+\end{itemize}
+ 
+\subsubsection{Usage Example} %% \label{sec--alg-use}
+
+The following example shows how to use \texttt{generate and generate\_n}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{algo/generate.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+ 
+\subsubsection{Implementation} %% \label{sec--alg-impl}
+
+\textit{WRITE}
+
+\subsubsection{Performance} %% \label{sec--alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:gener-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/gener_alg_proc}
+\caption{generate Algorithm Execution Time}
+\label{fig:gener-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % %
+ 
+\subsubsection{Interface} %% \label{sec--alg-inter}
+
+\noindent
+\texttt{%
+template<typename View0 >
+\newline
+void 
+}
+\newline
+\textbf{iota}%
+\texttt{%
+(View0 const \&
+\textit{view,}%
+typename View0::value\_type const \&
+\textit{value}%
+)
+}
+\index{iota()}
+
+\begin{itemize}
+\item
+Initializes the elements of the view such that the first element is assigned value, the next element value+1, etc. 
+\end{itemize}
+ 
+\subsubsection{Usage Example} %% \label{sec--alg-use}
+
+The following example shows how to use \texttt{iota}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{algo/iota.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+ 
+\subsubsection{Implementation} %% \label{sec--alg-impl}
+
+\textit{WRITE}
+
+\subsubsection{Performance} %% \label{sec--alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:iota-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/iota_alg_proc}
+\caption{iota Algorithm Execution Time}
+\label{fig:iota-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % %
+
+\subsection{Replace Values Accessed by Views} \label{sec-muta-replace}
+
+\subsubsection{Interface} %% \label{sec--alg-inter}
+
+\noindent
+\texttt{%
+template<typename View >
+\newline
+void 
+}
+\newline
+\textbf{replace}%
+\texttt{%
+(View \&
+\textit{vw,}%
+typename View::value\_type const \&
+\textit{old\_value,}%
+typename View::value\_type const \&
+\textit{new\_value}%
+)
+}
+\vspace{0.4cm}
+\index{replace()}
+
+\noindent
+\texttt{%
+template<typename View, typename Predicate >
+\newline
+void 
+}
+\newline
+\textbf{replace\_if}%
+\texttt{%
+(View \&
+\textit{vw,}%
+Predicate 
+\textit{pred,}%
+typename View::value\_type const \&
+\textit{new\_value}%
+)
+}
+\vspace{0.4cm}
+\index{replace\_if()}
+
+\begin{itemize}
+\item
+Replace the values from the input view for which the given predicate returns true with the new value. 
+\item
+Replace the given value in the input with the new value. 
+\end{itemize}
+ 
+\subsubsection{Usage Example} %% \label{sec--alg-use}
+
+The following example shows how to use \texttt{replace and replace\_if}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{algo/replace.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+ 
+\subsubsection{Implementation} %% \label{sec--alg-impl}
+
+\textit{WRITE}
+
+\subsubsection{Performance} %% \label{sec--alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:repl-if-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/repl_if_alg_proc}
+\caption{replace\_if Algorithm Execution Time}
+\label{fig:repl-if-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % %
+
+\subsection{Replace and Copy Values} \label{sec-muta-repl_copy}
+
+\subsubsection{Interface} %% \label{sec--alg-inter}
+
+\noindent
+\texttt{%
+template<typename View0, typename View1 >
+\newline
+View1::iterator 
+}
+\newline
+\textbf{replace\_copy}%
+\texttt{%
+(View0 \&
+\textit{vw0,}%
+View1 \&
+\textit{vw1,}%
+typename View0::value\_type 
+\textit{old\_value,}%
+typename View0::value\_type 
+\textit{new\_value}%
+)
+}
+\vspace{0.4cm}
+\index{replace\_copy()}
+
+\noindent
+\texttt{%
+template<typename View0, typename View1, typename Predicate >
+\newline
+View1::iterator 
+}
+\newline
+\textbf{replace\_copy\_if}%
+\texttt{%
+(View0 const \&
+\textit{vw0,}%
+View1 const \&
+\textit{vw1,}%
+Predicate 
+\textit{pred,}%
+typename View0::value\_type 
+\textit{new\_value}%
+)
+}
+\index{replace\_copy\_if()}
+
+\begin{itemize}
+\item
+Copy the elements from the input to the output, replacing the given old\_value with the new\_value. 
+\item
+Copy the values from the input view to the output, except for those elements for which the given predicate returns true, which are replaced with the given value. 
+\end{itemize}
+ 
+\subsubsection{Usage Example} %% \label{sec--alg-use}
+
+The following example shows how to use \texttt{replace\_copy and replace\_copy\_if}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{algo/replcopy.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+ 
+\subsubsection{Implementation} %% \label{sec--alg-impl}
+
+\textit{WRITE}
+
+\subsubsection{Performance} %% \label{sec--alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:repl-copy-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/repl_copy_alg_proc}
+\caption{replace\_copy Algorithm Execution Time}
+\label{fig:repl-copy-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % %
+
+\subsection{Assigning a Single Value} \label{sec-muta-fill}
+
+\subsubsection{Interface} %% \label{sec--alg-inter}
+
+\noindent
+\texttt{%
+template<typename View >
+\newline
+void 
+}
+\newline
+\textbf{fill}%
+\texttt{%
+(View const \&
+\textit{vw,}%
+typename View::value\_type 
+\textit{value}%
+)
+}
+\vspace{0.4cm}
+\index{fill()}
+
+\noindent
+\texttt{%
+template<typename View, typename Size >
+\newline
+void 
+}
+\newline
+\textbf{fill\_n}%
+\texttt{%
+(View \&
+\textit{vw,}%
+typename View::value\_type 
+\textit{value,}%
+Size 
+\textit{n}%
+)
+}
+\vspace{0.4cm}
+\index{fill\_n()}
+
+\begin{itemize}
+\item
+Assigns the given value to the first n elements of the input view. 
+\item
+Assigns the given value to the elements of the input view. 
+\end{itemize}
+ 
+\subsubsection{Usage Example} %% \label{sec--alg-use}
+
+The following example shows how to use \texttt{fill and fill\_n}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{algo/fill.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+ 
+\subsubsection{Implementation} %% \label{sec--alg-impl}
+
+\textit{WRITE}
+
+\subsubsection{Performance} %% \label{sec--alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:fill-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/fill_alg_proc}
+\caption{fill Algorithm Execution Time}
+\label{fig:fill-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % %
+
+\subsection{for\_each} \label{sec-muta-foreach}
+
+\subsubsection{Interface} %% \label{sec--alg-inter}
+
+\begin{itemize}
+\item
+Swaps the elements of the two input views. 
+\end{itemize}
+\index{swap\_ranges()}
+ 
+\noindent
+\texttt{%
+template<typename View0, typename Function >
+\newline
+Function 
+}
+\newline
+\textbf{for\_each}%
+\texttt{%
+(const View0 \&
+\textit{vw0,}%
+Function 
+\textit{func}%
+)
+}
+\index{for\_each()}
+
+\begin{itemize}
+\item
+Applies the given functor to all of the elements in the input. 
+\end{itemize}
+ 
+\subsubsection{Usage Example} %% \label{sec--alg-use}
+
+The following example shows how to use \texttt{for\_each}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{algo/foreach.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+ 
+\subsubsection{Implementation} %% \label{sec--alg-impl}
+
+\textit{WRITE}
+
+\subsubsection{Performance} %% \label{sec--alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:foreach-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/foreach_alg_proc}
+\caption{for\_each Algorithm Execution Time}
+\label{fig:foreach-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % %
+
+\subsection{Transforming Values} \label{sec-muta-transform}
+
+\subsubsection{Interface} %% \label{sec--alg-inter}
+
+\noindent
+\texttt{%
+template<typename View0, typename View1, typename Function >
+\newline
+void 
+}
+\newline
+\textbf{transform}%
+\texttt{%
+(const View0 \&
+\textit{vw0,}%
+const View1 \&
+\textit{vw1,}%
+Function 
+\textit{func}%
+)
+}
+\vspace{0.4cm}
+
+\noindent
+\texttt{%
+template<typename View0, typename View1, typename View2, typename Function >
+\newline
+void 
+}
+\newline
+\textbf{transform}%
+\texttt{%
+(View0 \&
+\textit{vw0,}%
+View1 \&
+\textit{vw1,}%
+View2 \&
+\textit{vw2,}%
+Function 
+\textit{func}%
+)
+}
+\index{transform()}
+
+\begin{itemize}
+\item
+Applies the given function to the input, and stores the result in the output. 
+\item
+Applies the given function to the inputs, and stores the result in the output. 
+\end{itemize}
+ 
+\subsubsection{Usage Example} %% \label{sec--alg-use}
+
+The following example shows how to use \texttt{transform}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{algo/transform.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+ 
+\subsubsection{Implementation} %% \label{sec--alg-impl}
+
+\textit{WRITE}
+
+\subsubsection{Performance} %% \label{sec--alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:trans-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/trans_alg_proc}
+\caption{transform Algorithm Execution Time}
+\label{fig:trans-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\index{algorithms!removing}
+
+\subsection{Remove Items Not Selected} \label{sec-remv-keep_if}
+
+\subsubsection{Interface} %% \label{sec--alg-inter}
+
+\noindent
+\texttt{%
+template<typename View, typename Pred >
+\newline
+View 
+}
+\newline
+\textbf{keep\_if}%
+\texttt{%
+(View const \&
+\textit{pview,}%
+Pred 
+\textit{predicate}%
+)
+}
+\index{keep\_if()}
+
+\begin{itemize}
+\item
+Remove the values from the input view for which the given predicate returns false. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+template<typename View0, typename View1, typename Pred >
+\newline
+View1 
+}
+\newline
+\textbf{copy\_if}%
+\texttt{%
+(View0 const \&
+\textit{vw0,}%
+View1 \&
+\textit{vw1,}%
+Pred 
+\textit{predicate}%
+)
+}
+\index{copy\_if()}
+
+\begin{itemize}
+\item
+Copy the values from the input view to the output those elements for which the given predicate returns true. 
+\end{itemize}
+ 
+\subsubsection{Usage Example} %% \label{sec--alg-use}
+
+The following example shows how to use \texttt{keep\_if and copy\_if}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{algo/keepif.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsubsection{Implementation} %% \label{sec--alg-impl}
+
+\textit{WRITE}
+
+\subsubsection{Performance} %% \label{sec--alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:keep-if-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/keep_if_alg_proc}
+\caption{keep\_if Algorithm Execution Time}
+\label{fig:keep-if-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % %
+ 
+\subsection{Remove and Copy Values} \label{sec-remv-copy_if}
+
+\subsubsection{Interface} %% \label{sec--alg-inter}
+
+\noindent
+\texttt{%
+template<typename View0, typename View1 >
+\newline
+View1 
+}
+\newline
+\textbf{remove\_copy}%
+\texttt{%
+(View0 const \&
+\textit{vw0,}%
+View1 \&
+\textit{vw1,}%
+typename View0::value\_type 
+\textit{valuetoremove}%
+)
+}
+\index{remove\_copy()}
+
+\begin{itemize}
+\item
+Copy the values from the input view to the output, except for those elements which are equal to the given value. 
+\end{itemize}
+
+\noindent
+\texttt{%
+template<typename View0, typename View1, typename Pred >
+\newline
+View1 
+}
+\newline
+\textbf{remove\_copy\_if}%
+\texttt{%
+(View0 const \&
+\textit{vw0,}%
+View1 \&
+\textit{vw1,}%
+Pred 
+\textit{predicate}%
+)
+}
+\index{remove\_copy\_if()}
+
+\begin{itemize}
+\item
+Copy the values from the input view to the output, except for those elements for which the given predicate returns true. 
+\end{itemize}
+ 
+\subsubsection{Usage Example} %% \label{sec--alg-use}
+
+The following example shows how to use \texttt{remove\_copy and remove\_copy\_if}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{algo/rmvcopy.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+ 
+\subsubsection{Implementation} %% \label{sec--alg-impl}
+
+\textit{WRITE}
+
+\subsubsection{Performance} %% \label{sec--alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:remv-copy-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/remv_copy_alg_proc}
+\caption{remove\_copy Algorithm Execution Time}
+\label{fig:remv-copy-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % %
+
+\subsection{Remove Specified Values} \label{sec-remv-remove_if}
+
+\subsubsection{Interface} %% \label{sec--alg-inter}
+
+\noindent
+\texttt{%
+template<typename View >
+\newline
+View 
+}
+\newline
+\textbf{remove}%
+\texttt{%
+(View \&
+\textit{vw0,}%
+typename View::value\_type 
+\textit{valuetoremove}%
+)
+}
+\index{remove()}
+
+\begin{itemize}
+\item
+Remove the given value from the input. 
+\end{itemize}
+
+\noindent
+\texttt{%
+template<typename View, typename Pred >
+\newline
+View 
+}
+\newline
+\textbf{remove\_if}%
+\texttt{%
+(View const \&
+\textit{pview,}%
+Pred 
+\textit{predicate}%
+)
+}
+\index{remove\_if()}
+
+\begin{itemize}
+\item
+Remove the values from the input view for which the given predicate returns true. 
+\end{itemize}
+ 
+\subsubsection{Usage Example} %% \label{sec--alg-use}
+
+The following example shows how to use \texttt{remove and remove\_if}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{algo/remove.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+ 
+\subsubsection{Implementation} %% \label{sec--alg-impl}
+
+\textit{WRITE}
+
+\subsubsection{Performance} %% \label{sec--alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:remv-if-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/remv_if_alg_proc}
+\caption{remove\_if Algorithm Execution Time}
+\label{fig:remv-if-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % %
+ 
+\subsection{Remove Duplicate Values While Copying} \label{sec-remv-uniq_copy}
+
+\subsubsection{Interface} %% \label{sec--alg-inter}
+
+\noindent
+\texttt{%
+template<typename View, typename DestView, typename BinPredicate >
+\newline
+std::pair< DestView, DestView > 
+}
+\newline
+\textbf{unique\_copy}%
+\texttt{%
+(View \&
+\textit{src\_view,}%
+DestView \&
+\textit{dest\_view,}%
+BinPredicate 
+\textit{bin\_predicate}%
+)
+}
+
+\begin{itemize}
+\item
+Copies all of the elements from the source to the destination view, except those that are consecutive duplicates (equal to the preceding element), which are moved to the end of the destination view. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+template<typename View0, typename View1 >
+\newline
+std::pair< View1, View1 > 
+}
+\newline
+\textbf{unique\_copy}%
+\texttt{%
+(View0 
+\textit{src\_view,}%
+View1 
+\textit{dest\_view}%
+)
+}
+\index{unique\_copy()}
+
+\begin{itemize}
+\item
+Copies all of the elements from the source to the destination view, except those that are consecutive duplicates (equal to the preceding element), which are moved to the end of the destination view. 
+\end{itemize}
+
+\subsubsection{Usage Example} %% \label{sec--alg-use}
+
+The following example shows how to use \texttt{unique\_copy}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{algo/uniqcopy.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+ 
+\subsubsection{Implementation} %% \label{sec--alg-impl}
+
+\textit{WRITE}
+
+\subsubsection{Performance} %% \label{sec--alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:uniq-copy-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/uniq_copy_alg_proc}
+\caption{unique\_copy Algorithm Execution Time}
+\label{fig:uniq-copy-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % %
+
+\subsection{Remove Duplicate Values} \label{sec-remv-uniq}
+
+\subsubsection{Interface} %% \label{sec--alg-inter}
+
+\noindent
+\texttt{%
+template<typename View, typename BinPredicate >
+\newline
+std::pair< View, View > 
+}
+\newline
+\textbf{unique}%
+\texttt{%
+(View 
+\textit{view,}%
+BinPredicate 
+\textit{bin\_predicate}%
+)
+}
+\vspace{0.4cm}
+
+\noindent
+\texttt{%
+template<typename View >
+\newline
+std::pair< View, View > 
+}
+\newline
+\textbf{unique}%
+\texttt{%
+(View 
+\textit{view}%
+)
+}
+\index{unique()}
+
+\begin{itemize}
+\item
+Remove all duplicate elements from the given view. 
+\item
+Remove all duplicate elements from the given view. 
+\end{itemize}
+
+\subsubsection{Usage Example} %% \label{sec--alg-use}
+
+The following example shows how to use \texttt{unique}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{algo/unique.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+ 
+\subsubsection{Implementation} %% \label{sec--alg-impl}
+
+\textit{WRITE}
+
+\subsubsection{Performance} %% \label{sec--alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:unique-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/uniq_alg_proc}
+\caption{unique Algorithm Execution Time}
+\label{fig:unique-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\index{algorithms!reordering}
+
+\subsection{Reverse Value Order} \label{sec-reord-reverse}
+
+\subsubsection{Interface} %% \label{sec--alg-inter}
+
+\noindent
+\texttt{%
+template<typename View0, typename View1 >
+\newline
+void 
+}
+\newline
+\textbf{reverse\_copy}%
+\texttt{%
+(View0 const \&
+\textit{vw0,}%
+View1 const \&
+\textit{vw1}%
+)
+}
+\index{reverse\_copy()}
+
+\begin{itemize}
+\item
+Copy elements of the input view to the output view in reverse order. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+template<typename View0 >
+\newline
+void 
+}
+\newline
+\textbf{reverse}%
+\texttt{%
+(View0 const \&
+\textit{vw0}%
+)
+}
+\index{reverse()}
+
+\begin{itemize}
+\item
+Reverse the order of the elements in the input view. 
+\end{itemize}
+
+\subsubsection{Usage Example} %% \label{sec--alg-use}
+
+The following example shows how to use \texttt{reverse and reverse\_copy}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{algo/reverse.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+ 
+\subsubsection{Implementation} %% \label{sec--alg-impl}
+
+\textit{WRITE}
+
+\subsubsection{Performance} %% \label{sec--alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:rev-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/reverse_alg_proc}
+\caption{reverse Algorithm Execution Time}
+\label{fig:rev-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % %
+
+\subsection{Rotate Order of Values} \label{sec-reord-rotate}
+
+\subsubsection{Interface} %% \label{sec--alg-inter}
+
+\noindent
+\texttt{%
+template<typename View0, typename View1 >
+\newline
+void 
+}
+\newline
+\textbf{rotate\_copy}%
+\texttt{%
+(View0 const \&
+\textit{vw0,}%
+View1 const \&
+\textit{vw1,}%
+int 
+\textit{k}%
+)
+}
+\index{rotate\_copy()}
+
+\begin{itemize}
+\item
+Copy the elements in the input view to the output view rotated to the left by k positions. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+template<typename View0 >
+\newline
+void 
+}
+\newline
+\textbf{rotate}%
+\texttt{%
+(View0 const \&
+\textit{vw1,}%
+int 
+\textit{k}%
+)
+}
+\vspace{0.4cm}
+\index{rotate()}
+
+\begin{itemize}
+\item
+Rotate the elements in the view to the left by k positions. 
+\end{itemize}
+
+\subsubsection{Usage Example} %% \label{sec--alg-use}
+
+The following example shows how to use \texttt{rotate\_copy and rotate}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{algo/rotate.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+ 
+\subsubsection{Implementation} %% \label{sec--alg-impl}
+
+\textit{WRITE}
+
+\subsubsection{Performance} %% \label{sec--alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:rotate-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/rotate_alg_proc}
+\caption{rotate Algorithm Execution Time}
+\label{fig:rotate-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % %
+
+\subsection{Moving Values to Front} \label{sec-reord-stab_part}
+
+\subsubsection{Interface} %% \label{sec--alg-inter}
+
+\noindent
+\texttt{%
+template<typename View, typename Pred >
+\newline
+size\_t 
+}
+\newline
+\textbf{stable\_partition}%
+\texttt{%
+(View const \&
+\textit{pview,}%
+Pred 
+\textit{predicate}%
+)
+}
+\index{stable\_partition()}
+
+\begin{itemize}
+\item
+Partition the input such that all elements for which the predicate returns true are ordered before those for which it returned false, while also maintaining the relative ordering of the elements. 
+\end{itemize}
+
+\subsubsection{Usage Example} %% \label{sec--alg-use}
+
+The following example shows how to use \texttt{stable\_partition}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{algo/stpart.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+ 
+\subsubsection{Implementation} %% \label{sec--alg-impl}
+
+\textit{WRITE}
+
+\subsubsection{Performance} %% \label{sec--alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:stab-part-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/stab_part_alg_proc}
+\caption{stable\_partition Algorithm Execution Time}
+\label{fig:stab-part-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % %
+
+\subsection{Partition into Subviews} \label{sec-reord-part_copy}
+
+\subsubsection{Interface} %% \label{sec--alg-inter}
+
+\noindent
+\texttt{%
+template<typename View0, typename View1, typename View2, typename Pred >
+\newline
+std::pair< View1, View2 > 
+}
+\newline
+\textbf{partition\_copy}%
+\texttt{%
+(View0 const \&
+\textit{pview0,}%
+View1 const \&
+\textit{pview1,}%
+View2 const \&
+\textit{pview2,}%
+ Pred 
+\textit{predicate}%
+)
+}
+\index{partition\_copy()}
+
+\begin{itemize}
+\item
+Copies all elements from the input for which the functor returns true into the first output view, and all others into the second output. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+template<typename View, typename Pred >
+\newline
+size\_t 
+}
+\newline
+\textbf{partition}%
+\texttt{%
+(View const \&
+\textit{pview,}%
+Pred 
+\textit{predicate}%
+)
+}
+\index{partition()}
+
+\begin{itemize}
+\item
+Partition the input such that all elements for which the predicate returns true are ordered before those for which it returned false. 
+\end{itemize}
+
+\subsubsection{Usage Example} %% \label{sec--alg-use}
+
+The following example shows how to use \texttt{partition}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{algo/partition.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsubsection{Implementation} %% \label{sec--alg-impl}
+
+\textit{WRITE}
+
+\subsubsection{Performance} %% \label{sec--alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:part-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/part_alg_proc}
+\caption{partition Algorithm Execution Time}
+\label{fig:part-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % %
+ 
+\subsection{Reorder Values Randomly} \label{sec-reord-rand_shuf}
+
+\subsubsection{Interface} %% \label{sec--alg-inter}
+
+\noindent
+\texttt{%
+template<typename View, typename RandomNumberGenerator >
+\newline
+void 
+}
+\newline
+\textbf{random\_shuffle}%
+\texttt{%
+(View const \&
+\textit{view,}%
+RandomNumberGenerator const \&
+\textit{rng}%
+)
+}
+\vspace{0.4cm}
+
+\noindent
+\texttt{%
+template<typename View >
+\newline
+void 
+}
+\newline
+\textbf{random\_shuffle}%
+\texttt{%
+(View const \&
+\textit{view}%
+)
+}
+\index{random\_shuffle()}
+
+\begin{itemize}
+\item
+Computes a random shuffle of elements in the input view. 
+\item
+Computes a random shuffle of elements in the input view. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+template<typename View, typename UniformRandomNumberGenerator >
+\newline
+void 
+}
+\newline
+\textbf{shuffle}%
+\texttt{%
+(const View \&
+\textit{view,}%
+const UniformRandomNumberGenerator \&
+\textit{rng}%
+)
+}
+\index{shuffle()}
+
+\begin{itemize}
+\item
+Computes a random shuffle of elements in the input view, using the given uniform random number generator. 
+\end{itemize}
+
+\subsubsection{Usage Example} %% \label{sec--alg-use}
+
+The following example shows how to use \texttt{random\_shuffle}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{algo/randshuf.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+ 
+\subsubsection{Implementation} %% \label{sec--alg-impl}
+
+\textit{WRITE}
+
+\subsubsection{Performance} %% \label{sec--alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:shuffle-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/shuffle_alg_proc}
+\caption{shuffle Algorithm Execution Time}
+\label{fig:shuffle-alg-exec-exper}
+\end{figure}
+
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{Sorting and Related Operations} \label{sec-sorting-alg}
+
+The sorting algorithms perform operations related to sorting or depending on sorted order. All algorithms define ordering of elements based on operator< or an optional StrictWeakOrdering function object.
+
+\index{algorithms!sorting}
+
+\subsection{Sorting All Values with Sample Sort} \label{sec-sort-sample}
+
+\subsubsection{Interface} %% \label{sec--alg-inter}
+
+\noindent
+\texttt{%
+template<typename View, typename Compare >
+\newline
+void 
+}
+\newline
+\textbf{sample\_sort}%
+\texttt{%
+(View \&
+\textit{view,}%
+Compare 
+\textit{comp,}%
+size\_t 
+\textit{sampling\_method,}%
+size\_t 
+\textit{over\_partitioning\_ratio=1,}%
+size\_t 
+\textit{over\_sampling\_ratio=128}%
+)
+}
+\vspace{0.4cm}
+
+\noindent
+\texttt{%
+template<typename View >
+\newline
+void 
+}
+\newline
+\textbf{sample\_sort}%
+\texttt{%
+(View \&
+\textit{view,}%
+size\_t 
+\textit{sampling\_method,}%
+size\_t 
+\textit{over\_partitioning\_ratio=1,}%
+size\_t 
+\textit{over\_sampling\_ratio=128}%
+)
+}
+\vspace{0.4cm}
+
+\noindent
+\texttt{%
+template<typename View, typename Compare >
+\newline
+void 
+}
+\newline
+\textbf{sample\_sort}%
+\texttt{%
+(View \&
+\textit{view,}%
+Compare 
+\textit{comp}%
+)
+}
+\vspace{0.4cm}
+
+\noindent
+\texttt{%
+template<typename View >
+\newline
+void 
+}
+\newline
+\textbf{sample\_sort}%
+\texttt{%
+(View \&
+\textit{view}%
+)
+}
+\index{sample\_sort()}
+
+\begin{itemize}
+\item
+Sorts the elements of the input view according to the comparator provided using a sample-based approach. 
+\item
+Sorts the elements of the input view according to the comparator provided using a sample-based approach. 
+\item
+Sorts the elements of the input view according to the comparator provided using a sample-based approach. 
+\item
+Sorts the elements of the input view according to the comparator provided using a sample-based approach. 
+\end{itemize}
+
+\subsubsection{Usage Example} %% \label{sec--alg-use}
+
+The following example shows how to use \texttt{sample\_sort}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{algo/sampsort.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+ 
+\subsubsection{Implementation} %% \label{sec--alg-impl}
+
+\textit{WRITE}
+
+\subsubsection{Performance} %% \label{sec--alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:sample-sort-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/sample_sort_alg_proc}
+\caption{sample\_sort Algorithm Execution Time}
+\label{fig:sample-sort-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % %
+
+\subsection{Sorting All Values} \label{sec-sort-sort}
+
+\subsubsection{Interface} %% \label{sec--alg-inter}
+
+\noindent
+\texttt{%
+template<typename View, typename Comparator >
+\newline
+void 
+}
+\newline
+\textbf{sort}%
+\texttt{%
+(View \&
+\textit{view,}%
+Comparator 
+\textit{comp}%
+)
+}
+\vspace{0.4cm}
+
+\noindent
+\texttt{%
+template<typename View >
+\newline
+void 
+}
+\newline
+\textbf{sort}%
+\texttt{%
+(View \&
+\textit{view}%
+)
+}
+\index{sort()}
+
+\begin{itemize}
+\item
+Sorts the elements of the input view according to the comparator provided. 
+\item
+Sorts the elements of the input view according to the comparator provided. 
+\end{itemize}
+
+\subsubsection{Usage Example} %% \label{sec--alg-use}
+
+The following example shows how to use \texttt{sort}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{algo/sort.tex}
+%%\noindent\rule{12cm}{0.5mm}
+ 
+\subsubsection{Implementation} %% \label{sec--alg-impl}
+
+\textit{WRITE}
+
+\subsubsection{Performance} %% \label{sec--alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:sort-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/sort_alg_proc}
+\caption{sort Algorithm Execution Time}
+\label{fig:sort-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % %
+
+\subsection{Reorder Values into Subgroups} \label{sec-sort-n_part}
+
+\subsubsection{Interface} %% \label{sec--alg-inter}
+
+\noindent
+\texttt{%
+template<typename InputView, typename SplittersView, typename Compare, 
+    typename Functor > 
+\newline
+partitioned\_view< InputView, splitter\_partition< typename InputView::domain\_type > > 
+}
+\newline
+\textbf{n\_partition}%
+\texttt{%
+(InputView 
+\textit{input\_v,}%
+SplittersView 
+\textit{splitters,}%
+Compare 
+\textit{comp,}%
+Functor 
+\textit{partition\_functor}%
+)
+}
+\vspace{0.4cm}
+
+\noindent
+\texttt{%
+template<typename InputView, typename SplittersView, typename Compare >
+\newline
+partitioned\_view< InputView, splitter\_partition< typename 
+    InputView::domain\_type > > 
+}
+\newline
+\textbf{n\_partition}%
+\texttt{%
+(InputView 
+\textit{input\_v,}%
+SplittersView 
+\textit{splitters,}%
+Compare 
+\textit{comp}%
+)
+}
+\vspace{0.4cm}
+
+\noindent
+\texttt{%
+template<typename InputView, typename SplittersView >
+\newline
+partitioned\_view< InputView, splitter\_partition< typename 
+     InputView::domain\_type > > 
+}
+\newline
+\textbf{n\_partition}%
+\texttt{%
+(InputView 
+\textit{input\_v,}%
+SplittersView 
+\textit{splitters}%
+)
+}
+\vspace{0.4cm}
+
+\noindent
+\texttt{%
+template<typename InputView, typename Compare, typename Functor >
+\newline
+partitioned\_view< InputView, splitter\_partition< typename 
+    InputView::domain\_type > > 
+}
+\newline
+\textbf{n\_partition}%
+\texttt{%
+(InputView 
+\textit{input\_v,}%
+std::vector< typename InputView::value\_type > 
+\textit{splitters,}%
+Compare 
+\textit{comp,}%
+Functor 
+\textit{partition\_functor}%
+)
+}
+\index{n\_partition()}
+
+\begin{itemize}
+\item
+Reorders the elements in the input view in such a way that all elements for which the comparator returns true for a splitter s. 
+\item
+Reorders the elements in the input view in such a way that all elements for which the comparator returns true for a splitter s. 
+\item
+Reorders the elements in the input view in such a way that all elements for which the default '<' comparison function returns true for a splitter s - within the input splitters set - precede the elements for which the compare function returns false. The relative ordering of the elements is not preserved. 
+\item
+Reorders the elements in the input view in such a way that all elements for which the comparator returns true for a splitter s. 
+\end{itemize}
+
+\subsubsection{Usage Example} %% \label{sec--alg-use}
+
+The following example shows how to use \texttt{n\_partition}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{algo/npart.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+ 
+\subsubsection{Implementation} %% \label{sec--alg-impl}
+
+\textit{WRITE}
+
+\subsubsection{Performance} %% \label{sec--alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:npart-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/npart_alg_proc}
+\caption{n\_partition Algorithm Execution Time}
+\label{fig:npart-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % %
+
+\subsection{Partial Sort} \label{sec-sort-partial}
+
+\subsubsection{Interface} %% \label{sec--alg-inter}
+
+\noindent
+\texttt{%
+template<typename InputView, typename Compare >
+\newline
+void 
+}
+\newline
+\textbf{partial\_sort}%
+\texttt{%
+(InputView 
+\textit{input\_v,}%
+typename InputView::iterator 
+\textit{nth,}%
+Compare 
+\textit{comp}%
+)
+}
+\vspace{0.4cm}
+ 
+\noindent
+\texttt{%
+template<typename InputView >
+\newline
+void 
+}
+\newline
+\textbf{partial\_sort}%
+\texttt{%
+(InputView 
+\textit{input\_v,}%
+typename InputView::iterator 
+\textit{nth}%
+)
+}
+\index{partial\_sort()}
+
+\begin{itemize}
+\item
+Performs a partial sort of the data in the input view using the comparator provided such that all elements before the nth position are sorted using the comparator. 
+\item
+Performs a partial sort of the data in the input view using the comparator provided such that all elements before the nth position are sorted using the comparator. 
+\end{itemize}
+
+\subsubsection{Usage Example} %% \label{sec--alg-use}
+
+The following example shows how to use \texttt{partial\_sort}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{algo/partsort.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+ 
+\subsubsection{Implementation} %% \label{sec--alg-impl}
+
+\textit{WRITE}
+
+\subsubsection{Performance} %% \label{sec--alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:part-sort-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/part_sort_alg_proc}
+\caption{partial\_sort Algorithm Execution Time}
+\label{fig:part-sort-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % %
+
+\subsection{Partial Sort and Copy} \label{sec-sort-part_sort}
+
+\subsubsection{Interface} %% \label{sec--alg-inter}
+
+\noindent
+\texttt{%
+template<typename InputView, typename OutputView, typename Compare >
+\newline
+OutputView 
+}
+\newline
+\textbf{partial\_sort\_copy}%
+\texttt{%
+(InputView 
+\textit{input\_v,}%
+OutputView 
+\textit{output\_v,}%
+Compare 
+\textit{comp}%
+)
+}
+\vspace{0.4cm}
+
+\noindent
+\texttt{%
+template<typename InputView, typename OutputView >
+\newline
+OutputView 
+}
+\newline
+\textbf{partial\_sort\_copy}%
+\texttt{%
+(InputView 
+\textit{input\_v,}%
+OutputView 
+\textit{output\_v}%
+)
+}
+\index{partial\_sort\_copy()}
+
+\begin{itemize}
+\item
+Performs a partial sort of the input view data into the output view using the comparator provided such that all elements before the nth position are sorted using the comparator. 
+\item
+Performs a partial sort of the input view data into the output view using the comparator provided such that all elements before the nth position are sorted using the comparator. 
+\end{itemize}
+
+\subsubsection{Usage Example} %% \label{sec--alg-use}
+
+The following example shows how to use \texttt{partial\_sort\_copy}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{algo/partsortcp.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+ 
+\subsubsection{Implementation} %% \label{sec--alg-impl}
+
+\textit{WRITE}
+
+\subsubsection{Performance} %% \label{sec--alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:part-copy-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/part_copy_alg_proc}
+\caption{partial\_sort\_copy Algorithm Execution Time}
+\label{fig:part-copy-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % %
+
+\subsection{Sort Values with Radix Sort} \label{sec-sort-radix}
+
+\subsubsection{Interface} %% \label{sec--alg-inter}
+
+\noindent
+\texttt{%
+template<typename InputView >
+\newline
+void 
+}
+\newline
+\textbf{radix\_sort}%
+\texttt{%
+(InputView 
+\textit{input\_v}%
+)
+}
+\index{radix\_sort()}
+
+\begin{itemize}
+\item
+Sorts the element in the input view according to the radix-sort algorithm. 
+\end{itemize}
+
+\subsubsection{Usage Example} %% \label{sec--alg-use}
+
+The following example shows how to use \texttt{radix\_sort}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{algo/radsort.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+ 
+\subsubsection{Implementation} %% \label{sec--alg-impl}
+
+\textit{WRITE}
+
+\subsubsection{Performance} %% \label{sec--alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:radix-sort-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/radix_sort_alg_proc}
+\caption{radix\_sort Algorithm Execution Time}
+\label{fig:radix-sort-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\subsection{Permuting Values} \label{sec-sort-permute}
+
+\subsubsection{Interface} %% \label{sec--alg-inter}
+
+\index{algorithms!permuting}
+
+\textit{WARNING: software archaeology reviewals that these algorithms 
+have been broken since the great pContainer update nearly 3 years ago.
+tests have been turned off because they don't compile}
+
+Reorder the elements in a view. 
+
+\noindent
+\texttt{%
+template<typename View, typename Predicate >
+\newline
+bool 
+}
+\newline
+\textbf{next\_permutation}%
+\texttt{%
+(View \&
+\textit{vw,}%
+Predicate 
+\textit{pred}%
+)
+}
+\vspace{0.4cm}
+
+\noindent
+\texttt{%
+template<typename View >
+\newline
+bool 
+}
+\newline
+\textbf{next\_permutation}%
+\texttt{%
+(View \&
+\textit{vw}%
+)
+}
+\index{next\_permutation()}
+
+\begin{itemize}
+\item
+Computes the next lexicographic ordering of the input view (where the highest is sorted in decreasing order
+), or if input is already in highest order, places it in the lowest permutation (increasing order). 
+\item
+Computes the next lexicographic ordering of the input view (where the highest is sorted in decreasing order
+), or if input is already in highest order, places it in the lowest permutation (increasing order). 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+template<typename View, typename Predicate >
+\newline
+bool 
+}
+\newline
+\textbf{prev\_permutation}%
+\texttt{%
+(View \&
+\textit{vw,}%
+Predicate 
+\textit{pred}%
+)
+}
+\vspace{0.4cm}
+
+\noindent
+\texttt{%
+template<typename View >
+\newline
+bool 
+}
+\newline
+\textbf{prev\_permutation}%
+\texttt{%
+(View \&
+\textit{vw}%
+)
+}
+\index{prev\_permutation()}
+
+\begin{itemize}
+\item
+Computes the previous lexicographic ordering of the input view (where the lowest is sorted in increasing order
+), or if input is already in lowest order, places it in the highest permutation (decreasing order). 
+\item
+Computes the previous lexicographic ordering of the input view (where the lowest is sorted in increasing order
+), or if input is already in lowest order, places it in the highest permutation (decreasing order). 
+\end{itemize}
+
+\subsubsection{Usage Example} %% \label{sec--alg-use}
+
+The following example shows how to use \texttt{next\_permutation and prev\_permutation}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+%%\input{algo/permutation.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+ 
+\subsubsection{Implementation} %% \label{sec--alg-impl}
+
+\textit{WRITE}
+
+\subsubsection{Performance} %% \label{sec--alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:prev-perm-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/prev_perm_alg_proc}
+\caption{prev\_permutation Algorithm Execution Time}
+\label{fig:prev-perm-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\index{algorithms!search!binary}
+
+\subsection{Searching for Value Presence} \label{sec-sort-bin_srch}
+
+\subsubsection{Interface} %% \label{sec--alg-inter}
+
+\noindent
+\texttt{%
+template<typename View, typename StrictWeakOrdering >
+\newline
+bool 
+}
+\newline
+\textbf{binary\_search}%
+\texttt{%
+(View const \&
+\textit{view,}%
+typename View::value\_type 
+\textit{value,}%
+StrictWeakOrdering 
+\textit{comp}%
+)
+}
+\vspace{0.4cm}
+
+\noindent
+\texttt{%
+template<typename View >
+\newline
+bool 
+}
+\newline
+\textbf{binary\_search}%
+\texttt{%
+(View const \&
+\textit{view,}%
+typename View::value\_type 
+\textit{value}%
+)
+}
+\index{binary\_search()}
+
+\begin{itemize}
+\item
+Searches the input view for the given value using a binary search, and returns true if that value exists in the input. 
+\item
+Searches the input view for the given value using a binary search, and returns true if that value exists in the input. 
+\end{itemize}
+
+\subsubsection{Usage Example} %% \label{sec--alg-use}
+
+The following example shows how to use \texttt{binary\_search}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{algo/binsrch.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+ 
+\subsubsection{Implementation} %% \label{sec--alg-impl}
+
+\textit{WRITE}
+
+\subsubsection{Performance} %% \label{sec--alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:bin-srch-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/bin_srch_alg_proc}
+\caption{binary\_search Algorithm Execution Time}
+\label{fig:bin-srch-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\subsection{Search First or Last Possible Position} \label{sec-sort-bound}
+
+\subsubsection{Interface} %% \label{sec--alg-inter}
+
+\noindent
+\texttt{%
+template<typename View, typename T, typename StrictWeakOrdering >
+\newline
+View::reference 
+}
+\newline
+\textbf{lower\_bound}%
+\texttt{%
+(View const \&
+\textit{view,}%
+T const \&
+\textit{value,}%
+StrictWeakOrdering 
+\textit{comp}%
+)
+}
+\vspace{0.4cm}
+
+\noindent
+\texttt{%
+template<typename View, typename T >
+\newline
+View::reference 
+}
+\newline
+\textbf{lower\_bound}%
+\texttt{%
+(View const \&
+\textit{view,}%
+T const \&
+\textit{value}%
+)
+}
+\index{lower\_bound()}
+
+\begin{itemize}
+\item
+Finds the first element in the input view which compares greater than or equal to the given value. 
+\item
+Finds the first element in the input view which compares greater than or equal to the given value. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+template<typename View, typename T, typename StrictWeakOrdering >
+\newline
+View::reference 
+}
+\newline
+\textbf{upper\_bound}%
+\texttt{%
+(View const \&
+\textit{view,}%
+T const \&
+\textit{value,}%
+StrictWeakOrdering 
+\textit{comp}%
+)
+}
+\vspace{0.4cm}
+
+\noindent
+\texttt{%
+template<typename View, typename T >
+\newline
+View::reference 
+}
+\newline
+\textbf{upper\_bound}%
+\texttt{%
+(View const \&
+\textit{view,}%
+T const \&
+\textit{value}%
+)
+}
+\index{upper\_bound()}
+
+\begin{itemize}
+\item
+Finds the first element in the input view which compares greater than the given value. 
+\item
+Finds the first element in the input view which compares greater than the given value. 
+\end{itemize}
+
+\subsubsection{Usage Example} %% \label{sec--alg-use}
+
+The following example shows how to use \texttt{lower\_bound and upper\_bound}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{algo/uplobnd.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+ 
+\subsubsection{Implementation} %% \label{sec--alg-impl}
+
+\textit{WRITE}
+
+\subsubsection{Performance} %% \label{sec--alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:lobnd-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/lobnd_alg_proc}
+\caption{lower\_bound Algorithm Execution Time}
+\label{fig:lobnd-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+ 
+\subsection{Searching First and Last Position} \label{sec-sort-range}
+
+\subsubsection{Interface} %% \label{sec--alg-inter}
+
+\noindent
+\texttt{%
+template<typename View, typename StrictWeakOrdering >
+\newline
+View 
+}
+\newline
+\textbf{equal\_range}%
+\texttt{%
+(View const \&
+\textit{view,}%
+typename View::value\_type const \&
+\textit{value,}%
+StrictWeakOrdering const \&
+\textit{comp}%
+)
+}
+\vspace{0.4cm}
+
+\noindent
+\texttt{%
+template<typename View >
+\newline
+View 
+}
+\newline
+\textbf{equal\_range}%
+\texttt{%
+(View const \&
+\textit{view,}%
+typename View::value\_type const \&
+\textit{value}%
+)
+}
+\index{equal\_range()}
+
+\begin{itemize}
+\item
+Computes the range of elements which are equal to the given value. 
+\item
+Computes the range of elements which are equal to the given value. 
+\end{itemize}
+
+\subsubsection{Usage Example} %% \label{sec--alg-use}
+
+The following example shows how to use \texttt{equal\_range}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{algo/eqrange.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+ 
+\subsubsection{Implementation} %% \label{sec--alg-impl}
+
+\textit{WRITE}
+
+\subsubsection{Performance} %% \label{sec--alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:eq-range-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/eq_range_alg_proc}
+\caption{equal\_range Algorithm Execution Time}
+\label{fig:eq-range-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\index{algorithms!sorting!related}
+
+\subsection{Testing for "Less Than"} \label{sec-sort-lex_comp}
+
+\subsubsection{Interface} %% \label{sec--alg-inter}
+
+\noindent
+\texttt{%
+template<typename View, typename View2, typename Pred >
+\newline
+bool 
+}
+\newline
+\textbf{lexicographical\_compare}%
+\texttt{%
+(View const \&
+\textit{pview1,}%
+View2 const \&
+\textit{pview2,}%
+Pred const \&
+\textit{pred}%
+)
+}
+\vspace{0.4cm}
+
+\noindent
+\texttt{%
+template<typename View, typename View2 >
+\newline
+bool 
+}
+\newline
+\textbf{lexicographical\_compare}%
+\texttt{%
+(View const \&
+\textit{pview1,}%
+View2 const \&
+\textit{pview2}%
+)
+}
+\index{lexicographical\_compare()}
+
+\begin{itemize}
+\item
+Determines if the first view is lexicographically less than the second view, using the given functor. 
+\item
+Determines if the first view is lexicographically less than the second view. 
+\end{itemize}
+
+\subsubsection{Usage Example} %% \label{sec--alg-use}
+
+The following example shows how to use \texttt{lexicographical\_compare}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{algo/lexcomp.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+ 
+\subsubsection{Implementation} %% \label{sec--alg-impl}
+
+\textit{WRITE}
+
+\subsubsection{Performance} %% \label{sec--alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:lex-comp-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/lex_comp_alg_proc}
+\caption{lexicographical\_compare Algorithm Execution Time}
+\label{fig:lex-comp-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % %
+ 
+\subsection{Merge Values} \label{sec-sort-merge}
+
+\subsubsection{Interface} %% \label{sec--alg-inter}
+
+\noindent
+\texttt{%
+template<typename View1, typename View2, typename MergeView >
+\newline
+void 
+}
+\newline
+\textbf{merge}%
+\texttt{%
+(View1 const \&
+\textit{view1,}%
+View2 const \&
+\textit{view2,}%
+MergeView \&
+\textit{merged}%
+)
+}
+\index{merge()}
+
+\begin{itemize}
+\item
+Merges the two sorted input views into the output view in sorted order. 
+\end{itemize}
+
+\subsubsection{Usage Example} %% \label{sec--alg-use}
+
+The following example shows how to use \texttt{merge}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{algo/merge.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+ 
+\subsubsection{Implementation} %% \label{sec--alg-impl}
+
+\textit{WRITE}
+
+\subsubsection{Performance} %% \label{sec--alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:merge-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/merge_alg_proc}
+\caption{merge Algorithm Execution Time}
+\label{fig:merge-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % %
+ 
+\subsection{Check Sortedness} \label{sec-sort-is_sorted}
+
+\subsubsection{Interface} %% \label{sec--alg-inter}
+
+\noindent
+\texttt{%
+template<typename View, typename Comp >
+\newline
+bool 
+}
+\newline
+\textbf{is\_sorted}%
+\texttt{%
+(View const \&
+\textit{view,}%
+Comp 
+\textit{comp}%
+)
+}
+\vspace{0.4cm}
+
+\noindent
+\texttt{%
+template<typename View >
+\newline
+bool 
+}
+\newline
+\textbf{is\_sorted}%
+\texttt{%
+(View const \&
+\textit{view}%
+)
+}
+\index{is\_sorted()}
+
+\begin{itemize}
+\item
+Computes whether the input view is sorted. 
+\item
+Computes whether the input view is sorted. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+template<typename View, typename Comp >
+\newline
+View 
+}
+\newline
+\textbf{is\_sorted\_until}%
+\texttt{%
+(View const \&
+\textit{v,}%
+Comp const \&
+\textit{c}%
+)
+}
+\vspace{0.4cm}
+
+\noindent
+\texttt{%
+template<typename View >
+\newline
+View 
+}
+\newline
+\textbf{is\_sorted\_until}%
+\texttt{%
+(View const \&
+\textit{v}%
+)
+}
+\index{is\_sorted\_until()}
+
+\begin{itemize}
+\item
+Finds the range of elements in the input which are sorted. 
+\item
+Finds the range of elements in the input which are sorted. 
+\end{itemize}
+
+\subsubsection{Usage Example} %% \label{sec--alg-use}
+
+The following example shows how to use \texttt{is\_sorted and is\_sorted\_until}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{algo/issort.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+ 
+\subsubsection{Implementation} %% \label{sec--alg-impl}
+
+\textit{WRITE}
+
+\subsubsection{Performance} %% \label{sec--alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:is-sort-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/is_sort_alg_proc}
+\caption{is\_sorted Algorithm Execution Time}
+\label{fig:is-sort-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{Generalized Numeric Algorithms} \label{sec-numer-alg}
+\index{algorithms!numeric}
+
+\subsection{Compute Reduction of View} \label{sec-num-reduce}
+
+\subsubsection{Interface} %% \label{sec--alg-inter}
+
+\noindent
+\texttt{%
+template<typename View, typename T, typename Oper >
+\newline
+T 
+}
+\newline
+\textbf{accumulate}%
+\texttt{%
+(View const \&
+\textit{view,}%
+T 
+\textit{init,}%
+Oper 
+\textit{oper}%
+)
+}
+\vspace{0.4cm}
+
+\noindent
+\texttt{%
+template<typename View, typename T >
+\newline
+T 
+}
+\newline
+\textbf{accumulate}%
+\texttt{%
+(View const \&
+\textit{view,}%
+T 
+\textit{init}%
+)
+}
+\index{accumulate()}
+
+\begin{itemize}
+\item
+Compute the sum of the elements and the initial value. 
+\item
+Compute the sum of the elements and the initial value. 
+\end{itemize}
+
+\subsubsection{Usage Example} %% \label{sec--alg-use}
+
+The following example shows how to use \texttt{accumulate}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{algo/accum.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsubsection{Implementation} %% \label{sec--alg-impl}
+
+\textit{WRITE}
+
+\subsubsection{Performance} %% \label{sec--alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:accum-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/accum_alg_proc}
+\caption{accumulate Algorithm Execution Time}
+\label{fig:accum-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % %
+ 
+\subsection{Converting Absolute to Relative Values} \label{sec-num-adj_diff}
+
+\subsubsection{Interface} %% \label{sec--alg-inter}
+
+\noindent
+\texttt{%
+template<typename View1, typename View2, typename Oper >
+\newline
+void 
+}
+\newline
+\textbf{adjacent\_difference}%
+\texttt{%
+(View1 const \&
+\textit{view1,}%
+View2 const \&
+\textit{view2,}%
+Oper 
+\textit{oper}%
+)
+}
+\vspace{0.4cm}
+
+\noindent
+\texttt{%
+template<typename View1, typename View2 >
+\newline
+void 
+}
+\newline
+\textbf{adjacent\_difference}%
+\texttt{%
+(View1 const \&
+\textit{view1,}%
+View2 const \&
+\textit{view2}%
+)
+}
+\index{adjacent\_difference()}
+
+\begin{itemize}
+\item
+Assign each element of the output the difference between the corresponding input element and the input element that precedes it. 
+\item
+Assign each element of the output the difference between the corresponding input element and the input element that precedes it. 
+\end{itemize}
+
+\subsubsection{Usage Example} %% \label{sec--alg-use}
+
+The following example shows how to use \texttt{adjacent\_difference}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{algo/adjdiff.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+ 
+\subsubsection{Implementation} %% \label{sec--alg-impl}
+
+\textit{WRITE}
+
+\subsubsection{Performance} %% \label{sec--alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:adj-diff-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/adj_diff_alg_proc}
+\caption{adjacent\_difference Algorithm Execution Time}
+\label{fig:adj-diff-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % %
+ 
+\index{algorithms!numeric}
+
+\subsection{Compute Inner Product of Two Views} \label{sec-num-inner}
+
+\subsubsection{Interface} %% \label{sec--alg-inter}
+
+\noindent
+\texttt{%
+template<typename View1, typename View2, typename Init, typename Sum, typename Product > 
+\newline
+Init 
+}
+\newline
+\textbf{inner\_product}%
+\texttt{%
+(View1 const \&
+\textit{view1,}%
+View2 const \&
+\textit{view2,}%
+Init 
+\textit{init,}%
+Sum 
+\textit{op1,}%
+Product 
+\textit{op2}%
+)
+}
+\vspace{0.4cm}
+
+\noindent
+\texttt{%
+template<typename View1, typename View2, typename Init >
+\newline
+Init 
+}
+\newline
+\textbf{inner\_product}%
+\texttt{%
+(View1 const \&
+\textit{view1,}%
+View2 const \&
+\textit{view2,}%
+Init 
+\textit{init}%
+)
+}
+\vspace{0.4cm}
+ 
+\noindent
+\texttt{%
+template<typename T, typename ViewA, typename Views >
+\newline
+std::vector< T > 
+}
+\newline
+\textbf{inner\_product}%
+\texttt{%
+(const ViewA \&
+\textit{va,}%
+const Views \&
+\textit{views,}%
+std::vector< T > 
+\textit{init}%
+)
+}
+\index{inner\_product()}
+
+\begin{itemize}
+\item
+Compute the inner product of the elements of two input views. Inner product is defined as the sum of pair-wise products of the elements of two input views. 
+\item
+Compute the inner product of the elements of two input views. Inner product is defined as the sum of pair-wise products of the elements of two input views. 
+\item
+Compute the inner product of the elements of one view and the elements of each of a set of views. 
+\end{itemize}
+
+\subsubsection{Usage Example} %% \label{sec--alg-use}
+
+The following example shows how to use \texttt{inner\_product}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{algo/inprod.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsubsection{Implementation} %% \label{sec--alg-impl}
+
+\textit{WRITE}
+
+\subsubsection{Performance} %% \label{sec--alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:inner-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/inner_alg_proc}
+\caption{inner\_product Algorithm Execution Time}
+\label{fig:inner-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % %
+ 
+\subsection{Compute Weighted Inner Product} \label{sec-num-wt_inner}
+
+\subsubsection{Interface} %% \label{sec--alg-inter}
+
+\noindent
+\texttt{%
+template<typename Init, typename View1, typename View2, typename View3, 
+     typename Sum, typename Product >
+\newline
+Init 
+}
+\newline
+\textbf{weighted\_inner\_product}%
+\texttt{%
+(View1 const \&
+\textit{view1,}%
+View2 const \&
+\textit{view2,}%
+View3 const \&
+\textit{wt,}%
+Init 
+\textit{init,}%
+Sum 
+\textit{op1,}%
+Product 
+\textit{op2}%
+)
+}
+\vspace{0.4cm}
+
+\noindent
+\texttt{%
+template<typename Init, typename View1, typename View2, typename View3 >
+\newline
+Init 
+}
+\newline
+\textbf{weighted\_inner\_product}%
+\texttt{%
+(View1 const \&
+\textit{view1,}%
+View2 const \&
+\textit{view2,}%
+View3 const \&
+\textit{wt,}%
+Init 
+\textit{init}%
+)
+}
+\index{weighted\_inner\_product()}
+
+\begin{itemize}
+\item
+Compute a weighted inner product of the elements of two views, where each pair-wise product is multiplied by a weight factor before the sum of products is performed. 
+\item
+Compute a weighted inner product of the elements of two views, where each pair-wise product is multiplied by a weight factor before the sum of products is performed. 
+\end{itemize}
+
+\subsubsection{Usage Example} %% \label{sec--alg-use}
+
+The following example shows how to use \texttt{weighted\_inner\_product}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{algo/wtinprod.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+ 
+\subsubsection{Implementation} %% \label{sec--alg-impl}
+
+\textit{WRITE}
+
+\subsubsection{Performance} %% \label{sec--alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:wt-inner-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/wt_inner_alg_proc}
+\caption{weighted\_inner\_product Algorithm Execution Time}
+\label{fig:wt-inner-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % %
+ 
+\subsection{Compute Weighted Norm} \label{sec-num-wt_norm}
+
+\subsubsection{Interface} %% \label{sec--alg-inter}
+
+\noindent
+\texttt{%
+template<typename View1, typename View2, typename Sum, typename Product >
+\newline
+View1::value\_type 
+}
+\newline
+\textbf{weighted\_norm}%
+\texttt{%
+(View1 const \&
+\textit{view1,}%
+View2 const \&
+\textit{wt,}%
+Sum 
+\textit{op1,}%
+Product 
+\textit{op2}%
+)
+}
+\vspace{0.4cm}
+
+\noindent
+\texttt{%
+template<typename View1, typename View2 >
+\newline
+View1::value\_type 
+}
+\newline
+\textbf{weighted\_norm}%
+\texttt{%
+(View1 const \&
+\textit{view1,}%
+View2 const \&
+\textit{wt}%
+)
+}
+\index{weighted\_norm()}
+
+\begin{itemize}
+\item
+Compute a weighted normal of the elements of a view. 
+\item
+Compute a weighted normal of the elements of a view. 
+\end{itemize}
+
+\subsubsection{Usage Example} %% \label{sec--alg-use}
+
+The following example shows how to use \texttt{weighted\_norm}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{algo/wtnorm.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+ 
+\subsubsection{Implementation} %% \label{sec--alg-impl}
+
+\textit{WRITE}
+
+\subsubsection{Performance} %% \label{sec--alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:wt-norm-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/wt_norm_alg_proc}
+\caption{weighted\_norm Algorithm Execution Time}
+\label{fig:wt-norm-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % %
+ 
+\subsection{Converting Relative to Absolute Values} \label{sec-num-part_sum}
+
+\subsubsection{Interface} %% \label{sec--alg-inter}
+
+\noindent
+\texttt{%
+template<typename View0, typename View1, typename BinaryFunction >
+\newline
+void 
+}
+\newline
+\textbf{partial\_sum}%
+\texttt{%
+(View0 const \&
+\textit{view0,}%
+View1 const \&
+\textit{view1,}%
+BinaryFunction 
+\textit{binary\_op,}%
+const bool 
+\textit{shift}%
+)
+}
+\vspace{0.4cm}
+
+\noindent
+\texttt{%
+template<typename View0, typename View1 >
+\newline
+void 
+}
+\newline
+\textbf{partial\_sum}%
+\texttt{%
+(View0 const \&
+\textit{view0,}%
+View1 const \&
+\textit{view1,}%
+const bool 
+\textit{shift}%
+)
+}
+\index{partial\_sum()}
+
+\begin{itemize}
+\item
+Computes the prefix sum of the elements of the input view and stores the result in the output view. 
+\item
+Computes the prefix sum of the elements of the input view and stores the result in the output view. 
+\end{itemize}
+
+\subsubsection{Usage Example} %% \label{sec--alg-use}
+
+The following example shows how to use \texttt{partial\_sum}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{algo/partsum.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsubsection{Implementation} %% \label{sec--alg-impl}
+
+\textit{WRITE}
+
+\subsubsection{Performance} %% \label{sec--alg-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:part-sum-alg-exec-exper}
+shows the performance of the algorithm processing
+elements which are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/part_sum_alg_proc}
+\caption{XYZ Algorithm Execution Time}
+\label{fig:part-sum-alg-exec-exper}
+\end{figure}
+
+% % % % % % % % % %

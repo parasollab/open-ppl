@@ -1,0 +1,95 @@
+
+GENERAL INSTRUCTIONS FOR BUILDING STAPL
+
+First note the new make files require GNU make.  It also requires
+an alias or link to redirect gmake to GNU make.  If GNU make is
+not installed, build it and put it someplace in your PATH before
+the systems default "make".  If it is installed, but known as
+gmake you have two options:
+
+  1) alias gmake=make            # doesn't always work
+  2) mkdir ~/bin ; cd ~/bin ; ln -s <path to make> gmake ; PATH="$PATH:~/bin"
+
+STAPL currently supports 3 versions of STLport:
+
+stapl/STLport - the STLport that lives in our tree (older)
+STLport 4.6.2 - the current stlport.org release version (recommended)
+STLport 5.beta - the current stlport.org development version (experimental)
+
+The latest release can be found on the "Download" page
+at www.stlport.org (www.stlport.com).
+
+To latest development version can be retrieved from their
+CVS by using seeing the note:
+
+http://www.stlport.com/dcforum/DCForumID5/812.html
+
+STAPL now also supports gcc's > 3.2.x  libstdc++.  So,
+on systems that have a recent gcc using libstdc++, you
+may have to option to use one (or more) of the STLports
+above or the appropriate libstdc++ (you may find one
+outperforms the other in some situations).
+
+
+BUILDING STLPORT (optional)
+
+If you are using the included STLport.
+
+  cd stapl/STLport/src
+  make -f <the appropriate makefile for you system>.mak
+
+a "make install" used to be required but shouldn't be now for
+the included STLport.
+
+If you are using one the STLports from stlport.org.
+  
+  # download
+  # unzip
+  cd STLport/src
+  make -f <the appropriate makefile for you system>.mak
+  make -f <the appropriate makefile for you system>.mak INSTALLDIR=<where you want it> install
+
+
+BUILDING STAPL
+
+There are three things that must be specified to build STAPL.  Optionally,
+there are other tags that may be overridden.  For a list of current builds:
+
+  cd stapl
+  make
+
+The tags that must be set are "platform", "rts" and "stl".
+
+Optional tags (see GNUmakefile.STAPLdefaults) also include:
+
+STLFLAGS - e.g. -D_STLPORT when using STLport
+STLINCLUDEPATH - e.g. "-I<theplace where STLport includes are installed>"
+STLLIBPATH - e.g. "-L<the place where STLport libraries are installed>"
+STLPORTLIB - usually something like "-lstlport_gcc" but can be adjusted as needed.
+MYSTLINCLUDEPATH - typically "-I$(STAPL)/$(stl)" - points to "mySTL" files in STAPL tree... should not ever be neded
+
+ 
+EXAMPLES:
+
+To use MPI and gcc's 3.2.3 libstdc++ on the BG/L Runtime System:
+
+  gmake platform=BLRTS_gcc rts=MPI stl=mylibstdc++-gcc-3.2.3
+
+To use MPI and pthreads with the included STLport on a Linux system:
+
+  gmake platform=LINUX_gcc rts=MIXED stl=STLport/stlport
+
+To use just pthreads using a stock version install of STLport 4.6.2
+in the "/usr" tree (RPMS for Linux available at
+http://parasol.tamu.edu/people/jkp2866/myRPMS/misc/ ):
+
+  gmake platform=LINUX_gcc rts=THREAD stl=mystlport-4.6.2
+
+To use MPI and STLport 4.6.2 installed in my home
+directory on Darwin/MacOSX with gcc:
+
+  gmake platform=MACOSX_gcc rts=MPI stl=mystlport-4.6.2 STLINCLUDEPATH=-I/Users/jperdue/include/stlport/ STLLIBPATH=-L/Users/jperdue/lib/
+
+
+# EOF
+

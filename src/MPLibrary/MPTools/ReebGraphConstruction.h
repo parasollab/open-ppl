@@ -2,6 +2,7 @@
 #define PMPL_REEB_GRAPH_CONSTRUCTION_H_
 
 #include <vector>
+#include <set>
 #include <unordered_set>
 using namespace std;
 

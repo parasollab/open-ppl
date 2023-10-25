@@ -1,0 +1,136 @@
+
+BUILDING STAPL ON MAC OSX (e.g. iconium in geophysics)
+
+1) We require GNU make... furthemore, we refer to it as gmake which isn't
+   on iconium (some instructions here can be generalized for MacOSX, but
+   I'll refer to the target system as iconium for now as that is the only
+   one I am familiar with).  Note, using the shell's alias command won't 
+   work because such aliases aren't recognized within the Makefile's 
+   environment (at least I could never get it to work).  So, we first 
+   create a directory with the aliased/sym-linked command:
+
+  mkdir ~/bin
+  cd ~/bin
+  ln -s /usr/bin/make gmake
+
+   then update your ~/.profile to include that in the PATH:
+
+  PATH="$PATH:~/bin"
+
+   Be sure to logout/in so it takes effect.
+
+1.5) Make sure the MPI compilers are in the path... 
+     e.g. add to ~/.profile:
+
+  PATH="$PATH:/usr/local/mpich/bin" 
+
+2) Determine where to install stapl_release and unzip the sources there
+   (or, you can build in your home directory and move later... see item
+   6-i below).
+
+2.5) cd stapl_release 
+
+3) Since it serves no purpose (it doesn't work), and to avoid confusion,
+   toss the included STLport directory.
+
+  rm -rf STLport
+
+4) Due to case-insenstivy on HFS+ filesystems, 
+   edit GNUmakefile.MPI and change line 94 from:
+
+  CC       = mpiCC -g
+ 
+   to:
+
+  CC       = mpic++ -g
+
+5) The varieties to build are endless... however, we used the
+   included STLport for other builds and MPI is the better build.
+   However, the included STLport is way old and not well tested
+   on the Mac and will need work (won't work).  So, at this point decide
+   whether to use libstdc++ or install/patch STLport 4.6.2.
+   If you choose the latter, skip to step 6.
+
+   To build the libstdc++ version:
+
+  gmake clean
+  gmake platform=MACOSX_gcc rts=MPI stl=mylibstdc++-gcc-3.3.2
+
+   Be sure to choose the appropriate libstdc++ version [see "gcc -v"].
+   Once it compiles, you are done (I don't think a "make install" is necessary).
+
+6) To build the STLport 4.6.2 version...
+
+a) Get the STLport sources
+
+  cd /tmp
+  curl -O http://www.stlport.org/archive/STLport-4.6.2.tar.gz
+  tar xzf STLport-4.6.2.tar.gz
+
+b) You now need one of the patches found in this thread:
+
+      http://www.stlport.com/dcforum/DCForumID6/1696.html
+
+   I suggest my last one in that thread (my first won't
+   work and the one from ledzep37 is a mess).
+
+   You can retrieve it with:
+
+  curl -o STLport-4.6.2-gcc-apple-macosx.patch http://www.stlport.com/dcforum/User_files/413f3af8c1ffc80b.txt
+
+c) apply the patch:
+
+  cd STLport-4.6.2
+  patch -p0 < ../STLport-4.6.2-gcc-apple-macosx.patch
+
+d) Now build STLport
+
+  cd src
+  make -f gcc-apple-macosx.mak clean all
+
+e) Now install it (STAPL, by default, assumes 4.6.2 is installed in /usr...
+   (the headers being in /usr/include/stlport and the libs in /usr/lib):
+
+  make -f gcc-apple-macosx.mak INSTALLDIR=/usr install
+
+  If you install it elsewhere, there will be some extra steps for building
+  STAPL and for applications that are built on top of STAPL.
+
+f) Now then, we are ready to build stapl... change directories to where
+   you put stapl_release.
+
+  cd /whereveritwas/stapl_release
+
+g) If you used /usr above for STLport, then to build STAPL just do:
+
+  gmake clean
+  gmake platform=MACOSX_gcc rts=MPI stl=mystlport-4.6.2
+
+   Once it compiles, you are done (I don't think a "make install" is necessary).
+
+h) If you used another location for STLport, then to build STAPL then
+   you will also need to specify the alternate location using STLINCLUDEPATH
+   and STLLIBPATH.  For example, if I used "INSTALLDIR=/Users/jperdue" when 
+   building STLport above, I would use:
+
+  gmake clean
+  gmake platform=MACOSX_gcc rts=MPI stl=mystlport-4.6.2 STLINCLUDEPATH=-I/Users/jperdue/include/stlport STLLIBPATH=-L/Users/jperdue/lib
+   
+   Once it compiles, you are done (I don't think a "make install" is necessary).
+
+   Note, that if you choose this latter approach, any applications built
+   on top of STAPL (using STAPL makefiles) will have to include 
+   STLINCLUDEPATH/STLLIBPATH options on the "make" command line [at
+   some point in the future it will remember this, but at present
+   it does not].  Alternatively, you can edit stapl_release/GNUmakefile.STAPLdefaults
+   and changes line 145 for the include path and then add a line
+   for the lib path.
+
+i) Finally, the "stapl_release" directory can be moved to someplace
+   and set as read-only.  AFAIK, there are no shared library paths
+   or anything else embedded in STAPL (when not using its included
+   STLport) that precludes this.
+
+I think that's it for now.
+
+

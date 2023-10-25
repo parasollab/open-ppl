@@ -309,7 +309,8 @@ class GroupCfg final : public CompositeState<GraphType> {
     /// @param _dm The distance metric for checking length.
     /// @param _norm Normalize the orientation DOFs?
     template<typename DistanceMetricPointer>
-    void GetRandomRay(const double _length, DistanceMetricPointer _dm, const bool _norm = true);
+    void GetRandomRay(const double _length, DistanceMetricPointer _dm, const bool _norm=true);
+
     /// Normalize Orientation DOFs for a Group Cfg
     virtual void NormalizeOrientation(const std::vector<size_t>& _robots = {})
         noexcept;
@@ -922,8 +923,6 @@ InitializeLocalCfgs() noexcept {
     this->m_localCfgs[i] = IndividualCfg(this->GetRobot(i));
 }
 
-/*----------------------------------------------------------------------------*/
-
 template <typename GraphType>
 template <class DistanceMetricPointer>
 void
@@ -943,6 +942,8 @@ GetRandomRay(const double _length, DistanceMetricPointer _dm, const bool _norm) 
     NormalizeOrientation();
 }
 
+/*----------------------------------------------------------------------------*/
+
 template <typename GraphType>
 std::ostream&
 operator<<(std::ostream& _os, const GroupCfg<GraphType>& _groupCfg) {
@@ -955,8 +956,7 @@ operator<<(std::ostream& _os, const GroupCfg<GraphType>& _groupCfg) {
   for(size_t i = 0; i < _groupCfg.GetNumRobots(); ++i)
     _os << _groupCfg.GetRobotCfg(i);
 
-    return _os;
+  return _os;
 }
-
 
 #endif

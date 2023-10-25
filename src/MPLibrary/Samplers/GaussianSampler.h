@@ -9,7 +9,7 @@
 ///
 /// The default behavior is the above standard gaussian sampling. 
 /// However, this class provides internal (non-XML) functionality to
-//   perform gaussian sampling with other options. 
+///   perform gaussian sampling with other options.
 ///
 /// @ingroup Samplers
 /// @brief Gaussian-distribution based sampling. 

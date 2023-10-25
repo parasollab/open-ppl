@@ -4,7 +4,7 @@
 #include "Geometry/Boundaries/Range.h"
 
 #include <array>
-#include <QtGui>
+#include <QGroupBox>
 
 class Connection;
 class DHParameters;

@@ -232,7 +232,6 @@ template <typename MPTraits>
 void
 DistanceMetricMethod<MPTraits>::
 ScaleCfg(double _length, GroupCfgType& _c, const GroupCfgType& _o) {
-    
   _length = fabs(_length); //a distance must be positive
   GroupCfgType origin = _o;
   GroupCfgType outsideCfg = _c;
@@ -265,7 +264,6 @@ ScaleCfg(double _length, GroupCfgType& _c, const GroupCfgType& _o) {
   }
 
   _c = currentCfg;
-   
 }
 
 

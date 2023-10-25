@@ -42,7 +42,7 @@ class Coordinator : public Agent {
     ///@name Motion Planning Types
     ///@{
 
-    typedef GenericStateGraph<CfgType, WeightType>    RoadmapType;
+    typedef GenericStateGraph<CfgType, PMPLWeightType>    RoadmapType;
     typedef typename RoadmapType::vertex_descriptor   VID;
     typedef typename std::vector<VID>::const_iterator VIDIterator;
 

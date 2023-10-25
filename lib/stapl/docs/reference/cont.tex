@@ -1,0 +1,7263 @@
+\chapter{Distributed Containers}
+
+STAPL supports the following distributed containers:
+\vspace{0.4cm}
+\newline
+Array (section \ref{sec-ary-cont}),
+Static Array (section \ref{sec-stary-cont}),
+\newline
+Vector (section \ref{sec-vec-cont}),
+List (section \ref{sec-list-cont}),
+\newline
+Static Graph (section \ref{sec-stgraf-cont}),
+Dynamic Graph (section \ref{sec-dygraf-cont}),
+\newline
+Matrix (section \ref{sec-mat-cont}),
+Multiarray (section \ref{sec-multi-cont}),
+\newline
+Map (section \ref{sec-map-cont}),
+Set (section \ref{sec-set-cont}),
+\newline
+Unordered Map (section \ref{sec-unmap-cont})
+Unordered Set (section \ref{sec-unset-cont})
+\vspace{0.4cm}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\section{Introduction} \label{sec-cont-intro}
+
+A distributed container is the parallel equivalent of the STL container and is
+backward compatible with STL containers through its ability to provide iterators. Each distributed container provides (semi-) random access to its elements, a prerequisite for efficient parallel processing. Random access to the subsets of a distributed container's data is provided by an internal distribution maintained by the distributed container. The distribution is updated when elements are added or removed from the distributed container, and when migration of elements between locations is requested. The distribution has two primary components.
+
+The container manager maintains the subsets of elements stored on a location. Each subset is referred to as a bContainer. A distributed container instance may have more than one bContainer per location depending on the desired data distribution and independent migration of elements. The second component of the distribution is the directory, which enables any location to determine the location on which an element of the distributed container is stored.
+
+\vspace{0.4cm}
+%%\textbf{
+%%The purpose of a container is to be constructed and initialized with data.
+%%It is sometimes necessary to process an element, or a subset of elements of
+%%a container in a sequential manner.  This chapter documents the methods 
+%%provided by \stapl\ to do that.
+%%
+%%In order to perform operations in parallel on the elements of a container,
+%%a view should be constructed over the container, and the operations
+%%should be applied to the view.  Performing operations directly on the
+%%container is the exception, not the normal way of using \stapl.
+%%}
+
+\subsection{Implementation}
+
+\textit{WRITE - implementation common to all containers}
+
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\section{ Array Container} \label{sec-ary-cont}
+\index{array!container}
+\index{container!array}
+\index{array!constructor}
+
+\subsection{Definition}
+
+\textit{EXPAND - Distributed sequence container with fixed size.}
+
+\subsection{Relationship to \stl\ array}
+
+\textit{WRITE}
+
+\subsection{Relationship to other \stapl\ containers}
+
+\textit{WRITE}
+
+\subsection{Implementation}
+
+\textit{WRITE - details specific to this container}
+
+\subsection{Interface} \label{sec-ary-cont-inter}
+
+\subsubsection{Constructors}
+
+\noindent
+\textbf{array}%
+\texttt{%
+(void)
+}
+
+\begin{itemize}
+\item
+Create an array with size 0. Initially places the array in an unusable state. Should be used in conjunction with array::resize.
+\end{itemize}
+ 
+\noindent
+\textbf{array}%
+\texttt{%
+(size\_type 
+\textit{n}%
+) 
+}
+
+\begin{itemize}
+\item
+Create an array with a given size and default construct all elements.
+\end{itemize}
+ 
+\noindent
+\textbf{array}%
+\texttt{%
+(size\_type 
+\textit{n,}%
+value\_type const \& 
+\textit{default\_value}%
+) 
+}
+
+\begin{itemize}
+\item
+Create an array with a given size and construct all elements with a default value. 
+\end{itemize}
+ 
+\noindent
+\textbf{array}%
+\texttt{%
+(size\_type 
+\textit{n,}%
+mapper\_type const \& 
+\textit{mapper}%
+)
+}
+
+\begin{itemize}
+\item
+Create an array with a given size and instance of mapper. 
+\end{itemize}
+ 
+\noindent
+\textbf{array}%
+\texttt{%
+(partition\_type const \&
+\textit{ps}%
+)
+}
+
+\begin{itemize}
+\item
+Create an array with a given instance of partition. 
+\end{itemize}
+ 
+\noindent
+\textbf{array}%
+\texttt{%
+(partition\_type const \&
+\textit{partitioner,}%
+mapper\_type const \&
+\textit{mapper}%
+)
+}
+
+\begin{itemize}
+\item
+Create an array with a given partitioner and a mapper. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+template<typename DistSpecView >
+}
+\newline
+\textbf{array}%
+\texttt{%
+(DistSpecView const \&
+\textit{dist\_view,}%
+typename boost::enable\_if< 
+    is\_distribution\_view< DistSpecView > >::type *=0
+)
+}
+
+\vspace{0.4cm} \emph{fix Doxygen to omit enable\_if, not part of user interface}
+
+\begin{itemize}
+\item
+Create an array with a distribution that is specified by the dist\_view provided. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+template<typename DistSpecView >
+}
+\newline
+\textbf{array}%
+\texttt{%
+(DistSpecView const \&
+\textit{dist\_view,}%
+value\_type const \&
+\textit{default\_value,}%
+typename boost::enable\_if< is\_distribution\_view< DistSpecView > >::type *=0
+)
+}
+
+\vspace{0.4cm} \emph{fix Doxygen to omit enable\_if, not part of user interface}
+
+\begin{itemize}
+\item
+Create an array with a distribution that is specified by the dist\_view provided, and initialize all elements to default\_value. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+template<typename DP >
+}
+\newline
+\textbf{array}%
+\texttt{%
+(size\_type 
+\textit{n,}%
+value\_type const \&
+\textit{default\_value,}%
+DP const \&
+\textit{dis\_policy}%
+)
+}
+
+\begin{itemize}
+\item
+Create an array with a given size and default value where the value type of the container is itself a distributed container. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+template<typename X, typename Y >
+}
+\newline
+\textbf{array}%
+\texttt{%
+(boost::tuples::cons< X, Y > dims
+)
+}
+
+\begin{itemize}
+\item
+Create an array of arrays with given n-dimensional size. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+template<typename X , typename Y , typename DP >
+}
+\newline
+\textbf{array}%
+\texttt{%
+(boost::tuples::cons< X, Y > 
+\textit{dims,}%
+DP const \&
+\textit{dis\_policy}%
+)
+}
+
+\begin{itemize}
+\item
+Create an array of arrays with given n-dimensional size. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+template<typename SizesView >
+}
+\newline
+\textbf{array}%
+\texttt{%
+(SizesView const \&
+\textit{sizes\_view,}%
+typename boost::enable\_if< boost::mpl::and\_< boost::is\_same< size\_type, 
+typename SizesView::size\_type >, 
+boost::mpl::not\_< is\_distribution\_view< SizesView > > > >::type *=0
+)
+}
+
+\vspace{0.4cm} \emph{fix Doxygen to omit enable\_if, not part of user interface}
+
+\begin{itemize}
+\item
+Constructor for composed containers. For an m-level composed container, sizes\_view is an m-1 level composed view representing the sizes of the nested containers. 
+\end{itemize}
+
+\subsubsection{Element Manipulation}
+
+\noindent
+\texttt{%
+reference
+}
+\textbf{operator[]}%
+\texttt{%
+(index\_type 
+\textit{idx}%
+)
+}
+
+\begin{itemize}
+\item
+Construct a reference to a specific index of the array.
+\end{itemize}
+ 
+\noindent%
+\texttt{%
+const\_reference
+}
+\textbf{operator[]}%
+\texttt{%
+(index\_type 
+\textit{idx}%
+) const
+}
+
+\begin{itemize}
+\item
+Construct a const\_reference to a specific index of the array.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+reference
+}
+\textbf{front}%
+\texttt{%
+(void)
+}
+
+\begin{itemize}
+\item
+Construct a reference to the first element of the array.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+const\_reference
+}
+\textbf{front}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Construct a const\_reference to the first element of the array.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+reference
+}
+\textbf{back}%
+\texttt{%
+(void)
+}
+
+\begin{itemize}
+\item
+Construct a reference to the last element of the array.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+const\_reference
+}
+\textbf{back}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Construct a const\_reference to the last element of the array.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+reference
+}
+\textbf{make\_reference}%
+\texttt{%
+(index\_type const \&
+\textit{idx}%
+)
+}
+
+\begin{itemize}
+\item
+Construct a reference to a specific index of the array.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+const\_reference
+}
+\textbf{make\_reference}%
+\texttt{%
+(index\_type const \&
+\textit{idx}%
+) const
+}
+
+\begin{itemize}
+\item
+Construct a const\_reference to a specific index of the array.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+iterator
+}
+\textbf{make\_iterator}%
+\texttt{%
+(gid\_type const \&
+\textit{gid}%
+)
+}
+
+\begin{itemize}
+\item
+Construct an iterator to a specific index of the array.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+const\_iterator 
+}
+\textbf{make\_const\_iterator}%
+\texttt{%
+(gid\_type const \&
+gid
+) const
+}
+
+\begin{itemize}
+\item
+Construct a const\_iterator to a specific index of the array.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+iterator
+}
+\textbf{begin}%
+\texttt{%
+(void)
+}
+
+\begin{itemize}
+\item
+Construct an iterator to the beginning of the array.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+const\_iterator
+}
+\textbf{begin}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Construct a const\_iterator to the beginning of the array.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+const\_iterator
+}
+\textbf{cbegin}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Construct a const\_iterator to the beginning of the array.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+iterator
+}
+\textbf{end}%
+\texttt{%
+(void)
+}
+
+\begin{itemize}
+\item
+Construct an iterator to one past the end of the array.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+const\_iterator
+}
+\textbf{end}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Construct a const\_iterator to one past the end of the array.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+const\_iterator
+}
+\textbf{cend}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Construct a const\_iterator to one past the end of the array.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+void
+}
+\textbf{set\_element}%
+\texttt{%
+(index\_type const \&
+\textit{idx,}%
+value\_type const \&
+\textit{val}%
+)
+}
+
+\begin{itemize}
+\item
+Sets the element specified by the index to the provided value.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+value\_type
+}
+\textbf{get\_element}%
+\texttt{%
+(index\_type const \&
+\textit{idx}%
+) const
+}
+
+\begin{itemize}
+\item
+Returns the value of the element specified by the index.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+future< value\_type >
+}
+\textbf{get\_element\_split}%
+\texttt{%
+(index\_type const \&
+\textit{idx}%
+)
+}
+
+\begin{itemize}
+\item
+Returns a stapl::future holding the value of the element specified by the index.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+void
+}
+\textbf{apply\_set}%
+\texttt{%
+(gid\_type const \&
+\textit{gid,}%
+F const \&
+\textit{f}%
+)
+}
+
+\begin{itemize}
+\item
+Applies a function f to the element specified by the GID.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+F::result\_type
+}
+\textbf{apply\_get}%
+\texttt{%
+(gid\_type const \&
+\textit{gid,}%
+F const \&
+\textit{f}%
+)
+}
+
+\begin{itemize}
+\item
+Applies a function f to the element specified by the GID, and returns the result.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+F::result\_type
+}
+\textbf{apply\_get}%
+\texttt{%
+(gid\_type const \&
+\textit{gid,}%
+F const \&
+\textit{f}%
+) const
+}
+
+\begin{itemize}
+\item
+Applies a function f to the element specified by the GID, and returns the result.
+\end{itemize}
+ 
+\subsubsection{Memory and Domain Management}
+
+\noindent
+\texttt{%
+domain\_type
+}
+\textbf{domain}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Returns the domain of the container.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+void 
+}
+\textbf{resize}%
+\texttt{%
+(size\_type 
+\textit{n}%
+)
+}
+
+\begin{itemize}
+\item
+Destroy the distribution of the container (including all of its elements) and recreate the container with a different size. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+template<typename DistSpecView >
+void
+}
+\textbf{redistribute}%
+\texttt{%
+(DistSpecView const \&
+}
+\textit{dist\_view,}
+\texttt{
+typename std::enable\_if< is\_distribution\_view< DistSpecView >::value \&\&is\_view\_based< partition\_type >::value \&\&is\_view\_based< mapper\_type >::value >::type *=0)
+}
+
+\vspace{0.4cm} \emph{fix Doxygen to omit enable\_if, not part of user interface}
+
+\begin{itemize}
+\item
+Redistribute the data stored in the container to match the distribution specified by the distribution view provided. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+void
+}
+\textbf{migrate}%
+\texttt{%
+(gid\_type const \&
+\textit{gid,}%
+location\_type 
+\textit{destination}
+)
+}
+
+\begin{itemize}
+\item
+Migrates the element specified by the gid to the destination location. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+size\_type
+}
+\textbf{size}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Returns the number of elements in the container. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+bool
+}
+\textbf{empty}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Returns if the container has no element.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+distribution\_type \& 
+}
+\textbf{distribution}%
+\texttt{%
+ (void)
+}
+ 
+\noindent
+\texttt{%
+distribution\_type const \& 
+}
+\textbf{distribution}%
+\texttt{%
+ (void) const
+}
+ 
+\noindent
+\texttt{%
+distribution\_type *
+}
+\textbf{get\_distribution}%
+\texttt{%
+(void)
+}
+ 
+\begin{itemize}
+\item
+Returns the data distribution of the container.
+\end{itemize}
+
+\noindent
+\texttt{%
+locality\_info 
+}
+\textbf{locality}%
+\texttt{%
+ (gid\_type gid)
+}
+
+\begin{itemize}
+\item
+Return locality information about the element specified by the gid. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+bool
+}
+\textbf{is\_local}%
+\texttt{%
+(gid\_type const \&
+\textit{gid}%
+)
+}
+
+\begin{itemize}
+\item
+Returns true if the element specified by the GID is stored on this location, or false otherwise. 
+\end{itemize}
+
+\subsection{Usage Example} \label{sec-ary-cont-use}
+
+The following example shows how to use the \texttt{array container}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{cont/array.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\textbf{PLEASE NOTE: 
+Initializing a container with a sequential loop, as in this example,
+is for illustrative purposes only.
+The normal way to do this is applying a parallel algorithm or 
+basic parallel construct to a view over the container.  See Section
+\ref{sec-ary-vw-use}
+for the recommended usage.
+}
+
+\vspace{0.4cm} \textit{WRITE -comments on example}
+
+\subsection{Implementation} \label{sec-ary-cont-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-ary-cont-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:ary-cont-constr-exper}
+shows the performance of constructing a \stapl\ array container
+whose elements are atomic values, \stl\ containers, or \stapl\ containers.
+\item
+Fig. \ref{fig:ary-cont-assign-exper}
+shows the performance of assigning values to a \stapl\ array container
+whose elements are atomic values, \stl\ containers, or \stapl\ containers.
+\item
+Fig. \ref{fig:ary-cont-access-exper}
+shows the performance of accessing values from a \stapl\ array container
+whose elements are atomic values, \stl\ containers, or \stapl\ containers.
+\end{itemize}
+
+\textit{WRITE - complexity analysis}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/array_cont_constr}
+\caption{Construct array Execution Time}
+\label{fig:ary-cont-constr-exper}
+\end{figure}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/array_cont_assign}
+\caption{Assign Values to array Execution Time}
+\label{fig:ary-cont-assign-exper}
+\end{figure}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/array_cont_access}
+\caption{Access Values in array Execution Time}
+\label{fig:ary-cont-access-exper}
+\end{figure}
+
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{Static Array Container} \label{sec-stary-cont}
+\index{array!static!container}
+\index{container!array!static}
+\index{array!static!constructor}
+
+\subsection{Definition}
+
+\textit{EXPAND - Distributed sequence container with fixed size. 
+This container provides fast access, but has limits: it cannot be migrated and, the distribution is fixed to a balanced partition with one base container per location.}
+
+\subsection{Relationship to \stl\ array}
+
+\textit{WRITE}
+
+\subsection{Relationship to other \stapl\ containers}
+
+\textit{WRITE}
+
+\subsection{Implementation}
+
+\textit{WRITE - details specific to this container}
+
+\subsection{Interface} \label{sec-stary-cont-inter}
+
+\subsubsection{Constructors}
+
+\noindent
+\textbf{static\_array}%
+\texttt{%
+(size\_type
+\textit{n}%
+)
+}
+
+\begin{itemize}
+\item
+Create an array with a given size and default constructs all elements. 
+\end{itemize}
+ 
+\noindent
+\textbf{static\_array}%
+\texttt{%
+(size\_type 
+\textit{n,}%
+value\_type const \&
+\textit{default\_value}%
+)
+}
+
+\begin{itemize}
+\item
+Create an array with a given size and constructs all elements with a default value. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+template<typename DP >
+}
+\newline
+\textbf{static\_array}%
+\texttt{%
+(size\_type 
+\textit{n,}%
+value\_type const \&
+\textit{default\_value,}%
+DP const \&
+\textit{dis\_policy}%
+)
+}
+
+\begin{itemize}
+\item
+Create an array with a given size and default value where the value type of the container is itself a distributed container. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+template<typename X , typename Y >
+}
+\newline
+\textbf{static\_array}%
+\texttt{%
+(boost::tuples::cons< X, Y > dims
+)
+}
+
+\begin{itemize}
+\item
+Create an array of arrays with given n-dimensional size. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+template<typename X , typename Y , typename DP >
+}
+\newline
+\textbf{static\_array}%
+\texttt{%
+(boost::tuples::cons< X, Y > dims, DP const \&
+\textit{dis\_policy}%
+)
+}
+
+\begin{itemize}
+\item
+Create an array of arrays with given n-dimensional size. 
+\end{itemize}
+
+\subsubsection{Element Manipulation}
+
+\noindent
+\texttt{%
+reference
+}
+\textbf{operator[]}%
+\texttt{%
+(index\_type 
+\textit{idx}%
+)
+}
+
+\begin{itemize}
+\item
+Construct a reference to a specific index of the array.
+\end{itemize}
+ 
+\noindent%
+\texttt{%
+const\_reference
+}
+\textbf{operator[]}%
+\texttt{%
+(index\_type 
+\textit{idx}%
+) const
+}
+
+\begin{itemize}
+\item
+Construct a const\_reference to a specific index of the array.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+reference
+}
+\textbf{front}%
+\texttt{%
+(void)
+}
+
+\begin{itemize}
+\item
+Construct a reference to the first element of the array.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+const\_reference
+}
+\textbf{front}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Construct a const\_reference to the first element of the array.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+reference
+}
+\textbf{back}%
+\texttt{%
+(void)
+}
+
+\begin{itemize}
+\item
+Construct a reference to the last element of the array.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+const\_reference
+}
+\textbf{back}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Construct a const\_reference to the last element of the array.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+reference
+}
+\textbf{make\_reference}%
+\texttt{%
+(index\_type const \&
+\textit{idx}%
+)
+}
+
+\begin{itemize}
+\item
+Construct a reference to a specific index of the array.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+const\_reference
+}
+\textbf{make\_reference}%
+\texttt{%
+(index\_type const \&
+\textit{idx}%
+) const
+}
+
+\begin{itemize}
+\item
+Construct a const\_reference to a specific index of the array.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+iterator
+}
+\textbf{make\_iterator}%
+\texttt{%
+(gid\_type const \&
+\textit{gid}%
+)
+}
+
+\begin{itemize}
+\item
+Construct an iterator to a specific index of the array.
+\end{itemize}
+ 
+%%\noindent
+%%\texttt{%
+%%const\_iterator 
+%%}
+%%\textbf{make\_const\_iterator}%
+%%\texttt{%
+%%(gid\_type const \&
+%%gid
+%%) const
+%%}
+
+%%\begin{itemize}
+%%\item
+%%Construct a const\_iterator to a specific index of the array.
+%%\end{itemize}
+ 
+\noindent
+\texttt{%
+iterator
+}
+\textbf{begin}%
+\texttt{%
+(void)
+}
+
+\begin{itemize}
+\item
+Construct an iterator to the beginning of the array.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+const\_iterator
+}
+\textbf{begin}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Construct a const\_iterator to the beginning of the array.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+const\_iterator
+}
+\textbf{cbegin}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Construct a const\_iterator to the beginning of the array.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+iterator
+}
+\textbf{end}%
+\texttt{%
+(void)
+}
+
+\begin{itemize}
+\item
+Construct an iterator to one past the end of the array.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+const\_iterator
+}
+\textbf{end}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Construct a const\_iterator to one past the end of the array.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+const\_iterator
+}
+\textbf{cend}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Construct a const\_iterator to one past the end of the array.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+void
+}
+\textbf{set\_element}%
+\texttt{%
+(index\_type const \&
+\textit{idx,}%
+value\_type const \&
+\textit{val}%
+)
+}
+
+\begin{itemize}
+\item
+Sets the element specified by the index to the provided value.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+value\_type
+}
+\textbf{get\_element}%
+\texttt{%
+(index\_type const \&
+\textit{idx}%
+) const
+}
+
+\begin{itemize}
+\item
+Returns the value of the element specified by the index.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+future< value\_type >
+}
+\textbf{get\_element\_split}%
+\texttt{%
+(index\_type const \&
+\textit{idx}%
+)
+}
+
+\begin{itemize}
+\item
+Returns a stapl::future holding the value of the element specified by the index.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+void
+}
+\textbf{apply\_set}%
+\texttt{%
+(gid\_type const \&
+\textit{gid,}%
+F const \&
+\textit{f}%
+)
+}
+
+\begin{itemize}
+\item
+Applies a function f to the element specified by the GID.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+F::result\_type
+}
+\textbf{apply\_get}%
+\texttt{%
+(gid\_type const \&
+\textit{gid,}%
+F const \&
+\textit{f}%
+)
+}
+
+\begin{itemize}
+\item
+Applies a function f to the element specified by the GID, and returns the result.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+F::result\_type
+}
+\textbf{apply\_get}%
+\texttt{%
+(gid\_type const \&
+\textit{gid,}%
+F const \&
+\textit{f}%
+) const
+}
+
+\begin{itemize}
+\item
+Applies a function f to the element specified by the GID, and returns the result.
+\end{itemize}
+ 
+
+ 
+\subsubsection{Memory and Domain Management}
+
+\noindent
+\texttt{%
+domain\_type 	
+}
+\textbf{domain}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Returns the domain of the container.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+size\_type
+}
+\textbf{size}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Returns the number of elements in the container. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+bool
+}
+\textbf{empty}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Returns if the container has no element.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+distribution\_type \& 
+}
+\textbf{distribution}%
+\texttt{%
+ (void)
+}
+ 
+\noindent
+\texttt{%
+distribution\_type const \& 
+}
+\textbf{distribution}%
+\texttt{%
+ (void) const
+}
+ 
+\noindent
+\texttt{%
+distribution\_type *
+}
+\textbf{get\_distribution}%
+\texttt{%
+(void)
+}
+ 
+\begin{itemize}
+\item
+Returns the data distribution of the container.
+\end{itemize}
+
+\noindent
+\texttt{%
+locality\_info 
+}
+\textbf{locality}%
+\texttt{%
+ (gid\_type gid)
+}
+
+\begin{itemize}
+\item
+Return locality information about the element specified by the gid. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+bool
+}
+\textbf{is\_local}%
+\texttt{%
+(gid\_type const \&
+\textit{gid}%
+)
+}
+
+\begin{itemize}
+\item
+Returns true if the element specified by the GID is stored on this location, or false otherwise. 
+\end{itemize}
+
+\subsection{Usage Example} \label{sec-stary-cont-use}
+
+The following example shows how to use the \texttt{static array container}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{cont/starray.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\vspace{0.4cm} \textit{WRITE -comments on example}
+
+\subsection{Implementation} \label{sec-stary-cont-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-stary-cont-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:stary-cont-constr-exper}
+shows the performance of constructing a \stapl\ static array container
+whose elements are atomic values, \stl\ containers, or \stapl\ containers.
+\item
+Fig. \ref{fig:stary-cont-assign-exper}
+shows the performance of assigning values to a \stapl\ static array container
+whose elements are atomic values, \stl\ containers, or \stapl\ containers.
+\item
+Fig. \ref{fig:stary-cont-access-exper}
+shows the performance of accessing values from a \stapl\ static array container
+whose elements are atomic values, \stl\ containers, or \stapl\ containers.
+\end{itemize}
+
+\textit{WRITE - complexity analysis}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/static array_cont_constr}
+\caption{Construct static array Execution Time}
+\label{fig:stary-cont-constr-exper}
+\end{figure}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/static array_cont_assign}
+\caption{Assign Values to static array Execution Time}
+\label{fig:stary-cont-assign-exper}
+\end{figure}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/static array_cont_access}
+\caption{Access Values in static array Execution Time}
+\label{fig:stary-cont-access-exper}
+\end{figure}
+
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{Vector Container} \label{sec-vec-cont}
+\index{vector!container}
+\index{container!vector}
+\index{vector!constructor}
+
+\subsection{Definition}
+
+\textit{EXPAND - Distributed sequence container with element insertion and deletion methods.}
+
+\subsection{Relationship to \stl\ vector}
+
+\textit{WRITE}
+
+\subsection{Relationship to other \stapl\ containers}
+
+\textit{WRITE}
+
+\subsection{Implementation}
+
+\textit{WRITE - details specific to this container}
+
+\subsection{Interface} \label{sec-vec-cont-inter}
+
+\subsubsection{Constructors}
+
+\noindent
+\textbf{vector}%
+\texttt{%
+(void)
+}
+ 
+\noindent
+\textbf{vector}%
+\texttt{%
+(size\_t
+\textit{n}%
+)
+}
+
+\begin{itemize}
+\item
+Construct a vector with of size n. 
+\end{itemize}
+ 
+\noindent
+\textbf{vector}%
+\texttt{%
+(size\_t
+\textit{n,}%
+value\_type const \&
+\textit{default\_value}%
+)
+}
+
+\begin{itemize}
+\item
+Construct a vector with of size n filled with value default\_value. 
+\end{itemize}
+ 
+\noindent
+\textbf{vector}%
+\texttt{%
+(partition\_type const \&
+\textit{ps}%
+)
+}
+
+\begin{itemize}
+\item
+Construct a vector given a partitioner. 
+\end{itemize}
+ 
+\noindent
+\textbf{vector}%
+\texttt{%
+(size\_t 
+\textit{n,}%
+mapper\_type const \&
+\textit{mapper}%
+)
+}
+
+\begin{itemize}
+\item
+Construct a vector given a mapper. 
+\end{itemize}
+ 
+\noindent
+\textbf{vector}%
+\texttt{%
+(partition\_type const \&
+\textit{partitioner,}%
+mapper\_type const \&
+\textit{mapper}%
+)
+}
+
+\begin{itemize}
+\item
+Construct a vector given a partitioner and a mapper. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+template<typename DistSpecView >
+}
+\newline
+\textbf{vector}%
+\texttt{%
+(DistSpecView const \&
+\textit{dist\_view,}%
+typename boost::enable\_if< is\_distribution\_view< DistSpecView > >::type *=0
+)
+}
+
+\vspace{0.4cm} \emph{fix Doxygen to omit enable\_if, not part of user interface}
+
+\begin{itemize}
+\item
+Create a vector with a distribution that is specified by the dist\_view provided. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+template<typename DistSpecView >
+}
+\newline
+\textbf{vector}%
+\texttt{%
+(DistSpecView const \&
+\textit{dist\_view,}%
+value\_type const \&
+\textit{default\_value,}%
+typename boost::enable\_if< is\_distribution\_view< DistSpecView > >::type *=0
+)
+}
+
+\vspace{0.4cm} \emph{fix Doxygen to omit enable\_if, not part of user interface}
+
+\begin{itemize}
+\item
+Create a vector with a distribution that is specified by the dist\_view provided, and initialize all elements to default\_value. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+template<typename DP >
+}
+\newline
+\textbf{vector}%
+\texttt{%
+(size\_t 
+\textit{n,}%
+value\_type const \&
+\textit{default\_value,}%
+DP const \&
+\textit{dis\_policy}%
+)
+}
+
+\begin{itemize}
+\item
+Create a vector with a given size and default value where the value type of the container is itself a distributed container. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+template<typename X , typename Y >
+}
+\newline
+\textbf{vector}%
+\texttt{%
+(boost::tuples::cons< X, Y > dims
+)
+}
+
+\begin{itemize}
+\item
+Create a vector of vectors with given n-dimensional size. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+template<typename X , typename Y , typename DP >
+}
+\newline
+\textbf{vector}%
+\texttt{%
+(boost::tuples::cons< X, Y > 
+\textit{dims,}%
+DP const \&
+\textit{dis\_policy}%
+)
+}
+
+\begin{itemize}
+\item
+Create a vector of vectors with given n-dimensional size. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+template<typename SizesView >
+}
+\newline
+\textbf{vector}%
+\texttt{%
+(SizesView const \&
+\textit{sizes\_view,}%
+typename boost::enable\_if< boost::mpl::and\_< boost::is\_same< size\_type, 
+typename SizesView::size\_type >, boost::mpl::not\_< is\_distribution\_view< SizesView > > > >::type *=0
+)
+}
+
+\vspace{0.4cm} \emph{fix Doxygen to omit enable\_if, not part of user interface}
+
+\begin{itemize}
+\item
+Constructor for composed containers. For an m level composed container, sizes\_view is an m-1 level composed view representing the sizes of the nested containers. 
+\end{itemize}
+
+\subsubsection{Element Manipulation}
+
+\noindent
+\texttt{%
+reference
+}
+\textbf{operator[]}%
+\texttt{%
+(index\_type 
+\textit{idx}%
+)
+}
+
+\begin{itemize}
+\item
+Construct a reference to a specific index of the vector.
+\end{itemize}
+ 
+\noindent%
+\texttt{%
+const\_reference
+}
+\textbf{operator[]}%
+\texttt{%
+(index\_type 
+\textit{idx}%
+) const
+}
+
+\begin{itemize}
+\item
+Construct a const\_reference to a specific index of the vector.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+reference
+}
+\textbf{front}%
+\texttt{%
+(void)
+}
+
+\begin{itemize}
+\item
+Construct a reference to the first element of the vector.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+const\_reference
+}
+\textbf{front}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Construct a const\_reference to the first element of the vector.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+reference
+}
+\textbf{back}%
+\texttt{%
+(void)
+}
+
+\begin{itemize}
+\item
+Construct a reference to the last element of the vector.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+const\_reference
+}
+\textbf{back}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Construct a const\_reference to the last element of the vector.
+\end{itemize}
+ 
+%%%%%
+ 
+\noindent
+\texttt{%
+iterator 	
+}
+\textbf{insert}%
+\texttt{
+(iterator const \&
+\textit{pos,}%
+value\_type const \&
+\textit{value}%
+)
+}
+
+\begin{itemize}
+\item
+Inserts the given value before the element pointed to by the iterator pos and returns an iterator to the new element.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+iterator 	
+}
+\textbf{erase}%
+\texttt{
+(iterator const \&
+\textit{pos}%
+)
+}
+ 	
+\begin{itemize}
+\item
+Removes the element pointed by the iterator pos and returns an iterator pointing to the next element.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+void 
+}
+\textbf{clear}%
+\texttt{
+(void)
+}
+
+\begin{itemize}
+\item
+Remove all elements from the container. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+void 	
+}
+\textbf{push\_front}%
+\texttt{
+(value\_type const \&
+\textit{value}%
+)
+}
+
+\begin{itemize}
+\item
+Inserts the given value at the beginning of the list.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+void 	
+}
+\textbf{push\_back}%
+\texttt{
+(value\_type const \&
+\textit{value}%
+)
+}
+
+\begin{itemize}
+\item
+Inserts the given value at the end of the list.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+void 	
+}
+\textbf{add}%
+\texttt{
+(value\_type const \&
+\textit{value}%
+)
+}
+
+\begin{itemize}
+\item
+Insert the given value into the list. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+void 	
+}
+\textbf{pop\_front}%
+\texttt{
+(void)
+}
+ 	
+\begin{itemize}
+\item
+Removes the first element of the list.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+void 	
+}
+\textbf{pop\_back}%
+\texttt{
+(void)
+}
+ 	
+\begin{itemize}
+\item
+Removes the last element of the list.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+void 	
+}
+\textbf{splice}%
+\texttt{
+(iterator 
+\textit{pos,}%
+list \&
+\textit{pl,}%
+iterator 
+\textit{first,}%
+iterator 
+\textit{l}%
+)
+}
+ 	
+\begin{itemize}
+\item
+Splits the list at the given position pos and inserts between the two split lists the sublist defined from first to last iterator in the specified list pl.
+\end{itemize}
+
+%%%%%
+ 
+\noindent
+\texttt{%
+reference
+}
+\textbf{make\_reference}%
+\texttt{%
+(index\_type const \&
+\textit{idx}%
+)
+}
+
+\begin{itemize}
+\item
+Construct a reference to a specific index of the vector.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+const\_reference
+}
+\textbf{make\_reference}%
+\texttt{%
+(index\_type const \&
+\textit{idx}%
+) const
+}
+
+\begin{itemize}
+\item
+Construct a const\_reference to a specific index of the vector.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+iterator
+}
+\textbf{make\_iterator}%
+\texttt{%
+(gid\_type const \&
+\textit{gid}%
+)
+}
+
+\begin{itemize}
+\item
+Construct an iterator to a specific index of the vector.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+const\_iterator 
+}
+\textbf{make\_const\_iterator}%
+\texttt{%
+(gid\_type const \&
+gid
+) const
+}
+
+\begin{itemize}
+\item
+Construct a const\_iterator to a specific index of the vector.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+iterator
+}
+\textbf{begin}%
+\texttt{%
+(void)
+}
+
+\begin{itemize}
+\item
+Construct an iterator to the beginning of the vector.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+const\_iterator
+}
+\textbf{begin}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Construct a const\_iterator to the beginning of the vector.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+const\_iterator
+}
+\textbf{cbegin}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Construct a const\_iterator to the beginning of the vector.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+iterator
+}
+\textbf{end}%
+\texttt{%
+(void)
+}
+
+\begin{itemize}
+\item
+Construct an iterator to one past the end of the vector.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+const\_iterator
+}
+\textbf{end}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Construct a const\_iterator to one past the end of the vector.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+const\_iterator
+}
+\textbf{cend}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Construct a const\_iterator to one past the end of the vector.
+\end{itemize}
+
+%%%%%
+ 
+\noindent
+\texttt{%
+void
+}
+\textbf{set\_element}%
+\texttt{%
+(index\_type const \&
+\textit{idx,}%
+value\_type const \&
+\textit{val}%
+)
+}
+
+\begin{itemize}
+\item
+Sets the element specified by the index to the provided value.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+value\_type
+}
+\textbf{get\_element}%
+\texttt{%
+(index\_type const \&
+\textit{idx}%
+) const
+}
+
+\begin{itemize}
+\item
+Returns the value of the element specified by the index.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+future< value\_type >
+}
+\textbf{get\_element\_split}%
+\texttt{%
+(index\_type const \&
+\textit{idx}%
+)
+}
+
+\begin{itemize}
+\item
+Returns a stapl::future holding the value of the element specified by the index.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+void
+}
+\textbf{apply\_set}%
+\texttt{%
+(gid\_type const \&
+\textit{gid,}%
+F const \&
+\textit{f}%
+)
+}
+
+\begin{itemize}
+\item
+Applies a function f to the element specified by the GID.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+F::result\_type
+}
+\textbf{apply\_get}%
+\texttt{%
+(gid\_type const \&
+\textit{gid,}%
+F const \&
+\textit{f}%
+)
+}
+
+\begin{itemize}
+\item
+Applies a function f to the element specified by the GID, and returns the result.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+F::result\_type
+}
+\textbf{apply\_get}%
+\texttt{%
+(gid\_type const \&
+\textit{gid,}%
+F const \&
+\textit{f}%
+) const
+}
+
+\begin{itemize}
+\item
+Applies a function f to the element specified by the GID, and returns the result.
+\end{itemize}
+ 
+ 
+\subsubsection{Memory and Domain Management}
+
+\noindent
+\texttt{%
+domain\_type 	
+}
+\textbf{domain}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Returns the domain of the container.
+\end{itemize}
+ 
+\begin{itemize}
+\item
+Destroy the distribution of the container (including all of its elements) and recreate the container with a different size. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+void 
+}
+\textbf{resize}%
+\texttt{%
+(size\_type 
+\textit{n}%
+)
+}
+
+\begin{itemize}
+\item
+Destroy the distribution of the container (including all of its elements) and recreate the container with a different size. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+template<typename DistSpecView >
+void
+}
+\textbf{redistribute}%
+\texttt{%
+(DistSpecView const \&
+}
+\textit{dist\_view,}
+\texttt{
+typename std::enable\_if< is\_distribution\_view< DistSpecView >::value \&\&is\_view\_based< partition\_type >::value \&\&is\_view\_based< mapper\_type >::value >::type *=0)
+}
+
+\vspace{0.4cm} \emph{fix Doxygen to omit enable\_if, not part of user interface}
+
+\begin{itemize}
+\item
+Redistribute the data stored in the container to match the distribution specified by the distribution view provided. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+void
+}
+\textbf{migrate}%
+\texttt{%
+(gid\_type const \&
+\textit{gid,}
+location\_type 
+\textit{destination}
+)
+}
+
+\begin{itemize}
+\item
+Migrates the element specified by the gid to the destination location. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+size\_type
+}
+\textbf{size}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Returns the number of elements in the container. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+bool
+}
+\textbf{empty}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Returns if the container has no element.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+distribution\_type \& 
+}
+\textbf{distribution}%
+\texttt{%
+ (void)
+}
+ 
+\noindent
+\texttt{%
+distribution\_type const \& 
+}
+\textbf{distribution}%
+\texttt{%
+ (void) const
+}
+ 
+\noindent
+\texttt{%
+distribution\_type *
+}
+\textbf{get\_distribution}%
+\texttt{%
+(void)
+}
+ 
+\begin{itemize}
+\item
+Returns the data distribution of the container.
+\end{itemize}
+
+\noindent
+\texttt{%
+locality\_info 
+}
+\textbf{locality}%
+\texttt{%
+ (gid\_type gid)
+}
+
+\begin{itemize}
+\item
+Return locality information about the element specified by the gid. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+bool
+}
+\textbf{is\_local}%
+\texttt{%
+(gid\_type const \&
+\textit{gid}%
+)
+}
+
+\begin{itemize}
+\item
+Returns true if the element specified by the GID is stored on this location, or false otherwise. 
+\end{itemize}
+
+
+\subsection{Usage Example} \label{sec-vec-cont-use}
+
+The following example shows how to use the \texttt{vector container}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{cont/vector.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\textbf{PLEASE NOTE: 
+Initializing a container with a sequential loop, as in this example,
+is for illustrative purposes only.
+The normal way to do this is applying a parallel algorithm or 
+basic parallel construct to a view over the container.  See Section
+\ref{sec-vec-vw-use}
+for the recommended usage.
+}
+
+\vspace{0.4cm} \textit{WRITE -comments on example}
+
+\subsection{Implementation} \label{sec-vec-cont-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-vec-cont-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:vec-cont-constr-exper}
+shows the performance of constructing a \stapl\ vector container
+whose elements are atomic values, \stl\ containers, or \stapl\ containers.
+\item
+Fig. \ref{fig:vec-cont-assign-exper}
+shows the performance of assigning values to a \stapl\ vector container
+whose elements are atomic values, \stl\ containers, or \stapl\ containers.
+\item
+Fig. \ref{fig:vec-cont-access-exper}
+shows the performance of accessing values from a \stapl\ vector container
+whose elements are atomic values, \stl\ containers, or \stapl\ containers.
+\end{itemize}
+
+\textit{WRITE - complexity analysis}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/vector_cont_constr}
+\caption{Construct vector Execution Time}
+\label{fig:vec-cont-constr-exper}
+\end{figure}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/vector_cont_assign}
+\caption{Assign Values to vector Execution Time}
+\label{fig:vec-cont-assign-exper}
+\end{figure}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/vector_cont_access}
+\caption{Access Values in vector Execution Time}
+\label{fig:vec-cont-access-exper}
+\end{figure}
+
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{ List Container} \label{sec-list-cont}
+\index{list!container}
+\index{container!list}
+\index{list!constructor}
+
+\subsection{Definition}
+
+\textit{EXPAND - Distributed list container.}
+
+\subsection{Relationship to \stl\ list}
+
+\textit{WRITE}
+
+\subsection{Relationship to other \stapl\ containers}
+
+\textit{WRITE}
+
+\subsection{Implementation}
+
+\textit{WRITE - details specific to this container}
+
+\subsection{Interface} \label{sec-list-cont-inter}
+
+\subsubsection{Constructors}
+
+\noindent
+\textbf{list}%
+\texttt{%
+(void)
+}
+ 
+\begin{itemize}
+\item
+Constructs a list with no elements.
+\end{itemize}
+ 
+\noindent
+\textbf{list}%
+\texttt{%
+(size\_t
+\textit{n}%
+)
+}
+
+\begin{itemize}
+\item
+Constructs a list with n default constructed elements.
+\end{itemize}
+ 
+\noindent
+\textbf{list}%
+\texttt{%
+(size\_t 
+\textit{n,}%
+value\_type const \&
+\textit{default\_value}%
+)
+}
+
+\begin{itemize}
+\item
+Constructs a list with a given size and default value. 
+\end{itemize}
+ 
+\noindent
+\textbf{list}%
+\texttt{%
+(size\_t 
+\textit{n,}%
+mapper\_type const \&
+\textit{mapper}%
+)
+}
+
+\begin{itemize}
+\item
+Construct a list given a mapper and a size parameter. 
+\end{itemize}
+ 
+\noindent
+\textbf{list}%
+\texttt{%
+(partition\_type const \&
+\textit{ps}%
+)
+}
+
+
+\begin{itemize}
+\item
+Constructs a list with a given partitioner. 
+\end{itemize}
+ 
+\noindent
+\textbf{list}%
+\texttt{%
+(partition\_type const \&
+\textit{partitioner,}%
+mapper\_type const \&
+\textit{mapper}%
+)
+}
+
+\begin{itemize}
+\item
+Constructs a list given a partitioner and a mapper. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+template<typename DistSpecView >
+}
+\newline
+\textbf{list}%
+\texttt{%
+(DistSpecView const \&
+\textit{dist\_view,}%
+typename boost::enable\_if< is\_distribution\_view< DistSpecView > >::type *=0
+)
+}
+
+\vspace{0.4cm} \emph{fix Doxygen to omit enable\_if, not part of user interface}
+ 
+\begin{itemize}
+\item
+\emph{fix Doxygen and copy material here}
+\end{itemize}
+ 
+\noindent
+\texttt{%
+template<typename DistSpecView >
+}
+\newline
+\textbf{list}%
+\texttt{%
+(DistSpecView const \&
+\textit{dist\_view,}%
+value\_type const \&
+\textit{default\_value,}%
+typename boost::enable\_if< is\_distribution\_view< DistSpecView > >::type *=0
+)
+}
+
+\vspace{0.4cm} \emph{fix Doxygen to omit enable\_if, not part of user interface}
+ 
+\noindent
+\textbf{list}%
+\texttt{%
+(list const \&other
+)
+}
+
+\begin{itemize}
+\item
+Copy constructs a list from another list container.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+template<typename DP >
+}
+\newline
+\textbf{list}%
+\texttt{%
+(size\_t 
+\textit{n,}%
+value\_type const \&
+\textit{default\_value,}%
+DP const \&
+\textit{dis\_policy}%
+)
+}
+
+\begin{itemize}
+\item
+Constructs a list with a given size and default value where the value type of the container is itself a distributed container. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+template<typename X , typename Y >
+}
+\newline
+\textbf{list}%
+\texttt{%
+(boost::tuples::cons< X, Y > 
+\textit{dims}%
+)
+}
+
+\begin{itemize}
+\item
+Constructs a list of lists with given n-dimensional size. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+template<typename X , typename Y , typename DP >
+}
+\newline
+\textbf{list}%
+\texttt{%
+(boost::tuples::cons< X, Y > 
+\textit{dims,}%
+DP const \&
+\textit{dis\_policy}%
+)
+}
+
+\begin{itemize}
+\item
+Constructs a list of lists with given n-dimensional size. 
+\end{itemize}
+
+\subsubsection{Element Manipulation}
+
+\begin{itemize}
+\item
+Construct a reference to the first element of the array.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+const\_reference
+}
+\textbf{front}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Construct a const\_reference to the first element of the array.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+reference
+}
+\textbf{back}%
+\texttt{%
+(void)
+}
+
+\begin{itemize}
+\item
+Construct a reference to the last element of the array.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+const\_reference
+}
+\textbf{back}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Construct a const\_reference to the last element of the array.
+\end{itemize}
+
+%%%%%
+ 
+\noindent
+\texttt{%
+iterator 	
+}
+\textbf{insert}%
+\texttt{
+(iterator const \&
+\textit{pos,}%
+value\_type const \&
+\textit{value}%
+)
+}
+
+\begin{itemize}
+\item
+Inserts the given value before the element pointed to by the iterator pos and returns an iterator to the new element.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+iterator 	
+}
+\textbf{erase}%
+\texttt{
+(iterator const \&
+\textit{pos}%
+)
+}
+ 	
+\begin{itemize}
+\item
+Removes the element pointed by the iterator pos and returns an iterator pointing to the next element.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+void 
+}
+\textbf{clear}%
+\texttt{
+(void)
+}
+
+\begin{itemize}
+\item
+Remove all elements from the container. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+void 	
+}
+\textbf{push\_front}%
+\texttt{
+(value\_type const \&
+\textit{value}%
+)
+}
+
+\begin{itemize}
+\item
+Inserts the given value at the beginning of the list.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+void 	
+}
+\textbf{push\_back}%
+\texttt{
+(value\_type const \&
+\textit{value}%
+)
+}
+
+\begin{itemize}
+\item
+Inserts the given value at the end of the list.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+void 	
+}
+\textbf{add}%
+\texttt{
+(value\_type const \&
+\textit{value}%
+)
+}
+
+\begin{itemize}
+\item
+Insert the given value into the list. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+void 	
+}
+\textbf{pop\_front}%
+\texttt{
+(void)
+}
+ 	
+\begin{itemize}
+\item
+Removes the first element of the list.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+void 	
+}
+\textbf{pop\_back}%
+\texttt{
+(void)
+}
+ 	
+\begin{itemize}
+\item
+Removes the last element of the list.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+void 	
+}
+\textbf{splice}%
+\texttt{
+(iterator 
+\textit{pos,}%
+list \&
+\textit{pl,}%
+iterator 
+\textit{first,}%
+iterator 
+\textit{l}%
+)
+}
+ 	
+\begin{itemize}
+\item
+Splits the list at the given position pos and inserts between the two split lists the sublist defined from first to last iterator in the specified list pl.
+\end{itemize}
+
+%%%%%
+ 
+\noindent
+\texttt{%
+reference
+}
+\textbf{make\_reference}%
+\texttt{%
+(index\_type const \&
+\textit{idx}%
+)
+}
+
+\begin{itemize}
+\item
+Construct a reference to a specific index of the array.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+const\_reference
+}
+\textbf{make\_reference}%
+\texttt{%
+(index\_type const \&
+\textit{idx}%
+) const
+}
+
+\begin{itemize}
+\item
+Construct a const\_reference to a specific index of the array.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+iterator
+}
+\textbf{make\_iterator}%
+\texttt{%
+(gid\_type const \&
+\textit{gid}%
+)
+}
+
+\begin{itemize}
+\item
+Construct an iterator to a specific index of the array.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+const\_iterator 
+}
+\textbf{make\_const\_iterator}%
+\texttt{%
+(gid\_type const \&
+gid
+) const
+}
+
+\begin{itemize}
+\item
+Construct a const\_iterator to a specific index of the array.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+iterator
+}
+\textbf{begin}%
+\texttt{%
+(void)
+}
+
+\begin{itemize}
+\item
+Construct an iterator to the beginning of the array.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+const\_iterator
+}
+\textbf{begin}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Construct a const\_iterator to the beginning of the array.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+const\_iterator
+}
+\textbf{cbegin}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Construct a const\_iterator to the beginning of the array.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+iterator
+}
+\textbf{end}%
+\texttt{%
+(void)
+}
+
+\begin{itemize}
+\item
+Construct an iterator to one past the end of the array.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+const\_iterator
+}
+\textbf{end}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Construct a const\_iterator to one past the end of the array.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+const\_iterator
+}
+\textbf{cend}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Construct a const\_iterator to one past the end of the array.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+void
+}
+\textbf{set\_element}%
+\texttt{%
+(index\_type const \&
+\textit{idx,}%
+value\_type const \&
+\textit{val}%
+)
+}
+
+\begin{itemize}
+\item
+Sets the element specified by the index to the provided value.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+value\_type
+}
+\textbf{get\_element}%
+\texttt{%
+(index\_type const \&
+\textit{idx}%
+) const
+}
+
+\begin{itemize}
+\item
+Returns the value of the element specified by the index.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+future< value\_type >
+}
+\textbf{get\_element\_split}%
+\texttt{%
+(index\_type const \&
+\textit{idx}%
+)
+}
+
+\begin{itemize}
+\item
+Returns a stapl::future holding the value of the element specified by the index.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+void
+}
+\textbf{apply\_set}%
+\texttt{%
+(gid\_type const \&
+\textit{gid,}%
+F const \&
+\textit{f}%
+)
+}
+
+\begin{itemize}
+\item
+Applies a function f to the element specified by the GID.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+F::result\_type
+}
+\textbf{apply\_get}%
+\texttt{%
+(gid\_type const \&
+\textit{gid,}%
+F const \&
+\textit{f}%
+)
+}
+
+\begin{itemize}
+\item
+Applies a function f to the element specified by the GID, and returns the result.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+F::result\_type
+}
+\textbf{apply\_get}%
+\texttt{%
+(gid\_type const \&
+\textit{gid,}%
+F const \&
+\textit{f}%
+) const
+}
+
+\begin{itemize}
+\item
+Applies a function f to the element specified by the GID, and returns the result.
+\end{itemize}
+ 
+ 
+\subsubsection{Memory and Domain Management}
+
+\noindent
+\texttt{%
+domain\_type 	
+}
+\textbf{domain}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Returns the domain of the container.
+\end{itemize}
+ 
+\begin{itemize}
+\item
+Redistribute the data stored in the container to match the distribution specified by the distribution view provided. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+void
+}
+\textbf{migrate}%
+\texttt{%
+(gid\_type const \&
+\textit{gid,}
+location\_type 
+\textit{destination}
+)
+}
+
+\begin{itemize}
+\item
+Migrates the element specified by the gid to the destination location. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+size\_type
+}
+\textbf{size}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Returns the number of elements in the container. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+bool
+}
+\textbf{empty}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Returns if the container has no element.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+distribution\_type \& 
+}
+\textbf{distribution}%
+\texttt{%
+ (void)
+}
+ 
+\noindent
+\texttt{%
+distribution\_type const \& 
+}
+\textbf{distribution}%
+\texttt{%
+ (void) const
+}
+ 
+\noindent
+\texttt{%
+distribution\_type *
+}
+\textbf{get\_distribution}%
+\texttt{%
+(void)
+}
+ 
+\begin{itemize}
+\item
+Returns the data distribution of the container.
+\end{itemize}
+
+\noindent
+\texttt{%
+locality\_info 
+}
+\textbf{locality}%
+\texttt{%
+ (gid\_type gid)
+}
+
+\begin{itemize}
+\item
+Return locality information about the element specified by the gid. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+bool
+}
+\textbf{is\_local}%
+\texttt{%
+(gid\_type const \&
+\textit{gid}%
+)
+}
+
+\begin{itemize}
+\item
+Returns true if the element specified by the GID is stored on this location, or false otherwise. 
+\end{itemize}
+
+\subsection{Usage Example} \label{sec-list-cont-use}
+
+The following example shows how to use the \texttt{list container}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{cont/list.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\textbf{PLEASE NOTE: 
+Initializing a container with a sequential loop, as in this example,
+is for illustrative purposes only.
+The normal way to do this is applying a parallel algorithm or 
+basic parallel construct to a view over the container.  See Section
+\ref{sec-list-vw-use}
+for the recommended usage.
+}
+
+\vspace{0.4cm} \textit{WRITE -comments on example}
+
+\subsection{Implementation} \label{sec-list-cont-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-list-cont-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:list-cont-constr-exper}
+shows the performance of constructing a \stapl\ list container
+whose elements are atomic values, \stl\ containers, or \stapl\ containers.
+\item
+Fig. \ref{fig:list-cont-assign-exper}
+shows the performance of assigning values to a \stapl\ list container
+whose elements are atomic values, \stl\ containers, or \stapl\ containers.
+\item
+Fig. \ref{fig:list-cont-access-exper}
+shows the performance of accessing values from a \stapl\ list container
+whose elements are atomic values, \stl\ containers, or \stapl\ containers.
+\end{itemize}
+
+\textit{WRITE - complexity analysis}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/list_cont_constr}
+\caption{Construct list Execution Time}
+\label{fig:list-cont-constr-exper}
+\end{figure}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/list_cont_assign}
+\caption{Assign Values to list Execution Time}
+\label{fig:list-cont-assign-exper}
+\end{figure}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/list_cont_access}
+\caption{Access Values in list Execution Time}
+\label{fig:list-cont-access-exper}
+\end{figure}
+
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{ Static Graph Container} \label{sec-stgraf-cont}
+\index{graph!static!container}
+\index{container!graph!static}
+\index{graph!static!constructor}
+
+\subsection{Definition}
+
+\textit{EXPAND - Distributed static graph container. Inherits all functionality from either undirected\_graph or directed\_graph.  Static graphs do not allow addition or deletion of vertices. The number of vertices must be known at construction. Edges may be added/deleted. Uses directedness selector to inherit from correct directed/undirected base. }
+ 
+\subsection{Relationship to other \stapl\ containers}
+
+\textit{WRITE}
+
+\subsection{Implementation}
+
+\textit{WRITE - details specific to this container}
+
+\subsection{Interface} \label{sec-stgraf-cont-inter}
+
+\subsubsection{Constructors}
+
+\noindent
+\textbf{graph}%
+\texttt{%
+(void)
+}
+
+\begin{itemize}
+\item
+Creates an empty graph.
+\end{itemize}
+ 
+\noindent
+\textbf{graph}%
+\texttt{%
+(size\_t const \&
+\textit{n}%
+)
+}
+
+\begin{itemize}
+\item
+Creates a graph with a given size.
+\end{itemize}
+ 
+\noindent
+\textbf{graph}%
+\texttt{%
+(size\_t const \&
+\textit{n,}%
+vertex\_property const \&
+\textit{default\_value}%
+)
+}
+
+\begin{itemize}
+\item
+Creates a graph with a given size and constructs all elements with a default value for vertex property.
+\end{itemize}
+ 
+\noindent
+\textbf{graph}%
+\texttt{%
+(partition\_type const \&
+\textit{ps,}%
+vertex\_property const \&
+\textit{default\_value=vertex\_property()}%
+)
+}
+
+\begin{itemize}
+\item
+Creates a graph with a given partition and default value for vertex property.
+\end{itemize}
+ 
+\noindent
+\textbf{graph}%
+\texttt{%
+(partition\_type const \&
+\textit{ps,}%
+mapper\_type const \&
+\textit{m}%
+)
+}
+
+\begin{itemize}
+\item
+Creates a graph with a given partition and mapper.
+\end{itemize}
+ 
+\noindent
+\textbf{graph}%
+\texttt{%
+(partition\_type const \&
+\textit{ps,}%
+mapper\_type const \&
+\textit{m,}%
+vertex\_property const \&
+\textit{default\_value}%
+)
+}
+
+\begin{itemize}
+\item
+Creates a graph with a given partition and mapper, with default value for vertex property.
+\end{itemize}
+ 
+\noindent
+\textbf{graph}%
+\texttt{%
+(size\_t const \&
+\textit{n,}%
+mapper\_type const \&
+\textit{m,}%
+vertex\_property const \&
+\textit{default\_value=vertex\_property()}%
+)
+}
+
+\begin{itemize}
+\item
+Creates a graph with a given size and mapper, with default value for vertex property. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+template<typename DistSpecsView >
+}
+\newline
+\textbf{graph}%
+\texttt{%
+(DistSpecsView const \&
+\textit{dist\_view,}%
+typename boost::enable\_if< is\_distribution\_view< DistSpecsView > >::type *=0
+)
+}
+
+\vspace{0.4cm} \emph{fix Doxygen to omit enable\_if, not part of user interface}
+
+\begin{itemize}
+\item
+\emph{fix Doxygen and copy material here}
+\end{itemize}
+ 
+\noindent
+\texttt{%
+template<typename DistSpecsView >
+}
+\newline
+\textbf{graph}%
+\texttt{%
+(DistSpecsView const \&
+\textit{dist\_view,}%
+vertex\_property const \&
+\textit{default\_value,}%
+typename boost::enable\_if< is\_distribution\_view< DistSpecsView > >::type *=0)
+}
+
+\vspace{0.4cm} \emph{fix Doxygen to omit enable\_if, not part of user interface}
+ 
+\noindent
+\texttt{%
+template<typename DP >
+}
+\newline
+\textbf{graph}%
+\texttt{%
+(size\_t 
+\textit{n,}%
+vertex\_property const \&
+\textit{default\_value,}%
+DP const \&
+\textit{dis\_policy}%
+)
+}
+
+\begin{itemize}
+\item
+Creates a graph with a given size and default value where the vertex\_property may itself be a distributed container. Required for pC composition. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+template<typename DP >
+}
+\newline
+\textbf{graph}%
+\texttt{%
+(size\_t 
+\textit{n,}%
+DP const \&
+\textit{dis\_policy}%
+)
+}
+
+\begin{itemize}
+\item
+Creates composed distributed containers with a given distribution policy. Required for pC composition. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+template<typename X , typename Y >
+}
+\newline
+\textbf{graph}%
+\texttt{%
+(boost::tuples::cons< X, Y > 
+\textit{dims}%
+)
+}
+
+\begin{itemize}
+\item
+Creates composed distributed containers with a given size-specifications. Required for pC composition. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+template<typename X , typename Y , typename DP >
+}
+\newline
+\textbf{graph}%
+\texttt{%
+(boost::tuples::cons< X, Y > 
+\textit{dims,}%
+const DP \&
+\textit{dis\_policy}%
+)
+}
+
+\begin{itemize}
+\item
+Creates composed distributed containers with a given size-specifications. Required for pC composition. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+template<typename SizesView >
+}
+\newline
+\textbf{graph}%
+\texttt{%
+(SizesView const \&
+\textit{sizes\_view,}%
+typename boost::enable\_if< boost::mpl::and\_< boost::is\_same< size\_type, 
+typename SizesView::size\_type >, boost::mpl::not\_< is\_distribution\_view< SizesView > > > >::type *=0
+)
+}
+
+\vspace{0.4cm} \emph{fix Doxygen to omit enable\_if, not part of user interface}
+
+\begin{itemize}
+\item
+Constructor for composed containers. For an m-level composed container, sizes\_view is an m-1 level composed view representing the sizes of the nested containers. 
+\end{itemize}
+
+
+
+\subsection{Usage Example} \label{sec-stgraf-cont-use}
+
+The following example shows how to use the \texttt{static graph container}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{cont/stgraf.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\textbf{PLEASE NOTE: 
+Initializing a container with a sequential loop, as in this example,
+is for illustrative purposes only.
+The normal way to do this is applying a parallel algorithm or 
+basic parallel construct to a view over the container.  See Section
+\ref{sec-graf-vw-use}
+for the recommended usage.
+}
+
+\vspace{0.4cm} \textit{WRITE -comments on example}
+
+\subsection{Implementation} \label{sec-stgraf-cont-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-stgraf-cont-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:stgraf-cont-constr-exper}
+shows the performance of constructing a \stapl\ static graph container
+whose elements are atomic values, \stl\ containers, or \stapl\ containers.
+\item
+Fig. \ref{fig:stgraf-cont-assign-exper}
+shows the performance of assigning values to a \stapl\ static graph container
+whose elements are atomic values, \stl\ containers, or \stapl\ containers.
+\item
+Fig. \ref{fig:stgraf-cont-access-exper}
+shows the performance of accessing values from a \stapl\ static graph container
+whose elements are atomic values, \stl\ containers, or \stapl\ containers.
+\end{itemize}
+
+\textit{WRITE - complexity analysis}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/static graph_cont_constr}
+\caption{Construct static graph Execution Time}
+\label{fig:stgraf-cont-constr-exper}
+\end{figure}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/static graph_cont_assign}
+\caption{Assign Values to static graph Execution Time}
+\label{fig:stgraf-cont-assign-exper}
+\end{figure}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/static graph_cont_access}
+\caption{Access Values in static graph Execution Time}
+\label{fig:stgraf-cont-access-exper}
+\end{figure}
+
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{Dynamic Graph Container} \label{sec-dygraf-cont}
+\index{graph!dynamic!container}
+\index{container!graph!dynamic}
+\index{graph!dynamic!constructor}
+
+\subsection{Definition}
+
+\textit{EXPAND - Distributed dynamic graph that supports addition and deletion of vertices and edges.Inherits from stapl::graph and adds functionality to add/delete vertices.}
+
+\subsection{Relationship to other \stapl\ containers}
+
+\textit{WRITE}
+
+\subsection{Implementation}
+
+\textit{WRITE - details specific to this container}
+
+\subsection{Interface} \label{sec-dygraf-cont-inter}
+
+\subsubsection{Constructors}
+
+\noindent
+\textbf{dynamic\_graph}%
+\texttt{%
+(void)
+}
+ 
+\noindent
+\textbf{dynamic\_graph}%
+\texttt{%
+(size\_t const \&
+\textit{n}%
+)
+}
+
+\begin{itemize}
+\item
+Creates a graph with a given size. 
+\end{itemize}
+ 
+\noindent
+\textbf{dynamic\_graph}%
+\texttt{%
+(size\_t const \&
+\textit{n,}%
+VertexP const \&
+\textit{default\_value}%
+)
+}
+
+\begin{itemize}
+\item
+Creates a graph with a given size and constructs all elements with a default value for vertex property. 
+\end{itemize}
+ 
+\noindent
+\textbf{dynamic\_graph}%
+\texttt{%
+(partition\_type const \&
+\textit{ps,}%
+VertexP const \& 
+\textit{default\_value=VertexP()}%
+)
+}
+
+\begin{itemize}
+\item
+Creates a graph with a given partition and default value for vertex property. 
+\end{itemize}
+ 
+\noindent
+\textbf{dynamic\_graph}%
+\texttt{%
+(partition\_type const \&
+\textit{ps,}%
+mapper\_type const \&
+\textit{mapper,}%
+VertexP const \&
+\textit{default\_value=VertexP()}%
+)
+}
+
+\begin{itemize}
+\item
+\emph{fix Doxygen and copy material here}
+\end{itemize}
+ 
+\noindent
+\texttt{%
+template<typename DistSpecsView >
+}
+\newline
+\textbf{dynamic\_graph}%
+\texttt{%
+(DistSpecsView const \&
+\textit{dist\_view,}%
+typename boost::enable\_if< is\_distribution\_view< DistSpecsView > >::type *=0
+)
+}
+
+\vspace{0.4cm} \emph{fix Doxygen to omit enable\_if, not part of user interface}
+ 
+\begin{itemize}
+\item
+\emph{fix Doxygen and copy material here}
+\end{itemize}
+ 
+\noindent
+\texttt{%
+template<typename DistSpecsView >
+}
+\newline
+\textbf{dynamic\_graph}%
+\texttt{%
+(DistSpecsView const \&
+\textit{dist\_view,}%
+VertexP const \&
+\textit{default\_value,}%
+typename boost::enable\_if< is\_distribution\_view< DistSpecsView > >::type *=0
+)
+}
+
+\vspace{0.4cm} \emph{fix Doxygen to omit enable\_if, not part of user interface}
+ 
+\noindent
+\texttt{%
+template<typename DP >
+}
+\newline
+\textbf{dynamic\_graph}%
+\texttt{%
+(size\_t 
+\textit{n,}%
+vertex\_property const \&
+\textit{default\_value,}%
+DP const \&
+\textit{dis\_policy}%
+)
+}
+
+\begin{itemize}
+\item
+Creates a graph with a given size and default value where the vertex\_property may itself be a distributed container. Required for pC composition. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+template<typename X , typename Y >
+}
+\newline
+\textbf{dynamic\_graph}%
+\texttt{%
+(boost::tuples::cons< X, Y > 
+\textit{dims}%
+)
+}
+
+\begin{itemize}
+\item
+Creates composed distributed containers with a given size-specifications. Required for pC composition. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+template<typename X , typename Y , typename DP >
+}
+\newline
+\textbf{dynamic\_graph}%
+\texttt{%
+(boost::tuples::cons< X, Y > 
+\textit{dims,}%
+DP const \&
+\textit{dis\_policy}%
+)
+}
+
+\begin{itemize}
+\item
+Creates composed distributed containers with a given size-specifications. Required for pC composition. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+template<typename SizesView >
+}
+\newline
+\textbf{dynamic\_graph}%
+\texttt{%
+(SizesView const \&
+\textit{sizes\_view,}%
+typename boost::enable\_if< boost::mpl::and\_< boost::is\_same< size\_type,
+ typename SizesView::size\_type >, boost::mpl::not\_< is\_distribution\_view< SizesView > > > >::type *=0
+)
+}
+
+\begin{itemize}
+\item
+Constructor for composed containers. For an m-level composed container, sizes\_view is an m-1 level composed view representing the sizes of the nested containers. 
+\end{itemize}
+
+HERE
+
+\subsection{Usage Example} \label{sec-dygraf-cont-use}
+
+The following example shows how to use the \texttt{dynamic graph container}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{cont/dygraf.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\textbf{PLEASE NOTE: 
+Initializing a container with a sequential loop, as in this example,
+is for illustrative purposes only.
+The normal way to do this is applying a parallel algorithm or 
+basic parallel construct to a view over the container.  See Section
+\ref{sec-graf-vw-use}
+for the recommended usage.
+}
+
+\vspace{0.4cm} \textit{WRITE -comments on example}
+
+\subsection{Implementation} \label{sec-dygraf-cont-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-dygraf-cont-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:dygraf-cont-constr-exper}
+shows the performance of constructing a \stapl\ dynamic graph container
+whose elements are atomic values, \stl\ containers, or \stapl\ containers.
+\item
+Fig. \ref{fig:dygraf-cont-assign-exper}
+shows the performance of assigning values to a \stapl\ dynamic graph container
+whose elements are atomic values, \stl\ containers, or \stapl\ containers.
+\item
+Fig. \ref{fig:dygraf-cont-access-exper}
+shows the performance of accessing values from a \stapl\ dynamic graph container
+whose elements are atomic values, \stl\ containers, or \stapl\ containers.
+\end{itemize}
+
+\textit{WRITE - complexity analysis}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/dynamic graph_cont_constr}
+\caption{Construct dynamic graph Execution Time}
+\label{fig:dygraf-cont-constr-exper}
+\end{figure}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/dynamic graph_cont_assign}
+\caption{Assign Values to dynamic graph Execution Time}
+\label{fig:dygraf-cont-assign-exper}
+\end{figure}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/dynamic graph_cont_access}
+\caption{Access Values in dynamic graph Execution Time}
+\label{fig:dygraf-cont-access-exper}
+\end{figure}
+
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section { Matrix Container} \label{sec-mat-cont}
+\index{matrix!container}
+\index{container!matrix}
+\index{matrix!constructor}
+
+\subsection{Definition}
+
+\textit{EXPAND - Distributed dense matrix container.}
+
+\subsection{Relationship to other \stapl\ containers}
+
+\textit{WRITE}
+
+\subsection{Implementation}
+
+\textit{WRITE - details specific to this container}
+
+\subsection{Interface} \label{sec-mat-cont-inter}
+
+\subsubsection{Constructors}
+
+\noindent
+\textbf{matrix}%
+\texttt{%
+(size\_type const \&
+\textit{n,}%
+partition\_type const \&
+\textit{ps}%
+)
+}
+
+\begin{itemize}
+\item
+Create an matrix with a given size and partition, default constructing all elements. 
+\end{itemize}
+ 
+\noindent
+\textbf{matrix}%
+\texttt{%
+(size\_type const \&
+\textit{sizes}%
+)
+}
+
+\begin{itemize}
+\item
+Create a matrix with a given size that default constructs all elements. 
+\end{itemize}
+ 
+\noindent
+\textbf{matrix}%
+\texttt{%
+(size\_type const \&
+\textit{sizes,}%
+mapper\_type const \&
+\textit{mapper}%
+)
+}
+
+\begin{itemize}
+\item
+Create a matrix with a given size and mapper. 
+\end{itemize}
+ 
+\noindent
+\textbf{matrix}%
+\texttt{%
+(partition\_type const \&
+\textit{partitioner,}%
+mapper\_type const \&
+\textit{mapper}%
+)
+}
+
+\begin{itemize}
+\item
+Create a matrix with a given mapper and partition. 
+\end{itemize}
+ 
+\noindent
+\textbf{%
+matrix 
+}
+\texttt{%
+(size\_type const \&
+\textit{sizes,}%
+value\_type const \&
+\textit{default\_value}%
+)
+}
+
+\begin{itemize}
+\item
+Create a matrix with a given size and default value default constructing all elements. 
+\end{itemize}
+ 
+\noindent
+\textbf{matrix}%
+\texttt{%
+(partition\_type const \&
+\textit{ps}%
+)
+}
+
+\begin{itemize}
+\item
+Create a matrix with a given partition. 
+\end{itemize}
+
+\subsubsection{Element Manipulation}
+
+\noindent
+\texttt{%
+reference
+}
+\textbf{operator[]}%
+\texttt{%
+(index\_type 
+\textit{idx}%
+)
+}
+
+\begin{itemize}
+\item
+Construct a reference to a specific index of the matrix.
+\end{itemize}
+ 
+\noindent%
+\texttt{%
+const\_reference
+}
+\textbf{operator[]}%
+\texttt{%
+(index\_type 
+\textit{idx}%
+) const
+}
+
+\begin{itemize}
+\item
+Construct a const\_reference to a specific index of the matrix.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+void
+}
+\textbf{set\_element}%
+\texttt{%
+(index\_type const \&
+\textit{idx,}%
+value\_type const \&
+\textit{val}%
+)
+}
+
+\begin{itemize}
+\item
+Sets the element specified by the index to the provided value.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+value\_type
+}
+\textbf{get\_element}%
+\texttt{%
+(index\_type const \&
+\textit{idx}%
+) const
+}
+
+\begin{itemize}
+\item
+Returns the value of the element specified by the index.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+future< value\_type >
+}
+\textbf{get\_element\_split}%
+\texttt{%
+(index\_type const \&
+\textit{idx}%
+)
+}
+
+\begin{itemize}
+\item
+Returns a stapl::future holding the value of the element specified by the index.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+void
+}
+\textbf{apply\_set}%
+\texttt{%
+(gid\_type const \&
+\textit{gid,}%
+F const \&
+\textit{f}%
+)
+}
+
+\begin{itemize}
+\item
+Applies a function f to the element specified by the GID.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+F::result\_type
+}
+\textbf{apply\_get}%
+\texttt{%
+(gid\_type const \&
+\textit{gid,}%
+F const \&
+\textit{f}%
+)
+}
+
+\begin{itemize}
+\item
+Applies a function f to the element specified by the GID, and returns the result.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+F::result\_type
+}
+\textbf{apply\_get}%
+\texttt{%
+(gid\_type const \&
+\textit{gid,}%
+F const \&
+\textit{f}%
+) const
+}
+
+\begin{itemize}
+\item
+Applies a function f to the element specified by the GID, and returns the result.
+\end{itemize}
+ 
+ 
+\subsubsection{Memory and Domain Management}
+
+\noindent
+\texttt{%
+dimensions\_type
+}
+\textbf{dimensions}
+\texttt{%
+() const
+}
+
+\begin{itemize}
+\item
+Return the size of the matrix in each dimension.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+domain\_type 	
+}
+\textbf{domain}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Returns the domain of the container.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+void 
+}
+\textbf{resize}%
+\texttt{%
+(size\_type 
+\textit{n}
+)
+}
+
+\begin{itemize}
+\item
+Destroy the distribution of the container (including all of its elements) and recreate the container with a different size.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+template<typename DistSpecView >
+void
+}
+\textbf{redistribute}%
+\texttt{%
+(DistSpecView const \&
+}
+\textit{dist\_view,}
+\texttt{
+typename std::enable\_if< is\_distribution\_view< DistSpecView >::value \&\&is\_view\_based< partition\_type >::value \&\&is\_view\_based< mapper\_type >::value >::type *=0)
+}
+
+\vspace{0.4cm} \emph{fix Doxygen to omit enable\_if, not part of user interface}
+
+\begin{itemize}
+\item
+Redistribute the data stored in the container to match the distribution specified by the distribution view provided. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+void
+}
+\textbf{migrate}%
+\texttt{%
+(gid\_type const \&
+\textit{gid,}
+location\_type 
+\textit{destination}
+)
+}
+
+\begin{itemize}
+\item
+Migrates the element specified by the gid to the destination location. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+size\_type
+}
+\textbf{size}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Returns the number of elements in the container. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+bool
+}
+\textbf{empty}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Returns if the container has no element.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+distribution\_type \& 
+}
+\textbf{distribution}%
+\texttt{%
+ (void)
+}
+ 
+\noindent
+\texttt{%
+distribution\_type const \& 
+}
+\textbf{distribution}%
+\texttt{%
+ (void) const
+}
+ 
+\noindent
+\texttt{%
+distribution\_type *
+}
+\textbf{get\_distribution}%
+\texttt{%
+(void)
+}
+ 
+\begin{itemize}
+\item
+Returns the data distribution of the container.
+\end{itemize}
+
+\noindent
+\texttt{%
+locality\_info 
+}
+\textbf{locality}%
+\texttt{%
+ (gid\_type gid)
+}
+
+\begin{itemize}
+\item
+Return locality information about the element specified by the gid. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+bool
+}
+\textbf{is\_local}%
+\texttt{%
+(gid\_type const \&
+\textit{gid}%
+)
+}
+
+\begin{itemize}
+\item
+Returns true if the element specified by the GID is stored on this location, or false otherwise. 
+\end{itemize}
+
+\subsection{Usage Example} \label{sec-mat-cont-use}
+
+The following example shows how to use the \texttt{matrix container}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{cont/matrix.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\textbf{PLEASE NOTE: 
+Initializing a container with a sequential loop, as in this example,
+is for illustrative purposes only.
+The normal way to do this is applying a parallel algorithm or 
+basic parallel construct to a view over the container.  See Section
+\ref{sec-mat-vw-use}
+for the recommended usage.
+}
+
+\vspace{0.4cm} \textit{WRITE -comments on example}
+
+\subsection{Implementation} \label{sec-mat-cont-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-mat-cont-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:mat-cont-constr-exper}
+shows the performance of constructing a \stapl\ matrix container
+whose elements are atomic values, \stl\ containers, or \stapl\ containers.
+\item
+Fig. \ref{fig:mat-cont-assign-exper}
+shows the performance of assigning values to a \stapl\ matrix container
+whose elements are atomic values, \stl\ containers, or \stapl\ containers.
+\item
+Fig. \ref{fig:mat-cont-access-exper}
+shows the performance of accessing values from a \stapl\ matrix container
+whose elements are atomic values, \stl\ containers, or \stapl\ containers.
+\end{itemize}
+
+\textit{WRITE - complexity analysis}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/matrix_cont_constr}
+\caption{Construct matrix Execution Time}
+\label{fig:mat-cont-constr-exper}
+\end{figure}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/matrix_cont_assign}
+\caption{Assign Values to matrix Execution Time}
+\label{fig:mat-cont-assign-exper}
+\end{figure}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/matrix_cont_access}
+\caption{Access Values in matrix Execution Time}
+\label{fig:mat-cont-access-exper}
+\end{figure}
+
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{ Multiarray Container} \label{sec-multi-cont}
+\index{multiarray!container}
+\index{container!multiarray}
+\index{multiarray!constructor}
+
+\subsection{Definition}
+
+\textit{EXPAND - Distributed multi-dimensional array container. }
+
+\subsection{Relationship to other \stapl\ containers}
+
+\textit{WRITE}
+
+\subsection{Implementation}
+
+\textit{WRITE - details specific to this container}
+
+\subsection{Interface} \label{sec-multi-cont-inter}
+
+\subsubsection{Constructors}
+
+\noindent
+\textbf{multiarray}%
+\texttt{%
+(void)
+}
+
+\begin{itemize}
+\item
+Default constructor creates an empty multiarray with zero size in all dimensions.
+\end{itemize}
+ 
+\noindent
+\textbf{multiarray}%
+\texttt{%
+(size\_type const \&
+\textit{sizes}%
+)
+}
+
+\begin{itemize}
+\item
+Create an multiarray with a given size and default construct all elements. 
+\end{itemize}
+ 
+\noindent
+\textbf{multiarray}%
+\texttt{%
+(size\_type const \&
+\textit{sizes,}%
+value\_type const \&
+\textit{default\_value}%
+)
+}
+
+\begin{itemize}
+\item
+Create a multiarray with given sizes in each dimension and a default value. 
+\end{itemize}
+ 
+\noindent
+\textbf{multiarray}%
+\texttt{%
+(size\_type const \&
+\textit{sizes,}%
+mapper\_type const \&
+\textit{mapper}%
+)
+}
+
+\begin{itemize}
+\item
+Create a multiarray with a given sizes in each dimension and a mapper. 
+\end{itemize}
+ 
+\noindent
+\textbf{multiarray}%
+\texttt{%
+(partition\_type const \&
+\textit{ps}%
+)
+}
+
+\begin{itemize}
+\item
+Create an multiarray with a given partition. 
+\end{itemize}
+ 
+\noindent
+\textbf{multiarray}%
+\texttt{%
+(partition\_type const \&
+\textit{partitioner,}%
+mapper\_type const \&
+\textit{mapper}%
+)
+}
+
+\begin{itemize}
+\item
+Create an multiarray with a given partitioner and mapper, default constructing all elements. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+template<typename DistSpecsView >
+}
+\newline
+\textbf{multiarray}%
+\texttt{%
+(DistSpecsView const \&
+\textit{dist\_view,}%
+typename boost::enable\_if< is\_distribution\_view< DistSpecsView > >::type *=0
+)
+}
+
+\vspace{0.4cm} \emph{fix Doxygen to omit enable\_if, not part of user interface}
+ 
+\begin{itemize}
+\item
+\emph{fix Doxygen and copy material here}
+\end{itemize}
+ 
+\noindent
+\texttt{%
+template<typename SizesView >
+}
+\newline
+\textbf{multiarray}%
+\texttt{%
+(SizesView const \&
+\textit{sizes\_view,}%
+typename boost::enable\_if< boost::mpl::and\_< boost::is\_same< size\_type, 
+typename SizesView::size\_type >, 
+boost::mpl::not\_< is\_distribution\_view< SizesView > > > >::type *=0
+)
+}
+
+\vspace{0.4cm} \emph{fix Doxygen to omit enable\_if, not part of user interface}
+
+\begin{itemize}
+\item
+Constructor for composed containers. For an m level composed container, sizes\_view is an m-1 level composed view representing the sizes of the nested containers. 
+\end{itemize}
+
+\subsubsection{Element Manipulation}
+
+\noindent
+\texttt{%
+reference
+}
+\textbf{operator[]}%
+\texttt{%
+(index\_type 
+\textit{idx}%
+)
+}
+
+\begin{itemize}
+\item
+Construct a reference to a specific index of the multiarray.
+\end{itemize}
+ 
+\noindent%
+\texttt{%
+const\_reference
+}
+\textbf{operator[]}%
+\texttt{%
+(index\_type 
+\textit{idx}%
+) const
+}
+
+\begin{itemize}
+\item
+Construct a const\_reference to a specific index of the multiarray.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+void
+}
+\textbf{set\_element}%
+\texttt{%
+(index\_type const \&
+\textit{idx,}%
+value\_type const \&
+\textit{val}%
+)
+}
+
+\begin{itemize}
+\item
+Sets the element specified by the index to the provided value.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+value\_type
+}
+\textbf{get\_element}%
+\texttt{%
+(index\_type const \&
+\textit{idx}%
+) const
+}
+
+\begin{itemize}
+\item
+Returns the value of the element specified by the index.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+future< value\_type >
+}
+\textbf{get\_element\_split}%
+\texttt{%
+(index\_type const \&
+\textit{idx}%
+)
+}
+
+\begin{itemize}
+\item
+Returns a stapl::future holding the value of the element specified by the index.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+void
+}
+\textbf{apply\_set}%
+\texttt{%
+(gid\_type const \&
+\textit{gid,}%
+F const \&
+\textit{f}%
+)
+}
+
+\begin{itemize}
+\item
+Applies a function f to the element specified by the GID.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+F::result\_type
+}
+\textbf{apply\_get}%
+\texttt{%
+(gid\_type const \&
+\textit{gid,}%
+F const \&
+\textit{f}%
+)
+}
+
+\begin{itemize}
+\item
+Applies a function f to the element specified by the GID, and returns the result.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+F::result\_type
+}
+\textbf{apply\_get}%
+\texttt{%
+(gid\_type const \&
+\textit{gid,}%
+F const \&
+\textit{f}%
+) const
+}
+
+\begin{itemize}
+\item
+Applies a function f to the element specified by the GID, and returns the result.
+\end{itemize}
+ 
+ 
+\subsubsection{Memory and Domain Management}
+
+\noindent
+\texttt{%
+dimensions\_type
+}
+\textbf{dimensions}
+\texttt{%
+() const
+}
+
+\begin{itemize}
+\item
+Return the size of the multiarray in each dimension.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+domain\_type 	
+}
+\textbf{domain}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Returns the domain of the container.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+void 
+}
+\textbf{resize}%
+\texttt{%
+(size\_type 
+\textit{n}
+)
+}
+
+\begin{itemize}
+\item
+Destroy the distribution of the container (including all of its elements) and recreate the container with a different size. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+template<typename DistSpecView >
+void
+}
+\textbf{redistribute}%
+\texttt{%
+(DistSpecView const \&
+}
+\textit{dist\_view,}
+\texttt{
+typename std::enable\_if< is\_distribution\_view< DistSpecView >::value \&\&is\_view\_based< partition\_type >::value \&\&is\_view\_based< mapper\_type >::value >::type *=0)
+}
+
+\vspace{0.4cm} \emph{fix Doxygen to omit enable\_if, not part of user interface}
+
+\begin{itemize}
+\item
+Redistribute the data stored in the container to match the distribution specified by the distribution view provided. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+void
+}
+\textbf{migrate}%
+\texttt{%
+(gid\_type const \&
+\textit{gid,}
+location\_type 
+\textit{destination}
+)
+}
+
+\begin{itemize}
+\item
+Migrates the element specified by the gid to the destination location. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+size\_type
+}
+\textbf{size}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Returns the number of elements in the container. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+bool
+}
+\textbf{empty}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Returns if the container has no element.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+distribution\_type \& 
+}
+\textbf{distribution}%
+\texttt{%
+ (void)
+}
+ 
+\noindent
+\texttt{%
+distribution\_type const \& 
+}
+\textbf{distribution}%
+\texttt{%
+ (void) const
+}
+ 
+\noindent
+\texttt{%
+distribution\_type *
+}
+\textbf{get\_distribution}%
+\texttt{%
+(void)
+}
+ 
+\begin{itemize}
+\item
+Returns the data distribution of the container.
+\end{itemize}
+
+\noindent
+\texttt{%
+locality\_info 
+}
+\textbf{locality}%
+\texttt{%
+ (gid\_type gid)
+}
+
+\begin{itemize}
+\item
+Return locality information about the element specified by the gid. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+bool
+}
+\textbf{is\_local}%
+\texttt{%
+(gid\_type const \&
+\textit{gid}%
+)
+}
+
+\begin{itemize}
+\item
+Returns true if the element specified by the GID is stored on this location, or false otherwise. 
+\end{itemize}
+
+
+\subsection{Usage Example} \label{sec-multi-cont-use}
+
+The following example shows how to use the \texttt{multiarray container}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{cont/multi.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\textbf{PLEASE NOTE: 
+Initializing a container with a sequential loop, as in this example,
+is for illustrative purposes only.
+The normal way to do this is applying a parallel algorithm or 
+basic parallel construct to a view over the container.  See Section
+\ref{sec-multi-vw-use}
+for the recommended usage.
+}
+
+\vspace{0.4cm} \textit{WRITE -comments on example}
+
+\subsection{Implementation} \label{sec-multi-cont-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-multi-cont-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:multi-cont-constr-exper}
+shows the performance of constructing a \stapl\ multiarray container
+whose elements are atomic values, \stl\ containers, or \stapl\ containers.
+\item
+Fig. \ref{fig:multi-cont-assign-exper}
+shows the performance of assigning values to a \stapl\ multiarray container
+whose elements are atomic values, \stl\ containers, or \stapl\ containers.
+\item
+Fig. \ref{fig:multi-cont-access-exper}
+shows the performance of accessing values from a \stapl\ multiarray container
+whose elements are atomic values, \stl\ containers, or \stapl\ containers.
+\end{itemize}
+
+\textit{WRITE - complexity analysis}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/multiarray_cont_constr}
+\caption{Construct multiarray Execution Time}
+\label{fig:multi-cont-constr-exper}
+\end{figure}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/multiarray_cont_assign}
+\caption{Assign Values to multiarray Execution Time}
+\label{fig:multi-cont-assign-exper}
+\end{figure}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/multiarray_cont_access}
+\caption{Access Values in multiarray Execution Time}
+\label{fig:multi-cont-access-exper}
+\end{figure}
+
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{ Set Container} \label{sec-set-cont}
+\index{set!container}
+\index{container!set}
+\index{set!constructor}
+
+\subsection{Definition}
+
+\textit{EXPAND - Distributed set container}
+
+\subsection{Relationship to \stl\ set}
+
+\textit{WRITE}
+
+\subsection{Relationship to other \stapl\ containers}
+
+\textit{WRITE}
+
+\subsection{Implementation}
+
+\textit{WRITE - details specific to this container}
+
+\subsection{Interface} \label{sec-set-cont-inter}
+
+\subsubsection{Constructors}
+
+\noindent
+\textbf{set}%
+\texttt{%
+(void)
+}
+
+\begin{itemize}
+\item
+Construct a parallel set where the ownership of keys is determined by a simple block-cyclic distribution of the key space. 
+\end{itemize}
+ 
+\noindent
+\textbf{set}%
+\texttt{%
+(typename Partitioner::value\_type const \&
+\textit{domain}%
+)
+}
+
+\begin{itemize}
+\item
+Create a set with a given domain.
+\end{itemize}
+ 
+\noindent
+\textbf{set}%
+\texttt{%
+(Partitioner const \&
+\textit{partition}%
+)
+}
+
+\begin{itemize}
+\item
+Construct a parallel set where the ownership of keys is determined by a given partition. 
+\end{itemize}
+ 
+\noindent
+\textbf{set}%
+\texttt{%
+(Partitioner const \&
+\textit{partitioner,}%
+Mapper const \&
+\textit{mapper}%
+)
+}
+
+\begin{itemize}
+\item
+Create a set with a given partitioner and mapper an instance of mapper. More
+\end{itemize}
+
+\subsubsection{Element Manipulation}
+
+%%\noindent
+%%\texttt{%
+%%reference
+%%}
+%%\textbf{operator[]}%
+%%\texttt{%
+%%(index\_type 
+%%\textit{idx}%
+%%)
+%%}
+
+%%\begin{itemize}
+%%\item
+%%Construct a reference to a specific key.
+%%\end{itemize}
+ 
+%%\noindent%
+%%\texttt{%
+%%const\_reference
+%%}
+%%\textbf{operator[]}%
+%%\texttt{%
+%%(index\_type 
+%%\textit{idx}%
+%%) const
+%%}
+
+%%\begin{itemize}
+%%\item
+%%Construct a const\_reference to a specific key;
+%%\end{itemize}
+ 
+%%%%%
+
+\noindent
+\texttt{%
+reference
+}
+\textbf{make\_reference}%
+\texttt{%
+(index\_type const \&
+\textit{idx}%
+)
+}
+
+\begin{itemize}
+\item
+Construct a reference to a specific key.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+const\_reference
+}
+\textbf{make\_reference}%
+\texttt{%
+(index\_type const \&
+\textit{idx}%
+) const
+}
+
+\begin{itemize}
+\item
+Construct a const\_reference to a specific key.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+iterator
+}
+\textbf{make\_iterator}%
+\texttt{%
+(gid\_type const \&
+\textit{gid}%
+)
+}
+
+\begin{itemize}
+\item
+Construct an iterator to a specific key.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+const\_iterator 
+}
+\textbf{make\_const\_iterator}%
+\texttt{%
+(gid\_type const \&
+gid
+) const
+}
+
+\begin{itemize}
+\item
+Construct a const\_iterator to a specific key;
+\end{itemize}
+ 
+\texttt{%
+iterator
+}
+\textbf{begin}%
+\texttt{%
+(void)
+}
+
+\begin{itemize}
+\item
+Construct an iterator to the first element of the domain.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+const\_iterator
+}
+\textbf{begin}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Construct a const\_iterator to the first element of the domain.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+const\_iterator
+}
+\textbf{cbegin}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Construct a const\_iterator to the first element of the domain.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+iterator
+}
+\textbf{end}%
+\texttt{%
+(void)
+}
+
+\begin{itemize}
+\item
+Construct an iterator to one past the last element of the domain.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+const\_iterator
+}
+\textbf{end}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Construct a const\_iterator to one past the last element of the domain.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+const\_iterator
+}
+\textbf{cend}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Construct a const\_iterator to one past the last element of the domain.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+void
+}
+\textbf{set\_element}%
+\texttt{%
+(index\_type const \&
+\textit{idx,}%
+value\_type const \&
+\textit{val}%
+)
+}
+
+\begin{itemize}
+\item
+Sets the element specified by the index to the provided value.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+value\_type
+}
+\textbf{get\_element}%
+\texttt{%
+(index\_type const \&
+\textit{idx}%
+) const
+}
+
+\begin{itemize}
+\item
+Returns the value of the element specified by the key.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+future< value\_type >
+}
+\textbf{get\_element\_split}%
+\texttt{%
+(index\_type const \&
+\textit{idx}%
+)
+}
+
+\begin{itemize}
+\item
+Returns a stapl::future holding the value of the element specified by the key.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+void
+}
+\textbf{apply\_set}%
+\texttt{%
+(gid\_type const \&
+\textit{gid,}%
+F const \&
+\textit{f}%
+)
+}
+
+\begin{itemize}
+\item
+Applies a function f to the element specified by the GID.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+F::result\_type
+}
+\textbf{apply\_get}%
+\texttt{%
+(gid\_type const \&
+\textit{gid,}%
+F const \&
+\textit{f}%
+)
+}
+
+\begin{itemize}
+\item
+Applies a function f to the element specified by the GID, and returns the result.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+F::result\_type
+}
+\textbf{apply\_get}%
+\texttt{%
+(gid\_type const \&
+\textit{gid,}%
+F const \&
+\textit{f}%
+) const
+}
+
+\begin{itemize}
+\item
+Applies a function f to the element specified by the GID, and returns the result.
+\end{itemize}
+ 
+%%%%%
+
+\subsubsection{Memory and Domain Management}
+
+\noindent
+\texttt{%
+domain\_type 	
+}
+\textbf{domain}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Returns the domain of the container.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+template<typename DistSpecView >
+void
+}
+\textbf{redistribute}%
+\texttt{%
+(DistSpecView const \&
+}
+\textit{dist\_view,}
+\texttt{
+typename std::enable\_if< is\_distribution\_view< DistSpecView >::value \&\&is\_view\_based< partition\_type >::value \&\&is\_view\_based< mapper\_type >::value >::type *=0)
+}
+
+\vspace{0.4cm} \emph{fix Doxygen to omit enable\_if, not part of user interface}
+
+\begin{itemize}
+\item
+Redistribute the data stored in the container to match the distribution specified by the distribution view provided. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+void
+}
+\textbf{migrate}%
+\texttt{%
+(gid\_type const \&
+\textit{gid,}
+location\_type 
+\textit{destination}
+)
+}
+
+\begin{itemize}
+\item
+Migrates the element specified by the gid to the destination location. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+size\_type
+}
+\textbf{size}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Returns the number of elements in the container. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+bool
+}
+\textbf{empty}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Returns if the container has no element.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+distribution\_type \& 
+}
+\textbf{distribution}%
+\texttt{%
+ (void)
+}
+ 
+\noindent
+\texttt{%
+distribution\_type const \& 
+}
+\textbf{distribution}%
+\texttt{%
+ (void) const
+}
+ 
+\noindent
+\texttt{%
+distribution\_type *
+}
+\textbf{get\_distribution}%
+\texttt{%
+(void)
+}
+ 
+\begin{itemize}
+\item
+Returns the data distribution of the container.
+\end{itemize}
+
+\noindent
+\texttt{%
+locality\_info 
+}
+\textbf{locality}%
+\texttt{%
+ (gid\_type gid)
+}
+
+\begin{itemize}
+\item
+Return locality information about the element specified by the gid. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+bool
+}
+\textbf{is\_local}%
+\texttt{%
+(gid\_type const \&
+\textit{gid}%
+)
+}
+
+\begin{itemize}
+\item
+Returns true if the element specified by the GID is stored on this location, or false otherwise. 
+\end{itemize}
+
+
+\subsection{Usage Example} \label{sec-set-cont-use}
+
+The following example shows how to use the \texttt{set container}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{cont/set.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\textbf{PLEASE NOTE: 
+Initializing a container with a sequential loop, as in this example,
+is for illustrative purposes only.
+The normal way to do this is applying a parallel algorithm or 
+basic parallel construct to a view over the container.  See Section
+\ref{sec-set-vw-use}
+for the recommended usage.
+}
+
+\vspace{0.4cm} \textit{WRITE -comments on example}
+
+\subsection{Implementation} \label{sec-set-cont-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-set-cont-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:set-cont-constr-exper}
+shows the performance of constructing a \stapl\ set container
+whose elements are atomic values, \stl\ containers, or \stapl\ containers.
+\item
+Fig. \ref{fig:set-cont-assign-exper}
+shows the performance of assigning values to a \stapl\ set container
+whose elements are atomic values, \stl\ containers, or \stapl\ containers.
+\item
+Fig. \ref{fig:set-cont-access-exper}
+shows the performance of accessing values from a \stapl\ set container
+whose elements are atomic values, \stl\ containers, or \stapl\ containers.
+\end{itemize}
+
+\textit{WRITE - complexity analysis}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/set_cont_constr}
+\caption{Construct set Execution Time}
+\label{fig:set-cont-constr-exper}
+\end{figure}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/set_cont_assign}
+\caption{Assign Values to set Execution Time}
+\label{fig:set-cont-assign-exper}
+\end{figure}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/set_cont_access}
+\caption{Access Values in set Execution Time}
+\label{fig:set-cont-access-exper}
+\end{figure}
+
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{ Map Container} \label{sec-map-cont}
+\index{map!container}
+\index{container!map}
+\index{map!constructor}
+
+\subsection{Definition}
+
+\textit{EXPAND - Distributed ordered map container.}
+
+\subsection{Relationship to \stl\ map}
+
+\textit{WRITE}
+
+\subsection{Relationship to other \stapl\ containers}
+
+\textit{WRITE}
+
+\subsection{Implementation}
+
+\textit{WRITE - details specific to this container}
+
+\subsection{Interface} \label{sec-map-cont-inter}
+
+\subsubsection{Constructors}
+
+\noindent
+\textbf{map}%
+\texttt{%
+()
+}
+
+\begin{itemize}
+\item
+Construct a parallel map where the ownership of keys is determined by a simple block-cyclic distribution of the key space. 
+\end{itemize}
+ 
+\noindent
+\textbf{map}%
+\texttt{%
+(typename partition\_type::value\_type const \&
+\textit{domain}%
+)
+}
+
+\begin{itemize}
+\item
+Construct a parallel map where the ownership of keys is determined by a balanced partition of a given domain. 
+\end{itemize}
+ 
+\noindent
+\textbf{map}%
+\texttt{%
+(partition\_type const \&
+\textit{partition}%
+)
+}
+
+\begin{itemize}
+\item
+Construct a parallel map where the ownership of keys is determined by a given partition. 
+\end{itemize}
+ 
+\noindent
+\textbf{map}%
+\texttt{%
+(partition\_type const \&
+\textit{partitioner,}%
+mapper\_type const \&
+\textit{mapper}%
+)
+}
+
+\begin{itemize}
+\item
+Construct a parallel map where the ownership of keys is determined by a given partition and mapper. 
+\end{itemize}
+
+\subsubsection{Element Manipulation}
+
+\noindent
+\texttt{%
+reference
+}
+\textbf{operator[]}%
+\texttt{%
+(index\_type 
+\textit{idx}%
+)
+}
+
+\begin{itemize}
+\item
+Construct a reference to the mapped value of a specific key.
+\end{itemize}
+ 
+\noindent%
+\texttt{%
+const\_reference
+}
+\textbf{operator[]}%
+\texttt{%
+(index\_type 
+\textit{idx}%
+) const
+}
+
+\begin{itemize}
+\item
+Construct a const\_reference to the mapped value of a specific key.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+reference
+}
+\textbf{make\_reference}%
+\texttt{%
+(index\_type const \&
+\textit{idx}%
+)
+}
+
+\begin{itemize}
+\item
+Construct a reference to the mapped value of a specific key.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+const\_reference
+}
+\textbf{make\_reference}%
+\texttt{%
+(index\_type const \&
+\textit{idx}%
+) const
+}
+
+\begin{itemize}
+\item
+Construct a const\_reference to the mapped value of a specific key.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+iterator
+}
+\textbf{make\_iterator}%
+\texttt{%
+(gid\_type const \&
+\textit{gid}%
+)
+}
+
+\begin{itemize}
+\item
+Construct an iterator to the mapped value of a specific key.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+const\_iterator 
+}
+\textbf{make\_const\_iterator}%
+\texttt{%
+(gid\_type const \&
+gid
+) const
+}
+
+\begin{itemize}
+\item
+Construct a const\_iterator to the mapped value of a specific key.
+\end{itemize}
+
+%%%%%
+ 
+\noindent
+\texttt{%
+iterator 	
+}
+\textbf{insert}%
+\texttt{
+(iterator const \&
+\textit{pos,}%
+value\_type const \&
+\textit{value}%
+)
+}
+
+\begin{itemize}
+\item
+Inserts the given value before the element pointed to by the iterator pos and returns an iterator to the new element.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+iterator 	
+}
+\textbf{erase}%
+\texttt{
+(iterator const \&
+\textit{pos}%
+)
+}
+ 	
+\begin{itemize}
+\item
+Removes the element pointed by the iterator pos and returns an iterator pointing to the next element.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+void 
+}
+\textbf{clear}%
+\texttt{
+(void)
+}
+
+%%%%%
+ 
+\noindent
+\texttt{%
+iterator
+}
+\textbf{begin}%
+\texttt{%
+(void)
+}
+
+\begin{itemize}
+\item
+Construct an iterator to the first element of the domain.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+const\_iterator
+}
+\textbf{begin}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Construct a const\_iterator to the first element of the domain.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+const\_iterator
+}
+\textbf{cbegin}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Construct a const\_iterator to the first element of the domain.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+iterator
+}
+\textbf{end}%
+\texttt{%
+(void)
+}
+
+\begin{itemize}
+\item
+Construct an iterator to one past the last element of the domain.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+const\_iterator
+}
+\textbf{end}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Construct a const\_iterator to one past the last element of the domain.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+const\_iterator
+}
+\textbf{cend}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Construct a const\_iterator to one past the last element of the domain.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+void
+}
+\textbf{set\_element}%
+\texttt{%
+(index\_type const \&
+\textit{idx,}%
+value\_type const \&
+\textit{val}%
+)
+}
+
+\begin{itemize}
+\item
+Sets the element specified by the index to the provided value.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+value\_type
+}
+\textbf{get\_element}%
+\texttt{%
+(index\_type const \&
+\textit{idx}%
+) const
+}
+
+\begin{itemize}
+\item
+Returns the value of the element specified by the index.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+future< value\_type >
+}
+\textbf{get\_element\_split}%
+\texttt{%
+(index\_type const \&
+\textit{idx}%
+)
+}
+
+\begin{itemize}
+\item
+Returns a stapl::future holding the value of the element specified by the index.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+void
+}
+\textbf{apply\_set}%
+\texttt{%
+(gid\_type const \&
+\textit{gid,}%
+F const \&
+\textit{f}%
+)
+}
+
+\begin{itemize}
+\item
+Applies a function f to the element specified by the GID.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+F::result\_type
+}
+\textbf{apply\_get}%
+\texttt{%
+(gid\_type const \&
+\textit{gid,}%
+F const \&
+\textit{f}%
+)
+}
+
+\begin{itemize}
+\item
+Applies a function f to the element specified by the GID, and returns the result.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+F::result\_type
+}
+\textbf{apply\_get}%
+\texttt{%
+(gid\_type const \&
+\textit{gid,}%
+F const \&
+\textit{f}%
+) const
+}
+
+\begin{itemize}
+\item
+Applies a function f to the element specified by the GID, and returns the result.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+F::result\_type
+}
+\textbf{data\_apply\_async}%
+\texttt{%
+(gid\_type const \&
+\textit{gid,}%
+F const \&
+\textit{f}%
+)
+}
+
+\begin{itemize}
+\item
+Applies a function f to the element specified by the GID, and returns the result.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+F::result\_type
+}
+\textbf{data\_apply}%
+\texttt{%
+(gid\_type const \&
+\textit{gid,}%
+F const \&
+\textit{f}%
+) const
+}
+
+\begin{itemize}
+\item
+Applies a function f to the element specified by the GID, and returns the result.
+\end{itemize}
+ 
+\subsubsection{Memory and Domain Management}
+
+\noindent
+\texttt{%
+int
+}
+\textbf{count}%
+\texttt{%
+(key\_type const \&
+\textit{key}%
+)
+}
+
+\begin{itemize}
+\item
+Returns 1 if the specified key exists, and otherwise 0.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+iterator 	
+}
+\textbf{find}%
+\texttt{%
+(key\_type const \&
+\textit{key}%
+)
+}
+
+\begin{itemize}
+\item
+Returns the ref of the member if the specified key exists, and otherwise an iterator to the end of the map. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+domain\_type 	
+}
+\textbf{domain}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Returns the domain of the container.
+\end{itemize}
+ 
+%%void 	update_distribution (std::vector< std::tuple< std::pair< gid_type, gid_type >, cid_type, location_type >> const &updates)
+
+\begin{itemize}
+\item
+Update the metadata of the distribution with mapping information for elements that will be inserted into the container. More...
+\end{itemize}
+ 
+\noindent
+\texttt{%
+template<typename DistSpecView >
+void
+}
+\textbf{redistribute}%
+\texttt{%
+(DistSpecView const \&
+}
+\textit{dist\_view,}
+\texttt{
+typename std::enable\_if< is\_distribution\_view< DistSpecView >::value \&\&is\_view\_based< partition\_type >::value \&\&is\_view\_based< mapper\_type >::value >::type *=0)
+}
+
+\vspace{0.4cm} \emph{fix Doxygen to omit enable\_if, not part of user interface}
+
+\begin{itemize}
+\item
+Redistribute the data stored in the container to match the distribution specified by the distribution view provided. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+void
+}
+\textbf{migrate}%
+\texttt{%
+(gid\_type const \&
+\textit{gid,}
+location\_type 
+\textit{destination}
+)
+}
+
+\begin{itemize}
+\item
+Migrates the element specified by the gid to the destination location. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+size\_type
+}
+\textbf{size}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Returns the number of elements in the container. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+bool
+}
+\textbf{empty}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Returns if the container has no element.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+distribution\_type \& 
+}
+\textbf{distribution}%
+\texttt{%
+ (void)
+}
+ 
+\noindent
+\texttt{%
+distribution\_type const \& 
+}
+\textbf{distribution}%
+\texttt{%
+ (void) const
+}
+ 
+\noindent
+\texttt{%
+distribution\_type *
+}
+\textbf{get\_distribution}%
+\texttt{%
+(void)
+}
+ 
+\begin{itemize}
+\item
+Returns the data distribution of the container.
+\end{itemize}
+
+\noindent
+\texttt{%
+locality\_info 
+}
+\textbf{locality}%
+\texttt{%
+ (gid\_type gid)
+}
+
+\begin{itemize}
+\item
+Return locality information about the element specified by the gid. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+bool
+}
+\textbf{is\_local}%
+\texttt{%
+(gid\_type const \&
+\textit{gid}%
+)
+}
+
+\begin{itemize}
+\item
+Returns true if the element specified by the GID is stored on this location, or false otherwise. 
+\end{itemize}
+
+
+\subsection{Usage Example} \label{sec-map-cont-use}
+
+The following example shows how to use the \texttt{map container}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{cont/map.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\textbf{PLEASE NOTE: 
+Initializing a container with a sequential loop, as in this example,
+is for illustrative purposes only.
+The normal way to do this is applying a parallel algorithm or 
+basic parallel construct to a view over the container.  See Section
+\ref{sec-map-vw-use}
+for the recommended usage.
+}
+
+\vspace{0.4cm} \textit{WRITE -comments on example}
+
+\subsection{Implementation} \label{sec-map-cont-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-map-cont-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:map-cont-constr-exper}
+shows the performance of constructing a \stapl\ map container
+whose elements are atomic values, \stl\ containers, or \stapl\ containers.
+\item
+Fig. \ref{fig:map-cont-assign-exper}
+shows the performance of assigning values to a \stapl\ map container
+whose elements are atomic values, \stl\ containers, or \stapl\ containers.
+\item
+Fig. \ref{fig:map-cont-access-exper}
+shows the performance of accessing values from a \stapl\ map container
+whose elements are atomic values, \stl\ containers, or \stapl\ containers.
+\end{itemize}
+
+\textit{WRITE - complexity analysis}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/map_cont_constr}
+\caption{Construct map Execution Time}
+\label{fig:map-cont-constr-exper}
+\end{figure}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/map_cont_assign}
+\caption{Assign Values to map Execution Time}
+\label{fig:map-cont-assign-exper}
+\end{figure}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/map_cont_access}
+\caption{Access Values in map Execution Time}
+\label{fig:map-cont-access-exper}
+\end{figure}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{ Unordered Map Container} \label{sec-unmap-cont}
+\index{map!unordered!container}
+\index{container!map!unordered}
+\index{map!unordered!constructor}
+
+\subsection{Definition}
+
+\textit{EXPAND - Distributed unordered map container.}
+
+\subsection{Relationship to \stl\ unordered map}
+
+\textit{WRITE}
+
+\subsection{Relationship to other \stapl\ containers}
+
+\textit{WRITE}
+
+\subsection{Implementation}
+
+\textit{WRITE - details specific to this container}
+
+\subsection{Interface} \label{sec-unmap-cont-inter}
+
+\subsubsection{Constructors}
+
+\noindent
+\textbf{unordered\_map}%
+\texttt{%
+(hasher const \&
+\textit{hash=hasher(),}%
+key\_equal const \&
+\textit{comp=key\_equal()}%
+)
+}
+
+\begin{itemize}
+\item
+Constructs an unordered map container. 
+\end{itemize}
+ 
+\noindent
+\textbf{unordered\_map}%
+\texttt{%
+(PS const \&
+\textit{part,}%
+hasher const \&
+\textit{hash=hasher(),}%
+key\_equal const \&
+\textit{comp=key\_equal()}%
+)
+}
+
+\begin{itemize}
+\item
+Constructs an unordered map container given a partition strategy. 
+\end{itemize}
+ 
+\noindent
+\textbf{unordered\_map}%
+\texttt{%
+(PS const \&
+\textit{partitioner,}%
+M const \&
+\textit{mapper,}%
+hasher const \&
+\textit{hash=hasher(),}%
+key\_equal const \&
+\textit{comp=key\_equal()}%
+)
+}
+
+\begin{itemize}
+\item
+Constructs an unordered map container given a partition strategy and a mapper for the distribution. 
+\end{itemize}
+ 
+\noindent
+\textbf{unordered\_map}%
+\texttt{%
+(unordered\_map const \&
+\textit{other}%
+)
+}
+
+\begin{itemize}
+\item
+Constructs an unordered map from another.
+\end{itemize}
+
+\subsubsection{Element Manipulation}
+
+\noindent
+\texttt{%
+reference
+}
+\textbf{operator[]}%
+\texttt{%
+(index\_type 
+\textit{idx}%
+)
+}
+
+\begin{itemize}
+\item
+Construct a reference to the mapped value of a specific key.
+\end{itemize}
+ 
+\noindent%
+\texttt{%
+const\_reference
+}
+\textbf{operator[]}%
+\texttt{%
+(index\_type 
+\textit{idx}%
+) const
+}
+
+\begin{itemize}
+\item
+Construct a const\_reference to the mapped value of a specific key.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+reference
+}
+\textbf{front}%
+\texttt{%
+(void)
+}
+
+\begin{itemize}
+\item
+Construct a reference to the first element of the domain.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+const\_reference
+}
+\textbf{front}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Construct a const\_reference to the first element of the domain.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+reference
+}
+\textbf{back}%
+\texttt{%
+(void)
+}
+
+\begin{itemize}
+\item
+Construct a reference to the last element in the domain.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+const\_reference
+}
+\textbf{back}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Construct a const\_reference to the last element in the domain.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+reference
+}
+\textbf{make\_reference}%
+\texttt{%
+(index\_type const \&
+\textit{idx}%
+)
+}
+
+\begin{itemize}
+\item
+Construct a reference to a specific pair.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+const\_reference
+}
+\textbf{make\_reference}%
+\texttt{%
+(index\_type const \&
+\textit{idx}%
+) const
+}
+
+\begin{itemize}
+\item
+Construct a const\_reference to a specific pair.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+iterator
+}
+\textbf{make\_iterator}%
+\texttt{%
+(gid\_type const \&
+\textit{gid}%
+)
+}
+
+\begin{itemize}
+\item
+Construct an iterator to a specified key.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+const\_iterator 
+}
+\textbf{make\_const\_iterator}%
+\texttt{%
+(gid\_type const \&
+gid
+) const
+}
+
+\begin{itemize}
+\item
+Construct a const\_iterator to a specified key.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+iterator
+}
+\textbf{begin}%
+\texttt{%
+(void)
+}
+
+\begin{itemize}
+\item
+Construct an iterator to the first element of the domain.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+const\_iterator
+}
+\textbf{begin}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Construct a const\_iterator to the first element of the domain.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+const\_iterator
+}
+\textbf{cbegin}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Construct a const\_iterator to the first element of the domain.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+iterator
+}
+\textbf{end}%
+\texttt{%
+(void)
+}
+
+\begin{itemize}
+\item
+Construct an iterator to one past the last element of the domain.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+const\_iterator
+}
+\textbf{end}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Construct a const\_iterator to one past the last element of the domain.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+const\_iterator
+}
+\textbf{cend}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Construct a const\_iterator to one past the last element of the domain.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+void
+}
+\textbf{set\_element}%
+\texttt{%
+(index\_type const \&
+\textit{idx,}%
+value\_type const \&
+\textit{val}%
+)
+}
+
+\begin{itemize}
+\item
+Sets the element specified by the index to the provided value.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+value\_type
+}
+\textbf{get\_element}%
+\texttt{%
+(index\_type const \&
+\textit{idx}%
+) const
+}
+
+\begin{itemize}
+\item
+Returns the value of the element specified by the index.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+future< value\_type >
+}
+\textbf{get\_element\_split}%
+\texttt{%
+(index\_type const \&
+\textit{idx}%
+)
+}
+
+\begin{itemize}
+\item
+Returns a stapl::future holding the value of the element specified by the index.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+void
+}
+\textbf{apply\_set}%
+\texttt{%
+(gid\_type const \&
+\textit{gid,}%
+F const \&
+\textit{f}%
+)
+}
+
+\begin{itemize}
+\item
+Applies a function f to the element specified by the GID.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+F::result\_type
+}
+\textbf{apply\_get}%
+\texttt{%
+(gid\_type const \&
+\textit{gid,}%
+F const \&
+\textit{f}%
+)
+}
+
+\begin{itemize}
+\item
+Applies a function f to the element specified by the GID, and returns the result.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+F::result\_type
+}
+\textbf{apply\_get}%
+\texttt{%
+(gid\_type const \&
+\textit{gid,}%
+F const \&
+\textit{f}%
+) const
+}
+
+\begin{itemize}
+\item
+Applies a function f to the element specified by the GID, and returns the result.
+\end{itemize}
+ 
+ 
+\subsubsection{Memory and Domain Management}
+
+\noindent
+\texttt{%
+hasher 	
+}
+\textbf{hash\_function}%
+\texttt{%
+() const
+}
+
+\begin{itemize}
+\item
+Return an instance of the container's hash function.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+key\_equal
+}
+\textbf{key\_eq}%
+\texttt{%
+() const
+}
+
+\begin{itemize}
+\item
+Return an instance of the container's comparator function.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+domain\_type 	
+}
+\textbf{domain}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Returns the domain of the container.
+\end{itemize}
+ 
+\begin{itemize}
+\item
+Redistribute the data stored in the container to match the distribution specified by the distribution view provided. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+void
+}
+\textbf{migrate}%
+\texttt{%
+(gid\_type const \&
+\textit{gid,}
+location\_type 
+\textit{destination}
+)
+}
+
+\begin{itemize}
+\item
+Migrates the element specified by the gid to the destination location. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+size\_type
+}
+\textbf{size}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Returns the number of elements in the container. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+bool
+}
+\textbf{empty}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Returns if the container has no element.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+distribution\_type \& 
+}
+\textbf{distribution}%
+\texttt{%
+ (void)
+}
+ 
+\noindent
+\texttt{%
+distribution\_type const \& 
+}
+\textbf{distribution}%
+\texttt{%
+ (void) const
+}
+ 
+\noindent
+\texttt{%
+distribution\_type *
+}
+\textbf{get\_distribution}%
+\texttt{%
+(void)
+}
+ 
+\begin{itemize}
+\item
+Returns the data distribution of the container.
+\end{itemize}
+
+\noindent
+\texttt{%
+locality\_info 
+}
+\textbf{locality}%
+\texttt{%
+ (gid\_type gid)
+}
+
+\begin{itemize}
+\item
+Return locality information about the element specified by the gid. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+bool
+}
+\textbf{is\_local}%
+\texttt{%
+(gid\_type const \&
+\textit{gid}%
+)
+}
+
+\begin{itemize}
+\item
+Returns true if the element specified by the GID is stored on this location, or false otherwise. 
+\end{itemize}
+
+\subsection{Usage Example} \label{sec-unmap-cont-use}
+
+The following example shows how to use the \texttt{unordered map container}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{cont/unordmap.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\textbf{PLEASE NOTE: 
+Initializing a container with a sequential loop, as in this example,
+is for illustrative purposes only.
+The normal way to do this is applying a parallel algorithm or 
+basic parallel construct to a view over the container.  See Section
+\ref{sec-unmap-vw-use}
+for the recommended usage.
+}
+
+\vspace{0.4cm} \textit{WRITE -comments on example}
+
+\subsection{Implementation} \label{sec-unmap-cont-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-unmap-cont-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:unmap-cont-constr-exper}
+shows the performance of constructing a \stapl\ unordered map container
+whose elements are atomic values, \stl\ containers, or \stapl\ containers.
+\item
+Fig. \ref{fig:unmap-cont-assign-exper}
+shows the performance of assigning values to a \stapl\ unordered map container
+whose elements are atomic values, \stl\ containers, or \stapl\ containers.
+\item
+Fig. \ref{fig:unmap-cont-access-exper}
+shows the performance of accessing values from a \stapl\ unordered map container
+whose elements are atomic values, \stl\ containers, or \stapl\ containers.
+\end{itemize}
+
+\textit{WRITE - complexity analysis}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/unordered map_cont_constr}
+\caption{Construct unordered map Execution Time}
+\label{fig:unmap-cont-constr-exper}
+\end{figure}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/unordered map_cont_assign}
+\caption{Assign Values to unordered map Execution Time}
+\label{fig:unmap-cont-assign-exper}
+\end{figure}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/unordered map_cont_access}
+\caption{Access Values in unordered map Execution Time}
+\label{fig:unmap-cont-access-exper}
+\end{figure}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{ Unordered Set Container} \label{sec-unset-cont}
+\index{set!unordered!container}
+\index{container!set!unordered}
+\index{set!unordered!constructor}
+
+\subsection{Definition}
+
+\textit{EXPAND - Distributed unordered set container.}
+
+\subsection{Relationship to \stl\ unordered map}
+
+\textit{WRITE}
+
+\subsection{Relationship to other \stapl\ containers}
+
+\textit{WRITE}
+
+\subsection{Implementation}
+
+\textit{WRITE - details specific to this container}
+
+\subsection{Interface} \label{sec-unset-cont-inter}
+
+\subsubsection{Constructors}
+
+%%unordered_set 
+%%(hasher const &hash=hasher(), key_equal const &comp=key_equal())
+ 
+%%unordered_set 
+%%(partition_type const &part, hasher const &hash=hasher(), key_equal const &comp=key_equal())
+ 
+%%unordered_set 
+%%(partition_type const &partitioner, mapper_type const &mapper)
+ 
+%%unordered_set 
+%%(unordered_set const &other)
+ 
+\subsubsection{Element Manipulation}
+
+\noindent
+\texttt{%
+reference
+}
+\textbf{make\_reference}%
+\texttt{%
+(index\_type const \&
+\textit{idx}%
+)
+}
+
+\begin{itemize}
+\item
+Construct a reference to a specified key.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+const\_reference
+}
+\textbf{make\_reference}%
+\texttt{%
+(index\_type const \&
+\textit{idx}%
+) const
+}
+
+\begin{itemize}
+\item
+Construct a const\_reference to a specified key.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+iterator
+}
+\textbf{make\_iterator}%
+\texttt{%
+(gid\_type const \&
+\textit{gid}%
+)
+}
+
+\begin{itemize}
+\item
+Construct an iterator to a specified key.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+const\_iterator 
+}
+\textbf{make\_const\_iterator}%
+\texttt{%
+(gid\_type const \&
+gid
+) const
+}
+
+\begin{itemize}
+\item
+Construct a const\_iterator to a specified key.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+iterator
+}
+\textbf{begin}%
+\texttt{%
+(void)
+}
+
+\begin{itemize}
+\item
+Construct an iterator to the first element of the domain.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+const\_iterator
+}
+\textbf{begin}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Construct a const\_iterator to the first element of the domain.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+const\_iterator
+}
+\textbf{cbegin}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Construct a const\_iterator to the first element of the domain.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+iterator
+}
+\textbf{end}%
+\texttt{%
+(void)
+}
+
+\begin{itemize}
+\item
+Construct an iterator to one past the last element of the domain.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+const\_iterator
+}
+\textbf{end}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Construct a const\_iterator to one past the last element of the domain.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+const\_iterator
+}
+\textbf{cend}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Construct a const\_iterator to one past the last element of the domain.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+void
+}
+\textbf{set\_element}%
+\texttt{%
+(index\_type const \&
+\textit{idx,}%
+value\_type const \&
+\textit{val}%
+)
+}
+
+\begin{itemize}
+\item
+Sets the element specified by the index to the provided value.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+value\_type
+}
+\textbf{get\_element}%
+\texttt{%
+(index\_type const \&
+\textit{idx}%
+) const
+}
+
+\begin{itemize}
+\item
+Returns the value of the element specified by the index.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+future< value\_type >
+}
+\textbf{get\_element\_split}%
+\texttt{%
+(index\_type const \&
+\textit{idx}%
+)
+}
+
+\begin{itemize}
+\item
+Returns a stapl::future holding the value of the element specified by the index.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+void
+}
+\textbf{apply\_set}%
+\texttt{%
+(gid\_type const \&
+\textit{gid,}%
+F const \&
+\textit{f}%
+)
+}
+
+\begin{itemize}
+\item
+Applies a function f to the element specified by the GID.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+F::result\_type
+}
+\textbf{apply\_get}%
+\texttt{%
+(gid\_type const \&
+\textit{gid,}%
+F const \&
+\textit{f}%
+)
+}
+
+\begin{itemize}
+\item
+Applies a function f to the element specified by the GID, and returns the result.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+F::result\_type
+}
+\textbf{apply\_get}%
+\texttt{%
+(gid\_type const \&
+\textit{gid,}%
+F const \&
+\textit{f}%
+) const
+}
+
+\begin{itemize}
+\item
+Applies a function f to the element specified by the GID, and returns the result.
+\end{itemize}
+ 
+ 
+\subsubsection{Memory and Domain Management}
+
+%%hasher 	
+%%hash_function 
+%%(void) const
+
+%%\begin{itemize}
+%%\item
+%%Return an instance of the container's hash function.
+%%\end{itemize}
+ 
+%%key_equal
+%%key_eq 
+%%(void) const
+
+%%\begin{itemize}
+%%\item
+%%Return an instance of the container's comparator function.
+%%\end{itemize}
+ 
+\noindent
+\texttt{%
+domain\_type 	
+}
+\textbf{domain}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Returns the domain of the container.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+void
+}
+\textbf{migrate}%
+\texttt{%
+(gid\_type const \&
+\textit{gid,}
+location\_type 
+\textit{destination}
+)
+}
+
+\begin{itemize}
+\item
+Migrates the element specified by the gid to the destination location. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+size\_type
+}
+\textbf{size}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Returns the number of elements in the container. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+bool
+}
+\textbf{empty}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Returns if the container has no element.
+\end{itemize}
+ 
+\noindent
+\texttt{%
+distribution\_type \& 
+}
+\textbf{distribution}%
+\texttt{%
+ (void)
+}
+ 
+\noindent
+\texttt{%
+distribution\_type const \& 
+}
+\textbf{distribution}%
+\texttt{%
+ (void) const
+}
+ 
+\noindent
+\texttt{%
+distribution\_type *
+}
+\textbf{get\_distribution}%
+\texttt{%
+(void)
+}
+ 
+\begin{itemize}
+\item
+Returns the data distribution of the container.
+\end{itemize}
+
+\noindent
+\texttt{%
+locality\_info 
+}
+\textbf{locality}%
+\texttt{%
+ (gid\_type gid)
+}
+
+\begin{itemize}
+\item
+Return locality information about the element specified by the gid. 
+\end{itemize}
+ 
+\noindent
+\texttt{%
+bool
+}
+\textbf{is\_local}%
+\texttt{%
+(gid\_type const \&
+\textit{gid}%
+)
+}
+
+\begin{itemize}
+\item
+Returns true if the element specified by the GID is stored on this location, or false otherwise. 
+\end{itemize}
+
+
+\subsection{Usage Example} \label{sec-unset-cont-use}
+
+The following example shows how to use the \texttt{unordered set container}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{cont/unordset.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\textbf{PLEASE NOTE: 
+Initializing a container with a sequential loop, as in this example,
+is for illustrative purposes only.
+The normal way to do this is applying a parallel algorithm or 
+basic parallel construct to a view over the container.  See Section
+\ref{sec-unset-vw-use}
+for the recommended usage.
+}
+
+\vspace{0.4cm}
+\textit{WRITE -comments on example}
+
+\subsection{Implementation} \label{sec-unset-cont-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-unset-cont-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:unset-cont-constr-exper}
+shows the performance of constructing a \stapl\ unordered set container
+whose elements are atomic values, \stl\ containers, or \stapl\ containers.
+\item
+Fig. \ref{fig:unset-cont-assign-exper}
+shows the performance of assigning values to a \stapl\ unordered set container
+whose elements are atomic values, \stl\ containers, or \stapl\ containers.
+\item
+Fig. \ref{fig:unset-cont-access-exper}
+shows the performance of accessing values from a \stapl\ unordered set container
+whose elements are atomic values, \stl\ containers, or \stapl\ containers.
+\end{itemize}
+
+\textit{WRITE - complexity analysis}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/unordered set_cont_constr}
+\caption{Construct unordered set Execution Time}
+\label{fig:unset-cont-constr-exper}
+\end{figure}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/unordered set_cont_assign}
+\caption{Assign Values to unordered set Execution Time}
+\label{fig:unset-cont-assign-exper}
+\end{figure}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/unordered set_cont_access}
+\caption{Access Values in unordered set Execution Time}
+\label{fig:unset-cont-access-exper}
+\end{figure}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 

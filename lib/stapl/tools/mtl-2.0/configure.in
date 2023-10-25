@@ -1,0 +1,550 @@
+dnl Configure script for the Matrix Template Library
+dnl Process this file with autoconf to produce a configure script.
+
+dnl Disable caching.
+define([AC_CACHE_LOAD], )dnl
+define([AC_CACHE_SAVE], )dnl
+
+AC_INIT(mtl/matrix.h)
+
+AC_CANONICAL_SYSTEM
+AC_MSG_RESULT([Configure MTL for $target])
+
+################################################################
+# Define the current version and release
+################################################################
+sinclude([VERSION])
+################################################################
+
+AM_INIT_AUTOMAKE(mtl, $MTLVERSION-$MTLRELEASE)
+
+AM_CONFIG_HEADER(mtl/mtl_config.h)
+
+AC_PROG_INSTALL
+
+dnl Force various things to use c++ compiler 
+AC_LANG_CPLUSPLUS
+
+AC_CYGWIN
+
+AC_MSG_CHECKING([if we really have cygwin])
+case "$target" in
+  *cyg*)
+  AC_MSG_RESULT([Environment is indeed cygwin.])
+  ;;
+  *)
+  AC_MSG_RESULT([Environment is not cygwin.])
+  ;;
+esac
+
+AC_PROG_CXX
+
+compiler="none"
+if test "$GXX" = yes; then
+  compiler=gnucc
+fi
+
+if test $compiler = "none"; then AC_PROG_CXX_KAICC   ; fi
+if test $compiler = "none"; then AC_PROG_CXX_SGICC   ; fi
+if test $compiler = "none"; then AC_PROG_CXX_MWERKS  ; fi
+if test $compiler = "none"; then AC_PROG_CXX_INTELCC ; fi
+if test $compiler = "none"; then AC_PROG_CXX_MSVCPP  ; fi
+
+dnl Don't bother checking for this
+dnl if test $compiler = "none"; then AC_PROG_CXX_SUNCC   ; fi
+
+BACKEND=""
+MATHLIB=""
+LDOUT="-o "
+FORTLIBS=""
+
+case "$compiler" in
+     kai*)               # KAI C++  http://www.kai.com/
+       echo "Configuring for KAI C++"
+       CXX_PICKY_FLAGS="--strict_warnings"
+       AC_BZ_SET_COMPILER($withval,"KCC","--restrict $CXX_PICKY_FLAGS")
+       CXX_OPTIMIZE_FLAGS="+K3 -O3 -fast --inline_keyword_space_time=10000"
+       CXX_DEBUG_FLAGS="-g +K0 -DBZ_DEBUG"
+       BACKEND="--backend"
+       CXXLD="$CXX"
+     ;;
+     sgi*)               # SGI C++  http://www.sgi.com
+       echo "Configuring for SGI C++"
+       CXX_PICKY_FLAGS=""
+       AC_BZ_SET_COMPILER($withval,"$CXX","-LANG:restrict -LANG:std $CXX_PICKY_FLAGS")
+       CXX_OPTIMIZE_FLAGS="-Ofast -LANG:restrict"
+       CXX_DEBUG_FLAGS="-g -DBZ_DEBUG"
+       CXXLD="$CXX"
+       LDFLAGS=
+     ;;
+     gnu*)              # EGCS  http://egcs.cygnus.com/
+       echo "Configuring for GNU C++"
+       CXX_PICKY_FLAGS="-Wall"
+       AC_BZ_SET_COMPILER($withval,"g++","-ftemplate-depth-30 $CXX_PICKY_FLAGS")
+       CXX_OPTIMIZE_FLAGS="-O2 -funroll-loops -fstrict-aliasing -fno-gcse"
+       CXX_DEBUG_FLAGS="-g -DBZ_DEBUG"
+       CXXLD="$CXX"
+       F77=g77
+       F77_OPTIMIZE_FLAGS="-O2 -funroll-loops"
+       FORTLIBS=-lg2c
+       CXXFFLAGS="-DMTL_FORTRAN_SYMBOLS_WITH_DOUBLE_TRAILING_UNDERSCORES"
+     ;;
+     msvc*) # Microsoft Visual C++
+       echo "Configuring for Microsoft Visual C++"
+       CXX_PICKY_FLAGS="/W0" # VC++ gives warnings for its own headers!
+       AC_BZ_SET_COMPILER($withval,"cl","")
+# had to move this below AC_PROG_CC
+#       CPPFLAGS="/TP /ML /GX /YX /FD $CXX_PICKY_FLAGS /Fo\$*.o"
+       CXX_OPTIMIZE_FLAGS="/Ox"
+       CXX_DEBUG_FLAGS="/Zi"
+       LDOUT="/out:"
+       CXXLD="link"
+     ;;
+     mwerk*)
+       echo "Configuring for Metrowerks Codewarrior (x86)"
+       CXX_PICKY_FLAGS="-w on"
+       AC_BZ_SET_COMPILER($withval,"mwcc -i-","")
+# had to move this below AC_PROG_CC
+#       CPPFLAGS="$CXX_PICKY_FLAGS -o \$*.o"
+       CXX_OPTIMIZE_FLAGS="-opt all"
+       CXX_DEBUG_FLAGS="-g"
+       CXXLD="mwld"
+     ;;
+     *)
+        CXXLD="$CXX"
+        AC_MSG_WARN([Compiler not recognized])
+     ;;
+   esac
+
+# Set platform-specific fortran compilers and optimization settings
+
+if test "$GXX" = "yes"; then
+    F77=g77
+    F77_OPTIMIZE_FLAGS="-O2 -funroll-loops"
+    FORTLIBS=-lg2c
+    MATHLIB="-lm"
+else
+case "$target" in
+  *linux*)
+    echo "Linux: assuming g77 fortran compiler"
+    F77=g77
+    F77_OPTIMIZE_FLAGS="-O2 -funroll-loops"
+    FORTLIBS=-lg2c
+    MATHLIB="-lm"
+  ;;
+  *aix*)
+    echo "AIX: assuming f77 and xlf90"
+    F77=f77
+    F77_OPTIMIZE_FLAGS="-O3 -qhot"
+    F90=xlf90
+    F90_OPTIMIZE_FLAGS="-O3 -qhot"
+    FORTLIBS=-lxlf90
+    MATHLIB="-lm"
+  ;;
+  *irix*)
+    echo "IRIX: assuming cc, f77 and f90 native compilers"
+    CC=cc
+    F77=f77
+    F90=f90
+    CC_OPTIMIZE_FLAGS="-Ofast"
+    F77_OPTIMIZE_FLAGS="-Ofast"
+    F90_OPTIMIZE_FLAGS="-Ofast"
+    MATHLIB="-lm"
+    CXXFFLAGS="-DMTL_FORTRAN_SYMBOLS_WITH_TRAILING_UNDERSCORES"
+    case "$CXX" in
+      KCC)
+       # When using KAI C++ under IRIX, enable some backend optimizations
+      CXX_OPTIMIZE_FLAGS="+K3 -O3 --COMPO_fe --output_restrict --backend -LANG:restrict=on -mips4"
+      CXX_DEBUG_FLAGS="-g +K0 -DBZ_DEBUG -mips4"
+      ;;
+    esac
+  ;;
+  *solaris*)
+    echo "Solaris: assuming cc as the native C compiler, "
+    echo "  and f77 and f90 as the fortran compilers"
+    echo "  Also assuming v8plusa architecture."
+    CC=cc
+    CC_OPTIMIZE_FLAGS="-fast -xO4 -xtarget=native -xarch=v8plusa -xdepend -dalign"
+    F77=f77
+    F77_OPTIMIZE_FLAGS="-fast -xO4 -xtarget=native -xarch=v8plusa -xdepend -dalign"
+    F90=f90
+    F90_OPTIMIZE_FLAGS="-fast -xO4 -xtarget=native -xarch=v8plusa -xdepend -dalign"
+    MATHLIB="-L/usr/lib -lm"
+    case "$CXX" in
+      KCC)
+        # When using KAI C++ under Solaris, enable some backend optimizations
+        CXX_OPTIMIZE_FLAGS="+K3 -fast  --backend -xO4  --backend -xtarget=native  -backend -xarch=v8plusa  --backend -xdepend  --backend -dalign "
+        CXX_DEBUG_FLAGS="-g +K0 -DBZ_DEBUG"
+      ;;
+    esac
+  ;;
+  *osf*)
+    echo "OSF: assuming f77 and f90 fortran compilers"
+    F77=f77
+    F77_OPTIMIZE_FLAGS="-O4 -tune host"
+    F90=f90
+    F90_OPTIMIZE_FLAGS="-O4 -tune host"
+    CXXFFLAGS="-DMTL_FORTRAN_SYMBOLS_WITH_TRAILING_UNDERSCORES"
+    MATHLIB="-lm"
+  ;;
+  alpha-cray-unicos)
+    echo "Cray T3D/E: Setting special optimization flags"
+    F77=fort77
+    F77_OPTIMIZE_FLAGS="-O aggress -O 3 -O unroll2 -O pipeline3"
+    F90=f90
+    F90_OPTIMIZE_FLAGS="-O 3 -O aggress -O unroll2 -O pipeline3"
+    CXXFFLAGS="-DMTL_FORTRAN_SYMBOLS_CAPS"
+    MATHLIB="-lm"
+    case "$CXX" in
+      KCC)
+        # When using KAI C++ on the T3E, need to enable a bunch of
+        # backend optimizations
+        CXX_OPTIMIZE_FLAGS="+K3 -O3 --backend -hpipeline3 --backend -hunroll \
+--backend -haggress --backend -hscalar2"
+      ;;
+    esac
+  ;;
+  *)
+    echo << EOF
+
+MTL has not been tuned for this platform.  You may have trouble
+building fortran benchmarks, and performance may be unexciting.
+
+EOF
+  ;;
+esac
+fi
+
+
+dnl check for F77 and CC here because they are set above
+AC_PROG_CC
+
+if test "$compiler" = "msvcpp"; then
+  CPPFLAGS="/TP /ML /GX /YX /FD $CXX_PICKY_FLAGS /Fo\$*.o"
+elif test "$compiler" = "mwerks"; then
+  CPPFLAGS="$CXX_PICKY_FLAGS -o \$*.o"
+fi
+
+dnl put msg inside to make output look better
+AC_EGREP_HEADER(copysign, math.h,
+  [ AC_DEFINE(HAVE_COPYSIGN)
+    AC_MSG_CHECKING(for copysign)
+    AC_MSG_RESULT(yes) ],
+  [ AC_MSG_CHECKING(for copysign)
+    AC_MSG_RESULT(no) ])
+
+dnl KCC always has the std::abs defined
+dnl AC_MSG_CHECKING(for std::abs)
+dnl if test "$CXX" = "KCC"; then
+dnl   AC_DEFINE(HAVE_STD_ABS)
+dnl   AC_MSG_RESULT(yes)
+dnl else
+dnl   AC_EGREP_HEADER(abs, cmath, 
+dnl    [ AC_DEFINE(HAVE_STD_ABS) AC_MSG_RESULT(yes) ],
+dnl     [ AC_MSG_RESULT(no) ])
+dnl fi
+
+
+AC_MSG_CHECKING(for std::abs)
+
+AC_MTL_TRY_COMPILE([#include <cmath>],
+  [ double d = std::abs(-3.0); ],
+  [ AC_DEFINE(HAVE_STD_ABS)
+    AC_MSG_RESULT(yes)
+  ],
+  [ 
+    AC_MSG_RESULT(no)
+  ])
+
+
+AC_MSG_CHECKING(for <limits> header)
+
+AC_MTL_TRY_COMPILE([#include <limits>],
+  [ double d = std::numeric_limits<double>::max(); ],
+  [ has_limits=yes
+    AC_DEFINE(MTL_CMPLR_HAS_LIMITS)
+    AC_MSG_RESULT(yes)
+  ],
+  [ 
+    has_limits=no
+    AC_MSG_RESULT(no)
+  ])
+
+
+
+
+
+dnl Enable some features
+
+AC_MSG_CHECKING(whether to use MTL exceptions)
+AC_ARG_ENABLE(exceptions,
+  [  --with-exceptions       Enables MTL exception handling],
+  [ MTL_EXCEPTIONS=1
+    AC_MSG_RESULT(yes)],
+  [ MTL_EXCEPTIONS=0
+    AC_MSG_RESULT(no) ])
+
+AC_MSG_CHECKING(whether to use BLAIS performance optimizations)
+AC_ARG_ENABLE(blais,
+  [  --enable-blais       Enable the BLAIS high performance optimization. Do not use this with egcs. ],
+  [ 
+    if test "GXX" != "yes"; then
+      AC_DEFINE(USE_BLAIS) 
+      AC_MSG_RESULT(yes) 
+    fi
+  ],
+  [ AC_MSG_RESULT(no) ])
+
+
+dnl External packages
+AC_MSG_CHECKING(whether to use interface to matlab files)
+AC_ARG_WITH(matlab, 
+[  --with-matlab=MATLAB_DIR       Directory where Matlab is installed. Also the Matlab external interface libraries must be in you LD_LIBRARY_PATH], 
+[HAVE_MATLAB=1 WITHDIR=$withval AC_MSG_RESULT(yes)],
+[HAVE_MATLAB=0 AC_MSG_RESULT(no)])
+
+if test "$HAVE_MATLAB" = "1"; then
+    matlab_dir="-I$WITHDIR"
+else
+    matlab_dir=""
+fi
+
+if test "$HAVE_MATLAB" = "1"; then
+    matlab_lib="-lmat -lmx"
+else
+    matlab_lib=""
+fi
+
+
+dnl Checks for libraries.
+
+AC_MSG_CHECKING(whether to use interface to LAPACK)
+AC_ARG_WITH(lapack,
+[  --with-lapack=LIBS       The libraries needed for LAPACK and BLAS. Also the lapack libraries must be in your LD_LIBRARY_PATH],
+[ HAVE_LAPACK=1
+  WITHLIBS=$withval
+  AC_MSG_RESULT(yes) ],
+[ HAVE_LAPACK=0 
+  AC_MSG_RESULT(no) ])
+
+LAPACK_EXAMPLES=""
+
+if test "$HAVE_LAPACK" = "1"; then
+  LAPACKLIB="$WITHLIBS"
+
+  if test $LAPACKLIB = yes; then
+    LAPACKLIB=-llapack
+  fi
+
+  LAPACK_EXAMPLES="lapack_examples"
+  case "$target" in
+    *solaris*)
+       LAPACKLIB=" -R/opt/SUNWspro/lib -L/opt/SUNWspro/lib -lsunperf -lfsu -lF77 -lM77 -lsunmath"
+       if test "$CXX" = "KCC"; then
+
+	CXXFLAGS_save=$CXXFLAGS
+        CXXFLAGS="$CXXFLAGS $BACKEND -xlic_lib=sunperf"
+        sunperf_blas=0
+        AC_MSG_CHECKING([Sun performance library]) 
+        AC_CHECK_FUNCS(daxpy dgetrf,
+        [ AC_MSG_RESULT(Using Sun Performance Library BLAS and LAPACK)
+          CXXFLAGS="$CXXFLAGS -DMTL_USE_SUNPERF -DMTL_FORTRAN_SYMBOLS_WITH_TRAILING_UNDERSCORES"
+          sunperf_blas=1 
+	  LAPACKLIB=""
+	],
+        [ CXXFLAGS=$CXXFLAGS_save ])
+      fi
+  esac
+
+if test "$sunperf_blas" != "1"; then
+
+dnl If fortran is supported
+dnl   check for -lblas and -llapack and how to use them
+dnl Warning!  The fortran libs must have been compiled with the 
+dnl currently defined fortran compiler 
+
+dnl Check how to link to fortran -- will require calling fortran
+AC_MTL_PROG_F77
+AC_F77_LIBRARY_LDFLAGS
+
+dnl AC_CHECK_LIB (LIBRARY, FUNCTION [, ACTION-IF-FOUND [,
+dnl          ACTION-IF-NOT-FOUND [, OTHER-LIBRARIES]]])
+dnl AC_SEARCH_LIBS
+
+
+AC_CHECK_LIB(blas, main, 
+  [ AC_MSG_RESULT(BLAS found)
+    CXXFFLAGS="$CXXFLAGS -DMTL_USE_BLAS" 
+    BLASLIB="-lblas $FORTLIBS"],
+  [ AC_MSG_RESULT(BLAS not found) ], ["$FORTLIBS" -lm] )
+
+if test "$BLASLIB"; then
+AC_CHECK_LIB(lapack, main, 
+  [ AC_MSG_RESULT(LAPACK found)
+    CXXFFLAGS="$CXXFLAGS -DMTL_USE_LAPACK"
+    LAPACKLIB=-llapack ],
+  [ AC_MSG_RESULT(LAPACK not found) ], [ "$BLASLIB" -lm ] )
+
+HAVE_LIBLIBRARY=0
+AC_CHECK_LIB(blas, daxpy_,
+   [ CXXFFLAGS="$CXXFLAGS -DMTL_FORTRAN_SYMBOLS_WITH_TRAILING_UNDERSCORES" 
+     HAVE_LIBLIBRARY=1 
+     dgetrf=dgetrf_
+     sgetrf=sgetrf_ ],
+   [], 
+   $FLIBS )
+
+if test $HAVE_LIBLIBRARY = 0; then
+AC_CHECK_LIB(blas, daxpy,
+   [ CXXFFLAGS="$CXXFLAGS" 
+     HAVE_LIBLIBRARY=1
+     dgetrf=dgetrf
+     sgetrf=sgetrf ],
+   [], 
+   $FLIBS )
+elif test $HAVE_LIBLIBRARY = 0; then
+AC_CHECK_LIB(blas, DAXPY,
+   [ CXXFFLAGS="$CXXFLAGS -DMTL_FORTRAN_SYMBOLS_CAPS" 
+     HAVE_LIBLIBRARY=1
+     dgetrf=DGETRF
+     sgetrf=SGETRF ],
+   [], 
+   $FLIBS )
+elif test $HAVE_LIBLIBRARY = 0; then
+AC_CHECK_LIB(blas, daxpy__,
+   [ CXXFFLAGS="$CXXFLAGS -DMTL_FORTRAN_SYMBOLS_WITH_DOUBLE_TRAILING_UNDERSCORES" 
+     HAVE_LIBLIBRARY=1
+     dgetrf=dgetrf__
+     sgetrf=sgetrf__ ],
+   [], 
+   $FLIBS )
+fi dnl LIBLIBRARY
+
+
+XFLIBS=""
+HAVE_LIBLIBRARY=0
+AC_CHECK_LIB(lapack, $dgetrf,
+   [ 
+     HAVE_LIBLIBRARY=1 
+   ],
+   [], 
+   [ $BLASLIB $FLIBS ] )
+
+
+if test $HAVE_LIBLIBRARY = 0; then
+XFLIBS="-lF77 -lM77 -lsunmath -lm"
+AC_CHECK_LIB(lapack, $sgetrf,
+   [ 
+     FLIBS="$FLIBS $XFLIBS"
+     HAVE_LIBLIBRARY=1 
+   ],
+   [AC_MSG_WARN(Could not successfully make LAPACK example)], 
+   [ $BLASLIB $FLIBS $XFLIBS ] )
+fi
+
+fi dnl BLASLIB
+fi
+else
+    LAPACKLIB=""
+fi
+
+
+dnl LIBS="$LAPACKLIB"
+BLASLIB="$LAPACKLIB $BLASLIB"
+
+
+dnl Debugging and optimization options for the C compiler
+CFLAGS=
+
+dnl Header file search directory (`-IDIR') and any other miscellaneous
+dnl options for the C preprocessor and compiler.
+
+mtl_include_dir='$(top_srcdir)'
+contrib_dir='$(top_srcdir)/contrib'
+
+dnl double_double_dir='$(contrib_dir)/doubledouble'
+dnl interval_dir='$(contrib_dir)/interval'
+
+
+CPPFLAGS="$CPPFLAGS -I$mtl_include_dir $matlab_dir $lapack_dir $DEBUGFLAGS"
+dnl CPPFLAGS="-I$mtl_include_dir -I$double_double_dir"
+
+
+AC_DEFINE_UNQUOTED(MTL_EXCEPTIONS, $MTL_EXCEPTIONS)
+
+dnl `-D' options to pass to the C compiler.
+dnl DEFS=""
+
+dnl Stripping (`-s') and any other miscellaneous options for the linker
+dnl LDFLAGS=
+
+dnl `-l' and `-L' options to pass to the linker.
+LIBS="$LIBS $matlab_lib"
+
+
+# Variables that will be substituted in the Makefile.in's
+
+AC_SUBST(mtl_include_dir)
+AC_SUBST(contrib_dir)
+dnl AC_SUBST(double_double_dir)
+dnl AC_SUBST(interval_dir)
+
+AC_SUBST(CXX)
+AC_SUBST(CXXLD)
+AC_SUBST(LDOUT)
+AC_SUBST(CXXFLAGS)
+AC_SUBST(CXX_DEBUG_FLAGS)
+AC_SUBST(CXX_OPTIMIZE_FLAGS)
+
+AC_SUBST(CC)
+AC_SUBST(CCFLAGS)
+AC_SUBST(CC_DEBUG_FLAGS)
+AC_SUBST(CC_OPTIMIZE_FLAGS)
+
+AC_SUBST(LDFLAGS)
+
+AC_SUBST(FORTLIBS)
+AC_SUBST(BLASLIB)
+AC_SUBST(MATHLIB)
+AC_SUBST(LAPACK_EXAMPLES)
+
+AC_SUBST(MTLVERSION)
+AC_SUBST(MTLRELEASE)
+AC_SUBST(PACKAGE)
+AC_SUBST(VERSION)
+
+
+AC_CONFIG_SUBDIRS(time contrib/interval test/scripts)
+AC_OUTPUT(						\
+	Makefile					\
+	mtl/Makefile					\
+	contrib/Makefile contrib/examples/Makefile	\
+	contrib/doubledouble/Makefile			\
+	test/Makefile test/src/Makefile test/bin/Makefile 		\
+)
+
+test -f test/scripts/farmee.csh && chmod +x test/scripts/farmee.csh
+
+if test $compiler = "none"; then
+cat << 'EOH'
+
+WARNING!
+
+MTL makes use of several advanced C++ language features.
+Only sufficiently ISO compliant compilers are able to compile MTL.
+The compiler set in your environment variable CXX ($CXX) does not
+appear to be one of the following supported compilers:
+
+GNU C++ (http://egcs.cygnus.com/)
+KAI C++ (http://www.kai.com/)
+SGI C++ 7.3 or better (http://www.sgi.com/)
+Metrowerks CWPro 5.0
+Intel C++ 6.0
+Microsoft Visual C++ 7.0
+
+MTL may or may not compile with other compilers.
+
+EOH
+fi
+
+

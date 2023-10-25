@@ -7,6 +7,11 @@
 
 #include "Transformation.h"
 
+#include <QWidget>
+#include <QLabel>
+#include <QPushButton>
+#include <QVBoxLayout>
+
 using namespace mathtool;
 
 

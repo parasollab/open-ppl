@@ -5,6 +5,9 @@
 #include "Visualization/Gui/SliderTextWidget.h"
 
 #include "Transformation.h"
+
+#include <QVBoxLayout>
+
 using namespace mathtool;
 
 
