@@ -97,7 +97,7 @@ TestIndividualCfgSample() {
   // Make a vector to calculate the sample instances of each of the samplers.
   std::vector<size_t> sampleProportions(this->m_samplers.size(), 0);
 
-  size_t numTrials= 500;
+  size_t numTrials= 1000;
 
   this->IndividualCfgSample(numTrials, boundary, cfgs, sampleProportions);
   

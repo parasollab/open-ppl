@@ -110,8 +110,10 @@ cd pmpl
 ```bash
 cmake -DCMAKE_BUILD_TYPE=Debug -G Ninja -DCMAKE_TOOLCHAIN_FILE=/opt/vcpkg/scripts/buildsystems/vcpkg.cmake -S . -B build
 ```
+
+Build PPL with however many cores you'd prefer using `-j(number)`. By default, all cores will be used, which can potentially overwhelm your computer.
 ```bash
-cmake --build build
+cmake --build build -j3
 ```
 
 ### Install and build using Conan
@@ -128,17 +130,18 @@ conan --version
 
 #### Install conan packages
 ```bash
-conan install . --output-folder=cmake-build-debug_docker_conan --build=missing -c tools.system.package_manager:mode=install -c tools.system.package_manager:sudo=false -s build_type=Debug -s compiler.cppstd=gnu17
+conan install . --output-folder=build --build=missing -c tools.system.package_manager:mode=install -c tools.system.package_manager:sudo=false -s build_type=Debug -s compiler.cppstd=gnu17
 ```
 
 * make sure to set tools.system.package_manager:sudo=**false** if using docker
 
 #### Build ppl with conan
 ```bash
-cmake -DCMAKE_BUILD_TYPE=Debug -G Ninja -DCMAKE_TOOLCHAIN_FILE=cmake-build-debug_docker_conan/conan_toolchain.cmake -B cmake-build-debug_docker_conan/
+cmake -DCMAKE_BUILD_TYPE=Debug -G Ninja -DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake -B build/
 ```
+Build PPL with however many cores you'd prefer using `-j(number)`. By default, all cores will be used, which can potentially overwhelm your computer.
 ```bash
-cmake --build cmake-build-debug_docker_conan
+cmake --build build -j3
 ```
 
 
@@ -215,3 +218,9 @@ https://learn.microsoft.com/en-us/vcpkg/users/binarycaching
 
 ## Documentation
 We use `doxygen` for documentation, which is automatically generated when you build PPL. To view it, open `docs/Doxygen/html/index.html`
+
+## Running Examples
+We provide `Examples/CfgExamples.xml` as an example of how to create an xml file to run a motion planning scenaio. Run the following command to use it:
+```bash
+./build/ppl_mp -f Examples/CfgExamples.xml
+```
