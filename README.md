@@ -214,8 +214,4 @@ Binary caching saves copies of library binaries in a shared location that can be
 https://learn.microsoft.com/en-us/vcpkg/users/binarycaching
 
 ## Documentation
-We use `doxygen` for documentation. `cd` into the `docs/` directory, then run:
-```bash
-doxygen Doxygen/Doxyfile.in
-```
-Then open `docs/Doxygen/html/index.html`
+We use `doxygen` for documentation, which is automatically generated when you build PPL. To view it, open `docs/Doxygen/html/index.html`
