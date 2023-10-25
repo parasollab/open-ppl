@@ -1,8 +1,8 @@
 #ifndef PPL_UNIFORM_RANDOM_SAMPLER_H_
 #define PPL_UNIFORM_RANDOM_SAMPLER_H_
 
-#include "MPLibrary/Samplers/GaussianSampler.h"
-#include "Testing/MPLibrary/Samplers/SamplerMethodTest.h"
+#include "MPLibrary/Samplers/GaussianSampler.h"     //src
+#include "SamplerMethodTest.h"
 
 template <class MPTraits>
 class GaussianSamplerTest : virtual public GaussianSampler<MPTraits>, 

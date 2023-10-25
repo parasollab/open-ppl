@@ -347,9 +347,9 @@ min(PQP_REAL a, PQP_REAL b, PQP_REAL c)
 }
 
 int
-rapid_project6(PQP_REAL *ax,
-               PQP_REAL *p1, PQP_REAL *p2, PQP_REAL *p3,
-               PQP_REAL *q1, PQP_REAL *q2, PQP_REAL *q3)
+project6(PQP_REAL *ax,
+         PQP_REAL *p1, PQP_REAL *p2, PQP_REAL *p3,
+         PQP_REAL *q1, PQP_REAL *q2, PQP_REAL *q3)
 {
   PQP_REAL P1 = VdotV(ax, p1);
   PQP_REAL P2 = VdotV(ax, p2);
@@ -435,25 +435,25 @@ TriContact(PQP_REAL *P1, PQP_REAL *P2, PQP_REAL *P3,
   
   // now begin the series of tests
 
-  if (!rapid_project6(n1, p1, p2, p3, q1, q2, q3)) return 0;
-  if (!rapid_project6(m1, p1, p2, p3, q1, q2, q3)) return 0;
+  if (!project6(n1, p1, p2, p3, q1, q2, q3)) return 0;
+  if (!project6(m1, p1, p2, p3, q1, q2, q3)) return 0;
   
-  if (!rapid_project6(ef11, p1, p2, p3, q1, q2, q3)) return 0;
-  if (!rapid_project6(ef12, p1, p2, p3, q1, q2, q3)) return 0;
-  if (!rapid_project6(ef13, p1, p2, p3, q1, q2, q3)) return 0;
-  if (!rapid_project6(ef21, p1, p2, p3, q1, q2, q3)) return 0;
-  if (!rapid_project6(ef22, p1, p2, p3, q1, q2, q3)) return 0;
-  if (!rapid_project6(ef23, p1, p2, p3, q1, q2, q3)) return 0;
-  if (!rapid_project6(ef31, p1, p2, p3, q1, q2, q3)) return 0;
-  if (!rapid_project6(ef32, p1, p2, p3, q1, q2, q3)) return 0;
-  if (!rapid_project6(ef33, p1, p2, p3, q1, q2, q3)) return 0;
+  if (!project6(ef11, p1, p2, p3, q1, q2, q3)) return 0;
+  if (!project6(ef12, p1, p2, p3, q1, q2, q3)) return 0;
+  if (!project6(ef13, p1, p2, p3, q1, q2, q3)) return 0;
+  if (!project6(ef21, p1, p2, p3, q1, q2, q3)) return 0;
+  if (!project6(ef22, p1, p2, p3, q1, q2, q3)) return 0;
+  if (!project6(ef23, p1, p2, p3, q1, q2, q3)) return 0;
+  if (!project6(ef31, p1, p2, p3, q1, q2, q3)) return 0;
+  if (!project6(ef32, p1, p2, p3, q1, q2, q3)) return 0;
+  if (!project6(ef33, p1, p2, p3, q1, q2, q3)) return 0;
 
-  if (!rapid_project6(g1, p1, p2, p3, q1, q2, q3)) return 0;
-  if (!rapid_project6(g2, p1, p2, p3, q1, q2, q3)) return 0;
-  if (!rapid_project6(g3, p1, p2, p3, q1, q2, q3)) return 0;
-  if (!rapid_project6(h1, p1, p2, p3, q1, q2, q3)) return 0;
-  if (!rapid_project6(h2, p1, p2, p3, q1, q2, q3)) return 0;
-  if (!rapid_project6(h3, p1, p2, p3, q1, q2, q3)) return 0;
+  if (!project6(g1, p1, p2, p3, q1, q2, q3)) return 0;
+  if (!project6(g2, p1, p2, p3, q1, q2, q3)) return 0;
+  if (!project6(g3, p1, p2, p3, q1, q2, q3)) return 0;
+  if (!project6(h1, p1, p2, p3, q1, q2, q3)) return 0;
+  if (!project6(h2, p1, p2, p3, q1, q2, q3)) return 0;
+  if (!project6(h3, p1, p2, p3, q1, q2, q3)) return 0;
 
   return 1;
 }

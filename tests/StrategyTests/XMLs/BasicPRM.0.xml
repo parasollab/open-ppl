@@ -1,8 +1,8 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <MotionPlanning warnings="true" warningsAsErrors="true" print="false">
   <Problem>
-    <Environment filename="../Envs/2D/2d.env"/>
-    <Robot label="boxy" filename="../Envs/2D/boxy.robot"/>
+    <Environment filename="../../../Examples/2D/2d.env"/>
+    <Robot label="boxy" filename="../../../Examples/2D/boxy.robot"/>
   </Problem>
 
   <Library>

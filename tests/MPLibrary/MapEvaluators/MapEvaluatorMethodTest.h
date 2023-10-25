@@ -1,11 +1,11 @@
 #ifndef PPL_MAP_EVALUATOR_METHOD_TEST_H_
 #define PPL_MAP_EVALUATOR_METHOD_TEST_H_
 
-#include "MPLibrary/MapEvaluators/MapEvaluatorMethod.h"
-#include "Testing/TestBaseObject.h"
+#include "MPLibrary/MapEvaluators/MapEvaluatorMethod.h" //src
+#include "../../TestBaseObject.h"
 
-#include "MPProblem/Robot/Robot.h"
-#include "MPProblem/RobotGroup/RobotGroup.h"
+#include "MPProblem/Robot/Robot.h"                      //src
+#include "MPProblem/RobotGroup/RobotGroup.h"            //src
 
 template <typename MPTraits>
 class MapEvaluatorMethodTest : virtual public MapEvaluatorMethod<MPTraits>,

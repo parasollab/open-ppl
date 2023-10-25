@@ -1,0 +1,11 @@
+# PPLConfig.cmake.in
+@PACKAGE_INIT@
+
+include("${CMAKE_CURRENT_LIST_DIR}/PPLTargets.cmake")
+
+check_required_components(Foo)
+
+# set(PPL_DEFINITIONS "")
+set(PPL_INCLUDE_DIRS "${PACKAGE_PREFIX_DIR}/${CMAKE_INSTALL_INCLUDEDIR}")
+set(PPL_LIBRARY_DIRS "${PACKAGE_PREFIX_DIR}/${CMAKE_INSTALL_LIBDIR}")
+set(PPL_LIBRARIES "PPL::ppl_library" "PPL::ppl_mp_library")

@@ -3,6 +3,23 @@ set(CMAKE_CXX_STANDARD 17)
 
 project(gl_visualizer)
 
-add_subdirectory(nonstd) #build nonstd using nonstd/CmakeLists.txt
-add_subdirectory(glutils) #build nonstd using glutils/CmakeLists.txt
-add_subdirectory(sandbox) #build nonstd using sandbox/CmakeLists.txt
+add_subdirectory(nonstd)
+add_subdirectory(glutils)
+add_subdirectory(sandbox)
+
+install(TARGETS nonstd glutils sandbox
+        EXPORT GLVisTargets
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib
+        INCLUDES DESTINATION include
+)
+
+install(EXPORT GLVisTargets
+        FILE glvisTargets.cmake
+        NAMESPACE GLVIS::
+        DESTINATION share/${PROJECT_NAME}
+)
+
+install(FILES
+        ${CMAKE_CURRENT_SOURCE_DIR}/cmake/gl_visualizerConfig.cmake
+        DESTINATION share/${PROJECT_NAME} )

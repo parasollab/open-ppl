@@ -5,10 +5,10 @@
        'baseFilename in the Problem node is for Simulator stat output only. -->
     <Problem baseFilename="example">
 
-    <Environment filename="../Envs/3D/3d.env"
+    <Environment filename="../../../Examples/3D/3d.env"
       frictionCoefficient="0" gravity="0 0 0"/>
 
-    <Robot label="boxy" filename="../Envs/3D/boxy.robot">
+    <Robot label="boxy" filename="../../../Examples/3D/boxy.robot">
       <!--
       <Agent type="planning"/>
       -->

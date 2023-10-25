@@ -1,8 +1,8 @@
 #ifndef PPL_BINARY_LPSWEPT_DISTANCE_TEST_H_
 #define PPL_BINARY_LPSWEPT_DISTANCE_TEST_H_
 
-#include "MPLibrary/DistanceMetrics/BinaryLPSweptDistance.h"
-#include "Testing/MPLibrary/DistanceMetrics/DistanceMetricMethodTest.h"
+#include "MPLibrary/DistanceMetrics/BinaryLPSweptDistance.h"    //src
+#include "DistanceMetricMethodTest.h"
 
 template <typename MPTraits>
 class BinaryLPSweptDistanceTest : virtual public BinaryLPSweptDistance<MPTraits>,
@@ -89,15 +89,10 @@ TestIndividualCfgDistance() {
 
   if (fabs(dist - trueDist) > 1e-7) {
     passed = false;
-    message = message + "\n\tIncorrect distance returned between different configurations.\n";
+    std::cout << "\n\tIncorrect distance returned between different configurations." << std::endl;
   }
 
-  if (passed) {
-    message = "IndividualCfgSample::PASSED!\n";
-  } else {
-    message = "IndividualCfgSample::FAILED :(\n" + message;
-  }
-
+  message = "\tFINISHED TestIndividualCfgDistance";
   return std::make_pair(passed, message);
 }
 
@@ -113,15 +108,10 @@ TestIndividualEdgeWeight() {
 
   if (fabs(weight - trueWeight) > 1e-7) {
     passed = false;
-    message = message + "\n\tIncorrect edge weight/distance between configurations.\n";
+    std::cout << "\n\tIncorrect edge weight/distance between configurations." << std::endl;
   }
 
-  if (passed) {
-    message = "IndividualEdgeWeight::PASSED!\n";
-  } else {
-    message = "IndividualEdgeWeight::FAILED :(\n" + message;
-  }
-
+  message = "\tFINISHED TestIndividualEdgeWeight";
   return std::make_pair(passed, message);
 }
 
@@ -138,15 +128,10 @@ TestIndividualScaleCfg() {
 
   if (fabs(newLength - 10.0) > 1) {
     passed = false;
-    message = message + "\n\tScaled distance is not the correct magnitude.\n";
+    std::cout << "\n\tScaled distance is not the correct magnitude." << std::endl;
   }
 
-  if (passed) {
-    message = "IndividualScaleCfg::PASSED!\n";
-  } else {
-    message = "IndividualScaleCfg::FAILED :(\n" + message;
-  }
-
+  message = "\tFINISHED TestIndividualScaleCfg";
   return std::make_pair(passed, message);
 }
 
@@ -164,15 +149,10 @@ TestGroupCfgDistance() {
 
   if (fabs(dist - trueDist) > 1e-7) {
     passed = false;
-    message = message + "\n\tIncorrect distance returned between different configurations.\n";
+    std::cout << "\n\tIncorrect distance returned between different configurations." << std::endl;
   }
 
-  if (passed) {
-    message = "GroupCfgSample::PASSED!\n";
-  } else {
-    message = "GroupCfgSample::FAILED :(\n" + message;
-  }
-
+  message = "\tFINISHED TestGroupCfgDistance";
   return std::make_pair(passed, message);
 }
 
@@ -185,12 +165,7 @@ TestGroupEdgeWeight() {
 
   //TODO::This method does not exist in distance metric method yet.
 
-  if (passed) {
-    message = "GroupEdgeWeight::PASSED!\n";
-  } else {
-    message = "GroupEdgeWeight::FAILED :(\n" + message;
-  }
-
+  message = "\tFINISHED TestGroupEdgeWeight";
   return std::make_pair(passed, message);
 }
 
@@ -203,12 +178,7 @@ TestGroupScaleCfg() {
 
   //TODO::This method does not exist in distance metric method yet.
 
-  if (passed) {
-    message = "GroupScaleCfg::PASSED!\n";
-  } else {
-    message = "GroupScaleCfg::FAILED :(\n" + message;
-  }
-
+  message = "\tFINISHED TestGroupScaleCfg";
   return std::make_pair(passed, message);
 }
 

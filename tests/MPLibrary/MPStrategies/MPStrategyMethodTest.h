@@ -1,8 +1,8 @@
 #ifndef PPL_MP_STRATEGY_METHOD_TEST_H_
 #define PPL_MP_STRATEGY_METHOD_TEST_H_
 
-#include "MPLibrary/MPStrategies/MPStrategyMethod.h"
-#include "Testing/TestBaseObject.h"
+#include "MPLibrary/MPStrategies/MPStrategyMethod.h"    //src
+#include "../../TestBaseObject.h"
 
 template <typename MPTraits>
 class MPStrategyMethodTest : virtual public MPStrategyMethod<MPTraits>,

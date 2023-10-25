@@ -5,10 +5,10 @@
        'baseFilename in the Problem node is for Simulator stat output only. -->
   <Problem baseFilename="tmp_examples">
 
-    <Environment filename="../Envs/3D/3d.env"
+    <Environment filename="../../../Examples/3D/3d.env"
       frictionCoefficient="0" gravity="0 0 0"/>
 
-    <Robot label="boxy" filename="../Envs/3D/boxy.robot">
+    <Robot label="boxy" filename="../../../Examples/3D/boxy.robot">
       <!--
       <Agent type="planning"/>
       -->
@@ -76,14 +76,13 @@
         nfLabel="Nearest" extenderLabel="BERO"
         growGoals="false" growthFocus="0.01" m="1"
         goalDmLabel="minkowski" goalThreshold="5"
-        wallPenalty=0.5 gamma=0.5 cost="reward">
+        wallPenalty="0.5" gamma="0.5" cost="reward">
 
         <GrowthSet threshold="0.0">
           <Extender label="BERO"/>
         </GrowthSet>
         <Evaluator label="QueryMethod"/>
       </AdaptiveRRT>
-
 
       <ValidationStrategy label="Test" target="AdaptiveRRT" debug="true">
         <GoldStandard robot="boxy" type="roadmap"

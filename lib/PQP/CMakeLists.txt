@@ -1,5 +1,9 @@
 cmake_minimum_required(VERSION 2.8.11)
 
+if (POLICY CMP0048)
+  cmake_policy(SET CMP0048 OLD)
+endif (POLICY CMP0048)
+
 project(pqp)
 
 include(CMakePackageConfigHelpers)
@@ -10,15 +14,6 @@ set(VERSION_MINOR 3)
 set(VERSION ${VERSION_MAJOR}.${VERSION_MINOR})
 
 set(
-	HDRS
-	src/BV.h
-	src/PQP.h
-	src/PQP_Compile.h
-	src/PQP_Internal.h
-	src/Tri.h
-)
-
-set(
 	SRCS
 	src/Build.cpp
 	src/BV.cpp
@@ -26,13 +21,13 @@ set(
 	src/TriDist.cpp
 )
 
-add_library(PQP STATIC ${HDRS} ${SRCS})
+add_library(PQP STATIC ${SRCS})
 
 target_include_directories(
 	PQP
 	INTERFACE
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
-	$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/${CMAKE_INSTALL_INCLUDEDIR}>
+	$<INSTALL_INTERFACE:include/PQP>
 )
 
 set_target_properties(
@@ -43,8 +38,10 @@ set_target_properties(
 	VERSION ${VERSION}
 )
 
-install(FILES ${HDRS} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT development)
-
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        DESTINATION include
+        FILES_MATCHING PATTERN "*.h"
+)
 install(
 	TARGETS	PQP
 	EXPORT PQP

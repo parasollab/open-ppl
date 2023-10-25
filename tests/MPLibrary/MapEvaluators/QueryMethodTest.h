@@ -1,12 +1,12 @@
 #ifndef PPL_QUERY_METHOD_TEST_H_
 #define PPL_QUERY_METHOD_TEST_H_
 
-#include "MPLibrary/MapEvaluators/QueryMethod.h"
-#include "Testing/MPLibrary/MapEvaluators/MapEvaluatorMethodTest.h"
-#include "Utilities/MPUtils.h"
-#include "MPLibrary/MPSolution.h"
+#include "MPLibrary/MapEvaluators/QueryMethod.h"    //src
+#include "MapEvaluatorMethodTest.h"
+#include "Utilities/MPUtils.h"                      //src
+#include "MPLibrary/MPSolution.h"                   //src
 
-#include "Vector.h"
+#include "Vector.h"                                 //src
 
 namespace mathtool {
   class EulerAngle;
@@ -100,26 +100,21 @@ MainFunctionTest() {
 
   if(!singleResult) {
     passed = false;
-    message = message + "\n\tQuery method failed to find a path.\n";
+    std::cout << "\n\tQuery method failed to find a path." << std::endl;
   } 
 
   double pathWeight = this->GetMPLibrary()->GetPath()->Length();
 
   if (pathWeight != 3) {
     passed = false;
-    message = message + "\n\tQuery method did not find the shortest path.\n";
+    std::cout << "\n\tQuery method did not find the shortest path." << std::endl;
   }
 
   // Clean up
   auto task = this->GetMPLibrary()->GetTask();
   task->ClearGoalConstraints();
 
-  if (passed) {
-    message = "MainFunctionTest::PASSED!\n";
-  } else {
-    message = "MainFunctionTest::FAILED :(\n" + message;
-  }
-
+  message = "\tFINISHED MainFunctionTest";
   return std::make_pair(passed, message);
 }
 

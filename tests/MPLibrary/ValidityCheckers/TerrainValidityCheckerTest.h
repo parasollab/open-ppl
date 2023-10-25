@@ -2,7 +2,7 @@
 #define PPL_TERRAIN_VALIDITY_CHECKER_TEST_H_
 
 #include "ValidityCheckerMethodTest.h"
-#include "MPLibrary/ValidityCheckers/TerrainValidityChecker.h"
+#include "MPLibrary/ValidityCheckers/TerrainValidityChecker.h"  //src
 
 template <typename MPTraits>
 class TerrainValidityCheckerTest : virtual public TerrainValidityChecker<MPTraits>,
@@ -115,17 +115,12 @@ IndividualCfgValidityTest() {
 
     } else {
       /// ???
-      std::cout << "\n\n !!Should never get here!! \n\n" << std::endl;
+      std::cout << "\n\t !!Should never get here!! \n\n" << std::endl;
       passed = false;
     }
   }
 
-  if(passed) {
-    message = "IndividualCfgValidity::PASSED!\n";
-  }
-  else {
-    message = "IndividualCfgValidity::FAILED :(\n" + message;
-  }
+  message = "\tFINISHED IndividualCfgValidityTest";
   return std::make_pair(passed,message);
 
 }
@@ -136,13 +131,8 @@ TerrainValidityCheckerTest<MPTraits>::
 GroupCfgValidityTest() {
   bool passed = true;
   std::string message = "";
-  
-  if(passed) {
-    message = "GroupCfgValidity::PASSED!\n";
-  }
-  else {
-    message = "GroupCfgValidity::FAILED :(\n" + message;
-  }
+
+  message = "\tFINISHED GroupCfgValidityTest";
   return std::make_pair(passed,message);
 }
 

@@ -32,7 +32,7 @@ Factory(XMLNode& _node) {
   const std::string ip = _node.Read("ip", true, "",
       "The IPv4 address for the robot hardware.");
 
-  unsigned short port = _node.Read<unsigned short>("port", false, 0, 0,
+  unsigned short port = _node.Read<unsigned int>("port", false, 0, 0,
       std::numeric_limits<unsigned short>::max(),
       "The on-board controller port.");
 

@@ -1,6 +1,5 @@
 cmake_minimum_required(VERSION 3.15)
 
-
 set(HARDWARE_SRCS
         ${CMAKE_CURRENT_SOURCE_DIR}/MPProblem/Robot/HardwareInterfaces/ActuatorInterface.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/MPProblem/Robot/HardwareInterfaces/Battery.cpp
@@ -13,6 +12,51 @@ set(HARDWARE_SRCS
         PARENT_SCOPE
         )
 
+if(BUILD_ICREATE)
+    list(APPEND HARDWARE_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/MPProblem/Robot/HardwareInterfaces/ArucoDetectorInterface.cpp)
+    list(APPEND HARDWARE_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/MPProblem/Robot/HardwareInterfaces/ArucoMarkerMap.cpp)
+endif()
+
+if(BUILD_ARUCO)
+    list(APPEND HARDWARE_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/MPProblem/Robot/HardwareInterfaces/ICreateInterface.cpp)
+endif()
+
+# empty srcs
+set(MATLAB_SRCS
+        PARENT_SCOPE
+        )
+
+if(BUILD_MATLAB)
+    list(APPEND MATLAB_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/Behaviors/Controllers/MatlabNeedleController.cpp)
+    list(APPEND MATLAB_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/Behaviors/Simulator/MatlabMicroSimulator.cpp)
+endif()
+
+set(COMM_SRCS
+        PARENT_SCOPE
+        )
+
+set(PLANNER_SRCS
+        PARENT_SCOPE
+        )
+
+set(CLIENT_SRCS
+        PARENT_SCOPE
+        )
+
+set(SIM_SRCS
+        $(CMAKE_CURRENT_SOURCE_DIR)/sim_main.cpp
+        PARENT_SCOPE
+        )
+
+set(XML_SRCS
+        $(CMAKE_CURRENT_SOURCE_DIR)/xml_main.cpp
+        PARENT_SCOPE
+        )
+
+set(MASTER_SRCS
+        $(CMAKE_CURRENT_SOURCE_DIR)/master_node_main.cpp
+        PARENT_SCOPE
+        )
 
 set(TASK_SRCS
         ${CMAKE_CURRENT_SOURCE_DIR}/MPProblem/Robot/HardwareInterfaces/RobotCommandQueue_sim.cpp
@@ -59,14 +103,19 @@ set(TASK_SRCS
 
 set(SIM_SRCS_EXCL
         ${CMAKE_CURRENT_SOURCE_DIR}/MPProblem/Robot/HardwareInterfaces/RobotCommandQueue_sim.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/Behaviors/Agents/AgentFactory_sim.cpp)
+        ${CMAKE_CURRENT_SOURCE_DIR}/Behaviors/Agents/AgentFactory_sim.cpp
+        PARENT_SCOPE
+        )
 
 set(PMPL_SRCS_EXCL
         ${CMAKE_CURRENT_SOURCE_DIR}/Behaviors/Agents/AgentFactory_pmpl.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/MPProblem/Robot/HardwareInterfaces/RobotCommandQueue_pmpl.cpp)
+        ${CMAKE_CURRENT_SOURCE_DIR}/MPProblem/Robot/HardwareInterfaces/RobotCommandQueue_pmpl.cpp
+        PARENT_SCOPE
+        )
 
 set(PMPL_SRCS
         ${CMAKE_CURRENT_SOURCE_DIR}/Behaviors/Agents/Agent.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/Behaviors/Agents/AgentFactory_pmpl.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Behaviors/Controllers/CarlikeNeedleController.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Behaviors/Controllers/ControllerMethod.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Behaviors/Controllers/ControlSetGenerators.cpp
@@ -116,6 +165,7 @@ set(PMPL_SRCS
         ${CMAKE_CURRENT_SOURCE_DIR}/MPProblem/Robot/Actuator.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/MPProblem/Robot/Control.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/MPProblem/Robot/Robot.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/MPProblem/Robot/HardwareInterfaces/RobotCommandQueue_pmpl.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/MPProblem/RobotGroup/RobotGroup.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/MPProblem/TaskHierarchy/Decomposition.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/MPProblem/TaskHierarchy/SemanticTask.cpp

@@ -8,6 +8,7 @@
 #include "sandbox/gui/main_window.h"
 #include "sandbox/gui/gl_widget.h"
 
+#include <QApplication>
 
 int
 main(int _argc, char** _argv) {

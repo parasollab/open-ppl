@@ -1,5 +1,7 @@
 .vs/
 
+.idea/
+
 *.swp
 *.swo
 
@@ -7,22 +9,36 @@
 *.slo
 *.lo
 *.o
-*.obj
 
 # generated make/cmake files
+CMakeSettings.json
 build/
 out/
 cmake-*/
 include/**/cmake-*/
 lib/**/cmake-*/
 lib/gl_visualizer/**/cmake-*/
+.vscode
 
 src/Examples/example*
 src/Examples
 tests/Testing/StrategyTests/Scratch*
-src/Doxygen/html
+docs/Doxygen/html/
+docs/Doxygen/latex/
 tests/StrategyTests/Scratch/*.map
 tests/StrategyTests/Scratch/*.path
 
-# doxygen-generated files
-doxygen/*
+# conan
+CMakeCache.txt
+CMakeFiles/
+Makefile
+bin/
+cmake_install.cmake
+conan.lock
+conanbuildinfo.cmake
+conanbuildinfo.txt
+conaninfo.txt
+graph_info.json
+.vscode/launch.json
+.vscode/settings.json
+/.vscode/

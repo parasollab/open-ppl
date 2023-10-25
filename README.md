@@ -24,7 +24,17 @@ It is recommended to update programs on your system before continuing. However,
 this can sometimes break certain programs that require a specific package
 version, such as a graphics driver and CUDA library.
 
-
+### Required External Dependencies
+- opencv _(note: can be removed but build image needs updating)_
+- eigen3
+- cgal
+- bullet3
+- boost
+- nlohmann-json
+- qtbase
+- qttools
+- catch2
+- tinyxml2
 
 ### To update your system, run the following commands:
 ```bash
@@ -98,10 +108,10 @@ cd into the cloned repo
 cd pmpl
 ```
 ```bash
-/usr/bin/cmake -DCMAKE_BUILD_TYPE=Debug -G Ninja -DCMAKE_TOOLCHAIN_FILE=/opt/vcpkg/scripts/buildsystems/vcpkg.cmake -S . -B build
+cmake -DCMAKE_BUILD_TYPE=Debug -G Ninja -DCMAKE_TOOLCHAIN_FILE=/opt/vcpkg/scripts/buildsystems/vcpkg.cmake -S . -B build
 ```
 ```bash
-/usr/bin/cmake --build build
+cmake --build build
 ```
 
 ### Install and build using Conan
@@ -111,29 +121,31 @@ Alternate installation instructions available at https://docs.conan.io/en/latest
 pip install conan
 ```
 
+Make sure that the installed version of conan is > 2.0
+```bash
+conan --version
+```
+
 #### Install conan packages
 ```bash
-conan install . --install-folder cmake-build-release --build=missing
+conan install . --output-folder=cmake-build-debug_docker_conan --build=missing -c tools.system.package_manager:mode=install -c tools.system.package_manager:sudo=false -s build_type=Debug -s compiler.cppstd=gnu17
 ```
 
-#### Build pmpl with conan
+* make sure to set tools.system.package_manager:sudo=**false** if using docker
+
+#### Build ppl with conan
 ```bash
-cmake . -DCMAKE_TOOLCHAIN_FILE=cmake-build-release/conan_toolchain.cmake
-cmake --build .
+cmake -DCMAKE_BUILD_TYPE=Debug -G Ninja -DCMAKE_TOOLCHAIN_FILE=cmake-build-debug_docker_conan/conan_toolchain.cmake -B cmake-build-debug_docker_conan/
+```
+```bash
+cmake --build cmake-build-debug_docker_conan
 ```
 
-<!---
-### CGAL Runtime Error
-There is currently a bug in the CGAL library which causes a runtime assertion in pmpl.  In order to work around this, after cmake has been configured and vcpkg has downloaded the CGAL library, you will need to comment out lines 171 and 172 of  the file 
-build/vcpkg_installed/x64-linux/include/CGAL/Interval_nt.h, which read as follows:
-```
-    CGAL_assertion_msg( (!is_valid(i)) || (!is_valid(s)) || (!(i>s)),
-              "Variable used before being initialized (or CGAL bug)");
-```
---->
+
 
 ## Docker
-Alternatively a docker file is provided, with the above instructions pre-built.
+Alternatively a default docker file is provided, with the above instructions pre-built.
+More docker configurations and instructions are available [here](docker/README.md).
 
 ### Install Docker
 Follow the instructions on https://docs.docker.com/get-docker/ for your operating system
@@ -145,15 +157,65 @@ docker build -t pmpl-build .
 docker run -it pmpl-build 
 ```
 
-The executable built resides in /pmp/build/pmpl_exec within the docker container
+The executable built resides in /pmpl/build/pmpl_exec within the docker container
 
 ## Tests
 
-**TODO** Update Test Instructions
+### To run tests start by building the test target
+```bash
+cmake --build build --target tests
+```
+
+### You can run the by running CTest
+```bash
+cd build
+ctest --output-on-failure
+```
+
+this will run the Basic PRM Tests by default
+
+### Or by running the generated test executable
+```bash
+cd build
+./ppl_tests -F CfgTests
+```
+
+## Consuming PPL Libraries
+
+### Install from source
+To install the PPL libraries and related headers, run the following in this directory.
+
+```bash
+cmake --build build --target install
+```
+
+### Linking
+In order to have access to the dependencies of PPL, for things like header files included in PPL's header files, you should include the following commands in the CMakeLists file for your ptroject.
+```cmake
+find_package(Qt6 CONFIG COMPONENTS Core Gui Widgets OpenGL OpenGLWidgets REQUIRED)
+find_package(Eigen3 CONFIG REQUIRED)
+find_package(Bullet CONFIG REQUIRED
+         LinearMath Bullet3Common BulletDynamics BulletSoftBody BulletCollision BulletInverseDynamics)
+find_package(modelloader CONFIG REQUIRED)
+find_package(RAPID CONFIG REQUIRED)
+find_package(Tetgen CONFIG REQUIRED)
+find_package(PQP CONFIG REQUIRED)
+find_package(gl_visualizer CONFIG COMPONENTS nonstd glutils sandbox REQUIRED)
+find_package(PPL CONFIG REQUIRED)
+```
+
+Then you will need to link to either ppl::ppl_mp_library or ppl::ppl_library
+
+## binary caching of dependencies
+Libraries installed with vcpkg can always be built from source. However, this can duplicate work and waste time across multiple developers or machines.
+
+Binary caching saves copies of library binaries in a shared location that can be accessed by vcpkg for future installs. Caches can be hosted in a variety of environments. The most basic examples are a folder on the local machine or a network file share. Caches can also be stored in any NuGet feed (such as GitHub Packages or Azure DevOps Artifacts), Azure Blob Storage, Google Cloud Storage, and many other services.
+
+https://learn.microsoft.com/en-us/vcpkg/users/binarycaching
 
 ## Documentation
-We use `doxygen` for documentation. `cd` into the `src/` directory, then run:
+We use `doxygen` for documentation. `cd` into the `docs/` directory, then run:
 ```bash
-doxygen
+doxygen Doxygen/Doxyfile.in
 ```
-Then open `../doxygen/html/index.html`
+Then open `docs/Doxygen/html/index.html`

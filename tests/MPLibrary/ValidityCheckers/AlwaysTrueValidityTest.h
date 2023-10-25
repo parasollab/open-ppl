@@ -2,7 +2,7 @@
 #define PPL_ALWAYS_TRUE_VALIDITY_TEST_H_
 
 #include "ValidityCheckerMethodTest.h"
-#include "MPLibrary/ValidityCheckers/AlwaysTrueValidity.h"
+#include "MPLibrary/ValidityCheckers/AlwaysTrueValidity.h"  //src
 
 template <typename MPTraits>
 class AlwaysTrueValidityTest : virtual public AlwaysTrueValidity<MPTraits>,
@@ -95,17 +95,11 @@ IndividualCfgValidityTest() {
       continue;
 
     passed = false;
-    message = message + "\n\tA cfg was incorrectly labeled "
-              "invalid.\n";
+    std::cout << "\n\tA cfg was incorrectly labeled invalid." << std::endl;
     break;
   }
 
-  if(passed) {
-    message = "IndividualCfgValidity::PASSED!\n";
-  }
-  else {
-    message = "IndividualCfgValidity::FAILED :(\n" + message;
-  }
+  message = "\tFINISHED IndividualCfgValidityTest";
   return std::make_pair(passed,message);
 }
 
@@ -125,17 +119,11 @@ GroupCfgValidityTest() {
       continue;
 
     passed = false;
-    message = message + "\n\tA group cfg was incorrectly labeled "
-              "invalid.\n";
+    std::cout << "\n\tA group cfg was incorrectly labeled invalid." << std::endl;
     break;
   }
-  
-  if(passed) {
-    message = "GroupCfgValidity::PASSED!\n";
-  }
-  else {
-    message = "GroupCfgValidity::FAILED :(\n" + message;
-  }
+
+  message = "\tFINISHED GroupCfgValidityTest";
   return std::make_pair(passed,message);
 }
 
