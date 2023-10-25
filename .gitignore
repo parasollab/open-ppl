@@ -23,7 +23,8 @@ lib/gl_visualizer/**/cmake-*/
 src/Examples/example*
 src/Examples
 tests/Testing/StrategyTests/Scratch*
-src/Doxygen/html
+docs/Doxygen/html/
+docs/Doxygen/latex/
 tests/StrategyTests/Scratch/*.map
 tests/StrategyTests/Scratch/*.path
 

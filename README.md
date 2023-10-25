@@ -212,3 +212,6 @@ Libraries installed with vcpkg can always be built from source. However, this ca
 Binary caching saves copies of library binaries in a shared location that can be accessed by vcpkg for future installs. Caches can be hosted in a variety of environments. The most basic examples are a folder on the local machine or a network file share. Caches can also be stored in any NuGet feed (such as GitHub Packages or Azure DevOps Artifacts), Azure Blob Storage, Google Cloud Storage, and many other services.
 
 https://learn.microsoft.com/en-us/vcpkg/users/binarycaching
+
+## Documentation
+We use `doxygen` for documentation, which is automatically generated when you build PPL. To view it, open `docs/Doxygen/html/index.html`
