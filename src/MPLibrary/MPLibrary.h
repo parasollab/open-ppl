@@ -650,6 +650,9 @@ ProcessXML(XMLNode& planningLibraryNode) {
   // Ensure we have at least one solver.
   if(m_solvers.empty())
     throw ParseException(WHERE) << "Cannot find Solver node in XML node '.";
+  
+  // Set the seed to the first solver
+  SetSeed();
 
   // Print XML details if requested.
   bool print = planningLibraryNode.Read("print", false, false, "Print all XML input");

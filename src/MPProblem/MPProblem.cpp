@@ -502,7 +502,7 @@ ParseChild(XMLNode& _node) {
     const std::string label = _node.Read("robot", true, "",
         "Label for the robot assigned to this task.");
     auto robot = this->GetRobot(label);
-    auto task = std::shared_ptr<MPTask>(new MPTask(this, _node));
+    auto task = std::shared_ptr<MPTask>(new MPTask(this, _node, m_environment.get()));
     m_taskMap[robot].push_back(task);
     /// @todo Add check that tasks have unique labels
     m_taskLabelMap[task->GetLabel()] = task.get();
