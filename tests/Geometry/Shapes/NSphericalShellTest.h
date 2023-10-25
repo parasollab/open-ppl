@@ -1,8 +1,7 @@
 #ifndef PPL_NSphericalShell_TEST_H
 #define PPL_NSphericalShell_TEST_H
 
-#include "Geometry/Shapes/NSphericalShell.h"
-#include "Testing/TestBaseObject.h"
+#include "Geometry/Shapes/NSphericalShell.h"    //src
 
 #include <cmath>
 #include <string>
@@ -12,8 +11,7 @@
 #include <vector>
 #include <functional>
 
-class NSphericalShellTest : public NSphericalShell,
-				public TestBaseObject {
+class NSphericalShellTest : public NSphericalShell {
   public: 
     ///@name LocalTypes
     ///@{
@@ -29,15 +27,9 @@ class NSphericalShellTest : public NSphericalShell,
     virtual ~NSphericalShellTest();
 
     ///@}
-    ///@name Interface
-    ///@{
-
-    virtual TestResult RunTest();
-
-    ///@}
 
 
-  private:
+  public:
 
     ///@name Internal State
     ///@{
@@ -72,45 +64,15 @@ class NSphericalShellTest : public NSphericalShell,
 /*--------------------------- Construction ---------------------------*/
 
 
-NSphericalShellTest::
-NSphericalShellTest() : NSphericalShell(1) {
+NSphericalShellTest::NSphericalShellTest() : NSphericalShell(1) {
 }
-
-
 NSphericalShellTest::
 ~NSphericalShellTest() noexcept = default;
 
 
 /*--------------------------- Tests ---------------------------*/
 
-typename NSphericalShellTest::
-TestResult
-NSphericalShellTest::RunTest() {
-  std::cout << "TESTS FOR NSphericalShell" << std::endl;
-
-  // RunTestMessage(&NSphericalShellTest::TestContains);
-  // RunTestMessage(&NSphericalShellTest::testClerance);
-  // RunTestMessage(&NSphericalShellTest::testClerancePoint);
-  // RunTestMessage(&NSphericalShellTest::testSample);
-  TestResult containsTestResult = TestContains();
-  std::cout << "PASSED: "<< containsTestResult.first << std::endl << containsTestResult.second;
-
-  TestResult clearanceTestResult = TestClearance();
-  std::cout << "PASSED: "<< clearanceTestResult.first << std::endl << clearanceTestResult.second;
-
-  TestResult clearancePointTestResult = TestClearancePoint();
-  std::cout << "PASSED: "<< clearancePointTestResult.first << std::endl << clearancePointTestResult.second;
-
-  TestResult sampleTestResult = TestSample();
-  std::cout << "PASSED: "<< sampleTestResult.first << std::endl << sampleTestResult.second;
-
-  return TestResult(true, "this is for testing infrastructure");
-}
-
-
-typename NSphericalShellTest::
-TestResult
-NSphericalShellTest::TestContains() {
+typename NSphericalShellTest::TestResult NSphericalShellTest::TestContains() {
 
   int dimension = 3;
   int innerRadius = 1;
@@ -135,28 +97,21 @@ NSphericalShellTest::TestContains() {
 
   if (!testSphericalShell->Contains(validP)) {
     passed = false;
-    message = message + "\n\tNSphericalShell does not contain valid point.\n";
+    std::cout << "\n\tNSphericalShell does not contain valid point." << std::endl;
   } 
 
   if (testSphericalShell->Contains(invalidP)) {
     passed = false;
-    message = message + "\n\tNSphericalShell contains invalid point.\n";
+    std::cout << "\n\tNSphericalShell contains invalid point." << std::endl;
   }
 
-  if (passed) {
-    message = "NSphericalShell Contains: PASSED!\n";
-  } else {
-    message = "NSphericalShell Contains: Failed :(\n" + message;
-  }
-
+  message = "\tFINISHED TestContains";
   return std::make_pair(passed, message);
 
 } 
 
 
-typename NSphericalShellTest::
-TestResult
-NSphericalShellTest::TestClearance() {
+typename NSphericalShellTest::TestResult NSphericalShellTest::TestClearance() {
 
   int dimension = 3;
   int innerRadius = 1;
@@ -178,22 +133,15 @@ NSphericalShellTest::TestClearance() {
 
   if (expectedClearance != actualClearance) {
     passed = false;
-    message = message + "\n\tReturned incorrect clearance.\n";
+    std::cout << "\n\tReturned incorrect clearance." << std::endl;
   }
 
-  if (passed) {
-    message = "NSphericalShell Clearance: PASSED!\n";
-  } else {
-    message = "NSphericalShell Clearance: Failed :(\n" + message;
-  }
-
+  message = "\tFINISHED TestClearance";
   return std::make_pair(passed, message);
 
 } 
 
-typename NSphericalShellTest::
-TestResult
-NSphericalShellTest::TestClearancePoint() {
+typename NSphericalShellTest::TestResult NSphericalShellTest::TestClearancePoint() {
 
   int dimension = 3;
   int innerRadius = 1;
@@ -217,27 +165,20 @@ NSphericalShellTest::TestClearancePoint() {
     expectedClearancePoint.push_back(0);
   }
 
-  vector<double> actualClearancePoint = testSphericalShell -> ClearancePoint(testP);
+  std::vector<double> actualClearancePoint = testSphericalShell -> ClearancePoint(testP);
 
   if (expectedClearancePoint != actualClearancePoint) {
     passed = false;
-    message = "\n\tReturned clearance point is incorrect.\n";
+    std::cout << "\n\tReturned clearance point is incorrect." << std::endl;
   }
 
-  if (passed) {
-    message = "NSphericalShell Clearance point: PASSED!\n";
-  } else {
-    message = "NSphericalShell Clearance point: Failed :(\n" + message;
-  }
-
+  message = "\tFINISHED TestClearancePoint";
   return std::make_pair(passed, message);
 
 } 
 
 
-typename NSphericalShellTest::
-TestResult
-NSphericalShellTest::TestSample() {
+typename NSphericalShellTest::TestResult NSphericalShellTest::TestSample() {
 
   int dimension = 3;
   int innerRadius = 1;
@@ -249,20 +190,15 @@ NSphericalShellTest::TestSample() {
 
   // sample 100 random points and test if they lie within the spherical shell
   for (int i = 0; i < 100; i++) {
-    vector<double> randomSamplePoint = testSphericalShell -> Sample();
+    std::vector<double> randomSamplePoint = testSphericalShell -> Sample();
     if (!testSphericalShell -> Contains(randomSamplePoint)) {
       passed = false;
-      message = message + "\n\tSampled point not in the spherical shell\n";
+      std::cout << "\n\tSampled point not in the spherical shell." << std::endl;
       break;
     }
   }
 
-  if (passed) {
-    message = "NSphericalShell Sample: PASSED!\n";
-  } else {
-    message = "NSphericalShell Sample: Failed :(\n" + message;
-  }
-
+  message = "\tFINISHED TestSample";
   return std::make_pair(passed, message);
 
 } 
@@ -270,8 +206,7 @@ NSphericalShellTest::TestSample() {
 
 /*---------------------------- Helpers --------------------------*/
 
-NSphericalShell* 
-NSphericalShellTest::Construct(int dimension, int outerRadius, int innererRadius) {
+NSphericalShell* NSphericalShellTest::Construct(int dimension, int outerRadius, int innererRadius) {
 
   // define a valid n dimensional sphere centered at origin with a given radius
   NSphericalShell* testSphere = new NSphericalShell(dimension, outerRadius, innererRadius);
@@ -280,12 +215,9 @@ NSphericalShellTest::Construct(int dimension, int outerRadius, int innererRadius
 
 }
 
-void 
-NSphericalShellTest::RunTestMessage(TestResult (*inputTestFunction)()) {
+void NSphericalShellTest::RunTestMessage(TestResult (*inputTestFunction)()) {
   TestResult testResult = inputTestFunction();
   std::cout << "PASSED: "<< testResult.first << std::endl << testResult.second;
 }
-
-
 
 #endif

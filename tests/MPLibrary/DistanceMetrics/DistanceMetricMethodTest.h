@@ -1,8 +1,8 @@
 #ifndef PPL_DISTANCE_METRIC_METHOD_TEST_H_
 #define PPL_DISTANCE_METRIC_METHOD_TEST_H_
 
-#include "MPLibrary/DistanceMetrics/DistanceMetricMethod.h"
-#include "Testing/TestBaseObject.h"
+#include "MPLibrary/DistanceMetrics/DistanceMetricMethod.h" //src
+#include "../../TestBaseObject.h"
 
 template <typename MPTraits>
 class DistanceMetricMethodTest : virtual public DistanceMetricMethod<MPTraits>,

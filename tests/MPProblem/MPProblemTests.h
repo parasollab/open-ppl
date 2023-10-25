@@ -1,15 +1,17 @@
 #ifndef PPL_MP_PROBLEM_TESTS_H_
 #define PPL_MP_PROBLEM_TESTS_H_
 
-#include "Testing/TestBaseObject.h"
-#include "MPProblem/MPProblem.h"
+#include "MPProblem/MPProblem.h"    //src
 
-class MPProblemTests : public MPProblem, public TestBaseObject {
+#include <string>
+#include <utility>
+
+class MPProblemTests : public MPProblem {
   public:
     ///@name LocalTypes
     ///@{
 
-    typedef TestBaseObject::TestResult TestResult;
+    typedef std::pair<bool,std::string> TestResult;
 
     ///@}
     ///@name Construction
@@ -25,7 +27,7 @@ class MPProblemTests : public MPProblem, public TestBaseObject {
     ///@name Interface
     ///@{
 
-    virtual TestResult RunTest() override;
+    TestResult RunTest();
 
     ///@}
 };

@@ -1,12 +1,12 @@
 #ifndef PPL_OBSTACLE_BASED_SAMPLER_H_
 #define PPL_OBSTACLE_BASED_SAMPLER_H_
 
-#include "MPLibrary/Samplers/ObstacleBasedSampler.h"
-#include "MPLibrary/MPTools/MedialAxisUtilities.h"
-#include "Testing/MPLibrary/Samplers/SamplerMethodTest.h"
+#include "MPLibrary/Samplers/ObstacleBasedSampler.h"    //src
+#include "MPLibrary/MPTools/MedialAxisUtilities.h"      //src
+#include "SamplerMethodTest.h"
 
-#include "MPLibrary/ValidityCheckers/CollisionDetection/CDInfo.h"
-#include "Utilities/MetricUtils.h"
+#include "MPLibrary/ValidityCheckers/CollisionDetection/CDInfo.h"   //src
+#include "Utilities/MetricUtils.h"                                  //src
 
 
 template <class MPTraits>
@@ -124,8 +124,7 @@ TestIndividualCfgSample() {
       // Check the validity
       if(!vc->IsValid(cfg, callee)) {   
         passed = false;
-        message = message + "\n\tA configuration was incorrectly labeled "
-                  "valid for the given boundary.\n";
+        std::cout << "\n\tA configuration was incorrectly labeled valid for the given boundary." << std::endl;
         break;
       }
 
@@ -140,7 +139,7 @@ TestIndividualCfgSample() {
       // Cannot find a valid obstacle cfg    
       if (!valid) {
         passed = false;
-        message = "Cannot find the closest obstacle from given cfg\n";
+        std::cout << "\n\tCannot find the closest obstacle from given cfg." << std::endl;
         break;
       }
 
@@ -158,7 +157,7 @@ TestIndividualCfgSample() {
     // Compare them 
     if (avgDist > envRes) {
       passed = false;
-      message = "Average minimum distance from valid cfgs to obstacles is too large \n";
+      std::cout << "\n\tAverage minimum distance from valid cfgs to obstacles is too large." << std::endl;
     }
   }
 
@@ -170,8 +169,7 @@ TestIndividualCfgSample() {
       // Check the validity
       if(vc->IsValid(cfg, callee)) {   
         passed = false;
-        message = message + "\n\tA configuration was incorrectly labeled "
-                  "invalid for the given boundary.\n";
+        std::cout << "\n\tA configuration was incorrectly labeled invalid for the given boundary." << std::endl;
         break;
       }
 
@@ -186,7 +184,7 @@ TestIndividualCfgSample() {
       // Cannot find a nearby obstacle
       if (!valid) {
         passed = false;
-        message = "Cannot find the closest obstacle from given cfg\n";
+        std::cout << "\n\tCannot find the closest obstacle from given cfg." << std::endl;
         break;
       }
 
@@ -205,17 +203,11 @@ TestIndividualCfgSample() {
     // Compare them 
     if (avgDist > envRes) {
       passed = false;
-      message = "Average minimum distance from cfgs to obstacles are too large \n";
+      std::cout << "\n\tAverage minimum distance from cfgs to obstacles are too large." << std::endl;
     }
   }
 
-  
-  if(passed) {
-    message = "IndividualCfgSample::PASSED!\n";
-  }
-  else {
-    message = "IndividualCfgSample::FAILED :(\n" + message;
-  }
+  message = "\tFINISHED TestIndividualCfgSample";
   return std::make_pair(passed,message);
 }
 
@@ -230,12 +222,7 @@ TestIndividualCfgSampleWithEEConstraint() {
   //TODO::Setup test of this function.
   //this->IndividualCfgSampleWithEEConstraint();
 
-  if(passed) {
-    message = "IndividualCfgSampleWithEEConstraint::PASSED!\n";
-  }
-  else {
-    message = "IndividualCfgSampleWithEEConstraint::FAILED :(\n" + message;
-  }
+  message = "\tFINISHED TestIndividualCfgSampleWithEEConstraint";
   return std::make_pair(passed,message);
 }
 
@@ -250,12 +237,7 @@ TestIndividualFilter() {
   //TODO::Setup test of this function.
   //this->IndividualFilter();
 
-  if(passed) {
-    message = "IndividualFilter::PASSED!\n";
-  }
-  else {
-    message = "IndividualFilter::FAILED :(\n" + message;
-  }
+  message = "\tFINISHED TestIndividualFilter";
   return std::make_pair(passed,message);
 }
 
@@ -298,8 +280,7 @@ TestGroupCfgSampleSingleBoundary() {
       // Check the validity
       if(!vc->IsValid(groupCfg, callee)) {
         passed = false;
-        message = message + "\n\tA configuration was incorrectly labeled "
-                  "valid for the given boundary.\n";
+        std::cout << "\n\tA configuration was incorrectly labeled valid for the given boundary." << std::endl;
         break;
       }
 
@@ -325,8 +306,7 @@ TestGroupCfgSampleSingleBoundary() {
         // Cannot find a valid obstacle cfg    
         if (!valid) {
           passed = false;
-          message = "Cannot find the closest obstacle from given cfg\n";
-          std::cout << message << std::endl;
+          std::cout << "\n\tCannot find the closest obstacle from given cfg." << std::endl;
           break;
         }
 
@@ -349,7 +329,7 @@ TestGroupCfgSampleSingleBoundary() {
     // Compare them 
     if (avgDist > envRes) {
       passed = false;
-      message = "Average minimum distance from cfgs to obstacles are too large \n";
+      std::cout << "\n\tAverage minimum distance from cfgs to obstacles are too large." << std::endl;
     }
   }
 
@@ -364,8 +344,7 @@ TestGroupCfgSampleSingleBoundary() {
       // Check the validity
       if(vc->IsValid(groupCfg, callee)) {
         passed = false;
-        message = message + "\n\tA configuration was incorrectly labeled "
-                  "valid for the given boundary.\n";
+        std::cout << "\n\tA configuration was incorrectly labeled valid for the given boundary." << std::endl;
         break;
       }
 
@@ -391,8 +370,7 @@ TestGroupCfgSampleSingleBoundary() {
         // Cannot find a valid obstacle cfg    
         if (!valid) {
           passed = false;
-          message = "Cannot find the closest obstacle from given cfg\n";
-          std::cout << message << std::endl;
+          std::cout << "\n\tCannot find the closest obstacle from given cfg." << std::endl;
           break;
         }
 
@@ -415,16 +393,11 @@ TestGroupCfgSampleSingleBoundary() {
     // Compare them 
     if (avgDist > envRes) {
       passed = false;
-      message = "Average minimum distance from cfgs to obstacles are too large \n";
+      std::cout << "\n\tAverage minimum distance from cfgs to obstacles are too large." << std::endl;
     }
   }
-  
-  if(passed) {
-    message = "GroupCfgSampleSingleBoundary::PASSED!\n";
-  }
-  else {
-    message = "GroupCfgSampleSingleBoundary::FAILED :(\n" + message;
-  }
+
+  message = "\tFINISHED TestGroupCfgSampleSingleBoundary";
   return std::make_pair(passed,message);
 }
 
@@ -468,8 +441,7 @@ TestGroupCfgSampleIndividualBoundaries() {
     for (auto groupCfg : valids) {
       if(!vc->IsValid(groupCfg, callee)) {
         passed = false;
-        message = message + "\n\tA configuration was incorrectly labeled "
-                  "valid for the given boundary.\n";
+        std::cout << "\n\tA configuration was incorrectly labeled valid for the given boundary." << std::endl;
         break;
       }
 
@@ -498,8 +470,7 @@ TestGroupCfgSampleIndividualBoundaries() {
         // Cannot find a valid obstacle cfg    
         if (!valid) {
           passed = false;
-          message = "Cannot find the closest obstacle from given cfg\n";
-          std::cout << message << std::endl;
+          std::cout << "\n\tCannot find the closest obstacle from given cfg." << std::endl;
           break;
         }
 
@@ -522,7 +493,7 @@ TestGroupCfgSampleIndividualBoundaries() {
     // Compare them 
     if (avgDist > envRes) {
       passed = false;
-      message = "Average minimum distance from cfgs to obstacles are too large \n";
+      std::cout << "\n\tAverage minimum distance from cfgs to obstacles are too large." << std::endl;
     }
   }
 
@@ -536,8 +507,7 @@ TestGroupCfgSampleIndividualBoundaries() {
       // Check the validity
       if(vc->IsValid(groupCfg, callee)) {
         passed = false;
-        message = message + "\n\tA configuration was incorrectly labeled "
-                  "valid for the given boundary.\n";
+        std::cout << "\n\tA configuration was incorrectly labeled valid for the given boundary." << std::endl;
         break;
       }
 
@@ -566,8 +536,7 @@ TestGroupCfgSampleIndividualBoundaries() {
         // Cannot find a valid obstacle cfg    
         if (!valid) {
           passed = false;
-          message = "Cannot find the closest obstacle from given cfg\n";
-          std::cout << message << std::endl;
+          std::cout << "\n\tCannot find the closest obstacle from given cfg." << std::endl;
           break;
         }
 
@@ -590,17 +559,12 @@ TestGroupCfgSampleIndividualBoundaries() {
     // Compare them 
     if (avgDist > envRes) {
       passed = false;
-      message = "Average minimum distance from cfgs to obstacles are too large \n";
+      std::cout << "\n\tAverage minimum distance from cfgs to obstacles are too large." << std::endl;
     }
   
   }
 
-  if(passed) {
-    message = "GroupCfgSampleIndividualBoundaries::PASSED!\n";
-  }
-  else {
-    message = "GroupCfgSampleIndividualBoundaries::FAILED :(\n" + message;
-  }
+  message = "\tFINISHED TestGroupCfgSampleIndividualBoundaries";
   return std::make_pair(passed,message);
 }
 
@@ -615,12 +579,7 @@ TestGroupFilter() {
   //TODO::Setup test of this function.
   //this->GroupFilter();
 
-  if(passed) {
-    message = "GroupFilter::PASSED!\n";
-  }
-  else {
-    message = "GroupFilter::FAILED :(\n" + message;
-  }
+  message = "\tFINISHED TestGroupFilter";
   return std::make_pair(passed,message);
 }
 

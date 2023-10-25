@@ -9,7 +9,7 @@
 
 // TaskEvaluators to include
 
-#include "Testing/TMPLibrary/TaskEvaluators/SimpleMotionEvaluatorTest.h"
+#include "../TMPLibrary/TaskEvaluators/SimpleMotionEvaluatorTest.h"
 
 // TaskDecomposers to include
 

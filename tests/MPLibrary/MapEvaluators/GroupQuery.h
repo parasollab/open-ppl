@@ -1,10 +1,10 @@
 #ifndef PMPL_GROUP_QUERY_H_
 #define PMPL_GROUP_QUERY_H_
 
-#include "QueryMethod.h"
+#include "QueryMethod.h"            //src
 
-#include "Utilities/MetricUtils.h"
-#include "Utilities/SSSP.h"
+#include "Utilities/MetricUtils.h"  //src
+#include "Utilities/SSSP.h"         //src
 
 
 ////////////////////////////////////////////////////////////////////////////////

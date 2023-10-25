@@ -1,10 +1,10 @@
 #ifndef PPL_BASIC_EXTENDER_TEST_H_
 #define PPL_BASIC_EXTENDER_TEST_H_
 
-#include "MPLibrary/Extenders/BasicExtender.h"
-#include "MPLibrary/LocalPlanners/LPOutput.h"
-#include "MPLibrary/LocalPlanners/GroupLPOutput.h"
-#include "Testing/MPLibrary/Extenders/ExtenderMethodTest.h"
+#include "MPLibrary/Extenders/BasicExtender.h"      //src
+#include "MPLibrary/LocalPlanners/LPOutput.h"       //src
+#include "MPLibrary/LocalPlanners/GroupLPOutput.h"  //src
+#include "ExtenderMethodTest.h"
 
 template <typename MPTraits>
 class BasicExtenderTest : virtual public BasicExtender<MPTraits>,
@@ -80,18 +80,13 @@ IndividualRobotExtendTests() {
 
   if (!result) {
     passed = false;
-    message = message + "\n\tThe configuration was not successfully extended.\n";
+    std::cout << "\n\tThe configuration was not successfully extended." << std::endl;
   } else if (fabs(newCfg[0] - maxDist) > 1e-7) {
     passed = false;
-    message = message + "\n\tThe configuration was not extended the correct distance.\n";
+    std::cout << "\n\tThe configuration was not extended the correct distance." << std::endl;
   }
 
-  if (passed) {
-    message = "IndividualRobotExtend::PASSED!\n";
-  } else {
-    message = "IndividualRobotExtend::FAILED :(\n" + message;
-  }
-
+  message = "\tFINISHED IndividualRobotExtendTests";
   return std::make_pair(passed, message);
 }
 
@@ -104,12 +99,7 @@ RobotGroupExtendTests() {
 
   // TODO Need GroupCfg support
 
-  if (passed) {
-    message = "RobotGroupExtend::PASSED!\n";
-  } else {
-    message = "RobotGroupExtend::FAILED :(\n" + message;
-  }
-
+  message = "\tFINISHED RobotGroupExtendTests";
   return std::make_pair(passed, message);
 }
 

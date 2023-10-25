@@ -38,5 +38,5 @@ install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         FILES_MATCHING PATTERN "*.h"
 )
 
-install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/cmake/RapidConfig.cmake 
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/cmake/rapid-config.cmake 
         DESTINATION share/${PROJECT_NAME} )

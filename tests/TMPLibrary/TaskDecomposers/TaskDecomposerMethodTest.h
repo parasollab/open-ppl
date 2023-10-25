@@ -1,8 +1,8 @@
 #ifndef PPL_TASK_DECOMPOSER_METHOD_TEST_H_
 #define PPL_TASK_DECOMPOSER_METHOD_TEST_H_
 
-#include "TMPLibrary/TaskDecomposers/TaskDecomposerMethod.h"
-#include "Testing/TestBaseObject.h"
+#include "TMPLibrary/TaskDecomposers/TaskDecomposerMethod.h"    //src
+#include "../../TestBaseObject.h"
 
 class TaskDecomposerMethodTest : virtual public TaskDecomposerMethod,
                                  public TestBaseObject {

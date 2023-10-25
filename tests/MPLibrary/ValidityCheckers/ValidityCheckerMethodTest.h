@@ -1,8 +1,8 @@
 #ifndef PPL_VALIDITY_CHECKER_METHOD_TEST_H_
 #define PPL_VALIDITY_CHECKER_METHOD_TEST_H_
 
-#include "MPLibrary/ValidityCheckers/ValidityCheckerMethod.h"
-#include "Testing/TestBaseObject.h"
+#include "MPLibrary/ValidityCheckers/ValidityCheckerMethod.h"   //src
+#include "../../TestBaseObject.h"
 
 template <typename MPTraits>
 class ValidityCheckerMethodTest : virtual public ValidityCheckerMethod<MPTraits>,
