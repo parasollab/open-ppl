@@ -22,11 +22,11 @@ main(int _argc, char** _argv) {
   // Get the XML file name from the command line.
   std::string xmlFile = _argv[2];
 
-  // Parse the Problem node into an MPProblem object.
-  MPProblem* problem = new MPProblem(xmlFile);
-
   // Parse the Library node into an MPLibrary object.
   MPLibrary* pmpl = new MPLibrary(xmlFile);
+
+  // Parse the Problem node into an MPProblem object.
+  MPProblem* problem = new MPProblem(xmlFile);
 
   // Create storage for the solution and ask the library to solve our problem.
   Robot* const robot = problem->GetRobots().front().get();

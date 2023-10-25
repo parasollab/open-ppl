@@ -19,12 +19,14 @@
     <Task label="query" robot="boxy">
       <StartConstraints>
         <!-- WARNING Support for multiple constraints is not yet implemented! -->
+        <!-- Use <Random/> to specify a randomly sampled configuration -->
         <CSpaceConstraint point="0 10 0 0 0 0"/>
       </StartConstraints>
 
       <GoalConstraints>
         <!-- Here multiple constraints indicates a compound goal. Each constraint
              represents a single intermediate goal. -->
+        <!-- Use <Random/> to specify a randomly sampled configuration -->
         <CSpaceConstraint point="0 -10 0 0.2 0.8 0.5"/>
       </GoalConstraints>
     </Task>

@@ -34,24 +34,30 @@ CSpaceConstraint(Robot* const _r, const Cfg& _cfg)
 
 
 CSpaceConstraint::
-CSpaceConstraint(Robot* const _r, XMLNode& _node)
+CSpaceConstraint(Robot* const _r, XMLNode& _node, Environment* _env)
   : BoundaryConstraint(_r, nullptr)
 {
   /// @todo Verify that this works with constraints of lower dimension than the
   ///       robot's cspace (for partial constraint), or decide that we will not
   ///       support this and throw an error if requested.
 
-  // The XML node will either describe a point or a bounding box.
-  const std::string pointString = _node.Read("point", false, "", "The Cfg point"),
-                    bbxString = _node.Read("bbx", false, "", "The Cfg box");
+  if(_env == nullptr){
+    // The XML node will either describe a point or a bounding box.
+    const std::string pointString = _node.Read("point", false, "", "The Cfg point"),
+                      bbxString = _node.Read("bbx", false, "", "The Cfg box");
 
-  if(pointString.empty() == bbxString.empty())
-    throw ParseException(_node.Where()) << "A CSpaceConstraint should specify a "
-                                        << "single configuration (point) or "
-                                        << "bounding box (bbx), but not both.";
+    if(pointString.empty() == bbxString.empty())
+      throw ParseException(_node.Where()) << "A CSpaceConstraint should specify a "
+                                          << "single configuration (point) or "
+                                          << "bounding box (bbx), but not both.";
 
-	ParseBoundaryString(_r,pointString,bbxString);
-
+    ParseBoundaryString(_r,pointString,bbxString);
+  }
+  else{
+    auto cfg = Cfg(_r);
+    cfg.GetRandomCfg(_env);
+    ParseBoundaryString(_r, cfg.ToString(), "");
+  }
 }
 
 CSpaceConstraint::

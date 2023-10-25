@@ -8,6 +8,7 @@ class Boundary;
 class Cfg;
 class Robot;
 class XMLNode;
+class Environment;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -36,7 +37,7 @@ class Constraint {
     /// @param _r The robot to which the constraint applies.
     /// @param _node The XML node to parse.
     /// @return A constraint for _r of the type/parameters described by _node.
-    static std::unique_ptr<Constraint> Factory(Robot* const _r, XMLNode& _node);
+    static std::unique_ptr<Constraint> Factory(Robot* const _r, XMLNode& _node, Environment* _env = nullptr);
 
     /// Copy this constraint.
     /// @return A copy of this constraint.

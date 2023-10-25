@@ -20,8 +20,8 @@ lib/**/cmake-*/
 lib/gl_visualizer/**/cmake-*/
 .vscode
 
-src/Examples/example*
-src/Examples
+Examples/example*
+Examples
 tests/Testing/StrategyTests/Scratch*
 docs/Doxygen/html/
 docs/Doxygen/latex/
