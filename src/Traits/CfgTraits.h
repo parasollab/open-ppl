@@ -43,6 +43,7 @@
 #include "MPLibrary/Samplers/MixSampler.h" 
 #include "MPLibrary/Samplers/ObstacleBasedSampler.h"
 #include "MPLibrary/Samplers/UniformRandomSampler.h"
+#include "MPLibrary/Samplers/UniformObstacleBasedSampler.h"
 #include "MPLibrary/Samplers/GaussianSampler.h"
 
 //local planner includes
@@ -161,6 +162,7 @@ struct MPTraits {
     MixSampler<MPTraits>, 
     ObstacleBasedSampler<MPTraits>,
     UniformRandomSampler<MPTraits>, 
+    UniformObstacleBasedSampler<MPTraits>,
     GaussianSampler<MPTraits>
       > SamplerMethodList;
 

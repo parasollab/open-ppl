@@ -304,6 +304,13 @@ class GroupCfg final : public CompositeState<GraphType> {
     /// @param _env The environment to sample within.
     void GetRandomGroupCfg(Environment* _env);
 
+    /// Generate a random configuration for group robotswith a set length.
+    /// @param _length The desired length.
+    /// @param _dm The distance metric for checking length.
+    /// @param _norm Normalize the orientation DOFs?
+    template<typename DistanceMetricPointer>
+    void GetRandomRay(const double _length, DistanceMetricPointer _dm, const bool _norm=true);
+
     /// Normalize Orientation DOFs for a Group Cfg
     virtual void NormalizeOrientation(const std::vector<size_t>& _robots = {})
         noexcept;
@@ -914,6 +921,25 @@ InitializeLocalCfgs() noexcept {
 
   for(size_t i = 0; i < numRobots; ++i)
     this->m_localCfgs[i] = IndividualCfg(this->GetRobot(i));
+}
+
+template <typename GraphType>
+template <class DistanceMetricPointer>
+void
+GroupCfg<GraphType>::
+GetRandomRay(const double _length, DistanceMetricPointer _dm, const bool _norm) {
+  // Randomly sample DOFs.
+
+    for(size_t j = 0; j < this->GetNumRobots(); ++j) {
+        for(size_t i = 0; i < this->GetRobotCfg(j).DOF(); ++i)
+            this->GetRobotCfg(j)[i] = GRand();
+    }
+  // Scale to appropriate length. 
+  _dm->ScaleCfg(_length, *this);
+
+  // Normalize if requested.
+  if(_norm)
+    NormalizeOrientation();
 }
 
 /*----------------------------------------------------------------------------*/

@@ -41,6 +41,7 @@
 #include "../MPLibrary/Samplers/MixSamplerTest.h"
 #include "../MPLibrary/Samplers/ObstacleBasedSamplerTest.h"
 #include "../MPLibrary/Samplers/UniformRandomSamplerTest.h"
+#include "../MPLibrary/Samplers/UniformObstacleBasedSamplerTest.h"
 
 //local planner includes
 #include "../MPLibrary/LocalPlanners/StraightLineTest.h"
@@ -136,7 +137,8 @@ struct MPTraits {
       BridgeTestSamplerTest<MPTraits>,
       MixSamplerTest<MPTraits>,
       ObstacleBasedSamplerTest<MPTraits>,
-      UniformRandomSamplerTest<MPTraits>
+      UniformRandomSamplerTest<MPTraits>,
+      UniformObstacleBasedSamplerTest<MPTraits>
       > SamplerMethodList;
 
   //types of local planners available in our world

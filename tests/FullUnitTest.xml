@@ -164,6 +164,8 @@
         pointSelection="cspace" dmLabel="euclidean" stepSize="0.0"
         nShellsColl="10" nShellsFree="10" debug="false" />
       <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
+      <UniformObstacleBasedSampler label="UniformObstacleBased" vcLabel="pqp_solid" 
+        dmLabel="euclidean" d="0.1" useBBX="true"/>
     </Samplers>
 
     <LocalPlanners>
