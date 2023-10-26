@@ -90,6 +90,7 @@
 #include "MPLibrary/MPStrategies/GroupDecoupledStrategy.h"
 #include "MPLibrary/MPStrategies/GroupPRM.h"
 #include "MPLibrary/MPStrategies/GroupStrategyMethod.h"
+#include "MPLibrary/MPStrategies/PathStrategy.h"
 #include "MPLibrary/MPStrategies/Syclop.h"
 #include "MPLibrary/MPStrategies/TogglePRMStrategy.h"
 #include "MPLibrary/MPStrategies/ValidationStrategy.h"
@@ -222,6 +223,7 @@ struct MPTraits {
       EET<MPTraits>,
       GroupDecoupledStrategy<MPTraits>,
       GroupStrategyMethod<MPTraits>,
+      PathStrategy<MPTraits>,
       Syclop<MPTraits>,
       TogglePRMStrategy<MPTraits>,
       ValidationStrategy<MPTraits>>
