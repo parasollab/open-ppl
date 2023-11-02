@@ -162,6 +162,19 @@ class CollisionDetectionValidity
     virtual bool IsInObstacleCollision(CDInfo& _cdInfo,
         const MultiBody* const _multibody, const std::string& _caller);
 
+    /// Check if any of the robot's bodies are in collision with an obstacle.
+    /// Obstacles are provided as an array of multibodies
+    /// @param _cdInfo Output for collision detection info. It will only be
+    ///                updated if the detected collision is closer than the
+    ///                previous.
+    /// @param _multibody The robot's MultiBody.
+    /// @param _caller Name of the calling function.
+    /// @return True if the robot is in collision with an obstacle.
+    virtual bool IsInObstacleCollision(CDInfo& _cdInfo, 
+        const MultiBody* const _robotBody, 
+        const MultiBody* const _obstacleBodies[], 
+        const std::string& _caller) 
+
     /// Check for a collision between a query robot and a specific set of other
     /// robots.
     /// @param _robot The query robot.
@@ -667,6 +680,44 @@ IsInObstacleCollision(CDInfo& _cdInfo, const MultiBody* const _multibody,
   return collision;
 }
 
+template <typename MPTraits>
+bool
+CollisionDetectionValidity<MPTraits>::
+IsInObstacleCollision(CDInfo& _cdInfo, const MultiBody* const _robotBody,
+    const MultiBody* const _obstacleBodies[], const std::string& _caller) {
+
+    bool collision = false;
+    const bool allInfo = _cdInfo.m_retAllInfo;
+    const size_t numObst = sizeof(_obstacleBodies)/sizeof(_obstacleBodies[0]);
+
+    for(size_t i = 0; i < numObst; ++i) {
+    CDInfo cdInfo(allInfo);
+    const bool c = IsMultiBodyCollision(cdInfo, _multibody, _obstacleBodies[i],
+        _caller);
+    collision |= c;
+
+    if(this->m_debug and c)
+      std::cout << "\tCollision with obstacle " << i << " detected."
+                << std::endl;
+
+    // Store the nearest obstacle information. This is not really correct
+    // because CDInfo::operator< is looking at m_minDist, which might represent
+    // a distance to a self collision.
+    if(cdInfo < _cdInfo) {
+      _cdInfo = cdInfo;
+      _cdInfo.m_nearestObstIndex = i;
+      if(c)
+        _cdInfo.m_collidingObstIndex = i;
+    }
+
+    // Early quit if we don't care for distance information.
+    if(!allInfo and collision)
+      return true;
+  }
+
+  return collision;
+
+}
 
 template <typename MPTraits>
 bool
