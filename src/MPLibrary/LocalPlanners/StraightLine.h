@@ -1,6 +1,8 @@
 #ifndef PMPL_STRAIGHT_LINE_H_
 #define PMPL_STRAIGHT_LINE_H_
 
+#include "ConfigurationSpace/GroupRoadmap.h"
+
 #include "LocalPlannerMethod.h"
 #include "GroupLPOutput.h"
 #include "LPOutput.h"
@@ -8,6 +10,8 @@
 #include "Transformation.h"
 #include "Vector.h"
 #include "nonstd.h"
+
+
 
 #include <queue>
 
@@ -84,6 +88,17 @@ class StraightLine : virtual public LocalPlannerMethod<MPTraits> {
         double _positionRes, double _orientationRes,
         bool _checkCollision = true, bool _savePath = false);
 
+    /// Decides if the robots move at equal velocity.
+    /// This method implements an equal distance intermediate instead
+    /// of a fixed quanity across all paths.
+    /// If the cfg has reached its goal, increment will be set to 0
+    /// to wait for the other robots.
+    virtual bool IsConnectedEqualVelocities(
+      const GroupCfgType& _c1, const GroupCfgType& _c2, GroupCfgType& _col,
+      GroupLPOutput<MPTraits>* _lpOutput, double _positionRes,
+      double _orientationRes, bool _checkCollision, bool _savePath,
+      const Formation& _robotIndexes);
+
     /// Check if two Cfgs could be connected by straight line.
     /// This method implements straight line connection local planner
     /// by checking collision of each Cfg along the line.
@@ -111,6 +126,7 @@ class StraightLine : virtual public LocalPlannerMethod<MPTraits> {
     std::string m_dmLabel;          ///< The metric for measuring edge length.
     std::string m_vcLabel;          ///< The validity checker.
     bool m_binaryEvaluation{false}; ///< Use binary search?
+    bool m_equalVelocity{false};  ///< decides if multi-robots move at same speed
 
 		double m_selfEdgeSteps{1};
 
@@ -137,12 +153,15 @@ StraightLine(XMLNode& _node) : LocalPlannerMethod<MPTraits>(_node) {
   m_binaryEvaluation = _node.Read("binaryEvaluation", false, m_binaryEvaluation,
       "Use binary search to evaluate the edge, or linear scan if false.");
 
+  m_equalVelocity = _node.Read("equalVelocity", false, m_equalVelocity,
+      "Use equal velocities for multi-robot experiments.");
+
   m_dmLabel = _node.Read("dmLabel", false, "euclidean",
       "The distance metric for computing edge length.");
 
   m_vcLabel = _node.Read("vcLabel", true, "", "The validity checker to use.");
 
-	m_selfEdgeSteps = _node.Read("selfEdgeSteps", false, m_selfEdgeSteps,0.0,10000.0, 
+	m_selfEdgeSteps = _node.Read("selfEdgeSteps", false, m_selfEdgeSteps,0.0,10000.0,
 																"Number of increments in a self edge.");
 }
 
@@ -200,7 +219,6 @@ IsConnected(
   return connected;
 }
 
-
 template <typename MPTraits>
 bool
 StraightLine<MPTraits>::
@@ -208,6 +226,10 @@ IsConnected(const GroupCfgType& _c1, const GroupCfgType& _c2, GroupCfgType& _col
     GroupLPOutput<MPTraits>* _lpOutput, double _positionRes,
     double _orientationRes, bool _checkCollision, bool _savePath,
     const Formation& _robotIndexes) {
+
+  if(m_equalVelocity)
+    return IsConnectedEqualVelocities(_c1, _c2, _col, _lpOutput, _positionRes,
+    _orientationRes, _checkCollision, _savePath, _robotIndexes);
   const std::string id = this->GetNameAndLabel();
   auto stats = this->GetStatClass();
   MethodTimer(stats, id + "::IsConnectedFunc");
@@ -265,6 +287,171 @@ IsConnected(const GroupCfgType& _c1, const GroupCfgType& _c2, GroupCfgType& _col
   for(int i = 1; i < numSteps; ++i) {
     previousStep = currentStep;
     currentStep += increment;
+
+    // Handle rotation of a formation. We will determine the rotation applied to
+    // the leader robot and cause the others to rotate about it, maintaining
+    // their realtive formation
+    if(formationRotation) {
+      /// @todo This can likely be optimized. For one, only one Configure call
+      ///       should be necessary here. Also a lot of the group Cfgs here
+      ///       could be made individual if using the leader, then using
+      ///       Configure on that.
+
+      // Advance the leader currentStep by the original increment (we will only use
+      // data which is set in the leader body).
+      leaderStep += originalIncrement;
+
+      // Find the previousStep transformation of the leader robot's base.
+      previousStep.ConfigureRobot();
+      mathtool::Transformation initialTransform =
+          previousStep.GetRobot(leaderRobotIndex)->GetMultiBody()->GetBase()->
+          GetWorldTransformation();
+
+      // Find the new transformation of the leader robot's base.
+      leaderStep.ConfigureRobot();
+      mathtool::Transformation finalTransform =
+          leaderStep.GetRobot(leaderRobotIndex)->GetMultiBody()->GetBase()->
+          GetWorldTransformation();
+
+      // Find the relative transformation of the leader robot's base. This holds
+      // the rotation to be applied to currentStep, which only increments
+      // position in this case.
+      mathtool::Transformation delta = -initialTransform * finalTransform;
+      currentStep.RotateFormationAboutLeader(_robotIndexes, delta.rotation(),
+          this->m_debug);
+    }
+
+    // Check collision if requested.
+    if(_checkCollision) {
+      ++cdCounter;
+      const bool inBounds = currentStep.InBounds(env->GetBoundary());
+      if(!inBounds or !vc->IsValid(currentStep, id)) {
+        _col = currentStep;
+        connected = false;
+        break;
+      }
+    }
+
+    // Save the resolution-level path if requested.
+    if(_savePath)
+      _lpOutput->m_path.push_back(currentStep);
+  }
+
+  // Set data in the LPOutput object.
+  //_lpOutput->m_edge.first.SetWeight(numSteps);
+  //_lpOutput->m_edge.second.SetWeight(numSteps);
+  auto dm = this->GetDistanceMetric(m_dmLabel);
+  auto distance = dm->Distance(_c1,_c2);
+  _lpOutput->m_edge.first.SetWeight(distance);
+  _lpOutput->m_edge.second.SetWeight(distance);
+  _lpOutput->SetIndividualEdges(_robotIndexes);
+  _lpOutput->SetFormation(_robotIndexes);
+
+  if(connected)
+    _lpOutput->AddIntermediatesToWeights(this->m_saveIntermediates);
+
+  // Track usage stats.
+  stats->IncLPAttempts(id);
+  stats->IncLPConnections(id, connected);
+  stats->IncLPCollDetCalls(id, cdCounter);
+
+  if(this->m_debug)
+    std::cout << "\n\tLocal Plan is "
+              << (connected ? "valid" : "invalid at " + _col.PrettyPrint())
+              << std::endl;
+  return connected;
+}
+
+template <typename MPTraits>
+bool
+StraightLine<MPTraits>::
+IsConnectedEqualVelocities(const GroupCfgType& _c1, const GroupCfgType& _c2, GroupCfgType& _col,
+    GroupLPOutput<MPTraits>* _lpOutput, double _positionRes,
+    double _orientationRes, bool _checkCollision, bool _savePath,
+    const Formation& _robotIndexes) {
+
+  const std::string id = this->GetNameAndLabel();
+  auto stats = this->GetStatClass();
+  MethodTimer(stats, id + "::IsConnectedFunc");
+
+  if(this->m_debug) {
+    std::cout << id
+              << "\n\tChecking line from " << _c1.PrettyPrint()
+              << " to " << _c2.PrettyPrint()
+              << std::endl;
+    if(!_robotIndexes.empty())
+      std::cout << "\tUsing formation: " << _robotIndexes << std::endl;
+  }
+
+  // Initialize the LPOutput object.
+  _lpOutput->Clear();
+  _lpOutput->SetLPLabel(this->GetLabel());
+
+  auto env = this->GetEnvironment();
+  auto vc = this->GetValidityChecker(m_vcLabel);
+  auto groupMap = _c1.GetGroupRoadmap();
+
+  // Determine whether multiple robots are moving and whether this is a
+  // formation rotation (rotation about some leader robot).
+  const bool multipleParts = _robotIndexes.size() > 1;
+  const bool isRotational = _c1.GetRobot(0)->GetMultiBody()->OrientationDOF() > 0;
+  const bool formationRotation = multipleParts && isRotational;
+  const size_t leaderRobotIndex = _robotIndexes.empty() ? size_t(-1)
+                                                        : _robotIndexes[0];
+
+  // Will find all the straight-line increments for each robot independently.
+  // (Though the numSteps calculation is coupled with all moving robots).
+  int numSteps, tempSteps;
+  GroupCfgType increment(groupMap);
+  numSteps = 0;
+  std::map<size_t,int> stepsMap;
+
+
+  // For each robot in the group, find the increment for the individual cfg
+  // given the number of ticks found.
+  for(size_t i = 0; i < increment.GetNumRobots(); ++i) {
+    CfgType incr(increment.GetRobot(i));      // declare incr variable
+    incr.FindIncrement(_c1.GetRobotCfg(i), _c2.GetRobotCfg(i), 
+                    &tempSteps, _positionRes, _orientationRes);   // find increments for each local path 
+    numSteps = std::max(tempSteps,numSteps);
+    stepsMap[i] = tempSteps;                    
+    increment.SetRobotCfg(i, std::move(incr));
+  }
+
+
+  const GroupCfgType originalIncrement = increment;
+
+  // Set up increment for all translating bodies, should there be more than one.
+  if(multipleParts) {
+    // Remove the rotational bits, as increment should only do the translation
+    // and then RotateFormationAboutLeader() will handle all rotations:
+    increment = GroupCfgType(groupMap);
+
+    // Overwrite all positional dofs from the leader's cfg for all active robots
+    increment.OverwriteDofsForRobots(
+        originalIncrement.GetRobotCfg(leaderRobotIndex).GetLinearPosition(),
+        _robotIndexes);
+  }
+
+  bool connected = true;
+  int cdCounter = 0;
+  GroupCfgType currentStep(_c1),
+               leaderStep(_c1),
+               previousStep(groupMap);
+               
+  for(int i = 1; i < numSteps; ++i) {
+    previousStep = currentStep;
+    currentStep += increment;
+
+    // here we check if a robot has reached the goal, if so, we set
+    // its corresponding cfg value to zero
+    for(size_t j = 0; j < currentStep.GetNumRobots(); ++j) {  // loops through the steps of each robot
+      if (i == stepsMap[j] ) {                      // if robot has reached target
+        CfgType incr(currentStep.GetRobot(j));        // obtains incr variable
+        incr.Zero();                                  // sets incr = 0
+        increment.SetRobotCfg(j, std::move(incr));    // increment robot by incr (zero)
+      }
+    }
 
     // Handle rotation of a formation. We will determine the rotation applied to
     // the leader robot and cause the others to rotate about it, maintaining
@@ -435,7 +622,7 @@ IsConnectedSLSequential(
     // }
 
 
-    // Check for collisions. 
+    // Check for collisions.
     // TODO: out of bounds and obst-space are treated the same.
     // This might be problematic.
 
@@ -451,16 +638,16 @@ IsConnectedSLSequential(
 
       //in case the validity is switched for toggle operations.
       const bool validity = vc->GetValidity();
-      
+
       if (inBounds)
         valid = vc->IsValid(currentStep, id);
-      
+
       if (!valid) {
         _col = currentStep;
         _col.SetLabel("VALID", valid and validity);
         return false;
       }
-      
+
       if(this->m_debug)
           std::cout << "\n\t\t\t" << (valid ? "VALID" : "INVALID" ) << std::endl;
     }
@@ -568,7 +755,7 @@ IsConnectedSLBinary(
 
 
     // Check for collisions.
-    // TODO: out of bounds and obst-space are treated the same. 
+    // TODO: out of bounds and obst-space are treated the same.
     // This might be problematic.
 
     if(_checkCollision) {
@@ -583,17 +770,17 @@ IsConnectedSLBinary(
 
       //in case the validity is switched for toggle operations.
       const bool validity = vc->GetValidity();
-      
+
 
       if (inBounds)
         valid = vc->IsValid(midCfg, id);
-      
+
       if (!valid) {
         _col = midCfg;
         _col.SetLabel("VALID", !validity);
         return false;
       }
-      
+
       if(this->m_debug)
           std::cout << "\n\t\t\t" << (valid ? "VALID" : "INVALID" ) << std::endl;
     }
