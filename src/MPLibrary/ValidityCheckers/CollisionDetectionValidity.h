@@ -644,7 +644,7 @@ IsInObstacleCollision(CDInfo& _cdInfo, const MultiBody* const _multibody,
     const std::string& _caller) {
 
   bool subsetFlag = !(this->m_obstacleSubset.empty());
-  auto env; //Remains unset if subsetFlag is True
+  auto env;
   if(!subsetFlag) { env = this->GetEnvironment(); }
   bool collision = false;
   const bool allInfo = _cdInfo.m_retAllInfo;
