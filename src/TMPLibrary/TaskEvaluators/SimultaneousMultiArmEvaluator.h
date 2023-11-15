@@ -60,7 +60,7 @@ class SimultaneousMultiArmEvaluator : public TaskEvaluatorMethod {
     // Vector of mode graph vertices
     typedef std::vector<size_t>                          ActionHistory;
     typedef size_t                                       AHID;
-    
+
     struct ActionExtendedState {
       TID vid;   ///< TaskGraph VID
       AHID ahid; ///< ActionHistory ID
@@ -83,7 +83,7 @@ class SimultaneousMultiArmEvaluator : public TaskEvaluatorMethod {
     typedef GenericStateGraph<std::pair<size_t,size_t>,double> HeuristicSearch;
     typedef std::pair<std::pair<size_t,size_t>,size_t>           CBSConstraint;
     typedef std::vector<size_t>                                  CBSSolution;
-    typedef CBSNode<Robot,CBSConstraint,CBSSolution>             CBSNodeType;
+    typedef CBSNode<Robot*,CBSConstraint,CBSSolution*>             CBSNodeType;
 
     ///@}
     ///@name Construction
@@ -120,9 +120,9 @@ class SimultaneousMultiArmEvaluator : public TaskEvaluatorMethod {
 
     bool SampleTransition(VID _source, VID _target);
 
-    bool ConnectToExistingRoadmap(Interaction* _interaction, State& _state, State& _end, 
+    bool ConnectToExistingRoadmap(Interaction* _interaction, State& _state, State& _end,
                                   bool _reverse, size_t _sourceMode, size_t _targetMode);
-    
+
     VID AddToRoadmap(GroupCfgType _cfg);
 
     VID CreateTensorProductVertex(const std::vector<GroupCfgType>& _cfgs);
@@ -167,8 +167,8 @@ class SimultaneousMultiArmEvaluator : public TaskEvaluatorMethod {
 
     std::vector<CBSNodeType> SplitNodeFunction(CBSNodeType& _node,
                      std::vector<std::pair<Robot*,CBSConstraint>> _constraints,
-                     CBSLowLevelPlanner<Robot,CBSConstraint,CBSSolution>& _lowLevel,
-                     CBSCostFunction<Robot,CBSConstraint,CBSSolution>& _cost);
+                     CBSLowLevelPlanner<Robot*,CBSConstraint,CBSSolution*>& _lowLevel,
+                     CBSCostFunction<Robot*,CBSConstraint,CBSSolution*>& _cost);
 
     ///@}
     ///@name Internal State
@@ -179,7 +179,7 @@ class SimultaneousMultiArmEvaluator : public TaskEvaluatorMethod {
     size_t m_maxAttempts; ///< Number of attempts to sample a transition.
 
     /// Label for connector method to use in connecting transitions.
-    std::string m_connectorLabel; 
+    std::string m_connectorLabel;
 
     /// Label for compute distance between two group cfgs
     std::string m_dmLabel;
@@ -188,7 +188,7 @@ class SimultaneousMultiArmEvaluator : public TaskEvaluatorMethod {
     std::string m_lpLabel;
 
     /// TensorProductRoadmap for whole system.
-    std::unique_ptr<TensorProductRoadmap> m_tensorProductRoadmap; 
+    std::unique_ptr<TensorProductRoadmap> m_tensorProductRoadmap;
 
     /// Cached interaction paths.
     std::vector<std::unique_ptr<InteractionPath>> m_interactionPaths;

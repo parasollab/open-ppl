@@ -29,9 +29,9 @@ class ScheduledCBS : public TaskEvaluatorMethod {
     typedef TMPBaseObject::GroupRoadmapType                   GroupRoadmapType;
     typedef MPTraits<Cfg>::GroupPathType                      GroupPathType;
 
-    // Edge <Source, Target>, Time Interval <Start, End> 
+    // Edge <Source, Target>, Time Interval <Start, End>
     typedef std::pair<std::pair<size_t,size_t>,Range<size_t>> Constraint;
-    typedef CBSNode<SemanticTask,Constraint,GroupPathType>    Node;
+    typedef CBSNode<SemanticTask*,Constraint,GroupPathType*>    Node;
 
     typedef std::map<size_t,std::vector<Range<size_t>>> VertexIntervals;
     typedef std::map<std::pair<size_t,size_t>,std::vector<Range<size_t>>> EdgeIntervals;
@@ -57,7 +57,7 @@ class ScheduledCBS : public TaskEvaluatorMethod {
     ///@}
 
     //TODO::Add function to set upper bound for quitting early
-    void SetUpperBound(double _upperBound); 
+    void SetUpperBound(double _upperBound);
 
   private:
 
@@ -74,16 +74,16 @@ class ScheduledCBS : public TaskEvaluatorMethod {
 
     std::vector<std::pair<SemanticTask*,Constraint>> ValidationFunction(Node& _node);
 
-    std::vector<Node> SplitNodeFunction(Node& _node, 
-          std::vector<std::pair<SemanticTask*,Constraint>> _constraints, 
-          CBSLowLevelPlanner<SemanticTask,Constraint,GroupPathType>& _lowLevel,
-          CBSCostFunction<SemanticTask,Constraint,GroupPathType>& _cost);
+    std::vector<Node> SplitNodeFunction(Node& _node,
+          std::vector<std::pair<SemanticTask*,Constraint>> _constraints,
+          CBSLowLevelPlanner<SemanticTask*,Constraint,GroupPathType*>& _lowLevel,
+          CBSCostFunction<SemanticTask*,Constraint,GroupPathType*>& _cost);
 
     double CostFunction(Node& _node);
 
     void InitialSolutionFunction(std::vector<Node>& _root, std::vector<SemanticTask*> _tasks,
-                        CBSLowLevelPlanner<SemanticTask,Constraint,GroupPathType>& _lowLevel,
-                        CBSCostFunction<SemanticTask,Constraint,GroupPathType>& _cost);
+                        CBSLowLevelPlanner<SemanticTask*,Constraint,GroupPathType*>& _lowLevel,
+                        CBSCostFunction<SemanticTask*,Constraint,GroupPathType*>& _cost);
 
     bool EarlyTermination(const size_t& _numNodes);
 
@@ -96,7 +96,7 @@ class ScheduledCBS : public TaskEvaluatorMethod {
 
     void ConvertToPlan(const Node& _node, Plan* _plan);
 
-    size_t FindStartTime(SemanticTask* _task, std::set<SemanticTask*> _solved, 
+    size_t FindStartTime(SemanticTask* _task, std::set<SemanticTask*> _solved,
                          std::map<SemanticTask*,size_t> _endTimes);
 
     void ComputeIntervals(SemanticTask* _task, const Node& _node);

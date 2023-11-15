@@ -27,7 +27,7 @@ class NextBestSearch : public TMPStrategyMethod {
     typedef TMPBaseObject::GroupRoadmapType                GroupRoadmapType;
     typedef GroupPath<MPTraits<Cfg>>                       GroupPathType;
     typedef std::pair<std::pair<size_t,size_t>,size_t>     Constraint;
-    typedef CBSNode<SemanticTask,Constraint,GroupPathType> Node;
+    typedef CBSNode<SemanticTask*,Constraint,GroupPathType*> Node;
 
     typedef std::set<Constraint> ConstraintSet;
     typedef std::map<SemanticTask*,ConstraintSet> ConstraintMap;
@@ -83,26 +83,26 @@ class NextBestSearch : public TMPStrategyMethod {
 
     double CostFunction(Node& _node);
 
-    std::vector<Node> SplitNodeFunction(Node& _node, 
+    std::vector<Node> SplitNodeFunction(Node& _node,
                         std::vector<std::pair<SemanticTask*,Constraint>> _constraints,
-                        CBSLowLevelPlanner<SemanticTask,Constraint,GroupPathType>& _lowLevel,
-                        CBSCostFunction<SemanticTask,Constraint,GroupPathType>& _cost);
+                        CBSLowLevelPlanner<SemanticTask*,Constraint,GroupPathType*>& _lowLevel,
+                        CBSCostFunction<SemanticTask*,Constraint,GroupPathType*>& _cost);
 
     void InitialSolutionFunction(std::vector<Node>& _root, std::vector<SemanticTask*> _tasks,
-                        CBSLowLevelPlanner<SemanticTask,Constraint,GroupPathType>& _lowLevel,
-                        CBSCostFunction<SemanticTask,Constraint,GroupPathType>& _cost);
+                        CBSLowLevelPlanner<SemanticTask*,Constraint,GroupPathType*>& _lowLevel,
+                        CBSCostFunction<SemanticTask*,Constraint,GroupPathType*>& _cost);
 
     double RobotGroupPathWeight(typename GroupRoadmapType::adj_edge_iterator& _ei,
               const double _sourceTimestep, const double _bestTimestep) const;
 
     bool IsEdgeSafe(const VID _source, const VID _target, const Constraint _constraint,
                     const size_t _startTime) const;
- 
+
     ConstraintSet::iterator LowerBound(size_t _bound) const;
     ConstraintSet::iterator UpperBound(size_t _bound) const;
 
-    
- 
+
+
     ///@name Internal State
     ///@{
 
@@ -118,7 +118,7 @@ class NextBestSearch : public TMPStrategyMethod {
     std::set<ConstraintMap> m_constraintCache;
 
     std::string m_safeIntervalLabel;
-    
+
     VertexIntervals m_vertexIntervals;
     EdgeIntervals m_edgeIntervals;
 

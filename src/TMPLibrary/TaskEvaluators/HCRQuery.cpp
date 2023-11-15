@@ -19,10 +19,10 @@ HCRQuery() {
 HCRQuery::
 HCRQuery(XMLNode& _node) : TaskEvaluatorMethod(_node) {
   this->SetName("HCRQuery");
-  m_sgLabel = _node.Read("sgLabel", true, "", 
+  m_sgLabel = _node.Read("sgLabel", true, "",
            "Temp till stategraph is embedded in plan.");
 
-  m_vcLabel = _node.Read("vcLabel", true, "", 
+  m_vcLabel = _node.Read("vcLabel", true, "",
            "Validity checker to use in validating paths.");
 }
 
@@ -37,14 +37,14 @@ Run(Plan* _plan) {
 
   auto hcr = dynamic_cast<CombinedRoadmap*>(
               this->GetStateGraph(m_sgLabel).get());
-  
+
   if(m_debug) {
     hcr->GetHypergraph()->Print();
   }
 
   //auto path = PerformHyperpathQuery();
   auto node = PerformCBSQuery();
-  
+
   if(node.solutionMap.empty())
     return false;
 
@@ -54,16 +54,16 @@ Run(Plan* _plan) {
 }
 
 /*--------------------- Helper Functions ---------------------*/
-    
-HCRQuery::Node 
+
+HCRQuery::Node
 HCRQuery::
 PerformCBSQuery() {
- 
+
   // Initialize MPLibrary because it needs a solution object to keep statistics.
   MPTraits<Cfg>::MPSolution solution(this->GetPlan()->GetCoordinator()->GetRobot());
   this->GetMPLibrary()->SetMPSolution(&solution);
- 
-  CBSLowLevelPlanner<Robot,CT,Path> lowlevel(
+
+  CBSLowLevelPlanner<Robot*,CT,Path*> lowlevel(
     [this](Node& _node, Robot* _robot) {
       auto hyperpath = this->PerformHyperpathQuery();
       if(hyperpath.empty())
@@ -71,27 +71,27 @@ PerformCBSQuery() {
 
       auto individualPaths = this->ExtractPaths(hyperpath);
 
-      _node.solutionMap = individualPaths;    
+      _node.solutionMap = individualPaths;
 
       return true;
     }
   );
 
-  CBSValidationFunction<Robot,CT,Path> validate(
+  CBSValidationFunction<Robot*,CT,Path*> validate(
     [this](Node _node) {
       return this->Validate(_node);
     }
   );
 
-  CBSSplitNodeFunction<Robot,CT,Path> split(
+  CBSSplitNodeFunction<Robot*,CT,Path*> split(
     [this](Node _node, std::vector<std::pair<Robot*,CT>> _constraints,
-           CBSLowLevelPlanner<Robot,CT,Path> _lowlevel,
-           CBSCostFunction<Robot,CT,Path> _cost) {
+           CBSLowLevelPlanner<Robot*,CT,Path*> _lowlevel,
+           CBSCostFunction<Robot*,CT,Path*> _cost) {
       return this->SplitNode(_node,_constraints,_lowlevel);
     }
   );
 
-  CBSCostFunction<Robot,CT,Path> cost(
+  CBSCostFunction<Robot*,CT,Path*> cost(
     [this](Node _node) {
       double cost = 0;
       for(auto path : _node.solutionMap) {
@@ -100,29 +100,29 @@ PerformCBSQuery() {
 
         double length = path.second->Length();
 
-        if(this->m_soc) 
+        if(this->m_soc)
           cost += length;
-        else 
+        else
           cost = std::max(cost,length);
       }
       return cost;
     }
   );
 
-  CBSInitialFunction<Robot,CT,Path> initial(
+  CBSInitialFunction<Robot*,CT,Path*> initial(
     [lowlevel](
       std::vector<Node>& _root,
       std::vector<Robot*> _tasks,
-      CBSLowLevelPlanner<Robot,CT,Path>& _lowlevel,
-      CBSCostFunction<Robot,CT,Path>& _cost) {
-      
+      CBSLowLevelPlanner<Robot*,CT,Path*>& _lowlevel,
+      CBSCostFunction<Robot*,CT,Path*>& _cost) {
+
       Node node;
       lowlevel(node,nullptr);
       _root.push_back(node);
     }
   );
 
-  std::vector<Robot*> robots; 
+  std::vector<Robot*> robots;
   auto c = this->GetPlan()->GetCoordinator();
   for(auto group : c->GetInitialRobotGroups()) {
     for(auto robot : group.first->GetRobots())
@@ -137,7 +137,7 @@ PerformCBSQuery() {
   return node;
 }
 
-std::vector<std::pair<Robot*,HCRQuery::CT>> 
+std::vector<std::pair<Robot*,HCRQuery::CT>>
 HCRQuery::
 Validate(Node _node) {
 
@@ -197,15 +197,15 @@ Validate(Node _node) {
                     << cfg2.PrettyPrint()
                     << std::endl;
         }
-        
+
         // Make cbs constraints.
         CT constraint1 = std::make_pair(t,cfg2);
         CT constraint2 = std::make_pair(t,cfg1);
-    
+
         std::vector<std::pair<Robot*,CT>> constraintSet;
         constraintSet.push_back(std::make_pair(robot1,constraint1));
         constraintSet.push_back(std::make_pair(robot2,constraint2));
-  
+
         return constraintSet;
       }
     }
@@ -217,11 +217,11 @@ Validate(Node _node) {
   return {};
 }
 
-std::vector<HCRQuery::Node> 
+std::vector<HCRQuery::Node>
 HCRQuery::
-SplitNode(Node _node, 
+SplitNode(Node _node,
           std::vector<std::pair<Robot*,CT>> _constraints,
-          CBSLowLevelPlanner<Robot,CT,Path> _lowlevel) {
+          CBSLowLevelPlanner<Robot*,CT,Path*> _lowlevel) {
 
   std::vector<Node> children;
 
@@ -233,11 +233,11 @@ SplitNode(Node _node,
     if(_node.constraintMap.at(robot).count(c))
       throw RunTimeException(WHERE) << "Duplicaiting cbs constraint in HCRQuery."
                                     << "\nRobot: " << robot->GetLabel()
-                                    << "\nConstraint: {Robot: " 
+                                    << "\nConstraint: {Robot: "
                                     << c.second.GetRobot()->GetLabel()
-                                    << ", Cfg: " 
+                                    << ", Cfg: "
                                     << c.second.PrettyPrint()
-                                    << ", Timestep: " << c.first 
+                                    << ", Timestep: " << c.first
                                     << "}" << std::endl;
 
     Node child = _node;
@@ -293,7 +293,7 @@ ExtractPaths(const std::vector<HPElem>& _hyperpath) {
       *robotPaths[robot] += truncated;
     }
   }
-  
+
   return robotPaths;
 }
 
@@ -350,7 +350,7 @@ PerformHyperpathQuery() {
       if(_target == 1)
         std::cout << "HERE";
 
-      double hyperarcWeight; 
+      double hyperarcWeight;
       //if(_hyperarc.property.semantic) {
       //  hyperarcWeight = 0;
       //}
@@ -369,7 +369,7 @@ PerformHyperpathQuery() {
       }
 
       return hyperarcWeight + tailWeight;
-    }); 
+    });
 
   auto forwardStar = DefaultSSSHPForwardStar<TMPVertex,TMPHyperarc>();
 
@@ -392,7 +392,7 @@ PerformHyperpathQuery() {
   if(m_debug) {
     std::cout << "Full Path" << std::endl;
     for(auto e : path) {
-      if(e.first) 
+      if(e.first)
         std::cout << "v";
       else
         std::cout << "h";
@@ -430,7 +430,7 @@ ConstructPath(size_t _sink, std::set<HPElem>& _parents, MBTOutput& _mbt) {
 
     path.push_back(current);
   }
-    
+
   _parents.insert(current);
   std::reverse(path.begin(), path.end());
 
@@ -453,7 +453,7 @@ AddBranches(std::vector<HPElem> _path, std::set<HPElem>& _parents, MBTOutput& _m
   for(size_t i = 0; i < _path.size(); i++) {
     auto elem = _path[i];
 
-    if(elem.first) 
+    if(elem.first)
       continue;
 
     auto arc = hypergraph->GetHyperarc(elem.second);
@@ -491,18 +491,18 @@ AddDanglingNodes(std::vector<HPElem> _path, std::set<HPElem>& _parents) {
   auto hcr = dynamic_cast<CombinedRoadmap*>(
               this->GetStateGraph(m_sgLabel).get());
   auto hypergraph = hcr->GetHypergraph();
-  
+
   std::vector<HPElem> finalPath = _path;
 
   size_t offset = 0;
 
   for(size_t i = 0; i < _path.size(); i++) {
     auto elem = _path[i];
-    if(elem.first) 
+    if(elem.first)
       continue;
 
     const auto arc = hypergraph->GetHyperarc(elem.second);
-    
+
     for(auto vid : arc.head) {
       HPElem e;
       e.first = true;
@@ -515,12 +515,12 @@ AddDanglingNodes(std::vector<HPElem> _path, std::set<HPElem>& _parents) {
 
       auto iter = finalPath.begin();
       finalPath.insert(iter+(i+offset+1),e);
-      
+
       offset++;
     }
   }
 
-  return finalPath; 
+  return finalPath;
 }
 
 bool

@@ -11,7 +11,7 @@
 
 class SMART : public TaskEvaluatorMethod {
 
-  public: 
+  public:
     ///@name Local Types
     ///@{
 
@@ -71,7 +71,7 @@ class SMART : public TaskEvaluatorMethod {
     typedef GenericStateGraph<std::pair<size_t,size_t>,double> HeuristicSearch;
     typedef std::vector<size_t>                                CBSSolution;
     typedef std::pair<size_t,std::pair<size_t,size_t>>         CBSConstraint;
-    typedef CBSNode<Robot,CBSConstraint,CBSSolution>           CBSNodeType;
+    typedef CBSNode<Robot*,CBSConstraint,CBSSolution*>           CBSNodeType;
 
     struct HeuristicValues {
       Mode nextMode;
@@ -107,10 +107,10 @@ class SMART : public TaskEvaluatorMethod {
 
     std::pair<size_t,size_t> SelectMode();
 
-    std::pair<size_t,Direction> SelectVertex(size_t _modeID, 
+    std::pair<size_t,Direction> SelectVertex(size_t _modeID,
                 size_t _historyID, Mode _heuristic);
 
-    size_t Extend(size_t _qNear, Direction _direction, size_t _modeID, 
+    size_t Extend(size_t _qNear, Direction _direction, size_t _modeID,
                   size_t _historyID, Mode _heuristic);
 
     size_t Rewire(size_t _qNew, size_t _qNear, size_t _modeID, size_t _historyID);
@@ -139,8 +139,8 @@ class SMART : public TaskEvaluatorMethod {
 
     std::vector<CBSNodeType> SplitNodeFunction(CBSNodeType& _node,
         std::vector<std::pair<Robot*,CBSConstraint>> _constraints,
-        CBSLowLevelPlanner<Robot,CBSConstraint,CBSSolution>& _lowLevel,
-        CBSCostFunction<Robot,CBSConstraint,CBSSolution>& _cost);
+        CBSLowLevelPlanner<Robot*,CBSConstraint,CBSSolution*>& _lowLevel,
+        CBSCostFunction<Robot*,CBSConstraint,CBSSolution*>& _cost);
 
     ///@}
     ///@name XML Parameters

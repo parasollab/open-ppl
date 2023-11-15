@@ -40,17 +40,17 @@ class CBSQuery : public MapEvaluatorMethod<MPTraits> {
 
     ///}
 
-  private:
+  public:
 
     ///@name Internal Types
     ///@{
 
-    // Edge <Source, Target>, Time Interval <Start, End> 
+    // Edge <Source, Target>, Time Interval <Start, End>
     typedef std::pair<std::pair<size_t,size_t>,Range<size_t>> Constraint;
-    typedef CBSNode<Robot,Constraint,Path>    Node;
+    typedef CBSNode<Robot*, size_t, Path*> Node;
 
     typedef std::map<size_t,std::vector<Range<size_t>>> VertexIntervals;
-    typedef std::map<std::pair<size_t,size_t>,std::vector<Range<size_t>>> EdgeIntervals;
+    typedef std::map<std::pair<size_t, size_t>, std::vector<Range<size_t>>> EdgeIntervals;
 
     ///@}
 
@@ -94,7 +94,7 @@ class CBSQuery : public MapEvaluatorMethod<MPTraits> {
     /// @param _node The node to validate
     /// @return The set of new robot-constraint pairs to add to the node generated
     ///         from discovered conflicts.
-    std::vector<std::pair<Robot*,Constraint>> ValidationFunction(Node& _node);
+    std::vector<std::pair<Robot*,size_t>> ValidationFunction(Node& _node);
 
     /// Create child nodes corresponding to the additional constraints.
     /// @param _node The parent CBS node to spawn children for.
@@ -102,10 +102,10 @@ class CBSQuery : public MapEvaluatorMethod<MPTraits> {
     /// @param _lowLevel The functor to plan new paths for robots with new constraints.
     /// @param _cost The functor to compute the cost of new child nodes.
     /// @return The set of new child nodes.
-    std::vector<Node> SplitNodeFunction(Node& _node, 
-          std::vector<std::pair<Robot*, Constraint>> _constraints,
-          CBSLowLevelPlanner<Robot, Constraint, typename MPTraits::Path>& _lowlevel,
-          CBSCostFunction<Robot, Constraint, typename MPTraits::Path>& _cost);
+    std::vector<Node> SplitNodeFunction(Node& _node,
+          std::vector<std::pair<Robot*, size_t>> _constraints,
+          CBSLowLevelPlanner<Robot*, size_t, typename MPTraits::Path*>& _lowlevel,
+          CBSCostFunction<Robot*, size_t, typename MPTraits::Path*>& _cost);
 
     /// Compute the cost of a CBS node. Can either be makespace or sum-of-cost.
     /// @param _node Node to compute cost for.
@@ -119,7 +119,7 @@ class CBSQuery : public MapEvaluatorMethod<MPTraits> {
     /// Compute the safe intervals for a robot given its constraint set in the node.
     /// @param _robot The robot to compute safe intervals for.
     /// @param _node The node containing the constraint set.
-    void ComputeIntervals(Robot* _robot, const Node& _node);
+    void ComputeIntervals(Robot* _robot, const std::vector<Constraint>& _constraints);
 
     /// Construct the safe intervals that complement the unsafe intervals.
     /// @param _unsafeIntervals The unsafe intervals that define the complement.
@@ -138,6 +138,18 @@ class CBSQuery : public MapEvaluatorMethod<MPTraits> {
     /// @return New merged interval.
     Range<double> MergeIntervals(Range<double> _interval1, Range<double> _interval2);
 
+    /// Count the number of conflicts in a node
+    /// @param _node The node you want count conflicts for.
+    /// @return Number of existing conflicts.
+    size_t CountConflicts(Node& _node);
+
+    /// Determine if a constraint is cardinal.
+    /// @param _node The parent node you are comparing two.
+    /// @param _robot The robot for which the constraint applies to.
+    /// @param _constraint The new constraint you are applying.
+    /// @return True if cardinal, false if not cardinal.
+    bool IsCardinal(Node& _node, Robot* _robot, Constraint _constraint);
+
     ///@}
     ///@name Internal State
     ///@{
@@ -146,15 +158,25 @@ class CBSQuery : public MapEvaluatorMethod<MPTraits> {
 
     std::string m_queryLabel;  ///< Query method for making individual plans.
     std::string m_vcLabel;     ///< Validity checker for conflict detection.
-    std::string m_costLabel = "SOC"; ///< The label of the cost function
+    std::string m_costLabel = "SOC"; ///< The label of the cost function.
+    bool m_bypass = false; ///< The flag for bypass.
+    bool m_pc = false; ///< The flag for prioritized conflict.
 
     size_t m_nodeLimit{std::numeric_limits<size_t>::max()}; ///< The maximum number of nodes
 
     std::unordered_map<Robot*, MPTask*> m_taskMap; ///< The task for each robot
 
+    std::map<Robot*, std::vector<Constraint>> m_constraintMap;
+
     VertexIntervals m_vertexIntervals;  ///< The current set of safe vertex intervals.
     EdgeIntervals m_edgeIntervals;      ///< The current set of safe edge intervals.
 
+    size_t m_numLeafNodes = 0; ///< Number of leaf nodes left to evaluate
+    size_t m_numExploredNodes = 0; ///< Number of evaluated node
+    size_t m_numTotalNodes = 0; ///< Total nodes in constraint tree
+
+    // Default for continuous environments should be 2, for grid world 1.
+    size_t m_buffer{2}; ///< Default buffer to put around time intervals
     ///@}
 
 };
@@ -181,6 +203,13 @@ CBSQuery(XMLNode& _node) : MapEvaluatorMethod<MPTraits>(_node) {
 
   m_vcLabel = _node.Read("vcLabel", true, "",
       "The validity checker for conflict detection. Must be a CD type.");
+
+  m_bypass = _node.Read("bypass", false, m_bypass, "Flag to use bypass strategy.");
+
+  m_pc = _node.Read("pc", false, m_pc, "Flag to use prioritized conflicts.");
+
+  m_buffer = _node.Read("buffer",false,m_buffer,size_t(0),size_t(MAX_INT),
+      "Buffer to fit around time intervals.");
 }
 
 /*-------------------------- MPBaseObject Overrides --------------------------*/
@@ -232,7 +261,7 @@ operator()() {
 
 
   //CBSLowLevelPlanner<MPTask, Constraint, std::shared_ptr<typename MPTraits::Path>>(
-  CBSLowLevelPlanner<Robot, Constraint, typename MPTraits::Path> lowlevel(
+  CBSLowLevelPlanner<Robot*, size_t, typename MPTraits::Path*> lowlevel(
       [this](Node& _node, Robot* _robot) {
         auto path = this->SolveIndividualTask(_robot, _node);
         if(!path or path->VIDs().empty())
@@ -241,24 +270,28 @@ operator()() {
         return true;
       });
 
-  CBSValidationFunction<Robot, Constraint, typename MPTraits::Path> validation(
+  CBSValidationFunction<Robot*, size_t, typename MPTraits::Path*> validation(
       [this](Node& _node) {
+        m_numExploredNodes += 1;
         return this->ValidationFunction(_node);
       });
 
-  CBSSplitNodeFunction<Robot, Constraint, typename MPTraits::Path> split(
-      [this](Node& _node, std::vector<std::pair<Robot*, Constraint>> _constraints,
-             CBSLowLevelPlanner<Robot, Constraint, typename MPTraits::Path>& _lowlevel,
-             CBSCostFunction<Robot, Constraint, typename MPTraits::Path>& _cost) {
+  CBSSplitNodeFunction<Robot*, size_t, typename MPTraits::Path*> split(
+      [this](Node& _node, std::vector<std::pair<Robot*, size_t>> _constraints,
+             CBSLowLevelPlanner<Robot*, size_t, typename MPTraits::Path*>& _lowlevel,
+             CBSCostFunction<Robot*, size_t, typename MPTraits::Path*>& _cost) {
         return this->SplitNodeFunction(_node,_constraints,_lowlevel,_cost);
       });
 
-  CBSCostFunction<Robot, Constraint, typename MPTraits::Path> cost(
+  CBSCostFunction<Robot*, size_t, typename MPTraits::Path*> cost(
       [this](Node& _node) {
         return this->CostFunction(_node);
       });
 
-  auto solutionNode =  CBS(m_robots, validation, split, lowlevel, cost);
+
+  std::priority_queue<Node, std::vector<Node>, std::greater<Node>>* constraintTree =
+    new std::priority_queue<Node, std::vector<Node>, std::greater<Node>>();
+  auto solutionNode =  CBS(m_robots, validation, split, lowlevel, cost, constraintTree);
   auto solution = this->GetMPSolution();
 
   if(solutionNode.solutionMap.empty())
@@ -268,6 +301,14 @@ operator()() {
     solution->SetPath(rp.first, rp.second);
   }
 
+  m_numLeafNodes = constraintTree->size();
+  m_numTotalNodes = m_numLeafNodes + m_numExploredNodes;
+
+  stats->SetStat(this->GetNameAndLabel() + "::NumLeafNodes", this->m_numLeafNodes);
+  stats->SetStat(this->GetNameAndLabel() + "::NumExploredNodes", this->m_numExploredNodes);
+  stats->SetStat(this->GetNameAndLabel() + "::NumTotalNodes", this->m_numTotalNodes);
+  stats->SetStat(this->GetNameAndLabel() + "::SolutionCost", solutionNode.cost);
+
   return true;
 }
 
@@ -276,7 +317,7 @@ typename MPTraits::Path*
 CBSQuery<MPTraits>::
 SolveIndividualTask(Robot* const _robot, Node& _node) {
   MethodTimer mt(this->GetStatClass(),
-      this->GetNameAndLabel() + "SolveIndividualTask");
+      this->GetNameAndLabel() + "::SolveIndividualTask");
 
   MPTask* const task = m_taskMap.at(_robot);
 
@@ -288,12 +329,16 @@ SolveIndividualTask(Robot* const _robot, Node& _node) {
   }
 
   size_t minEndTime = 0;
-  
-  for(auto c : _node.constraintMap[_robot]) {
+
+  std::vector<Constraint> currentConstraints;
+  for (auto idx : _node.constraintMap[_robot]) {
+    currentConstraints.push_back(m_constraintMap[_robot][idx]);
+  }
+  for(auto c : currentConstraints) {
     minEndTime = std::max(minEndTime,c.second.max);
   }
 
-  ComputeIntervals(_robot,_node);
+  ComputeIntervals(_robot, currentConstraints);
 
   // Generate a path for this robot individually while avoiding the conflicts.
   auto groupTask = this->GetGroupTask();
@@ -329,7 +374,7 @@ SolveIndividualTask(Robot* const _robot, Node& _node) {
 template <typename MPTraits>
 void
 CBSQuery<MPTraits>::
-ComputeIntervals(Robot* _robot, const Node& _node) {
+ComputeIntervals(Robot* _robot, const std::vector<Constraint>& _constraints) {
   MethodTimer mt(this->GetStatClass(),
     this->GetNameAndLabel() + "::ComputeIntervals");
 
@@ -339,12 +384,10 @@ ComputeIntervals(Robot* _robot, const Node& _node) {
   m_vertexIntervals.clear();
   m_edgeIntervals.clear();
 
-  const auto& constraints = _node.constraintMap.at(_robot);
-
   VertexIntervals vertexUnsafeIntervals;
   EdgeIntervals edgeUnsafeIntervals;
 
-  for(auto c : constraints) {
+  for(auto c : _constraints) {
     auto edge = c.first;
     if(edge.first == edge.second) {
       vertexUnsafeIntervals[edge.first].push_back(c.second);
@@ -368,11 +411,10 @@ template <typename MPTraits>
 std::vector<Range<size_t>>
 CBSQuery<MPTraits>::
 ConstructSafeIntervals(std::vector<Range<size_t>>& _unsafeIntervals) {
-  const size_t buffer = 2;
 
   // Return infinite interval if there are no unsafe intervals
   if(_unsafeIntervals.empty())
-    return {Range<size_t>(0,MAX_UINT)};
+    return {Range<size_t>(0,MAX_INT)};
 
   // Merge unsafe intervals
   std::vector<Range<size_t>> unsafeIntervals = _unsafeIntervals;
@@ -381,7 +423,7 @@ ConstructSafeIntervals(std::vector<Range<size_t>>& _unsafeIntervals) {
   do {
 
     std::set<size_t> merged;
-    
+
     std::vector<Range<size_t>> copyIntervals = unsafeIntervals;
     const size_t size = copyIntervals.size();
 
@@ -394,20 +436,20 @@ ConstructSafeIntervals(std::vector<Range<size_t>>& _unsafeIntervals) {
       const auto& interval1 = copyIntervals[i];
 
       size_t zero = 0;
-      size_t min = std::max(zero,std::min(interval1.min,interval1.min - (firstTime ? buffer : 0)));
-      size_t max = std::max(interval1.max,interval1.max + (firstTime ? buffer : 0));
+      size_t min = std::max(zero,std::min(interval1.min,interval1.min - (firstTime ? m_buffer : 0)));
+      size_t max = std::max(interval1.max,interval1.max + (firstTime ? m_buffer : 0));
 
       for(size_t j = i+1; j < copyIntervals.size(); j++) {
 
         const auto& interval2 = copyIntervals[j];
 
         // Check if there is no overlap
-        if(interval2.min > max + buffer or min > interval2.max + buffer)
+        if(interval2.min > max + m_buffer or min > interval2.max + m_buffer)
           continue;
 
         // If there is, merge the intervals
-        min = std::min(min,interval2.min-buffer);
-        max = std::max(max,interval2.max+buffer);
+        min = std::min(min,interval2.min-m_buffer);
+        max = std::max(max,interval2.max+m_buffer);
 
         merged.insert(j);
       }
@@ -430,7 +472,7 @@ ConstructSafeIntervals(std::vector<Range<size_t>>& _unsafeIntervals) {
   };
 
   std::sort(unsafeIntervals.begin(), unsafeIntervals.end(), less_than());
-  
+
   for(size_t i = 1; i < unsafeIntervals.size(); i++) {
     if(unsafeIntervals[i-1].max > unsafeIntervals[i].max
       or unsafeIntervals[i-1].max > unsafeIntervals[i].min)
@@ -448,12 +490,12 @@ ConstructSafeIntervals(std::vector<Range<size_t>>& _unsafeIntervals) {
     max = std::min(iter->min - 1,iter->min);
     if(min < max)
       intervals.emplace_back(min,max);
-  
+
     min = std::max(iter->max + 1,iter->max);
     iter++;
   }
 
-  max = MAX_UINT;
+  max = MAX_INT;
   intervals.push_back(Range<size_t>(min,max));
 
   return intervals;
@@ -462,7 +504,7 @@ ConstructSafeIntervals(std::vector<Range<size_t>>& _unsafeIntervals) {
 /*---------------------------- CBS Functor Methods ---------------------------*/
 
 template <typename MPTraits>
-std::vector<std::pair<Robot*,typename CBSQuery<MPTraits>::Constraint>>
+std::vector<std::pair<Robot*, size_t>>
 CBSQuery<MPTraits>::
 ValidationFunction(Node& _node) {
   auto stats = this->GetStatClass();
@@ -487,12 +529,16 @@ ValidationFunction(Node& _node) {
     cfgPaths[robot] = path->FullCfgsWithWait(lib);
   }
 
+
+  std::vector<std::pair<Robot*, size_t>> constraints;
+  std::vector<std::pair<Robot*, Constraint>> constraintReference;
+  int bestCardinality = -1;
   for(size_t t = 0; t <= maxTimestep; t++) {
     for(auto iter1 = cfgPaths.begin(); iter1 != cfgPaths.end(); iter1++) {
 
       auto robot1 = iter1->first;
       auto path1 = _node.solutionMap[robot1];
-      
+
       const auto& cfgs1 = iter1->second;
       const size_t index1 = std::min(t,cfgs1.size()-1);
       const auto cfg1 = cfgs1[index1];
@@ -504,7 +550,7 @@ ValidationFunction(Node& _node) {
       for(; iter2 != cfgPaths.end(); iter2++) {
         auto robot2 = iter2->first;
         auto path2 = _node.solutionMap[robot2];
-        
+
         const auto& cfgs2 = iter2->second;
         const size_t index2 = std::min(t,cfgs2.size()-1);
         const auto cfg2 = cfgs2[index2];
@@ -551,8 +597,8 @@ ValidationFunction(Node& _node) {
           auto edge2 = path2->GetEdgeAtTimestep(t).first;
 
           if(this->m_debug) {
-            std::cout << "Edge 1: " << edge1 << std::endl; 
-            std::cout << "Edge 2: " << edge2 << std::endl; 
+            std::cout << "Edge 1: " << edge1 << std::endl;
+            std::cout << "Edge 2: " << edge2 << std::endl;
           }
 
           size_t duration1 = 0;
@@ -572,36 +618,64 @@ ValidationFunction(Node& _node) {
           Range<size_t> interval1(t < duration1 ? zero : t-duration1,endT);
           Range<size_t> interval2(t < duration2 ? zero : t-duration2,endT);
 
-          std::vector<std::pair<Robot*,Constraint>> constraints;
-          constraints.push_back(std::make_pair(robot1,
-                                std::make_pair(edge1,interval1)));
-          constraints.push_back(std::make_pair(robot2,
-                                std::make_pair(edge2,interval2)));
+          Constraint constraintOne = std::make_pair(edge1, interval1);
+          Constraint constraintTwo = std::make_pair(edge2, interval2);
 
-          for(auto constraint : constraints) {
-            for(auto c : _node.constraintMap[constraint.first]) {
-              if(c == constraint.second) {
+          size_t idxOne = m_constraintMap[robot1].size();
+          size_t idxTwo = m_constraintMap[robot2].size();
+
+          for (auto idx : _node.constraintMap[robot1]){
+            if(constraintOne == m_constraintMap[robot1][idx])
                 throw RunTimeException(WHERE) << "Adding constraint that already exists.";
-                // std::cout << "Adding constraint that already exists." << std::endl;
-              }
-            }
           }
 
+          for (auto idx : _node.constraintMap[robot2]) {
+            if (constraintTwo == m_constraintMap[robot2][idx])
+              throw RunTimeException(WHERE) << "Adding constraint that already exists.";
+          }
+
+          int cardinality = 0;
+          if (m_pc) {
+            cardinality = IsCardinal(_node, robot1, constraintOne) +
+                          IsCardinal(_node, robot2, constraintTwo);
+            if (bestCardinality > cardinality)
+              continue;
+            bestCardinality = cardinality;
+          }
+
+          constraints.clear();
+          constraints.push_back(std::make_pair(robot1, idxOne));
+          constraints.push_back(std::make_pair(robot2, idxTwo));
+
+          if (m_pc and cardinality < 2){
+            constraintReference.clear();
+            constraintReference.push_back(std::make_pair(robot1, constraintOne));
+            constraintReference.push_back(std::make_pair(robot2, constraintTwo));
+            continue;
+          }
+
+          m_constraintMap[robot1].push_back(constraintOne);
+          m_constraintMap[robot2].push_back(constraintTwo);
           return constraints;
         }
       }
     }
   }
 
-  return {};
+  if (m_pc) {
+    for (auto kv : constraintReference)
+      m_constraintMap[kv.first].push_back(kv.second);
+  }
+
+  return constraints;
 }
 
 template <typename MPTraits>
 std::vector<typename CBSQuery<MPTraits>::Node>
 CBSQuery<MPTraits>::
-SplitNodeFunction(Node& _node, std::vector<std::pair<Robot*, Constraint>> _constraints,
-                  CBSLowLevelPlanner<Robot, Constraint, typename MPTraits::Path>& _lowlevel,
-                  CBSCostFunction<Robot, Constraint, typename MPTraits::Path>& _cost) {
+SplitNodeFunction(Node& _node, std::vector<std::pair<Robot*, size_t>> _constraints,
+                  CBSLowLevelPlanner<Robot*, size_t, typename MPTraits::Path*>& _lowlevel,
+                  CBSCostFunction<Robot*, size_t, typename MPTraits::Path*>& _cost) {
   MethodTimer mt(this->GetStatClass(),
     this->GetNameAndLabel() + "::SplitNodes");
 
@@ -619,6 +693,16 @@ SplitNodeFunction(Node& _node, std::vector<std::pair<Robot*, Constraint>> _const
       continue;
 
     child.cost = _cost(child);
+
+    // check if bypass flag is on
+    if (m_bypass and child.cost == _node.cost) {
+      if(CountConflicts(child) < CountConflicts(_node)){
+        child.constraintMap = _node.constraintMap;
+        return {child};
+      }
+    }
+
+
     children.push_back(child);
 
     if(this->m_debug)
@@ -671,5 +755,119 @@ MergeIntervals(Range<double> _interval1, Range<double> _interval2) {
  return Range<double>(std::max(_interval1.min,_interval2.min),
           std::min(_interval1.max, _interval2.max));
 }
+
+template <typename MPTraits>
+size_t
+CBSQuery<MPTraits>::
+CountConflicts(Node& _node) {
+  auto vc = static_cast<CollisionDetectionValidityMethod<MPTraits>*>(
+              this->GetMPLibrary()->GetValidityChecker(this->m_vcLabel));
+
+  std::map<Robot*,std::vector<Cfg>> cfgPaths;
+  size_t totalConflicts = 0;
+
+  size_t maxTimestep = 0;
+  auto lib = this->GetMPLibrary();
+
+  // Find max timestep and Collect cfgs
+  for(auto kv : _node.solutionMap) {
+    auto path = kv.second;
+    maxTimestep = std::max(maxTimestep,path->TimeSteps());
+
+    auto robot = kv.first;
+    cfgPaths[robot] = path->FullCfgsWithWait(lib);
+  }
+
+
+  for(size_t t = 0; t <= maxTimestep; t++) {
+    for(auto iter1 = cfgPaths.begin(); iter1 != cfgPaths.end(); iter1++) {
+
+      auto robot1         = iter1->first;
+      const auto& cfgs1   = iter1->second;
+      const size_t index1 = std::min(t,cfgs1.size()-1);
+      const auto cfg1     = cfgs1[index1];
+      cfg1.ConfigureRobot();
+      auto mb1            = robot1->GetMultiBody();
+
+      auto iter2 = iter1;
+      iter2++;
+      for(; iter2 != cfgPaths.end(); iter2++) {
+        auto robot2         = iter2->first;
+        const auto& cfgs2   = iter2->second;
+        const size_t index2 = std::min(t,cfgs2.size()-1);
+        const auto cfg2     = cfgs2[index2];
+        cfg2.ConfigureRobot();
+        auto mb2            = robot2->GetMultiBody();
+
+        // Check for collision
+        bool collision = false;
+        CDInfo cdInfo;
+        collision = collision or vc->IsMultiBodyCollision(cdInfo,
+            mb1,mb2,this->GetNameAndLabel());
+
+        if(!collision)
+          continue;
+
+        totalConflicts++;
+      }
+    }
+  }
+
+  return totalConflicts;
+}
+
+template <typename MPTraits>
+bool
+CBSQuery<MPTraits>::
+IsCardinal(Node& _node, Robot* _robot, Constraint _constraint) {
+  Node single({_robot});
+  single.constraintMap[_robot] = _node.constraintMap[_robot];
+
+  MPTask* const task = m_taskMap.at(_robot);
+  size_t minEndTime = 0;
+
+  std::vector<Constraint> currentConstraints;
+  for (auto idx : _node.constraintMap[_robot]) {
+    currentConstraints.push_back(m_constraintMap[_robot][idx]);
+  }
+  currentConstraints.push_back(_constraint);
+
+  for(auto c : currentConstraints) {
+    minEndTime = std::max(minEndTime,c.second.max);
+  }
+
+  ComputeIntervals(_robot, currentConstraints);
+
+  // Generate a path for this robot individually while avoiding the conflicts.
+  auto groupTask = this->GetGroupTask();
+  this->GetMPLibrary()->SetGroupTask(nullptr);
+  this->GetMPLibrary()->SetTask(task);
+  auto query = dynamic_cast<SIPPMethod<MPTraits>*>(this->GetMapEvaluator(m_queryLabel));
+  query->SetEdgeIntervals(m_edgeIntervals);
+  query->SetVertexIntervals(m_vertexIntervals);
+  query->SetMinEndTime(minEndTime);
+  const bool success = (*query)();
+  this->GetMPLibrary()->SetTask(nullptr);
+  this->GetMPLibrary()->SetGroupTask(groupTask);
+
+  // If we failed to find a path, return an empty pointer.
+  if(!success)
+    return false;
+
+  // Otherwise, return a copy of the robot's path from the solution object.
+  Path* path = this->GetPath(_robot);
+
+  if(this->m_costLabel == "SOC") {
+    if (path->TimeSteps() > _node.solutionMap[_robot]->TimeSteps())
+      return true;
+  }
+  else {
+    if (path->TimeSteps() > _node.cost)
+      return true;
+  }
+
+  return false;
+}
+
 
 #endif

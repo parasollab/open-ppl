@@ -58,10 +58,10 @@ Run(Plan* _plan) {
   MethodTimer mt(stats,this->GetNameAndLabel() + "::Run");
 
   // Initialize search trees
-  CreateSMARTreeRoot(); 
+  CreateSMARTreeRoot();
 
   for(size_t i = 0; i < m_maxIterations; i++) {
-    
+
     auto modePair = SelectMode();
     auto modeID = modePair.first;
     auto historyID = modePair.second;
@@ -109,7 +109,7 @@ CreateSMARTreeRoot() {
   auto plan = this->GetPlan();
   auto stats = plan->GetStatClass();
   MethodTimer mt(stats,this->GetNameAndLabel() + "::CreateSMARTreeRoots");
-  
+
   auto coordinator = plan->GetCoordinator();
   auto sg = static_cast<OCMG*>(this->GetStateGraph(m_sgLabel).get());
   auto omg = sg->GetSingleObjectModeGraph();
@@ -121,13 +121,13 @@ CreateSMARTreeRoot() {
       new TensorProductRoadmap(coordinator->GetRobot()));
 
   m_actionExtendedGraph = std::unique_ptr<ActionExtendedGraph>(
-      new ActionExtendedGraph(coordinator->GetRobot())); 
-  
+      new ActionExtendedGraph(coordinator->GetRobot()));
+
 
   // Convert start state to root vertex and build initial mode
   Vertex root;
   Mode mode;
-  
+
   for(auto& kv : coordinator->GetInitialRobotGroups()) {
     auto group = kv.first;
     auto rm = sg->GetGroupRoadmap(group);
@@ -190,7 +190,7 @@ CreateSMARTreeRoot() {
   m_modes.clear();
   m_modes.push_back(mode);
   root.modeID = 0;
-  
+
   m_biasedModes.push_back(root.modeID);
 
   if(m_debug) {
@@ -202,12 +202,12 @@ CreateSMARTreeRoot() {
 
   // Save root vertex in tree
   auto rootVID = m_tensorProductRoadmap->AddVertex(root);
- 
+
   ActionHistory history = {root.modeID};
   m_actionHistories.push_back(history);
 
   m_modeHistories[root.modeID] = {0};
- 
+
   ActionExtendedState aes;
   aes.vid = rootVID;
   aes.ahid = {0};
@@ -229,7 +229,7 @@ SelectMode() {
 
   // With m_modeBias probability, return mode closest to goal
   if(DRand() < m_goalBias) {
-    
+
     size_t index = LRand() % m_biasedModes.size();
     modeID = m_biasedModes[index];
     historyID = m_modeHistories[modeID][0];
@@ -274,10 +274,10 @@ SelectVertex(size_t _modeID, size_t _historyID, Mode _heuristic) {
 
   auto mode = m_modes[_modeID];
 
-  // Find history vid closest to the randomly sampled vertex 
+  // Find history vid closest to the randomly sampled vertex
   auto dm = this->GetMPLibrary()->GetDistanceMetric(m_dmLabel);
   auto candidates = m_historyVIDs[_historyID];
- 
+
   double minDistance = MAX_DBL;
   VID closest = MAX_UINT;
 
@@ -315,7 +315,7 @@ SelectVertex(size_t _modeID, size_t _historyID, Mode _heuristic) {
 
 size_t
 SMART::
-Extend(size_t _qNear, Direction _direction, size_t _modeID, 
+Extend(size_t _qNear, Direction _direction, size_t _modeID,
        size_t _historyID, Mode _heuristic) {
   auto plan = this->GetPlan();
   auto stats = plan->GetStatClass();
@@ -362,7 +362,7 @@ Extend(size_t _qNear, Direction _direction, size_t _modeID,
   };
 
   auto vertex = m_tensorProductRoadmap->GetVertex(qNear);
-  
+
   Vertex neighbor;
   neighbor.modeID = vertex.modeID;
   // Find individual gcfg that minimizes angle for each robot
@@ -370,7 +370,7 @@ Extend(size_t _qNear, Direction _direction, size_t _modeID,
     auto grm = pair.first;
     auto vid = pair.second;
     auto start = grm->GetVertex(vid);
-    
+
     // Check if this is a passive group
     auto group = grm->GetGroup();
     bool passive = true;
@@ -382,7 +382,7 @@ Extend(size_t _qNear, Direction _direction, size_t _modeID,
     }
 
     // Leave cfg stationary if it is
-    if(passive) { 
+    if(passive) {
       neighbor.cfgs.push_back(pair);
       continue;
     }
@@ -455,7 +455,7 @@ Extend(size_t _qNear, Direction _direction, size_t _modeID,
 
     for(auto pair2 : neighbor.cfgs) {
       if(pair2.first == grm) {
-        
+
         auto vids = std::make_pair(pair1.second,pair2.second);
         transitions.emplace_back(grm,vids);
 
@@ -483,7 +483,7 @@ Extend(size_t _qNear, Direction _direction, size_t _modeID,
   state.vid = qNew;
 
   auto aeTarget = m_actionExtendedGraph->AddVertex(state);
-  
+
   ActionExtendedEdge aeEdge;
   aeEdge.cost = double(cost);
 
@@ -569,11 +569,11 @@ Rewire(size_t _qNew, size_t _qNear, size_t _modeID, size_t _historyID) {
 
   // In order of best cost from source, check if there is a valid connection in the tensor product roadmap
   size_t qBest = MAX_UINT;
-  
+
   for(auto pair : neighbors) {
     auto cand = pair.second;
     auto vid2 = m_actionExtendedGraph->GetVertex(cand).vid;
-    
+
     // Check if it is connected
     auto vertex2 = m_tensorProductRoadmap->GetVertex(vid2);
     auto cost = ValidConnection(vertex2,vertex1);
@@ -593,9 +593,9 @@ Rewire(size_t _qNew, size_t _qNear, size_t _modeID, size_t _historyID) {
 
     ActionExtendedEdge edge;
     edge.cost = m_distanceMap[_qNew] - m_distanceMap[cand];
-    
+
     m_actionExtendedGraph->AddEdge(cand,_qNew,edge);
-    
+
     break;
   }
 
@@ -603,7 +603,7 @@ Rewire(size_t _qNew, size_t _qNear, size_t _modeID, size_t _historyID) {
   for(auto pair : backNeighbors) {
     auto cand = pair.second;
     auto vid2 = m_actionExtendedGraph->GetVertex(cand).vid;
-    
+
     // Check if rewire is useful
     if(pair.second + m_distanceMap[_qNew] >= m_distanceMap[cand])
       continue;
@@ -704,7 +704,7 @@ ValidConnection(const Vertex& _source, const Vertex& _target) {
       const auto& path1 = iter1->second;
       const size_t t1 = path1.size() > t ? t : path1.size() - 1;
       const auto& gcfg1 = path1[t1];
-    
+
       gcfg1.ConfigureRobot();
 
       auto iter2 = iter1;
@@ -734,7 +734,7 @@ ValidConnection(const Vertex& _source, const Vertex& _target) {
   return maxTimestep;
 }
 
-bool 
+bool
 SMART::
 CheckForModeSwitch(size_t _qNew) {
   auto plan = this->GetPlan();
@@ -887,7 +887,7 @@ CheckForModeSwitch(size_t _qNew) {
 
     // Add vertex to tensor product roadmap
     auto vid = m_tensorProductRoadmap->AddVertex(target);
-    
+
     // Connect to source vertex
     Edge edge;
     edge.cost = 0.;
@@ -898,7 +898,7 @@ CheckForModeSwitch(size_t _qNew) {
     history.push_back(target.modeID);
     m_actionHistories.push_back(history);
 
-    // Add vertex to action extended graph 
+    // Add vertex to action extended graph
     ActionExtendedState aeState;
     aeState.vid = vid;
     aeState.ahid = m_actionHistories.size() - 1;
@@ -936,7 +936,7 @@ CheckForModeSwitch(size_t _qNew) {
           break;
         }
       }
-    
+
       if(!exists)
         m_biasedModes.push_back(target.modeID);
     }
@@ -977,7 +977,7 @@ CheckForGoal(size_t _qNew) {
   for(auto st : decomp->GetGroupMotionTasks()) {
 
     auto parent = st->GetParent();
-    std::vector<SemanticTask*> tasks; 
+    std::vector<SemanticTask*> tasks;
 
     auto relation = parent->GetSubtaskRelation();
 
@@ -1043,7 +1043,7 @@ GetRandomDirection(size_t _historyID) {
   auto illustrative = m_tensorProductRoadmap->GetVertex(aeState.vid);
 
   std::map<GroupRoadmapType*,GroupCfgType> random;
-  
+
   for(auto pair : illustrative.cfgs) {
     auto rm = pair.first;
 
@@ -1165,7 +1165,7 @@ GetHeuristicDirection(size_t _vid, size_t _modeID, Mode _heuristic) {
   return direction;
   /*// Collect source groups
   std::vector<GroupRoadmapType*> sourceGrms;
-  
+
   for(auto kv : mode) {
 
     // Collect relevant robots
@@ -1186,7 +1186,7 @@ GetHeuristicDirection(size_t _vid, size_t _modeID, Mode _heuristic) {
 
   // Collect target groups
   std::vector<GroupRoadmapType*> targetGrms;
-  
+
   for(auto kv : _heuristic) {
 
     // Collect relevant robots
@@ -1214,7 +1214,7 @@ ComputeMAPFHeuristic(size_t _modeID) {
   auto plan = this->GetPlan();
   auto stats = plan->GetStatClass();
   MethodTimer mt(stats,this->GetNameAndLabel() + "::ComputeMAPFHeuristic");
-  
+
   if(m_cachedHeuristics.find(_modeID) != m_cachedHeuristics.end()) {
     return m_cachedHeuristics.at(_modeID);
   }
@@ -1236,7 +1236,7 @@ ComputeMAPFHeuristic(size_t _modeID) {
       auto gt = st->GetGroupMotionTask();
       for(auto iter = gt->begin(); iter != gt->end(); iter++) {
 
-        // Isolate the object 
+        // Isolate the object
         auto object = iter->GetRobot();
         auto rm = sg->GetGroupRoadmap(gt->GetRobotGroup());
 
@@ -1275,30 +1275,30 @@ ComputeMAPFHeuristic(size_t _modeID) {
     }
 
   }
-  
+
   // Configure CBS Functions
-  CBSLowLevelPlanner<Robot,CBSConstraint,CBSSolution> lowLevel(
+  CBSLowLevelPlanner<Robot*,CBSConstraint,CBSSolution*> lowLevel(
     [this](CBSNodeType& _node, Robot* _task) {
       return this->LowLevelPlanner(_node,_task);
     }
   );
 
-  CBSValidationFunction<Robot,CBSConstraint,CBSSolution> validation(
+  CBSValidationFunction<Robot*,CBSConstraint,CBSSolution*> validation(
     [this](CBSNodeType& _node) {
       return this->ValidationFunction(_node);
     }
   );
 
-  CBSCostFunction<Robot,CBSConstraint,CBSSolution> cost(
+  CBSCostFunction<Robot*,CBSConstraint,CBSSolution*> cost(
     [this](CBSNodeType& _node) {
       return this->CostFunction(_node);
     }
   );
 
-  CBSSplitNodeFunction<Robot,CBSConstraint,CBSSolution> splitNode(
+  CBSSplitNodeFunction<Robot*,CBSConstraint,CBSSolution*> splitNode(
     [this](CBSNodeType& _node, std::vector<std::pair<Robot*,CBSConstraint>> _constraints,
-           CBSLowLevelPlanner<Robot,CBSConstraint,CBSSolution>& _lowLevel,
-           CBSCostFunction<Robot,CBSConstraint,CBSSolution>& _cost) {
+           CBSLowLevelPlanner<Robot*,CBSConstraint,CBSSolution*>& _lowLevel,
+           CBSCostFunction<Robot*,CBSConstraint,CBSSolution*>& _cost) {
       return this->SplitNodeFunction(_node,_constraints,_lowLevel,_cost);
     }
   );
@@ -1372,13 +1372,13 @@ LowLevelPlanner(CBSNodeType& _node, Robot* _robot) {
     [](typename OCMG::SingleObjectModeGraph::adj_edge_iterator& _ei,
        const double _sourceDistance,
        const double _targetDistance) {
-      
+
       return _sourceDistance + _ei->property();
     }
   );
 
   // Compute distance to goal for each vertex in g
-  auto dist2go = DijkstraSSSP(g,{goal},cost2goWeight).distance;  
+  auto dist2go = DijkstraSSSP(g,{goal},cost2goWeight).distance;
 
   auto startVertex = std::make_pair(start,0);
   auto startVID = h->AddVertex(startVertex);
@@ -1386,7 +1386,7 @@ LowLevelPlanner(CBSNodeType& _node, Robot* _robot) {
   SSSPTerminationCriterion<HeuristicSearch> termination(
     [goal,minEndTimestep](typename HeuristicSearch::vertex_iterator& _vi,
            const SSSPOutput<HeuristicSearch>& _sssp) {
-      
+
       auto vertex = _vi->property();
 
       if(goal == vertex.first and minEndTimestep <= vertex.second)
@@ -1400,7 +1400,7 @@ LowLevelPlanner(CBSNodeType& _node, Robot* _robot) {
     [constraints,h](typename HeuristicSearch::adj_edge_iterator& _ei,
        const double _sourceDistance,
        const double _targetDistance) {
-     
+
       //auto source = h->GetVertex(_ei->source()).first;
       auto target = h->GetVertex(_ei->target()).first;
 
@@ -1417,7 +1417,7 @@ LowLevelPlanner(CBSNodeType& _node, Robot* _robot) {
       for(auto constraint : constraints) {
         if(target != constraint.first)
           continue;
-    
+
         auto range = constraint.second;
         if(timestep >= range.first and timestep <= range.second)
           return std::numeric_limits<double>::infinity();
@@ -1428,7 +1428,7 @@ LowLevelPlanner(CBSNodeType& _node, Robot* _robot) {
   );
 
   SSSPHeuristicFunction<HeuristicSearch> heuristic(
-    [dist2go](const HeuristicSearch* _h, 
+    [dist2go](const HeuristicSearch* _h,
        typename HeuristicSearch::vertex_descriptor _source,
        typename HeuristicSearch::vertex_descriptor _target) {
 
@@ -1451,7 +1451,7 @@ LowLevelPlanner(CBSNodeType& _node, Robot* _robot) {
       auto vertex = _h->GetVertex(_vid);
       auto gvid = vertex.first;
       auto timestep = vertex.second;
-      
+
       auto vit = g->find_vertex(gvid);
 
       for(auto eit = vit->begin(); eit != vit->end(); eit++) {
@@ -1461,7 +1461,7 @@ LowLevelPlanner(CBSNodeType& _node, Robot* _robot) {
 
         auto nvid = _h->AddVertex(neighbor);
         _h->AddEdge(_vid,nvid,edge);
-      } 
+      }
     }
   );
 
@@ -1508,7 +1508,7 @@ ValidationFunction(CBSNodeType& _node) {
     maxTimestep = std::max(maxTimestep,kv.second->size());
   }
 
-  //TODO::Currently only allows capacity of 1, need to update to check for edge conflicts in loop and build 
+  //TODO::Currently only allows capacity of 1, need to update to check for edge conflicts in loop and build
   //      capacity counts of vertices at each timestep that's checked at the end of the timestep loop iterations.
 
   for(size_t i = 0; i < maxTimestep; i++) {
@@ -1575,7 +1575,7 @@ ValidationFunction(CBSNodeType& _node) {
           //if(m_debug) {
           //  std::cout << "Found vertex conflict at timestep " << i
           //            << " between " << object1->GetLabel()
-          //            << " and " << object2->GetLabel() 
+          //            << " and " << object2->GetLabel()
           //            << std::endl;
           //}
 
@@ -1591,7 +1591,7 @@ ValidationFunction(CBSNodeType& _node) {
           //if(m_debug) {
           //  std::cout << "Found edge conflict at timestep " << i
           //            << " between " << object1->GetLabel()
-          //            << " and " << object2->GetLabel() 
+          //            << " and " << object2->GetLabel()
           //            << std::endl;
           //}
 
@@ -1608,7 +1608,7 @@ ValidationFunction(CBSNodeType& _node) {
       }
     }
   }
-  
+
   return {};
 }
 
@@ -1641,12 +1641,12 @@ CostFunction(CBSNodeType& _node) {
   return cost;
 }
 
-std::vector<SMART::CBSNodeType> 
+std::vector<SMART::CBSNodeType>
 SMART::
 SplitNodeFunction(CBSNodeType& _node,
         std::vector<std::pair<Robot*,CBSConstraint>> _constraints,
-        CBSLowLevelPlanner<Robot,CBSConstraint,CBSSolution>& _lowLevel,
-        CBSCostFunction<Robot,CBSConstraint,CBSSolution>& _cost) {
+        CBSLowLevelPlanner<Robot*,CBSConstraint,CBSSolution*>& _lowLevel,
+        CBSCostFunction<Robot*,CBSConstraint,CBSSolution*>& _cost) {
   auto plan = this->GetPlan();
   auto stats = plan->GetStatClass();
   MethodTimer mt(stats,this->GetNameAndLabel() + "::SplitNodeFunction");
@@ -1660,12 +1660,12 @@ SplitNodeFunction(CBSNodeType& _node,
 
     // Copy parent node
     CBSNodeType child = _node;
-  
+
     // Add new constraint
     child.constraintMap[task].insert(constraint);
 
     // Replan tasks affected by constraint. Skip if no valid replanned path is found
-    if(!_lowLevel(child,task)) 
+    if(!_lowLevel(child,task))
       continue;
 
     // Update the cost and add to set of new nodes

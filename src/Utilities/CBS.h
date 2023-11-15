@@ -5,8 +5,8 @@
 
 #include <functional>
 #include <map>
-#include <queue>
 #include <set>
+#include <queue>
 #include <unordered_set>
 #include <unordered_map>
 #include <vector>
@@ -16,27 +16,27 @@ struct CBSNode {
 
   /// Map of task to its constraints
   //std::unordered_map<IndividualTask*,std::unordered_set<ConstraintType>> constraintMap;
-  std::map<IndividualTask*,std::set<ConstraintType>> constraintMap;
+  std::map<IndividualTask,std::set<ConstraintType>> constraintMap;
 
   /// Map of task to its solution
-  std::unordered_map<IndividualTask*,IndividualSolution*> solutionMap;
+  std::unordered_map<IndividualTask,IndividualSolution> solutionMap;
 
   /// Cost of current solution
   double cost;
 
-  /// Number of conflicts in node
   size_t conflicts = MAX_INT;
 
-  std::vector<std::pair<IndividualTask*,ConstraintType>> cachedNextConstraintSet;
+  std::vector<std::pair<IndividualTask, ConstraintType>> cachedNextConstraintSet;
+
 
   CBSNode() {
     cost = 0;
   }
 
-  CBSNode(std::vector<IndividualTask*> _tasks) {
+  CBSNode(std::vector<IndividualTask> _tasks) {
     for(auto& task : _tasks) {
       constraintMap[task] = {};
-      solutionMap[task] = nullptr;
+      solutionMap[task];
     }
     cost = 0;
   }
@@ -116,11 +116,11 @@ struct CBSNode {
 template <typename IndividualTask, typename ConstraintType, typename IndividualSolution>
 using CBSLowLevelPlanner =
   std::function<bool(CBSNode<IndividualTask, ConstraintType, IndividualSolution>& _node,
-    IndividualTask* _task)>;
+    IndividualTask _task)>;
 
 template <typename IndividualTask, typename ConstraintType, typename IndividualSolution>
 using CBSValidationFunction =
-  std::function<std::vector<std::pair<IndividualTask*, ConstraintType>>(
+  std::function<std::vector<std::pair<IndividualTask, ConstraintType>>(
     CBSNode<IndividualTask, ConstraintType, IndividualSolution>& _node)>;
 
 template <typename IndividualTask, typename ConstraintType, typename IndividualSolution>
@@ -131,7 +131,7 @@ template <typename IndividualTask, typename ConstraintType, typename IndividualS
 using CBSSplitNodeFunction =
   std::function<std::vector<CBSNode<IndividualTask,ConstraintType,IndividualSolution>>(
     CBSNode<IndividualTask, ConstraintType, IndividualSolution>& _node,
-    std::vector<std::pair<IndividualTask*, ConstraintType>> _constraints,
+    std::vector<std::pair<IndividualTask, ConstraintType>> _constraints,
     CBSLowLevelPlanner<IndividualTask, ConstraintType, IndividualSolution>& _lowlevel,
     CBSCostFunction<IndividualTask, ConstraintType, IndividualSolution>& _cost)>;
 
@@ -139,7 +139,7 @@ template <typename IndividualTask, typename ConstraintType, typename IndividualS
 using CBSInitialFunction =
   std::function<void(
       std::vector<CBSNode<IndividualTask, ConstraintType, IndividualSolution>>& _root,
-      std::vector<IndividualTask*> _tasks,
+      std::vector<IndividualTask> _tasks,
       CBSLowLevelPlanner<IndividualTask, ConstraintType, IndividualSolution>& _lowlevel,
       CBSCostFunction<IndividualTask, ConstraintType, IndividualSolution>& _cost)>;
 
@@ -148,7 +148,7 @@ CBSInitialFunction<IndividualTask, ConstraintType, IndividualSolution>
 CBSDefaultInitialFunction() {
   return [](
       std::vector<CBSNode<IndividualTask, ConstraintType, IndividualSolution>>& _root,
-      std::vector<IndividualTask*> _tasks,
+      std::vector<IndividualTask> _tasks,
       CBSLowLevelPlanner<IndividualTask, ConstraintType, IndividualSolution>& _lowlevel,
       CBSCostFunction<IndividualTask, ConstraintType, IndividualSolution>& _cost){
 
@@ -162,7 +162,7 @@ CBSDefaultInitialFunction() {
   };
 }
 
-using CBSEarlyTerminationFunction = 
+using CBSEarlyTerminationFunction =
   std::function<bool(const size_t& _numNodes)>;
 
 CBSEarlyTerminationFunction
@@ -171,52 +171,96 @@ CBSDefaultEarlyTermination();
 template <typename IndividualTask, typename ConstraintType, typename IndividualSolution>
 CBSNode<IndividualTask, ConstraintType, IndividualSolution>
 CBS(
-  std::vector<IndividualTask*> _tasks,
+  std::vector<IndividualTask> _tasks,
   CBSValidationFunction<IndividualTask,ConstraintType,IndividualSolution>& _validate,
   CBSSplitNodeFunction<IndividualTask,ConstraintType,IndividualSolution>& _split,
   CBSLowLevelPlanner<IndividualTask,ConstraintType,IndividualSolution>& _lowlevel,
   CBSCostFunction<IndividualTask,ConstraintType,IndividualSolution>& _cost)
 {
+  using CBSNodeType = CBSNode<IndividualTask,ConstraintType,IndividualSolution>;
+
   auto initial = CBSDefaultInitialFunction<IndividualTask, ConstraintType, IndividualSolution>();
   auto termination = CBSDefaultEarlyTermination();
-  return CBS(_tasks, _validate, _split, _lowlevel, _cost, initial, termination);
+  std::priority_queue<CBSNodeType, std::vector<CBSNodeType>,
+    std::greater<CBSNodeType>>* ct = new std::priority_queue<CBSNodeType,
+    std::vector<CBSNodeType>, std::greater<CBSNodeType>>();
+
+  auto solution =  CBS(_tasks, _validate, _split, _lowlevel, _cost,
+      initial, termination, ct);
+  delete ct;
+  return solution;
 }
 
 
-template <typename IndividualTask, typename ConstraintType, typename IndividualSolution>
+template<typename IndividualTask, typename ConstraintType, typename IndividualSolution>
 CBSNode<IndividualTask, ConstraintType, IndividualSolution>
 CBS(
-  std::vector<IndividualTask*> _tasks,
+  std::vector<IndividualTask> _tasks,
   CBSValidationFunction<IndividualTask,ConstraintType,IndividualSolution>& _validate,
   CBSSplitNodeFunction<IndividualTask,ConstraintType,IndividualSolution>& _split,
   CBSLowLevelPlanner<IndividualTask,ConstraintType,IndividualSolution>& _lowlevel,
   CBSCostFunction<IndividualTask,ConstraintType,IndividualSolution>& _cost,
-  CBSInitialFunction<IndividualTask,ConstraintType,IndividualSolution>& _initial)
+  CBSInitialFunction<IndividualTask, ConstraintType, IndividualSolution>& _initial)
 {
+  using CBSNodeType = CBSNode<IndividualTask,ConstraintType,IndividualSolution>;
+
   auto termination = CBSDefaultEarlyTermination();
-  return CBS(_tasks, _validate, _split, _lowlevel, _cost, _initial, termination);
+  std::priority_queue<CBSNodeType, std::vector<CBSNodeType>,
+    std::greater<CBSNodeType>>* ct = new std::priority_queue<CBSNodeType,
+    std::vector<CBSNodeType>, std::greater<CBSNodeType>>();
+
+  auto solution =  CBS(_tasks, _validate, _split, _lowlevel, _cost,
+      _initial, termination, ct);
+  delete ct;
+  return solution;
 }
 
 
-template <typename IndividualTask, typename ConstraintType, typename IndividualSolution>
+template<typename IndividualTask, typename ConstraintType, typename IndividualSolution>
 CBSNode<IndividualTask, ConstraintType, IndividualSolution>
 CBS(
-  std::vector<IndividualTask*> _tasks,
+  std::vector<IndividualTask> _tasks,
   CBSValidationFunction<IndividualTask,ConstraintType,IndividualSolution>& _validate,
   CBSSplitNodeFunction<IndividualTask,ConstraintType,IndividualSolution>& _split,
   CBSLowLevelPlanner<IndividualTask,ConstraintType,IndividualSolution>& _lowlevel,
   CBSCostFunction<IndividualTask,ConstraintType,IndividualSolution>& _cost,
   CBSEarlyTerminationFunction& _termination)
 {
+  using CBSNodeType = CBSNode<IndividualTask,ConstraintType,IndividualSolution>;
+
   auto initial = CBSDefaultInitialFunction<IndividualTask, ConstraintType, IndividualSolution>();
-  return CBS(_tasks, _validate, _split, _lowlevel, _cost, initial, _termination);
+  std::priority_queue<CBSNodeType, std::vector<CBSNodeType>,
+    std::greater<CBSNodeType>>* ct = new std::priority_queue<CBSNodeType,
+    std::vector<CBSNodeType>, std::greater<CBSNodeType>>();
+
+  auto solution =  CBS(_tasks, _validate, _split, _lowlevel, _cost,
+      initial, _termination, ct);
+  delete ct;
+  return solution;
 }
 
 
 template <typename IndividualTask, typename ConstraintType, typename IndividualSolution>
 CBSNode<IndividualTask, ConstraintType, IndividualSolution>
 CBS(
-  std::vector<IndividualTask*> _tasks,
+  std::vector<IndividualTask> _tasks,
+  CBSValidationFunction<IndividualTask,ConstraintType,IndividualSolution>& _validate,
+  CBSSplitNodeFunction<IndividualTask,ConstraintType,IndividualSolution>& _split,
+  CBSLowLevelPlanner<IndividualTask,ConstraintType,IndividualSolution>& _lowlevel,
+  CBSCostFunction<IndividualTask,ConstraintType,IndividualSolution>& _cost,
+  std::priority_queue<CBSNode<IndividualTask, ConstraintType, IndividualSolution>, std::vector<CBSNode<IndividualTask, ConstraintType, IndividualSolution>>, std::greater<CBSNode<IndividualTask, ConstraintType, IndividualSolution>>>* _ct)
+{
+  auto initial = CBSDefaultInitialFunction<IndividualTask, ConstraintType, IndividualSolution>();
+  auto termination = CBSDefaultEarlyTermination();
+
+  return CBS(_tasks, _validate, _split, _lowlevel, _cost,
+      initial, termination, _ct);
+}
+
+template <typename IndividualTask, typename ConstraintType, typename IndividualSolution>
+CBSNode<IndividualTask, ConstraintType, IndividualSolution>
+CBS(
+  std::vector<IndividualTask> _tasks,
   CBSValidationFunction<IndividualTask,ConstraintType,IndividualSolution>& _validate,
   CBSSplitNodeFunction<IndividualTask,ConstraintType,IndividualSolution>& _split,
   CBSLowLevelPlanner<IndividualTask,ConstraintType,IndividualSolution>& _lowlevel,
@@ -224,13 +268,69 @@ CBS(
   CBSInitialFunction<IndividualTask,ConstraintType,IndividualSolution>& _initial,
   CBSEarlyTerminationFunction& _termination)
 {
-
   using CBSNodeType = CBSNode<IndividualTask,ConstraintType,IndividualSolution>;
 
-  // Create the conflict tree
-  std::priority_queue<CBSNodeType,
-                      std::vector<CBSNodeType>,
-                      std::greater<CBSNodeType>> ct;
+  std::priority_queue<CBSNodeType, std::vector<CBSNodeType>,
+    std::greater<CBSNodeType>>* ct = new std::priority_queue<CBSNodeType,
+    std::vector<CBSNodeType>, std::greater<CBSNodeType>>();
+
+  auto solution =  CBS(_tasks, _validate, _split, _lowlevel, _cost,
+      _initial, _termination, ct);
+  delete ct;
+  return solution;
+};
+
+
+template <typename IndividualTask, typename ConstraintType, typename IndividualSolution>
+CBSNode<IndividualTask, ConstraintType, IndividualSolution>
+CBS(
+  std::vector<IndividualTask> _tasks,
+  CBSValidationFunction<IndividualTask,ConstraintType,IndividualSolution>& _validate,
+  CBSSplitNodeFunction<IndividualTask,ConstraintType,IndividualSolution>& _split,
+  CBSLowLevelPlanner<IndividualTask,ConstraintType,IndividualSolution>& _lowlevel,
+  CBSCostFunction<IndividualTask,ConstraintType,IndividualSolution>& _cost,
+  CBSInitialFunction<IndividualTask,ConstraintType,IndividualSolution>& _initial,
+  std::priority_queue<CBSNode<IndividualTask, ConstraintType, IndividualSolution>, std::vector<CBSNode<IndividualTask, ConstraintType, IndividualSolution>>, std::greater<CBSNode<IndividualTask, ConstraintType, IndividualSolution>>>* _ct)
+{
+  auto termination = CBSDefaultEarlyTermination();
+
+  return CBS(_tasks, _validate, _split, _lowlevel, _cost,
+      _initial, termination, _ct);
+};
+
+
+template <typename IndividualTask, typename ConstraintType, typename IndividualSolution>
+CBSNode<IndividualTask, ConstraintType, IndividualSolution>
+CBS(
+  std::vector<IndividualTask> _tasks,
+  CBSValidationFunction<IndividualTask,ConstraintType,IndividualSolution>& _validate,
+  CBSSplitNodeFunction<IndividualTask,ConstraintType,IndividualSolution>& _split,
+  CBSLowLevelPlanner<IndividualTask,ConstraintType,IndividualSolution>& _lowlevel,
+  CBSCostFunction<IndividualTask,ConstraintType,IndividualSolution>& _cost,
+  CBSEarlyTerminationFunction& _termination,
+  std::priority_queue<CBSNode<IndividualTask, ConstraintType, IndividualSolution>, std::vector<CBSNode<IndividualTask, ConstraintType, IndividualSolution>>, std::greater<CBSNode<IndividualTask, ConstraintType, IndividualSolution>>>* _ct)
+{
+  auto initial = CBSDefaultInitialFunction<IndividualTask, ConstraintType, IndividualSolution>();
+
+  return CBS(_tasks, _validate, _split, _lowlevel, _cost,
+      initial, _termination, _ct);
+};
+
+
+template <typename IndividualTask, typename ConstraintType, typename IndividualSolution>
+CBSNode<IndividualTask, ConstraintType, IndividualSolution>
+CBS(
+  std::vector<IndividualTask> _tasks,
+  CBSValidationFunction<IndividualTask,ConstraintType,IndividualSolution>& _validate,
+  CBSSplitNodeFunction<IndividualTask,ConstraintType,IndividualSolution>& _split,
+  CBSLowLevelPlanner<IndividualTask,ConstraintType,IndividualSolution>& _lowlevel,
+  CBSCostFunction<IndividualTask,ConstraintType,IndividualSolution>& _cost,
+  CBSInitialFunction<IndividualTask,ConstraintType,IndividualSolution>& _initial,
+  CBSEarlyTerminationFunction& _termination,
+  std::priority_queue<CBSNode<IndividualTask, ConstraintType, IndividualSolution>, std::vector<CBSNode<IndividualTask, ConstraintType, IndividualSolution>>, std::greater<CBSNode<IndividualTask, ConstraintType, IndividualSolution>>>* _ct)
+{
+
+  using CBSNodeType = CBSNode<IndividualTask,ConstraintType,IndividualSolution>;
 
   // Create root node with initial plans
   std::vector<CBSNodeType> root;
@@ -239,18 +339,19 @@ CBS(
   size_t numNodes = 0;
 
   _initial(root, _tasks, _lowlevel, _cost);
+  numNodes += root.size();
 
   for (auto node : root) {
     numNodes++;
-    ct.push(node);
+    _ct->push(node);
   }
 
   // Search conflict tree
-  while(!ct.empty()) {
+  while(!_ct->empty()) {
 
     // Grab minimum cost node
-    auto node = ct.top();
-    ct.pop();
+    auto node = _ct->top();
+    _ct->pop();
 
     // Validate solution in node
     auto constraints = _validate(node);
@@ -260,9 +361,8 @@ CBS(
      return node;
 
     // Check early termination
-    if(_termination(numNodes)) {
-      break;
-    }
+    if(_termination(numNodes))
+      return CBSNodeType();
 
     // Create child nodes
     auto children = _split(node, constraints, _lowlevel, _cost);
@@ -270,7 +370,7 @@ CBS(
     // Add child nodes to the tree
     for(const auto& child : children) {
       numNodes++;
-      ct.push(child);
+      _ct->push(child);
     }
   }
 
@@ -278,6 +378,5 @@ CBS(
   empty.cost = std::numeric_limits<double>::infinity();
   return empty;
 }
-
 
 #endif

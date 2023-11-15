@@ -137,7 +137,7 @@ Initialize() {
     m_regionRadius.insert(std::make_pair(robot, robotRadius));
 
     // Get the goal skeleton vertex for each robot
-    if(task.GetGoalConstraints().size() != 1) 
+    if(task.GetGoalConstraints().size() != 1)
       throw RunTimeException(WHERE) << "Exactly one goal is required.";
 
     const auto goal_center = task.GetGoalConstraints()[0]->GetBoundary()->GetCenter();
@@ -353,7 +353,7 @@ ValidationFunction(CBSNodeType& _node) {
   }
 
   std::unordered_map<VID, std::unordered_map<size_t, double>> vertexCapacity;
-  std::unordered_map<std::pair<VID, VID>, 
+  std::unordered_map<std::pair<VID, VID>,
       std::unordered_map<size_t, double>> edgeCapacity;
 
   // new constraints of form (robot, ((vid, vid), time))
@@ -459,7 +459,7 @@ ValidationFunction(CBSNodeType& _node) {
           edgeCapacity.emplace(std::make_pair(edgePair, eMap));
         }
       }
-      
+
       // Check if this vid has been added yet
       if(vertexCapacity.find(source) != vertexCapacity.end()) {
         // Check if this timestep has been added
@@ -553,8 +553,8 @@ std::vector<typename WoDaSH::CBSNodeType>
 WoDaSH::
 SplitNodeFunction(CBSNodeType& _node,
         std::vector<std::pair<Robot*,CBSConstraint>> _constraints,
-        CBSLowLevelPlanner<Robot,CBSConstraint,CBSSolution>& _lowLevel,
-        CBSCostFunction<Robot,CBSConstraint,CBSSolution>& _cost) {
+        CBSLowLevelPlanner<Robot*,CBSConstraint,CBSSolution*>& _lowLevel,
+        CBSCostFunction<Robot*,CBSConstraint,CBSSolution*>& _cost) {
   auto stats = this->GetPlan()->GetStatClass();
   MethodTimer mt(stats,this->GetNameAndLabel() + "::SplitNodeFunction");
 
@@ -567,12 +567,12 @@ SplitNodeFunction(CBSNodeType& _node,
 
     // Copy parent node
     CBSNodeType child = _node;
-  
+
     // Add new constraint
     child.constraintMap[robot].insert(constraint);
 
     // Replan tasks affected by constraint. Skip if no valid replanned path is found
-    if(!_lowLevel(child,robot)) 
+    if(!_lowLevel(child,robot))
       continue;
 
     // Update the cost and add to set of new nodes
@@ -620,7 +620,7 @@ LowLevelPlanner(CBSNodeType& _node, Robot* _robot) {
   SSSPTerminationCriterion<HeuristicSearch> termination(
     [goal,minEndTimestep](typename HeuristicSearch::vertex_iterator& _vi,
            const SSSPOutput<HeuristicSearch>& _sssp) {
-      
+
       auto vertex = _vi->property();
 
       if(goal == vertex.first and minEndTimestep <= vertex.second)
@@ -634,7 +634,7 @@ LowLevelPlanner(CBSNodeType& _node, Robot* _robot) {
     [constraints,h](typename HeuristicSearch::adj_edge_iterator& _ei,
        const double _sourceDistance,
        const double _targetDistance) {
-     
+
       auto source = h->GetVertex(_ei->source()).first;
       auto target = h->GetVertex(_ei->target()).first;
       auto timestep = h->GetVertex(_ei->source()).second;
@@ -676,7 +676,7 @@ LowLevelPlanner(CBSNodeType& _node, Robot* _robot) {
   );
 
   SSSPHeuristicFunction<HeuristicSearch> heuristic(
-    [dist2go](const HeuristicSearch* _h, 
+    [dist2go](const HeuristicSearch* _h,
        typename HeuristicSearch::vertex_descriptor _source,
        typename HeuristicSearch::vertex_descriptor _target) {
 
@@ -693,7 +693,7 @@ LowLevelPlanner(CBSNodeType& _node, Robot* _robot) {
       auto vertex = _h->GetVertex(_vid);
       auto gvid = vertex.first;
       auto timestep = vertex.second;
-      
+
       auto vit = g->find_vertex(gvid);
 
       for(auto eit = vit->begin(); eit != vit->end(); eit++) {
@@ -761,8 +761,8 @@ std::vector<typename WoDaSH::PBSNodeType>
 WoDaSH::
 SplitNodeFunction(PBSNodeType& _node,
         std::vector<std::pair<Robot*,OrderingConstraint>> _constraints,
-        CBSLowLevelPlanner<Robot,OrderingConstraint,CBSSolution>& _lowLevel,
-        CBSCostFunction<Robot,OrderingConstraint,CBSSolution>& _cost) {
+        CBSLowLevelPlanner<Robot*, OrderingConstraint, CBSSolution*>& _lowLevel,
+        CBSCostFunction<Robot*, OrderingConstraint, CBSSolution*>& _cost) {
   auto stats = this->GetPlan()->GetStatClass();
   MethodTimer mt(stats,this->GetNameAndLabel() + "::SplitNodeFunction");
 
@@ -1284,28 +1284,28 @@ MAPFSolution() {
 
   // Configure CBS/PBS Functions
   if(m_mapf == "cbs") {
-    CBSLowLevelPlanner<Robot,CBSConstraint,CBSSolution> lowLevel(
+    CBSLowLevelPlanner<Robot*,CBSConstraint,CBSSolution*> lowLevel(
       [this](CBSNodeType& _node, Robot* _task) {
         return this->LowLevelPlanner(_node,_task);
       }
     );
 
-    CBSValidationFunction<Robot,CBSConstraint,CBSSolution> validation(
+    CBSValidationFunction<Robot*,CBSConstraint,CBSSolution*> validation(
       [this](CBSNodeType& _node) {
         return this->ValidationFunction(_node);
       }
     );
 
-    CBSCostFunction<Robot,CBSConstraint,CBSSolution> cost(
+    CBSCostFunction<Robot*,CBSConstraint,CBSSolution*> cost(
       [this](CBSNodeType& _node) {
         return this->CostFunction<CBSNodeType>(_node);
       }
     );
 
-    CBSSplitNodeFunction<Robot,CBSConstraint,CBSSolution> splitNode(
+    CBSSplitNodeFunction<Robot*,CBSConstraint,CBSSolution*> splitNode(
       [this](CBSNodeType& _node, std::vector<std::pair<Robot*,CBSConstraint>> _constraints,
-            CBSLowLevelPlanner<Robot,CBSConstraint,CBSSolution>& _lowLevel,
-            CBSCostFunction<Robot,CBSConstraint,CBSSolution>& _cost) {
+            CBSLowLevelPlanner<Robot*,CBSConstraint,CBSSolution*>& _lowLevel,
+            CBSCostFunction<Robot*,CBSConstraint,CBSSolution*>& _cost) {
         return this->SplitNodeFunction(_node,_constraints,_lowLevel,_cost);
       }
     );
@@ -1315,27 +1315,27 @@ MAPFSolution() {
     solution = sol.solutionMap;
 
   } else if(m_mapf == "pbs") {
-    CBSLowLevelPlanner<Robot,OrderingConstraint,CBSSolution> lowLevel(
+    CBSLowLevelPlanner<Robot*, OrderingConstraint, CBSSolution*> lowLevel(
       [this](PBSNodeType& _node, Robot* _task) {
         return this->LowLevelPlanner(_node,_task);
       }
     );
 
-    CBSValidationFunction<Robot,OrderingConstraint,CBSSolution> validation(
+    CBSValidationFunction<Robot*, OrderingConstraint, CBSSolution*> validation(
       [this](PBSNodeType& _node) {
         return this->ValidationFunction(_node);
       }
     );
 
-    CBSSplitNodeFunction<Robot,OrderingConstraint,CBSSolution> splitNode(
+    CBSSplitNodeFunction<Robot*, OrderingConstraint, CBSSolution*> splitNode(
       [this](PBSNodeType& _node, std::vector<std::pair<Robot*,OrderingConstraint>> _constraints,
-            CBSLowLevelPlanner<Robot,OrderingConstraint,CBSSolution>& _lowLevel,
-            CBSCostFunction<Robot,OrderingConstraint,CBSSolution>& _cost) {
+            CBSLowLevelPlanner<Robot*, OrderingConstraint, CBSSolution*>& _lowLevel,
+            CBSCostFunction<Robot*, OrderingConstraint, CBSSolution*>& _cost) {
         return this->SplitNodeFunction(_node,_constraints,_lowLevel,_cost);
       }
     );
 
-    CBSCostFunction<Robot,OrderingConstraint,CBSSolution> cost(
+    CBSCostFunction<Robot*, OrderingConstraint, CBSSolution*> cost(
       [this](PBSNodeType& _node) {
         return this->CostFunction<PBSNodeType>(_node);
       }
@@ -2434,7 +2434,7 @@ SpawnVertex(GroupRoadmapType* _grm, CompositeSkeletonEdge _edge) {
   BoundaryMap bMap;
   for(size_t i = 0; i < robots.size(); i++)
     bMap[robots[i]] = &bounds[i];
-  
+
   // Get the sampler.
   auto s = this->GetMPLibrary()->GetSampler(m_sampler);
 
@@ -2472,7 +2472,7 @@ SpawnVertex(GroupRoadmapType* _grm, CompositeSkeletonVertex _vertex) {
   BoundaryMap bMap;
   for(size_t i = 0; i < robots.size(); i++)
     bMap[robots[i]] = &bounds[i];
-  
+
   // Get the sampler.
   auto s = this->GetMPLibrary()->GetSampler(m_sampler);
 
@@ -3000,7 +3000,7 @@ SampleTrajectories() {
       t.AddGoalConstraint(std::move(goalConstraint));
 
       task->AddTask(t);
-    } 
+    }
 
     bool failed = false;
 
@@ -3186,7 +3186,7 @@ SampleTrajectories() {
       t.AddGoalConstraint(std::move(goalConstraint));
 
       task->AddTask(t);
-    } 
+    }
 
     bool failed = false;
 

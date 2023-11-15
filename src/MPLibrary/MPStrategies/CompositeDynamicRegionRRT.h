@@ -70,10 +70,10 @@ class CompositeDynamicRegionRRT : virtual public GroupRRTStrategy<MPTraits> {
 
     // A constraint is formulated as an (edge, time) represented by ((vid, vid=MAX), time)
     typedef std::pair<std::pair<SkeletonVertexDescriptor, SkeletonVertexDescriptor>, size_t> CBSConstraint;
-    typedef CBSNode<Robot,CBSConstraint,CBSSolution>           CBSNodeType;
+    typedef CBSNode<Robot*, CBSConstraint, CBSSolution*>           CBSNodeType;
 
     typedef Robot* OrderingConstraint;
-    typedef CBSNode<Robot, OrderingConstraint, CBSSolution>    PBSNodeType;
+    typedef CBSNode<Robot*, OrderingConstraint, CBSSolution*>    PBSNodeType;
 
     ///@}
     ///@name Local Types
@@ -224,8 +224,8 @@ class CompositeDynamicRegionRRT : virtual public GroupRRTStrategy<MPTraits> {
     /// Forms new CBS nodes from new constraints.
     std::vector<CBSNodeType> SplitNodeFunction(CBSNodeType& _node,
         std::vector<std::pair<Robot*,CBSConstraint>> _constraints,
-        CBSLowLevelPlanner<Robot,CBSConstraint,CBSSolution>& _lowLevel,
-        CBSCostFunction<Robot,CBSConstraint,CBSSolution>& _cost);
+        CBSLowLevelPlanner<Robot*,CBSConstraint,CBSSolution*>& _lowLevel,
+        CBSCostFunction<Robot*,CBSConstraint,CBSSolution*>& _cost);
 
     /// Finds a low level solution for a robot over the workspace skeleton for CBS.
     bool LowLevelPlanner(CBSNodeType& _node, Robot* _robot);
@@ -241,8 +241,8 @@ class CompositeDynamicRegionRRT : virtual public GroupRRTStrategy<MPTraits> {
     /// Forms new PBS nodes from new constraints.
     std::vector<PBSNodeType> SplitNodeFunction(PBSNodeType& _node,
         std::vector<std::pair<Robot*,OrderingConstraint>> _constraints,
-        CBSLowLevelPlanner<Robot,OrderingConstraint,CBSSolution>& _lowLevel,
-        CBSCostFunction<Robot,OrderingConstraint,CBSSolution>& _cost);
+        CBSLowLevelPlanner<Robot*,OrderingConstraint,CBSSolution*>& _lowLevel,
+        CBSCostFunction<Robot*,OrderingConstraint,CBSSolution*>& _cost);
 
     /// Evaluate whether a set of priorities has a circular dependency.
     /// @param _robot The robot which the new constraint applies to.
@@ -1427,8 +1427,8 @@ std::vector<typename CompositeDynamicRegionRRT<MPTraits>::CBSNodeType>
 CompositeDynamicRegionRRT<MPTraits>::
 SplitNodeFunction(CBSNodeType& _node,
         std::vector<std::pair<Robot*,CBSConstraint>> _constraints,
-        CBSLowLevelPlanner<Robot,CBSConstraint,CBSSolution>& _lowLevel,
-        CBSCostFunction<Robot,CBSConstraint,CBSSolution>& _cost) {
+        CBSLowLevelPlanner<Robot*,CBSConstraint,CBSSolution*>& _lowLevel,
+        CBSCostFunction<Robot*,CBSConstraint,CBSSolution*>& _cost) {
   auto stats = this->GetStatClass();
   MethodTimer mt(stats,this->GetNameAndLabel() + "::SplitNodeFunction");
 
@@ -1464,8 +1464,8 @@ std::vector<typename CompositeDynamicRegionRRT<MPTraits>::PBSNodeType>
 CompositeDynamicRegionRRT<MPTraits>::
 SplitNodeFunction(PBSNodeType& _node,
         std::vector<std::pair<Robot*,OrderingConstraint>> _constraints,
-        CBSLowLevelPlanner<Robot,OrderingConstraint,CBSSolution>& _lowLevel,
-        CBSCostFunction<Robot,OrderingConstraint,CBSSolution>& _cost) {
+        CBSLowLevelPlanner<Robot*,OrderingConstraint,CBSSolution*>& _lowLevel,
+        CBSCostFunction<Robot*,OrderingConstraint,CBSSolution*>& _cost) {
   auto stats = this->GetStatClass();
   MethodTimer mt(stats,this->GetNameAndLabel() + "::SplitNodeFunction");
 
@@ -2009,27 +2009,27 @@ ComputeMAPFPaths(const VID _vid) {
   std::unordered_map<Robot*, CBSSolution*> solution;
 
   if(m_mapf == "CBS") {
-    CBSLowLevelPlanner<Robot,CBSConstraint,CBSSolution> lowLevel(
+    CBSLowLevelPlanner<Robot*,CBSConstraint,CBSSolution*> lowLevel(
       [this](CBSNodeType& _node, Robot* _task) {
         return this->LowLevelPlanner(_node,_task);
       }
     );
 
-    CBSValidationFunction<Robot,CBSConstraint,CBSSolution> validation(
+    CBSValidationFunction<Robot*,CBSConstraint,CBSSolution*> validation(
       [this](CBSNodeType& _node) {
         return this->ValidationFunction(_node);
       }
     );
 
-    CBSSplitNodeFunction<Robot,CBSConstraint,CBSSolution> splitNode(
+    CBSSplitNodeFunction<Robot*,CBSConstraint,CBSSolution*> splitNode(
       [this](CBSNodeType& _node, std::vector<std::pair<Robot*,CBSConstraint>> _constraints,
-            CBSLowLevelPlanner<Robot,CBSConstraint,CBSSolution>& _lowLevel,
-            CBSCostFunction<Robot,CBSConstraint,CBSSolution>& _cost) {
+            CBSLowLevelPlanner<Robot*,CBSConstraint,CBSSolution*>& _lowLevel,
+            CBSCostFunction<Robot*,CBSConstraint,CBSSolution*>& _cost) {
         return this->SplitNodeFunction(_node,_constraints,_lowLevel,_cost);
       }
     );
 
-    CBSCostFunction<Robot,CBSConstraint,CBSSolution> cost(
+    CBSCostFunction<Robot*,CBSConstraint,CBSSolution*> cost(
       [this](CBSNodeType& _node) {
         return this->CostFunction(_node);
       }
@@ -2039,27 +2039,27 @@ ComputeMAPFPaths(const VID _vid) {
     solution = sol.solutionMap;
   } 
   else {
-    CBSLowLevelPlanner<Robot,OrderingConstraint,CBSSolution> lowLevel(
+    CBSLowLevelPlanner<Robot*,OrderingConstraint,CBSSolution*> lowLevel(
       [this](PBSNodeType& _node, Robot* _task) {
         return this->LowLevelPlanner(_node,_task);
       }
     );
 
-    CBSValidationFunction<Robot,OrderingConstraint,CBSSolution> validation(
+    CBSValidationFunction<Robot*,OrderingConstraint,CBSSolution*> validation(
       [this](PBSNodeType& _node) {
         return this->ValidationFunction(_node);
       }
     );
 
-    CBSSplitNodeFunction<Robot,OrderingConstraint,CBSSolution> splitNode(
+    CBSSplitNodeFunction<Robot*,OrderingConstraint,CBSSolution*> splitNode(
       [this](PBSNodeType& _node, std::vector<std::pair<Robot*,OrderingConstraint>> _constraints,
-            CBSLowLevelPlanner<Robot,OrderingConstraint,CBSSolution>& _lowLevel,
-            CBSCostFunction<Robot,OrderingConstraint,CBSSolution>& _cost) {
+            CBSLowLevelPlanner<Robot*,OrderingConstraint,CBSSolution*>& _lowLevel,
+            CBSCostFunction<Robot*,OrderingConstraint,CBSSolution*>& _cost) {
         return this->SplitNodeFunction(_node,_constraints,_lowLevel,_cost);
       }
     );
 
-    CBSCostFunction<Robot,OrderingConstraint,CBSSolution> cost(
+    CBSCostFunction<Robot*,OrderingConstraint,CBSSolution*> cost(
       [this](PBSNodeType& _node) {
         return this->CostFunction(_node);
       }

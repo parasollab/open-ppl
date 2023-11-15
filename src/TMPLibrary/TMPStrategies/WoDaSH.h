@@ -26,7 +26,7 @@ class WoDaSH : public TMPStrategyMethod {
     typedef typename TMPBaseObject::GroupRoadmapType  GroupRoadmapType;
     typedef typename MPTraits<CfgType>::GroupPathType GroupPathType;
     typedef size_t                                    VID;
-    
+
     typedef typename std::map<Robot*, VID>      VIDMap;
     typedef std::vector<Point3d>                PointSet;
     typedef std::map<Robot*, const Boundary*>   BoundaryMap;
@@ -58,10 +58,10 @@ class WoDaSH : public TMPStrategyMethod {
 
     // ((vid, vid=INVAILD_VID), time)
     typedef std::pair<std::pair<VID, VID>, size_t>             CBSConstraint;
-    typedef CBSNode<Robot,CBSConstraint,CBSSolution>           CBSNodeType;
+    typedef CBSNode<Robot*,CBSConstraint,CBSSolution*>           CBSNodeType;
 
     typedef Robot* OrderingConstraint;
-    typedef CBSNode<Robot, OrderingConstraint, CBSSolution>    PBSNodeType;
+    typedef CBSNode<Robot*, OrderingConstraint, CBSSolution*>    PBSNodeType;
 
     ///@}
     ///@name Hyperskeleton Types
@@ -159,7 +159,7 @@ class WoDaSH : public TMPStrategyMethod {
     typedef Hypergraph<CompositeSkeletonVertex,
                        HyperskeletonArc> HypergraphSkeletonType;
 
-    ///@} 
+    ///@}
     ///@name Construction
     ///@{
 
@@ -174,12 +174,12 @@ class WoDaSH : public TMPStrategyMethod {
     ///@{
 
     virtual void Initialize() override;
-	
-    virtual void PlanTasks() override; 
+
+    virtual void PlanTasks() override;
 
     ///@}
 
-  private: 
+  private:
     ///@name Helper Functions
     ///@{
 
@@ -190,11 +190,11 @@ class WoDaSH : public TMPStrategyMethod {
 
     std::vector<std::pair<Robot*, CBSConstraint>> ValidationFunction(CBSNodeType& _node);
 
-    std::vector<CBSNodeType> SplitNodeFunction(CBSNodeType& _node, 
+    std::vector<CBSNodeType> SplitNodeFunction(CBSNodeType& _node,
             std::vector<std::pair<Robot*, CBSConstraint>> _constraints,
-            CBSLowLevelPlanner<Robot, CBSConstraint, CBSSolution>& _lowLevel,
-            CBSCostFunction<Robot, CBSConstraint, CBSSolution>& _cost);
-    
+            CBSLowLevelPlanner<Robot*, CBSConstraint, CBSSolution*>& _lowLevel,
+            CBSCostFunction<Robot*, CBSConstraint, CBSSolution*>& _cost);
+
     bool LowLevelPlanner(CBSNodeType& _node, Robot* _robot);
 
     template <typename NodeType>
@@ -203,8 +203,8 @@ class WoDaSH : public TMPStrategyMethod {
     /// Forms new PBS nodes from new constraints.
     std::vector<PBSNodeType> SplitNodeFunction(PBSNodeType& _node,
         std::vector<std::pair<Robot*,OrderingConstraint>> _constraints,
-        CBSLowLevelPlanner<Robot,OrderingConstraint,CBSSolution>& _lowLevel,
-        CBSCostFunction<Robot,OrderingConstraint,CBSSolution>& _cost);
+        CBSLowLevelPlanner<Robot*, OrderingConstraint, CBSSolution*>& _lowLevel,
+        CBSCostFunction<Robot*, OrderingConstraint, CBSSolution*>& _cost);
 
     /// Evaluate whether a set of priorities has a circular dependency.
     /// @param _robot The robot which the new constraint applies to.
@@ -300,7 +300,7 @@ class WoDaSH : public TMPStrategyMethod {
     std::string m_motionEvaluator;         ///< The motion evaluator label (Scheduled CBS)
 
     /// Skeleton clearance annotations
-    std::map<Robot*, PropertyMap<std::vector<double>,double>*> m_annotationMap; 
+    std::map<Robot*, PropertyMap<std::vector<double>,double>*> m_annotationMap;
 
     std::unique_ptr<HypergraphSkeletonType> m_skeleton;
 
