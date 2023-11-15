@@ -288,6 +288,9 @@ GenerateModeHypergraph(const std::vector<VID>& _initialModes) {
     for(auto actionLabel : as->GetActions()) {
       auto action = actionLabel.second;
       ApplyAction(action,appliedActions[action],newModes);
+      if(action->IsReversible()) {
+        ApplyAction(action,appliedActions[action],newModes,false);
+      }
     }
 
   } while(!newModes.empty());
@@ -703,6 +706,8 @@ GenerateRoadmaps(const State& _start, std::set<VID>& _startVIDs, std::set<VID>& 
 
   auto gh = dynamic_cast<GroundedHypergraph*>(this->GetStateGraph(m_GH).get());
 
+  std::map<Robot*,Robot*> plannedRoadmapMap;
+
   // Set all robots to virtual
   for(auto pair : c->GetInitialRobotGroups()) {
     auto group = pair.first;
@@ -795,16 +800,59 @@ GenerateRoadmaps(const State& _start, std::set<VID>& _startVIDs, std::set<VID>& 
     auto vertex = kv.second;
     auto mode = vertex.property;
 
-    bool actuated = false;
+    //bool actuated = false;
+    Robot* actuated = nullptr;
+    Robot* passive = nullptr;
     for(auto robot : mode->robotGroup->GetRobots()) {
       if(!robot->GetMultiBody()->IsPassive()) {
-        actuated = true;
-        break;
+        actuated = robot;
+      }
+      else {
+        passive = robot;
       }
     }
 
     if(!actuated)
       continue;
+
+    // Check if this robot already has a planned object roadmap
+    if(mode->robotGroup->Size() > 1 and plannedRoadmapMap.find(actuated) != plannedRoadmapMap.end()) {
+      auto repObject = plannedRoadmapMap[actuated];
+      std::vector<Robot*> oldGroup = {actuated,plannedRoadmapMap[actuated]};
+      std::string label = oldGroup[0]->GetLabel() + "::" + oldGroup[1]->GetLabel();
+      auto repGroup = this->GetMPProblem()->AddRobotGroup(oldGroup,label);
+      auto sol = this->GetPlan()->GetMPSolution();
+      auto repRm = sol->GetGroupRoadmap(repGroup);
+      auto rm = sol->GetGroupRoadmap(mode->robotGroup);
+
+      std::map<size_t,size_t> vidMap;
+      for(auto vit = repRm->begin(); vit != repRm->end(); vit++) {
+        auto vid = vit->descriptor();
+        auto gcfg = vit->property();
+        GroupCfgType newGcfg(rm);
+        Cfg cfg(passive);
+        cfg.SetData(gcfg.GetRobotCfg(repObject).GetData());
+        newGcfg.SetRobotCfg(passive,std::move(cfg));
+        cfg = gcfg.GetRobotCfg(actuated);
+        newGcfg.SetRobotCfg(actuated,std::move(cfg));
+        auto newVID = rm->AddVertex(newGcfg);
+        vidMap[vid] = newVID;
+      }
+
+      for(auto vit = repRm->begin(); vit != repRm->end(); vit++) {
+        for(auto eit = vit->begin(); eit != vit->end(); eit++) {
+          auto source = vidMap[eit->source()];
+          auto target = vidMap[eit->target()];
+          auto edge = eit->property();
+          GroupLocalPlanType newEdge(rm,edge.GetLPLabel(),edge.GetWeight());
+          newEdge.SetTimeSteps(edge.GetTimeSteps());
+          rm->AddEdge(source,target,newEdge);
+        }
+      }
+
+      continue;
+    }
+      
 
     // Initialize dummy task
     auto task = new GroupTask(mode->robotGroup);
@@ -851,6 +899,10 @@ GenerateRoadmaps(const State& _start, std::set<VID>& _startVIDs, std::set<VID>& 
     }
 
     delete task;
+
+    if(actuated and passive) {
+      plannedRoadmapMap[actuated] = passive;
+    }
   }
 
   // TODO::Collect set of modes for each robot-unique object type pairing
@@ -1061,13 +1113,13 @@ ConnectTransitions() {
 
 void
 ModeGraph::
-ApplyAction(Action* _action, std::set<std::vector<VID>>& _applied, std::vector<VID>& _newModes) {
+ApplyAction(Action* _action, std::set<std::vector<VID>>& _applied, std::vector<VID>& _newModes, bool _forward) {
   auto as = this->GetTMPLibrary()->GetActionSpace();
 
   // Extract the formation and motion constraints
   std::vector<FormationCondition*> initialFormationConditions;
   std::vector<MotionCondition*> initialMotionConditions;
-  auto initialStage = _action->GetStages()[0];
+  auto initialStage = _forward ? _action->GetStages()[0] : _action->GetStages().back();
   for(auto label : _action->GetStageConditions(initialStage)) {
     auto c = as->GetCondition(label);
     auto f = dynamic_cast<FormationCondition*>(c);
@@ -1186,7 +1238,7 @@ ApplyAction(Action* _action, std::set<std::vector<VID>>& _applied, std::vector<V
   // Extract the final formation and motion constraints
   std::vector<FormationCondition*> finalFormationConditions;
   std::vector<MotionCondition*> finalMotionConditions;
-  auto finalStage = _action->GetStages().back();
+  auto finalStage = _forward ? _action->GetStages().back() : _action->GetStages().front();
 
   for(auto label : _action->GetStageConditions(finalStage)) {
     auto c = as->GetCondition(label);
@@ -1330,9 +1382,9 @@ ApplyAction(Action* _action, std::set<std::vector<VID>>& _applied, std::vector<V
       if(overlap)
         continue;
 
-      m_modeHypergraph.AddHyperarc(head,tail,std::make_pair(_action,false));
+      m_modeHypergraph.AddHyperarc(head,tail,std::make_pair(_action,!_forward));
       if(_action->IsReversible()) {
-        m_modeHypergraph.AddHyperarc(tail,head,std::make_pair(_action,true));
+        m_modeHypergraph.AddHyperarc(tail,head,std::make_pair(_action,_forward));
       }
     }
 
@@ -2077,6 +2129,10 @@ CanReach(const State& _state) {
       const auto& sphere2 = spheres[j];
       const auto& center2 = sphere2.first;
       const auto& radius2 = sphere2.second;
+
+      // Check if both spheres correspond to passive objects
+      if(radius1 == 0 and radius2 == 0)
+        continue;
 
       double distance = 0;
       for(size_t k = 0; k < 3; k++) {

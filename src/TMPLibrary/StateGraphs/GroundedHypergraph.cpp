@@ -17,6 +17,9 @@ GroundedHypergraph(XMLNode& _node) : StateGraph(_node) {
 
   m_queryStrategy = _node.Read("queryStrategy",true,"",
                       "MPStrategy label to query roadaps.");
+
+  m_queryStaticStrategy = _node.Read("queryStaticStrategy",false,m_queryStrategy,
+                      "Strategy method to compute paths over static roadmaps.");
 }
 
 GroundedHypergraph::
@@ -215,12 +218,12 @@ ConnectAllTransitions(const std::vector<VID>& _vertices, const PathConstraints& 
 
   delete mt;
   // Strange behavior to avoid issues with roadmaps being improved after costs are saved
-  //if(m_queryStrategy != m_queryStrategyStatic) {
-  //  auto stash = m_queryStrategy;
-  //  m_queryStrategy = m_queryStrategyStatic;
-  //  ConnectTransitions();
-  //  m_queryStrategy = stash;
-  //}
+  if(m_queryStrategy != m_queryStaticStrategy) {
+    auto stash = m_queryStrategy;
+    m_queryStrategy = m_queryStaticStrategy;
+    ConnectAllTransitions(_vertices,_pathConstraints,_bidirectional);
+    m_queryStrategy = stash;
+  }
 }
 
 bool
@@ -283,6 +286,12 @@ const std::set<GroundedHypergraph::HID>
 GroundedHypergraph::
 GetOutgoingHyperarcs(const VID& _vid) {
   return m_hypergraph->GetOutgoingHyperarcs(_vid);
+}
+
+const std::set<GroundedHypergraph::HID>
+GroundedHypergraph::
+GetIncomingHyperarcs(const VID& _vid) {
+  return m_hypergraph->GetIncomingHyperarcs(_vid);
 }
 
 /*------------------------- Miscellaneous Accessors --------------------------*/

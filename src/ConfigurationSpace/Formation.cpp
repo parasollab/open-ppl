@@ -124,7 +124,28 @@ operator==(const Formation& _formation) {
 bool 
 Formation::
 operator!=(const Formation& _formation) {
-  if(m_robots != _formation.m_robots)
+  //if(m_robots != _formation.m_robots)
+  //  return true;
+
+  if(m_robots.size() != _formation.m_robots.size())
+    return true;
+
+  bool sameRobots = true;
+  for(auto r1 : m_robots) {
+    bool match = false;
+    for(auto r2 : _formation.m_robots) {
+      if(r1 == r2) {
+        match = true;
+        break;
+      }
+    }
+    if(!match) {
+      sameRobots = false;
+      break;
+    }
+  }
+
+  if(!sameRobots)
     return true;
 
   if(m_leader != _formation.m_leader)

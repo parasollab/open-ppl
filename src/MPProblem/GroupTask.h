@@ -115,7 +115,7 @@ class GroupTask {
     /// Access, modify, and iterate over the individual tasks.
 
     /// Get the number of goals in the longest (most goals) task.
-    size_t GetNumGoals() const noexcept;
+    size_t GetNumGoals(const GroupCfgType* _cfg=nullptr) const noexcept;
 
     /// Add an individual task.
     /// @param _t The individual task to add.

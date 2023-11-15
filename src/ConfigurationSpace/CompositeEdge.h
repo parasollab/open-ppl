@@ -170,6 +170,8 @@ class CompositeEdge {
     /// be invalid if an individual edge is local.
     virtual std::vector<ED>& GetEdgeDescriptors() noexcept;
 
+    virtual ED GetEdgeDescriptor(Robot* _robot);
+
     virtual RobotGroup* GetGroup();
 
     /// Get the number of robots given in this group local plan.
@@ -529,6 +531,15 @@ std::vector<typename CompositeEdge<GraphType>::ED>&
 CompositeEdge<GraphType>::
 GetEdgeDescriptors() noexcept {
   return m_edges;
+}
+
+
+template <typename GraphType>
+typename CompositeEdge<GraphType>::ED
+CompositeEdge<GraphType>::
+GetEdgeDescriptor(Robot* _robot) {
+  auto idx = m_group->GetGroupIndex(_robot);
+  return m_edges.at(idx);
 }
 
 

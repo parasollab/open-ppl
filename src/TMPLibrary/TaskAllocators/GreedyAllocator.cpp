@@ -65,7 +65,7 @@ AllocateTask(SemanticTask* _semanticTask) {
 
   // TODO::Assign task to robot that can finish it first
 
-  Robot* bestRobot;
+  Robot* bestRobot = nullptr;
   double bestCost = numeric_limits<double>::max();
   std::unique_ptr<Path> bestPath;
 

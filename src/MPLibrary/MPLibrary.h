@@ -615,7 +615,9 @@ ReadXMLFile(const std::string& _filename) {
 
   std::string filename = planningLibrary->Read("filename",false,"","Separate Library XML file.");
   if(!filename.empty()) {
-    mpNode = XMLNode(filename,"MotionPlanning");
+    size_t pos = _filename.find_last_of("/\\");
+    auto path = _filename.substr(0,pos+1);
+    mpNode = XMLNode(path + filename,"MotionPlanning");
     for(auto& child : mpNode)
       if(child.Name() == "Library")
         planningLibrary = &child;

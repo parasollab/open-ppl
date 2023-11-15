@@ -85,6 +85,8 @@ class ScheduledCBS : public TaskEvaluatorMethod {
                         CBSLowLevelPlanner<SemanticTask*,Constraint,GroupPathType*>& _lowLevel,
                         CBSCostFunction<SemanticTask*,Constraint,GroupPathType*>& _cost);
 
+    bool EarlyTermination(const size_t& _numNodes);
+
     ///@}
     ///@name Helper Functions
     ///@{
@@ -150,6 +152,17 @@ class ScheduledCBS : public TaskEvaluatorMethod {
     bool m_bypass{true};
 
     bool m_quit{false};
+
+    size_t m_buffer{0};
+
+    double m_alpha;
+    double m_X;
+
+    size_t m_quitTimes{0};
+
+    bool m_writeSolution{false};
+
+    bool m_workspace{false};
 
     ///@}
 

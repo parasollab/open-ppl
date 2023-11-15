@@ -159,7 +159,10 @@ GetStatus() const noexcept {
 
 size_t
 GroupTask::
-GetNumGoals() const noexcept {
+GetNumGoals(const GroupCfgType* _cfg) const noexcept {
+  if(_cfg and this->GetRobotGroup() != _cfg->GetGroup())
+    return 0;
+
   size_t max = 0;
   for(const auto& task : *this)
     max = std::max(max, task.GetNumGoals());
@@ -266,6 +269,9 @@ GetStartConstraintCenter(GroupCfgType& _center) const noexcept {
 bool
 GroupTask::
 EvaluateStartConstraints(const GroupCfgType& _cfg) const {
+  if(this->GetRobotGroup() != _cfg.GetGroup())
+    return false;
+
   for(const auto& task : m_individualTasks) {
     // For now we will require all individual tasks to be assigned to a robot.
     auto robot = task.GetRobot();

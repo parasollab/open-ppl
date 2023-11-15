@@ -81,6 +81,7 @@ class WorkspaceSkeleton : public GenericStateGraph<mathtool::Point3d, std::vecto
     void Prune(const mathtool::Point3d& _goal);
 
     /// Divide existing edges into sizes of at most _maxLength.
+    ///@note This should only be used for straight-line edges
     void RefineEdges(double _maxLength);
 
     /// Double up the edges so that each one has a duplicate facing the opposite

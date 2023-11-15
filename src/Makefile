@@ -3,7 +3,7 @@
 # Set platform, debug mode, and address sanitizer if not already set.
 # Had to use this for building on machine at A&M
 platform ?= Ubuntu
-debug    ?= 1
+debug    ?= 0
 asan     ?= 0
 
 #! Important note about ASAN: you will also need to set these environment
@@ -17,10 +17,10 @@ asan     ?= 0
 
 
 # Temporary setting for making vizmo-compatible maps for nonholonomic robots.
-vizmo_map := #-DVIZMO_MAP
+vizmo_map := -DVIZMO_MAP
 
 # Temporary setting for making vizmo-compatible maps for robot groups.
-group_map := #-DGROUP_MAP
+group_map := -DGROUP_MAP
 ifeq ($(group_map), -DGROUP_MAP)
   vizmo_map ?= -DVIZMO_MAP
 endif

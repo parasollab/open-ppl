@@ -134,7 +134,7 @@ class ModeGraph : public StateGraph {
     void ConnectTransitions();
 
     void ApplyAction(Action* _action, std::set<std::vector<VID>>& _applied,
-                     std::vector<VID>& _newModes);
+                     std::vector<VID>& _newModes, bool _forward=true);
 
     std::vector<std::vector<ModeGraph::VID>> CollectModeSets(
                const std::vector<std::vector<VID>>& _formationModes, 
@@ -213,6 +213,9 @@ class ModeGraph : public StateGraph {
 
     // TEMP TO GET SEPARATE GROUNDED HYPERGRAPH
     std::string m_GH;
+
+    // Aggressive at the moment assuming objects are homogeneous
+    bool m_copyRoadmaps{true}; ///< Flag to copy roadmaps for a robot for all objects
 
     ///@}
 

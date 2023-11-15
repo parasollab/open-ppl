@@ -123,6 +123,8 @@ class GroundedHypergraph : public StateGraph {
 
     const std::set<HID> GetOutgoingHyperarcs(const VID& _vid);
 
+    const std::set<HID> GetIncomingHyperarcs(const VID& _vid);
+
     void Print();
 
     ///@}
@@ -155,6 +157,9 @@ class GroundedHypergraph : public StateGraph {
     ///@{
 
     std::string m_queryStrategy;
+
+    //TODO::This should really just be a map evaluator that is run over everything after all the transition end points have been connected to the roadmap
+    std::string m_queryStaticStrategy; ///< Path query method to run after roadmaps are complete
 
     ///@}
 };

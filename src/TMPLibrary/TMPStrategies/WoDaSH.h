@@ -4,14 +4,17 @@
 #include "TMPStrategyMethod.h"
 
 #include "TMPLibrary/ActionSpace/Condition.h"
+#include "Geometry/Boundaries/Boundary.h"
 
 #include "Traits/CfgTraits.h"
 
 #include "Workspace/WorkspaceSkeleton.h"
 #include "Workspace/HypergraphWorkspaceSkeleton.h"
 
+
 class Action;
 class Interaction;
+class Boundary;
 
 class WoDaSH : public TMPStrategyMethod {
   public:
@@ -29,6 +32,9 @@ class WoDaSH : public TMPStrategyMethod {
     typedef std::map<Robot*, const Boundary*>   BoundaryMap;
     typedef std::map<Robot*, Vector3d>          VectorMap;
 
+    typedef std::pair<GroupRoadmapType*, VID> RepresentativeVertex;
+    typedef std::pair<bool, size_t>           BoolHID;
+
     typedef Condition::State                 State;
     typedef std::set<std::string>            RoleSet;
 
@@ -41,12 +47,10 @@ class WoDaSH : public TMPStrategyMethod {
 
     typedef CompositeState<WorkspaceSkeleton>  CompositeSkeletonVertex;
     typedef CompositeEdge<WorkspaceSkeleton>   CompositeSkeletonEdge;
-    typedef HypergraphWorkspaceSkeleton<CompositeSkeletonVertex,
-            CompositeSkeletonEdge> HypergraphSkeletonType;
     typedef size_t HID;
 
     ///@}
-    ///@name CBS Types
+    ///@name MAPF Types
     ///@{
 
     typedef GenericStateGraph<std::pair<size_t,size_t>,double> HeuristicSearch;
@@ -56,6 +60,104 @@ class WoDaSH : public TMPStrategyMethod {
     typedef std::pair<std::pair<VID, VID>, size_t>             CBSConstraint;
     typedef CBSNode<Robot*,CBSConstraint,CBSSolution*>           CBSNodeType;
 
+    typedef Robot* OrderingConstraint;
+    typedef CBSNode<Robot*, OrderingConstraint, CBSSolution*>    PBSNodeType;
+
+    ///@}
+    ///@name Hyperskeleton Types
+    ///@{
+
+    enum class HyperskeletonArcType {
+      Movement, ///< Move along a skeleton edge
+      Couple,   ///< Merge two groups going in the opposite direction on same edge
+      Decouple, ///< Split two groups of robots moving in opposite directions
+      Merge,    ///< Merge together groups coming into the same vertex
+      Split     ///< Split groups going out from a merge onto different edges
+    };
+
+    struct HyperskeletonArc {
+      CompositeSkeletonEdge edge;
+      HyperskeletonArcType type;
+
+      RepresentativeVertex startRep;
+      RepresentativeVertex endRep;
+
+      HyperskeletonArc() {}
+
+      HyperskeletonArc(CompositeSkeletonEdge _edge, bool _pushStart, bool _pushTarget,
+                       HyperskeletonArcType _type, RepresentativeVertex _start,
+                       RepresentativeVertex _end) : edge(_edge), type(_type), 
+                       startRep(_start), endRep(_end) {}
+      
+      HyperskeletonArc(CompositeSkeletonEdge _edge, HyperskeletonArcType _type) :
+          edge(_edge), type(_type) {}
+
+      bool operator==(const HyperskeletonArc& _arc) {
+        return !(*this != _arc);
+      }
+
+      bool operator!=(const HyperskeletonArc& _arc) {
+        if(edge != _arc.edge)
+          return true;
+        
+        if(type != _arc.type)
+          return true;
+        
+        if(startRep != _arc.startRep or endRep != _arc.endRep)
+          return true;
+        
+        return false;
+      }
+
+      friend std::ostream& operator<<(std::ostream& _os, const HyperskeletonArc& _arc) {
+        _os << "Composite Edge: " << _arc.edge
+            << ", type: ";
+
+        switch(_arc.type) {
+          case HyperskeletonArcType::Movement: _os << "Movement";
+          case HyperskeletonArcType::Couple: _os << "Couple";
+          case HyperskeletonArcType::Decouple: _os << "Decouple";
+          case HyperskeletonArcType::Merge: _os << "Merge";
+          case HyperskeletonArcType::Split: _os << "Split";
+        }
+
+        _os << ", startRep: " << _arc.startRep
+            << ", endRep: " << _arc.endRep;
+
+        return _os;
+      }
+    };
+
+    struct HyperskeletonPath {
+      std::vector<VID> buildMovementHyperarcs; // Want to ground these in order
+      std::unordered_set<HID> movementHyperarcs;
+      std::unordered_set<HID> coupleHyperarcs;
+      std::unordered_set<HID> decoupleHyperarcs;
+      std::unordered_set<HID> mergeHyperarcs;
+      std::unordered_set<HID> splitHyperarcs;
+
+      std::unordered_map<HID, std::unordered_map<Robot*, BoolHID>> predecessors;
+      std::unordered_map<HID, std::unordered_map<Robot*, BoolHID>> successors;
+
+      std::unordered_set<HID> groundedSolution; // Path through grounded hypergraph
+
+      HyperskeletonPath() {}
+
+      void Reset() {
+        buildMovementHyperarcs.clear();
+        movementHyperarcs.clear();
+        coupleHyperarcs.clear();
+        decoupleHyperarcs.clear();
+        mergeHyperarcs.clear();
+        splitHyperarcs.clear();
+        predecessors.clear();
+        successors.clear();
+        groundedSolution.clear();
+      }
+    };
+
+    typedef Hypergraph<CompositeSkeletonVertex,
+                       HyperskeletonArc> HypergraphSkeletonType;
 
     ///@}
     ///@name Construction
@@ -95,7 +197,33 @@ class WoDaSH : public TMPStrategyMethod {
 
     bool LowLevelPlanner(CBSNodeType& _node, Robot* _robot);
 
-    double CostFunction(CBSNodeType& _node);
+    template <typename NodeType>
+    double CostFunction(NodeType& _node);
+
+    /// Forms new PBS nodes from new constraints.
+    std::vector<PBSNodeType> SplitNodeFunction(PBSNodeType& _node,
+        std::vector<std::pair<Robot*,OrderingConstraint>> _constraints,
+        CBSLowLevelPlanner<Robot*, OrderingConstraint, CBSSolution*>& _lowLevel,
+        CBSCostFunction<Robot*, OrderingConstraint, CBSSolution*>& _cost);
+
+    /// Evaluate whether a set of priorities has a circular dependency.
+    /// @param _robot The robot which the new constraint applies to.
+    /// @param _newConstraint The new constraint which will be added.
+    /// @param _constraints The existing priority constraints.
+    /// @return Whether the new constraint adds a circular dependency.
+    bool CheckCircularDependency(Robot* _robot, const OrderingConstraint& _newConstraint, 
+                const std::map<Robot*,std::set<OrderingConstraint>>& _constraints);
+
+    /// Finds a low level solution for a robot over the workspace skeleton for PBS.
+    bool LowLevelPlanner(PBSNodeType& _node, Robot* _robot);
+
+    /// Specify that robots that depend on _robot must also replan.
+    void AddDependencies(std::set<Robot*>& _needsToReplan, Robot* _robot,
+                const PBSNodeType& _node);
+
+    /// Finds conflicts in a PBS solution.
+    std::vector<std::pair<Robot*,OrderingConstraint>> 
+    ValidationFunction(PBSNodeType& _node);
 
     /// Generate a set of paths through the implicit skeleton using CBS
     std::unordered_map<Robot*, CBSSolution*> MAPFSolution();
@@ -115,19 +243,31 @@ class WoDaSH : public TMPStrategyMethod {
 
     bool FinishedEdge(CompositeSkeletonEdge _edge, const GroupCfgType& _groupCfg);
 
-    std::vector<CompositeSkeletonVertex>
-    ComputeIntermediates(const CompositeSkeletonVertex _source,
-                        const CompositeSkeletonVertex _target,
-                        CompositeSkeletonEdge _edge,
-                        const bool pushStart=false,
-                        const bool pushTarget=false);
+    void
+    ComputeIntermediates(std::unordered_map<Robot*, CBSSolution*> _mapfSolution, 
+                        size_t _timestep,
+                        CompositeSkeletonVertex& _compSource, 
+                        CompositeSkeletonVertex& _compTarget, 
+                        CompositeSkeletonEdge& _compEdge);
 
-    void ConnectToSkeleton();
+    bool ConnectToSkeleton();
+
+    void GroundStartAndGoal();
 
     RobotGroup* AddGroup(std::vector<Robot*> _robots);
 
-    HID AddTransitionToGroundedHypergraph(std::set<VID> _tail, std::set<VID> _head,
+    void SetVirtualExcept(RobotGroup* _group=nullptr);
+
+    HID AddTransitionToGroundedHypergraph(std::set<VID> _tail, std::set<VID> _head, 
       GroupPathType* _path, std::shared_ptr<GroupTask> _task);
+
+    HID AddTransitionToGroundedHypergraph(std::set<RepresentativeVertex> _tail, 
+      std::set<RepresentativeVertex> _head, GroupPathType* _path, 
+      std::shared_ptr<GroupTask> _task);
+
+    void ConvertToPlan(std::unordered_set<HID> _path);
+
+    std::vector<HID> OrderPath(std::unordered_set<HID> _path);
 
     ///@}
     ///@name Internal State
@@ -138,11 +278,18 @@ class WoDaSH : public TMPStrategyMethod {
 
     std::string m_sampler; // Sampler to generate spawn vertices
 
+    std::string m_mapf{"cbs"};
     std::string m_replanMethod{"global"}; // How to deal with constraints when replanning MAPF solution
 
     std::unordered_map<Robot*, MPTask*> m_taskMap;
+    std::unordered_map<RobotGroup*, GroupTask*> m_groupTaskMap;
+    std::unordered_map<RobotGroup*, GroupRoadmapType> m_roadmaps;
+
+    RobotGroup* m_wholeGroup{nullptr};
+    GroupTask* m_wholeTask{nullptr};
 
     WorkspaceSkeleton m_indSkeleton;
+    double m_split{0.};
     std::string m_skeletonFilename;        ///< The output file for the skeleton graph
     std::string m_skeletonIO;              ///< Option to read or write the skeleton
     std::string m_skeletonType{"reeb"};    ///< Type of skeleton to build.
@@ -150,26 +297,23 @@ class WoDaSH : public TMPStrategyMethod {
     std::string m_scuLabel;                ///< The skeleton clearance utility label.
     std::string m_edgeQueryLabel;          ///< The query method to extract paths along grounded edges.
     std::string m_groundedHypergraphLabel; ///< The grounded hypergraph label
-    std::string m_queryLabel;              ///< The hypergraph query label
+    std::string m_motionEvaluator;         ///< The motion evaluator label (Scheduled CBS)
 
     /// Skeleton clearance annotations
     std::map<Robot*, PropertyMap<std::vector<double>,double>*> m_annotationMap;
 
     std::unique_ptr<HypergraphSkeletonType> m_skeleton;
-    std::unordered_map<size_t, std::unordered_map<Robot*, HID>> m_hidPaths;
+
+    // TODO update everything to account for this change (false, vid for waiting)
+    std::unordered_map<size_t, std::unordered_map<Robot*, BoolHID>> m_hidPaths;
+
+    // Map hyperskeleton vertex to a represenative group configuration
+    std::unordered_map<VID, RepresentativeVertex> m_waitingReps;
     std::unordered_map<Robot*, size_t> m_pathLengths;
 
-    std::unordered_set<HID> m_groundHIDs;
-    std::unordered_set<HID> m_mergeTraj;
-    std::unordered_set<HID> m_splitTraj;
+    HyperskeletonPath m_path;
 
-    std::unordered_set<HID> m_origStart;
-    std::unordered_set<HID> m_origTarget;
-
-    // TODO::Think about if we will ever have more than one grounded instance of a WHS vertex
-    // Start and end VIDs for each hyperskeleton hyperarc
-    std::unordered_map<HID, std::pair<GroupRoadmapType*, VID>> m_startReps;
-    std::unordered_map<HID, std::pair<GroupRoadmapType*, VID>> m_endReps;
+    std::unordered_map<HID, HID> m_skeletonToGrounded;
 
     /// The dynamic sampling regions will have radius equal to this times the
     /// robot's bounding sphere radius.
@@ -189,11 +333,25 @@ class WoDaSH : public TMPStrategyMethod {
     std::unordered_map<Robot*, VID> m_skeletonStarts;
     std::unordered_map<Robot*, VID> m_skeletonGoals;
 
+    VID m_groundedStartVID{INVALID_VID};
+    VID m_groundedGoalVID{INVALID_VID};
+
+    VID m_virtualSource{INVALID_VID};
+    VID m_virtualSink{INVALID_VID};
+
     // Constraints from hyperarcs that failed to ground
-    std::unordered_map<std::pair<VID, VID>, RobotGroup*> m_failedEdges;
+    std::vector<std::unordered_map<Robot*, std::pair<VID, VID>>> m_failedEdges;
+    // std::unordered_map<std::pair<VID, VID>, RobotGroup*> m_failedEdges;
+
+    // Cache composition hyperarcs that have already been grounded for 
+    // repeated queries
+    std::unordered_set<HID> m_cachedTrajs;
 
     // Map from workspace hyper-skeleton VID to all grounded instances of itself
     std::unordered_map<VID,std::unordered_set<VID>> m_vertexGroundingMap;
+
+    /// Use skeleton edge clearance during MAPF validity functions?
+    bool m_clearance{true};
 
     ///@}
 };

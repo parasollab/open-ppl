@@ -77,7 +77,7 @@ class CompositeState {
     /// Get the full vector of robot pointers.
     virtual const std::vector<Robot*>& GetRobots() const noexcept;
 
-    virtual RobotGroup* GetGroup();
+    virtual RobotGroup* GetGroup() const noexcept;
 
     /// Get the robot pointer for a group member by index.
     /// @param _index The desired index.
@@ -241,7 +241,12 @@ operator==(const CompositeState<GraphType>& _other) const noexcept {
     return false;
 
   // If _other is from another graph, these are not the same.
-  if(m_groupMap != _other.m_groupMap || m_individualGraph != _other.m_individualGraph)
+  if(m_groupMap != nullptr and _other.m_groupMap != nullptr and 
+          m_groupMap != _other.m_groupMap)
+    return false;
+  
+  if(m_individualGraph != nullptr and _other.m_individualGraph != nullptr and
+          m_individualGraph != _other.m_individualGraph)
     return false;
 
   // Else, compare VIDs if both are valid, or by-value other wise.
@@ -289,7 +294,7 @@ GetRobots() const noexcept {
 template <typename GraphType>
 RobotGroup* 
 CompositeState<GraphType>::
-GetGroup() {
+GetGroup() const noexcept {
   return m_group;
 }
 

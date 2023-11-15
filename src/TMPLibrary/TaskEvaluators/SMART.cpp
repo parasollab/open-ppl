@@ -90,6 +90,7 @@ Run(Plan* _plan) {
       stats->SetStat("Success",1);
       stats->SetStat("Steps",i);
       stats->SetStat("Conflicts",m_conflictCount);
+      stats->SetStat(this->GetNameAndLabel()+"::BestCost",m_goalDistance);
 
       return true;
     }
@@ -438,7 +439,8 @@ Extend(size_t _qNear, Direction _direction, size_t _modeID,
   }
 
   // Check if there is a valid connection to the neighbor
-  if(!ValidConnection(vertex,neighbor))
+  auto cost = ValidConnection(vertex,neighbor);
+  if(cost == SIZE_MAX)
     return qNew;
 
   // Add vertex to tensor product roadmap
@@ -446,7 +448,7 @@ Extend(size_t _qNear, Direction _direction, size_t _modeID,
 
   // Add edge to qNear
   std::vector<std::pair<GroupRoadmapType*,std::pair<size_t,size_t>>> transitions;
-  size_t cost = 0;
+  /*size_t cost = 0;
 
   for(auto pair1 : vertex.cfgs) {
     auto grm = pair1.first;
@@ -463,8 +465,7 @@ Extend(size_t _qNear, Direction _direction, size_t _modeID,
         break;
       }
     }
-
-  }
+  }*/
 
   Edge edge;
   edge.transitions = transitions;
@@ -575,7 +576,8 @@ Rewire(size_t _qNew, size_t _qNear, size_t _modeID, size_t _historyID) {
 
     // Check if it is connected
     auto vertex2 = m_tensorProductRoadmap->GetVertex(vid2);
-    if(!ValidConnection(vertex2,vertex1))
+    auto cost = ValidConnection(vertex2,vertex1);
+    if(cost == SIZE_MAX)
       continue;
 
     qBest = cand;
@@ -608,7 +610,8 @@ Rewire(size_t _qNew, size_t _qNear, size_t _modeID, size_t _historyID) {
 
     // Check if it is connected
     auto vertex2 = m_tensorProductRoadmap->GetVertex(vid2);
-    if(!ValidConnection(vertex1,vertex2))
+    auto cost = ValidConnection(vertex1,vertex2);
+    if(cost == SIZE_MAX)
       continue;
 
     // Delete parent of cand
@@ -628,7 +631,7 @@ Rewire(size_t _qNew, size_t _qNear, size_t _modeID, size_t _historyID) {
   return qBest;
 }
 
-bool
+size_t
 SMART::
 ValidConnection(const Vertex& _source, const Vertex& _target) {
   auto plan = this->GetPlan();
@@ -636,7 +639,7 @@ ValidConnection(const Vertex& _source, const Vertex& _target) {
   MethodTimer mt(stats,this->GetNameAndLabel() + "::ValidConnection");
 
   if(_source == _target)
-    return false;
+    return SIZE_MAX;
 
   if(_source.cfgs.size() != _target.cfgs.size())
       throw RunTimeException(WHERE) << "Mismatched group roadmaps.";
@@ -671,6 +674,9 @@ ValidConnection(const Vertex& _source, const Vertex& _target) {
 
   std::map<RobotGroup*,std::vector<GroupCfgType>> localPlans;
   size_t maxTimestep = 0;
+
+  if(edges.empty())
+    return SIZE_MAX;
 
   for(auto kv : edges) {
     auto grm = kv.first;
@@ -717,7 +723,7 @@ ValidConnection(const Vertex& _source, const Vertex& _target) {
             if(cd->IsMultiBodyCollision(cdInfo,
                 r1->GetMultiBody(),r2->GetMultiBody(),this->GetNameAndLabel())) {
 
-              return false;
+              return SIZE_MAX;
             }
           }
         }
@@ -725,7 +731,7 @@ ValidConnection(const Vertex& _source, const Vertex& _target) {
     }
   }
 
-  return true;
+  return maxTimestep;
 }
 
 bool
@@ -990,6 +996,8 @@ CheckForGoal(size_t _qNew) {
     for(auto task : tasks) {
       auto gt = task->GetGroupMotionTask();
 
+      isSatisfied = true;
+
       for(auto iter = gt->begin(); iter != gt->end(); iter++) {
         auto constraint = iter->GetGoalConstraints()[0].get();
 
@@ -1005,6 +1013,7 @@ CheckForGoal(size_t _qNew) {
 
       if(isSatisfied)
         break;
+
     }
 
     if(isSatisfied) {
@@ -1014,6 +1023,8 @@ CheckForGoal(size_t _qNew) {
 
     return false;
   }
+ 
+  m_goalDistance = m_distanceMap[_qNew];
 
   return true;
 }

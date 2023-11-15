@@ -45,6 +45,7 @@ operator()(Interaction* _interaction, State& _start) {
   auto lib = this->GetMPLibrary();
   auto plan = this->GetPlan();
   auto coord = plan->GetCoordinator();
+  auto as = this->GetTMPLibrary()->GetActionSpace();
 
   // Set all robots to virtual
   for(auto kv : coord->GetInitialRobotGroups()) {
@@ -396,20 +397,26 @@ operator()(Interaction* _interaction, State& _start) {
     }
 
     // Identify active robot
-    Robot* active;
+    Robot* active = nullptr;
+    Robot* passive = nullptr;
     for(auto robot : group->GetRobots()) {
-      if(robot->GetMultiBody()->IsPassive())
-        continue;
-
-      active = robot;
-      break;
+      if(robot->GetMultiBody()->IsPassive()) {
+        passive = robot;
+      }
+      else {
+        active = robot;
+      }
     }
 
     GroupCfgType gcfg(rm);
-    gcfg.GetRandomGroupCfg(constraintMap[active]->GetBoundary());
-    auto vid = rm->AddVertex(gcfg);
-
-    goal[group] = std::make_pair(rm,vid);
+    if(active) {
+      gcfg.GetRandomGroupCfg(constraintMap[active]->GetBoundary());
+      auto vid = rm->AddVertex(gcfg);
+      goal[group] = std::make_pair(rm,vid);
+    }
+    else if(passive) {
+      goal[group] = _start[group];
+    }
   }
 
   // Convert group cfg to goal constraints
@@ -432,10 +439,23 @@ operator()(Interaction* _interaction, State& _start) {
   }
   */
 
+  // Grab all static robots from conditions and pass to PlanMotions
+  std::set<Robot*> staticLiftRobots;
+  for(auto c : startConditions) {
+    auto f = dynamic_cast<FormationCondition*>(as->GetCondition(c));
+    if(!f or !f->IsStatic())
+      continue;
+
+    for(auto role : f->GetRoles()) {
+      auto r = m_roleMap[role];
+      staticLiftRobots.insert(r);
+    }
+  }
+
   // Plan path
   auto paths = PlanMotions(tasks,toStageSolution,
       "PlanInteraction::"+_interaction->GetLabel()+"::To"+stages[graspStage+1],
-      {},_start);
+      staticLiftRobots,_start);
 
   size_t delay = _interaction->GetDelay(stages[graspStage+1]);
   if(delay > 0) {
@@ -670,7 +690,7 @@ ComputeEEFrames(Interaction* _interaction, std::map<Robot*,Cfg>& objectPoses, si
       
       auto refRobot = m_roleMap[roleInfo.referenceRole];
       // Check that refRobot is active
-      if(refRobot->GetMultiBody()->IsPassive())
+      if(!refRobot or refRobot->GetMultiBody()->IsPassive())
         continue;
 
       auto refBase = refRobot->GetMultiBody()->GetBase();

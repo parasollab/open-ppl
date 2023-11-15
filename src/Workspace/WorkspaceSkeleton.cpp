@@ -212,48 +212,45 @@ Prune(const mathtool::Point3d& _goal) {
 void
 WorkspaceSkeleton::
 RefineEdges(double _maxLength){
-  std::vector<std::vector<Point3d>> refinedVertices;
-  //std::vector<WorkspaceSkeleton::ED> originalEdges;
-  //for(auto vi = m_graph.begin(); vi != m_graph.end(); vi++){
-    //for(auto ei = vi->begin(); ei != vi->end(); ei++){
-    for(auto ei = this->edges_begin(); ei != this->edges_end(); ei++){
-      auto source = this->find_vertex(ei->source())->property();
-      auto target = this->find_vertex(ei->target())->property();
-      //original_edges.emplace_back(source,target);
-      //if(target[2] != 0 or source[2] != 0)
-      //  continue; //This is a hack because invalid edges are being examined
-      const double distance = (source - target).norm();
-      if(distance < _maxLength)
-        continue;
-      //size_t divisions = (size_t)std::ceil(distance/_maxLength);
-      std::vector<Point3d> newVertices = {this->find_vertex(ei->source())->property()};
-      auto& intermediates = ei->property();
-      double currentDistance = 0;
-      for(size_t i = 1; i < intermediates.size(); i++){
-        double step = (intermediates[i-1] - intermediates[i]).norm();
-        currentDistance += step;
-        //newVertices.push_back(m_graph.add_vertex(intermediates[i*divisions]));
-        if(currentDistance > _maxLength){
-          newVertices.push_back(intermediates[i-1]);
-          currentDistance = step;
-        }
-      }
-      newVertices.push_back(this->find_vertex(ei->target())->property());
-      refinedVertices.push_back(newVertices);
+  std::vector<std::tuple<VD, VD, std::vector<Point3d>>> refinedVertices;
+
+  for(auto ei = this->edges_begin(); ei != this->edges_end(); ei++) {
+    auto source = this->find_vertex(ei->source())->property();
+    auto target = this->find_vertex(ei->target())->property();
+
+    const double distance = (source - target).norm();
+    if(distance < _maxLength)
+      continue;
+
+    int divisions = (int)std::ceil(distance/_maxLength);
+    std::vector<Point3d> newVertices;
+
+    auto disp = target - source;
+    for(int i = 1; i < divisions; i++) {
+      Point3d d = {i * disp[0]/divisions, 
+                   i * disp[1]/divisions, 
+                   i * disp[2]/divisions};
+      newVertices.push_back(source + d);
     }
-  //}
+    refinedVertices.push_back(std::make_tuple(ei->source(), ei->target(), newVertices));
+  }
+
   for(auto edge : refinedVertices){
-    size_t firstVID = FindNearestVertex(edge[0])->descriptor();
-    size_t vd1 = firstVID;
-    size_t vd2 = firstVID;
-    for(size_t i = 1; i < edge.size()-1; i++){
-      vd2 = this->AddVertex(edge[i]);
-      this->AddEdge(vd1,vd2);
-      vd1 = vd2;;
+    auto firstVID = std::get<0>(edge);
+    auto lastVID = std::get<1>(edge);
+    auto newVerts = std::get<2>(edge);
+
+    auto v1 = firstVID;
+    auto p1 = this->find_vertex(v1)->property();
+    for(auto p : newVerts){
+      auto v2 = this->AddVertex(p);
+      this->AddEdge(v1, v2, {p1, p});
+      v1 = v2;
+      p1 = p;
     }
-    size_t lastVID = FindNearestVertex(edge.back())->descriptor();
-    this->AddEdge(vd2,lastVID);
-    this->DeleteEdge(firstVID,lastVID);
+    auto p2 = this->find_vertex(lastVID)->property();
+    this->AddEdge(v1, lastVID, {p1, p2});
+    this->DeleteEdge(firstVID, lastVID);
   }
 }
 

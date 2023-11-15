@@ -60,7 +60,7 @@ class NextBestSearch : public TMPStrategyMethod {
 
     virtual void PlanTasks() override;
 
-    double FindTaskPlan(Decomposition* _decomp);
+    double FindTaskPlan(Decomposition* _decomp,bool _useExtraEval=false);
 
     void ComputeMotions(Node& _bestNode);
 
@@ -136,6 +136,8 @@ class NextBestSearch : public TMPStrategyMethod {
     std::string m_motionEvaluator;
 
     bool m_singleShot{false};
+
+    std::string m_extraEval; ///< Temporary parameter for testing multiple evaluators on the same representation
 
     ///@}
 

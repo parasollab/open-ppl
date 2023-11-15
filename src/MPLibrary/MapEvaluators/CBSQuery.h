@@ -634,7 +634,7 @@ ValidationFunction(Node& _node) {
               throw RunTimeException(WHERE) << "Adding constraint that already exists.";
           }
 
-          int cardinality;
+          int cardinality = 0;
           if (m_pc) {
             cardinality = IsCardinal(_node, robot1, constraintOne) +
                           IsCardinal(_node, robot2, constraintTwo);

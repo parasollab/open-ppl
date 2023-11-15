@@ -413,6 +413,10 @@ Expand(const GroupCfgType& _start, const GroupCfgType& _end,
   _lp.m_edge.first.SetWeight(distance);
   _lp.m_edge.second.SetWeight(distance);
 
+  // Set the timesteps
+  _lp.m_edge.first.SetTimeSteps(ticker);
+  _lp.m_edge.second.SetTimeSteps(ticker);
+
   // Add individual edges to the GroupLocalPlan:
   _lp.SetIndividualEdges(_robotIndexes);
 

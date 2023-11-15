@@ -105,7 +105,7 @@ class MPTask final {
     bool Empty() const noexcept;
 
     /// Get the number of goals in this task.
-    size_t GetNumGoals() const noexcept;
+    size_t GetNumGoals(const Cfg* _cfg=nullptr) const noexcept;
 
     ///@}
     ///@name Constraint Accessors

@@ -84,6 +84,7 @@
 #include "MPLibrary/MapEvaluators/GroupDecoupledQuery.h"
 #include "MPLibrary/MapEvaluators/GroupQuery.h"
 #include "MPLibrary/MapEvaluators/LazyQuery.h"
+#include "MPLibrary/MapEvaluators/MStarQuery.h"
 #include "MPLibrary/MapEvaluators/PrintMapEvaluation.h"
 #include "MPLibrary/MapEvaluators/QueryMethod.h"
 #include "MPLibrary/MapEvaluators/SIPPMethod.h"
@@ -96,6 +97,7 @@
 #include "MPLibrary/MPStrategies/BasicPRM.h"
 #include "MPLibrary/MPStrategies/BasicRRTStrategy.h"
 #include "MPLibrary/MPStrategies/CompositeDynamicRegionRRT.h"
+#include "MPLibrary/MPStrategies/CDRRRTLite.h"
 #include "MPLibrary/MPStrategies/DynamicRegionRRT.h"
 #include "MPLibrary/MPStrategies/DynamicRegionsPRM.h"
 #include "MPLibrary/MPStrategies/EvaluateMapStrategy.h"
@@ -103,6 +105,7 @@
 #include "MPLibrary/MPStrategies/GroupPRM.h"
 #include "MPLibrary/MPStrategies/GroupRRTStrategy.h"
 #include "MPLibrary/MPStrategies/GroupStrategyMethod.h"
+#include "MPLibrary/MPStrategies/MStar.h"
 #include "MPLibrary/MPStrategies/PathGuidedRRT.h"
 #include "MPLibrary/MPStrategies/PathSamplerStrategy.h"
 #include "MPLibrary/MPStrategies/TogglePRMStrategy.h"
@@ -232,6 +235,7 @@ struct MPTraits {
     GroupDecoupledQuery<MPTraits>,
     GroupQuery<MPTraits>,
     LazyQuery<MPTraits>,
+    MStarQuery<MPTraits>,
     PrintMapEvaluation<MPTraits>,
     QueryMethod<MPTraits>,
     SIPPMethod<MPTraits>,
@@ -245,6 +249,7 @@ struct MPTraits {
     BasicPRM<MPTraits>,
     BasicRRTStrategy<MPTraits>,
     CompositeDynamicRegionRRT<MPTraits>,
+    CDRRRTLite<MPTraits>,
     DynamicRegionRRT<MPTraits>,
     DynamicRegionsPRM<MPTraits>,
     EvaluateMapStrategy<MPTraits>,
@@ -253,6 +258,7 @@ struct MPTraits {
     GroupDecoupledStrategy<MPTraits>,
     GroupStrategyMethod<MPTraits>,
     GroupRRTStrategy<MPTraits>,
+    MStar<MPTraits>,
     PathGuidedRRT<MPTraits>,
     PathSamplerStrategy<MPTraits>,
     TogglePRMStrategy<MPTraits>,

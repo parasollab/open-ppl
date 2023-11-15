@@ -256,7 +256,7 @@ class TMPLibrary {
 
     /// Helper for parsing XML nodes.
     /// @param _node The child node to be parsed.
-    bool ParseChild(XMLNode& _node);
+    bool ParseChild(XMLNode& _node, const std::string _path);
 
     ///@}
     ///@name Inputs

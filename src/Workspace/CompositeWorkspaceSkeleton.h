@@ -51,7 +51,8 @@ class CompositeWorkspaceSkeleton : public CompositeGraph<Vertex, Edge> {
 
     CompositeWorkspaceSkeleton();
 
-    CompositeWorkspaceSkeleton(RobotGroup* const _g, WorkspaceSkeletonSet _skeletons);
+    CompositeWorkspaceSkeleton(RobotGroup* const _g, WorkspaceSkeletonSet _skeletons, 
+                                double intermediateFactor = 10.0);
 
     ///@}
     ///@name Locators
@@ -99,7 +100,13 @@ class CompositeWorkspaceSkeleton : public CompositeGraph<Vertex, Edge> {
     /// Overriding to suppress output
     virtual VD AddVertex(const Vertex& _v) noexcept override;
 
-    ///@}
+  ///@}
+
+  private:
+
+    double m_intermediateFactor{10.0};
+
+    
 };
 
 /*------------------------------- Construction -------------------------------*/
@@ -111,8 +118,9 @@ CompositeWorkspaceSkeleton() :
 
 template <typename Vertex, typename Edge>
 CompositeWorkspaceSkeleton<Vertex, Edge>::
-CompositeWorkspaceSkeleton(RobotGroup* const _g, WorkspaceSkeletonSet _skeletons) :
-  CompositeGraph<Vertex, Edge>(_g, _skeletons) {}
+CompositeWorkspaceSkeleton(RobotGroup* const _g, WorkspaceSkeletonSet _skeletons,
+  double intermediateFactor) : CompositeGraph<Vertex, Edge>(_g, _skeletons),
+  m_intermediateFactor(intermediateFactor) {}
 
 /*--------------------------------- Locators ---------------------------------*/
 
@@ -267,52 +275,103 @@ AddEdge(const VD _source, const VD _target, const Edge& _lp) noexcept {
   // Find the length of each individual edge and the maximum length
   const auto robots = this->GetGroup()->GetRobots();
 
-  // Intermediate length is twice the average robot diameter
+  // Intermediate length is multiple of the average robot diameter
   double diam = 0;
   for(auto robot : robots)
     diam += robot->GetMultiBody()->GetBoundingSphereRadius() * 2;
-  double intLength = (diam / robots.size()) * 10;
+  double intLength = (diam / robots.size()) * m_intermediateFactor;
+  double tolerance = 1e-5;
 
-  std::vector<Point3d> starts;
-  std::vector<Point3d> displacements;
+  // Initialize intermediate and used length trackers
+  std::vector<double> dists;
+  std::vector<size_t> inters; // current start intermediate
+  std::vector<double> useds; // distance used between start and current position
+  std::vector<std::vector<Point3d>> edges;
   double maxDist = 0;
-  for(size_t i = 0; i < robots.size(); ++i) {
-    auto start = this->GetIndividualGraph(i)->find_vertex(edgeDescriptors[i].source());
-    auto target = this->GetIndividualGraph(i)->find_vertex(edgeDescriptors[i].target());
-    starts.push_back(start->property());
+  for(size_t r = 0; r < robots.size(); r++) {
+    auto edge = this->m_graphs[r]->GetEdge(edgeDescriptors[r]);
+    edges.push_back(edge);
 
-    auto disp = target->property() - start->property();
-    const auto dist = (disp).norm();
+    double total = 0.0;
+    if(edgeDescriptors[r].source() != edgeDescriptors[r].target()) {
+      for(size_t i = 0; i < edge.size()-1; i++)
+        total += (edge.at(i+1) - edge.at(i)).norm();
+    } else {
+      edges[r] = {this->m_graphs[r]->GetVertex(edgeDescriptors[r].source())};
+    }
 
-    if(dist < intLength)
-      displacements.push_back({0., 0., 0.});
-    else
-      displacements.push_back(disp);
-    
-    if(dist > maxDist)
-      maxDist = dist;
+    dists.push_back(total);
+    if(total > maxDist)
+      maxDist = total;
+
+    inters.push_back(0);
+    useds.push_back(0);
   }
 
   // Find the number of composite edge intermediates
-  std::vector<Vertex> inters;
+  std::vector<Vertex> compInters;
   int numInter = (int)ceil(maxDist/intLength);
 
-  // Set the intermediate values along the edge
-  for(int i = 0; i <= numInter; ++i){
-    Vertex v = Vertex(this);
+  // Make the first intermediate
+  auto v = Vertex(this->GetGroup());
+  for(size_t r = 0; r < robots.size(); r++) {
+    auto inter = inters.at(r);
+    auto edge = edges.at(r);
 
-    for(size_t r = 0; r < robots.size(); r++) {
-      Point3d d = {i * displacements[r][0]/numInter, 
-                   i * displacements[r][1]/numInter,
-                   i * displacements[r][2]/numInter};
-      v.SetRobotCfg(r, starts[r] + d);
+    Point3d disp(0.0, 0.0, 0.0);
+    if(edge.size() > 1) {
+      disp = edge.at(inter+1) - edge.at(inter);
+      disp = disp / disp.norm();
     }
 
-    inters.push_back(v);
+    auto point = edge.at(inter) + (disp * useds.at(r));
+    v.SetRobotCfg(r, std::move(point));
+  }
+  compInters.push_back(v);
+
+  // Set the intermediate values along the edge
+  for(int i = 0; i < numInter; ++i){
+    auto u = Vertex(this->GetGroup());
+
+    for(size_t r = 0; r < robots.size(); r++) {
+      // Get the intermediate distance for this robot
+      if(dists.at(r) < tolerance or edges.at(r).size() == 1) {
+        // Make sure we don't infinite loop for self edges
+        auto point = edges.at(r).at(0);
+        u.SetRobotCfg(r, std::move(point));
+        continue;
+      }
+
+      auto intDist = dists.at(r) / numInter;
+      double elapsed = 0.;
+
+      auto inter = inters.at(r);
+      auto used = useds.at(r);
+      auto edge = edges.at(r);
+      while(fabs(elapsed - intDist) > tolerance) {
+        auto fullLength = (edge.at(inter+1) - edge.at(inter)).norm();
+        auto deltaUsed = std::min(fullLength - used, intDist - elapsed);
+        elapsed += deltaUsed;
+        used += deltaUsed;
+        if(fabs(elapsed - intDist) > tolerance) {
+          inter++;
+          used = 0.;
+        }
+      }
+      useds[r] = used;
+      inters[r] = inter;
+
+      auto disp = edge.at(inter+1) - edge.at(inter);
+      disp = disp / disp.norm();
+      auto point = edge.at(inter) + (disp * used);
+      u.SetRobotCfg(r, std::move(point));
+    }
+
+    compInters.push_back(u);
   }
 
   // Set the intermediates
-  edge.SetIntermediates(inters);
+  edge.SetIntermediates(compInters);
 
   const auto edgeDescriptor = this->add_edge(_source, _target, edge);
   const bool notNew = edgeDescriptor.id() == INVALID_EID;
