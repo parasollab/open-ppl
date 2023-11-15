@@ -319,8 +319,10 @@ AddEdge(const VD _source, const VD _target, const Edge& _lp) noexcept {
     auto edge = edges.at(r);
 
     Point3d disp(0.0, 0.0, 0.0);
-    if(edge.size() > 1)
+    if(edge.size() > 1) {
       disp = edge.at(inter+1) - edge.at(inter);
+      disp = disp / disp.norm();
+    }
 
     auto point = edge.at(inter) + (disp * useds.at(r));
     v.SetRobotCfg(r, std::move(point));
@@ -348,8 +350,9 @@ AddEdge(const VD _source, const VD _target, const Edge& _lp) noexcept {
       auto edge = edges.at(r);
       while(fabs(elapsed - intDist) > tolerance) {
         auto fullLength = (edge.at(inter+1) - edge.at(inter)).norm();
-        used = std::min(fullLength - used, intDist - elapsed);
-        elapsed += used;
+        auto deltaUsed = std::min(fullLength - used, intDist - elapsed);
+        elapsed += deltaUsed;
+        used += deltaUsed;
         if(fabs(elapsed - intDist) > tolerance) {
           inter++;
           used = 0.;
@@ -359,6 +362,7 @@ AddEdge(const VD _source, const VD _target, const Edge& _lp) noexcept {
       inters[r] = inter;
 
       auto disp = edge.at(inter+1) - edge.at(inter);
+      disp = disp / disp.norm();
       auto point = edge.at(inter) + (disp * used);
       u.SetRobotCfg(r, std::move(point));
     }

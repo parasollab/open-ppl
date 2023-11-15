@@ -257,7 +257,7 @@ TrackCfg(const VI _vertex) {
     m_startVIDs.insert(vid);
 
   // Check for satisfying each goal constraint.
-  const size_t numGoals = m_task->GetNumGoals();
+  const size_t numGoals = m_task->GetNumGoals(&cfg);
   for(size_t i = 0; i < numGoals; ++i)
     if(m_task->EvaluateGoalConstraints(cfg, i))
       m_goalVIDs[i].insert(vid);

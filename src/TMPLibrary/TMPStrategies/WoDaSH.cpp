@@ -387,6 +387,33 @@ ValidationFunction(CBSNodeType& _node) {
         tVID = source;
       }
 
+      // if waiting, get the last different vertex
+      // auto preVID = SIZE_MAX;
+      // if(tVID == sVID) {
+      //   int pt = std::min(s - 1, path.size()-1);
+      //   while (pt >= 0 and path.at(pt) == source) {
+      //     pt -= 1;
+      //   }
+      //   if(path.at(pt) != source) {
+      //     preVID = path.at(pt);
+      //     auto pVID = std::min(preVID, source);
+      //     auto qVID = std::max(preVID, source);
+
+      //     // Check if this robot is waiting in a failed group
+      //     for(size_t j = 0; j < m_failedEdges.size(); j++) {
+      //       if(m_failedEdges[j].count(robot)) {
+      //         if(m_failedEdges[j][robot].first == pVID and 
+      //               m_failedEdges[j][robot].second == qVID) {
+      //           if(edgeOccupancy.count(i) and edgeOccupancy[i].count(j))
+      //             edgeOccupancy[i][j]++;
+      //           else
+      //             edgeOccupancy[i][j] = 1;
+      //         }
+      //       }
+      //     }
+      //   }
+      // }
+
       // Check if this robot is in a failed group
       for(size_t j = 0; j < m_failedEdges.size(); j++) {
         if(m_failedEdges[j].count(robot)) {
@@ -511,7 +538,6 @@ ValidationFunction(CBSNodeType& _node) {
 
           // Otherwise add edge constraint
           if(source != target and !addedEdgeConstraint.count(robot)) {
-            auto edgePair = std::make_pair(source, target);
             constraints.push_back(std::make_pair(robot, std::make_pair(edgePair, i)));
           }
         }
@@ -1780,6 +1806,7 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
       }
 
       std::vector<Robot*> robots;
+      std::unordered_set<Robot*> waiting;
       for(auto vid : hvids) {
         auto vertex = m_skeleton->GetVertexType(vid);
         auto rs = vertex.GetGroup()->GetRobots();
@@ -1792,6 +1819,28 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
               std::cout << "Found end-of-path waiting into merge at " << t 
                         << " " << vid << std::endl;
 
+            if(!m_waitingReps.count(vid)) {
+              auto vertex = m_skeleton->GetVertexType(vid);
+              auto subgroup = vertex.GetGroup();
+              auto grm = this->GetMPLibrary()->GetMPSolution()->GetGroupRoadmap(subgroup);
+              auto wvid = SpawnVertex(grm, vertex);
+              m_waitingReps.emplace(vid, std::make_pair(grm, wvid));
+            }
+          }
+
+          // Also check if this merge is the first movement for a robot (i.e. 
+          // waiting at start)
+          bool startWaiting = true;
+          for (int tt = t-1; tt >= 0; tt--) {
+            if (_mapfSolution[robot]->at(std::min((size_t)tt, _mapfSolution[robot]->size()-1)) != 
+                _mapfSolution[robot]->at(std::min((size_t)tt+1, _mapfSolution[robot]->size()-1))) {
+              startWaiting = false;
+              break;
+            }
+          }
+          
+          if (startWaiting) {
+            waiting.insert(robot);
             if(!m_waitingReps.count(vid)) {
               auto vertex = m_skeleton->GetVertexType(vid);
               auto subgroup = vertex.GetGroup();
@@ -1817,7 +1866,7 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
       m_path.mergeHyperarcs.insert(hid);
 
       if(this->m_debug)
-        std::cout << "Merged " << hvids.size() << " groups at time" << t << std::endl;
+        std::cout << "Merged " << hvids.size() << " groups at time " << t << std::endl;
 
       // Check if there is a start of path wait coming into this merge
       if(t == 0) {
@@ -1840,6 +1889,15 @@ ConstructHyperpath(std::unordered_map<Robot*, CBSSolution*> _mapfSolution) {
                 auto vid = SpawnVertex(grm, vertex);
                 m_waitingReps.emplace(v, std::make_pair(grm, vid));
               }
+            }
+          }
+        }
+      } else {
+        for(auto v : hvids) {
+          auto rs = m_skeleton->GetVertexType(v).GetGroup()->GetRobots();
+          for(auto r : rs) {
+            if (waiting.count(r)) {
+              m_path.predecessors[hid].emplace(r, std::make_pair(false, v));
             }
           }
         }
@@ -2168,6 +2226,10 @@ GroundHyperskeleton() {
     auto endGcfg = grm->GetVertex(lastVID);
     for(auto robot : grm->GetGroup()->GetRobots()) {
       MPTask t(robot);
+      std::string l = "GroundMoveHyperarc";
+      l = l + std::to_string(hid);
+      t.SetLabel(l);
+
       t.SetStartConstraint(std::move(std::unique_ptr<CSpaceConstraint>(
           new CSpaceConstraint(robot,startGcfg.GetRobotCfg(robot)))));
       t.AddGoalConstraint(std::move(std::unique_ptr<CSpaceConstraint>(
@@ -2270,8 +2332,9 @@ ComputeIntermediates(std::unordered_map<Robot*, CBSSolution*> _mapfSolution,
       double used = 0.;
       while(fabs(elapsed - pushed) > tolerance) {
         auto iterDist = (edge.at(inter+1) - edge.at(inter)).norm();
-        used = std::min(iterDist, pushed - elapsed);
-        elapsed += used;
+        auto deltaUsed = std::min(iterDist, pushed - elapsed);
+        elapsed += deltaUsed;
+        used += deltaUsed;
         if(fabs(elapsed - pushed) > tolerance) {
           inter++;
           used = 0;
@@ -2325,8 +2388,9 @@ ComputeIntermediates(std::unordered_map<Robot*, CBSSolution*> _mapfSolution,
       auto edge = edges.at(r);
       while(fabs(elapsed - intDist) > tolerance) {
         auto fullLength = (edge.at(inter+1) - edge.at(inter)).norm();
-        used = std::min(fullLength - used, intDist - elapsed);
-        elapsed += used;
+        auto deltaUsed = std::min(fullLength - used, intDist - elapsed);
+        elapsed += deltaUsed;
+        used += deltaUsed;
         if(fabs(elapsed - intDist) > tolerance) {
           inter++;
           used = 0.;
@@ -2394,7 +2458,7 @@ SpawnVertex(GroupRoadmapType* _grm, CompositeSkeletonVertex _vertex) {
   auto stats = this->GetPlan()->GetStatClass();
   MethodTimer mt(stats,this->GetNameAndLabel() + "::SpawnVertex");
 
-  this->GetMPLibrary()->SetGroupTask(m_groupTaskMap[_vertex.GetGroup()]);
+  this->GetMPLibrary()->SetGroupTask(m_groupTaskMap.at(_vertex.GetGroup()));
   SetVirtualExcept(_vertex.GetGroup());
 
   auto robots = _vertex.GetGroup()->GetRobots();
@@ -2419,7 +2483,15 @@ SpawnVertex(GroupRoadmapType* _grm, CompositeSkeletonVertex _vertex) {
   }
 
   auto& target = samples.front();
+  _grm->DisableHooks();
+  for(size_t i = 0; i < robots.size(); i++)
+    _grm->GetIndividualGraph(i)->DisableHooks();
+
   auto vid = _grm->AddVertex(target);
+
+  _grm->EnableHooks();
+  for(size_t i = 0; i < robots.size(); i++)
+    _grm->GetIndividualGraph(i)->EnableHooks();
 
   this->GetMPLibrary()->SetGroupTask(m_wholeTask);
   SetVirtualExcept();
@@ -2576,6 +2648,7 @@ ConnectToSkeleton() {
     auto task = std::shared_ptr<GroupTask>(new GroupTask(group));
     for(auto robot : group->GetRobots()) {
       auto t = MPTask(robot);
+      t.SetLabel("ConnectStart");
 
       auto startCfg = startRep.first->GetVertex(startRep.second).GetRobotCfg(robot);
       auto goalCfg = skelRep.first->GetVertex(skelRep.second).GetRobotCfg(robot);
@@ -2702,6 +2775,7 @@ ConnectToSkeleton() {
     auto task = std::shared_ptr<GroupTask>(new GroupTask(group));
     for(auto robot : group->GetRobots()) {
       auto t = MPTask(robot);
+      t.SetLabel("ConnectGoal");
 
       auto startCfg = skelRep.first->GetVertex(skelRep.second).GetRobotCfg(robot);
       auto goalCfg = goalRep.first->GetVertex(goalRep.second).GetRobotCfg(robot);
@@ -2771,6 +2845,7 @@ SampleTrajectories() {
     auto task = std::shared_ptr<GroupTask>(new GroupTask(group));
     for(auto r : group->GetRobots()) {
       auto t = MPTask(r);
+      t.SetLabel("OppSplit");
 
       // Add start constraints
       auto startCfg = start.GetRobotCfg(r);
@@ -2912,6 +2987,7 @@ SampleTrajectories() {
     auto task = std::shared_ptr<GroupTask>(new GroupTask(group));
     for(auto r : group->GetRobots()) {
       auto t = MPTask(r);
+      t.SetLabel("Merge");
 
       // Add start constraints
       auto startCfg = start.GetRobotCfg(r);
@@ -3097,6 +3173,7 @@ SampleTrajectories() {
     auto task = std::shared_ptr<GroupTask>(new GroupTask(group));
     for(auto r : group->GetRobots()) {
       auto t = MPTask(r);
+      t.SetLabel("Split");
 
       // Add start constraints
       auto startCfg = start.GetRobotCfg(r);
@@ -3178,6 +3255,7 @@ SampleTrajectories() {
     auto task = std::shared_ptr<GroupTask>(new GroupTask(group));
     for(auto r : group->GetRobots()) {
       auto t = MPTask(r);
+      t.SetLabel("OppMerge");
 
       // TODO make this less ugly
       // See if there is a movement hyperarc coming into this, if so, take
@@ -3467,6 +3545,7 @@ ConvertToPlan(std::unordered_set<HID> _path) {
       auto start = std::unique_ptr<CSpaceConstraint>(new CSpaceConstraint(robot,cfg));
       auto goal = std::unique_ptr<CSpaceConstraint>(new CSpaceConstraint(robot,cfg));
       MPTask t(robot);
+      t.SetLabel("StartConstraint");
       t.SetStartConstraint(std::move(start));
       t.AddGoalConstraint(std::move(goal));
       task->AddTask(t);

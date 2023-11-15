@@ -167,7 +167,7 @@ Empty() const noexcept {
 
 size_t
 MPTask::
-GetNumGoals() const noexcept {
+GetNumGoals(const Cfg* _cfg) const noexcept {
   return m_goalConstraints.size();
 }
 
@@ -328,6 +328,8 @@ MPTask::
 EvaluateGoalConstraints(const Cfg& _cfg, const size_t _index) const {
   try {
     const auto& constraint = m_goalConstraints.at(_index);
+    if(constraint->GetRobot() != _cfg.GetRobot())
+      return false;
     return constraint->Satisfied(_cfg);
   }
   catch(const std::out_of_range&) {

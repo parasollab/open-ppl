@@ -1518,14 +1518,13 @@ inline
 void
 GenericStateGraph<Vertex, Edge>::
 ExecuteAddVertexHooks(const VI _iterator) noexcept {
-  if(!m_enableHooks)
-    return;
-
   if(m_ccTracker)
     m_ccTracker->AddVertex(_iterator);
 
-  for(auto& hook : m_addVertexHooks)
-    hook.second(_iterator);
+  if(m_enableHooks) {
+    for(auto& hook : m_addVertexHooks)
+      hook.second(_iterator);
+  }
 }
 
 
@@ -1534,11 +1533,10 @@ inline
 void
 GenericStateGraph<Vertex, Edge>::
 ExecuteDeleteVertexHooks(const VI _iterator) noexcept {
-  if(!m_enableHooks)
-    return;
-
-  for(auto& hook : m_deleteVertexHooks)
-    hook.second(_iterator);
+  if(m_enableHooks) {
+    for(auto& hook : m_deleteVertexHooks)
+      hook.second(_iterator);
+  }
 
   if(m_ccTracker)
     m_ccTracker->DeleteVertex(_iterator);
@@ -1550,11 +1548,11 @@ inline
 void
 GenericStateGraph<Vertex, Edge>::
 ExecuteAddEdgeHooks(const EI _iterator) noexcept {
-  if(!m_enableHooks)
-    return;
-
   if(m_ccTracker)
     m_ccTracker->AddEdge(_iterator);
+
+  if(!m_enableHooks)
+    return;
 
   for(auto& hook : m_addEdgeHooks)
     hook.second(_iterator);
@@ -1566,11 +1564,10 @@ inline
 void
 GenericStateGraph<Vertex, Edge>::
 ExecuteDeleteEdgeHooks(const EI _iterator) noexcept {
-  if(!m_enableHooks)
-    return;
-
-  for(auto& hook : m_deleteEdgeHooks)
-    hook.second(_iterator);
+  if(m_enableHooks) {
+    for(auto& hook : m_deleteEdgeHooks)
+      hook.second(_iterator);
+  }
 
   if(m_ccTracker)
     m_ccTracker->DeleteEdge(_iterator);

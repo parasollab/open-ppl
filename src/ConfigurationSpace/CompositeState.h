@@ -77,7 +77,7 @@ class CompositeState {
     /// Get the full vector of robot pointers.
     virtual const std::vector<Robot*>& GetRobots() const noexcept;
 
-    virtual RobotGroup* GetGroup();
+    virtual RobotGroup* GetGroup() const noexcept;
 
     /// Get the robot pointer for a group member by index.
     /// @param _index The desired index.
@@ -294,7 +294,7 @@ GetRobots() const noexcept {
 template <typename GraphType>
 RobotGroup* 
 CompositeState<GraphType>::
-GetGroup() {
+GetGroup() const noexcept {
   return m_group;
 }
 
