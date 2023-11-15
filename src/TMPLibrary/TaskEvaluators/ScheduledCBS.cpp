@@ -53,6 +53,9 @@ ScheduledCBS(XMLNode& _node) : TaskEvaluatorMethod(_node) {
   m_writeSolution = _node.Read("writeSolution",false,m_writeSolution,
           "Flag to use bypass strategy.");
 
+  m_workspace = _node.Read("workspace", false, m_workspace,
+          "Bypass logic not needed for workspace dash");
+
 }
 
 ScheduledCBS::
@@ -1049,47 +1052,48 @@ ConvertToPlan(const Node& _node, Plan* _plan) {
     }
   }
 
-  // Commenting this out to make WoDaSH work - CM
-  // Find changes in gripper dof and add buffers
-  // std::vector<size_t> switches;
-  // for(size_t t = 1; t < finalTime; t++) {
-  //   for(auto& kv : robotPaths) {
-  //     if(kv.first->GetMultiBody()->IsPassive())
-  //       continue;
+  if(!m_workspace) {
+    // Find changes in gripper dof and add buffers
+    std::vector<size_t> switches;
+    for(size_t t = 1; t < finalTime; t++) {
+      for(auto& kv : robotPaths) {
+        if(kv.first->GetMultiBody()->IsPassive())
+          continue;
 
-  //     const auto& path = kv.second;
+        const auto& path = kv.second;
 
-  //     if(t >= path.size())
-  //       continue;
+        if(t >= path.size())
+          continue;
 
-  //     auto cfg1 = path[t-1];
-  //     auto cfg2 = path[t];
-      
-  //     if(abs(cfg1[1] - cfg2[1]) >= .00001) {
-  //       if(switches.empty() or switches.back() != t-1)
-  //         switches.push_back(t-1);
-  //       switches.push_back(t);
-  //       std::cout << "Found switch at " << t-1 << std::endl;
-  //       break;
-  //     }
-  //   }
-  // }
+        auto cfg1 = path[t-1];
+        auto cfg2 = path[t];
+        
+        if(abs(cfg1[1] - cfg2[1]) >= .00001) {
+          if(switches.empty() or switches.back() != t-1)
+            switches.push_back(t-1);
+          switches.push_back(t);
+          std::cout << "Found switch at " << t-1 << std::endl;
+          break;
+        }
+      }
+    }
 
-  // const size_t numCopies = 10;
+    const size_t numCopies = 10;
 
-  // for(size_t i = 0; i < switches.size(); i++) {
-  //   size_t t = switches[i] + numCopies*i;
-  //   for(auto& kv : robotPaths) {
-  //     auto& path = kv.second;
+    for(size_t i = 0; i < switches.size(); i++) {
+      size_t t = switches[i] + numCopies*i;
+      for(auto& kv : robotPaths) {
+        auto& path = kv.second;
 
-  //     if(t >= path.size())
-  //       continue;
+        if(t >= path.size())
+          continue;
 
-  //     auto cfg = path[t];
+        auto cfg = path[t];
 
-  //     path.insert(path.begin()+t,numCopies,cfg);
-  //   }
-  // }
+        path.insert(path.begin()+t,numCopies,cfg);
+      }
+    }
+  }
 
   for(auto kv : robotPaths) {
     if(m_debug) {
@@ -1115,51 +1119,52 @@ ConvertToPlan(const Node& _node, Plan* _plan) {
     // ::WritePath("hypergraph-"+kv.first->GetLabel()+".rdmp.path",kv.second);
   }
 
-  // Commenting this out because wodash doesnt need it - CM
-  // Naive way to create paths - will lose synchronization
-  // Initialize a decomposition
-  // auto top = std::shared_ptr<SemanticTask>(new SemanticTask());
-  // Decomposition* decomp = new Decomposition(top);
-  // plan->SetDecomposition(decomp);
-  
-  // for(auto kv : robotPaths) {
-  //   std::cout << "Setting plan for " << kv.first->GetLabel() << std::endl;
-  //   auto robot = kv.first;
-  //   auto cfgs = kv.second;
+  if(!m_workspace) {
+    // Naive way to create paths - will lose synchronization
+    // Initialize a decomposition
+    auto top = std::shared_ptr<SemanticTask>(new SemanticTask());
+    Decomposition* decomp = new Decomposition(top);
+    plan->SetDecomposition(decomp);
 
-  //   // Create a motion task
-  //   auto mpTask = std::shared_ptr<MPTask>(new MPTask(robot));
+    for(auto kv : robotPaths) {
+      std::cout << "Setting plan for " << kv.first->GetLabel() << std::endl;
+      auto robot = kv.first;
+      auto cfgs = kv.second;
 
-  //   // Create a semantic task
-  //   const std::string label = robot->GetLabel() + ":PATH";
-  //   auto task = new SemanticTask(label,top.get(),decomp,
-  //                SemanticTask::SubtaskRelation::AND,false,true,mpTask);
+      // Create a motion task
+      auto mpTask = std::shared_ptr<MPTask>(new MPTask(robot));
 
-  //   // Create a task solution
-  //   auto sol = std::shared_ptr<TaskSolution>(new TaskSolution(task));
-  //   sol->SetRobot(robot);
+      // Create a semantic task
+      const std::string label = robot->GetLabel() + ":PATH";
+      auto task = new SemanticTask(label,top.get(),decomp,
+                   SemanticTask::SubtaskRelation::AND,false,true,mpTask);
 
-  //   // Initialize mp solution and path
-  //   auto mpsol = new MPSolution(robot);
-  //   auto rm = mpsol->GetRoadmap(robot);
+      // Create a task solution
+      auto sol = std::shared_ptr<TaskSolution>(new TaskSolution(task));
+      sol->SetRobot(robot);
 
-  //   std::vector<size_t> vids;
-  //   for(auto cfg : cfgs) {
-  //     auto vid = rm->AddVertex(cfg);
-  //     vids.push_back(vid);
-  //   }
-    
-  //   auto path = mpsol->GetPath(robot);
-  //   *path += vids;
+      // Initialize mp solution and path
+      auto mpsol = new MPSolution(robot);
+      auto rm = mpsol->GetRoadmap(robot);
 
-  //   // Save mp solution in task solution
-  //   sol->SetMotionSolution(mpsol);
+      std::vector<size_t> vids;
+      for(auto cfg : cfgs) {
+        auto vid = rm->AddVertex(cfg);
+        vids.push_back(vid);
+      }
+      
+      auto path = mpsol->GetPath(robot);
+      *path += vids;
 
-  //   // Save task solution in plan
-  //   plan->SetTaskSolution(task,sol);
-  //   std::cout << "set plan" << std::endl;
-  // }
-  // plan->Print();
+      // Save mp solution in task solution
+      sol->SetMotionSolution(mpsol);
+
+      // Save task solution in plan
+      plan->SetTaskSolution(task,sol);
+      std::cout << "set plan" << std::endl;
+    }
+    plan->Print();
+  }
 }
 
 size_t

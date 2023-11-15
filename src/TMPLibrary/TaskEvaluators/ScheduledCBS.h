@@ -162,6 +162,8 @@ class ScheduledCBS : public TaskEvaluatorMethod {
 
     bool m_writeSolution{false};
 
+    bool m_workspace{false};
+
     ///@}
 
 };
