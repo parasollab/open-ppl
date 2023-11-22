@@ -50,7 +50,7 @@ sudo apt-get upgrade
 sudo apt-get update
 ```
 ```bash
-sudo apt-get install tzdata build-essential gdb python gperf libclang-dev gfortran \
+sudo apt-get install tzdata build-essential gdb python3 gperf libclang-dev gfortran \
         ninja-build pkg-config make wget curl zip unzip \
         software-properties-common git-all libtool autoconf-archive texinfo bison \
         libmpfr-dev libeigen3-dev libboost-all-dev libgl1-mesa-dev libglu1-mesa-dev freeglut3-dev \
@@ -58,13 +58,19 @@ sudo apt-get install tzdata build-essential gdb python gperf libclang-dev gfortr
         libxcb1-dev libxcb-glx0-dev libxcb-keysyms1-dev libxcb-image0-dev libxcb-shm0-dev libxcb-icccm4-dev libxcb-sync-dev \
         libxcb-xfixes0-dev libxcb-shape0-dev libxcb-randr0-dev libxcb-render-util0-dev libxcb-util-dev libxcb-xinerama0-dev libxcb-xkb-dev \
         libxkbcommon-dev libxkbcommon-x11-dev libatspi2.0-dev libxrandr-dev libxcursor-dev \ 
-        libxdamage-dev libxinerama1 libxinerama-dev libssl-dev doxygen graphviz
+        libxdamage-dev libxinerama1 libxinerama-dev libxcomposite-dev libxkbfile-dev libxmuu-dev libxres-dev \
+        libxcb-dri3-dev libxcb-cursor-dev libssl-dev doxygen graphviz
 ```
 
 ### Remove previous versions of cmake and install latest cmake
 ```bash
 sudo apt remove -y --purge --auto-remove cmake
 wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | sudo tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null
+```
+
+For Ubuntu Jamming Jellyfish (22.04)
+```bash
+sudo apt-add-repository -y 'deb https://apt.kitware.com/ubuntu/ jammy main'
 ```
 For Ubuntu Focal Fossa (20.04)
 ```bash
@@ -128,9 +134,18 @@ Make sure that the installed version of conan is > 2.0
 conan --version
 ```
 
-#### Install conan packages
+Setup default conan profile for machine.
 ```bash
-conan install . --output-folder=build --build=missing -c tools.system.package_manager:mode=install -c tools.system.package_manager:sudo=false -s build_type=Debug -s compiler.cppstd=gnu17
+conan profile detect
+```
+
+#### Install conan packages
+For Ubuntu 22.04, qt/6.3.2 requires this export for C3I until conan-io/conan-center-index#13472 is fixed
+```bash
+export NOT_ON_C3I=1
+```
+```bash
+conan install . --output-folder=build --build=missing -c tools.system.package_manager:mode=install -c tools.system.package_manager:sudo=true -s build_type=Debug -s compiler.cppstd=gnu17
 ```
 
 * make sure to set tools.system.package_manager:sudo=**false** if using docker
