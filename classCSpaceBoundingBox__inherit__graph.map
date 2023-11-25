@@ -1,0 +1,6 @@
+<map id="CSpaceBoundingBox" name="CSpaceBoundingBox">
+<area shape="rect" id="node1" title="An n&#45;dimensional bounding box in c&#45;space." alt="" coords="16,155,172,181"/>
+<area shape="rect" id="node2" href="$classAbstractBoundingBox.html" title=" " alt="" coords="13,80,175,107"/>
+<area shape="rect" id="node3" href="$classBoundary.html" title=" " alt="" coords="5,5,89,32"/>
+<area shape="rect" id="node4" href="$classNBox.html" title="An axis&#45;aligned rectangular prism in n dimensions." alt="" coords="113,5,171,32"/>
+</map>

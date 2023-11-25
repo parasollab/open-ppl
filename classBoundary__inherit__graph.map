@@ -1,0 +1,12 @@
+<map id="Boundary" name="Boundary">
+<area shape="rect" id="node1" title=" " alt="" coords="5,161,89,188"/>
+<area shape="rect" id="node2" href="$classAbstractBoundingBox.html" title=" " alt="" coords="155,56,317,83"/>
+<area shape="rect" id="node5" href="$classAbstractBoundingSphere.html" title=" " alt="" coords="145,132,327,159"/>
+<area shape="rect" id="node8" href="$classAbstractBoundingSphericalShell.html" title=" " alt="" coords="137,183,335,225"/>
+<area shape="rect" id="node10" href="$classTetrahedralBoundary.html" title="A tetrahedral bounding region in workspace." alt="" coords="157,249,315,276"/>
+<area shape="rect" id="node3" href="$classCSpaceBoundingBox.html" title="An n&#45;dimensional bounding box in c&#45;space." alt="" coords="412,5,568,32"/>
+<area shape="rect" id="node4" href="$classWorkspaceBoundingBox.html" title="A two or three dimensional bounding box in workspace." alt="" coords="401,56,579,83"/>
+<area shape="rect" id="node6" href="$classCSpaceBoundingSphere.html" title="An n&#45;dimensional bounding sphere in c&#45;space." alt="" coords="402,107,578,133"/>
+<area shape="rect" id="node7" href="$classWorkspaceBoundingSphere.html" title="A 2 or 3 dimensional bounding sphere in workspace." alt="" coords="391,157,589,184"/>
+<area shape="rect" id="node9" href="$classWorkspaceBoundingSphericalShell.html" title="A 2 or 3 dimensional bounding spherical shell in workspace." alt="" coords="383,209,597,250"/>
+</map>

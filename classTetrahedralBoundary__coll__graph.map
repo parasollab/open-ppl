@@ -1,0 +1,8 @@
+<map id="TetrahedralBoundary" name="TetrahedralBoundary">
+<area shape="rect" id="node1" title="A tetrahedral bounding region in workspace." alt="" coords="281,184,438,211"/>
+<area shape="rect" id="node2" href="$classBoundary.html" title=" " alt="" coords="5,95,89,121"/>
+<area shape="rect" id="node3" title=" " alt="" coords="114,95,301,121"/>
+<area shape="rect" id="node4" title=" " alt="" coords="168,5,247,32"/>
+<area shape="rect" id="node5" title=" " alt="" coords="325,95,503,121"/>
+<area shape="rect" id="node6" href="$classNBox.html" title="An axis&#45;aligned rectangular prism in n dimensions." alt="" coords="528,95,585,121"/>
+</map>

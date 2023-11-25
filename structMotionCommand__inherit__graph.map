@@ -1,0 +1,4 @@
+<map id="MotionCommand" name="MotionCommand">
+<area shape="rect" id="node1" title="A motion command, consisting of a control and length of time to execute it." alt="" coords="5,80,140,107"/>
+<area shape="rect" id="node2" href="$classCommand.html" title=" " alt="" coords="28,5,117,32"/>
+</map>

@@ -1,0 +1,5 @@
+<map id="SimpleController" name="SimpleController">
+<area shape="rect" id="node1" title="Chooses the control that drives most directly towards the target." alt="" coords="29,80,159,107"/>
+<area shape="rect" id="node3" href="$classCarlikeNeedleController.html" title=" " alt="" coords="5,155,183,181"/>
+<area shape="rect" id="node2" href="$classControllerMethod.html" title=" " alt="" coords="27,5,161,32"/>
+</map>

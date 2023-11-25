@@ -1,0 +1,8 @@
+<map id="CollisionDetectionMethod" name="CollisionDetectionMethod">
+<area shape="rect" id="node1" title=" " alt="" coords="177,5,368,32"/>
+<area shape="rect" id="node2" href="$classBoundingSpheres.html" title=" " alt="" coords="5,80,140,107"/>
+<area shape="rect" id="node3" href="$classInsideSpheres.html" title=" " alt="" coords="164,80,277,107"/>
+<area shape="rect" id="node4" href="$classPQP.html" title=" " alt="" coords="302,80,350,107"/>
+<area shape="rect" id="node6" href="$classRapid.html" title=" " alt="" coords="374,80,433,107"/>
+<area shape="rect" id="node5" href="$classPQPSolid.html" title=" " alt="" coords="286,155,366,181"/>
+</map>

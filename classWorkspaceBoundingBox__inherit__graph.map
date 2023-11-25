@@ -1,0 +1,6 @@
+<map id="WorkspaceBoundingBox" name="WorkspaceBoundingBox">
+<area shape="rect" id="node1" title="A two or three dimensional bounding box in workspace." alt="" coords="5,155,184,181"/>
+<area shape="rect" id="node2" href="$classAbstractBoundingBox.html" title=" " alt="" coords="13,80,176,107"/>
+<area shape="rect" id="node3" href="$classBoundary.html" title=" " alt="" coords="6,5,90,32"/>
+<area shape="rect" id="node4" href="$classNBox.html" title="An axis&#45;aligned rectangular prism in n dimensions." alt="" coords="114,5,171,32"/>
+</map>

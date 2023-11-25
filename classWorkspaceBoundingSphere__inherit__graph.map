@@ -1,0 +1,6 @@
+<map id="WorkspaceBoundingSphere" name="WorkspaceBoundingSphere">
+<area shape="rect" id="node1" title="A 2 or 3 dimensional bounding sphere in workspace." alt="" coords="5,155,204,181"/>
+<area shape="rect" id="node2" href="$classAbstractBoundingSphere.html" title=" " alt="" coords="13,80,196,107"/>
+<area shape="rect" id="node3" href="$classBoundary.html" title=" " alt="" coords="11,5,95,32"/>
+<area shape="rect" id="node4" href="$classNSphere.html" title=" " alt="" coords="119,5,197,32"/>
+</map>

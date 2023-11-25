@@ -1,0 +1,11 @@
+<map id="TMPBaseObject" name="TMPBaseObject">
+<area shape="rect" id="node1" title=" " alt="" coords="5,132,129,159"/>
+<area shape="rect" id="node2" href="$classPoIPlacementMethod.html" title=" " alt="" coords="189,5,349,32"/>
+<area shape="rect" id="node3" href="$classStateGraph.html" title=" " alt="" coords="221,56,316,83"/>
+<area shape="rect" id="node4" href="$classTMPStrategyMethod.html" title=" " alt="" coords="191,107,346,133"/>
+<area shape="rect" id="node6" href="$classTaskAllocatorMethod.html" title=" " alt="" coords="189,157,348,184"/>
+<area shape="rect" id="node7" href="$classTaskDecomposerMethod.html" title=" " alt="" coords="177,208,360,235"/>
+<area shape="rect" id="node8" href="$classTaskEvaluatorMethod.html" title=" " alt="" coords="187,259,350,285"/>
+<area shape="rect" id="node5" href="$classSimpleMotionMethod.html" title=" " alt="" coords="415,107,576,133"/>
+<area shape="rect" id="node9" href="$classSimpleMotionEvaluator.html" title=" " alt="" coords="408,259,583,285"/>
+</map>

@@ -1,0 +1,10 @@
+<map id="SamplerMethod&lt; MPTraits &gt;" name="SamplerMethod&lt; MPTraits &gt;">
+<area shape="rect" id="node1" title=" " alt="" coords="255,151,465,178"/>
+<area shape="rect" id="node3" href="$classBridgeTestSampler.html" title="This sampler validity checks the input sample and accepts it iff it passes the bridge test &#45; i...." alt="" coords="549,5,704,47"/>
+<area shape="rect" id="node4" href="$classGaussianSampler.html" title="Gaussian&#45;distribution based sampling." alt="" coords="516,71,737,98"/>
+<area shape="rect" id="node5" href="$classMixSampler.html" title=" " alt="" coords="534,122,719,149"/>
+<area shape="rect" id="node6" href="$classObstacleBasedSampler.html" title="Obstacle&#45;based sampling." alt="" coords="540,173,713,215"/>
+<area shape="rect" id="node7" href="$classUniformObstacleBasedSampler.html" title=" " alt="" coords="513,239,740,280"/>
+<area shape="rect" id="node8" href="$classUniformRandomSampler.html" title=" " alt="" coords="535,304,718,345"/>
+<area shape="rect" id="node2" href="$classMPBaseObject.html" title=" " alt="" coords="5,151,207,178"/>
+</map>

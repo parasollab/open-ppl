@@ -1,0 +1,7 @@
+<map id="HardwareInterface" name="HardwareInterface">
+<area shape="rect" id="node1" title=" " alt="" coords="84,5,227,32"/>
+<area shape="rect" id="node2" href="$classActuatorInterface.html" title="An abstract interface for a physical robot&#39;s actuators." alt="" coords="12,80,147,107"/>
+<area shape="rect" id="node4" href="$classSensorInterface.html" title=" " alt="" coords="176,80,300,107"/>
+<area shape="rect" id="node3" href="$classICreateInterface.html" title=" " alt="" coords="5,155,132,181"/>
+<area shape="rect" id="node5" href="$classArucoDetectorInterface.html" title=" " alt="" coords="157,155,330,181"/>
+</map>

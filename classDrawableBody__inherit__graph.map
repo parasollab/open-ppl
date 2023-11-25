@@ -1,0 +1,5 @@
+<map id="DrawableBody" name="DrawableBody">
+<area shape="rect" id="node1" title="Drawable representation of a pmpl Body." alt="" coords="52,155,169,181"/>
+<area shape="rect" id="node2" href="$classDrawablePolyhedron.html" title="A visualization of a polyhedron." alt="" coords="32,80,189,107"/>
+<area shape="rect" id="node3" title=" " alt="" coords="5,5,216,32"/>
+</map>
