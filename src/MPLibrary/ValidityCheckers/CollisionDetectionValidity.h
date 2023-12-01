@@ -172,7 +172,7 @@ class CollisionDetectionValidity
     /// @return True if the robot is in collision with an obstacle.
     virtual bool IsInObstacleCollision(CDInfo& _cdInfo, 
         const MultiBody* const _robotBody, 
-        const MultiBody* const _obstacleBodies[], 
+        const std::vector<Multibody*>* _obstacles, 
         const std::string& _caller) 
 
     /// Check for a collision between a query robot and a specific set of other
@@ -182,6 +182,10 @@ class CollisionDetectionValidity
     /// @param _caller Name of the calling function.
     virtual bool IsInInterRobotCollision(CDInfo& _cdInfo, Robot* const _robot,
         const std::vector<Robot*>& _robots, const std::string& _caller);
+
+    /// Set the obstacle_subset variable
+    /// @param obst_subset the set of obstacles to store
+    virtual void setObstacleSubset(std::vector<Multibody*>* obst_subset);
 
     ///@}
     ///@name Internal State
@@ -194,6 +198,7 @@ class CollisionDetectionValidity
     bool m_interRobotCollision{false};    ///< Check inter-robot collisions
     bool m_ignoreAdjacentLinks{false};    ///< Ignore adj links in self collisions
     bool m_ignoreSiblingCollisions{false}; ///< Ignore sibling links in self collisions
+    std::vector<Multibody*>* obstacle_subset{NULL}; ///< Subset of obstacles we want to collision check for
 
     ///@}
 
@@ -646,6 +651,7 @@ bool
 CollisionDetectionValidity<MPTraits>::
 IsInObstacleCollision(CDInfo& _cdInfo, const MultiBody* const _multibody,
     const std::string& _caller) {
+    
   auto env = this->GetEnvironment();
 
   bool collision = false;
@@ -678,45 +684,6 @@ IsInObstacleCollision(CDInfo& _cdInfo, const MultiBody* const _multibody,
   }
 
   return collision;
-}
-
-template <typename MPTraits>
-bool
-CollisionDetectionValidity<MPTraits>::
-IsInObstacleCollision(CDInfo& _cdInfo, const MultiBody* const _robotBody,
-    const MultiBody* const _obstacleBodies[], const std::string& _caller) {
-
-    bool collision = false;
-    const bool allInfo = _cdInfo.m_retAllInfo;
-    const size_t numObst = sizeof(_obstacleBodies)/sizeof(_obstacleBodies[0]);
-
-    for(size_t i = 0; i < numObst; ++i) {
-    CDInfo cdInfo(allInfo);
-    const bool c = IsMultiBodyCollision(cdInfo, _multibody, _obstacleBodies[i],
-        _caller);
-    collision |= c;
-
-    if(this->m_debug and c)
-      std::cout << "\tCollision with obstacle " << i << " detected."
-                << std::endl;
-
-    // Store the nearest obstacle information. This is not really correct
-    // because CDInfo::operator< is looking at m_minDist, which might represent
-    // a distance to a self collision.
-    if(cdInfo < _cdInfo) {
-      _cdInfo = cdInfo;
-      _cdInfo.m_nearestObstIndex = i;
-      if(c)
-        _cdInfo.m_collidingObstIndex = i;
-    }
-
-    // Early quit if we don't care for distance information.
-    if(!allInfo and collision)
-      return true;
-  }
-
-  return collision;
-
 }
 
 template <typename MPTraits>
@@ -765,6 +732,12 @@ IsInInterRobotCollision(CDInfo& _cdInfo, Robot* const _robot,
   }
 
   return collision;
+}
+
+template <typename MPTraits>
+void
+setObstacleSubset(std::vector<Multibody*>* obst_subset){
+    this.obstacle_subset = obst_subset;
 }
 
 /*----------------------------------------------------------------------------*/
