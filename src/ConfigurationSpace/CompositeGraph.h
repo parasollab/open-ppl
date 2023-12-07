@@ -11,6 +11,8 @@
 #define INVALID_ED ED{std::numeric_limits<size_t>::max(), std::numeric_limits<size_t>::max()}
 #endif
 
+template <typename Vertex, typename Edge> class GenericStateGraph;
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Represents a composite graph for a robot group.

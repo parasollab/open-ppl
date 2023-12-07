@@ -1,6 +1,7 @@
 #ifndef PMPL_METRIC_METHOD_H_
 #define PMPL_METRIC_METHOD_H_
 
+#include "MPLibrary/MPBaseObject.h"
 #include "Utilities/MPUtils.h"
 
 
@@ -18,8 +19,7 @@
 ///
 /// @ingroup Metrics
 ////////////////////////////////////////////////////////////////////////////////
-template <typename MPTraits>
-class MetricMethod : public MPBaseObject<MPTraits> {
+class MetricMethod : public MPBaseObject {
 
   public:
 
@@ -43,13 +43,5 @@ class MetricMethod : public MPBaseObject<MPTraits> {
     ///@}
 
 };
-
-/*------------------------------ Construction --------------------------------*/
-
-template <typename MPTraits>
-MetricMethod<MPTraits>::
-MetricMethod(XMLNode& _node) : MPBaseObject<MPTraits>(_node) { }
-
-/*----------------------------------------------------------------------------*/
 
 #endif

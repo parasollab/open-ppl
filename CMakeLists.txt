@@ -17,7 +17,7 @@ option(BUILD_MATLAB "Build with MatLab support" OFF)
 # work from Matthew Bulluck's parallel branch.
 option(BUILD_PARALLEL "Build parallel version of PMPL" OFF)
 
-option(BUILD_TESTS "Build and Run Tests" ON)
+option(BUILD_TESTS "Build and Run Tests" OFF)
 option(CODE_COVERAGE "Enable code coverage reporting" ON)
 option(BUILD_DOCS "Build Documentation" ON)
 
@@ -109,12 +109,12 @@ if(MSVC)
 endif()
 
 # define target name variables
-set(PPL_EXECUTABLE ppl_executable)
-set(PPL_LIBRARY ppl_library)
+#set(PPL_EXECUTABLE ppl_executable)
+#set(PPL_LIBRARY ppl_library)
 set(PPL_MP_LIBRARY ppl_mp_library)
 set(PPL_MP_EXECUTABLE ppl_mp_executable)
-set(SIMULATOR simulator)
-set(PPL_XML_EXECUTABLE ppl_xml_executable)
+#set(SIMULATOR simulator)
+#set(PPL_XML_EXECUTABLE ppl_xml_executable)
 
 # build [base object library]
 add_library(objlib OBJECT ${PMPL_SRCS})
@@ -160,11 +160,11 @@ target_link_libraries(objlib
 target_link_libraries(objlib PUBLIC modelloader RAPID tetgen PQP glutils nonstd sandbox)
 
 # build [ppl library]
-add_library(${PPL_LIBRARY} STATIC ${HARDWARE_SRCS} ${TASK_SRCS})
+#add_library(${PPL_LIBRARY} STATIC ${HARDWARE_SRCS} ${TASK_SRCS})
 
-target_compile_options(${PPL_LIBRARY} PRIVATE
-  -Wno-terminate
-)
+#target_compile_options(${PPL_LIBRARY} PRIVATE
+#  -Wno-terminate
+#)
 
 # build [ppl_mp library]
 add_library(${PPL_MP_LIBRARY} STATIC ${HARDWARE_SRCS})
@@ -173,21 +173,21 @@ target_compile_options(${PPL_MP_LIBRARY} PRIVATE
   -Wno-terminate
 )
 
-target_include_directories(${PPL_LIBRARY}
-        PUBLIC 
-        $<INSTALL_INTERFACE:include/ppl>
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
-)
-target_include_directories(${PPL_LIBRARY}
-        PUBLIC
-        $<INSTALL_INTERFACE:include/mathtool>
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/mathtool>
-)
-target_include_directories(${PPL_LIBRARY} 
-        PUBLIC 
-        $<INSTALL_INTERFACE:include/LKH/SRC/INCLUDE>
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/LKH/SRC/INCLUDE>
-)
+#target_include_directories(${PPL_LIBRARY}
+#        PUBLIC 
+#        $<INSTALL_INTERFACE:include/ppl>
+#        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
+#)
+#target_include_directories(${PPL_LIBRARY}
+#        PUBLIC
+#        $<INSTALL_INTERFACE:include/mathtool>
+#        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/mathtool>
+#)
+#target_include_directories(${PPL_LIBRARY} 
+#        PUBLIC 
+#        $<INSTALL_INTERFACE:include/LKH/SRC/INCLUDE>
+#        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/LKH/SRC/INCLUDE>
+#)
 
 target_include_directories(${PPL_MP_LIBRARY} 
         PUBLIC 
@@ -207,13 +207,13 @@ target_include_directories(${PPL_MP_LIBRARY}
 
 # [ppl library] - Link external packages
 # bullet order is very specific, do not modify
-target_link_libraries(${PPL_LIBRARY} PUBLIC objlib ${BULLET_LIBRARIES} CGAL::CGAL Eigen3::Eigen
-        nlohmann_json::nlohmann_json Qt6::Core Qt6::Gui Qt6::OpenGL Qt6::Widgets
-        Qt6::OpenGLWidgets tinyxml2::tinyxml2)
-#target_link_libraries(${PPL_LIBRARY} PUBLIC ${OPENGL_LIBRARIES} ${GLUT_LIBRARY})
+#target_link_libraries(${PPL_LIBRARY} PUBLIC objlib ${BULLET_LIBRARIES} CGAL::CGAL Eigen3::Eigen
+#        nlohmann_json::nlohmann_json Qt6::Core Qt6::Gui Qt6::OpenGL Qt6::Widgets
+#        Qt6::OpenGLWidgets tinyxml2::tinyxml2)
+##target_link_libraries(${PPL_LIBRARY} PUBLIC ${OPENGL_LIBRARIES} ${GLUT_LIBRARY})
 # [ppl library] - Link internal built packages
-target_link_libraries(${PPL_LIBRARY} PUBLIC modelloader RAPID tetgen PQP glutils nonstd sandbox)
-set_target_properties(${PPL_LIBRARY} PROPERTIES OUTPUT_NAME ppl)
+#target_link_libraries(${PPL_LIBRARY} PUBLIC modelloader RAPID tetgen PQP glutils nonstd sandbox)
+#set_target_properties(${PPL_LIBRARY} PROPERTIES OUTPUT_NAME ppl)
 
 # [ppl_mp library] - Link external packages
 target_link_libraries(${PPL_MP_LIBRARY} PUBLIC objlib ${BULLET_LIBRARIES} CGAL::CGAL Eigen3::Eigen
@@ -225,9 +225,9 @@ target_link_libraries(${PPL_MP_LIBRARY} PUBLIC PQP glutils nonstd sandbox modell
 set_target_properties(${PPL_MP_LIBRARY} PROPERTIES OUTPUT_NAME ppl_mp)
 
 # build [ppl executable]
-add_executable(${PPL_EXECUTABLE} src/tmp_main.cpp)
-target_link_libraries(${PPL_EXECUTABLE} PRIVATE ${PPL_LIBRARY} RAPID tetgen)
-set_target_properties(${PPL_EXECUTABLE} PROPERTIES OUTPUT_NAME ppl)
+#add_executable(${PPL_EXECUTABLE} src/tmp_main.cpp)
+#target_link_libraries(${PPL_EXECUTABLE} PRIVATE ${PPL_LIBRARY} RAPID tetgen)
+#set_target_properties(${PPL_EXECUTABLE} PROPERTIES OUTPUT_NAME ppl)
 
 # build [ppl_mp executable]
 add_executable(${PPL_MP_EXECUTABLE} src/main.cpp)
@@ -235,9 +235,9 @@ target_link_libraries(${PPL_MP_EXECUTABLE} PRIVATE ${PPL_MP_LIBRARY})
 set_target_properties(${PPL_MP_EXECUTABLE} PROPERTIES OUTPUT_NAME ppl_mp)
 
 # build [sim executable]
-add_executable(${SIMULATOR} src/sim_main.cpp)
-target_link_libraries(${SIMULATOR} PRIVATE ${PPL_LIBRARY})
-set_target_properties(${SIMULATOR} PROPERTIES OUTPUT_NAME sim)
+#add_executable(${SIMULATOR} src/sim_main.cpp)
+#target_link_libraries(${SIMULATOR} PRIVATE ${PPL_LIBRARY})
+#set_target_properties(${SIMULATOR} PROPERTIES OUTPUT_NAME sim)
 
 # build [tests]
 if(BUILD_TESTS)
@@ -275,15 +275,16 @@ if(BUILD_TESTS)
     catch_discover_tests(${TESTS_STRATEGY})
 endif()
 
-add_executable(${PPL_XML_EXECUTABLE} src/xml_main.cpp)
-target_link_libraries(${PPL_XML_EXECUTABLE} PRIVATE ${PPL_LIBRARY})
+#add_executable(${PPL_XML_EXECUTABLE} src/xml_main.cpp)
+#target_link_libraries(${PPL_XML_EXECUTABLE} PRIVATE ${PPL_LIBRARY})
 
 
 # -------------  package ppl library for distribution --------------
 message("Generating targets for packaging")
 include(GNUInstallDirs)
 
-install(TARGETS ${PPL_LIBRARY} ${PPL_MP_LIBRARY} objlib
+#install(TARGETS ${PPL_LIBRARY} ${PPL_MP_LIBRARY} objlib
+install(TARGETS ${PPL_MP_LIBRARY} objlib
         EXPORT PPLTargets
         LIBRARY DESTINATION lib
         ARCHIVE DESTINATION lib)

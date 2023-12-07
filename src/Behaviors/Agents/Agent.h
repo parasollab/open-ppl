@@ -5,6 +5,7 @@
 #include <memory>
 #include <vector>
 
+#include "Utilities/XMLNode.h"
 #include "MPProblem/Robot/Control.h"
 
 class Cfg;

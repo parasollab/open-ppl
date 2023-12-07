@@ -21,18 +21,16 @@
 ///
 /// @ingroup Connectors
 ////////////////////////////////////////////////////////////////////////////////
-template <typename MPTraits>
-class ConnectorMethod : public MPBaseObject<MPTraits>
+class ConnectorMethod : public MPBaseObject
 {
   public:
 
     ///@name Motion Planning Types
     ///@{
 
-    typedef typename MPTraits::CfgType           CfgType;
-    typedef typename MPTraits::GroupCfgType      GroupCfgType;
-    typedef typename MPTraits::RoadmapType       RoadmapType;
-    typedef typename MPTraits::GroupRoadmapType  GroupRoadmapType;
+    typedef typename MPBaseObject::GroupCfgType      GroupCfgType;
+    typedef typename MPBaseObject::RoadmapType       RoadmapType;
+    typedef typename MPBaseObject::GroupRoadmapType  GroupRoadmapType;
     typedef typename RoadmapType::VID            VID;
     typedef typename RoadmapType::VertexSet      VertexSet;
 
@@ -228,71 +226,19 @@ class ConnectorMethod : public MPBaseObject<MPTraits>
 
 };
 
-/*------------------------------- Construction -------------------------------*/
 
-template <typename MPTraits>
-ConnectorMethod<MPTraits>::
-ConnectorMethod()
-{ }
-
-
-template <typename MPTraits>
-ConnectorMethod<MPTraits>::
-ConnectorMethod(XMLNode& _node) : MPBaseObject<MPTraits>(_node) {
-  m_lpLabel = _node.Read("lpLabel", true, "", "Local Planner");
-
-  m_skipIfSameCC = _node.Read("checkIfSameCC", false, m_skipIfSameCC,
-      "Skip connections between nodes in the same CC?");
-
-  m_maxFailures = _node.Read("maxFailures", false, m_maxFailures,
-      size_t(0), std::numeric_limits<size_t>::max(),
-      "Terminate Connect operations after this many failures (0 to disable).");
-
-	m_selfEdges = _node.Read("selfEdges", false, m_selfEdges,
-			"Indicates if the connector should allow self edges.");
-
-  m_oneWay = _node.Read("unidirectional", false, m_oneWay,
-      "Create unidirectional edges.");
-}
-
-/*--------------------------- MPBaseObject Overrides -------------------------*/
-
-template <typename MPTraits>
-void
-ConnectorMethod<MPTraits>::
-Print(std::ostream& _os) const {
-  MPBaseObject<MPTraits>::Print(_os);
-  _os << "\n\tlpLabel: " << m_lpLabel
-      << "\n\tskip if same cc: " << m_skipIfSameCC
-      << "\n\tmax failures: " << m_maxFailures
-      << "\n\tunidirectional: " << m_oneWay
-      << std::endl;
-}
-
-
-template <typename MPTraits>
-void
-ConnectorMethod<MPTraits>::
-Initialize() {
-  ClearConnectionAttempts();
-}
-
-/*---------------------------- Connection Interface --------------------------*/
-
-template <typename MPTraits>
 template <typename AbstractRoadmapType>
 void
-ConnectorMethod<MPTraits>::
+ConnectorMethod::
 Connect(AbstractRoadmapType* const _r, const VertexSet* const _targetSet,
     OutputIterator<AbstractRoadmapType>* const _collision) {
   Connect(_r, _r->begin(), _r->end(), _targetSet, _collision);
 }
 
 
-template <typename MPTraits>
 template <typename AbstractRoadmapType>
 void
-ConnectorMethod<MPTraits>::
+ConnectorMethod::
 Connect(AbstractRoadmapType* const _r, const VID _source,
     const VertexSet* const _targetSet,
     OutputIterator<AbstractRoadmapType>* const _collision)
@@ -302,10 +248,9 @@ Connect(AbstractRoadmapType* const _r, const VID _source,
 }
 
 
-template <typename MPTraits>
 template <typename AbstractRoadmapType, typename InputIterator>
 void
-ConnectorMethod<MPTraits>::
+ConnectorMethod::
 Connect(AbstractRoadmapType* const _r,
     InputIterator _sourceBegin, InputIterator _sourceEnd,
     const VertexSet* const _targetSet,
@@ -328,40 +273,9 @@ Connect(AbstractRoadmapType* const _r,
 }
 
 
-template <typename MPTraits>
-inline
-bool
-ConnectorMethod<MPTraits>::
-IsRewiring() const noexcept {
-  return m_rewiring;
-}
-
-/*--------------------------- Connection Helpers -----------------------------*/
-
-template <typename MPTraits>
-void
-ConnectorMethod<MPTraits>::
-ConnectImpl(RoadmapType* const _r, const VID _source,
-    const VertexSet* const _targetSet,
-    OutputIterator<RoadmapType>* const _collision) {
-  throw NotImplementedException(WHERE);
-}
-
-
-template <typename MPTraits>
-void
-ConnectorMethod<MPTraits>::
-ConnectImpl(GroupRoadmapType* const _r, const VID _source,
-    const VertexSet* const _targetSet,
-    OutputIterator<GroupRoadmapType>* const _collision) {
-  throw NotImplementedException(WHERE);
-}
-
-
-template <typename MPTraits>
 template <typename AbstractRoadmapType>
 void
-ConnectorMethod<MPTraits>::
+ConnectorMethod::
 ConnectNeighbors(AbstractRoadmapType* const _r, const VID _source,
     const std::vector<Neighbor>& _neighbors,
     OutputIterator<AbstractRoadmapType>* const _collision,
@@ -408,75 +322,9 @@ ConnectNeighbors(AbstractRoadmapType* const _r, const VID _source,
 }
 
 
-template <typename MPTraits>
-bool
-ConnectorMethod<MPTraits>::
-ConnectNodes(RoadmapType* const _r, const VID _source, const VID _target,
-    OutputIterator<RoadmapType>* const _collision) {
-  auto env = this->GetEnvironment();
-  auto robot = this->GetTask()->GetRobot();
-  auto lp = this->GetLocalPlanner(m_lpLabel);
-
-  const CfgType& c1 = _r->GetVertex(_source),
-               & c2 = _r->GetVertex(_target);
-
-  CfgType collision(robot);
-  LPOutput<MPTraits> lpOutput;
-  const bool connected = lp->IsConnected(c1, c2, collision, &lpOutput,
-        env->GetPositionRes(), env->GetOrientationRes(), true);
-
-  if(connected) {
-    if(m_oneWay)
-      _r->AddEdge(_source, _target, lpOutput.m_edge.first);
-    else
-      _r->AddEdge(_source, _target, lpOutput.m_edge);
-  }
-  else {
-    CacheFailedConnection(_r, _source, _target);
-    if(_collision)
-      *_collision = collision;
-  }
-
-  return connected;
-}
-
-
-template <typename MPTraits>
-bool
-ConnectorMethod<MPTraits>::
-ConnectNodes(GroupRoadmapType* const _r, const VID _source, const VID _target,
-    OutputIterator<GroupRoadmapType>* const _collision) {
-  auto env = this->GetEnvironment();
-  auto lp = this->GetLocalPlanner(m_lpLabel);
-
-  const GroupCfgType& c1 = _r->GetVertex(_source),
-                    & c2 = _r->GetVertex(_target);
-
-  GroupCfgType collision(_r);
-  GroupLPOutput<MPTraits> lpOutput(_r);
-  const bool connected = lp->IsConnected(c1, c2, collision, &lpOutput,
-        env->GetPositionRes(), env->GetOrientationRes(), true);
-
-  if(connected) {
-    if(m_oneWay)
-      _r->AddEdge(_source, _target, lpOutput.m_edge.first);
-    else
-      _r->AddEdge(_source, _target, lpOutput.m_edge);
-  }
-  else {
-    CacheFailedConnection(_r, _source, _target);
-    if(_collision)
-      *_collision = collision;
-  }
-
-  return connected;
-}
-
-
-template <typename MPTraits>
 template <typename AbstractRoadmapType>
 bool
-ConnectorMethod<MPTraits>::
+ConnectorMethod::
 DoNotCheck(AbstractRoadmapType* const _r, const VID _source, const VID _target)
     const {
   // Check that both VIDs are valid.
@@ -534,43 +382,5 @@ DoNotCheck(AbstractRoadmapType* const _r, const VID _source, const VID _target)
 
   return false;
 }
-
-
-/*------------------------------ Connection Caching --------------------------*/
-
-template <typename MPTraits>
-void
-ConnectorMethod<MPTraits>::
-CacheFailedConnection(void* const _map, const VID _source, const VID _target)
-    noexcept {
-  m_attemptsCache[_map].insert({_source, _target});
-}
-
-
-template <typename MPTraits>
-bool
-ConnectorMethod<MPTraits>::
-IsCached(void* const _map, const VID _source, const VID _target) const noexcept {
-  // Look up the cache for this map. If it hasn't been created yet, nothing is
-  // cached.
-  auto iter = m_attemptsCache.find(_map);
-  const bool cached = iter == m_attemptsCache.end()
-                    ? false
-                    : iter->second.count({_source, _target});
-
-  this->GetStatClass()->GetAverage(this->GetNameAndLabel() + "::CacheHitRatio")
-      += cached;
-  return cached;
-}
-
-
-template <typename MPTraits>
-void
-ConnectorMethod<MPTraits>::
-ClearConnectionAttempts() {
-  m_attemptsCache.clear();
-}
-
-/*----------------------------------------------------------------------------*/
 
 #endif

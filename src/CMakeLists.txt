@@ -1,5 +1,30 @@
 cmake_minimum_required(VERSION 3.15)
 
+# Samplers
+option(COMPILE_UNIFORM_RANDOM_SAMPLER "Compile UniformRandomSampler" ON)
+
+# DistanceMetrics
+option(COMPILE_MINKOWSKI_DISTANCE "Compile MinkowskiDistance" ON)
+option(COMPILE_EUCLIDEAN_DISTANCE "Compile EuclideanDistance" ON)
+
+# NeighborhoodFinders
+option(COMPILE_BRUTE_FORCE_NF "Compile BruteForceNF" ON)
+
+# Extenders
+option(COMPILE_BASIC_EXTENDER "Compile BasicExtender" ON)
+
+# MapEvaluators
+option(COMPILE_CONDITIONAL_EVALUATOR "Compile ConditionalEvaluator" ON)
+
+# Metrics
+option(COMPILE_NUM_NODES_METRIC "Compile NumNodesMetric" ON)
+
+# MPStrategies
+option(COMPILE_BASIC_RRT "Compile BasicRRTStrategy" ON)
+
+# ValidityCheckers
+option(COMPILE_ALWAYS_TRUE_VC "Compile AlwaysTrueValidity" ON)
+
 set(HARDWARE_SRCS
         ${CMAKE_CURRENT_SOURCE_DIR}/MPProblem/Robot/HardwareInterfaces/ActuatorInterface.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/MPProblem/Robot/HardwareInterfaces/Battery.cpp
@@ -122,6 +147,9 @@ set(PMPL_SRCS
         ${CMAKE_CURRENT_SOURCE_DIR}/Behaviors/Controllers/SimpleController.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Behaviors/Controllers/ICreateController.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/ConfigurationSpace/Cfg.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/ConfigurationSpace/GroupPath.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/ConfigurationSpace/LocalObstacleMap.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/ConfigurationSpace/Path.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/ConfigurationSpace/ReachableVolumes.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Geometry/GMSPolygon.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Geometry/GMSPolyhedron.cpp
@@ -144,15 +172,32 @@ set(PMPL_SRCS
         ${CMAKE_CURRENT_SOURCE_DIR}/Geometry/Shapes/NBox.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Geometry/Shapes/NSphere.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Geometry/Shapes/NSphericalShell.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/MapEvaluators/SIPPMethod.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/MPTools/MeanCurvatureSkeleton3D.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/MPTools/ReebGraphConstruction.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/MPTools/TetGenDecomposition.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/MPBaseObject.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/MPSolution.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/Connectors/ConnectorMethod.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/DistanceMetrics/DistanceMetricMethod.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/EdgeValidityCheckers/EdgeValidityCheckerMethod.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/Extenders/ExtenderMethod.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/LocalPlanners/LocalPlannerMethod.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/LocalPlanners/LPOutput.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/LocalPlanners/GroupLPOutput.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/MapEvaluators/MapEvaluatorMethod.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/Metrics/MetricMethod.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/MPStrategies/MPStrategyMethod.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/MPStrategies/BasicRRTStrategy.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/MPTools/MPTools.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/NeighborhoodFinders/NeighborhoodFinderMethod.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/PathModifiers/PathModifierMethod.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/Samplers/SamplerMethod.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/ValidityCheckers/CollisionDetection/CDInfo.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/ValidityCheckers/CollisionDetectionValidity.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/ValidityCheckers/CollisionDetection/CollisionDetectionMethod.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/ValidityCheckers/CollisionDetection/RapidCollisionDetection.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/ValidityCheckers/CollisionDetection/PQPCollisionDetection.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/ValidityCheckers/CollisionDetection/SpheresCollisionDetection.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/ValidityCheckers/ValidityCheckerMethod.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/GoalTracker.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/MPLibrary.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/MPProblem/MPProblem.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/MPProblem/MPTask.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/MPProblem/GroupTask.cpp
@@ -188,5 +233,79 @@ set(PMPL_SRCS
         ${CMAKE_CURRENT_SOURCE_DIR}/Workspace/WorkspaceRegion.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Workspace/WorkspaceSkeleton.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/PMPL.cpp
-        PARENT_SCOPE
 )
+
+# Samplers
+if(COMPILE_UNIFORM_RANDOM_SAMPLER)
+    set(UNIFORM_RANDOM_AVAILABLE 1)
+    list(APPEND PMPL_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/Samplers/UniformRandomSampler.cpp)
+else()
+    set(UNIFORM_RANDOM_AVAILABLE 0)
+endif()
+
+# DistanceMetrics
+if(COMPILE_MINKOWSKI_DISTANCE)
+    set(MINKOWSKI_AVAILABLE 1)
+    list(APPEND PMPL_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/DistanceMetrics/MinkowskiDistance.cpp)
+else()
+    set(MINKOWSKI_AVAILABLE 0)
+endif()
+
+if(COMPILE_EUCLIDEAN_DISTANCE)
+    set(EUCLIDEAN_AVAILABLE 1)
+    list(APPEND PMPL_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/DistanceMetrics/EuclideanDistance.cpp)
+else()
+    set(EUCLIDEAN_AVAILABLE 0)
+endif()
+
+# NeighborhoodFinders
+if(COMPILE_BRUTE_FORCE_NF)
+    set(BRUTE_FORCE_NF_AVAILABLE 1)
+    list(APPEND PMPL_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/NeighborhoodFinders/BruteForceNF.cpp)
+else()
+    set(BRUTE_FORCE_NF_AVAILABLE 0)
+endif()
+
+# Extenders
+if(COMPILE_BASIC_EXTENDER)
+    set(BASIC_EXTENDER_AVAILABLE 1)
+    list(APPEND PMPL_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/Extenders/BasicExtender.cpp)
+else()
+    set(BASIC_EXTENDER_AVAILABLE 0)
+endif()
+
+# MapEvaluators
+if(COMPILE_CONDITIONAL_EVALUATOR)
+    set(CONDITIONAL_EVAL_AVAILABLE 1)
+    list(APPEND PMPL_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/MapEvaluators/ConditionalEvaluator.cpp)
+else()
+    set(CONDITIONAL_EVAL_AVAILABLE 0)
+endif()
+
+# Metrics
+if(COMPILE_NUM_NODES_METRIC)
+    set(NUM_NODES_AVAILABLE 1)
+    list(APPEND PMPL_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/Metrics/NumNodesMetric.cpp)
+else()
+    set(NUM_NODES_AVAILABLE 0)
+endif()
+
+# MPStrategies
+if(COMPILE_BASIC_RRT)
+    set(BASIC_RRT_AVAILABLE 1)
+    list(APPEND PMPL_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/MPStrategies/BasicRRTStrategy.cpp)
+else()
+    set(BASIC_RRT_AVAILABLE 0)
+endif()
+
+# ValidityCheckers
+if(COMPILE_ALWAYS_TRUE_VC)
+    set(ALWAYS_TRUE_AVAILABLE 1)
+    list(APPEND PMPL_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/ValidityCheckers/AlwaysTrueValidity.cpp)
+else()
+    set(ALWAYS_TRUE_AVAILABLE 0)
+endif()
+
+set(PMPL_SRCS ${PMPL_SRCS} PARENT_SCOPE)
+
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Traits/Methods.h.in ${CMAKE_CURRENT_SOURCE_DIR}/Traits/Methods.h)

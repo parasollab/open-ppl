@@ -25,16 +25,14 @@
 ///
 /// @ingroup ValidityCheckers
 ////////////////////////////////////////////////////////////////////////////////
-template <typename MPTraits>
-class CollisionDetectionValidityMethod : public ValidityCheckerMethod<MPTraits> {
+class CollisionDetectionValidityMethod : public ValidityCheckerMethod {
 
   public:
 
     ///@name Local Types
     ///@{
 
-    typedef typename MPTraits::CfgType      CfgType;
-    typedef typename MPTraits::GroupCfgType GroupCfg;
+    typedef typename ValidityCheckerMethod::GroupCfgType GroupCfg;
 
     ///@}
     ///@name Construction
@@ -43,7 +41,7 @@ class CollisionDetectionValidityMethod : public ValidityCheckerMethod<MPTraits> 
     CollisionDetectionValidityMethod() = default;
 
     CollisionDetectionValidityMethod(XMLNode& _node) 
-      : ValidityCheckerMethod<MPTraits>(_node) {}
+      : ValidityCheckerMethod(_node) {}
 
     virtual ~CollisionDetectionValidityMethod() = default;
 

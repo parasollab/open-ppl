@@ -16,7 +16,8 @@
 #include "Simulator/BulletModel.h"
 
 #ifndef PPL_TEST_TRAITS_H_
-  #include "Traits/CfgTraits.h"
+  // #include "Traits/CfgTraits.h"
+  #include "Traits/Methods.h"
 #else 
   #include "Traits/TestTraits.h"
 #endif

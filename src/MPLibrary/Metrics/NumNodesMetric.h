@@ -7,8 +7,7 @@
 /// Evaluates the number of nodes in the current roadmap.
 /// @ingroup Metrics
 ////////////////////////////////////////////////////////////////////////////////
-template <typename MPTraits>
-class NumNodesMetric : virtual public MetricMethod<MPTraits> {
+class NumNodesMetric : virtual public MetricMethod {
 
   public:
 
@@ -29,34 +28,5 @@ class NumNodesMetric : virtual public MetricMethod<MPTraits> {
 
     ///@}
 };
-
-/*------------------------------ Construction --------------------------------*/
-
-template <typename MPTraits>
-NumNodesMetric<MPTraits>::
-NumNodesMetric() {
-  this->SetName("NumNodesMetric");
-}
-
-
-template <typename MPTraits>
-NumNodesMetric<MPTraits>::
-NumNodesMetric(XMLNode& _node) : MetricMethod<MPTraits>(_node){
-  this->SetName("NumNodesMetric");
-}
-
-/*---------------------------- Metric Interface ------------------------------*/
-
-template <typename MPTraits>
-double
-NumNodesMetric<MPTraits>::
-operator()() {
-  if(this->GetGroupRoadmap())
-    return this->GetGroupRoadmap()->Size();
-  else
-    return this->GetRoadmap()->Size();
-}
-
-/*----------------------------------------------------------------------------*/
 
 #endif

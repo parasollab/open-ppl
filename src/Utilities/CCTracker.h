@@ -593,7 +593,7 @@ AddEdge(const edge_iterator _ei) noexcept {
 
   if(s_debug)
     std::cout << "Added edge (" << sourceVID << ", " << targetVID << ")."
-              << endl;
+              << std::endl;
 
   // If the two are already the same, there is nothing to do.
   if(sourceCC == targetCC) {
@@ -654,7 +654,7 @@ DeleteEdge(const edge_iterator _ei) noexcept {
 
   if(s_debug)
     std::cout << "Deleted edge (" << source << ", " << target << ")."
-              << endl;
+              << std::endl;
 
   // Assert that both cfgs started out in the same CC.
   VertexSet* const sourceCC = FindCC(source),

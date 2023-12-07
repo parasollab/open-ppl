@@ -4,18 +4,28 @@
 ///      directives in header files.
 using namespace std;
 
+#include "ConfigurationSpace/GenericStateGraph.h"
+#include "ConfigurationSpace/GroupCfg.h"
+#include "ConfigurationSpace/GroupRoadmap.h"
+#include "ConfigurationSpace/Path.h"
+#include "ConfigurationSpace/GroupPath.h"
+
 #include "MPProblem/MPProblem.h"
+#include "MPProblem/MPTask.h"
 #include "Utilities/IOUtils.h"
 #include "Utilities/MethodSet.h"
 #include "Utilities/XMLNode.h"
 
+#include "MPLibrary/MPSolution.h"
+
 #include <iostream>
 #include <string>
 
+template <typename Vertex, typename Edge> class GenericStateGraph;
 class Environment;
 class MPTask;
 class StatClass;
-
+class MPLibrary;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Abstract base class for all algorithm abstractions in PMPL.
@@ -33,7 +43,6 @@ class StatClass;
 /// to set that data: this method will be called whenever the owning MPLibrary's
 /// current MPProblem is changed.
 ////////////////////////////////////////////////////////////////////////////////
-template <typename MPTraits>
 class MPBaseObject {
 
   public:
@@ -41,29 +50,25 @@ class MPBaseObject {
     ///@name Local Types
     ///@{
 
-    typedef typename MPTraits::RoadmapType             RoadmapType;
-    typedef typename MPTraits::GroupRoadmapType        GroupRoadmapType;
-    typedef typename MPTraits::LocalObstacleMap        LocalObstacleMap;
-    typedef typename MPTraits::Path                    Path;
-    typedef typename MPTraits::GroupPathType           GroupPath;
-    typedef typename MPTraits::MPLibrary               MPLibrary;
-    typedef typename MPTraits::MPSolution              MPSolution;
-    typedef typename MPTraits::GoalTracker             GoalTracker;
+    typedef GenericStateGraph<Cfg, DefaultWeight<Cfg>> RoadmapType;
+    typedef GroupCfg<RoadmapType> GroupCfgType;
+    typedef GroupLocalPlan<RoadmapType> GroupWeightType;
+    typedef GroupRoadmap<GroupCfgType, GroupWeightType> GroupRoadmapType;
 
-    typedef typename MPLibrary::SamplerPointer         SamplerPointer;
-    typedef typename MPLibrary::LocalPlannerPointer    LocalPlannerPointer;
-    typedef typename MPLibrary::ExtenderPointer        ExtenderPointer;
-    typedef typename MPLibrary::PathModifierPointer    PathModifierPointer;
-    typedef typename MPLibrary::EdgeValidityCheckerPointer    
-                                                       EdgeValidityCheckerPointer;
-    typedef typename MPLibrary::ConnectorPointer       ConnectorPointer;
-    typedef typename MPLibrary::MetricPointer          MetricPointer;
-    typedef typename MPLibrary::MapEvaluatorPointer    MapEvaluatorPointer;
-    typedef typename MPLibrary::MPStrategyPointer      MPStrategyPointer;
-    typedef typename MPLibrary::DistanceMetricPointer  DistanceMetricPointer;
-    typedef typename MPLibrary::ValidityCheckerPointer ValidityCheckerPointer;
-    typedef typename MPLibrary::NeighborhoodFinderPointer
-                                                       NeighborhoodFinderPointer;
+    // typedef typename MPLibrary::SamplerPointer         SamplerPointer;
+    // typedef typename MPLibrary::LocalPlannerPointer    LocalPlannerPointer;
+    // typedef typename MPLibrary::ExtenderPointer        ExtenderPointer;
+    // typedef typename MPLibrary::PathModifierPointer    PathModifierPointer;
+    // typedef typename MPLibrary::EdgeValidityCheckerPointer    
+    //                                                    EdgeValidityCheckerPointer;
+    // typedef typename MPLibrary::ConnectorPointer       ConnectorPointer;
+    // typedef typename MPLibrary::MetricPointer          MetricPointer;
+    // typedef typename MPLibrary::MapEvaluatorPointer    MapEvaluatorPointer;
+    // typedef typename MPLibrary::MPStrategyPointer      MPStrategyPointer;
+    // typedef typename MPLibrary::DistanceMetricPointer  DistanceMetricPointer;
+    // typedef typename MPLibrary::ValidityCheckerPointer ValidityCheckerPointer;
+    // typedef typename MPLibrary::NeighborhoodFinderPointer
+    //                                                    NeighborhoodFinderPointer;
 
     ///@}
     ///@name Construction
@@ -80,7 +85,7 @@ class MPBaseObject {
     /// @param _node XMLNode to parse for this object
     MPBaseObject(XMLNode& _node);
 
-    virtual ~MPBaseObject() = default;
+    virtual ~MPBaseObject();
 
     ///@}
     ///@name I/O
@@ -135,44 +140,44 @@ class MPBaseObject {
     /// Check the library's running flag.
     bool IsRunning() const noexcept;
 
-    /// Get a distance metric by label from the owning MPLibrary.
-    DistanceMetricPointer GetDistanceMetric(const std::string&) const noexcept;
+    // /// Get a distance metric by label from the owning MPLibrary.
+    // DistanceMetricPointer GetDistanceMetric(const std::string&) const noexcept;
 
-    /// Get a validity checker by label from the owning MPLibrary.
-    ValidityCheckerPointer GetValidityChecker(const std::string&) const noexcept;
+    // /// Get a validity checker by label from the owning MPLibrary.
+    // ValidityCheckerPointer GetValidityChecker(const std::string&) const noexcept;
 
-    /// Get a neighborhood finder by label from the owning MPLibrary.
-    NeighborhoodFinderPointer GetNeighborhoodFinder(const std::string&) const noexcept;
+    // /// Get a neighborhood finder by label from the owning MPLibrary.
+    // NeighborhoodFinderPointer GetNeighborhoodFinder(const std::string&) const noexcept;
 
-    /// Get a sampler by label from the owning MPLibrary.
-    SamplerPointer GetSampler(const std::string&) const noexcept;
+    // /// Get a sampler by label from the owning MPLibrary.
+    // SamplerPointer GetSampler(const std::string&) const noexcept;
 
-    /// Get a local planner by label from the owning MPLibrary.
-    LocalPlannerPointer GetLocalPlanner(const std::string&) const noexcept;
+    // /// Get a local planner by label from the owning MPLibrary.
+    // LocalPlannerPointer GetLocalPlanner(const std::string&) const noexcept;
 
-    /// Get an extender by label from the owning MPLibrary.
-    ExtenderPointer GetExtender(const std::string&) const noexcept;
+    // /// Get an extender by label from the owning MPLibrary.
+    // ExtenderPointer GetExtender(const std::string&) const noexcept;
 
-    /// Get a path modifier by label from the owning MPLibrary.
-    PathModifierPointer GetPathModifier(const std::string&) const noexcept;
+    // /// Get a path modifier by label from the owning MPLibrary.
+    // PathModifierPointer GetPathModifier(const std::string&) const noexcept;
 
-    /// Get a path modifier by label from the owning MPLibrary.
-    EdgeValidityCheckerPointer GetEdgeValidityChecker(const std::string&) const noexcept;
+    // /// Get a path modifier by label from the owning MPLibrary.
+    // EdgeValidityCheckerPointer GetEdgeValidityChecker(const std::string&) const noexcept;
 
-    /// Get a connector by label from the owning MPLibrary.
-    ConnectorPointer GetConnector(const std::string&) const noexcept;
+    // /// Get a connector by label from the owning MPLibrary.
+    // ConnectorPointer GetConnector(const std::string&) const noexcept;
 
-    /// Get a metric by label from the owning MPLibrary.
-    MetricPointer GetMetric(const std::string&) const noexcept;
+    // /// Get a metric by label from the owning MPLibrary.
+    // MetricPointer GetMetric(const std::string&) const noexcept;
 
-    /// Get a map evaluator by label from the owning MPLibrary.
-    MapEvaluatorPointer GetMapEvaluator(const std::string&) const noexcept;
+    // /// Get a map evaluator by label from the owning MPLibrary.
+    // MapEvaluatorPointer GetMapEvaluator(const std::string&) const noexcept;
 
-    /// Get a strategy by label from the owning MPLibrary.
-    MPStrategyPointer GetMPStrategy(const std::string&) const noexcept;
+    // /// Get a strategy by label from the owning MPLibrary.
+    // MPStrategyPointer GetMPStrategy(const std::string&) const noexcept;
 
-    /// Get the MPTools container from the owning MPLibrary.
-    typename MPTraits::MPTools* GetMPTools() const noexcept;
+    // /// Get the MPTools container from the owning MPLibrary.
+    // typename MPTraits::MPTools* GetMPTools() const noexcept;
 
     ///@}
     ///@name Problem Accessors
@@ -194,7 +199,7 @@ class MPBaseObject {
     ///@name Solution Accessors
     ///@{
 
-    MPSolution* GetMPSolution() const noexcept;
+    MPSolutionType* GetMPSolution() const noexcept;
 
     /// Get the current free-space roadmap.
     RoadmapType* GetRoadmap(Robot* const _r = nullptr) const noexcept;
@@ -206,7 +211,7 @@ class MPBaseObject {
     /// Get the current obstacle-space roadmap.
     RoadmapType* GetBlockRoadmap(Robot* const _r = nullptr) const noexcept;
 
-    /// Get the current best path.
+    // /// Get the current best path.
     Path* GetPath(Robot* const _r = nullptr) const noexcept;
 
     /// Get the current best group path.
@@ -219,7 +224,7 @@ class MPBaseObject {
     LocalObstacleMap* GetLocalObstacleMap() const noexcept;
 
     /// Get the goal tracker.
-    GoalTracker* GetGoalTracker() const noexcept;
+    // GoalTracker* GetGoalTracker() const noexcept;
 
     ///@}
 
@@ -229,9 +234,7 @@ class MPBaseObject {
     void SetName(const std::string& _s) {m_name = _s;}
 
     /// @return base file name from MPProblem
-    const std::string& GetBaseFilename() const {
-      return GetMPProblem()->GetBaseFilename();
-    }
+    const std::string& GetBaseFilename() const;
 
     bool m_debug;                  ///< Print debug info?
 
@@ -241,334 +244,7 @@ class MPBaseObject {
     std::string m_label;           ///< Unique identifier.
     MPLibrary* m_library{nullptr}; ///< The owning MPLibrary.
 
-    template<typename T, typename U> friend class MethodSet;
+    template<typename U> friend class MethodSet;
 };
-
-/*-------------------------------- Construction ------------------------------*/
-
-template <typename MPTraits>
-MPBaseObject<MPTraits>::
-MPBaseObject(const std::string& _label, const std::string& _name, bool _debug) :
-    m_debug(_debug), m_name(_name), m_label(_label) { }
-
-
-template <typename MPTraits>
-MPBaseObject<MPTraits>::
-MPBaseObject(XMLNode& _node) {
-  m_label = _node.Read("label", true, "", "Label Identifier");
-  m_debug = _node.Read("debug", false, false, "Show run-time debug info?");
-}
-
-/*------------------------------------ I/O -----------------------------------*/
-
-template <typename MPTraits>
-void
-MPBaseObject<MPTraits>::
-Print(std::ostream& _os) const {
-  _os << this->GetNameAndLabel() << endl;
-}
-
-/*-------------------------- Name and Label Accessors ------------------------*/
-
-template <typename MPTraits>
-inline
-const std::string&
-MPBaseObject<MPTraits>::
-GetName() const {
-  return m_name;
-}
-
-
-template <typename MPTraits>
-inline
-const std::string&
-MPBaseObject<MPTraits>::
-GetLabel() const {
-  return m_label;
-}
-
-
-template <typename MPTraits>
-inline
-std::string
-MPBaseObject<MPTraits>::
-GetNameAndLabel() const {
-  return m_name + "::" + m_label;
-}
-
-
-template <typename MPTraits>
-inline
-void
-MPBaseObject<MPTraits>::
-SetLabel(const std::string& _s) {
-  m_label = _s;
-}
-
-/*----------------------------- MPLibrary Accessors --------------------------*/
-
-template <typename MPTraits>
-inline
-void
-MPBaseObject<MPTraits>::
-SetMPLibrary(MPLibrary* _l) noexcept {
-  m_library = _l;
-}
-
-
-template <typename MPTraits>
-inline
-typename MPTraits::MPLibrary*
-MPBaseObject<MPTraits>::
-GetMPLibrary() const noexcept {
-  return m_library;
-}
-
-
-template <typename MPTraits>
-inline
-bool
-MPBaseObject<MPTraits>::
-IsRunning() const noexcept {
-  return m_library->IsRunning();
-}
-
-
-template <typename MPTraits>
-inline
-typename MPBaseObject<MPTraits>::DistanceMetricPointer
-MPBaseObject<MPTraits>::
-GetDistanceMetric(const std::string& _label) const noexcept {
-  return m_library->GetDistanceMetric(_label);
-}
-
-
-template <typename MPTraits>
-inline
-typename MPBaseObject<MPTraits>::ValidityCheckerPointer
-MPBaseObject<MPTraits>::
-GetValidityChecker(const std::string& _label) const noexcept {
-  return m_library->GetValidityChecker(_label);
-}
-
-
-template <typename MPTraits>
-inline
-typename MPBaseObject<MPTraits>::NeighborhoodFinderPointer
-MPBaseObject<MPTraits>::
-GetNeighborhoodFinder(const std::string& _label) const noexcept {
-  return m_library->GetNeighborhoodFinder(_label);
-}
-
-
-template <typename MPTraits>
-inline
-typename MPBaseObject<MPTraits>::SamplerPointer
-MPBaseObject<MPTraits>::
-GetSampler(const std::string& _label) const noexcept {
-  return m_library->GetSampler(_label);
-}
-
-
-template <typename MPTraits>
-inline
-typename MPBaseObject<MPTraits>::LocalPlannerPointer
-MPBaseObject<MPTraits>::
-GetLocalPlanner(const std::string& _label) const noexcept {
-  return m_library->GetLocalPlanner(_label);
-}
-
-
-template <typename MPTraits>
-inline
-typename MPBaseObject<MPTraits>::ExtenderPointer
-MPBaseObject<MPTraits>::
-GetExtender(const std::string& _label) const noexcept {
-  return m_library->GetExtender(_label);
-}
-
-
-template <typename MPTraits>
-inline
-typename MPBaseObject<MPTraits>::PathModifierPointer
-MPBaseObject<MPTraits>::
-GetPathModifier(const std::string& _label) const noexcept {
-  return m_library->GetPathModifier(_label);
-}
-
-
-template <typename MPTraits>
-inline
-typename MPBaseObject<MPTraits>::EdgeValidityCheckerPointer
-MPBaseObject<MPTraits>::
-GetEdgeValidityChecker(const std::string& _label) const noexcept {
-  return m_library->GetEdgeValidityChecker(_label);
-}
-
-
-template <typename MPTraits>
-inline
-typename MPBaseObject<MPTraits>::ConnectorPointer
-MPBaseObject<MPTraits>::
-GetConnector(const std::string& _label) const noexcept {
-  return m_library->GetConnector(_label);
-}
-
-
-template <typename MPTraits>
-inline
-typename MPBaseObject<MPTraits>::MetricPointer
-MPBaseObject<MPTraits>::
-GetMetric(const std::string& _label) const noexcept {
-  return m_library->GetMetric(_label);
-}
-
-
-template <typename MPTraits>
-inline
-typename MPBaseObject<MPTraits>::MapEvaluatorPointer
-MPBaseObject<MPTraits>::
-GetMapEvaluator(const std::string& _label) const noexcept {
-  return m_library->GetMapEvaluator(_label);
-}
-
-
-template <typename MPTraits>
-inline
-typename MPBaseObject<MPTraits>::MPStrategyPointer
-MPBaseObject<MPTraits>::
-GetMPStrategy(const std::string& _label) const noexcept {
-  return m_library->GetMPStrategy(_label);
-}
-
-
-template <typename MPTraits>
-inline
-typename MPTraits::MPTools*
-MPBaseObject<MPTraits>::
-GetMPTools() const noexcept {
-  return m_library->GetMPTools();
-}
-
-/*------------------------------ Problem Accessors ---------------------------*/
-
-template <typename MPTraits>
-inline
-MPProblem*
-MPBaseObject<MPTraits>::
-GetMPProblem() const noexcept {
-  return m_library->GetMPProblem();
-}
-
-
-template <typename MPTraits>
-inline
-Environment*
-MPBaseObject<MPTraits>::
-GetEnvironment() const noexcept {
-  return GetMPProblem()->GetEnvironment();
-}
-
-
-template <typename MPTraits>
-inline
-MPTask*
-MPBaseObject<MPTraits>::
-GetTask() const noexcept {
-  return m_library->GetTask();
-}
-
-
-template <typename MPTraits>
-inline
-GroupTask*
-MPBaseObject<MPTraits>::
-GetGroupTask() const noexcept {
-  return m_library->GetGroupTask();
-}
-
-/*--------------------------- Solution Accessors -----------------------------*/
-
-template <typename MPTraits>
-inline
-typename MPTraits::MPSolution*
-MPBaseObject<MPTraits>::
-GetMPSolution() const noexcept {
-  return m_library->GetMPSolution();
-}
-
-
-template <typename MPTraits>
-inline
-typename MPTraits::RoadmapType*
-MPBaseObject<MPTraits>::
-GetRoadmap(Robot* const _r) const noexcept {
-  return m_library->GetRoadmap(_r);
-}
-
-
-template <typename MPTraits>
-inline
-typename MPTraits::GroupRoadmapType*
-MPBaseObject<MPTraits>::
-GetGroupRoadmap(RobotGroup* const _g) const noexcept {
-  return m_library->GetGroupRoadmap(_g);
-}
-
-
-template <typename MPTraits>
-inline
-typename MPTraits::RoadmapType*
-MPBaseObject<MPTraits>::
-GetBlockRoadmap(Robot* const _r) const noexcept {
-  return m_library->GetBlockRoadmap(_r);
-}
-
-
-template <typename MPTraits>
-inline
-typename MPTraits::Path*
-MPBaseObject<MPTraits>::
-GetPath(Robot* const _r) const noexcept {
-  return m_library->GetPath(_r);
-}
-
-
-template <typename MPTraits>
-inline
-typename MPTraits::GroupPathType*
-MPBaseObject<MPTraits>::
-GetGroupPath(RobotGroup* const _g) const noexcept {
-  return m_library->GetGroupPath(_g);
-}
-
-
-template <typename MPTraits>
-inline
-StatClass*
-MPBaseObject<MPTraits>::
-GetStatClass() const noexcept {
-  return m_library->GetStatClass();
-}
-
-
-template <typename MPTraits>
-inline
-typename MPTraits::LocalObstacleMap*
-MPBaseObject<MPTraits>::
-GetLocalObstacleMap() const noexcept {
-  return m_library->GetLocalObstacleMap();
-}
-
-
-template <typename MPTraits>
-inline
-typename MPTraits::GoalTracker*
-MPBaseObject<MPTraits>::
-GetGoalTracker() const noexcept {
-  return m_library->GetGoalTracker();
-}
-
-/*----------------------------------------------------------------------------*/
 
 #endif

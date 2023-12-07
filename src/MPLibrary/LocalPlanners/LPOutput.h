@@ -1,6 +1,9 @@
 #ifndef PMPL_LP_OUTPUT_H_
 #define PMPL_LP_OUTPUT_H_
 
+#include "ConfigurationSpace/Cfg.h"
+#include "ConfigurationSpace/Weight.h"
+
 #include <string>
 #include <utility>
 #include <vector>
@@ -18,14 +21,12 @@
 ///
 /// @ingroup LocalPlanners
 ////////////////////////////////////////////////////////////////////////////////
-template <typename MPTraits>
 struct LPOutput {
 
   ///@name Motion Planning Types
   ///@{
 
-  typedef typename MPTraits::CfgType    CfgType;
-  typedef typename MPTraits::WeightType WeightType;
+  typedef DefaultWeight<Cfg> WeightType;
 
   ///@}
   ///@name Local Types
@@ -39,12 +40,12 @@ struct LPOutput {
 
   /// The resolution-level path computed by a local planner. Does not include
   /// the start or goal configurations.
-  std::vector<CfgType> m_path;
+  std::vector<Cfg> m_path;
 
   /// The set of 'intermediate' configurations, between each of which is a
   /// straight-line path in c-space (i.e. these are the vertices of a polygonal
   /// chain). Does not include the start or goal configurations.
-  std::vector<CfgType> m_intermediates;
+  std::vector<Cfg> m_intermediates;
 
   /// A pair of weight objects. The first is in the forward direction and the
   /// second is its reverse.
@@ -69,55 +70,5 @@ struct LPOutput {
   ///@}
 
 };
-
-/*----------------------------------------------------------------------------*/
-
-template <typename MPTraits>
-LPOutput<MPTraits>::
-LPOutput() {
-  Clear();
-}
-
-
-template <typename MPTraits>
-void
-LPOutput<MPTraits>::
-Clear() {
-  m_path.clear();
-  m_intermediates.clear();
-  m_edge.first.Clear();
-  m_edge.second.Clear();
-}
-
-
-template <typename MPTraits>
-void
-LPOutput<MPTraits>::
-SetLPLabel(const std::string& _label) {
-  m_edge.first.SetLPLabel(_label);
-  m_edge.second.SetLPLabel(_label);
-}
-
-
-template <typename MPTraits>
-void
-LPOutput<MPTraits>::
-AddIntermediatesToWeights(const bool _saveIntermediates) {
-  if(!_saveIntermediates)
-    return;
-
-  // Make a copy of the intermediates in reverse order for the backward edge.
-  std::vector<CfgType> tmp;
-  tmp.reserve(m_intermediates.size());
-  std::copy(m_intermediates.rbegin(), m_intermediates.rend(),
-            std::back_inserter(tmp));
-
-  // Set both edges.
-  m_edge.first.SetIntermediates(m_intermediates);
-  m_edge.second.SetIntermediates(tmp);
-}
-
-
-/*----------------------------------------------------------------------------*/
 
 #endif

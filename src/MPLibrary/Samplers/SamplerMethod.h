@@ -13,7 +13,7 @@
 
 class Boundary;
 class Environment;
-template <typename MPTraits> class MixSampler;
+// template <typename MPTraits> class MixSampler;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Base algorithm abstraction for \ref Samplers.
@@ -32,7 +32,7 @@ template <typename MPTraits> class MixSampler;
 /// @code
 /// size_t num, attempts;
 /// Boundary* bounds;
-/// std::vector<CfgType> valid;
+/// std::vector<Cfg> valid;
 /// auto s = this->GetSampler(m_sLabel);
 /// s->Sample(num, attempts, bounds, std::back_inserter(valid));
 /// @endcode
@@ -41,7 +41,7 @@ template <typename MPTraits> class MixSampler;
 ///
 /// @usage
 /// @code
-/// std::vector<CfgType> input, valid;
+/// std::vector<Cfg> input, valid;
 /// size_t attempts;
 /// Boundary* bounds;
 /// auto s = this->GetSampler(m_sLabel);
@@ -65,11 +65,10 @@ template <typename MPTraits> class MixSampler;
 ///
 /// @ingroup Samplers
 ////////////////////////////////////////////////////////////////////////////////
-template <typename MPTraits>
 #ifdef _PARALLEL
-class SamplerMethod : public MPBaseObject<MPTraits>, public stapl::p_object {
+class SamplerMethod : public MPBaseObject, public stapl::p_object {
 #else
-class SamplerMethod : public MPBaseObject<MPTraits> {
+class SamplerMethod : public MPBaseObject {
 #endif
 
   public:
@@ -77,15 +76,14 @@ class SamplerMethod : public MPBaseObject<MPTraits> {
     ///@name Motion Planning Types
     ///@{
 
-    typedef typename MPTraits::CfgType      CfgType;
-    typedef typename MPTraits::GroupCfgType GroupCfgType;
+    typedef typename MPBaseObject::GroupCfgType GroupCfgType;
 
     ///@}
     ///@name Local Types
     ///@{
 
-    typedef typename std::vector<CfgType>::iterator InputIterator;
-    typedef typename std::back_insert_iterator<std::vector<CfgType>> OutputIterator;
+    typedef typename std::vector<Cfg>::iterator InputIterator;
+    typedef typename std::back_insert_iterator<std::vector<Cfg>> OutputIterator;
     typedef typename std::vector<GroupCfgType>::iterator GroupInputIterator;
     typedef typename std::back_insert_iterator<std::vector<GroupCfgType>> GroupOutputIterator;
 
@@ -232,14 +230,14 @@ class SamplerMethod : public MPBaseObject<MPTraits> {
     /// @param _valid The resulting output configurations.
     /// @param _invalid The (optional) return for failed attempts.
     /// @return True if a valid configuration was generated, false otherwise.
-    virtual bool Sampler(CfgType& _cfg, const Boundary* const _boundary,
-        std::vector<CfgType>& _valid, std::vector<CfgType>& _invalid);
+    virtual bool Sampler(Cfg& _cfg, const Boundary* const _boundary,
+        std::vector<Cfg>& _valid, std::vector<Cfg>& _invalid);
 
     /// This version also specifies a boundary for the end-effector.
     /// @overload
-    virtual bool Sampler(CfgType& _cfg, const Boundary* const _robotBoundary,
+    virtual bool Sampler(Cfg& _cfg, const Boundary* const _robotBoundary,
         const Boundary* const _eeBoundary,
-        std::vector<CfgType>& _valid, std::vector<CfgType>& _invalid);
+        std::vector<Cfg>& _valid, std::vector<Cfg>& _invalid);
 
     /// Takes a single input configuration and applies the sampler rule to
     /// generate one or more output configurations.
@@ -260,315 +258,8 @@ class SamplerMethod : public MPBaseObject<MPTraits> {
 
     ///@}
 
-    friend class MixSampler<MPTraits>;
+    // friend class MixSampler<MPTraits>;
 
 };
-
-/*------------------------------ Construction --------------------------------*/
-
-template <typename MPTraits>
-SamplerMethod<MPTraits>::
-SamplerMethod(XMLNode& _node) : MPBaseObject<MPTraits>(_node) {
-}
-
-
-template <typename MPTraits>
-SamplerMethod<MPTraits>::
-~SamplerMethod() = default;
-
-/*-------------------- Individual Configuration Sampling ---------------------*/
-
-template <typename MPTraits>
-void
-SamplerMethod<MPTraits>::
-Sample(size_t _numNodes, size_t _maxAttempts,
-    const Boundary* const _boundary,
-    OutputIterator _valid, OutputIterator _invalid) {
-  auto stats = this->GetStatClass();
-  MethodTimer mt(stats, this->GetNameAndLabel() + "::Sample");
-
-  CfgType cfg(this->GetTask()->GetRobot());
-  std::vector<CfgType> valid, invalid;
-  valid.reserve(_numNodes);
-
-  // Try to generate _numNodes samples, using up to _maxAttempts tries per
-  // sample.
-  for(size_t i = 0; i < _numNodes; ++i) {
-    for(size_t attempts = 0; attempts < _maxAttempts; ++attempts) {
-      cfg.GetRandomCfg(_boundary);
-      if(this->Sampler(cfg, _boundary, valid, invalid))
-        break;
-    }
-  }
-
-  stats->IncNodesGenerated(this->GetNameAndLabel(), valid.size());
-  stats->IncNodesAttempted(this->GetNameAndLabel(),
-      valid.size() + invalid.size());
-
-  std::copy(valid.begin(), valid.end(), _valid);
-  std::copy(invalid.begin(), invalid.end(), _invalid);
-}
-
-
-template <typename MPTraits>
-void
-SamplerMethod<MPTraits>::
-Sample(size_t _numNodes, size_t _maxAttempts, const Boundary* const _boundary,
-    OutputIterator _valid) {
-  std::vector<CfgType> invalid;
-
-  Sample(_numNodes, _maxAttempts, _boundary, _valid, std::back_inserter(invalid));
-}
-
-
-template <typename MPTraits>
-void
-SamplerMethod<MPTraits>::
-Sample(size_t _numNodes, size_t _maxAttempts,
-    const Boundary* const _robotBoundary, const Boundary* const _eeBoundary,
-    OutputIterator _valid, OutputIterator _invalid) {
-  auto stats = this->GetStatClass();
-  MethodTimer mt(stats, this->GetNameAndLabel() + "::Sample");
-
-  CfgType cfg(this->GetTask()->GetRobot());
-  std::vector<CfgType> valid, invalid;
-  valid.reserve(_numNodes);
-
-  // Try to generate _numNodes samples, using up to _maxAttempts tries per
-  // sample.
-  for(size_t i = 0; i < _numNodes; ++i) {
-    for(size_t attempts = 0; attempts < _maxAttempts; ++attempts) {
-      cfg.GetRandomCfg(_robotBoundary);
-      if(this->Sampler(cfg, _robotBoundary, _eeBoundary, valid, invalid))
-        break;
-    }
-  }
-
-  stats->IncNodesGenerated(this->GetNameAndLabel(), valid.size());
-  stats->IncNodesAttempted(this->GetNameAndLabel(),
-      valid.size() + invalid.size());
-
-  std::copy(valid.begin(), valid.end(), _valid);
-  std::copy(invalid.begin(), invalid.end(), _invalid);
-}
-
-
-template <typename MPTraits>
-void
-SamplerMethod<MPTraits>::
-Sample(size_t _numNodes, size_t _maxAttempts,
-    const Boundary* const _robotBoundary, const Boundary* const _eeBoundary,
-    OutputIterator _valid) {
-  std::vector<CfgType> invalid;
-
-  Sample(_numNodes, _maxAttempts, _robotBoundary, _eeBoundary, _valid,
-      std::back_inserter(invalid));
-}
-
-
-template <typename MPTraits>
-void
-SamplerMethod<MPTraits>::
-Filter(InputIterator _first, InputIterator _last,
-    size_t _maxAttempts, const Boundary* const _boundary,
-    OutputIterator _valid, OutputIterator _invalid) {
-  auto stats = this->GetStatClass();
-  MethodTimer mt(stats, this->GetNameAndLabel() + "::Filter");
-
-  std::vector<CfgType> valid, invalid;
-
-  // Try to filter each configuration in the input range, using up to
-  // _maxAttempts tries per sample.
-  while(_first != _last) {
-    for(size_t attempts = 0; attempts < _maxAttempts; ++attempts) {
-      if(this->Sampler(*_first, _boundary, valid, invalid))
-        break;
-    }
-    _first++;
-  }
-
-  stats->IncNodesGenerated(this->GetNameAndLabel(), valid.size());
-  stats->IncNodesAttempted(this->GetNameAndLabel(),
-      valid.size() + invalid.size());
-
-  std::copy(valid.begin(), valid.end(), _valid);
-  std::copy(invalid.begin(), invalid.end(), _invalid);
-}
-
-
-template <typename MPTraits>
-void
-SamplerMethod<MPTraits>::
-Filter(InputIterator _first, InputIterator _last,
-    size_t _maxAttempts, const Boundary* const _boundary,
-    OutputIterator _valid) {
-  std::vector<CfgType> invalid;
-  Filter(_first, _last, _maxAttempts, _boundary, _valid,
-      std::back_inserter(invalid));
-}
-
-/*----------------------- Group Configuration Sampling -----------------------*/
-
-template <typename MPTraits>
-void
-SamplerMethod<MPTraits>::
-Sample(size_t _numNodes, size_t _maxAttempts,
-    const Boundary* const _boundary,
-    GroupOutputIterator _valid, GroupOutputIterator _invalid) {
-  auto stats = this->GetStatClass();
-  MethodTimer mt(stats, this->GetNameAndLabel() + "::Sample");
-
-  GroupCfgType cfg(this->GetGroupRoadmap());
-  std::vector<GroupCfgType> valid, invalid;
-
-  // Try to generate _numNodes samples, using up to _maxAttempts tries per
-  // sample.
-  for(size_t i = 0; i < _numNodes; ++i) {
-    for(size_t attempts = 0; attempts < _maxAttempts; ++attempts) {
-      // Generate a random configuration for each robot.
-      for(size_t i = 0; i < cfg.GetNumRobots(); ++i)
-        cfg.GetRobotCfg(i).GetRandomCfg(_boundary);
-
-      if(this->Sampler(cfg, _boundary, valid, invalid))
-        break;
-    }
-  }
-
-  stats->IncNodesGenerated(this->GetNameAndLabel(), valid.size());
-  stats->IncNodesAttempted(this->GetNameAndLabel(),
-      valid.size() + invalid.size());
-
-  std::copy(valid.begin(), valid.end(), _valid);
-  std::copy(invalid.begin(), invalid.end(), _invalid);
-}
-
-
-template <typename MPTraits>
-void
-SamplerMethod<MPTraits>::
-Sample(size_t _numNodes, size_t _maxAttempts, const Boundary* const _boundary,
-    GroupOutputIterator _valid) {
-  std::vector<GroupCfgType> invalid;
-  Sample(_numNodes, _maxAttempts, _boundary, _valid,
-      std::back_inserter(invalid));
-}
-
-
-template <typename MPTraits>
-void
-SamplerMethod<MPTraits>::
-Sample(size_t _numNodes, size_t _maxAttempts, const BoundaryMap& _boundaryMap,
-    GroupOutputIterator _valid, GroupOutputIterator _invalid) {
-  auto stats = this->GetStatClass();
-  MethodTimer mt(stats, this->GetNameAndLabel() + "::Sample");
-
-  const Boundary* const envBoundary = this->GetEnvironment()->GetBoundary();
-
-  GroupCfgType cfg(this->GetGroupRoadmap());
-  std::vector<GroupCfgType> valid, invalid;
-
-  // Try to generate _numNodes samples, using up to _maxAttempts tries per
-  // sample.
-  for(size_t i = 0; i < _numNodes; ++i) {
-    for(size_t attempts = 0; attempts < _maxAttempts; ++attempts) {
-      // Generate a random configuration for each robot.
-      for(size_t i = 0; i < cfg.GetNumRobots(); ++i) {
-        // Determine the boundary to use.
-        auto robot = cfg.GetRobot(i);
-        auto boundary = _boundaryMap.count(robot) ? _boundaryMap.at(robot)
-                                                  : envBoundary;
-        cfg.GetRobotCfg(i).GetRandomCfg(boundary);
-      }
-
-      if(this->Sampler(cfg, _boundaryMap, valid, invalid))
-        break;
-    }
-  }
-
-  stats->IncNodesGenerated(this->GetNameAndLabel(), valid.size());
-  stats->IncNodesAttempted(this->GetNameAndLabel(),
-      valid.size() + invalid.size());
-
-  std::copy(valid.begin(), valid.end(), _valid);
-  std::copy(invalid.begin(), invalid.end(), _invalid);
-}
-
-
-template <typename MPTraits>
-void
-SamplerMethod<MPTraits>::
-Sample(size_t _numNodes, size_t _maxAttempts, const BoundaryMap& _boundaryMap,
-    GroupOutputIterator _valid) {
-  std::vector<GroupCfgType> invalid;
-  Sample(_numNodes, _maxAttempts, _boundaryMap, _valid,
-      std::back_inserter(invalid));
-}
-
-
-template <typename MPTraits>
-void
-SamplerMethod<MPTraits>::
-Filter(GroupInputIterator _first, GroupInputIterator _last,
-    size_t _maxAttempts, const Boundary* const _boundary,
-    GroupOutputIterator _valid, GroupOutputIterator _invalid) {
-  throw NotImplementedException(WHERE) << "No default implementation is "
-                                       << "provided.";
-}
-
-
-template <typename MPTraits>
-void
-SamplerMethod<MPTraits>::
-Filter(GroupInputIterator _first, GroupInputIterator _last,
-    size_t _maxAttempts, const Boundary* const _boundary,
-    GroupOutputIterator _valid) {
-  std::vector<GroupCfgType> invalid;
-  Filter(_first, _last, _maxAttempts, _boundary, _valid,
-      std::back_inserter(invalid));
-}
-
-/*------------------------------- Sampler Rule -------------------------------*/
-
-template <typename MPTraits>
-bool
-SamplerMethod<MPTraits>::
-Sampler(CfgType& _cfg, const Boundary* const _boundary,
-    std::vector<CfgType>& _valid, std::vector<CfgType>& _invalid) {
-  throw NotImplementedException(WHERE) << "No default implementation is "
-                                       << "provided.";
-}
-
-
-template <typename MPTraits>
-bool
-SamplerMethod<MPTraits>::
-Sampler(CfgType& _cfg, const Boundary* const _robotBoundary,
-    const Boundary* const _eeBoundary,
-    std::vector<CfgType>& _valid, std::vector<CfgType>& _invalid) {
-  throw NotImplementedException(WHERE) << "No default implementation is "
-                                       << "provided.";
-}
-
-
-template <typename MPTraits>
-bool
-SamplerMethod<MPTraits>::
-Sampler(GroupCfgType& _cfg, const Boundary* const _boundary,
-    std::vector<GroupCfgType>& _valid, std::vector<GroupCfgType>& _invalid) {
-  throw NotImplementedException(WHERE) << "No default implementation is "
-                                       << "provided.";
-}
-
-
-template <typename MPTraits>
-bool
-SamplerMethod<MPTraits>::
-Sampler(GroupCfgType& _cfg, const BoundaryMap& _boundaryMap,
-    std::vector<GroupCfgType>& _valid, std::vector<GroupCfgType>& _invalid) {
-  throw NotImplementedException(WHERE) << "No default implementation is "
-                                       << "provided.";
-}
-
-/*----------------------------------------------------------------------------*/
 
 #endif

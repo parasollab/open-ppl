@@ -13,6 +13,8 @@
 #include "IOUtils.h"
 #include "XMLNode.h"
 
+class MPLibrary;
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Creates new method instances from an XML node.
@@ -52,15 +54,13 @@ struct MethodFactory final {
 /// its universe of method types. Then, specific instantiations of those types
 /// can be added to its map of available methods by calling 'AddMethod'.
 ////////////////////////////////////////////////////////////////////////////////
-template <typename MPTraits, typename Method>
+template <typename Method>
 class MethodSet final {
 
   public:
 
     ///@name Local Types
     ///@{
-
-    typedef typename MPTraits::MPLibrary                  MPLibrary;
 
     typedef Method*                                       MethodPointer;
     typedef std::shared_ptr<Method>                       OwningPointer;
@@ -152,9 +152,9 @@ class MethodSet final {
 
 /*------------------------------- Method Set ---------------------------------*/
 
-template <typename MPTraits, typename Method>
+template <typename Method>
 template <typename MethodTypeList>
-MethodSet<MPTraits, Method>::
+MethodSet<Method>::
 MethodSet(MPLibrary* const _p, const MethodTypeList& _mtl,
     const std::string& _name) : m_library(_p), m_name(_name) {
   AddToUniverse(typename boost::mpl::begin<MethodTypeList>::type(),
@@ -162,18 +162,18 @@ MethodSet(MPLibrary* const _p, const MethodTypeList& _mtl,
 }
 
 
-template <typename MPTraits, typename Method>
+template <typename Method>
 void
-MethodSet<MPTraits, Method>::
+MethodSet<Method>::
 ParseXML(XMLNode& _node) {
   for(auto& child : _node)
     AddMethod(child);
 }
 
 
-template <typename MPTraits, typename Method>
+template <typename Method>
 void
-MethodSet<MPTraits, Method>::
+MethodSet<Method>::
 AddMethod(XMLNode& _node) {
   auto iter = m_universe.find(_node.Name());
 
@@ -186,17 +186,17 @@ AddMethod(XMLNode& _node) {
 }
 
 
-template <typename MPTraits, typename Method>
+template <typename Method>
 void
-MethodSet<MPTraits, Method>::
+MethodSet<Method>::
 AddMethod(MethodPointer _e, const std::string& _label) {
   AddMethod(OwningPointer(_e), _label);
 }
 
 
-template <typename MPTraits, typename Method>
+template <typename Method>
 void
-MethodSet<MPTraits, Method>::
+MethodSet<Method>::
 AddMethod(OwningPointer _e, const std::string& _label) {
   auto iter = m_universe.find(_e->m_name);
 
@@ -218,9 +218,9 @@ AddMethod(OwningPointer _e, const std::string& _label) {
 }
 
 
-template <typename MPTraits, typename Method>
-typename MethodSet<MPTraits, Method>::MethodPointer
-MethodSet<MPTraits, Method>::
+template <typename Method>
+typename MethodSet<Method>::MethodPointer
+MethodSet<Method>::
 GetMethod(const std::string& _label) {
   // Find the method and ensure it exists.
   auto iter = m_elements.find(_label);
@@ -237,18 +237,18 @@ GetMethod(const std::string& _label) {
 }
 
 
-template <typename MPTraits, typename Method>
+template <typename Method>
 void
-MethodSet<MPTraits, Method>::
+MethodSet<Method>::
 Initialize() {
   for(auto& elem : m_elements)
     elem.second->Initialize();
 }
 
 
-template <typename MPTraits, typename Method>
+template <typename Method>
 void
-MethodSet<MPTraits, Method>::
+MethodSet<Method>::
 Print(std::ostream& _os) const {
   size_t count = 0;
 
@@ -261,47 +261,47 @@ Print(std::ostream& _os) const {
 
 /*--------------------------------- Iteration --------------------------------*/
 
-template <typename MPTraits, typename Method>
+template <typename Method>
 inline
-typename MethodSet<MPTraits, Method>::iterator
-MethodSet<MPTraits, Method>::
+typename MethodSet<Method>::iterator
+MethodSet<Method>::
 begin() noexcept {
   return m_elements.begin();
 }
 
 
-template <typename MPTraits, typename Method>
+template <typename Method>
 inline
-typename MethodSet<MPTraits, Method>::iterator
-MethodSet<MPTraits, Method>::
+typename MethodSet<Method>::iterator
+MethodSet<Method>::
 end() noexcept {
   return m_elements.end();
 }
 
 
-template <typename MPTraits, typename Method>
+template <typename Method>
 inline
-typename MethodSet<MPTraits, Method>::const_iterator
-MethodSet<MPTraits, Method>::
+typename MethodSet<Method>::const_iterator
+MethodSet<Method>::
 begin() const noexcept {
   return m_elements.begin();
 }
 
 
-template <typename MPTraits, typename Method>
+template <typename Method>
 inline
-typename MethodSet<MPTraits, Method>::const_iterator
-MethodSet<MPTraits, Method>::
+typename MethodSet<Method>::const_iterator
+MethodSet<Method>::
 end() const noexcept {
   return m_elements.end();
 }
 
 /*-------------------------- Initialization Helpers --------------------------*/
 
-template <typename MPTraits, typename Method>
+template <typename Method>
 template <typename First, typename Last>
 void
-MethodSet<MPTraits, Method>::
+MethodSet<Method>::
 AddToUniverse(First, Last) {
   using FirstType = typename boost::mpl::deref<First>::type;
   FirstType first;
@@ -310,10 +310,10 @@ AddToUniverse(First, Last) {
 }
 
 
-template <typename MPTraits, typename Method>
+template <typename Method>
 template <typename Last>
 void
-MethodSet<MPTraits, Method>::
+MethodSet<Method>::
 AddToUniverse(Last, Last) {}
 
 /*----------------------------------------------------------------------------*/
