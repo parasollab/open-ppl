@@ -30,8 +30,6 @@ jobs:
     needs: build-deploy
     runs-on: self-hosted
     steps:
-      # - name: Checkout code
-      #   uses: actions/checkout@v2
       - name: Run Tests
         run: |
           cmake -DCMAKE_BUILD_TYPE=Debug -G Ninja -DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake -B build/ -DCODE_COVERAGE=ON
@@ -41,8 +39,7 @@ jobs:
           ctest --output-on-failure --output-junit junit.xml
           lcov --capture --directory . --output-file coverage.info
           lcov --remove coverage.info '/usr/*' '*/vcpkg_installed/*' --output-file coverage.info
-          gcovr --xml-pretty --exclude-unreachable-branches --print-summary -o coverage.xml --root ${{ github.workspace }}
       - name: Upload Coverage Report
         uses: romeovs/lcov-reporter-action@v0.2.16
         with:
-          lcov-file: build/coverage.xml
+          lcov-file: build/coverage.info
