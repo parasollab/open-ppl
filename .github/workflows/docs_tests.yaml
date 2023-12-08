@@ -37,9 +37,3 @@ jobs:
           cmake --build build --target strategy_tests
           cd build
           ctest --output-on-failure --output-junit junit.xml
-          lcov --capture --directory . --output-file coverage.info
-          lcov --remove coverage.info '/usr/*' '*/vcpkg_installed/*' --output-file coverage.info
-      - name: Upload Coverage Report
-        uses: romeovs/lcov-reporter-action@v0.2.16
-        with:
-          lcov-file: build/coverage.info
