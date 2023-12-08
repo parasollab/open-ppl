@@ -161,6 +161,8 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:ac3db16e341c9358c4b239de503cb2c28"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0a258e0ad2deb47bfddf60da993136a4"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classCollisionDetectionValidityMethod.html#a0a258e0ad2deb47bfddf60da993136a4">IsInsideObstacle</a> (const Point3d &amp;_p)=0</td></tr>
 <tr class="separator:a0a258e0ad2deb47bfddf60da993136a4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5d7d158d6abd39fb1e5e58f8d4b928c8"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classCollisionDetectionValidityMethod.html#a5d7d158d6abd39fb1e5e58f8d4b928c8">IsInsideObstacle</a> (const Point3d &amp;_p, vector&lt; size_t &gt; *_obstIdxs)=0</td></tr>
+<tr class="separator:a5d7d158d6abd39fb1e5e58f8d4b928c8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab13a76b6011f0e01f30377b0265fe0ec"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classCollisionDetectionValidityMethod.html#ab13a76b6011f0e01f30377b0265fe0ec">WorkspaceVisibility</a> (const Point3d &amp;_a, const Point3d &amp;_b)=0</td></tr>
 <tr class="separator:ab13a76b6011f0e01f30377b0265fe0ec"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1443917c462e13cc51b477aeaf47c4a3"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classCollisionDetectionValidityMethod.html#a1443917c462e13cc51b477aeaf47c4a3">IsMultiBodyCollision</a> (<a class="el" href="structCDInfo.html">CDInfo</a> &amp;_cdInfo, const <a class="el" href="classMultiBody.html">MultiBody</a> *const _a, const <a class="el" href="classMultiBody.html">MultiBody</a> *const _b, const std::string &amp;_caller)=0</td></tr>
@@ -472,7 +474,7 @@ template&lt;typename MPTraits &gt; </div>
 </div>
 </div>
 <a id="a0a258e0ad2deb47bfddf60da993136a4"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a0a258e0ad2deb47bfddf60da993136a4">&#9670;&nbsp;</a></span>IsInsideObstacle()</h2>
+<h2 class="memtitle"><span class="permalink"><a href="#a0a258e0ad2deb47bfddf60da993136a4">&#9670;&nbsp;</a></span>IsInsideObstacle() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -505,6 +507,54 @@ template&lt;typename MPTraits &gt; </div>
 <dl class="section return"><dt>Returns</dt><dd>True if _p is inside an obstacle. </dd></dl>
 
 <p>Implemented in <a class="el" href="classComposeCollision.html#a0451efb5bd435f8985feccb8a3dc8ca1">ComposeCollision&lt; MPTraits &gt;</a>, and <a class="el" href="classCollisionDetectionValidity.html#ac6cc07cd643ace953fddf67d86b270de">CollisionDetectionValidity&lt; MPTraits &gt;</a>.</p>
+
+</div>
+</div>
+<a id="a5d7d158d6abd39fb1e5e58f8d4b928c8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5d7d158d6abd39fb1e5e58f8d4b928c8">&#9670;&nbsp;</a></span>IsInsideObstacle() <span class="overload">[2/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename MPTraits &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual bool <a class="el" href="classCollisionDetectionValidityMethod.html">CollisionDetectionValidityMethod</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::IsInsideObstacle </td>
+          <td>(</td>
+          <td class="paramtype">const Point3d &amp;&#160;</td>
+          <td class="paramname"><em>_p</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">vector&lt; size_t &gt; *&#160;</td>
+          <td class="paramname"><em>_obstIdxs</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Determine whether a workspace point lies inside of an obstacle from a specific subset of obstacles </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">_p</td><td>The workspace point. </td></tr>
+    <tr><td class="paramname">_obstIdxs</td><td>The indices of the subset of obstacles </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>True if _p is inside an obstacle. </dd></dl>
+
+<p>Implemented in <a class="el" href="classComposeCollision.html#a7621fd5b499a609f6c57ca273c4196da">ComposeCollision&lt; MPTraits &gt;</a>, and <a class="el" href="classCollisionDetectionValidity.html#a5fdf3fba320e271cfbf6a45319cf17f7">CollisionDetectionValidity&lt; MPTraits &gt;</a>.</p>
 
 </div>
 </div>

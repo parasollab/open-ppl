@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['querymethod_3074',['QueryMethod',['../classQueryMethod.html',1,'']]]
+  ['querymethod_3079',['QueryMethod',['../classQueryMethod.html',1,'']]]
 ];

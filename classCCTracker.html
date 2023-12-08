@@ -181,7 +181,7 @@ class CCTracker&lt; RoadmapType &gt;</h3>
 <p>For directed graphs, we will compute weak connectivity because it describes the typical usage for RRT and nonholonomic robots. One should recall, however, that in such cases shared CC membership does not imply connectivity.</p>
 <p>For this to work correctly with directed trees, one must ensure that the graph always remains a tree. For instance, if you rewire the tree by switching a vertex's parent, you must delete the old edge before adding the new one.</p>
 <dl class="section warning"><dt>Warning</dt><dd>This class assumes that either all edges are bidirectional, or the roadmap is a single tree. It will not work correctly (silent errors) on a non-tree directed graph! </dd></dl>
-<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000103">Todo:</a></b></dt><dd><p class="startdd">Add support for non-tree directed graphs. We need to use predecessor information to do this, which we now have in the roadmap graph. </p>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000104">Todo:</a></b></dt><dd><p class="startdd">Add support for non-tree directed graphs. We need to use predecessor information to do this, which we now have in the roadmap graph. </p>
 <p class="enddd">The stat class tracking adds a lot of complication. Remove it once we're sure the performance is fast enough to forgo tracking.</p>
 </dd></dl>
 </div><h2 class="groupheader">Member Typedef Documentation</h2>
