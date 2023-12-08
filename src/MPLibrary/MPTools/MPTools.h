@@ -17,6 +17,8 @@
 #include "ReachabilityUtil.h"
 #include "MPLibrary/MPTools/LKHSearch.h"
 #include "PointConstruction.h"
+#include "WrenchAccessibilityTool.h"
+
 //#include "MPLibrary/LearningModels/SVMModel.h"
 
 
@@ -70,6 +72,8 @@ class MPToolsType final {
   LabelMap<TRPTool>                  m_trpTools;
   LabelMap<ReachabilityUtil>         m_reachabilityUtils;
   LabelMap<PointConstruction>        m_pointConstruction;
+  LabelMap<WrenchAccessibilityTool>  m_wrenchAccessibilityTools;
+
 
   std::unordered_map<std::string, TetGenDecomposition> m_tetgens;
   std::unordered_map<std::string, const WorkspaceDecomposition*> m_decompositions;
@@ -262,7 +266,22 @@ class MPToolsType final {
         PointConstruction<MPTraits>* _util);
 
     ///}
+    ///@name Wrench Accessibility Tool
+    ///@{
+    /// Get a WrenchAccessibilityTool by label.
+    /// @param _label The string label of the desired utility as defined in the
+    ///               XML file.
+    /// @return The labeled utility.
+    WrenchAccessibilityTool<MPTraits>* GetWrenchAccessibilityTool(const std::string& _label) const;
 
+    /// Set a WrenchAccessibilityTool. This object will take ownership of the utility and
+    /// delete it when necessary.
+    /// @param _label The string label for the new utility.
+    /// @param _utility The GetWrenchAccessibilityTool to use.
+    void SetWrenchAccessibilityTool(const std::string& _label,
+        WrenchAccessibilityTool<MPTraits>* const _utility);
+
+    ///@}
   private:
 
     ///@name Helpers
@@ -396,6 +415,17 @@ ParseXML(XMLNode& _node) {
 
       SetTRPTool(utility->GetLabel(), utility);
     }
+    else if(child.Name() == "WrenchAccessibilityTool") {
+      auto utility = new WrenchAccessibilityTool<MPTraits>(child);
+
+      // A second node with the same label is an error during XML parsing.
+      if(m_wrenchAccessibilityTools.count(utility->GetLabel()))
+        throw ParseException(child.Where(), "Second WrenchAccessibilityTool "
+            "node with the label '" + utility->GetLabel() + "'. Labels must be "
+            "unique.");
+
+      SetWrenchAccessibilityTool(utility->GetLabel(), utility);
+    }
     // Below here we are setting defaults rather than creating instances.
     else if(child.Name() == "ReebGraphConstruction") {
       if(parsedReebGraph)
@@ -461,6 +491,8 @@ Initialize() {
     pair.second->Initialize();
   for(auto& pair : m_pointConstruction)
     pair.second->Initialize();
+  for(auto& pair : m_wrenchAccessibilityTools)
+    pair.second->Initialize();
 }
 
 template <typename MPTraits>
@@ -495,6 +527,8 @@ MPToolsType<MPTraits>::
   for(auto& pair : m_reachabilityUtils)
     delete pair.second;
   for(auto& pair : m_pointConstruction) 
+    delete pair.second;
+  for(auto& pair : m_wrenchAccessibilityTools)
     delete pair.second;
 }
 
@@ -708,7 +742,23 @@ SetPointConstruction(const std::string& _label,
   SetUtility(_label, _util, m_pointConstruction);
 }
 
+/*------------------------------ Wrench Accessibility Tools ------------------------------*/
 
+template <typename MPTraits>
+WrenchAccessibilityTool<MPTraits>*
+MPToolsType<MPTraits>::
+GetWrenchAccessibilityTool(const std::string& _label) const {
+  return GetUtility(_label, m_wrenchAccessibilityTools);
+}
+
+
+template <typename MPTraits>
+void
+MPToolsType<MPTraits>::
+SetWrenchAccessibilityTool(const std::string& _label,
+    WrenchAccessibilityTool<MPTraits>* const _utility) {
+  SetUtility(_label, _utility, m_wrenchAccessibilityTools);
+}
 /*---------------------------------- Helpers ---------------------------------*/
 
 template <typename MPTraits>

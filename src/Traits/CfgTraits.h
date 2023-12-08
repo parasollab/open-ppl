@@ -87,6 +87,7 @@
 #include "MPLibrary/MPStrategies/GroupPRM.h"
 #include "MPLibrary/MPStrategies/EET.h"
 #include "MPLibrary/MPStrategies/BasicPRM.h"
+#include "MPLibrary/MPStrategies/WrenchAccessibilityStrategy.h"
 #include "MPLibrary/MPStrategies/BasicRRTStrategy.h"
 #include "MPLibrary/MPStrategies/DynamicRegionRRT.h"
 #include "MPLibrary/MPStrategies/DynamicRegionsPRM.h"
@@ -222,6 +223,7 @@ struct MPTraits {
     AdaptiveRRT<MPTraits>,
     GroupPRM<MPTraits>,
     BasicPRM<MPTraits>,
+    WrenchAccessibilityStrategy<MPTraits>,
     BasicRRTStrategy<MPTraits>,
     DynamicRegionRRT<MPTraits>,
     DynamicRegionsPRM<MPTraits>,
