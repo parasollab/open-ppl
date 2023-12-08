@@ -2,16 +2,12 @@
 
 The PMPL library is a general code base for studying motion planning algorithms.
 This file lists the package dependencies for PMPL and how to install them.
-> Tested on Ubuntu 20.04
+> Tested on Ubuntu 20.04, Ubuntu 22.04
 
-## Clone repository
-```bash
-git clone https://gitlab.engr.illinois.edu/parasol-group/parasol/pmpl.git
-```
 
 ## Requirements
 ### Required Tools:
-- vcpkg
+- conan or vcpkg
 
 ### Required Packages:
 - build-essential
@@ -50,16 +46,7 @@ sudo apt-get upgrade
 sudo apt-get update
 ```
 ```bash
-sudo apt-get install tzdata build-essential gdb python3 gperf libclang-dev gfortran \
-        ninja-build pkg-config make wget curl zip unzip \
-        software-properties-common git-all libtool autoconf-archive texinfo bison \
-        libmpfr-dev libeigen3-dev libboost-all-dev libgl1-mesa-dev libglu1-mesa-dev freeglut3-dev \
-        libxft-dev libfontconfig1-dev libfreetype6-dev libx11-dev libx11-xcb-dev libxext-dev libxfixes-dev libxi-dev libxrender-dev \
-        libxcb1-dev libxcb-glx0-dev libxcb-keysyms1-dev libxcb-image0-dev libxcb-shm0-dev libxcb-icccm4-dev libxcb-sync-dev \
-        libxcb-xfixes0-dev libxcb-shape0-dev libxcb-randr0-dev libxcb-render-util0-dev libxcb-util-dev libxcb-xinerama0-dev libxcb-xkb-dev \
-        libxkbcommon-dev libxkbcommon-x11-dev libatspi2.0-dev libxrandr-dev libxcursor-dev \ 
-        libxdamage-dev libxinerama1 libxinerama-dev libxcomposite-dev libxkbfile-dev libxmuu-dev libxres-dev \
-        libxcb-dri3-dev libxcb-cursor-dev libssl-dev doxygen graphviz
+sudo apt-get install tzdata build-essential gdb python3 gperf libclang-dev gfortran ninja-build pkg-config make wget curl zip unzip software-properties-common git-all libtool autoconf-archive texinfo bison libmpfr-dev libeigen3-dev libboost-all-dev libgl1-mesa-dev libglu1-mesa-dev freeglut3-dev libxft-dev libfontconfig1-dev libfreetype6-dev libx11-dev libx11-xcb-dev libxext-dev libxfixes-dev libxi-dev libxrender-dev libxcb1-dev libxcb-glx0-dev libxcb-keysyms1-dev libxcb-image0-dev libxcb-shm0-dev libxcb-icccm4-dev libxcb-sync-dev libxcb-xfixes0-dev libxcb-shape0-dev libxcb-randr0-dev libxcb-render-util0-dev libxcb-util-dev libxcb-xinerama0-dev libxcb-xkb-dev libxkbcommon-dev libxkbcommon-x11-dev libatspi2.0-dev libxrandr-dev libxcursor-dev libxdamage-dev libxinerama1 libxinerama-dev libxcomposite-dev libxkbfile-dev libxmuu-dev libxres-dev libxcb-dri3-dev libxcb-cursor-dev libssl-dev doxygen graphviz
 ```
 
 ### Remove previous versions of cmake and install latest cmake
@@ -68,7 +55,7 @@ sudo apt remove -y --purge --auto-remove cmake
 wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | sudo tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null
 ```
 
-For Ubuntu Jamming Jellyfish (22.04)
+For Ubuntu Jammy Jellyfish (22.04)
 ```bash
 sudo apt-add-repository -y 'deb https://apt.kitware.com/ubuntu/ jammy main'
 ```
@@ -87,42 +74,7 @@ sudo apt update
 sudo apt install cmake
 ```
 
-
-
-### Install and build using vcpkg
-
-#### Install vcpkg
-Full instructions available at https://vcpkg.io/en/getting-started.html
-
-```bash
-cd /opt
-```
-```bash
-sudo git clone https://github.com/Microsoft/vcpkg.git
-```
-```bash
-sudo chmod 777 /opt/vcpkg && sudo chmod 666 vcpkg/.vcpkg-root
-```
-```bash
-sudo ./vcpkg/bootstrap-vcpkg.sh
-```
-
-#### Build pmpl with vcpkg
-Run cmake, specify build type (e.g. Release or Debug), generator (e.g. Ninja), vcpkg installation path, source path, output path
-cd into the cloned repo
-```bash
-cd pmpl
-```
-```bash
-cmake -DCMAKE_BUILD_TYPE=Debug -G Ninja -DCMAKE_TOOLCHAIN_FILE=/opt/vcpkg/scripts/buildsystems/vcpkg.cmake -S . -B build
-```
-
-Build PPL with however many cores you'd prefer using `-j(number)`. By default, all cores will be used, which can potentially overwhelm your computer.
-```bash
-cmake --build build -j3
-```
-
-### Install and build using Conan
+### Install and build using Conan (Recommended)
 #### Install conan 
 Alternate installation instructions available at https://docs.conan.io/en/latest/installation.html
 ```bash
@@ -161,6 +113,40 @@ cmake --build build -j3
 
 
 
+### Install and build using vcpkg
+
+#### Install vcpkg
+Full instructions available at https://vcpkg.io/en/getting-started.html
+
+```bash
+cd /opt
+```
+```bash
+sudo git clone https://github.com/Microsoft/vcpkg.git
+```
+```bash
+sudo chmod 777 /opt/vcpkg && sudo chmod 666 vcpkg/.vcpkg-root
+```
+```bash
+sudo ./vcpkg/bootstrap-vcpkg.sh
+```
+
+#### Build pmpl with vcpkg
+Run cmake, specify build type (e.g. Release or Debug), generator (e.g. Ninja), vcpkg installation path, source path, output path
+cd into the cloned repo
+```bash
+cd pmpl
+```
+```bash
+cmake -DCMAKE_BUILD_TYPE=Debug -G Ninja -DCMAKE_TOOLCHAIN_FILE=/opt/vcpkg/scripts/buildsystems/vcpkg.cmake -S . -B build
+```
+
+Build PPL with however many cores you'd prefer using `-j(number)`. By default, all cores will be used, which can potentially overwhelm your computer.
+```bash
+cmake --build build -j3
+```
+
+
 ## Docker
 Alternatively a default docker file is provided, with the above instructions pre-built.
 More docker configurations and instructions are available [here](docker/README.md).
@@ -181,7 +167,7 @@ The executable built resides in /pmpl/build/pmpl_exec within the docker containe
 
 ### To run tests start by building the test target
 ```bash
-cmake --build build --target tests
+cmake --build build --target test
 ```
 
 ### You can run the by running CTest
@@ -224,7 +210,7 @@ find_package(PPL CONFIG REQUIRED)
 
 Then you will need to link to either ppl::ppl_mp_library or ppl::ppl_library
 
-## binary caching of dependencies
+## Binary caching of dependencies
 Libraries installed with vcpkg can always be built from source. However, this can duplicate work and waste time across multiple developers or machines.
 
 Binary caching saves copies of library binaries in a shared location that can be accessed by vcpkg for future installs. Caches can be hosted in a variety of environments. The most basic examples are a folder on the local machine or a network file share. Caches can also be stored in any NuGet feed (such as GitHub Packages or Azure DevOps Artifacts), Azure Blob Storage, Google Cloud Storage, and many other services.
