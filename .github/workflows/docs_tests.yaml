@@ -1,0 +1,48 @@
+name: Documentation and Tests
+
+on:
+  push:
+    branches:
+      - release-stage-one
+      - github_updates
+      - main
+
+jobs:
+  build-deploy:
+    runs-on: self-hosted
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: CMake Build
+        run: |
+          export NOT_ON_C3I=1
+          conan install . --output-folder=build --build=missing -c tools.system.package_manager:mode=install -c tools.system.package_manager:sudo=false -s build_type=Debug -s compiler.cppstd=gnu17
+          cmake -DCMAKE_BUILD_TYPE=Debug -G Ninja -DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake -B build/
+          cmake --build build --target generate_doxygen_docs
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@4.1.5
+        with:
+          branch: gh-pages # The branch the action should deploy to.
+          folder: docs/Doxygen/html # The folder the action should deploy.
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+  test-job:
+    needs: build-deploy
+    runs-on: self-hosted
+    steps:
+      # - name: Checkout code
+      #   uses: actions/checkout@v2
+      - name: Run Tests
+        run: |
+          cmake -DCMAKE_BUILD_TYPE=Debug -G Ninja -DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake -B build/ -DCODE_COVERAGE=ON
+          cmake --build build --target unit_tests
+          cmake --build build --target strategy_tests
+          cd build
+          ctest --output-on-failure --output-junit junit.xml
+          lcov --capture --directory . --output-file coverage.info
+          lcov --remove coverage.info '/usr/*' '*/vcpkg_installed/*' --output-file coverage.info
+          gcovr --xml-pretty --exclude-unreachable-branches --print-summary -o coverage.xml --root ${{ github.workspace }}
+      - name: Upload Coverage Report
+        uses: romeovs/lcov-reporter-action@v0.2.16
+        with:
+          lcov-file: build/coverage.xml
