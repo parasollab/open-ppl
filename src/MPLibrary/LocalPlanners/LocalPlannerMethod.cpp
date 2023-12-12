@@ -1,5 +1,9 @@
 #include "LocalPlannerMethod.h"
 
+#include "MPProblem/Environment/Environment.h"
+#include "Utilities/MetricUtils.h"
+#include "Utilities/MPUtils.h"
+
 /*------------------------------- Construction -------------------------------*/
 
 LocalPlannerMethod::

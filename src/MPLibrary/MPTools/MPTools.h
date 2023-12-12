@@ -6,21 +6,20 @@
 
 #include "Utilities/XMLNode.h"
 
-// #include "MedialAxisUtilities.h"
-// #include "MeanCurvatureSkeleton3D.h"
-// #include "ReebGraphConstruction.h"
-// #include "SafeIntervalTool.h"
-// #include "SkeletonClearanceUtility.h"
-// #include "TetGenDecomposition.h"
-// #include "TopologicalMap.h"
-// #include "TRPTool.h"
-// #include "ReachabilityUtil.h"
-// #include "MPLibrary/MPTools/LKHSearch.h"
-// #include "PointConstruction.h"
-//#include "MPLibrary/LearningModels/SVMModel.h"
+#include "MedialAxisUtilities.h"
+#include "MeanCurvatureSkeleton3D.h"
+#include "ReebGraphConstruction.h"
+#include "SafeIntervalTool.h"
+#include "SkeletonClearanceUtility.h"
+#include "TetGenDecomposition.h"
+#include "TopologicalMap.h"
+#include "ReachabilityUtil.h"
+#include "PointConstruction.h"
+// #include "MPLibrary/LearningModels/SVMModel.h"
 
 
 class WorkspaceDecomposition;
+class MPLibrary;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -42,250 +41,265 @@ class WorkspaceDecomposition;
 ////////////////////////////////////////////////////////////////////////////////
 class MPToolsType final {
 
-  // ///@name Motion Planning Types
-  // ///@{
+  ///@name Motion Planning Types
+  ///@{
 
 
 
-  // ///@}
-  // ///@name Local Types
-  // ///@{
+  ///@}
+  ///@name Local Types
+  ///@{
 
-  // template <template <typename> class Utility>
-  // using LabelMap = std::unordered_map<std::string, Utility<MPTraits>*>;
+  template <typename Utility>
+  using LabelMap = std::unordered_map<std::string, Utility*>;
 
-  // ///@}
-  // ///@name Internal State
-  // ///@{
+  ///@}
+  ///@name Internal State
+  ///@{
 
-  // MPLibrary* const m_library; ///< The owning library.
+  MPLibrary* const m_library; ///< The owning library.
 
-  // LabelMap<ClearanceUtility>         m_clearanceUtils;
-  // LabelMap<MedialAxisUtility>        m_medialAxisUtils;
-  // LabelMap<SkeletonClearanceUtility> m_skeletonUtils;
-  // LabelMap<TopologicalMap>           m_topologicalMaps;
-  // LabelMap<SafeIntervalTool>         m_safeIntervalTools;
-  // LabelMap<LKHSearch>                m_lkhSearchTools;
-  // LabelMap<TRPTool>                  m_trpTools;
-  // LabelMap<ReachabilityUtil>         m_reachabilityUtils;
-  // LabelMap<PointConstruction>        m_pointConstruction;
+  LabelMap<ClearanceUtility>         m_clearanceUtils;
+  LabelMap<MedialAxisUtility>        m_medialAxisUtils;
+  LabelMap<SkeletonClearanceUtility> m_skeletonUtils;
+  LabelMap<TopologicalMap>           m_topologicalMaps;
+  LabelMap<SafeIntervalTool>         m_safeIntervalTools;
+  LabelMap<ReachabilityUtil>         m_reachabilityUtils;
+  LabelMap<PointConstruction>        m_pointConstruction;
 
-  // std::unordered_map<std::string, TetGenDecomposition> m_tetgens;
-  // std::unordered_map<std::string, const WorkspaceDecomposition*> m_decompositions;
+  std::unordered_map<std::string, TetGenDecomposition> m_tetgens;
+  std::unordered_map<std::string, const WorkspaceDecomposition*> m_decompositions;
 
-  // ///@}
+  ///@}
 
-  // public:
+  public:
 
-  //   ///@name Construction
-  //   ///@{
+    ///@name Construction
+    ///@{
 
-  //   /// Construct a tool set.
-  //   /// @param _library The owning library.
-  //   MPToolsType(MPLibrary* const _library);
+    /// Construct a tool set.
+    /// @param _library The owning library.
+    MPToolsType(MPLibrary* const _library);
 
-  //   /// Parse an XML node.
-  //   /// @param _node The XML node object.
-  //   void ParseXML(XMLNode& _node);
+    /// Parse an XML node.
+    /// @param _node The XML node object.
+    void ParseXML(XMLNode& _node);
 
-  //   /// Initialize the clearance and MA tools prior to use.
-  //   void Initialize();
+    /// Initialize the clearance and MA tools prior to use.
+    void Initialize();
 
-  //   /// Uninitialize the clearance and MA tools.
-  //   void Uninitialize();
+    /// Uninitialize the clearance and MA tools.
+    void Uninitialize();
 
-  //   ~MPToolsType();
+    ~MPToolsType();
 
-  //   ///@}
-  //   ///@name Clearance Utility
-  //   ///@{
+    ///@}
+    ///@name Clearance Utility
+    ///@{
 
-  //   /// Get a ClearanceUtility by label.
-  //   /// @param _label The string label of the desired utility as defined in the
-  //   ///               XML file.
-  //   /// @return The labeled utility.
-  //   ClearanceUtility<MPTraits>* GetClearanceUtility(const std::string& _label)
-  //       const;
+    /// Get a ClearanceUtility by label.
+    /// @param _label The string label of the desired utility as defined in the
+    ///               XML file.
+    /// @return The labeled utility.
+    ClearanceUtility* GetClearanceUtility(const std::string& _label)
+        const;
 
-  //   /// Set a ClearanceUtility. This object will take ownership of the utility
-  //   /// and delete it when necessary.
-  //   /// @param _label The string label for the new utility.
-  //   /// @param _utility The ClearanceUtility to use.
-  //   void SetClearanceUtility(const std::string& _label,
-  //       ClearanceUtility<MPTraits>* const _utility);
+    /// Set a ClearanceUtility. This object will take ownership of the utility
+    /// and delete it when necessary.
+    /// @param _label The string label for the new utility.
+    /// @param _utility The ClearanceUtility to use.
+    void SetClearanceUtility(const std::string& _label,
+        ClearanceUtility* const _utility);
 
-  //   ///@}
-  //   ///@name Medial Axis Utility
-  //   ///@{
+    ///@}
+    ///@name Medial Axis Utility
+    ///@{
 
-  //   /// Get a MedialAxisUtility by label.
-  //   /// @param _label The string label of the desired utility as defined in the
-  //   ///               XML file.
-  //   /// @return The labeled utility.
-  //   MedialAxisUtility<MPTraits>* GetMedialAxisUtility(const std::string& _label)
-  //       const;
+    /// Get a MedialAxisUtility by label.
+    /// @param _label The string label of the desired utility as defined in the
+    ///               XML file.
+    /// @return The labeled utility.
+    MedialAxisUtility* GetMedialAxisUtility(const std::string& _label)
+        const;
 
-  //   /// Set a MedialAxisUtility. This object will take ownership of the utility
-  //   /// and delete it when necessary.
-  //   /// @param _label The string label for the new utility.
-  //   /// @param _utility The MedialAxisUtility to use.
-  //   void SetMedialAxisUtility(const std::string& _label,
-  //       MedialAxisUtility<MPTraits>* const _utility);
+    /// Set a MedialAxisUtility. This object will take ownership of the utility
+    /// and delete it when necessary.
+    /// @param _label The string label for the new utility.
+    /// @param _utility The MedialAxisUtility to use.
+    void SetMedialAxisUtility(const std::string& _label,
+        MedialAxisUtility* const _utility);
 
-  //   ///@}
-  //   ///@name Skeleton Clearance Utility
-  //   ///@{
+    ///@}
+    ///@name Skeleton Clearance Utility
+    ///@{
 
-  //   /// Get a SkeletonClearanceUtility by label.
-  //   /// @param _label The string label of the desired utility as defined in the
-  //   ///               XML file.
-  //   /// @return The labeled utility.
-  //   SkeletonClearanceUtility<MPTraits>* GetSkeletonClearanceUtility(
-  //       const std::string& _label) const;
+    /// Get a SkeletonClearanceUtility by label.
+    /// @param _label The string label of the desired utility as defined in the
+    ///               XML file.
+    /// @return The labeled utility.
+    SkeletonClearanceUtility* GetSkeletonClearanceUtility(
+        const std::string& _label) const;
 
-  //   /// Set a SkeletonClearanceUtility. This object will take ownership of the
-  //   /// utility and delete it when necessary.
-  //   /// @param _label The string label for the new utility.
-  //   /// @param _utility The SkeletonClearanceUtility to use.
-  //   void SetSkeletonClearanceUtility(const std::string& _label,
-  //       SkeletonClearanceUtility<MPTraits>* const _utility);
+    /// Set a SkeletonClearanceUtility. This object will take ownership of the
+    /// utility and delete it when necessary.
+    /// @param _label The string label for the new utility.
+    /// @param _utility The SkeletonClearanceUtility to use.
+    void SetSkeletonClearanceUtility(const std::string& _label,
+        SkeletonClearanceUtility* const _utility);
 
-  //   ///@}
-  //   ///@name Topological Map
-  //   ///@{
+    ///@}
+    ///@name Topological Map
+    ///@{
 
-  //   /// Get a TopologicalMap by label.
-  //   /// @param _label The string label of the desired utility as defined in the
-  //   ///               XML file.
-  //   /// @return The labeled utility.
-  //   TopologicalMap<MPTraits>* GetTopologicalMap(const std::string& _label) const;
+    /// Get a TopologicalMap by label.
+    /// @param _label The string label of the desired utility as defined in the
+    ///               XML file.
+    /// @return The labeled utility.
+    TopologicalMap* GetTopologicalMap(const std::string& _label) const;
 
-  //   /// Set a TopologicalMap. This object will take ownership of the utility and
-  //   /// delete it when necessary.
-  //   /// @param _label The string label for the new utility.
-  //   /// @param _utility The TopologicalMap to use.
-  //   void SetTopologicalMap(const std::string& _label,
-  //       TopologicalMap<MPTraits>* const _utility);
+    /// Set a TopologicalMap. This object will take ownership of the utility and
+    /// delete it when necessary.
+    /// @param _label The string label for the new utility.
+    /// @param _utility The TopologicalMap to use.
+    void SetTopologicalMap(const std::string& _label,
+        TopologicalMap* const _utility);
 
-  //   ///@}
-  //   ///@name Safe Interval Tool
-  //   ///@{
+    ///@}
+    ///@name Safe Interval Tool
+    ///@{
 
-  //   /// Get a SafeIntervalTool by label.
-  //   /// @param _label The string label of the desired utility as defined in the
-  //   ///               XML file.
-  //   /// @return The labeled utility.
-  //   SafeIntervalTool<MPTraits>* GetSafeIntervalTool(const std::string& _label)
-  //       const;
+    /// Get a SafeIntervalTool by label.
+    /// @param _label The string label of the desired utility as defined in the
+    ///               XML file.
+    /// @return The labeled utility.
+    SafeIntervalTool* GetSafeIntervalTool(const std::string& _label)
+        const;
 
-  //   /// Set a SafeIntervalTool. This object will take ownership of the utility and
-  //   /// delete it when necessary.
-  //   /// @param _label The string label for the new utility.
-  //   /// @param _utility The TopologicalMap to use.
-  //   void SetSafeIntervalTool(const std::string& _label,
-  //       SafeIntervalTool<MPTraits>* const _utility);
+    /// Set a SafeIntervalTool. This object will take ownership of the utility and
+    /// delete it when necessary.
+    /// @param _label The string label for the new utility.
+    /// @param _utility The TopologicalMap to use.
+    void SetSafeIntervalTool(const std::string& _label,
+        SafeIntervalTool* const _utility);
 
-  //   ///@}
-  //   ///@name LKH Search
-  //   ///@{
+    ///@}
+    ///@name Decompositions
+    ///@{
 
-  //   /// Get an LKH Search by label.
-  //   /// @param _label The string label of the desired utility as defined in the
-  //   ///               XML file.
-  //   /// @return The labeled utility.
-  //   LKHSearch<MPTraits>* GetLKHSearch(const std::string& _label) const;
+    /// Get a decomposition.
+    /// @param _label The label of the decomposition to use.
+    const WorkspaceDecomposition* GetDecomposition(const std::string& _label);
 
-  //   /// Set an LKH Search
-  //   /// @param _label The string label for the new utility
-  //   /// @param _utility The LKHSearch to use
-  //   void SetLKHSearch(const std::string& _label,
-  //       LKHSearch<MPTraits>* const _utility);
+    /// Set a workspace decomposition by label. This object will take ownership
+    /// the decomposition and delete it when necessary.
+    /// @param _label The label for this decomposition.
+    /// @param _decomposition The decomposition object to set.
+    void SetDecomposition(const std::string& _label,
+        const WorkspaceDecomposition* _decomposition);
 
-  //   ///@}
-  //   ////@name TRP Tool
-  //   ///@{
+    ///@}
+    ///@name Reachability
+    ///@{
 
-  //   /// Get a TRP Tool by label.
-  //   /// @param _label The string label of the desired utility as defined in the
-  //   ///               XML file.
-  //   /// @return The labeled utility.
-  //   TRPTool<MPTraits>* GetTRPTool(const std::string& _label) const;
+    /// Get a Reachability Utility
+    /// @param _label The label of the decomposition to use.
+    ReachabilityUtil* GetReachabilityUtil(const std::string& _label) const;
 
-  //   /// Set a TRP Tool
-  //   /// @param _label The string label for the new utility
-  //   /// @param _utility The LKHSearch to use
-  //   void SetTRPTool(const std::string& _label,
-  //       TRPTool<MPTraits>* const _utility);
+    /// Set a reachability utility  by label.
+    /// @param _label The label for this utility
+    /// @param _decomposition the reachability utility
+    void SetReachabilityUtil(const std::string& _label,
+        ReachabilityUtil* _util);
 
-  //   ///@}
-  //   ///@name Decompositions
-  //   ///@{
+    ///}
 
-  //   /// Get a decomposition.
-  //   /// @param _label The label of the decomposition to use.
-  //   const WorkspaceDecomposition* GetDecomposition(const std::string& _label);
+    ///@{
 
-  //   /// Set a workspace decomposition by label. This object will take ownership
-  //   /// the decomposition and delete it when necessary.
-  //   /// @param _label The label for this decomposition.
-  //   /// @param _decomposition The decomposition object to set.
-  //   void SetDecomposition(const std::string& _label,
-  //       const WorkspaceDecomposition* _decomposition);
+    /// Get a Point Construction
+    /// @param _label The label of the decomposition to use.
+    PointConstruction* GetPointConstruction(const std::string& _label) const;
 
-  //   ///@}
-  //   ///@name Reachability
-  //   ///@{
+    /// Set a Point Construction  by label.
+    /// @param _label The label for this utility
+    /// @param _decomposition the point construction
+    void SetPointConstruction(const std::string& _label,
+        PointConstruction* _util);
 
-  //   /// Get a Reachability Utility
-  //   /// @param _label The label of the decomposition to use.
-  //   ReachabilityUtil<MPTraits>* GetReachabilityUtil(const std::string& _label) const;
+    ///}
 
-  //   /// Set a reachability utility  by label.
-  //   /// @param _label The label for this utility
-  //   /// @param _decomposition the reachability utility
-  //   void SetReachabilityUtil(const std::string& _label,
-  //       ReachabilityUtil<MPTraits>* _util);
+  private:
 
-  //   ///}
+    ///@name Helpers
+    ///@{
 
-  //   ///@{
-
-  //   /// Get a Point Construction
-  //   /// @param _label The label of the decomposition to use.
-  //   PointConstruction<MPTraits>* GetPointConstruction(const std::string& _label) const;
-
-  //   /// Set a Point Construction  by label.
-  //   /// @param _label The label for this utility
-  //   /// @param _decomposition the point construction
-  //   void SetPointConstruction(const std::string& _label,
-  //       PointConstruction<MPTraits>* _util);
-
-  //   ///}
-
-  // private:
-
-  //   ///@name Helpers
-  //   ///@{
-
-  //   /// Get a utility in a label map. Throws if not found.
-  //   /// @param _label The utility label.
-  //   /// @param _map The label map which holds _utility.
-  //   /// @return The named utility.
-  //   template <template <typename> class Utility>
-  //   Utility<MPTraits>* GetUtility(const std::string& _label,
-  //       const LabelMap<Utility>& _map) const;
+    /// Get a utility in a label map. Throws if not found.
+    /// @param _label The utility label.
+    /// @param _map The label map which holds _utility.
+    /// @return The named utility.
+    template <typename Utility>
+    Utility* GetUtility(const std::string& _label,
+        const LabelMap<Utility>& _map) const;
 
 
-  //   /// Set a utility in a label map.
-  //   /// @param _label The utility label.
-  //   /// @param _utility The utility to set.
-  //   /// @param _map The label map which holds _utility.
-  //   template <template <typename> class Utility>
-  //   void SetUtility(const std::string& _label, Utility<MPTraits>* _utility,
-  //       LabelMap<Utility>& _map) const;
+    /// Set a utility in a label map.
+    /// @param _label The utility label.
+    /// @param _utility The utility to set.
+    /// @param _map The label map which holds _utility.
+    template <typename Utility>
+    void SetUtility(const std::string& _label, Utility* _utility,
+        LabelMap<Utility>& _map) const;
 
-  //   ///@}
+    ///@}
 
 };
+
+/*---------------------------------- Helpers ---------------------------------*/
+
+template <typename Utility>
+inline
+Utility*
+MPToolsType::
+GetUtility(const std::string& _label, const LabelMap<Utility>& _map) const {
+  try {
+    return _map.at(_label);
+  }
+  catch(const std::out_of_range&) {
+    Utility dummy;
+    throw RunTimeException(WHERE) << "Requested " << dummy.GetName()
+                                  << " '" << _label  << "' does not exist.";
+  }
+  catch(const std::exception& _e) {
+    Utility dummy;
+    throw RunTimeException(WHERE) << "Error when fetching " << dummy.GetName()
+                                  << " '" << _label << "': " << _e.what();
+  }
+  catch(...) {
+    Utility dummy;
+    throw RunTimeException(WHERE) << "Error when fetching " << dummy.GetName()
+                                  << " '" << _label << "': (unknown).";
+  }
+}
+
+
+template <typename Utility>
+void
+MPToolsType::
+SetUtility(const std::string& _label, Utility* _utility,
+    LabelMap<Utility>& _map) const {
+  // Set the library pointer.
+  _utility->SetMPLibrary(m_library);
+
+  // Check if this label is already in use.
+  auto iter = _map.find(_label);
+  const bool alreadyExists = iter != _map.end();
+
+  // If the label already exists, we need to release the previous utility first.
+  if(alreadyExists) {
+    delete iter->second;
+    iter->second = _utility;
+  }
+  else
+    _map.insert({_label, _utility});
+}
 
 #endif

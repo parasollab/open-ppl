@@ -34,25 +34,6 @@
 #include "MPLibrary/ValidityCheckers/ValidityCheckerMethod.h"
 #include "MPLibrary/GoalTracker.h"
 
-// #include <algorithm>
-// #include <atomic>
-// #include <unordered_map>
-
-// class ConnectorMethod;
-// class DistanceMetricMethod;
-// class ExtenderMethod;
-// class LocalPlannerMethod;
-// class MapEvaluatorMethod;
-// class MetricMethod;
-// class MPStrategyMethod;
-// class MPToolsType;
-// class NeighborhoodFinderMethod;
-// class PathModifierMethod;
-// class EdgeValidityCheckerMethod;
-// class SamplerMethod;
-// class CollisionDetectionValidity;
-// class ValidityCheckerMethod;
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// A collection of planning algorithms that can operate on a specific

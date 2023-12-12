@@ -9,8 +9,16 @@
 #define REWIRE_CONNECTOR_AVAILABLE 1
 
 // DistanceMetrics
+#define BIN_LP_SWEPT_AVAILABLE 1
+#define LP_SWEPT_AVAILABLE 1
 #define EUCLIDEAN_AVAILABLE 1
+#define SCALED_EUCLIDEAN_AVAILABLE 0
+#define WEIGHTED_EUCLIDEAN_AVAILABLE 1
 #define MINKOWSKI_AVAILABLE 1
+#define MANHATTAN_AVAILABLE 1
+#define RMSD_AVAILABLE 1
+#define TOPOLOGICAL_DISTANCE_AVAILABLE 1
+#define WORKSPACE_TRANSLATION_AVAILABLE 1
 
 // EdgeValidityCheckers
 
@@ -54,17 +62,48 @@
     ((RewireConnector, REWIRE_CONNECTOR_AVAILABLE))
 
 /***************************** DistanceMetrics ********************************/
+#ifdef BIN_LP_SWEPT_AVAILABLE
+    #include "MPLibrary/DistanceMetrics/BinaryLPSweptDistance.h"
+#endif
+#ifdef LP_SWEPT_AVAILABLE
+    #include "MPLibrary/DistanceMetrics/LPSweptDistance.h"
+#endif
 #ifdef MINKOWSKI_AVAILABLE
     #include "MPLibrary/DistanceMetrics/MinkowskiDistance.h"
 #endif
 #ifdef EUCLIDEAN_AVAILABLE
     #include "MPLibrary/DistanceMetrics/EuclideanDistance.h"
 #endif
+#ifdef SCALED_EUCLIDEAN_AVAILABLE
+    #include "MPLibrary/DistanceMetrics/ScaledEuclideanDistance.h"
+#endif
+#ifdef WEIGHTED_EUCLIDEAN_AVAILABLE
+    #include "MPLibrary/DistanceMetrics/WeightedEuclideanDistance.h"
+#endif
+#ifdef MANHATTAN_AVAILABLE
+    #include "MPLibrary/DistanceMetrics/ManhattanDistance.h"
+#endif
+#ifdef RMSD_AVAILABLE
+    #include "MPLibrary/DistanceMetrics/RMSDDistance.h"
+#endif
+#ifdef TOPOLOGICAL_DISTANCE_AVAILABLE
+    #include "MPLibrary/DistanceMetrics/TopologicalDistance.h"
+#endif
+#ifdef WORKSPACE_TRANSLATION_AVAILABLE
+    #include "MPLibrary/DistanceMetrics/WorkspaceTranslationDistance.h"
+#endif
 
 #define DM_CLASSES \
+    ((BinaryLPSweptDistance, BIN_LP_SWEPT_AVAILABLE)) \
+    ((LPSweptDistance, LP_SWEPT_AVAILABLE)) \
     ((MinkowskiDistance, MINKOWSKI_AVAILABLE)) \
-    ((EuclideanDistance, EUCLIDEAN_AVAILABLE))
-    // ... and so on ...
+    ((EuclideanDistance, EUCLIDEAN_AVAILABLE)) \
+    ((ScaledEuclideanDistance, SCALED_EUCLIDEAN_AVAILABLE)) \
+    ((WeightedEuclideanDistance, WEIGHTED_EUCLIDEAN_AVAILABLE)) \
+    ((ManhattanDistance, MANHATTAN_AVAILABLE)) \
+    ((RMSDDistance, RMSD_AVAILABLE)) \
+    ((TopologicalDistance, TOPOLOGICAL_DISTANCE_AVAILABLE)) \
+    ((WorkspaceTranslationDistance, WORKSPACE_TRANSLATION_AVAILABLE))
 
 /************************** EdgeValidityCheckers ******************************/
 

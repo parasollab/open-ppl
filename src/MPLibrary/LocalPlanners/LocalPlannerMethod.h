@@ -4,9 +4,6 @@
 #include "MPLibrary/LocalPlanners/LPOutput.h"
 #include "MPLibrary/LocalPlanners/GroupLPOutput.h"
 #include "MPLibrary/MPBaseObject.h"
-#include "MPProblem/Environment/Environment.h"
-#include "Utilities/MetricUtils.h"
-#include "Utilities/MPUtils.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Base algorithm abstraction for \ref LocalPlanners.

@@ -132,11 +132,11 @@ target_include_directories(objlib
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
 )
 
-target_include_directories(objlib 
-        PUBLIC 
-        $<INSTALL_INTERFACE:include/LKH/SRC/INCLUDE>
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/LKH/SRC/INCLUDE>
-)
+# target_include_directories(objlib 
+#         PUBLIC 
+#         $<INSTALL_INTERFACE:include/LKH/SRC/INCLUDE>
+#         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/LKH/SRC/INCLUDE>
+# )
 
 target_include_directories(objlib 
         PUBLIC 
@@ -199,11 +199,11 @@ target_include_directories(${PPL_MP_LIBRARY}
         $<INSTALL_INTERFACE:include/mathtool>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/mathtool>
 )
-target_include_directories(${PPL_MP_LIBRARY} 
-        PUBLIC
-        $<INSTALL_INTERFACE:include/LKH/SRC/INCLUDE>
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/LKH/SRC/INCLUDE>
-)
+# target_include_directories(${PPL_MP_LIBRARY} 
+#         PUBLIC
+#         $<INSTALL_INTERFACE:include/LKH/SRC/INCLUDE>
+#         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/LKH/SRC/INCLUDE>
+# )
 
 # [ppl library] - Link external packages
 # bullet order is very specific, do not modify

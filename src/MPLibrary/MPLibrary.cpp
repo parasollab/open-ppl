@@ -32,7 +32,7 @@ MPLibrary() {
       typename MPUniverse::MapEvaluatorMethodList(), "MapEvaluators");
   m_mpStrategies = new MPStrategySet(this,
       typename MPUniverse::MPStrategyMethodList(), "MPStrategies");
-  // m_mpTools = new MPTools(this);
+  m_mpTools = new MPTools(this);
   m_goalTracker.reset(new GoalTracker(this));
 }
 
@@ -92,7 +92,7 @@ Initialize() {
   m_connectors->Initialize();
   m_metrics->Initialize();
   m_mapEvaluators->Initialize();
-  // m_mpTools->Initialize();
+  m_mpTools->Initialize();
 
   m_running = true;
 }
@@ -218,7 +218,7 @@ ParseChild(XMLNode& _node) {
     return true;
   }
   else if(_node.Name() == "MPTools") {
-    // m_mpTools->ParseXML(_node);
+    m_mpTools->ParseXML(_node);
     return true;
   }
   else if(_node.Name() == "Solver") {

@@ -5,6 +5,27 @@
 
 #include "MPLibrary/MPLibrary.h"
 
+/*---------------------------- Clearance Utility -----------------------------*/
+
+ClearanceUtility::
+ClearanceUtility(
+    string _vcLabel, string _dmLabel, bool _exactClearance,
+    bool _exactPenetration, size_t _clearanceRays, size_t _penetrationRays,
+    double _approxStepSize, double _approxResolution, bool _useBBX,
+    bool _positionalDofsOnly, bool _debug):
+    m_vcLabel(_vcLabel), m_dmLabel(_dmLabel),
+    m_useBBX(_useBBX), m_positionalDofsOnly(_positionalDofsOnly),
+    m_exactClearance(_exactClearance), m_exactPenetration(_exactPenetration),
+    m_clearanceRays(_clearanceRays), m_penetrationRays(_penetrationRays)
+    {
+  this->SetName("ClearanceUtility");
+  this->m_debug = _debug;
+  this->m_rayTickResolution = 0.;
+  this->m_orientationResolution = 0.;
+  this->m_maxRayMagnitude = DBL_MAX;//So that Initialize() will update this.
+  this->m_maxRayIterations = 0;
+}
+
 
 ClearanceUtility::
 ClearanceUtility(XMLNode& _node) : MPBaseObject(_node) {
