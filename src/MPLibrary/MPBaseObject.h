@@ -56,21 +56,6 @@ class MPBaseObject {
     typedef GroupLocalPlan<RoadmapType> GroupWeightType;
     typedef GroupRoadmap<GroupCfgType, GroupWeightType> GroupRoadmapType;
 
-    // typedef typename MPLibrary::SamplerPointer         SamplerPointer;
-    // typedef typename MPLibrary::LocalPlannerPointer    LocalPlannerPointer;
-    // typedef typename MPLibrary::ExtenderPointer        ExtenderPointer;
-    // typedef typename MPLibrary::PathModifierPointer    PathModifierPointer;
-    // typedef typename MPLibrary::EdgeValidityCheckerPointer    
-    //                                                    EdgeValidityCheckerPointer;
-    // typedef typename MPLibrary::ConnectorPointer       ConnectorPointer;
-    // typedef typename MPLibrary::MetricPointer          MetricPointer;
-    // typedef typename MPLibrary::MapEvaluatorPointer    MapEvaluatorPointer;
-    // typedef typename MPLibrary::MPStrategyPointer      MPStrategyPointer;
-    // typedef typename MPLibrary::DistanceMetricPointer  DistanceMetricPointer;
-    // typedef typename MPLibrary::ValidityCheckerPointer ValidityCheckerPointer;
-    // typedef typename MPLibrary::NeighborhoodFinderPointer
-    //                                                    NeighborhoodFinderPointer;
-
     ///@}
     ///@name Construction
     ///@{
@@ -141,45 +126,6 @@ class MPBaseObject {
     /// Check the library's running flag.
     bool IsRunning() const noexcept;
 
-    // /// Get a distance metric by label from the owning MPLibrary.
-    // DistanceMetricPointer GetDistanceMetric(const std::string&) const noexcept;
-
-    // /// Get a validity checker by label from the owning MPLibrary.
-    // ValidityCheckerPointer GetValidityChecker(const std::string&) const noexcept;
-
-    // /// Get a neighborhood finder by label from the owning MPLibrary.
-    // NeighborhoodFinderPointer GetNeighborhoodFinder(const std::string&) const noexcept;
-
-    // /// Get a sampler by label from the owning MPLibrary.
-    // SamplerPointer GetSampler(const std::string&) const noexcept;
-
-    // /// Get a local planner by label from the owning MPLibrary.
-    // LocalPlannerPointer GetLocalPlanner(const std::string&) const noexcept;
-
-    // /// Get an extender by label from the owning MPLibrary.
-    // ExtenderPointer GetExtender(const std::string&) const noexcept;
-
-    // /// Get a path modifier by label from the owning MPLibrary.
-    // PathModifierPointer GetPathModifier(const std::string&) const noexcept;
-
-    // /// Get a path modifier by label from the owning MPLibrary.
-    // EdgeValidityCheckerPointer GetEdgeValidityChecker(const std::string&) const noexcept;
-
-    // /// Get a connector by label from the owning MPLibrary.
-    // ConnectorPointer GetConnector(const std::string&) const noexcept;
-
-    // /// Get a metric by label from the owning MPLibrary.
-    // MetricPointer GetMetric(const std::string&) const noexcept;
-
-    // /// Get a map evaluator by label from the owning MPLibrary.
-    // MapEvaluatorPointer GetMapEvaluator(const std::string&) const noexcept;
-
-    // /// Get a strategy by label from the owning MPLibrary.
-    // MPStrategyPointer GetMPStrategy(const std::string&) const noexcept;
-
-    // /// Get the MPTools container from the owning MPLibrary.
-    // typename MPTraits::MPTools* GetMPTools() const noexcept;
-
     ///@}
     ///@name Problem Accessors
     ///@{
@@ -223,9 +169,6 @@ class MPBaseObject {
 
     /// Get the local obstacle map.
     LocalObstacleMap* GetLocalObstacleMap() const noexcept;
-
-    /// Get the goal tracker.
-    // GoalTracker* GetGoalTracker() const noexcept;
 
     ///@}
 

@@ -80,110 +80,6 @@ IsRunning() const noexcept {
   return m_library->IsRunning();
 }
 
-
-// 
-// typename MPBaseObject::DistanceMetricPointer
-// MPBaseObject::
-// GetDistanceMetric(const std::string& _label) const noexcept {
-//   return m_library->GetDistanceMetric(_label);
-// }
-
-
-// 
-// typename MPBaseObject::ValidityCheckerPointer
-// MPBaseObject::
-// GetValidityChecker(const std::string& _label) const noexcept {
-//   return m_library->GetValidityChecker(_label);
-// }
-
-
-// 
-// typename MPBaseObject::NeighborhoodFinderPointer
-// MPBaseObject::
-// GetNeighborhoodFinder(const std::string& _label) const noexcept {
-//   return m_library->GetNeighborhoodFinder(_label);
-// }
-
-
-// 
-// typename MPBaseObject::SamplerPointer
-// MPBaseObject::
-// GetSampler(const std::string& _label) const noexcept {
-//   return m_library->GetSampler(_label);
-// }
-
-
-// 
-// typename MPBaseObject::LocalPlannerPointer
-// MPBaseObject::
-// GetLocalPlanner(const std::string& _label) const noexcept {
-//   return m_library->GetLocalPlanner(_label);
-// }
-
-
-// 
-// typename MPBaseObject::ExtenderPointer
-// MPBaseObject::
-// GetExtender(const std::string& _label) const noexcept {
-//   return m_library->GetExtender(_label);
-// }
-
-
-// 
-// typename MPBaseObject::PathModifierPointer
-// MPBaseObject::
-// GetPathModifier(const std::string& _label) const noexcept {
-//   return m_library->GetPathModifier(_label);
-// }
-
-
-// 
-// typename MPBaseObject::EdgeValidityCheckerPointer
-// MPBaseObject::
-// GetEdgeValidityChecker(const std::string& _label) const noexcept {
-//   return m_library->GetEdgeValidityChecker(_label);
-// }
-
-
-// 
-// typename MPBaseObject::ConnectorPointer
-// MPBaseObject::
-// GetConnector(const std::string& _label) const noexcept {
-//   return m_library->GetConnector(_label);
-// }
-
-
-// 
-// typename MPBaseObject::MetricPointer
-// MPBaseObject::
-// GetMetric(const std::string& _label) const noexcept {
-//   return m_library->GetMetric(_label);
-// }
-
-
-// 
-// typename MPBaseObject::MapEvaluatorPointer
-// MPBaseObject::
-// GetMapEvaluator(const std::string& _label) const noexcept {
-//   return m_library->GetMapEvaluator(_label);
-// }
-
-
-// 
-// typename MPBaseObject::MPStrategyPointer
-// MPBaseObject::
-// GetMPStrategy(const std::string& _label) const noexcept {
-//   return m_library->GetMPStrategy(_label);
-// }
-
-
-// 
-// MPTools*
-// MPBaseObject::
-// GetMPTools() const noexcept {
-//   return m_library->GetMPTools();
-// }
-
 /*------------------------------ Problem Accessors ---------------------------*/
 
 MPProblem*
@@ -270,13 +166,6 @@ GetLocalObstacleMap() const noexcept {
   return m_library->GetLocalObstacleMap();
 }
 
-
-// 
-// GoalTracker*
-// MPBaseObject::
-// GetGoalTracker() const noexcept {
-//   return m_library->GetGoalTracker();
-// }
 
 const std::string&
 MPBaseObject::

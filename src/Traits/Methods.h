@@ -30,7 +30,18 @@
 #define STRAIGHT_LINE_AVAILABLE 1
 
 // MapEvaluators
+#define CBS_QUERY_AVAILABLE 1
+#define CLEARANCE_QUERY_AVAILABLE 1
+#define COLLISION_EVAL_AVAILABLE 1
+#define COMPOSE_EVAL_AVAILABLE 1
 #define CONDITIONAL_EVAL_AVAILABLE 1
+#define GROUP_QUERY_AVAILABLE 1
+#define LAZY_QUERY_AVAILABLE 1
+#define PATH_EVAL_AVAILABLE 1
+#define PRINT_MAP_AVAILABLE 1
+#define QUERY_METHOD_AVAILABLE 1
+#define SIPP_METHOD_AVAILABLE 1
+#define TIME_EVAL_AVAILABLE 1
 
 // Metrics
 #define NUM_NODES_AVAILABLE 1
@@ -134,13 +145,56 @@
     // ... and so on ...
 
 /***************************** MapEvaluators **********************************/
+#ifdef CBS_QUERY_AVAILABLE
+    #include "MPLibrary/MapEvaluators/CBSQuery.h"
+#endif
+#ifdef CLEARANCE_QUERY_AVAILABLE
+    #include "MPLibrary/MapEvaluators/ClearanceQuery.h"
+#endif
 #ifdef CONDITIONAL_EVAL_AVAILABLE
     #include "MPLibrary/MapEvaluators/ConditionalEvaluator.h"
 #endif
+#ifdef COLLISION_EVAL_AVAILABLE
+    #include "MPLibrary/MapEvaluators/CollisionEvaluator.h"
+#endif
+#ifdef COMPOSE_EVAL_AVAILABLE
+    #include "MPLibrary/MapEvaluators/ComposeEvaluator.h"
+#endif
+#ifdef GROUP_QUERY_AVAILABLE
+    #include "MPLibrary/MapEvaluators/GroupQuery.h"
+#endif
+#ifdef LAZY_QUERY_AVAILABLE
+    #include "MPLibrary/MapEvaluators/LazyQuery.h"
+#endif
+#ifdef PATH_EVAL_AVAILABLE
+    #include "MPLibrary/MapEvaluators/PathEvaluator.h"
+#endif
+#ifdef PRINT_MAP_AVAILABLE
+    #include "MPLibrary/MapEvaluators/PrintMapEvaluation.h"
+#endif
+#ifdef QUERY_METHOD_AVAILABLE
+    #include "MPLibrary/MapEvaluators/QueryMethod.h"
+#endif
+#ifdef SIPP_METHOD_AVAILABLE
+    #include "MPLibrary/MapEvaluators/SIPPMethod.h"
+#endif
+#ifdef TIME_EVAL_AVAILABLE
+    #include "MPLibrary/MapEvaluators/TimeEvaluator.h"
+#endif
 
 #define ME_CLASSES \
-    ((ConditionalEvaluator, CONDITIONAL_EVAL_AVAILABLE))
-    // ... and so on ...
+    ((CBSQuery, CBS_QUERY_AVAILABLE)) \
+    ((ClearanceQuery, CLEARANCE_QUERY_AVAILABLE)) \
+    ((CollisionEvaluator, COLLISION_EVAL_AVAILABLE)) \
+    ((ComposeEvaluator, COMPOSE_EVAL_AVAILABLE)) \
+    ((ConditionalEvaluator, CONDITIONAL_EVAL_AVAILABLE)) \
+    ((GroupQuery, GROUP_QUERY_AVAILABLE)) \
+    ((LazyQuery, LAZY_QUERY_AVAILABLE)) \
+    ((PathEvaluator, PATH_EVAL_AVAILABLE)) \
+    ((PrintMapEvaluation, PRINT_MAP_AVAILABLE)) \
+    ((QueryMethod, QUERY_METHOD_AVAILABLE)) \
+    ((SIPPMethod, SIPP_METHOD_AVAILABLE)) \
+    ((TimeEvaluator, TIME_EVAL_AVAILABLE))
 
 /******************************** Metrics *************************************/
 #ifdef NUM_NODES_AVAILABLE
