@@ -50,7 +50,8 @@ class MPBaseObject {
     ///@name Local Types
     ///@{
 
-    typedef GenericStateGraph<Cfg, DefaultWeight<Cfg>> RoadmapType;
+    typedef DefaultWeight<Cfg> WeightType;
+    typedef GenericStateGraph<Cfg, WeightType> RoadmapType;
     typedef GroupCfg<RoadmapType> GroupCfgType;
     typedef GroupLocalPlan<RoadmapType> GroupWeightType;
     typedef GroupRoadmap<GroupCfgType, GroupWeightType> GroupRoadmapType;

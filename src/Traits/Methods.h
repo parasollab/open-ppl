@@ -1,18 +1,23 @@
 #ifndef PMPL_AVAILABLE_METHODS_H_
 #define PMPL_AVAILABLE_METHODS_H_
 
-// Samplers
-#define UNIFORM_RANDOM_AVAILABLE 1
+#include <boost/preprocessor/seq.hpp>
+
+// Connectors
+#define CCS_CONNECTOR_AVAILABLE 1
+#define NEIGHBOR_CONNECTOR_AVAILABLE 1
+#define REWIRE_CONNECTOR_AVAILABLE 1
 
 // DistanceMetrics
-#define MINKOWSKI_AVAILABLE 1
 #define EUCLIDEAN_AVAILABLE 1
+#define MINKOWSKI_AVAILABLE 1
 
-// NeighborhoodFinders
-#define BRUTE_FORCE_NF_AVAILABLE 1
+// EdgeValidityCheckers
 
 // Extenders
 #define BASIC_EXTENDER_AVAILABLE 1
+
+// LocalPlanners
 
 // MapEvaluators
 #define CONDITIONAL_EVAL_AVAILABLE 1
@@ -23,27 +28,32 @@
 // MPStrategies
 #define BASIC_RRT_AVAILABLE 1
 
+// NeighborhoodFinders
+#define BRUTE_FORCE_NF_AVAILABLE 1
+
+// Samplers
+#define UNIFORM_RANDOM_AVAILABLE 1
+
 // ValidityCheckers
 #define ALWAYS_TRUE_AVAILABLE 1
 
-#include <boost/preprocessor/seq.hpp>
-
-#define ADD_CLASS_IF_AVAILABLE(r, data, elem) \
-    BOOST_PP_IF(BOOST_PP_TUPLE_ELEM(2, 1, elem), (BOOST_PP_TUPLE_ELEM(2, 0, elem)), BOOST_PP_EMPTY())
-
-// Samplers
-#ifdef UNIFORM_RANDOM_AVAILABLE
-    #include "MPLibrary/Samplers/UniformRandomSampler.h"
+/******************************* Connectors ***********************************/
+#ifdef CCS_CONNECTOR_AVAILABLE
+    #include "MPLibrary/Connectors/CCsConnector.h"
+#endif
+#ifdef NEIGHBOR_CONNECTOR_AVAILABLE
+    #include "MPLibrary/Connectors/NeighborhoodConnector.h"
+#endif
+#ifdef REWIRE_CONNECTOR_AVAILABLE
+    #include "MPLibrary/Connectors/RewireConnector.h"
 #endif
 
-#define SAMPLER_CLASSES \
-    ((UniformRandomSampler, UNIFORM_RANDOM_AVAILABLE))
-    // ((B, CLASS_B_AVAILABLE)) \
-    // ... and so on ...
+#define CONNECTOR_CLASSES \
+    ((CCsConnector, CCS_CONNECTOR_AVAILABLE)) \
+    ((NeighborhoodConnector, NEIGHBOR_CONNECTOR_AVAILABLE)) \
+    ((RewireConnector, REWIRE_CONNECTOR_AVAILABLE))
 
-#define SAMPLER_SEQ BOOST_PP_SEQ_FOR_EACH(ADD_CLASS_IF_AVAILABLE, _, SAMPLER_CLASSES)
-
-// Distance Metrics
+/***************************** DistanceMetrics ********************************/
 #ifdef MINKOWSKI_AVAILABLE
     #include "MPLibrary/DistanceMetrics/MinkowskiDistance.h"
 #endif
@@ -56,20 +66,9 @@
     ((EuclideanDistance, EUCLIDEAN_AVAILABLE))
     // ... and so on ...
 
-#define DM_SEQ BOOST_PP_SEQ_FOR_EACH(ADD_CLASS_IF_AVAILABLE, _, DM_CLASSES)
+/************************** EdgeValidityCheckers ******************************/
 
-// Neighborhood Finders
-#ifdef BRUTE_FORCE_NF_AVAILABLE
-    #include "MPLibrary/NeighborhoodFinders/BruteForceNF.h"
-#endif
-
-#define NF_CLASSES \
-    ((BruteForceNF, BRUTE_FORCE_NF_AVAILABLE))
-    // ... and so on ...
-
-#define NF_SEQ BOOST_PP_SEQ_FOR_EACH(ADD_CLASS_IF_AVAILABLE, _, NF_CLASSES)
-
-// Extenders
+/******************************* Extenders ************************************/
 #ifdef BASIC_EXTENDER_AVAILABLE
     #include "MPLibrary/Extenders/BasicExtender.h"
 #endif
@@ -78,9 +77,9 @@
     ((BasicExtender, BASIC_EXTENDER_AVAILABLE))
     // ... and so on ...
 
-#define EXT_SEQ BOOST_PP_SEQ_FOR_EACH(ADD_CLASS_IF_AVAILABLE, _, EXT_CLASSES)
+/***************************** LocalPlanners **********************************/
 
-// MapEvaluators
+/***************************** MapEvaluators **********************************/
 #ifdef CONDITIONAL_EVAL_AVAILABLE
     #include "MPLibrary/MapEvaluators/ConditionalEvaluator.h"
 #endif
@@ -89,9 +88,7 @@
     ((ConditionalEvaluator, CONDITIONAL_EVAL_AVAILABLE))
     // ... and so on ...
 
-#define ME_SEQ BOOST_PP_SEQ_FOR_EACH(ADD_CLASS_IF_AVAILABLE, _, ME_CLASSES)
-
-// Metrics
+/******************************** Metrics *************************************/
 #ifdef NUM_NODES_AVAILABLE
     #include "MPLibrary/Metrics/NumNodesMetric.h"
 #endif
@@ -100,10 +97,38 @@
     ((NumNodesMetric, NUM_NODES_AVAILABLE))
     // ... and so on ...
 
-#define METRIC_SEQ BOOST_PP_SEQ_FOR_EACH(ADD_CLASS_IF_AVAILABLE, _, METRIC_CLASSES)
+/***************************** MPStrategies ***********************************/
+#ifdef BASIC_RRT_AVAILABLE
+    #include "MPLibrary/MPStrategies/BasicRRTStrategy.h"
+#endif
 
-// Validity Checkers - CollisionDetectionValidity has to be included, but
-// others are parameterizable
+#define MPSTRATEGY_CLASSES \
+    ((BasicRRTStrategy, BASIC_RRT_AVAILABLE))
+    // ((B, CLASS_B_AVAILABLE)) \
+    // ... and so on ...
+
+/************************** NeighborhoodFinders *******************************/
+#ifdef BRUTE_FORCE_NF_AVAILABLE
+    #include "MPLibrary/NeighborhoodFinders/BruteForceNF.h"
+#endif
+
+#define NF_CLASSES \
+    ((BruteForceNF, BRUTE_FORCE_NF_AVAILABLE))
+    // ... and so on ...
+
+/***************************** PathModifiers **********************************/
+
+/******************************* Samplers *************************************/
+#ifdef UNIFORM_RANDOM_AVAILABLE
+    #include "MPLibrary/Samplers/UniformRandomSampler.h"
+#endif
+
+#define SAMPLER_CLASSES \
+    ((UniformRandomSampler, UNIFORM_RANDOM_AVAILABLE))
+    // ((B, CLASS_B_AVAILABLE)) \
+    // ... and so on ...
+
+/**************************** ValidityCheckers ********************************/
 #include "MPLibrary/ValidityCheckers/CollisionDetectionValidity.h"
 #ifdef ALWAYS_TRUE_AVAILABLE
     #include "MPLibrary/ValidityCheckers/AlwaysTrueValidity.h"
@@ -114,19 +139,19 @@
     ((AlwaysTrueValidity, ALWAYS_TRUE_AVAILABLE)) \
     // ... and so on ...
 
-#define VC_SEQ BOOST_PP_SEQ_FOR_EACH(ADD_CLASS_IF_AVAILABLE, _, VC_CLASSES)
 
-// MPStrategies
-#ifdef BASIC_RRT_AVAILABLE
-    #include "MPLibrary/MPStrategies/BasicRRTStrategy.h"
-#endif
+#define ADD_CLASS_IF_AVAILABLE(r, data, elem) \
+    BOOST_PP_IF(BOOST_PP_TUPLE_ELEM(2, 1, elem), (BOOST_PP_TUPLE_ELEM(2, 0, elem)), BOOST_PP_EMPTY())
 
-#define MPSTRATEGY_CLASSES \
-    ((BasicRRTStrategy, BASIC_RRT_AVAILABLE))
-    // ((B, CLASS_B_AVAILABLE)) \
-    // ... and so on ...
-
+#define CONN_SEQ BOOST_PP_SEQ_FOR_EACH(ADD_CLASS_IF_AVAILABLE, _, CONNECTOR_CLASSES)
+#define DM_SEQ BOOST_PP_SEQ_FOR_EACH(ADD_CLASS_IF_AVAILABLE, _, DM_CLASSES)
+#define EXT_SEQ BOOST_PP_SEQ_FOR_EACH(ADD_CLASS_IF_AVAILABLE, _, EXT_CLASSES)
+#define ME_SEQ BOOST_PP_SEQ_FOR_EACH(ADD_CLASS_IF_AVAILABLE, _, ME_CLASSES)
+#define METRIC_SEQ BOOST_PP_SEQ_FOR_EACH(ADD_CLASS_IF_AVAILABLE, _, METRIC_CLASSES)
 #define MPSTRATEGY_SEQ BOOST_PP_SEQ_FOR_EACH(ADD_CLASS_IF_AVAILABLE, _, MPSTRATEGY_CLASSES)
+#define NF_SEQ BOOST_PP_SEQ_FOR_EACH(ADD_CLASS_IF_AVAILABLE, _, NF_CLASSES)
+#define SAMPLER_SEQ BOOST_PP_SEQ_FOR_EACH(ADD_CLASS_IF_AVAILABLE, _, SAMPLER_CLASSES)
+#define VC_SEQ BOOST_PP_SEQ_FOR_EACH(ADD_CLASS_IF_AVAILABLE, _, VC_CLASSES)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// @ingroup MotionPlanningUniverse
@@ -176,9 +201,7 @@ struct MPUniverse {
 
   //types of connectors available in our world
   typedef boost::mpl::list<
-    // NeighborhoodConnector<MPTraits>,
-    // CCsConnector<MPTraits>,
-    // RewireConnector<MPTraits>
+    BOOST_PP_SEQ_ENUM(CONN_SEQ)
       > ConnectorMethodList;
 
   //types of metrics available in our world

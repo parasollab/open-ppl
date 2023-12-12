@@ -1,17 +1,20 @@
 cmake_minimum_required(VERSION 3.15)
 
-# Samplers
-option(COMPILE_UNIFORM_RANDOM_SAMPLER "Compile UniformRandomSampler" ON)
+# Connectors
+option(COMPILE_CCS_CONNECTOR "Compile CCsConnector" ON)
+option(COMPILE_NEIGHBORHOOD_CONNECTOR "Compile NeighborhoodConnector" ON)
+option(COMPILE_REWIRE_CONNECTOR "Compile RewireConnector" ON)
 
 # DistanceMetrics
 option(COMPILE_MINKOWSKI_DISTANCE "Compile MinkowskiDistance" ON)
 option(COMPILE_EUCLIDEAN_DISTANCE "Compile EuclideanDistance" ON)
 
-# NeighborhoodFinders
-option(COMPILE_BRUTE_FORCE_NF "Compile BruteForceNF" ON)
+# EdgeValidityCheckers
 
 # Extenders
 option(COMPILE_BASIC_EXTENDER "Compile BasicExtender" ON)
+
+# LocalPlanners
 
 # MapEvaluators
 option(COMPILE_CONDITIONAL_EVALUATOR "Compile ConditionalEvaluator" ON)
@@ -21,6 +24,18 @@ option(COMPILE_NUM_NODES_METRIC "Compile NumNodesMetric" ON)
 
 # MPStrategies
 option(COMPILE_BASIC_RRT "Compile BasicRRTStrategy" ON)
+
+# MPTools
+option(COMPILE_CLEARANCE_UTILS "Compile ClearanceUtilities" ON)
+option(COMPILE_MED_AXIS_UTILS "Compile MedialAxisUtilities" ON)
+
+# NeighborhoodFinders
+option(COMPILE_BRUTE_FORCE_NF "Compile BruteForceNF" ON)
+
+# PathModifiers
+
+# Samplers
+option(COMPILE_UNIFORM_RANDOM_SAMPLER "Compile UniformRandomSampler" ON)
 
 # ValidityCheckers
 option(COMPILE_ALWAYS_TRUE_VC "Compile AlwaysTrueValidity" ON)
@@ -235,15 +250,33 @@ set(PMPL_SRCS
         ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/PMPL.cpp
 )
 
-# Samplers
-if(COMPILE_UNIFORM_RANDOM_SAMPLER)
-    set(UNIFORM_RANDOM_AVAILABLE 1)
-    list(APPEND PMPL_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/Samplers/UniformRandomSampler.cpp)
+# Connectors
+if(COMPILE_CCS_CONNECTOR)
+    set(CCS_CONNECTOR_AVAILABLE 1)
+    list(APPEND PMPL_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/Connectors/CCsConnector.cpp)
 else()
-    set(UNIFORM_RANDOM_AVAILABLE 0)
+    set(CCS_CONNECTOR_AVAILABLE 0)
+endif()
+if(COMPILE_NEIGHBORHOOD_CONNECTOR)
+    set(NEIGHBOR_CONNECTOR_AVAILABLE 1)
+    list(APPEND PMPL_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/Connectors/NeighborhoodConnector.cpp)
+else()
+    set(NEIGHBOR_CONNECTOR_AVAILABLE 0)
+endif()
+if(COMPILE_REWIRE_CONNECTOR)
+    set(REWIRE_CONNECTOR_AVAILABLE 1)
+    list(APPEND PMPL_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/Connectors/RewireConnector.cpp)
+else()
+    set(REWIRE_CONNECTOR_AVAILABLE 0)
 endif()
 
 # DistanceMetrics
+if(COMPILE_EUCLIDEAN_DISTANCE)
+    set(EUCLIDEAN_AVAILABLE 1)
+    list(APPEND PMPL_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/DistanceMetrics/EuclideanDistance.cpp)
+else()
+    set(EUCLIDEAN_AVAILABLE 0)
+endif()
 if(COMPILE_MINKOWSKI_DISTANCE)
     set(MINKOWSKI_AVAILABLE 1)
     list(APPEND PMPL_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/DistanceMetrics/MinkowskiDistance.cpp)
@@ -251,20 +284,7 @@ else()
     set(MINKOWSKI_AVAILABLE 0)
 endif()
 
-if(COMPILE_EUCLIDEAN_DISTANCE)
-    set(EUCLIDEAN_AVAILABLE 1)
-    list(APPEND PMPL_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/DistanceMetrics/EuclideanDistance.cpp)
-else()
-    set(EUCLIDEAN_AVAILABLE 0)
-endif()
-
-# NeighborhoodFinders
-if(COMPILE_BRUTE_FORCE_NF)
-    set(BRUTE_FORCE_NF_AVAILABLE 1)
-    list(APPEND PMPL_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/NeighborhoodFinders/BruteForceNF.cpp)
-else()
-    set(BRUTE_FORCE_NF_AVAILABLE 0)
-endif()
+# EdgeValidityCheckers
 
 # Extenders
 if(COMPILE_BASIC_EXTENDER)
@@ -273,6 +293,8 @@ if(COMPILE_BASIC_EXTENDER)
 else()
     set(BASIC_EXTENDER_AVAILABLE 0)
 endif()
+
+# LocalPlanners
 
 # MapEvaluators
 if(COMPILE_CONDITIONAL_EVALUATOR)
@@ -296,6 +318,38 @@ if(COMPILE_BASIC_RRT)
     list(APPEND PMPL_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/MPStrategies/BasicRRTStrategy.cpp)
 else()
     set(BASIC_RRT_AVAILABLE 0)
+endif()
+
+# MPTools
+if(COMPILE_CLEARANCE_UTILS)
+    set(CLEARANCE_UTILS_AVAILABLE 1)
+    list(APPEND PMPL_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/MPTools/ClearanceUtilities.cpp)
+else()
+    set(CLEARANCE_UTILS_AVAILABLE 0)
+endif()
+if(COMPILE_MED_AXIS_UTILS)
+    set(MED_AXIS_AVAILABLE 1)
+    list(APPEND PMPL_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/MPTools/MedialAxisUtilities.cpp)
+else()
+    set(MED_AXIS_AVAILABLE 0)
+endif()
+
+# NeighborhoodFinders
+if(COMPILE_BRUTE_FORCE_NF)
+    set(BRUTE_FORCE_NF_AVAILABLE 1)
+    list(APPEND PMPL_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/NeighborhoodFinders/BruteForceNF.cpp)
+else()
+    set(BRUTE_FORCE_NF_AVAILABLE 0)
+endif()
+
+# PathModifiers
+
+# Samplers
+if(COMPILE_UNIFORM_RANDOM_SAMPLER)
+    set(UNIFORM_RANDOM_AVAILABLE 1)
+    list(APPEND PMPL_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/Samplers/UniformRandomSampler.cpp)
+else()
+    set(UNIFORM_RANDOM_AVAILABLE 0)
 endif()
 
 # ValidityCheckers
