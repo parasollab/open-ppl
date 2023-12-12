@@ -45,6 +45,8 @@
 
 // Metrics
 #define NUM_NODES_AVAILABLE 1
+#define NUM_EDGES_AVAILABLE 1
+#define TIME_METRIC_AVAILABLE 1
 
 // MPStrategies
 #define BASIC_RRT_AVAILABLE 1
@@ -200,10 +202,17 @@
 #ifdef NUM_NODES_AVAILABLE
     #include "MPLibrary/Metrics/NumNodesMetric.h"
 #endif
+#ifdef NUM_EDGES_AVAILABLE
+    #include "MPLibrary/Metrics/NumEdgesMetric.h"
+#endif
+#ifdef TIME_METRIC_AVAILABLE
+    #include "MPLibrary/Metrics/TimeMetric.h"
+#endif
 
 #define METRIC_CLASSES \
-    ((NumNodesMetric, NUM_NODES_AVAILABLE))
-    // ... and so on ...
+    ((NumNodesMetric, NUM_NODES_AVAILABLE)) \
+    ((NumEdgesMetric, NUM_EDGES_AVAILABLE)) \
+    ((TimeMetric, TIME_METRIC_AVAILABLE))
 
 /***************************** MPStrategies ***********************************/
 #ifdef BASIC_RRT_AVAILABLE

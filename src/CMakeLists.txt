@@ -42,6 +42,8 @@ option(COMPILE_TIME_EVALUATOR "Compile TimeEvaluator" ON)
 
 # Metrics
 option(COMPILE_NUM_NODES_METRIC "Compile NumNodesMetric" ON)
+option(COMPILE_NUM_EDGES_METRIC "Compile NumEdgesMetric" ON)
+option(COMPILE_TIME_METRIC "Compile TimeMetric" ON)
 
 # MPStrategies
 option(COMPILE_BASIC_RRT "Compile BasicRRTStrategy" ON)
@@ -466,6 +468,18 @@ if(COMPILE_NUM_NODES_METRIC)
     list(APPEND PMPL_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/Metrics/NumNodesMetric.cpp)
 else()
     set(NUM_NODES_AVAILABLE 0)
+endif()
+if(COMPILE_NUM_EDGES_METRIC)
+    set(NUM_EDGES_AVAILABLE 1)
+    list(APPEND PMPL_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/Metrics/NumEdgesMetric.cpp)
+else()
+    set(NUM_EDGES_AVAILABLE 0)
+endif()
+if(COMPILE_TIME_METRIC)
+    set(TIME_METRIC_AVAILABLE 1)
+    list(APPEND PMPL_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/Metrics/TimeMetric.cpp)
+else()
+    set(TIME_METRIC_AVAILABLE 0)
 endif()
 
 # MPStrategies
