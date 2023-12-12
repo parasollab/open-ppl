@@ -27,6 +27,7 @@
 #define BASIC_EXTENDER_AVAILABLE 1
 
 // LocalPlanners
+#define STRAIGHT_LINE_AVAILABLE 1
 
 // MapEvaluators
 #define CONDITIONAL_EVAL_AVAILABLE 1
@@ -124,6 +125,13 @@
     // ... and so on ...
 
 /***************************** LocalPlanners **********************************/
+#ifdef STRAIGHT_LINE_AVAILABLE
+    #include "MPLibrary/LocalPlanners/StraightLine.h"
+#endif
+
+#define LP_CLASSES \
+    ((StraightLine, STRAIGHT_LINE_AVAILABLE))
+    // ... and so on ...
 
 /***************************** MapEvaluators **********************************/
 #ifdef CONDITIONAL_EVAL_AVAILABLE
@@ -194,6 +202,7 @@
 #define DM_SEQ BOOST_PP_SEQ_FOR_EACH(ADD_CLASS_IF_AVAILABLE, _, DM_CLASSES)
 #define EXT_SEQ BOOST_PP_SEQ_FOR_EACH(ADD_CLASS_IF_AVAILABLE, _, EXT_CLASSES)
 #define EVC_SEQ BOOST_PP_SEQ_FOR_EACH(ADD_CLASS_IF_AVAILABLE, _, EVC_CLASSES)
+#define LP_SEQ BOOST_PP_SEQ_FOR_EACH(ADD_CLASS_IF_AVAILABLE, _, LP_CLASSES)
 #define ME_SEQ BOOST_PP_SEQ_FOR_EACH(ADD_CLASS_IF_AVAILABLE, _, ME_CLASSES)
 #define METRIC_SEQ BOOST_PP_SEQ_FOR_EACH(ADD_CLASS_IF_AVAILABLE, _, METRIC_CLASSES)
 #define MPSTRATEGY_SEQ BOOST_PP_SEQ_FOR_EACH(ADD_CLASS_IF_AVAILABLE, _, MPSTRATEGY_CLASSES)
@@ -229,7 +238,7 @@ struct MPUniverse {
 
   //types of local planners available in our world
   typedef boost::mpl::list<
-    // StraightLine<MPTraits>
+    BOOST_PP_SEQ_ENUM(LP_SEQ)
       > LocalPlannerMethodList;
 
   //types of extenders avaible in our world
@@ -257,7 +266,6 @@ struct MPUniverse {
     BOOST_PP_SEQ_ENUM(METRIC_SEQ)
       > MetricMethodList;
 
-
   //types of map evaluators available in our world
   typedef boost::mpl::list<
     BOOST_PP_SEQ_ENUM(ME_SEQ)
@@ -267,7 +275,6 @@ struct MPUniverse {
   typedef boost::mpl::list<
     BOOST_PP_SEQ_ENUM(MPSTRATEGY_SEQ)
     > MPStrategyMethodList;
-
 
 };
 

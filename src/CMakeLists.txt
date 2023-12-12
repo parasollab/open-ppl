@@ -24,6 +24,7 @@ option(COMPILE_INTERMEDIATES_EVC "Compile IntermediatesEdgeValidityChecker" ON)
 option(COMPILE_BASIC_EXTENDER "Compile BasicExtender" ON)
 
 # LocalPlanners
+option(COMPILE_STRAIGHT_LINE_LP "Compile StraightLineLP" ON)
 
 # MapEvaluators
 option(COMPILE_CONDITIONAL_EVALUATOR "Compile ConditionalEvaluator" ON)
@@ -367,6 +368,12 @@ else()
 endif()
 
 # LocalPlanners
+if(COMPILE_STRAIGHT_LINE_LP)
+    set(STRAIGHT_LINE_AVAILABLE 1)
+    list(APPEND PMPL_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/LocalPlanners/StraightLine.cpp)
+else()
+    set(STRAIGHT_LINE_AVAILABLE 0)
+endif()
 
 # MapEvaluators
 if(COMPILE_CONDITIONAL_EVALUATOR)
