@@ -21,6 +21,7 @@
 #cmakedefine01 WORKSPACE_TRANSLATION_AVAILABLE
 
 // EdgeValidityCheckers
+#cmakedefine01 INTERMEDIATES_EVC_AVAILABLE
 
 // Extenders
 #cmakedefine01 BASIC_EXTENDER_AVAILABLE
@@ -106,6 +107,12 @@
     ((WorkspaceTranslationDistance, WORKSPACE_TRANSLATION_AVAILABLE))
 
 /************************** EdgeValidityCheckers ******************************/
+#ifdef INTERMEDIATES_EVC_AVAILABLE
+    #include "MPLibrary/EdgeValidityCheckers/IntermediatesEdgeValidityChecker.h"
+#endif
+
+#define EVC_CLASSES \
+    ((IntermediatesEdgeValidityChecker, INTERMEDIATES_EVC_AVAILABLE))
 
 /******************************* Extenders ************************************/
 #ifdef BASIC_EXTENDER_AVAILABLE
@@ -178,6 +185,7 @@
     ((AlwaysTrueValidity, ALWAYS_TRUE_AVAILABLE)) \
     // ... and so on ...
 
+/******************************************************************************/
 
 #define ADD_CLASS_IF_AVAILABLE(r, data, elem) \
     BOOST_PP_IF(BOOST_PP_TUPLE_ELEM(2, 1, elem), (BOOST_PP_TUPLE_ELEM(2, 0, elem)), BOOST_PP_EMPTY())
@@ -185,6 +193,7 @@
 #define CONN_SEQ BOOST_PP_SEQ_FOR_EACH(ADD_CLASS_IF_AVAILABLE, _, CONNECTOR_CLASSES)
 #define DM_SEQ BOOST_PP_SEQ_FOR_EACH(ADD_CLASS_IF_AVAILABLE, _, DM_CLASSES)
 #define EXT_SEQ BOOST_PP_SEQ_FOR_EACH(ADD_CLASS_IF_AVAILABLE, _, EXT_CLASSES)
+#define EVC_SEQ BOOST_PP_SEQ_FOR_EACH(ADD_CLASS_IF_AVAILABLE, _, EVC_CLASSES)
 #define ME_SEQ BOOST_PP_SEQ_FOR_EACH(ADD_CLASS_IF_AVAILABLE, _, ME_CLASSES)
 #define METRIC_SEQ BOOST_PP_SEQ_FOR_EACH(ADD_CLASS_IF_AVAILABLE, _, METRIC_CLASSES)
 #define MPSTRATEGY_SEQ BOOST_PP_SEQ_FOR_EACH(ADD_CLASS_IF_AVAILABLE, _, MPSTRATEGY_CLASSES)
@@ -235,7 +244,7 @@ struct MPUniverse {
 
   //types of edge validity checkers available in our world
   typedef boost::mpl::list<
-    // IntermediatesEdgeValidityChecker<MPTraits>
+    BOOST_PP_SEQ_ENUM(EVC_SEQ)
       > EdgeValidityCheckerMethodList;
 
   //types of connectors available in our world

@@ -18,6 +18,7 @@ option(COMPILE_WEIGHTED_EUCLIDEAN_DISTANCE "Compile WeightedEuclideanDistance" O
 option(COMPILE_WORKSPACE_TRANSLATION_DISTANCE "Compile WorkspaceTranslationDistance" ON)
 
 # EdgeValidityCheckers
+option(COMPILE_INTERMEDIATES_EVC "Compile IntermediatesEdgeValidityChecker" ON)
 
 # Extenders
 option(COMPILE_BASIC_EXTENDER "Compile BasicExtender" ON)
@@ -350,6 +351,12 @@ else()
 endif()
 
 # EdgeValidityCheckers
+if(COMPILE_INTERMEDIATES_EVC)
+    set(INTERMEDIATES_EVC_AVAILABLE 1)
+    list(APPEND PMPL_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/EdgeValidityCheckers/IntermediatesEdgeValidityChecker.cpp)
+else()
+    set(INTERMEDIATES_EVC_AVAILABLE 0)
+endif()
 
 # Extenders
 if(COMPILE_BASIC_EXTENDER)
