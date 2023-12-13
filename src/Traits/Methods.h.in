@@ -62,6 +62,7 @@
 
 // NeighborhoodFinders
 #cmakedefine01 BRUTE_FORCE_NF_AVAILABLE
+#cmakedefine01 RADIUS_NF_AVAILABLE
 
 // Samplers
 #cmakedefine01 UNIFORM_RANDOM_AVAILABLE
@@ -272,10 +273,13 @@
 #ifdef BRUTE_FORCE_NF_AVAILABLE
     #include "MPLibrary/NeighborhoodFinders/BruteForceNF.h"
 #endif
+#ifdef RADIUS_NF_AVAILABLE
+    #include "MPLibrary/NeighborhoodFinders/RadiusNF.h"
+#endif
 
 #define NF_CLASSES \
-    ((BruteForceNF, BRUTE_FORCE_NF_AVAILABLE))
-    // ... and so on ...
+    ((BruteForceNF, BRUTE_FORCE_NF_AVAILABLE)) \
+    ((RadiusNF, RADIUS_NF_AVAILABLE))
 
 /***************************** PathModifiers **********************************/
 

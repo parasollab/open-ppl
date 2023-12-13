@@ -71,6 +71,7 @@ option(COMPILE_MEAN_CURVATURE_SKEL "Compile MeanCurvatureSkeleton3D" ON)
 
 # NeighborhoodFinders
 option(COMPILE_BRUTE_FORCE_NF "Compile BruteForceNF" ON)
+option(COMPILE_RADIUS_NF "Compile RadiusNF" ON)
 
 # PathModifiers
 
@@ -623,6 +624,12 @@ if(COMPILE_BRUTE_FORCE_NF)
     list(APPEND PMPL_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/NeighborhoodFinders/BruteForceNF.cpp)
 else()
     set(BRUTE_FORCE_NF_AVAILABLE 0)
+endif()
+if(COMPILE_RADIUS_NF)
+    set(RADIUS_NF_AVAILABLE 1)
+    list(APPEND PMPL_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/NeighborhoodFinders/RadiusNF.cpp)
+else()
+    set(RADIUS_NF_AVAILABLE 0)
 endif()
 
 # PathModifiers
