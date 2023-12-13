@@ -13,7 +13,6 @@
 
 class Boundary;
 class Environment;
-// template <typename MPTraits> class MixSampler;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Base algorithm abstraction for \ref Samplers.
