@@ -64,6 +64,9 @@
 #cmakedefine01 BRUTE_FORCE_NF_AVAILABLE
 #cmakedefine01 RADIUS_NF_AVAILABLE
 
+// PathModifiers
+#cmakedefine01 SHORTCUTTING_AVAILABLE
+
 // Samplers
 #cmakedefine01 UNIFORM_RANDOM_AVAILABLE
 #cmakedefine01 GAUSSIAN_AVAILABLE
@@ -282,6 +285,12 @@
     ((RadiusNF, RADIUS_NF_AVAILABLE))
 
 /***************************** PathModifiers **********************************/
+#ifdef SHORTCUTTING_AVAILABLE
+    #include "MPLibrary/PathModifiers/ShortcuttingPathModifier.h"
+#endif
+
+#define PM_CLASSES \
+    ((ShortcuttingPathModifier, SHORTCUTTING_AVAILABLE))
 
 /******************************* Samplers *************************************/
 #ifdef GAUSSIAN_AVAILABLE
@@ -322,6 +331,7 @@
 #define METRIC_SEQ BOOST_PP_SEQ_FOR_EACH(ADD_CLASS_IF_AVAILABLE, _, METRIC_CLASSES)
 #define MPSTRATEGY_SEQ BOOST_PP_SEQ_FOR_EACH(ADD_CLASS_IF_AVAILABLE, _, MPSTRATEGY_CLASSES)
 #define NF_SEQ BOOST_PP_SEQ_FOR_EACH(ADD_CLASS_IF_AVAILABLE, _, NF_CLASSES)
+#define PM_SEQ BOOST_PP_SEQ_FOR_EACH(ADD_CLASS_IF_AVAILABLE, _, PM_CLASSES)
 #define SAMPLER_SEQ BOOST_PP_SEQ_FOR_EACH(ADD_CLASS_IF_AVAILABLE, _, SAMPLER_CLASSES)
 #define VC_SEQ BOOST_PP_SEQ_FOR_EACH(ADD_CLASS_IF_AVAILABLE, _, VC_CLASSES)
 
@@ -363,7 +373,7 @@ struct MPUniverse {
 
   //types of path smoothing available in our world
   typedef boost::mpl::list<
-    // ShortcuttingPathModifier<MPTraits>
+    BOOST_PP_SEQ_ENUM(PM_SEQ)
       > PathModifierMethodList;
 
   //types of edge validity checkers available in our world

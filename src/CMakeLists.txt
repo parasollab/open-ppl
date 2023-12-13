@@ -74,6 +74,7 @@ option(COMPILE_BRUTE_FORCE_NF "Compile BruteForceNF" ON)
 option(COMPILE_RADIUS_NF "Compile RadiusNF" ON)
 
 # PathModifiers
+option(COMPILE_SHORTCUTTING "Compile ShortcuttingPathModifier" ON)
 
 # Samplers
 option(COMPILE_UNIFORM_RANDOM_SAMPLER "Compile UniformRandomSampler" ON)
@@ -633,6 +634,12 @@ else()
 endif()
 
 # PathModifiers
+if(COMPILE_SHORTCUTTING)
+    set(SHORTCUTTING_AVAILABLE 1)
+    list(APPEND PMPL_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/PathModifiers/ShortcuttingPathModifier.cpp)
+else()
+    set(SHORTCUTTING_AVAILABLE 0)
+endif()
 
 # Samplers
 if(COMPILE_UNIFORM_RANDOM_SAMPLER)
