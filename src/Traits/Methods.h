@@ -59,6 +59,7 @@
 #define GROUP_PRM_AVAILABLE 1
 #define MODIFY_PATH_AVAILABLE 1
 #define TOGGLE_PRM_AVAILABLE 1
+#define WRENCH_ACCESS_STRAT_AVAILABLE 1
 
 // NeighborhoodFinders
 #define BRUTE_FORCE_NF_AVAILABLE 1
@@ -266,6 +267,9 @@
 #ifdef TOGGLE_PRM_AVAILABLE
     #include "MPLibrary/MPStrategies/TogglePRMStrategy.h"
 #endif
+#ifdef WRENCH_ACCESS_STRAT_AVAILABLE
+    #include "MPLibrary/MPStrategies/WrenchAccessibilityStrategy.h"
+#endif
 
 #define MPSTRATEGY_CLASSES \
     ((AdaptiveRRT, ADAPTIVE_RRT_AVAILABLE)) \
@@ -277,7 +281,8 @@
     ((GroupDecoupledStrategy, GROUP_DECOUPLED_STRAT_AVAILABLE)) \
     ((GroupPRM, GROUP_PRM_AVAILABLE)) \
     ((ModifyPath, MODIFY_PATH_AVAILABLE)) \
-    ((TogglePRMStrategy, TOGGLE_PRM_AVAILABLE))
+    ((TogglePRMStrategy, TOGGLE_PRM_AVAILABLE)) \
+    ((WrenchAccessibilityStrategy, WRENCH_ACCESS_STRAT_AVAILABLE))
 
 /************************** NeighborhoodFinders *******************************/
 #ifdef BRUTE_FORCE_NF_AVAILABLE

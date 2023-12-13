@@ -15,7 +15,9 @@
 #include "TopologicalMap.h"
 #include "ReachabilityUtil.h"
 #include "PointConstruction.h"
-// #include "MPLibrary/LearningModels/SVMModel.h"
+#include "WrenchAccessibilityTool.h"
+
+//#include "MPLibrary/LearningModels/SVMModel.h"
 
 
 class WorkspaceDecomposition;
@@ -66,6 +68,8 @@ class MPToolsType final {
   LabelMap<SafeIntervalTool>         m_safeIntervalTools;
   LabelMap<ReachabilityUtil>         m_reachabilityUtils;
   LabelMap<PointConstruction>        m_pointConstruction;
+  LabelMap<WrenchAccessibilityTool>  m_wrenchAccessibilityTools;
+
 
   std::unordered_map<std::string, TetGenDecomposition> m_tetgens;
   std::unordered_map<std::string, const WorkspaceDecomposition*> m_decompositions;
@@ -226,7 +230,22 @@ class MPToolsType final {
         PointConstruction* _util);
 
     ///}
+    ///@name Wrench Accessibility Tool
+    ///@{
+    /// Get a WrenchAccessibilityTool by label.
+    /// @param _label The string label of the desired utility as defined in the
+    ///               XML file.
+    /// @return The labeled utility.
+    WrenchAccessibilityTool* GetWrenchAccessibilityTool(const std::string& _label) const;
 
+    /// Set a WrenchAccessibilityTool. This object will take ownership of the utility and
+    /// delete it when necessary.
+    /// @param _label The string label for the new utility.
+    /// @param _utility The GetWrenchAccessibilityTool to use.
+    void SetWrenchAccessibilityTool(const std::string& _label,
+        WrenchAccessibilityTool* const _utility);
+
+    ///@}
   private:
 
     ///@name Helpers

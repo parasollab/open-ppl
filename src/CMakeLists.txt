@@ -56,6 +56,7 @@ option(COMPILE_GROUP_DECOUPLED_STRATEGY "Compile GroupDecoupledStrategy" ON)
 option(COMPILE_GROUP_PRM "Compile GroupPRM" ON)
 option(COMPILE_MODIFY_PATH "Compile ModifyPath" ON)
 option(COMPILE_TOGGLE_PRM "Compile TogglePRM" ON)
+option(COMPILE_WRENCH_ACCESS_STRAT "Compile WrenchAccessibilityStrategy" ON)
 
 # MPTools
 option(COMPILE_CLEARANCE_UTILS "Compile ClearanceUtilities" ON)
@@ -68,6 +69,7 @@ option(COMPILE_TOPOLOGICAL_MAP "Compile TopologicalMap" ON)
 option(COMPILE_TET_GEN_DECOMP "Compile TetGenDecomposition" ON)
 option(COMPILE_REEB_GRAPH "Compile ReebGraphConstruction" ON)
 option(COMPILE_MEAN_CURVATURE_SKEL "Compile MeanCurvatureSkeleton3D" ON)
+option(COMPILE_WRENCH_ACCESS_TOOL "Compile WrenchAccessibilityTool" ON)
 
 # NeighborhoodFinders
 option(COMPILE_BRUTE_FORCE_NF "Compile BruteForceNF" ON)
@@ -563,6 +565,12 @@ if(COMPILE_TOGGLE_PRM)
 else()
     set(TOGGLE_PRM_AVAILABLE 0)
 endif()
+if(COMPILE_WRENCH_ACCESS_STRAT)
+    set(WRENCH_ACCESS_STRAT_AVAILABLE 1)
+    list(APPEND PMPL_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/MPStrategies/WrenchAccessibilityStrategy.cpp)
+else()
+    set(WRENCH_ACCESS_STRAT_AVAILABLE 0)
+endif()
 
 # MPTools
 if(COMPILE_CLEARANCE_UTILS)
@@ -624,6 +632,12 @@ if(COMPILE_MEAN_CURVATURE_SKEL)
     list(APPEND PMPL_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/MPTools/MeanCurvatureSkeleton3D.cpp)
 else()
     set(MEAN_CURVE_SKEL_AVAILABLE 0)
+endif()
+if(COMPILE_WRENCH_ACCESS_TOOL)
+    set(WRENCH_ACCESS_TOOL_AVAILABLE 1)
+    list(APPEND PMPL_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/MPTools/WrenchAccessibilityTool.cpp)
+else()
+    set(WRENCH_ACCESS_TOOL_AVAILABLE 0)
 endif()
 
 # NeighborhoodFinders

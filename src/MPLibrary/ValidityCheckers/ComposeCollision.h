@@ -45,6 +45,13 @@ class ComposeCollision : public CollisionDetectionValidityMethod {
     /// @return True if _p is inside an obstacle.
     virtual bool IsInsideObstacle(const Point3d& _p) override;
 
+    /// Determine whether a workspace point lies inside of an obstacle from
+    /// a specific subset of obstacles
+    /// @param _p The workspace point.
+    /// @param _obstIdxs The indices of the subset of obstacles 
+    /// @return True if _p is inside an obstacle.
+    virtual bool IsInsideObstacle(const Point3d& _p, vector<size_t>* _obstIdxs);
+
     /// Check if two workspace points are mutually visible.
     /// @param _a The first point.
     /// @param _b The second point.

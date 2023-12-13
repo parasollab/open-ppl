@@ -90,6 +90,14 @@ IsInsideObstacle(const Point3d& _p) {
 
 bool
 ComposeCollision::
+IsInsideObstacle(const Point3d& _p, std::vector<size_t>* _obstIdxs) {
+  throw NotImplementedException(WHERE);
+  return false;
+}
+
+
+bool
+ComposeCollision::
 WorkspaceVisibility(const Point3d& _a, const Point3d& _b) {
   if(this->m_debug)
     std::cout << "ComposeCollision:: checking workspace visibility..."

@@ -92,6 +92,34 @@ IsInsideObstacle(const Point3d& _p) {
 
 bool
 CollisionDetectionValidity::
+IsInsideObstacle(const Point3d& _p, std::vector<size_t>* _obstIdxs) {
+  /// @todo Implement a bounding box check (per multibody and body) before
+  ///       calling m_cdMethod.
+
+  auto env = this->GetEnvironment();
+
+  // Check each obstacle.
+  for(size_t i : *_obstIdxs) {
+    auto obst = env->GetObstacle(i);
+
+    // Check each body.
+    for(size_t j = 0; j < obst->GetNumBodies(); ++j) {
+      this->GetStatClass()->IncNumCollDetCalls(m_cdMethod->GetName(),
+          "IsInsideObstacle");
+
+      const Body* const b = obst->GetBody(j);
+      if(m_cdMethod->IsInsideObstacle(_p, b->GetPolyhedron(),
+            b->GetWorldTransformation()))
+        return true;
+    }
+  }
+
+  return false;
+}
+
+
+bool
+CollisionDetectionValidity::
 WorkspaceVisibility(const Point3d& _a, const Point3d& _b) {
   // Generate the third point for the triangle with _a, _b as side
   Vector3d p;

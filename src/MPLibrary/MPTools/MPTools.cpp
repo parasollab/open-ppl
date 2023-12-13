@@ -85,6 +85,17 @@ ParseXML(XMLNode& _node) {
 
       SetSafeIntervalTool(utility->GetLabel(), utility);
     }
+    else if(child.Name() == "WrenchAccessibilityTool") {
+      auto utility = new WrenchAccessibilityTool(child);
+
+      // A second node with the same label is an error during XML parsing.
+      if(m_wrenchAccessibilityTools.count(utility->GetLabel()))
+        throw ParseException(child.Where(), "Second WrenchAccessibilityTool "
+            "node with the label '" + utility->GetLabel() + "'. Labels must be "
+            "unique.");
+
+      SetWrenchAccessibilityTool(utility->GetLabel(), utility);
+    }
     // Below here we are setting defaults rather than creating instances.
     else if(child.Name() == "ReebGraphConstruction") {
       if(parsedReebGraph)
@@ -144,6 +155,8 @@ Initialize() {
     pair.second->Initialize();
   for(auto& pair : m_pointConstruction)
     pair.second->Initialize();
+  for(auto& pair : m_wrenchAccessibilityTools)
+    pair.second->Initialize();
 }
 
 
@@ -174,6 +187,8 @@ MPToolsType::
   for(auto& pair : m_reachabilityUtils)
     delete pair.second;
   for(auto& pair : m_pointConstruction) 
+    delete pair.second;
+  for(auto& pair : m_wrenchAccessibilityTools)
     delete pair.second;
 }
 
@@ -329,4 +344,18 @@ SetPointConstruction(const std::string& _label,
   SetUtility(_label, _util, m_pointConstruction);
 }
 
-/*----------------------------------------------------------------------------*/
+/*---------------------- Wrench Accessibility Tools --------------------------*/
+
+WrenchAccessibilityTool*
+MPToolsType::
+GetWrenchAccessibilityTool(const std::string& _label) const {
+  return GetUtility(_label, m_wrenchAccessibilityTools);
+}
+
+
+void
+MPToolsType::
+SetWrenchAccessibilityTool(const std::string& _label,
+    WrenchAccessibilityTool* const _utility) {
+  SetUtility(_label, _utility, m_wrenchAccessibilityTools);
+}
