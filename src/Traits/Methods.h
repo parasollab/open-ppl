@@ -68,8 +68,12 @@
 #define SHORTCUTTING_AVAILABLE 1
 
 // Samplers
-#define UNIFORM_RANDOM_AVAILABLE 1
+#define BRIDGE_TEST_AVAILABLE 1
 #define GAUSSIAN_AVAILABLE 1
+#define MIX_SAMPLER_AVAILABLE 1
+#define OBSTACLE_BASED_SAMPLER_AVAILABLE 1
+#define UNIFORM_RANDOM_AVAILABLE 1
+#define UNIFORM_OBSTACLE_AVAILABLE 0
 
 // ValidityCheckers
 #define ALWAYS_TRUE_AVAILABLE 1
@@ -293,18 +297,32 @@
     ((ShortcuttingPathModifier, SHORTCUTTING_AVAILABLE))
 
 /******************************* Samplers *************************************/
+#ifdef BRIDGE_TEST_AVAILABLE
+    #include "MPLibrary/Samplers/BridgeTestSampler.h"
+#endif
 #ifdef GAUSSIAN_AVAILABLE
     #include "MPLibrary/Samplers/GaussianSampler.h"
+#endif
+#ifdef MIX_SAMPLER_AVAILABLE
+    #include "MPLibrary/Samplers/MixSampler.h"
+#endif
+#ifdef OBSTACLE_BASED_SAMPLER_AVAILABLE
+    #include "MPLibrary/Samplers/ObstacleBasedSampler.h"
 #endif
 #ifdef UNIFORM_RANDOM_AVAILABLE
     #include "MPLibrary/Samplers/UniformRandomSampler.h"
 #endif
+#ifdef UNIFORM_OBSTACLE_AVAILABLE
+    #include "MPLibrary/Samplers/UniformObstacleBasedSampler.h"
+#endif
 
 #define SAMPLER_CLASSES \
+    ((BridgeTestSampler, BRIDGE_TEST_AVAILABLE)) \
     ((GaussianSampler, GAUSSIAN_AVAILABLE)) \
-    ((UniformRandomSampler, UNIFORM_RANDOM_AVAILABLE))
-    // ((B, CLASS_B_AVAILABLE)) \
-    // ... and so on ...
+    ((MixSampler, MIX_SAMPLER_AVAILABLE)) \
+    ((ObstacleBasedSampler, OBSTACLE_BASED_SAMPLER_AVAILABLE)) \
+    ((UniformRandomSampler, UNIFORM_RANDOM_AVAILABLE)) \
+    ((UniformObstacleBasedSampler, UNIFORM_OBSTACLE_AVAILABLE))
 
 /**************************** ValidityCheckers ********************************/
 #include "MPLibrary/ValidityCheckers/CollisionDetectionValidity.h"

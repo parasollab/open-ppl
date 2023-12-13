@@ -258,7 +258,7 @@ class SamplerMethod : public MPBaseObject {
 
     ///@}
 
-    // friend class MixSampler<MPTraits>;
+    friend class MixSampler;
 
 };
 
