@@ -46,7 +46,16 @@ option(COMPILE_NUM_EDGES_METRIC "Compile NumEdgesMetric" ON)
 option(COMPILE_TIME_METRIC "Compile TimeMetric" ON)
 
 # MPStrategies
+option(COMPILE_ADAPTIVE_RRT "Compile AdaptiveRRT" ON)
+option(COMPILE_BASIC_PRM "Compile BasicPRM" ON)
 option(COMPILE_BASIC_RRT "Compile BasicRRTStrategy" ON)
+option(COMPILE_DYNAMIC_REGION_RRT "Compile DynamicRegionRRT" ON)
+option(COMPILE_DYNAMIC_REGION_PRM "Compile DynamicRegionsPRM" ON)
+option(COMPILE_EET "Compile EET" ON)
+option(COMPILE_GROUP_DECOUPLED_STRATEGY "Compile GroupDecoupledStrategy" ON)
+option(COMPILE_GROUP_PRM "Compile GroupPRM" ON)
+option(COMPILE_MODIFY_PATH "Compile ModifyPath" ON)
+option(COMPILE_TOGGLE_PRM "Compile TogglePRM" ON)
 
 # MPTools
 option(COMPILE_CLEARANCE_UTILS "Compile ClearanceUtilities" ON)
@@ -67,6 +76,7 @@ option(COMPILE_BRUTE_FORCE_NF "Compile BruteForceNF" ON)
 
 # Samplers
 option(COMPILE_UNIFORM_RANDOM_SAMPLER "Compile UniformRandomSampler" ON)
+option(COMPILE_GAUSSIAN_SAMPLER "Compile GaussianSampler" ON)
 
 # ValidityCheckers
 option(COMPILE_ALWAYS_TRUE_VC "Compile AlwaysTrueValidity" ON)
@@ -230,6 +240,7 @@ set(PMPL_SRCS
         ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/MapEvaluators/MapEvaluatorMethod.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/Metrics/MetricMethod.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/MPStrategies/MPStrategyMethod.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/MPStrategies/GroupStrategyMethod.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/MPStrategies/BasicRRTStrategy.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/MPTools/MPTools.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/NeighborhoodFinders/NeighborhoodFinderMethod.cpp
@@ -483,11 +494,65 @@ else()
 endif()
 
 # MPStrategies
+if(COMPILE_ADAPTIVE_RRT)
+    set(ADAPTIVE_RRT_AVAILABLE 1)
+    list(APPEND PMPL_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/MPStrategies/AdaptiveRRT.cpp)
+else()
+    set(ADAPTIVE_RRT_AVAILABLE 0)
+endif()
+if(COMPILE_BASIC_PRM)
+    set(BASIC_PRM_AVAILABLE 1)
+    list(APPEND PMPL_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/MPStrategies/BasicPRM.cpp)
+else()
+    set(BASIC_PRM_AVAILABLE 0)
+endif()
 if(COMPILE_BASIC_RRT)
     set(BASIC_RRT_AVAILABLE 1)
     list(APPEND PMPL_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/MPStrategies/BasicRRTStrategy.cpp)
 else()
     set(BASIC_RRT_AVAILABLE 0)
+endif()
+if(COMPILE_DYNAMIC_REGION_RRT)
+    set(DYNAMIC_REGION_RRT_AVAILABLE 1)
+    list(APPEND PMPL_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/MPStrategies/DynamicRegionRRT.cpp)
+else()
+    set(DYNAMIC_REGION_RRT_AVAILABLE 0)
+endif()
+if(COMPILE_DYNAMIC_REGION_PRM)
+    set(DYNAMIC_REGION_PRM_AVAILABLE 1)
+    list(APPEND PMPL_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/MPStrategies/DynamicRegionsPRM.cpp)
+else()
+    set(DYNAMIC_REGION_PRM_AVAILABLE 0)
+endif()
+if(COMPILE_EET)
+    set(EET_AVAILABLE 1)
+    list(APPEND PMPL_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/MPStrategies/EET.cpp)
+else()
+    set(EET_AVAILABLE 0)
+endif()
+if(COMPILE_GROUP_DECOUPLED_STRATEGY)
+    set(GROUP_DECOUPLED_STRAT_AVAILABLE 1)
+    list(APPEND PMPL_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/MPStrategies/GroupDecoupledStrategy.cpp)
+else()
+    set(GROUP_DECOUPLED_STRAT_AVAILABLE 0)
+endif()
+if(COMPILE_GROUP_PRM)
+    set(GROUP_PRM_AVAILABLE 1)
+    list(APPEND PMPL_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/MPStrategies/GroupPRM.cpp)
+else()
+    set(GROUP_PRM_AVAILABLE 0)
+endif()
+if(COMPILE_MODIFY_PATH)
+    set(MODIFY_PATH_AVAILABLE 1)
+    list(APPEND PMPL_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/MPStrategies/ModifyPath.cpp)
+else()
+    set(MODIFY_PATH_AVAILABLE 0)
+endif()
+if(COMPILE_TOGGLE_PRM)
+    set(TOGGLE_PRM_AVAILABLE 1)
+    list(APPEND PMPL_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/MPStrategies/TogglePRMStrategy.cpp)
+else()
+    set(TOGGLE_PRM_AVAILABLE 0)
 endif()
 
 # MPTools
@@ -568,6 +633,12 @@ if(COMPILE_UNIFORM_RANDOM_SAMPLER)
     list(APPEND PMPL_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/Samplers/UniformRandomSampler.cpp)
 else()
     set(UNIFORM_RANDOM_AVAILABLE 0)
+endif()
+if(COMPILE_GAUSSIAN_SAMPLER)
+    set(GAUSSIAN_AVAILABLE 1)
+    list(APPEND PMPL_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/Samplers/GaussianSampler.cpp)
+else()
+    set(GAUSSIAN_AVAILABLE 0)
 endif()
 
 # ValidityCheckers

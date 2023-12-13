@@ -49,13 +49,23 @@
 #cmakedefine01 TIME_METRIC_AVAILABLE
 
 // MPStrategies
+#cmakedefine01 ADAPTIVE_RRT_AVAILABLE
+#cmakedefine01 BASIC_PRM_AVAILABLE
 #cmakedefine01 BASIC_RRT_AVAILABLE
+#cmakedefine01 DYNAMIC_REGION_RRT_AVAILABLE
+#cmakedefine01 DYNAMIC_REGION_PRM_AVAILABLE
+#cmakedefine01 EET_AVAILABLE
+#cmakedefine01 GROUP_DECOUPLED_STRAT_AVAILABLE
+#cmakedefine01 GROUP_PRM_AVAILABLE
+#cmakedefine01 MODIFY_PATH_AVAILABLE
+#cmakedefine01 TOGGLE_PRM_AVAILABLE
 
 // NeighborhoodFinders
 #cmakedefine01 BRUTE_FORCE_NF_AVAILABLE
 
 // Samplers
 #cmakedefine01 UNIFORM_RANDOM_AVAILABLE
+#cmakedefine01 GAUSSIAN_AVAILABLE
 
 // ValidityCheckers
 #cmakedefine01 ALWAYS_TRUE_AVAILABLE
@@ -215,14 +225,48 @@
     ((TimeMetric, TIME_METRIC_AVAILABLE))
 
 /***************************** MPStrategies ***********************************/
+#ifdef ADAPTIVE_RRT_AVAILABLE
+    #include "MPLibrary/MPStrategies/AdaptiveRRT.h"
+#endif
+#ifdef BASIC_PRM_AVAILABLE
+    #include "MPLibrary/MPStrategies/BasicPRM.h"
+#endif
 #ifdef BASIC_RRT_AVAILABLE
     #include "MPLibrary/MPStrategies/BasicRRTStrategy.h"
 #endif
+#ifdef DYNAMIC_REGION_RRT_AVAILABLE
+    #include "MPLibrary/MPStrategies/DynamicRegionRRT.h"
+#endif
+#ifdef DYNAMIC_REGION_PRM_AVAILABLE
+    #include "MPLibrary/MPStrategies/DynamicRegionsPRM.h"
+#endif
+#ifdef EET_AVAILABLE
+    #include "MPLibrary/MPStrategies/EET.h"
+#endif
+#ifdef GROUP_DECOUPLED_STRAT_AVAILABLE
+    #include "MPLibrary/MPStrategies/GroupDecoupledStrategy.h"
+#endif
+#ifdef GROUP_PRM_AVAILABLE
+    #include "MPLibrary/MPStrategies/GroupPRM.h"
+#endif
+#ifdef MODIFY_PATH_AVAILABLE
+    #include "MPLibrary/MPStrategies/ModifyPath.h"
+#endif
+#ifdef TOGGLE_PRM_AVAILABLE
+    #include "MPLibrary/MPStrategies/TogglePRMStrategy.h"
+#endif
 
 #define MPSTRATEGY_CLASSES \
-    ((BasicRRTStrategy, BASIC_RRT_AVAILABLE))
-    // ((B, CLASS_B_AVAILABLE)) \
-    // ... and so on ...
+    ((AdaptiveRRT, ADAPTIVE_RRT_AVAILABLE)) \
+    ((BasicPRM, BASIC_PRM_AVAILABLE)) \
+    ((BasicRRTStrategy, BASIC_RRT_AVAILABLE)) \
+    ((DynamicRegionRRT, DYNAMIC_REGION_RRT_AVAILABLE)) \
+    ((DynamicRegionsPRM, DYNAMIC_REGION_PRM_AVAILABLE)) \
+    ((EET, EET_AVAILABLE)) \
+    ((GroupDecoupledStrategy, GROUP_DECOUPLED_STRAT_AVAILABLE)) \
+    ((GroupPRM, GROUP_PRM_AVAILABLE)) \
+    ((ModifyPath, MODIFY_PATH_AVAILABLE)) \
+    ((TogglePRMStrategy, TOGGLE_PRM_AVAILABLE))
 
 /************************** NeighborhoodFinders *******************************/
 #ifdef BRUTE_FORCE_NF_AVAILABLE
@@ -236,11 +280,15 @@
 /***************************** PathModifiers **********************************/
 
 /******************************* Samplers *************************************/
+#ifdef GAUSSIAN_AVAILABLE
+    #include "MPLibrary/Samplers/GaussianSampler.h"
+#endif
 #ifdef UNIFORM_RANDOM_AVAILABLE
     #include "MPLibrary/Samplers/UniformRandomSampler.h"
 #endif
 
 #define SAMPLER_CLASSES \
+    ((GaussianSampler, GAUSSIAN_AVAILABLE)) \
     ((UniformRandomSampler, UNIFORM_RANDOM_AVAILABLE))
     // ((B, CLASS_B_AVAILABLE)) \
     // ... and so on ...

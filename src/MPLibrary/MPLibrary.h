@@ -154,11 +154,11 @@ class MPLibrary
       m_validityCheckers->AddMethod(_vc, _l);
     }
 
-    /// Toggle (negate) the validity output for ALL validity checkers.
-    // void ToggleValidity() {
-    //   for(auto& vc : *m_validityCheckers)
-    //     vc.second->ToggleValidity();
-    // }
+    // Toggle (negate) the validity output for ALL validity checkers.
+    void ToggleValidity() {
+      for(auto& vc : *m_validityCheckers)
+        vc.second->ToggleValidity();
+    }
 
     ///@}
     ///@name Neighborhood Finder Accessors
