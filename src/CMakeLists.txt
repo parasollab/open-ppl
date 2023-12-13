@@ -86,6 +86,9 @@ option(COMPILE_UNIFORM_OBSTACLE_SAMPLER "Compile UniformObstacleBasedSampler" ON
 
 # ValidityCheckers
 option(COMPILE_ALWAYS_TRUE_VC "Compile AlwaysTrueValidity" ON)
+option(COMPILE_COMPOSE_CD "Compile ComposeCollision" ON)
+option(COMPILE_COMPOSE_VC "Compile ComposeValidity" ON)
+option(COMPILE_TERRAIN_VC "Compile TerrainValidityChecker" ON)
 
 set(HARDWARE_SRCS
         ${CMAKE_CURRENT_SOURCE_DIR}/MPProblem/Robot/HardwareInterfaces/ActuatorInterface.cpp
@@ -689,6 +692,24 @@ if(COMPILE_ALWAYS_TRUE_VC)
     list(APPEND PMPL_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/ValidityCheckers/AlwaysTrueValidity.cpp)
 else()
     set(ALWAYS_TRUE_AVAILABLE 0)
+endif()
+if(COMPILE_COMPOSE_CD)
+    set(COMPOSE_CD_AVAILABLE 1)
+    list(APPEND PMPL_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/ValidityCheckers/ComposeCollision.cpp)
+else()
+    set(COMPOSE_CD_AVAILABLE 0)
+endif()
+if(COMPILE_COMPOSE_VC)
+    set(COMPOSE_VC_AVAILABLE 1)
+    list(APPEND PMPL_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/ValidityCheckers/ComposeValidity.cpp)
+else()
+    set(COMPOSE_VC_AVAILABLE 0)
+endif()
+if(COMPILE_TERRAIN_VC)
+    set(TERRAIN_VC_AVAILABLE 1)
+    list(APPEND PMPL_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/ValidityCheckers/TerrainValidityChecker.cpp)
+else()
+    set(TERRAIN_VC_AVAILABLE 0)
 endif()
 
 set(PMPL_SRCS ${PMPL_SRCS} PARENT_SCOPE)

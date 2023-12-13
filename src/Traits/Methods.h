@@ -77,6 +77,9 @@
 
 // ValidityCheckers
 #define ALWAYS_TRUE_AVAILABLE 1
+#define COMPOSE_CD_AVAILABLE 1
+#define COMPOSE_VC_AVAILABLE 1
+#define TERRAIN_VC_AVAILABLE 1
 
 /******************************* Connectors ***********************************/
 #ifdef CCS_CONNECTOR_AVAILABLE
@@ -329,11 +332,22 @@
 #ifdef ALWAYS_TRUE_AVAILABLE
     #include "MPLibrary/ValidityCheckers/AlwaysTrueValidity.h"
 #endif
+#ifdef COMPOSE_CD_AVAILABLE
+    #include "MPLibrary/ValidityCheckers/ComposeCollision.h"
+#endif
+#ifdef COMPOSE_VC_AVAILABLE
+    #include "MPLibrary/ValidityCheckers/ComposeValidity.h"
+#endif
+#ifdef TERRAIN_VC_AVAILABLE
+    #include "MPLibrary/ValidityCheckers/TerrainValidityChecker.h"
+#endif
 
 #define VC_CLASSES \
     ((CollisionDetectionValidity, 1)) \
     ((AlwaysTrueValidity, ALWAYS_TRUE_AVAILABLE)) \
-    // ... and so on ...
+    ((ComposeCollision, COMPOSE_CD_AVAILABLE)) \
+    ((ComposeValidity, COMPOSE_VC_AVAILABLE)) \
+    ((TerrainValidityChecker, TERRAIN_VC_AVAILABLE))
 
 /******************************************************************************/
 
