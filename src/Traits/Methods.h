@@ -2,26 +2,27 @@
 #define PMPL_AVAILABLE_METHODS_H_
 
 #include <boost/preprocessor/seq.hpp>
+#define BOOST_PP_SEQ_ENUM_0
 
 // Connectors
-#define CCS_CONNECTOR_AVAILABLE 1
+#define CCS_CONNECTOR_AVAILABLE 0
 #define NEIGHBOR_CONNECTOR_AVAILABLE 1
-#define REWIRE_CONNECTOR_AVAILABLE 1
+#define REWIRE_CONNECTOR_AVAILABLE 0
 
 // DistanceMetrics
-#define BIN_LP_SWEPT_AVAILABLE 1
-#define LP_SWEPT_AVAILABLE 1
+#define BIN_LP_SWEPT_AVAILABLE 0
+#define LP_SWEPT_AVAILABLE 0
 #define EUCLIDEAN_AVAILABLE 1
 #define SCALED_EUCLIDEAN_AVAILABLE 0
-#define WEIGHTED_EUCLIDEAN_AVAILABLE 1
+#define WEIGHTED_EUCLIDEAN_AVAILABLE 0
 #define MINKOWSKI_AVAILABLE 1
-#define MANHATTAN_AVAILABLE 1
-#define RMSD_AVAILABLE 1
-#define TOPOLOGICAL_DISTANCE_AVAILABLE 1
-#define WORKSPACE_TRANSLATION_AVAILABLE 1
+#define MANHATTAN_AVAILABLE 0
+#define RMSD_AVAILABLE 0
+#define TOPOLOGICAL_DISTANCE_AVAILABLE 0
+#define WORKSPACE_TRANSLATION_AVAILABLE 0
 
 // EdgeValidityCheckers
-#define INTERMEDIATES_EVC_AVAILABLE 1
+#define INTERMEDIATES_EVC_AVAILABLE 0
 
 // Extenders
 #define BASIC_EXTENDER_AVAILABLE 1
@@ -30,66 +31,66 @@
 #define STRAIGHT_LINE_AVAILABLE 1
 
 // MapEvaluators
-#define CBS_QUERY_AVAILABLE 1
-#define CLEARANCE_QUERY_AVAILABLE 1
-#define COLLISION_EVAL_AVAILABLE 1
-#define COMPOSE_EVAL_AVAILABLE 1
-#define CONDITIONAL_EVAL_AVAILABLE 1
-#define GROUP_QUERY_AVAILABLE 1
-#define LAZY_QUERY_AVAILABLE 1
-#define PATH_EVAL_AVAILABLE 1
-#define PRINT_MAP_AVAILABLE 1
+#define CBS_QUERY_AVAILABLE 0
+#define CLEARANCE_QUERY_AVAILABLE 0
+#define COLLISION_EVAL_AVAILABLE 0
+#define COMPOSE_EVAL_AVAILABLE 0
+#define CONDITIONAL_EVAL_AVAILABLE 0
+#define GROUP_QUERY_AVAILABLE 0
+#define LAZY_QUERY_AVAILABLE 0
+#define PATH_EVAL_AVAILABLE 0
+#define PRINT_MAP_AVAILABLE 0
 #define QUERY_METHOD_AVAILABLE 1
-#define SIPP_METHOD_AVAILABLE 1
+#define SIPP_METHOD_AVAILABLE 0
 #define TIME_EVAL_AVAILABLE 1
 
 // Metrics
-#define NUM_NODES_AVAILABLE 1
-#define NUM_EDGES_AVAILABLE 1
-#define TIME_METRIC_AVAILABLE 1
+#define NUM_NODES_AVAILABLE 0
+#define NUM_EDGES_AVAILABLE 0
+#define TIME_METRIC_AVAILABLE 0
 
 // MPStrategies
-#define ADAPTIVE_RRT_AVAILABLE 1
+#define ADAPTIVE_RRT_AVAILABLE 0
 #define BASIC_PRM_AVAILABLE 1
 #define BASIC_RRT_AVAILABLE 1
-#define DYNAMIC_REGION_RRT_AVAILABLE 1
-#define DYNAMIC_REGION_PRM_AVAILABLE 1
-#define EET_AVAILABLE 1
-#define GROUP_DECOUPLED_STRAT_AVAILABLE 1
-#define GROUP_PRM_AVAILABLE 1
-#define MODIFY_PATH_AVAILABLE 1
-#define TOGGLE_PRM_AVAILABLE 1
-#define WRENCH_ACCESS_STRAT_AVAILABLE 1
+#define DYNAMIC_REGION_RRT_AVAILABLE 0
+#define DYNAMIC_REGION_PRM_AVAILABLE 0
+#define EET_AVAILABLE 0
+#define GROUP_DECOUPLED_STRAT_AVAILABLE 0
+#define GROUP_PRM_AVAILABLE 0
+#define MODIFY_PATH_AVAILABLE 0
+#define TOGGLE_PRM_AVAILABLE 0
+#define WRENCH_ACCESS_STRAT_AVAILABLE 0
 
 // NeighborhoodFinders
 #define BRUTE_FORCE_NF_AVAILABLE 1
-#define RADIUS_NF_AVAILABLE 1
+#define RADIUS_NF_AVAILABLE 0
 
 // PathModifiers
-#define SHORTCUTTING_AVAILABLE 1
+#define SHORTCUTTING_AVAILABLE 0
 
 // Samplers
-#define BRIDGE_TEST_AVAILABLE 1
-#define GAUSSIAN_AVAILABLE 1
-#define MIX_SAMPLER_AVAILABLE 1
-#define OBSTACLE_BASED_SAMPLER_AVAILABLE 1
+#define BRIDGE_TEST_AVAILABLE 0
+#define GAUSSIAN_AVAILABLE 0
+#define MIX_SAMPLER_AVAILABLE 0
+#define OBSTACLE_BASED_SAMPLER_AVAILABLE 0
 #define UNIFORM_RANDOM_AVAILABLE 1
 #define UNIFORM_OBSTACLE_AVAILABLE 0
 
 // ValidityCheckers
 #define ALWAYS_TRUE_AVAILABLE 1
-#define COMPOSE_CD_AVAILABLE 1
-#define COMPOSE_VC_AVAILABLE 1
-#define TERRAIN_VC_AVAILABLE 1
+#define COMPOSE_CD_AVAILABLE 0
+#define COMPOSE_VC_AVAILABLE 0
+#define TERRAIN_VC_AVAILABLE 0
 
 /******************************* Connectors ***********************************/
-#ifdef CCS_CONNECTOR_AVAILABLE
+#if CCS_CONNECTOR_AVAILABLE
     #include "MPLibrary/Connectors/CCsConnector.h"
 #endif
-#ifdef NEIGHBOR_CONNECTOR_AVAILABLE
+#if NEIGHBOR_CONNECTOR_AVAILABLE
     #include "MPLibrary/Connectors/NeighborhoodConnector.h"
 #endif
-#ifdef REWIRE_CONNECTOR_AVAILABLE
+#if REWIRE_CONNECTOR_AVAILABLE
     #include "MPLibrary/Connectors/RewireConnector.h"
 #endif
 
@@ -99,34 +100,34 @@
     ((RewireConnector, REWIRE_CONNECTOR_AVAILABLE))
 
 /***************************** DistanceMetrics ********************************/
-#ifdef BIN_LP_SWEPT_AVAILABLE
+#if BIN_LP_SWEPT_AVAILABLE
     #include "MPLibrary/DistanceMetrics/BinaryLPSweptDistance.h"
 #endif
-#ifdef LP_SWEPT_AVAILABLE
+#if LP_SWEPT_AVAILABLE
     #include "MPLibrary/DistanceMetrics/LPSweptDistance.h"
 #endif
-#ifdef MINKOWSKI_AVAILABLE
+#if MINKOWSKI_AVAILABLE
     #include "MPLibrary/DistanceMetrics/MinkowskiDistance.h"
 #endif
-#ifdef EUCLIDEAN_AVAILABLE
+#if EUCLIDEAN_AVAILABLE
     #include "MPLibrary/DistanceMetrics/EuclideanDistance.h"
 #endif
-#ifdef SCALED_EUCLIDEAN_AVAILABLE
+#if SCALED_EUCLIDEAN_AVAILABLE
     #include "MPLibrary/DistanceMetrics/ScaledEuclideanDistance.h"
 #endif
-#ifdef WEIGHTED_EUCLIDEAN_AVAILABLE
+#if WEIGHTED_EUCLIDEAN_AVAILABLE
     #include "MPLibrary/DistanceMetrics/WeightedEuclideanDistance.h"
 #endif
-#ifdef MANHATTAN_AVAILABLE
+#if MANHATTAN_AVAILABLE
     #include "MPLibrary/DistanceMetrics/ManhattanDistance.h"
 #endif
-#ifdef RMSD_AVAILABLE
+#if RMSD_AVAILABLE
     #include "MPLibrary/DistanceMetrics/RMSDDistance.h"
 #endif
-#ifdef TOPOLOGICAL_DISTANCE_AVAILABLE
+#if TOPOLOGICAL_DISTANCE_AVAILABLE
     #include "MPLibrary/DistanceMetrics/TopologicalDistance.h"
 #endif
-#ifdef WORKSPACE_TRANSLATION_AVAILABLE
+#if WORKSPACE_TRANSLATION_AVAILABLE
     #include "MPLibrary/DistanceMetrics/WorkspaceTranslationDistance.h"
 #endif
 
@@ -143,7 +144,7 @@
     ((WorkspaceTranslationDistance, WORKSPACE_TRANSLATION_AVAILABLE))
 
 /************************** EdgeValidityCheckers ******************************/
-#ifdef INTERMEDIATES_EVC_AVAILABLE
+#if INTERMEDIATES_EVC_AVAILABLE
     #include "MPLibrary/EdgeValidityCheckers/IntermediatesEdgeValidityChecker.h"
 #endif
 
@@ -151,7 +152,7 @@
     ((IntermediatesEdgeValidityChecker, INTERMEDIATES_EVC_AVAILABLE))
 
 /******************************* Extenders ************************************/
-#ifdef BASIC_EXTENDER_AVAILABLE
+#if BASIC_EXTENDER_AVAILABLE
     #include "MPLibrary/Extenders/BasicExtender.h"
 #endif
 
@@ -160,7 +161,7 @@
     // ... and so on ...
 
 /***************************** LocalPlanners **********************************/
-#ifdef STRAIGHT_LINE_AVAILABLE
+#if STRAIGHT_LINE_AVAILABLE
     #include "MPLibrary/LocalPlanners/StraightLine.h"
 #endif
 
@@ -169,40 +170,40 @@
     // ... and so on ...
 
 /***************************** MapEvaluators **********************************/
-#ifdef CBS_QUERY_AVAILABLE
+#if CBS_QUERY_AVAILABLE
     #include "MPLibrary/MapEvaluators/CBSQuery.h"
 #endif
-#ifdef CLEARANCE_QUERY_AVAILABLE
+#if CLEARANCE_QUERY_AVAILABLE
     #include "MPLibrary/MapEvaluators/ClearanceQuery.h"
 #endif
-#ifdef CONDITIONAL_EVAL_AVAILABLE
+#if CONDITIONAL_EVAL_AVAILABLE
     #include "MPLibrary/MapEvaluators/ConditionalEvaluator.h"
 #endif
-#ifdef COLLISION_EVAL_AVAILABLE
+#if COLLISION_EVAL_AVAILABLE
     #include "MPLibrary/MapEvaluators/CollisionEvaluator.h"
 #endif
-#ifdef COMPOSE_EVAL_AVAILABLE
+#if COMPOSE_EVAL_AVAILABLE
     #include "MPLibrary/MapEvaluators/ComposeEvaluator.h"
 #endif
-#ifdef GROUP_QUERY_AVAILABLE
+#if GROUP_QUERY_AVAILABLE
     #include "MPLibrary/MapEvaluators/GroupQuery.h"
 #endif
-#ifdef LAZY_QUERY_AVAILABLE
+#if LAZY_QUERY_AVAILABLE
     #include "MPLibrary/MapEvaluators/LazyQuery.h"
 #endif
-#ifdef PATH_EVAL_AVAILABLE
+#if PATH_EVAL_AVAILABLE
     #include "MPLibrary/MapEvaluators/PathEvaluator.h"
 #endif
-#ifdef PRINT_MAP_AVAILABLE
+#if PRINT_MAP_AVAILABLE
     #include "MPLibrary/MapEvaluators/PrintMapEvaluation.h"
 #endif
-#ifdef QUERY_METHOD_AVAILABLE
+#if QUERY_METHOD_AVAILABLE
     #include "MPLibrary/MapEvaluators/QueryMethod.h"
 #endif
-#ifdef SIPP_METHOD_AVAILABLE
+#if SIPP_METHOD_AVAILABLE
     #include "MPLibrary/MapEvaluators/SIPPMethod.h"
 #endif
-#ifdef TIME_EVAL_AVAILABLE
+#if TIME_EVAL_AVAILABLE
     #include "MPLibrary/MapEvaluators/TimeEvaluator.h"
 #endif
 
@@ -221,13 +222,13 @@
     ((TimeEvaluator, TIME_EVAL_AVAILABLE))
 
 /******************************** Metrics *************************************/
-#ifdef NUM_NODES_AVAILABLE
+#if NUM_NODES_AVAILABLE
     #include "MPLibrary/Metrics/NumNodesMetric.h"
 #endif
-#ifdef NUM_EDGES_AVAILABLE
+#if NUM_EDGES_AVAILABLE
     #include "MPLibrary/Metrics/NumEdgesMetric.h"
 #endif
-#ifdef TIME_METRIC_AVAILABLE
+#if TIME_METRIC_AVAILABLE
     #include "MPLibrary/Metrics/TimeMetric.h"
 #endif
 
@@ -237,37 +238,37 @@
     ((TimeMetric, TIME_METRIC_AVAILABLE))
 
 /***************************** MPStrategies ***********************************/
-#ifdef ADAPTIVE_RRT_AVAILABLE
+#if ADAPTIVE_RRT_AVAILABLE
     #include "MPLibrary/MPStrategies/AdaptiveRRT.h"
 #endif
-#ifdef BASIC_PRM_AVAILABLE
+#if BASIC_PRM_AVAILABLE
     #include "MPLibrary/MPStrategies/BasicPRM.h"
 #endif
-#ifdef BASIC_RRT_AVAILABLE
+#if BASIC_RRT_AVAILABLE
     #include "MPLibrary/MPStrategies/BasicRRTStrategy.h"
 #endif
-#ifdef DYNAMIC_REGION_RRT_AVAILABLE
+#if DYNAMIC_REGION_RRT_AVAILABLE
     #include "MPLibrary/MPStrategies/DynamicRegionRRT.h"
 #endif
-#ifdef DYNAMIC_REGION_PRM_AVAILABLE
+#if DYNAMIC_REGION_PRM_AVAILABLE
     #include "MPLibrary/MPStrategies/DynamicRegionsPRM.h"
 #endif
-#ifdef EET_AVAILABLE
+#if EET_AVAILABLE
     #include "MPLibrary/MPStrategies/EET.h"
 #endif
-#ifdef GROUP_DECOUPLED_STRAT_AVAILABLE
+#if GROUP_DECOUPLED_STRAT_AVAILABLE
     #include "MPLibrary/MPStrategies/GroupDecoupledStrategy.h"
 #endif
-#ifdef GROUP_PRM_AVAILABLE
+#if GROUP_PRM_AVAILABLE
     #include "MPLibrary/MPStrategies/GroupPRM.h"
 #endif
-#ifdef MODIFY_PATH_AVAILABLE
+#if MODIFY_PATH_AVAILABLE
     #include "MPLibrary/MPStrategies/ModifyPath.h"
 #endif
-#ifdef TOGGLE_PRM_AVAILABLE
+#if TOGGLE_PRM_AVAILABLE
     #include "MPLibrary/MPStrategies/TogglePRMStrategy.h"
 #endif
-#ifdef WRENCH_ACCESS_STRAT_AVAILABLE
+#if WRENCH_ACCESS_STRAT_AVAILABLE
     #include "MPLibrary/MPStrategies/WrenchAccessibilityStrategy.h"
 #endif
 
@@ -285,10 +286,10 @@
     ((WrenchAccessibilityStrategy, WRENCH_ACCESS_STRAT_AVAILABLE))
 
 /************************** NeighborhoodFinders *******************************/
-#ifdef BRUTE_FORCE_NF_AVAILABLE
+#if BRUTE_FORCE_NF_AVAILABLE
     #include "MPLibrary/NeighborhoodFinders/BruteForceNF.h"
 #endif
-#ifdef RADIUS_NF_AVAILABLE
+#if RADIUS_NF_AVAILABLE
     #include "MPLibrary/NeighborhoodFinders/RadiusNF.h"
 #endif
 
@@ -297,7 +298,7 @@
     ((RadiusNF, RADIUS_NF_AVAILABLE))
 
 /***************************** PathModifiers **********************************/
-#ifdef SHORTCUTTING_AVAILABLE
+#if SHORTCUTTING_AVAILABLE
     #include "MPLibrary/PathModifiers/ShortcuttingPathModifier.h"
 #endif
 
@@ -305,22 +306,22 @@
     ((ShortcuttingPathModifier, SHORTCUTTING_AVAILABLE))
 
 /******************************* Samplers *************************************/
-#ifdef BRIDGE_TEST_AVAILABLE
+#if BRIDGE_TEST_AVAILABLE
     #include "MPLibrary/Samplers/BridgeTestSampler.h"
 #endif
-#ifdef GAUSSIAN_AVAILABLE
+#if GAUSSIAN_AVAILABLE
     #include "MPLibrary/Samplers/GaussianSampler.h"
 #endif
-#ifdef MIX_SAMPLER_AVAILABLE
+#if MIX_SAMPLER_AVAILABLE
     #include "MPLibrary/Samplers/MixSampler.h"
 #endif
-#ifdef OBSTACLE_BASED_SAMPLER_AVAILABLE
+#if OBSTACLE_BASED_SAMPLER_AVAILABLE
     #include "MPLibrary/Samplers/ObstacleBasedSampler.h"
 #endif
-#ifdef UNIFORM_RANDOM_AVAILABLE
+#if UNIFORM_RANDOM_AVAILABLE
     #include "MPLibrary/Samplers/UniformRandomSampler.h"
 #endif
-#ifdef UNIFORM_OBSTACLE_AVAILABLE
+#if UNIFORM_OBSTACLE_AVAILABLE
     #include "MPLibrary/Samplers/UniformObstacleBasedSampler.h"
 #endif
 
@@ -334,16 +335,16 @@
 
 /**************************** ValidityCheckers ********************************/
 #include "MPLibrary/ValidityCheckers/CollisionDetectionValidity.h"
-#ifdef ALWAYS_TRUE_AVAILABLE
+#if ALWAYS_TRUE_AVAILABLE
     #include "MPLibrary/ValidityCheckers/AlwaysTrueValidity.h"
 #endif
-#ifdef COMPOSE_CD_AVAILABLE
+#if COMPOSE_CD_AVAILABLE
     #include "MPLibrary/ValidityCheckers/ComposeCollision.h"
 #endif
-#ifdef COMPOSE_VC_AVAILABLE
+#if COMPOSE_VC_AVAILABLE
     #include "MPLibrary/ValidityCheckers/ComposeValidity.h"
 #endif
-#ifdef TERRAIN_VC_AVAILABLE
+#if TERRAIN_VC_AVAILABLE
     #include "MPLibrary/ValidityCheckers/TerrainValidityChecker.h"
 #endif
 

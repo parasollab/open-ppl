@@ -14,11 +14,12 @@ ParseXML(XMLNode& _node) {
   // For the tools that use the XML to set defaults, keep track of whether we've
   // seen them before.
   bool parsedReebGraph = false,
-//       parsedSVMModel  = false,
        parsedMCS       = false;
 
   // MPTools shouldn't have any data of its own, only child nodes.
   for(auto& child : _node) {
+
+    #if CLEARANCE_UTILS_AVAILABLE
     if(child.Name() == "ClearanceUtility") {
       auto utility = new ClearanceUtility(child);
 
@@ -29,7 +30,10 @@ ParseXML(XMLNode& _node) {
 
       SetClearanceUtility(utility->GetLabel(), utility);
     }
-    else if(child.Name() == "MedialAxisUtility") {
+    #endif
+
+    #if MED_AXIS_AVAILABLE
+    if(child.Name() == "MedialAxisUtility") {
       auto utility = new MedialAxisUtility(child);
 
       // A second node with the same label is an error during XML parsing.
@@ -39,7 +43,10 @@ ParseXML(XMLNode& _node) {
 
       SetMedialAxisUtility(utility->GetLabel(), utility);
     }
-    else if(child.Name() == "SkeletonClearanceUtility") {
+    #endif
+
+    #if SKELETON_CLEARANCE_AVAILABLE
+    if(child.Name() == "SkeletonClearanceUtility") {
       auto utility = new SkeletonClearanceUtility(child);
 
       // A second node with the same label is an error during XML parsing.
@@ -50,7 +57,10 @@ ParseXML(XMLNode& _node) {
 
       SetSkeletonClearanceUtility(utility->GetLabel(), utility);
     }
-    else if(child.Name() == "TopologicalMap") {
+    #endif
+
+    #if TOPOLOGICAL_MAP_AVAILABLE
+    if(child.Name() == "TopologicalMap") {
       auto utility = new TopologicalMap(child);
 
       // A second node with the same label is an error during XML parsing.
@@ -61,7 +71,10 @@ ParseXML(XMLNode& _node) {
 
       SetTopologicalMap(utility->GetLabel(), utility);
     }
-    else if(child.Name() == "TetGenDecomposition") {
+    #endif
+
+    #if TET_GEN_DECOMP_AVAILABLE
+    if(child.Name() == "TetGenDecomposition") {
       // Parse the label and check that it is unique.
       const std::string label = child.Read("label", true, "",
           "The label for this decomposition.");
@@ -74,7 +87,10 @@ ParseXML(XMLNode& _node) {
       m_tetgens[label] = TetGenDecomposition(child);
       SetDecomposition(label, nullptr);
     }
-    else if(child.Name() == "SafeIntervalTool") {
+    #endif
+
+    #if SAFE_INTERVAL_TOOL_AVAILABLE
+    if(child.Name() == "SafeIntervalTool") {
       auto utility = new SafeIntervalTool(child);
 
       // A second node with the same label is an error during XML parsing.
@@ -85,7 +101,10 @@ ParseXML(XMLNode& _node) {
 
       SetSafeIntervalTool(utility->GetLabel(), utility);
     }
-    else if(child.Name() == "WrenchAccessibilityTool") {
+    #endif
+
+    #if WRENCH_ACCESS_TOOL_AVAILABLE
+    if(child.Name() == "WrenchAccessibilityTool") {
       auto utility = new WrenchAccessibilityTool(child);
 
       // A second node with the same label is an error during XML parsing.
@@ -96,8 +115,11 @@ ParseXML(XMLNode& _node) {
 
       SetWrenchAccessibilityTool(utility->GetLabel(), utility);
     }
+    #endif
+
+    #if REEB_GRAPH_AVAILABLE
     // Below here we are setting defaults rather than creating instances.
-    else if(child.Name() == "ReebGraphConstruction") {
+    if(child.Name() == "ReebGraphConstruction") {
       if(parsedReebGraph)
         throw ParseException(child.Where(),
             "Second ReebGraphConstruction node detected. This node sets "
@@ -106,7 +128,10 @@ ParseXML(XMLNode& _node) {
 
       ReebGraphConstruction::SetDefaultParameters(child);
     }
-    else if(child.Name() == "MeanCurvatureSkeleton3D") {
+    #endif
+
+    #if MEAN_CURVE_SKEL_AVAILABLE
+    if(child.Name() == "MeanCurvatureSkeleton3D") {
       if(parsedMCS)
         throw ParseException(child.Where(),
             "Second meanCurvatureSkeleton3D node detected. This node sets "
@@ -115,24 +140,21 @@ ParseXML(XMLNode& _node) {
 
       MeanCurvatureSkeleton3D::SetDefaultParameters(child);
     }
-/*    else if(child.Name() == "SVMModel") {
-      if(parsedSVMModel)
-        throw ParseException(child.Where(), "Second SVMModel node detected. "
-            "This node sets default parameters - only one is allowed.");
-      parsedSVMModel = true;
+    #endif
 
-      SVMModel::SetDefaultParameters(child);
-    }
-*/
-    else if(child.Name() == "ReachabilityUtil") {
+    #if REACHABILITY_UTIL_AVAILABLE
+    if(child.Name() == "ReachabilityUtil") {
       auto util = new ReachabilityUtil(child);
       SetReachabilityUtil(util->GetLabel(), util);
     }
+    #endif
     
-    else if(child.Name() == "PointConstruction") {
+    #if POINT_CONSTRUCTION_AVAILABLE
+    if(child.Name() == "PointConstruction") {
       auto util = new PointConstruction(child);
       SetPointConstruction(util->GetLabel(), util);
     }
+    #endif
   }
 }
 
@@ -140,23 +162,45 @@ ParseXML(XMLNode& _node) {
 void
 MPToolsType::
 Initialize() {
-  //Uninitialize();
+  #if CLEARANCE_UTILS_AVAILABLE
   for(auto& pair : m_clearanceUtils)
     pair.second->Initialize();
+  #endif
+
+  #if MED_AXIS_AVAILABLE
   for(auto& pair : m_medialAxisUtils)
     pair.second->Initialize();
+  #endif
+
+  #if SKELETON_CLEARANCE_AVAILABLE
   for(auto& pair : m_skeletonUtils)
     pair.second->Initialize();
+  #endif
+
+  #if TOPOLOGICAL_MAP_AVAILABLE
   for(auto& pair : m_topologicalMaps)
     pair.second->Initialize();
+  #endif
+
+  #if SAFE_INTERVAL_TOOL_AVAILABLE
   for(auto& pair : m_safeIntervalTools)
     pair.second->Initialize();
+  #endif
+
+  #if REACHABILITY_UTIL_AVAILABLE
   for(auto& pair : m_reachabilityUtils)
     pair.second->Initialize();
+  #endif
+
+  #if POINT_CONSTRUCTION_AVAILABLE
   for(auto& pair : m_pointConstruction)
     pair.second->Initialize();
+  #endif
+
+  #if WRENCH_ACCESS_TOOL_AVAILABLE
   for(auto& pair : m_wrenchAccessibilityTools)
     pair.second->Initialize();
+  #endif
 }
 
 
@@ -172,27 +216,54 @@ Uninitialize() {
 
 MPToolsType::
 ~MPToolsType() {
+  #if CLEARANCE_UTILS_AVAILABLE
   for(auto& pair : m_clearanceUtils)
     delete pair.second;
+  #endif
+
+  #if MED_AXIS_AVAILABLE
   for(auto& pair : m_medialAxisUtils)
     delete pair.second;
+  #endif
+
+  #if SKELETON_CLEARANCE_AVAILABLE
   for(auto& pair : m_skeletonUtils)
     delete pair.second;
+  #endif
+
+  #if TOPOLOGICAL_MAP_AVAILABLE
   for(auto& pair : m_topologicalMaps)
     delete pair.second;
+  #endif
+
+  #if SAFE_INTERVAL_TOOL_AVAILABLE
   for(auto& pair : m_safeIntervalTools)
     delete pair.second;
+  #endif
+
+  #if TET_GEN_DECOMP_AVAILABLE
   for(auto& pair : m_decompositions)
     delete pair.second;
+  #endif
+
+  #if REACHABILITY_UTIL_AVAILABLE
   for(auto& pair : m_reachabilityUtils)
     delete pair.second;
+  #endif
+
+  #if POINT_CONSTRUCTION_AVAILABLE
   for(auto& pair : m_pointConstruction) 
     delete pair.second;
+  #endif
+
+  #if WRENCH_ACCESS_TOOL_AVAILABLE
   for(auto& pair : m_wrenchAccessibilityTools)
     delete pair.second;
+  #endif
 }
 
 /*--------------------------- Clearance Utility ------------------------------*/
+#if CLEARANCE_UTILS_AVAILABLE
 
 ClearanceUtility*
 MPToolsType::
@@ -208,7 +279,10 @@ SetClearanceUtility(const std::string& _label,
   SetUtility(_label, _utility, m_clearanceUtils);
 }
 
+#endif
+
 /*-------------------------- Medial Axis Utility -----------------------------*/
+#if MED_AXIS_AVAILABLE
 
 MedialAxisUtility*
 MPToolsType::
@@ -224,7 +298,10 @@ SetMedialAxisUtility(const std::string& _label,
   SetUtility(_label, _utility, m_medialAxisUtils);
 }
 
+#endif
+
 /*----------------------------- Skeleton Tools -------------------------------*/
+#if SKELETON_CLEARANCE_AVAILABLE
 
 SkeletonClearanceUtility*
 MPToolsType::
@@ -240,7 +317,10 @@ SetSkeletonClearanceUtility(const std::string& _label,
   SetUtility(_label, _utility, m_skeletonUtils);
 }
 
+#endif
+
 /*------------------------------ Topological Map -----------------------------*/
+#if TOPOLOGICAL_MAP_AVAILABLE
 
 TopologicalMap*
 MPToolsType::
@@ -256,7 +336,10 @@ SetTopologicalMap(const std::string& _label,
   SetUtility(_label, _utility, m_topologicalMaps);
 }
 
+#endif
+
 /*---------------------------- Safe Interval Tool ----------------------------*/
+#if SAFE_INTERVAL_TOOL_AVAILABLE
 
 SafeIntervalTool*
 MPToolsType::
@@ -272,8 +355,10 @@ SetSafeIntervalTool(const std::string& _label,
   SetUtility(_label, _utility, m_safeIntervalTools);
 }
 
-/*----------------------------- Decompositions -------------------------------*/
+#endif
 
+/*----------------------------- Decompositions -------------------------------*/
+#if TET_GEN_DECOMP_AVAILABLE
 const WorkspaceDecomposition*
 MPToolsType::
 GetDecomposition(const std::string& _label) {
@@ -294,7 +379,6 @@ GetDecomposition(const std::string& _label) {
   return iter->second;
 }
 
-
 void
 MPToolsType::
 SetDecomposition(const std::string& _label,
@@ -312,7 +396,10 @@ SetDecomposition(const std::string& _label,
     m_decompositions[_label] = _decomposition;
 }
 
+#endif
+
 /*----------------------------- Reachability Utils -------------------------------*/
+#if REACHABILITY_UTIL_AVAILABLE
 
 ReachabilityUtil*
 MPToolsType::
@@ -328,7 +415,10 @@ SetReachabilityUtil(const std::string& _label,
   SetUtility(_label, _util, m_reachabilityUtils);
 }
 
+#endif
+
 /*----------------------------- Point Construction -------------------------------*/
+#if POINT_CONSTRUCTION_AVAILABLE
 
 PointConstruction*
 MPToolsType::
@@ -344,7 +434,10 @@ SetPointConstruction(const std::string& _label,
   SetUtility(_label, _util, m_pointConstruction);
 }
 
+#endif
+
 /*---------------------- Wrench Accessibility Tools --------------------------*/
+#if WRENCH_ACCESS_TOOL_AVAILABLE
 
 WrenchAccessibilityTool*
 MPToolsType::
@@ -359,3 +452,5 @@ SetWrenchAccessibilityTool(const std::string& _label,
     WrenchAccessibilityTool* const _utility) {
   SetUtility(_label, _utility, m_wrenchAccessibilityTools);
 }
+
+#endif

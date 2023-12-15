@@ -1,26 +1,69 @@
 #ifndef MP_TOOLS_H_
 #define MP_TOOLS_H_
 
+#define CLEARANCE_UTILS_AVAILABLE 0
+#define MED_AXIS_AVAILABLE 0
+#define POINT_CONSTRUCTION_AVAILABLE 0
+#define REACHABILITY_UTIL_AVAILABLE 0
+#define SAFE_INTERVAL_TOOL_AVAILABLE 1
+#define SKELETON_CLEARANCE_AVAILABLE 0
+#define TOPOLOGICAL_MAP_AVAILABLE 0
+#define TET_GEN_DECOMP_AVAILABLE 0
+#define REEB_GRAPH_AVAILABLE 0
+#define MEAN_CURVE_SKEL_AVAILABLE 0
+#define WRENCH_ACCESS_TOOL_AVAILABLE 0
+
 #include <string>
 #include <unordered_map>
 
 #include "Utilities/XMLNode.h"
 
-#include "MedialAxisUtilities.h"
-#include "MeanCurvatureSkeleton3D.h"
-#include "ReebGraphConstruction.h"
-#include "SafeIntervalTool.h"
-#include "SkeletonClearanceUtility.h"
-#include "TetGenDecomposition.h"
-#include "TopologicalMap.h"
-#include "ReachabilityUtil.h"
-#include "PointConstruction.h"
-#include "WrenchAccessibilityTool.h"
+#ifdef CLEARANCE_UTILS_AVAILABLE
+    #include "ClearanceUtilities.h"
+#endif
 
-//#include "MPLibrary/LearningModels/SVMModel.h"
+#ifdef MED_AXIS_AVAILABLE
+    #include "MedialAxisUtilities.h"
+#endif
+
+#ifdef MEAN_CURVE_SKEL_AVAILABLE
+    #include "MeanCurvatureSkeleton3D.h"
+#endif
+
+#ifdef REEB_GRAPH_AVAILABLE
+    #include "ReebGraphConstruction.h"
+#endif
+
+#ifdef SAFE_INTERVAL_TOOL_AVAILABLE
+    #include "SafeIntervalTool.h"
+#endif
+
+#ifdef SKELETON_CLEARANCE_AVAILABLE
+    #include "SkeletonClearanceUtility.h"
+#endif
+
+#ifdef TET_GEN_DECOMP_AVAILABLE
+    #include "TetGenDecomposition.h"
+    class WorkspaceDecomposition;
+#endif
+
+#ifdef TOPOLOGICAL_MAP_AVAILABLE
+    #include "TopologicalMap.h"
+#endif
+
+#ifdef REACHABILITY_UTIL_AVAILABLE
+    #include "ReachabilityUtil.h"
+#endif
+
+#ifdef POINT_CONSTRUCTION_AVAILABLE
+    #include "PointConstruction.h"
+#endif
+
+#ifdef WRENCH_ACCESS_TOOL_AVAILABLE
+    #include "WrenchAccessibilityTool.h"
+#endif
 
 
-class WorkspaceDecomposition;
 class MPLibrary;
 
 
@@ -61,18 +104,42 @@ class MPToolsType final {
 
   MPLibrary* const m_library; ///< The owning library.
 
+  #ifdef CLEARANCE_UTILS_AVAILABLE
   LabelMap<ClearanceUtility>         m_clearanceUtils;
+  #endif
+
+  #ifdef MED_AXIS_AVAILABLE
   LabelMap<MedialAxisUtility>        m_medialAxisUtils;
+  #endif
+
+  #ifdef SKELETON_CLEARANCE_AVAILABLE
   LabelMap<SkeletonClearanceUtility> m_skeletonUtils;
+  #endif
+  
+  #ifdef TOPOLOGICAL_MAP_AVAILABLE
   LabelMap<TopologicalMap>           m_topologicalMaps;
+  #endif
+  
+  #ifdef SAFE_INTERVAL_TOOL_AVAILABLE
   LabelMap<SafeIntervalTool>         m_safeIntervalTools;
+  #endif
+
+  #ifdef REACHABILITY_UTIL_AVAILABLE
   LabelMap<ReachabilityUtil>         m_reachabilityUtils;
+  #endif
+  
+  #ifdef POINT_CONSTRUCTION_AVAILABLE
   LabelMap<PointConstruction>        m_pointConstruction;
+  #endif
+
+  #ifdef WRENCH_ACCESS_TOOL_AVAILABLE
   LabelMap<WrenchAccessibilityTool>  m_wrenchAccessibilityTools;
+  #endif
 
-
+  #ifdef TET_GEN_DECOMP_AVAILABLE
   std::unordered_map<std::string, TetGenDecomposition> m_tetgens;
   std::unordered_map<std::string, const WorkspaceDecomposition*> m_decompositions;
+  #endif
 
   ///@}
 
@@ -98,6 +165,8 @@ class MPToolsType final {
     ~MPToolsType();
 
     ///@}
+
+    #ifdef CLEARANCE_UTILS_AVAILABLE
     ///@name Clearance Utility
     ///@{
 
@@ -116,6 +185,9 @@ class MPToolsType final {
         ClearanceUtility* const _utility);
 
     ///@}
+    #endif
+    
+    #ifdef MED_AXIS_AVAILABLE
     ///@name Medial Axis Utility
     ///@{
 
@@ -134,6 +206,9 @@ class MPToolsType final {
         MedialAxisUtility* const _utility);
 
     ///@}
+    #endif
+
+    #ifdef SKELETON_CLEARANCE_AVAILABLE
     ///@name Skeleton Clearance Utility
     ///@{
 
@@ -152,6 +227,9 @@ class MPToolsType final {
         SkeletonClearanceUtility* const _utility);
 
     ///@}
+    #endif
+
+    #ifdef TOPOLOGICAL_MAP_AVAILABLE
     ///@name Topological Map
     ///@{
 
@@ -169,6 +247,9 @@ class MPToolsType final {
         TopologicalMap* const _utility);
 
     ///@}
+    #endif
+
+    #ifdef SAFE_INTERVAL_TOOL_AVAILABLE
     ///@name Safe Interval Tool
     ///@{
 
@@ -187,6 +268,9 @@ class MPToolsType final {
         SafeIntervalTool* const _utility);
 
     ///@}
+    #endif
+
+    #ifdef TET_GEN_DECOMP_AVAILABLE
     ///@name Decompositions
     ///@{
 
@@ -202,6 +286,9 @@ class MPToolsType final {
         const WorkspaceDecomposition* _decomposition);
 
     ///@}
+    #endif
+
+    #ifdef REACHABILITY_UTIL_AVAILABLE
     ///@name Reachability
     ///@{
 
@@ -215,8 +302,11 @@ class MPToolsType final {
     void SetReachabilityUtil(const std::string& _label,
         ReachabilityUtil* _util);
 
-    ///}
+    ///@}
+    #endif
 
+    #ifdef POINT_CONSTRUCTION_AVAILABLE
+    ///@name Point Construction
     ///@{
 
     /// Get a Point Construction
@@ -229,7 +319,10 @@ class MPToolsType final {
     void SetPointConstruction(const std::string& _label,
         PointConstruction* _util);
 
-    ///}
+    ///@}
+    #endif
+
+    #ifdef WRENCH_ACCESS_TOOL_AVAILABLE
     ///@name Wrench Accessibility Tool
     ///@{
     /// Get a WrenchAccessibilityTool by label.
@@ -246,6 +339,8 @@ class MPToolsType final {
         WrenchAccessibilityTool* const _utility);
 
     ///@}
+    #endif
+
   private:
 
     ///@name Helpers
