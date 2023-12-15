@@ -39,7 +39,12 @@ class ValidityCheckerMethod : public MPBaseObject<MPTraits> {
 
     typedef typename MPTraits::CfgType       CfgType;
     typedef typename MPTraits::GroupCfgType  GroupCfgType;
-    typedef typename GroupCfgType::Formation Formation;
+
+    ///@}
+    ///@name Local Types
+    ///@{
+
+    typedef std::map<Robot*, std::vector<Robot*>> RobotMap;
 
     ///@}
     ///@name Construction
@@ -60,6 +65,11 @@ class ValidityCheckerMethod : public MPBaseObject<MPTraits> {
 
     /// Switches the meaning of "valid" to "invalid" and vice versa.
     void ToggleValidity();
+
+    virtual void SetLocalBoundary(Boundary* _boundary) {};
+
+    virtual void SetLocalBoundaries(std::map<Robot*,Boundary*> _boundaries) {};
+
 
     ///@}
     ///@name Individual Configuration Validity
@@ -82,7 +92,7 @@ class ValidityCheckerMethod : public MPBaseObject<MPTraits> {
     ///@name Group Configuration Validity
     ///@{
 
-    /// Classify a gropu configuration to either cfree or cobst.
+    /// Classify a group configuration to either cfree or cobst.
     /// @param _cfg The group configuration.
     /// @param _cdInfo Output for extra computed information such as clearance.
     /// @param _caller Name of the calling function.
@@ -92,6 +102,12 @@ class ValidityCheckerMethod : public MPBaseObject<MPTraits> {
     /// This version does not return extra information.
     /// @overload
     bool IsValid(GroupCfgType& _cfg, const std::string& _caller);
+
+    bool IsValid(GroupCfgType& _cfg, const RobotMap& _robotMap,
+        CDInfo& _cdInfo, const std::string& _caller);
+
+    /// @overload
+    bool IsValid(GroupCfgType& _cfg, const RobotMap& _robotMap, const std::string& _caller);
 
     ///@}
 
@@ -116,6 +132,12 @@ class ValidityCheckerMethod : public MPBaseObject<MPTraits> {
     /// @return True if _cfg is in cfree.
     virtual bool IsValidImpl(GroupCfgType& _cfg, CDInfo& _cdInfo,
         const std::string& _caller);
+
+    virtual bool IsValidImpl(GroupCfgType& _cfg, const RobotMap& _robotMap,
+        CDInfo& _cdInfo, const std::string& _caller);
+
+    virtual bool IsValidImpl(GroupCfgType& _cfg, Robot* _robot, std::vector<Robot*> _robots,
+        CDInfo& _cdInfo, const std::string& _caller);
 
     ///@}
     ///@name Internal State
@@ -181,7 +203,27 @@ bool
 ValidityCheckerMethod<MPTraits>::
 IsValid(GroupCfgType& _cfg, const std::string& _caller) {
   CDInfo cdInfo;
+  // cdInfo.m_retAllInfo = true;
   return IsValid(_cfg, cdInfo, _caller);
+}
+
+
+template <typename MPTraits>
+inline
+bool
+ValidityCheckerMethod<MPTraits>::
+IsValid(GroupCfgType& _cfg, const RobotMap& _robotMap,
+        CDInfo& _cdInfo, const std::string& _caller) {
+  return m_validity == IsValidImpl(_cfg, _robotMap, _cdInfo, _caller);
+}
+
+template <typename MPTraits>
+inline
+bool
+ValidityCheckerMethod<MPTraits>::
+IsValid(GroupCfgType& _cfg, const RobotMap& _robotMap, const std::string& _caller) {
+  CDInfo cdInfo;
+  return IsValid(_cfg, _robotMap, cdInfo, _caller);
 }
 
 /*--------------------------------- Helpers ----------------------------------*/
@@ -190,8 +232,35 @@ template <typename MPTraits>
 bool
 ValidityCheckerMethod<MPTraits>::
 IsValidImpl(GroupCfgType& _cfg, CDInfo& _cdInfo, const std::string& _caller) {
-  throw NotImplementedException(WHERE) << "No base class implementation is "
-                                       << "provided.";
+  for(auto robot : _cfg.GetRobots()) {
+    if(!IsValidImpl(_cfg.GetRobotCfg(robot),_cdInfo,_caller))
+      return false;
+  }
+  return true;
+}
+
+
+template <typename MPTraits>
+bool
+ValidityCheckerMethod<MPTraits>::
+IsValidImpl(GroupCfgType& _cfg, const RobotMap& _robotMap, CDInfo& _cdInfo, 
+  const std::string& _caller) {
+
+  for(auto const& iter : _robotMap) {
+    if(!IsValidImpl(_cfg, iter.first, iter.second, _cdInfo, _caller))
+      return false;
+  }
+  return true;
+}
+
+
+template <typename MPTraits>
+bool
+ValidityCheckerMethod<MPTraits>::
+IsValidImpl(GroupCfgType& _cfg, Robot* _robot, std::vector<Robot*> _robots,
+  CDInfo& _cdInfo, const std::string& _caller) {
+
+  throw NotImplementedException(WHERE) << "Not Implemented";
 }
 
 /*----------------------------------------------------------------------------*/

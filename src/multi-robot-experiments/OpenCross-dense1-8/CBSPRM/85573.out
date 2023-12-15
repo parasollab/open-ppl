@@ -1,0 +1,202 @@
+[0;1;32mLocalRepairQuery Constructor called for LocalRepair10[0m
+
+
+MPLibrary is solving with MPStrategyMethod labeled CBSPRM using seed 85573.
+GroupDecoupledStrategy::CBSPRM
+	Query Sampler: 
+	Map Evaluators:
+		CBSQuery
+	strategyLabel: IndividualEvaluation
+GroupDecoupledStrategy::CBSPRM::Initialize: 0 sec
+BasicPRM::SharedRoadmapPRM
+	Query Sampler: 
+	Map Evaluators:
+		NodesEval
+	Input Map: 
+	Samplers
+		UniformRandomFree	Number:4	Attempts:5
+	Connectors
+		Closest5
+BasicPRM::SharedRoadmapPRM::Initialize: 0 sec
+BasicPRM::SharedRoadmapPRM::Run: 0.036999 sec
+BasicPRM::IndividualEvaluation
+	Query Sampler: UniformRandomFree
+	Map Evaluators:
+		AlwaysTrue
+	Input Map: 
+	Samplers
+	Connectors
+		Closest3
+BasicPRM::IndividualEvaluation::Initialize: 0.000707 sec
+BasicPRM::IndividualEvaluation::Run: 0 sec
+BasicPRM::IndividualEvaluation
+	Query Sampler: UniformRandomFree
+	Map Evaluators:
+		AlwaysTrue
+	Input Map: 
+	Samplers
+	Connectors
+		Closest3
+BasicPRM::IndividualEvaluation::Initialize: 0.001232 sec
+BasicPRM::IndividualEvaluation::Run: 0 sec
+BasicPRM::IndividualEvaluation
+	Query Sampler: UniformRandomFree
+	Map Evaluators:
+		AlwaysTrue
+	Input Map: 
+	Samplers
+	Connectors
+		Closest3
+BasicPRM::IndividualEvaluation::Initialize: 0.002895 sec
+BasicPRM::IndividualEvaluation::Run: 0 sec
+BasicPRM::IndividualEvaluation
+	Query Sampler: UniformRandomFree
+	Map Evaluators:
+		AlwaysTrue
+	Input Map: 
+	Samplers
+	Connectors
+		Closest3
+BasicPRM::IndividualEvaluation::Initialize: 0.004894 sec
+BasicPRM::IndividualEvaluation::Run: 0 sec
+BasicPRM::IndividualEvaluation
+	Query Sampler: UniformRandomFree
+	Map Evaluators:
+		AlwaysTrue
+	Input Map: 
+	Samplers
+	Connectors
+		Closest3
+BasicPRM::IndividualEvaluation::Initialize: 0.006723 sec
+BasicPRM::IndividualEvaluation::Run: 0 sec
+BasicPRM::IndividualEvaluation
+	Query Sampler: UniformRandomFree
+	Map Evaluators:
+		AlwaysTrue
+	Input Map: 
+	Samplers
+	Connectors
+		Closest3
+BasicPRM::IndividualEvaluation::Initialize: 0.009151 sec
+BasicPRM::IndividualEvaluation::Run: 0 sec
+BasicPRM::IndividualEvaluation
+	Query Sampler: UniformRandomFree
+	Map Evaluators:
+		AlwaysTrue
+	Input Map: 
+	Samplers
+	Connectors
+		Closest3
+BasicPRM::IndividualEvaluation::Initialize: 0.012294 sec
+BasicPRM::IndividualEvaluation::Run: 0 sec
+BasicPRM::IndividualEvaluation
+	Query Sampler: UniformRandomFree
+	Map Evaluators:
+		AlwaysTrue
+	Input Map: 
+	Samplers
+	Connectors
+		Closest3
+BasicPRM::IndividualEvaluation::Initialize: 0.016717 sec
+BasicPRM::IndividualEvaluation::Run: 0 sec
+BasicPRM::SharedRoadmapPRM
+	Query Sampler: 
+	Map Evaluators:
+		NodesEval
+	Input Map: 
+	Samplers
+		UniformRandomFree	Number:4	Attempts:5
+	Connectors
+		Closest5
+BasicPRM::SharedRoadmapPRM::Initialize: 0 sec
+BasicPRM::SharedRoadmapPRM::Run: 0.040997 sec
+BasicPRM::IndividualEvaluation
+	Query Sampler: UniformRandomFree
+	Map Evaluators:
+		AlwaysTrue
+	Input Map: 
+	Samplers
+	Connectors
+		Closest3
+BasicPRM::IndividualEvaluation::Initialize: 0.016925 sec
+BasicPRM::IndividualEvaluation::Run: 0 sec
+BasicPRM::IndividualEvaluation
+	Query Sampler: UniformRandomFree
+	Map Evaluators:
+		AlwaysTrue
+	Input Map: 
+	Samplers
+	Connectors
+		Closest3
+BasicPRM::IndividualEvaluation::Initialize: 0.016925 sec
+BasicPRM::IndividualEvaluation::Run: 0 sec
+BasicPRM::IndividualEvaluation
+	Query Sampler: UniformRandomFree
+	Map Evaluators:
+		AlwaysTrue
+	Input Map: 
+	Samplers
+	Connectors
+		Closest3
+BasicPRM::IndividualEvaluation::Initialize: 0.017317 sec
+BasicPRM::IndividualEvaluation::Run: 0 sec
+BasicPRM::IndividualEvaluation
+	Query Sampler: UniformRandomFree
+	Map Evaluators:
+		AlwaysTrue
+	Input Map: 
+	Samplers
+	Connectors
+		Closest3
+BasicPRM::IndividualEvaluation::Initialize: 0.017701 sec
+BasicPRM::IndividualEvaluation::Run: 0 sec
+BasicPRM::IndividualEvaluation
+	Query Sampler: UniformRandomFree
+	Map Evaluators:
+		AlwaysTrue
+	Input Map: 
+	Samplers
+	Connectors
+		Closest3
+BasicPRM::IndividualEvaluation::Initialize: 0.017701 sec
+BasicPRM::IndividualEvaluation::Run: 0 sec
+BasicPRM::IndividualEvaluation
+	Query Sampler: UniformRandomFree
+	Map Evaluators:
+		AlwaysTrue
+	Input Map: 
+	Samplers
+	Connectors
+		Closest3
+BasicPRM::IndividualEvaluation::Initialize: 0.01823 sec
+BasicPRM::IndividualEvaluation::Run: 0 sec
+BasicPRM::IndividualEvaluation
+	Query Sampler: UniformRandomFree
+	Map Evaluators:
+		AlwaysTrue
+	Input Map: 
+	Samplers
+	Connectors
+		Closest3
+BasicPRM::IndividualEvaluation::Initialize: 0.019738 sec
+BasicPRM::IndividualEvaluation::Run: 0 sec
+BasicPRM::IndividualEvaluation
+	Query Sampler: UniformRandomFree
+	Map Evaluators:
+		AlwaysTrue
+	Input Map: 
+	Samplers
+	Connectors
+		Closest3
+BasicPRM::IndividualEvaluation::Initialize: 0.020045 sec
+BasicPRM::IndividualEvaluation::Run: 0 sec
+GroupDecoupledStrategy::CBSPRM::Run: 1.06546 sec
+robot1's path cost: 11.95
+robot2's path cost: 12.15
+robot3's path cost: 13.2
+robot4's path cost: 11.5
+robot5's path cost: 11.75
+robot6's path cost: 12.05
+robot7's path cost: 12.65
+robot8's path cost: 12.3
+MPLibrary::Initialize: 0 sec

@@ -1,0 +1,111 @@
+[0;1;32mLocalRepairQuery Constructor called for LocalRepair10[0m
+
+
+MPLibrary is solving with MPStrategyMethod labeled DecoupledPRM using seed 50393.
+GroupDecoupledStrategy::DecoupledPRM
+	Query Sampler: 
+	Map Evaluators:
+		DecoupledQuery
+	strategyLabel: IndividualEvaluation
+GroupDecoupledStrategy::DecoupledPRM::Initialize: 0 sec
+BasicPRM::SharedRoadmapPRM
+	Query Sampler: 
+	Map Evaluators:
+		NodesEval
+	Input Map: 
+	Samplers
+		UniformRandomFree	Number:4	Attempts:5
+	Connectors
+		Closest5
+BasicPRM::SharedRoadmapPRM::Initialize: 0 sec
+BasicPRM::SharedRoadmapPRM::Run: 0.037999 sec
+BasicPRM::IndividualEvaluation
+	Query Sampler: UniformRandomFree
+	Map Evaluators:
+		AlwaysTrue
+	Input Map: 
+	Samplers
+	Connectors
+		Closest3
+BasicPRM::IndividualEvaluation::Initialize: 0.001001 sec
+BasicPRM::IndividualEvaluation::Run: 0 sec
+BasicPRM::IndividualEvaluation
+	Query Sampler: UniformRandomFree
+	Map Evaluators:
+		AlwaysTrue
+	Input Map: 
+	Samplers
+	Connectors
+		Closest3
+BasicPRM::IndividualEvaluation::Initialize: 0.002866 sec
+BasicPRM::IndividualEvaluation::Run: 0 sec
+BasicPRM::IndividualEvaluation
+	Query Sampler: UniformRandomFree
+	Map Evaluators:
+		AlwaysTrue
+	Input Map: 
+	Samplers
+	Connectors
+		Closest3
+BasicPRM::IndividualEvaluation::Initialize: 0.004184 sec
+BasicPRM::IndividualEvaluation::Run: 0 sec
+BasicPRM::IndividualEvaluation
+	Query Sampler: UniformRandomFree
+	Map Evaluators:
+		AlwaysTrue
+	Input Map: 
+	Samplers
+	Connectors
+		Closest3
+BasicPRM::IndividualEvaluation::Initialize: 0.005753 sec
+BasicPRM::IndividualEvaluation::Run: 0 sec
+BasicPRM::IndividualEvaluation
+	Query Sampler: UniformRandomFree
+	Map Evaluators:
+		AlwaysTrue
+	Input Map: 
+	Samplers
+	Connectors
+		Closest3
+BasicPRM::IndividualEvaluation::Initialize: 0.008198 sec
+BasicPRM::IndividualEvaluation::Run: 0.001002 sec
+BasicPRM::IndividualEvaluation
+	Query Sampler: UniformRandomFree
+	Map Evaluators:
+		AlwaysTrue
+	Input Map: 
+	Samplers
+	Connectors
+		Closest3
+BasicPRM::IndividualEvaluation::Initialize: 0.0115 sec
+BasicPRM::IndividualEvaluation::Run: 0.001002 sec
+BasicPRM::IndividualEvaluation
+	Query Sampler: UniformRandomFree
+	Map Evaluators:
+		AlwaysTrue
+	Input Map: 
+	Samplers
+	Connectors
+		Closest3
+BasicPRM::IndividualEvaluation::Initialize: 0.01436 sec
+BasicPRM::IndividualEvaluation::Run: 0.001002 sec
+BasicPRM::IndividualEvaluation
+	Query Sampler: UniformRandomFree
+	Map Evaluators:
+		AlwaysTrue
+	Input Map: 
+	Samplers
+	Connectors
+		Closest3
+BasicPRM::IndividualEvaluation::Initialize: 0.018164 sec
+BasicPRM::IndividualEvaluation::Run: 0.001002 sec
+GroupDecoupledStrategy::DecoupledPRM::Run: 0.123083 sec
+robot1's path cost: 12
+robot2's path cost: 12.7
+robot3's path cost: 11.6
+robot4's path cost: 11.65
+robot5's path cost: 12.55
+robot6's path cost: 13.1
+robot7's path cost: 11.8
+robot8's path cost: 12.05
+MPLibrary::Initialize: 0 sec

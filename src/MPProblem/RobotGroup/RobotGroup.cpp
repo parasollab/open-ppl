@@ -20,6 +20,13 @@ RobotGroup(MPProblem* const _problem, const std::string& _label,
     m_indexes[m_robots[i]] = i;
 }
 
+RobotGroup::
+RobotGroup(MPProblem* const _problem, const std::vector<Robot*>& _robots)
+  : m_problem(_problem), m_robots(_robots) {
+  for(size_t i = 0; i < m_robots.size(); ++i)
+    m_indexes[m_robots[i]] = i;
+}
+
 
 RobotGroup::
 RobotGroup(MPProblem* const _problem, XMLNode& _node) : m_problem(_problem) {

@@ -65,6 +65,10 @@ class GroupTask {
     /// @param _robotGroup The robot group assigned to this task.
     explicit GroupTask(RobotGroup* const _robotGroup);
 
+    /// Create an empty task for a given robot.
+    /// @param _robot The robot assigned to this task.
+    explicit GroupTask(RobotGroup* const _robotGroup, TaskSet const _taskSet);
+
     /// Parse the set of task constraints described in an XML node
     /// and verify that tasks are assigned to robots in group.
     /// @param _problem The MPProblem for this task.

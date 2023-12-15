@@ -62,6 +62,12 @@ class BasicPRM : public MPStrategyMethod<MPTraits> {
     virtual void Print(std::ostream& _os) const override;
 
     ///@}
+    ///@name Local Boundaries for ARC
+    ///@{
+
+    virtual void SetLocalBoundaries(std::map<Robot*,Boundary*> _boundaries) override;
+
+    ///@}
 
   protected:
 
@@ -103,6 +109,8 @@ class BasicPRM : public MPStrategyMethod<MPTraits> {
     bool m_fixBase{false};  ///< Keep the base fixed to the start cfg?
     /// An optional sampling boundary for fixing the base.
     std::unique_ptr<Boundary> m_samplingBoundary;
+
+    std::map<Robot*,Boundary*> m_localBoundaries;
 
     ///@}
 
@@ -305,6 +313,14 @@ Connect(const std::vector<VID>& _vids) {
               << r->get_num_edges() << " edges and "
               << r->GetCCTracker()->GetNumCCs() << " connected components."
               << std::endl;
+}
+
+template<typename MPTraits>
+void
+BasicPRM<MPTraits>::
+SetLocalBoundaries(std::map<Robot*,Boundary*> _boundaries) {
+  MPStrategyMethod<MPTraits>::SetLocalBoundaries(_boundaries);
+  m_localBoundaries = _boundaries;
 }
 
 /*----------------------------------------------------------------------------*/

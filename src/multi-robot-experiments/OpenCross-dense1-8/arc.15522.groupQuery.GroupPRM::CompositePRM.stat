@@ -1,0 +1,67 @@
+Roadmap Statistics:
+
+  Number of Nodes: 12
+  Number of Edges: 24
+
+  There are 2 connected components:
+    CC[0]: 11 (vid 0)
+    CC[1]: 1 (vid 10)
+
+
+Sampler Statistics                                            Attempts Successes
+
+  UniformRandomSampler::UniformRandomFree                           13        12
+  All Samplers                                                      13        12
+  Success Rate: 92.3%
+
+
+Local Planner Statistics                        Attempts Connections    CD Calls
+
+  StraightLine::sl                                    33          16        1892
+
+
+Collision Detection Calls                                                  Count
+
+  StraightLine::sl                                                          1892
+  UniformRandomSampler::UniformRandomFree::Sampler                            13
+  All Collision Detectors                                                   1905
+
+
+Other Statistics                                                           Value
+
+  Free samples                                                                 5
+  Graph Search                                                                 2
+  GroupPRM::CompositePRM::NumEdges                                            24
+  GroupPRM::CompositePRM::NumVertices                                         12
+  GroupPRM::CompositePRM::TotalCost                                          168
+  GroupQuery::CompositeQuery::FoundPath                                        1
+  Obstacle samples                                                             0
+  QueryMethod::IndividualQuery::FoundPath                                      0
+  SIPPMethod::SIPP::FoundPath                                                  0
+
+
+Averages                                                         Value     Count
+
+  NeighborhoodConnector::Closest3::CacheHitRatio                     0        32
+
+
+Clock Name                                                        Time (Seconds)
+
+  BruteForceNF::BFNF3::FindNeighbors                                       0.279
+  CCTracker::AddEdge                                                       0.034
+  CCTracker::AddVertex                                                     0.041
+  GroupPRM::CompositePRM::Connect                                             35
+  GroupPRM::CompositePRM::EvaluateMap                                      0.098
+  GroupPRM::CompositePRM::InitAndRun                                        35.6
+  GroupPRM::CompositePRM::Initialize                                        2.57
+  GroupPRM::CompositePRM::Run                                               33.1
+  GroupPRM::CompositePRM::Sample                                           0.291
+  GroupPRM::GenerateGoals                                                 0.0604
+  GroupPRM::GenerateStart                                                  0.223
+  GroupQuery::CompositeQuery                                               0.097
+  GroupQuery::GeneratePath                                                 0.072
+  MPLibrary::Initialize                                                    0.102
+  NeighborhoodConnector::Closest3::Connect                                    35
+  StraightLine::sl::IsConnectedFunc                                            0
+  UniformRandomSampler::UniformRandomFree::GroupSample                     0.141
+  UniformRandomSampler::UniformRandomFree::Sample                          0.228

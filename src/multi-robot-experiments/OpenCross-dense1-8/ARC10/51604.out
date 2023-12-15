@@ -1,0 +1,613 @@
+[0;1;32mLocalRepairQuery Constructor called for LocalRepair10[0m
+
+
+MPLibrary is solving with MPStrategyMethod labeled ARC10 using seed 51604.
+GroupDecoupledStrategy::ARC10
+	Query Sampler: 
+	Map Evaluators:
+		LocalRepair10
+	strategyLabel: IndividualEvaluation
+GroupDecoupledStrategy::ARC10::Initialize: 0 sec
+BasicPRM::SharedRoadmapPRM
+	Query Sampler: 
+	Map Evaluators:
+		NodesEval
+	Input Map: 
+	Samplers
+		UniformRandomFree	Number:4	Attempts:5
+	Connectors
+		Closest5
+BasicPRM::SharedRoadmapPRM::Initialize: 0 sec
+BasicPRM::SharedRoadmapPRM::Run: 0.039999 sec
+BasicPRM::IndividualEvaluation
+	Query Sampler: UniformRandomFree
+	Map Evaluators:
+		AlwaysTrue
+	Input Map: 
+	Samplers
+	Connectors
+		Closest3
+BasicPRM::IndividualEvaluation::Initialize: 0.00057 sec
+BasicPRM::IndividualEvaluation::Run: 0 sec
+BasicPRM::IndividualEvaluation
+	Query Sampler: UniformRandomFree
+	Map Evaluators:
+		AlwaysTrue
+	Input Map: 
+	Samplers
+	Connectors
+		Closest3
+BasicPRM::IndividualEvaluation::Initialize: 0.00088 sec
+BasicPRM::IndividualEvaluation::Run: 0 sec
+BasicPRM::IndividualEvaluation
+	Query Sampler: UniformRandomFree
+	Map Evaluators:
+		AlwaysTrue
+	Input Map: 
+	Samplers
+	Connectors
+		Closest3
+BasicPRM::IndividualEvaluation::Initialize: 0.001736 sec
+BasicPRM::IndividualEvaluation::Run: 0 sec
+BasicPRM::IndividualEvaluation
+	Query Sampler: UniformRandomFree
+	Map Evaluators:
+		AlwaysTrue
+	Input Map: 
+	Samplers
+	Connectors
+		Closest3
+BasicPRM::IndividualEvaluation::Initialize: 0.002419 sec
+BasicPRM::IndividualEvaluation::Run: 0 sec
+BasicPRM::IndividualEvaluation
+	Query Sampler: UniformRandomFree
+	Map Evaluators:
+		AlwaysTrue
+	Input Map: 
+	Samplers
+	Connectors
+		Closest3
+BasicPRM::IndividualEvaluation::Initialize: 0.004342 sec
+BasicPRM::IndividualEvaluation::Run: 0 sec
+BasicPRM::IndividualEvaluation
+	Query Sampler: UniformRandomFree
+	Map Evaluators:
+		AlwaysTrue
+	Input Map: 
+	Samplers
+	Connectors
+		Closest3
+BasicPRM::IndividualEvaluation::Initialize: 0.006311 sec
+BasicPRM::IndividualEvaluation::Run: 0 sec
+BasicPRM::IndividualEvaluation
+	Query Sampler: UniformRandomFree
+	Map Evaluators:
+		AlwaysTrue
+	Input Map: 
+	Samplers
+	Connectors
+		Closest3
+BasicPRM::IndividualEvaluation::Initialize: 0.008311 sec
+BasicPRM::IndividualEvaluation::Run: 0 sec
+BasicPRM::IndividualEvaluation
+	Query Sampler: UniformRandomFree
+	Map Evaluators:
+		AlwaysTrue
+	Input Map: 
+	Samplers
+	Connectors
+		Closest3
+BasicPRM::IndividualEvaluation::Initialize: 0.01046 sec
+BasicPRM::IndividualEvaluation::Run: 0 sec
+GroupDecoupledStrategy::DecoupledPRM-local-wait
+	Query Sampler: 
+	Map Evaluators:
+		BoundedDecoupledQuery
+	strategyLabel: IndividualPRM-Wait
+GroupDecoupledStrategy::DecoupledPRM-local-wait::Initialize: 0 sec
+BasicPRM::IndividualPRM-Wait
+	Query Sampler: 
+	Map Evaluators:
+		IndividualQuery
+	Input Map: 
+	Samplers
+		UniformRandomFree	Number:0	Attempts:5
+	Connectors
+		Closest0
+BasicPRM::IndividualPRM-Wait::Initialize: 0.030999 sec
+Using local boundary CSpaceBoundingSphere [ -0.101139 -3.47928 -0.358817 ; 1.09028 ] on robot robot4
+BasicPRM::IndividualPRM-Wait::Run: 0 sec
+BasicPRM::IndividualPRM-Wait
+	Query Sampler: 
+	Map Evaluators:
+		IndividualQuery
+	Input Map: 
+	Samplers
+		UniformRandomFree	Number:0	Attempts:5
+	Connectors
+		Closest0
+BasicPRM::IndividualPRM-Wait::Initialize: 0.055998 sec
+Using local boundary CSpaceBoundingSphere [ 0.14184 -3.44553 -0.430386 ; 1.16377 ] on robot robot8
+BasicPRM::IndividualPRM-Wait::Run: 0 sec
+Failed to find a path.
+GroupDecoupledStrategy::DecoupledPRM-local-wait::Run: 0.059998 sec
+GroupDecoupledStrategy::DecoupledPRM-local-regular
+	Query Sampler: 
+	Map Evaluators:
+		BoundedDecoupledQuery
+	strategyLabel: IndividualPRM-Local
+GroupDecoupledStrategy::DecoupledPRM-local-regular::Initialize: 0 sec
+BasicPRM::IndividualPRM-Local
+	Query Sampler: 
+	Map Evaluators:
+		IndividualQuery
+	Input Map: 
+	Samplers
+		UniformRandomFree	Number:5	Attempts:5
+	Connectors
+		Closest3
+BasicPRM::IndividualPRM-Local::Initialize: 0 sec
+Using local boundary CSpaceBoundingSphere [ -0.101139 -3.47928 -0.358817 ; 1.09028 ] on robot robot4
+BasicPRM::IndividualPRM-Local::Run: 0.001001 sec
+BasicPRM::IndividualPRM-Local
+	Query Sampler: 
+	Map Evaluators:
+		IndividualQuery
+	Input Map: 
+	Samplers
+		UniformRandomFree	Number:5	Attempts:5
+	Connectors
+		Closest3
+BasicPRM::IndividualPRM-Local::Initialize: 0 sec
+Using local boundary CSpaceBoundingSphere [ 0.14184 -3.44553 -0.430386 ; 1.16377 ] on robot robot8
+BasicPRM::IndividualPRM-Local::Run: 0.00164 sec
+Failed to find a path.
+GroupDecoupledStrategy::DecoupledPRM-local-regular::Run: 0.007854 sec
+GroupPRM::CompositePRM-local
+	Query Sampler: 
+	Map Evaluators:
+		BoundedCompositeQuery
+	Samplers
+		UniformRandomFree	Number:10	Attempts:5
+	Connectors
+		Closest5
+Robot: 
+robot4
+Boundary: 
+CSpaceBoundingBox [0.387638:0.387638 ; -3.42116:-3.42116 ; 0.583561:0.583561 ]
+Robot: 
+robot8
+Boundary: 
+CSpaceBoundingBox [-0.342237:-0.342237 ; -3.51927:-3.51927 ; 0.769761:0.769761 ]
+GroupPRM::CompositePRM-local::Initialize: 0.001001 sec
+GroupPRM::CompositePRM-local::Run: 0.006999 sec
+GroupDecoupledStrategy::DecoupledPRM-local-wait
+	Query Sampler: 
+	Map Evaluators:
+		BoundedDecoupledQuery
+	strategyLabel: IndividualPRM-Wait
+GroupDecoupledStrategy::DecoupledPRM-local-wait::Initialize: 0 sec
+BasicPRM::IndividualPRM-Wait
+	Query Sampler: 
+	Map Evaluators:
+		IndividualQuery
+	Input Map: 
+	Samplers
+		UniformRandomFree	Number:0	Attempts:5
+	Connectors
+		Closest0
+BasicPRM::IndividualPRM-Wait::Initialize: 0.078005 sec
+Using local boundary CSpaceBoundingSphere [ -0.219893 -0.895618 0.306778 ; 1.09886 ] on robot robot3
+BasicPRM::IndividualPRM-Wait::Run: 0 sec
+BasicPRM::IndividualPRM-Wait
+	Query Sampler: 
+	Map Evaluators:
+		IndividualQuery
+	Input Map: 
+	Samplers
+		UniformRandomFree	Number:0	Attempts:5
+	Connectors
+		Closest0
+BasicPRM::IndividualPRM-Wait::Initialize: 0.101998 sec
+Using local boundary CSpaceBoundingSphere [ -0.020198 -0.900676 0.31046 ; 1.09886 ] on robot robot7
+BasicPRM::IndividualPRM-Wait::Run: 0 sec
+Failed to find a path.
+GroupDecoupledStrategy::DecoupledPRM-local-wait::Run: 0.109997 sec
+GroupDecoupledStrategy::DecoupledPRM-local-regular
+	Query Sampler: 
+	Map Evaluators:
+		BoundedDecoupledQuery
+	strategyLabel: IndividualPRM-Local
+GroupDecoupledStrategy::DecoupledPRM-local-regular::Initialize: 0 sec
+BasicPRM::IndividualPRM-Local
+	Query Sampler: 
+	Map Evaluators:
+		IndividualQuery
+	Input Map: 
+	Samplers
+		UniformRandomFree	Number:5	Attempts:5
+	Connectors
+		Closest3
+BasicPRM::IndividualPRM-Local::Initialize: 0 sec
+Using local boundary CSpaceBoundingSphere [ -0.219893 -0.895618 0.306778 ; 1.09886 ] on robot robot3
+BasicPRM::IndividualPRM-Local::Run: 0.00264 sec
+BasicPRM::IndividualPRM-Local
+	Query Sampler: 
+	Map Evaluators:
+		IndividualQuery
+	Input Map: 
+	Samplers
+		UniformRandomFree	Number:5	Attempts:5
+	Connectors
+		Closest3
+BasicPRM::IndividualPRM-Local::Initialize: 0 sec
+Using local boundary CSpaceBoundingSphere [ -0.020198 -0.900676 0.31046 ; 1.09886 ] on robot robot7
+BasicPRM::IndividualPRM-Local::Run: 0.00264 sec
+GroupDecoupledStrategy::DecoupledPRM-local-regular::Run: 0.011854 sec
+robot3's path cost: 1
+robot7's path cost: 1.4
+GroupDecoupledStrategy::DecoupledPRM-local-wait
+	Query Sampler: 
+	Map Evaluators:
+		BoundedDecoupledQuery
+	strategyLabel: IndividualPRM-Wait
+GroupDecoupledStrategy::DecoupledPRM-local-wait::Initialize: 0 sec
+BasicPRM::IndividualPRM-Wait
+	Query Sampler: 
+	Map Evaluators:
+		IndividualQuery
+	Input Map: 
+	Samplers
+		UniformRandomFree	Number:0	Attempts:5
+	Connectors
+		Closest0
+BasicPRM::IndividualPRM-Wait::Initialize: 0.126996 sec
+Using local boundary CSpaceBoundingSphere [ -0.0751528 0.130159 0.252615 ; 1.08573 ] on robot robot2
+BasicPRM::IndividualPRM-Wait::Run: 0 sec
+BasicPRM::IndividualPRM-Wait
+	Query Sampler: 
+	Map Evaluators:
+		IndividualQuery
+	Input Map: 
+	Samplers
+		UniformRandomFree	Number:0	Attempts:5
+	Connectors
+		Closest0
+BasicPRM::IndividualPRM-Wait::Initialize: 0.150996 sec
+Using local boundary CSpaceBoundingSphere [ 0.170921 0.135419 0.235073 ; 1.08964 ] on robot robot6
+BasicPRM::IndividualPRM-Wait::Run: 0 sec
+GroupDecoupledStrategy::DecoupledPRM-local-wait::Run: 0.163996 sec
+robot2's path cost: 2.7
+robot6's path cost: 1
+GroupDecoupledStrategy::DecoupledPRM-local-wait
+	Query Sampler: 
+	Map Evaluators:
+		BoundedDecoupledQuery
+	strategyLabel: IndividualPRM-Wait
+GroupDecoupledStrategy::DecoupledPRM-local-wait::Initialize: 0 sec
+BasicPRM::IndividualPRM-Wait
+	Query Sampler: 
+	Map Evaluators:
+		IndividualQuery
+	Input Map: 
+	Samplers
+		UniformRandomFree	Number:0	Attempts:5
+	Connectors
+		Closest0
+BasicPRM::IndividualPRM-Wait::Initialize: 0.174995 sec
+Using local boundary CSpaceBoundingSphere [ -0.539834 -0.505019 -0.0335516 ; 1 ] on robot robot2
+BasicPRM::IndividualPRM-Wait::Run: 0 sec
+BasicPRM::IndividualPRM-Wait
+	Query Sampler: 
+	Map Evaluators:
+		IndividualQuery
+	Input Map: 
+	Samplers
+		UniformRandomFree	Number:0	Attempts:5
+	Connectors
+		Closest0
+BasicPRM::IndividualPRM-Wait::Initialize: 0.199995 sec
+Using local boundary CSpaceBoundingSphere [ -0.473883 -1.08307 0.136917 ; 1 ] on robot robot7
+BasicPRM::IndividualPRM-Wait::Run: 0 sec
+BasicPRM::IndividualPRM-Wait
+	Query Sampler: 
+	Map Evaluators:
+		IndividualQuery
+	Input Map: 
+	Samplers
+		UniformRandomFree	Number:0	Attempts:5
+	Connectors
+		Closest0
+BasicPRM::IndividualPRM-Wait::Initialize: 0.224995 sec
+Using local boundary CSpaceBoundingSphere [ -0.55176 0.140192 0.285003 ; 1.05485 ] on robot robot6
+BasicPRM::IndividualPRM-Wait::Run: 0 sec
+BasicPRM::IndividualPRM-Wait
+	Query Sampler: 
+	Map Evaluators:
+		IndividualQuery
+	Input Map: 
+	Samplers
+		UniformRandomFree	Number:0	Attempts:5
+	Connectors
+		Closest0
+BasicPRM::IndividualPRM-Wait::Initialize: 0.248994 sec
+Using local boundary CSpaceBoundingSphere [ 0.392594 -0.911131 0.31807 ; 1 ] on robot robot3
+BasicPRM::IndividualPRM-Wait::Run: 0 sec
+GroupDecoupledStrategy::DecoupledPRM-local-wait::Run: 0.263995 sec
+robot2's path cost: 0.5
+robot7's path cost: 0.7
+robot6's path cost: 1
+robot3's path cost: 0.55
+GroupDecoupledStrategy::DecoupledPRM-local-wait
+	Query Sampler: 
+	Map Evaluators:
+		BoundedDecoupledQuery
+	strategyLabel: IndividualPRM-Wait
+GroupDecoupledStrategy::DecoupledPRM-local-wait::Initialize: 0 sec
+BasicPRM::IndividualPRM-Wait
+	Query Sampler: 
+	Map Evaluators:
+		IndividualQuery
+	Input Map: 
+	Samplers
+		UniformRandomFree	Number:0	Attempts:5
+	Connectors
+		Closest0
+BasicPRM::IndividualPRM-Wait::Initialize: 0.276993 sec
+Using local boundary CSpaceBoundingSphere [ -2.50197 0.277909 -0.447674 ; 1.1038 ] on robot robot5
+BasicPRM::IndividualPRM-Wait::Run: 0 sec
+BasicPRM::IndividualPRM-Wait
+	Query Sampler: 
+	Map Evaluators:
+		IndividualQuery
+	Input Map: 
+	Samplers
+		UniformRandomFree	Number:0	Attempts:5
+	Connectors
+		Closest0
+BasicPRM::IndividualPRM-Wait::Initialize: 0.308993 sec
+Using local boundary CSpaceBoundingSphere [ -3.08314 0.443445 0.437388 ; 1.58043 ] on robot robot6
+BasicPRM::IndividualPRM-Wait::Run: 0 sec
+GroupDecoupledStrategy::DecoupledPRM-local-wait::Run: 0.324995 sec
+robot5's path cost: 1
+robot6's path cost: 1.45
+GroupDecoupledStrategy::DecoupledPRM-local-wait
+	Query Sampler: 
+	Map Evaluators:
+		BoundedDecoupledQuery
+	strategyLabel: IndividualPRM-Wait
+GroupDecoupledStrategy::DecoupledPRM-local-wait::Initialize: 0 sec
+BasicPRM::IndividualPRM-Wait
+	Query Sampler: 
+	Map Evaluators:
+		IndividualQuery
+	Input Map: 
+	Samplers
+		UniformRandomFree	Number:0	Attempts:5
+	Connectors
+		Closest0
+BasicPRM::IndividualPRM-Wait::Initialize: 0.338993 sec
+Using local boundary CSpaceBoundingSphere [ -3.77139 0.397631 -0.292775 ; 1 ] on robot robot5
+BasicPRM::IndividualPRM-Wait::Run: 0 sec
+BasicPRM::IndividualPRM-Wait
+	Query Sampler: 
+	Map Evaluators:
+		IndividualQuery
+	Input Map: 
+	Samplers
+		UniformRandomFree	Number:0	Attempts:5
+	Connectors
+		Closest0
+BasicPRM::IndividualPRM-Wait::Initialize: 0.370992 sec
+Using local boundary CSpaceBoundingSphere [ -4.08583 0.575503 0.496811 ; 1 ] on robot robot6
+BasicPRM::IndividualPRM-Wait::Run: 0 sec
+GroupDecoupledStrategy::DecoupledPRM-local-wait::Run: 0.387995 sec
+robot5's path cost: 0.5
+robot6's path cost: 0.35
+GroupDecoupledStrategy::DecoupledPRM-local-wait
+	Query Sampler: 
+	Map Evaluators:
+		BoundedDecoupledQuery
+	strategyLabel: IndividualPRM-Wait
+GroupDecoupledStrategy::DecoupledPRM-local-wait::Initialize: 0 sec
+BasicPRM::IndividualPRM-Wait
+	Query Sampler: 
+	Map Evaluators:
+		IndividualQuery
+	Input Map: 
+	Samplers
+		UniformRandomFree	Number:0	Attempts:5
+	Connectors
+		Closest0
+BasicPRM::IndividualPRM-Wait::Initialize: 0.402992 sec
+Using local boundary CSpaceBoundingSphere [ -3.90393 0.410132 -0.276601 ; 1 ] on robot robot5
+BasicPRM::IndividualPRM-Wait::Run: 0 sec
+BasicPRM::IndividualPRM-Wait
+	Query Sampler: 
+	Map Evaluators:
+		IndividualQuery
+	Input Map: 
+	Samplers
+		UniformRandomFree	Number:0	Attempts:5
+	Connectors
+		Closest0
+BasicPRM::IndividualPRM-Wait::Initialize: 0.437985 sec
+Using local boundary CSpaceBoundingSphere [ -4.22101 0.593306 -0.495178 ; 1 ] on robot robot6
+BasicPRM::IndividualPRM-Wait::Run: 0 sec
+GroupDecoupledStrategy::DecoupledPRM-local-wait::Run: 0.455988 sec
+robot5's path cost: 0.55
+robot6's path cost: 0.45
+GroupDecoupledStrategy::DecoupledPRM-local-wait
+	Query Sampler: 
+	Map Evaluators:
+		BoundedDecoupledQuery
+	strategyLabel: IndividualPRM-Wait
+GroupDecoupledStrategy::DecoupledPRM-local-wait::Initialize: 0 sec
+BasicPRM::IndividualPRM-Wait
+	Query Sampler: 
+	Map Evaluators:
+		IndividualQuery
+	Input Map: 
+	Samplers
+		UniformRandomFree	Number:0	Attempts:5
+	Connectors
+		Closest0
+BasicPRM::IndividualPRM-Wait::Initialize: 0.468984 sec
+Using local boundary CSpaceBoundingSphere [ -4.25828 0.443552 -0.233362 ; 1.06521 ] on robot robot5
+BasicPRM::IndividualPRM-Wait::Run: 0 sec
+BasicPRM::IndividualPRM-Wait
+	Query Sampler: 
+	Map Evaluators:
+		IndividualQuery
+	Input Map: 
+	Samplers
+		UniformRandomFree	Number:0	Attempts:5
+	Connectors
+		Closest0
+BasicPRM::IndividualPRM-Wait::Initialize: 0.503984 sec
+Using local boundary CSpaceBoundingSphere [ -4.30467 0.604325 -0.49022 ; 1 ] on robot robot6
+BasicPRM::IndividualPRM-Wait::Run: 0 sec
+Failed to find valid start interval for vid: 56 at time :0GroupDecoupledStrategy::DecoupledPRM-local-wait::Run: 0.523988 sec
+robot5's path cost: 1
+GroupDecoupledStrategy::DecoupledPRM-local-regular
+	Query Sampler: 
+	Map Evaluators:
+		BoundedDecoupledQuery
+	strategyLabel: IndividualPRM-Local
+GroupDecoupledStrategy::DecoupledPRM-local-regular::Initialize: 0 sec
+BasicPRM::IndividualPRM-Local
+	Query Sampler: 
+	Map Evaluators:
+		IndividualQuery
+	Input Map: 
+	Samplers
+		UniformRandomFree	Number:5	Attempts:5
+	Connectors
+		Closest3
+BasicPRM::IndividualPRM-Local::Initialize: 0 sec
+Using local boundary CSpaceBoundingSphere [ -4.25828 0.443552 -0.233362 ; 1.06521 ] on robot robot5
+BasicPRM::IndividualPRM-Local::Run: 0.00364 sec
+BasicPRM::IndividualPRM-Local
+	Query Sampler: 
+	Map Evaluators:
+		IndividualQuery
+	Input Map: 
+	Samplers
+		UniformRandomFree	Number:5	Attempts:5
+	Connectors
+		Closest3
+BasicPRM::IndividualPRM-Local::Initialize: 6.9e-05 sec
+Using local boundary CSpaceBoundingSphere [ -4.30467 0.604325 -0.49022 ; 1 ] on robot robot6
+BasicPRM::IndividualPRM-Local::Run: 0.00464 sec
+Failed to find valid start interval for vid: 56 at time :0GroupDecoupledStrategy::DecoupledPRM-local-regular::Run: 0.016843 sec
+robot5's path cost: 1
+GroupPRM::CompositePRM-local
+	Query Sampler: 
+	Map Evaluators:
+		BoundedCompositeQuery
+	Samplers
+		UniformRandomFree	Number:10	Attempts:5
+	Connectors
+		Closest5
+Robot: 
+robot5
+Boundary: 
+CSpaceBoundingBox [-4.73681:-4.73681 ; 0.488683:0.488683 ; -0.17497:-0.17497 ]
+Robot: 
+robot6
+Boundary: 
+CSpaceBoundingBox [-4.45683:-4.45683 ; 0.624365:0.624365 ; -0.481202:-0.481202 ]
+GroupPRM::CompositePRM-local::Initialize: 0.002001 sec
+GroupPRM::CompositePRM-local::Run: 0.012998 sec
+GroupDecoupledStrategy::DecoupledPRM-local-wait
+	Query Sampler: 
+	Map Evaluators:
+		BoundedDecoupledQuery
+	strategyLabel: IndividualPRM-Wait
+GroupDecoupledStrategy::DecoupledPRM-local-wait::Initialize: 0 sec
+BasicPRM::IndividualPRM-Wait
+	Query Sampler: 
+	Map Evaluators:
+		IndividualQuery
+	Input Map: 
+	Samplers
+		UniformRandomFree	Number:0	Attempts:5
+	Connectors
+		Closest0
+BasicPRM::IndividualPRM-Wait::Initialize: 0.546983 sec
+Using local boundary CSpaceBoundingSphere [ -5.59303 1.16363 -0.0591911 ; 1.31616 ] on robot robot5
+BasicPRM::IndividualPRM-Wait::Run: 0 sec
+BasicPRM::IndividualPRM-Wait
+	Query Sampler: 
+	Map Evaluators:
+		IndividualQuery
+	Input Map: 
+	Samplers
+		UniformRandomFree	Number:0	Attempts:5
+	Connectors
+		Closest0
+BasicPRM::IndividualPRM-Wait::Initialize: 0.585982 sec
+Using local boundary CSpaceBoundingSphere [ -5.52778 1.11141 -0.0754107 ; 1 ] on robot robot6
+BasicPRM::IndividualPRM-Wait::Run: 0 sec
+Failed to find a path.
+GroupDecoupledStrategy::DecoupledPRM-local-wait::Run: 0.609987 sec
+GroupDecoupledStrategy::DecoupledPRM-local-regular
+	Query Sampler: 
+	Map Evaluators:
+		BoundedDecoupledQuery
+	strategyLabel: IndividualPRM-Local
+GroupDecoupledStrategy::DecoupledPRM-local-regular::Initialize: 0 sec
+BasicPRM::IndividualPRM-Local
+	Query Sampler: 
+	Map Evaluators:
+		IndividualQuery
+	Input Map: 
+	Samplers
+		UniformRandomFree	Number:5	Attempts:5
+	Connectors
+		Closest3
+BasicPRM::IndividualPRM-Local::Initialize: 6.9e-05 sec
+Using local boundary CSpaceBoundingSphere [ -5.59303 1.16363 -0.0591911 ; 1.31616 ] on robot robot5
+BasicPRM::IndividualPRM-Local::Run: 0.005641 sec
+BasicPRM::IndividualPRM-Local
+	Query Sampler: 
+	Map Evaluators:
+		IndividualQuery
+	Input Map: 
+	Samplers
+		UniformRandomFree	Number:5	Attempts:5
+	Connectors
+		Closest3
+BasicPRM::IndividualPRM-Local::Initialize: 6.9e-05 sec
+Using local boundary CSpaceBoundingSphere [ -5.52778 1.11141 -0.0754107 ; 1 ] on robot robot6
+BasicPRM::IndividualPRM-Local::Run: 0.005883 sec
+Failed to find a path.
+GroupDecoupledStrategy::DecoupledPRM-local-regular::Run: 0.022557 sec
+GroupPRM::CompositePRM-local
+	Query Sampler: 
+	Map Evaluators:
+		BoundedCompositeQuery
+	Samplers
+		UniformRandomFree	Number:10	Attempts:5
+	Connectors
+		Closest5
+Robot: 
+robot5
+Boundary: 
+CSpaceBoundingBox [-5.62499:-5.62499 ; 1.76083:1.76083 ; -0.0439921:-0.0439921 ]
+Robot: 
+robot6
+Boundary: 
+CSpaceBoundingBox [-5.7:-5.7 ; 1.2:1.2 ; 0:0 ]
+GroupPRM::CompositePRM-local::Initialize: 0.002001 sec
+GroupPRM::CompositePRM-local::Run: 0.018997 sec
+GroupDecoupledStrategy::ARC10::Run: 0.886394 sec
+robot1's path cost: 15.45
+robot2's path cost: 14.4
+robot3's path cost: 17.75
+robot4's path cost: 14.3
+robot5's path cost: 24.25
+robot6's path cost: 21.2
+robot7's path cost: 17.55
+robot8's path cost: 14.35
+MPLibrary::Initialize: 0 sec

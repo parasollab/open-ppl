@@ -1,0 +1,47 @@
+[0;1;32mLocalRepairQuery Constructor called for LocalRepair10[0m
+
+
+MPLibrary is solving with MPStrategyMethod labeled CompositePRM using seed 34503.
+GroupPRM::CompositePRM
+	Query Sampler: 
+	Map Evaluators:
+		CompositeQuery
+	Samplers
+		UniformRandomFree	Number:1	Attempts:5
+	Connectors
+		Closest5
+Robot: 
+robot1
+Boundary: 
+CSpaceBoundingBox [5.7:5.7 ; 3.6:3.6 ; 0:0 ]
+Robot: 
+robot5
+Boundary: 
+CSpaceBoundingBox [-5.7:-5.7 ; 3.6:3.6 ; 0:0 ]
+Robot: 
+robot2
+Boundary: 
+CSpaceBoundingBox [5.7:5.7 ; 1.2:1.2 ; 0:0 ]
+Robot: 
+robot6
+Boundary: 
+CSpaceBoundingBox [-5.7:-5.7 ; 1.2:1.2 ; 0:0 ]
+Robot: 
+robot4
+Boundary: 
+CSpaceBoundingBox [5.7:5.7 ; -3.6:-3.6 ; 0:0 ]
+Robot: 
+robot3
+Boundary: 
+CSpaceBoundingBox [5.7:5.7 ; -1.2:-1.2 ; 0:0 ]
+Robot: 
+robot8
+Boundary: 
+CSpaceBoundingBox [-5.7:-5.7 ; -3.6:-3.6 ; 0:0 ]
+Robot: 
+robot7
+Boundary: 
+CSpaceBoundingBox [-5.7:-5.7 ; -1.2:-1.2 ; 0:0 ]
+GroupPRM::CompositePRM::Initialize: 0.045984 sec
+GroupPRM::CompositePRM::Run: 270.749 sec
+MPLibrary::Initialize: 0 sec

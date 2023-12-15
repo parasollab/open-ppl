@@ -48,6 +48,12 @@ class MapEvaluatorMethod : public MPBaseObject<MPTraits> {
     /// Set the minimum end time of a path
     virtual void SetMinEndtime(double _minEndtime) {};
 
+    /// Used by compose evaluator only to get the sub evaluators
+    virtual std::vector<std::string> GetEvaluators() {return std::vector<std::string>();};
+
+    /// Used by decoupled query only to get the query method
+    virtual std::string GetQueryMethod() {return std::string();};
+
     ///@}
     ///@name Active Robots
     ///@{
@@ -60,6 +66,8 @@ class MapEvaluatorMethod : public MPBaseObject<MPTraits> {
 
     /// Get the active robots.
     std::vector<size_t> GetActiveRobots() const;
+
+    virtual void SetLocalBoundaries(std::map<Robot*,Boundary*> _boundaries);
 
     ///@}
 
@@ -76,6 +84,8 @@ class MapEvaluatorMethod : public MPBaseObject<MPTraits> {
     ///       replaced by using a proper subgroup where each robot within is
     ///       active.
     std::vector<size_t> m_activeRobots;
+
+    std::map<Robot*,Boundary*> m_localBoundaries;
 
     ///@}
 
@@ -102,6 +112,13 @@ std::vector<size_t>
 MapEvaluatorMethod<MPTraits>::
 GetActiveRobots() const {
   return m_activeRobots;
+}
+
+template<typename MPTraits>
+void
+MapEvaluatorMethod<MPTraits>::
+SetLocalBoundaries(std::map<Robot*,Boundary*> _boundaries) {
+  m_localBoundaries = _boundaries;
 }
 
 /*----------------------------------------------------------------------------*/

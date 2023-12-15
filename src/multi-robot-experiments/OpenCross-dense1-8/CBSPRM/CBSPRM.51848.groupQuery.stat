@@ -1,0 +1,89 @@
+Roadmap Statistics:
+
+  Number of Nodes: 7
+  Number of Edges: 6
+
+  There are 1 connected components:
+    CC[0]: 7 (vid 0)
+
+
+Sampler Statistics                                            Attempts Successes
+
+  UniformRandomSampler::UniformRandomFree                          128       128
+  All Samplers                                                     128       128
+  Success Rate: 100%
+
+
+Local Planner Statistics                        Attempts Connections    CD Calls
+
+  StraightLine::sl                                 47673       47673       14138
+
+
+Collision Detection Calls                                                  Count
+
+  StraightLine::sl::IsConnectedSLSequential                                14138
+  UniformRandomSampler::UniformRandomFree::Sampler                           128
+  All Collision Detectors                                                  14266
+
+
+Other Statistics                                                           Value
+
+  CBSQuery::CBSQuery::CollisionFound                                    1.27e+03
+  GlobalSamplingIterations                                                     5
+  GroupDecoupledStrategy::CBSPRM::AvgVertices                                 50
+  GroupDecoupledStrategy::CBSPRM::SharedRoadmap::Edges                       424
+  GroupDecoupledStrategy::CBSPRM::SharedRoadmap::Vertices                     48
+  GroupDecoupledStrategy::CBSPRM::TotalCost                                 96.1
+  GroupQuery::CompositeQuery::FoundPath                                        0
+  QueryMethod::IndividualQuery::FoundPath                                      0
+  QueryMethod::SIPP::FoundPath                                                 1
+  SIPP Graph Search                                                     2.58e+03
+  SIPPMethod::SIPP::FoundPath                                                  0
+  TotalConflicts                                                               0
+
+
+Averages                                                         Value     Count
+
+  NeighborhoodConnector::Closest3::CacheHitRatio                     0       240
+  NeighborhoodConnector::Closest5::CacheHitRatio                     0       232
+
+
+Clock Name                                                        Time (Seconds)
+
+  BasicPRM::IndividualEvaluation::Connect                                 0.0227
+  BasicPRM::IndividualEvaluation::EvaluateMap                                  0
+  BasicPRM::IndividualEvaluation::GenerateGoals                         0.000158
+  BasicPRM::IndividualEvaluation::GenerateStart                         0.000125
+  BasicPRM::IndividualEvaluation::InitAndRun                              0.0241
+  BasicPRM::IndividualEvaluation::Initialize                               0.023
+  BasicPRM::IndividualEvaluation::Run                                          0
+  BasicPRM::IndividualEvaluation::Sample                                       0
+  BasicPRM::SharedRoadmapPRM::Connect                                      0.048
+  BasicPRM::SharedRoadmapPRM::EvaluateMap                                      0
+  BasicPRM::SharedRoadmapPRM::InitAndRun                                   0.049
+  BasicPRM::SharedRoadmapPRM::Initialize                                       0
+  BasicPRM::SharedRoadmapPRM::Run                                          0.049
+  BasicPRM::SharedRoadmapPRM::Sample                                    0.000999
+  BruteForceNF::BFNF3::FindNeighbors                                     0.00184
+  BruteForceNF::BFNF5::FindNeighbors                                       0.002
+  CBSQuery::CBSQuery                                                        9.46
+  CBSQuery::CBSQuery::ComputeIntervals                                     0.296
+  CBSQuery::CBSQuery::Query                                                 9.46
+  CBSQuery::CBSQuery::SplitNodes                                            0.71
+  CBSQuery::CBSQuery::ValidationFunction                                    8.68
+  CBSQuery::CBSQuerySolveIndividualTask                                     0.72
+  CCTracker::AddEdge                                                       0.004
+  CCTracker::AddVertex                                                  0.000999
+  ConditionalEvaluator::NodesEval                                              0
+  GroupDecoupledStrategy::CBSPRM::EvaluateMap                               9.46
+  GroupDecoupledStrategy::CBSPRM::InitAndRun                                9.66
+  GroupDecoupledStrategy::CBSPRM::Initialize                                   0
+  GroupDecoupledStrategy::CBSPRM::Run                                       9.66
+  MPLibrary::Initialize                                                        0
+  NeighborhoodConnector::Closest3::Connect                                0.0227
+  NeighborhoodConnector::Closest5::Connect                                 0.048
+  SIPPMethod::GeneratePath                                                 0.157
+  StraightLine::sl::IsConnected                                             1.83
+  StraightLine::sl::IsConnectedFunc                                            0
+  TrueEvaluation::AlwaysTrue                                                   0
+  UniformRandomSampler::UniformRandomFree::IndividualSample                    0

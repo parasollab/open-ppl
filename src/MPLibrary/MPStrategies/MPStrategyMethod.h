@@ -79,6 +79,12 @@ class MPStrategyMethod : public MPBaseObject<MPTraits> {
     void EnableOutputFiles(const bool _enable = true);
 
     ///@}
+    ///@name Local boundaries for ARC
+    ///@{
+
+    virtual void SetLocalBoundaries(std::map<Robot*,Boundary*> _boundaries);
+
+    ///@}
 
   protected:
 
@@ -201,6 +207,27 @@ operator()() {
   // Don't count finalize in the time because file io isn't relevant to
   // algorithmic performance.
   Finalize();
+}
+
+template <typename MPTraits>
+void
+MPStrategyMethod<MPTraits>::
+SetLocalBoundaries(std::map<Robot*,Boundary*> _boundaries) {
+  for(auto label : m_meLabels) {
+    auto me = this->GetMapEvaluator(label);
+    me->SetLocalBoundaries(_boundaries);
+
+    std::vector<std::string> individual_labels = me->GetEvaluators();
+    for(auto individual_label : individual_labels) {
+      auto individual_me = this->GetMapEvaluator(individual_label);
+      // Here we want to set the local boundaries of SIPP
+      if(individual_me->GetQueryMethod().size()) {
+        this->GetMapEvaluator(individual_me->GetQueryMethod())->SetLocalBoundaries(_boundaries);
+      }
+      // individual_me->SetLocalBoundaries(_boundaries);
+
+    }
+  }
 }
 
 

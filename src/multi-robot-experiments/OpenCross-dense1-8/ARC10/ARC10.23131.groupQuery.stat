@@ -1,0 +1,151 @@
+Roadmap Statistics:
+
+  Number of Nodes: 9
+  Number of Edges: 8
+
+  There are 1 connected components:
+    CC[0]: 9 (vid 0)
+
+
+Sampler Statistics                                            Attempts Successes
+
+                                                                    11        10
+  UniformRandomSampler::UniformRandomFree                          119       118
+  All Samplers                                                     130       128
+  Success Rate: 98.5%
+
+
+Local Planner Statistics                        Attempts Connections    CD Calls
+
+  StraightLine::sl                                  1067        1056       73001
+
+
+Collision Detection Calls                                                  Count
+
+  LocalRepair::LocalRepair10                                                   8
+  StraightLine::sl                                                           753
+  StraightLine::sl::IsConnectedSLSequential                                72248
+  UniformRandomSampler::UniformRandomFree::Sampler                           119
+  All Collision Detectors                                                  73128
+
+
+Other Statistics                                                           Value
+
+  Free samples                                                                 0
+  GlobalSamplingIterations                                                     1
+  Graph Search                                                                23
+  GroupDecoupledQuery::DecoupledQuery::CollisionFound                         28
+  GroupDecoupledQuery::DecoupledQuery::FoundPath                               1
+  GroupDecoupledStrategy::ARC10::AvgVertices                                42.2
+  GroupDecoupledStrategy::ARC10::SharedRoadmap::Edges                        276
+  GroupDecoupledStrategy::ARC10::SharedRoadmap::Vertices                      32
+  GroupDecoupledStrategy::ARC10::TotalCost                                   128
+  GroupQuery::CompositeQuery::FoundPath                                        1
+  LocalRepairQuery::LocalRepair10::CollisionFound                              4
+  LocalRepairQuery::LocalRepair10::FoundPath                                   1
+  Number of multibody collision calls                                   1.66e+04
+  Obstacle samples                                                             0
+  QueryMethod::IndividualQuery::FoundPath                                      1
+  QueryMethod::SIPP::FoundPath                                                 1
+  SIPP Graph Search                                                           42
+  SIPPMethod::SIPP::FoundPath                                                  0
+  final local region radius                                                 1.09
+  final local region window size                                              10
+  initial local region radius                                                1.1
+  initial local region window size                                            10
+  times used CompositePRM-local                                                1
+  times used DecoupledPRM-local-regular                                        2
+  times used DecoupledPRM-local-wait                                           1
+
+
+Averages                                                         Value     Count
+
+  NeighborhoodConnector::Closest0::CacheHitRatio                     0       560
+  NeighborhoodConnector::Closest3::CacheHitRatio                     0       174
+  NeighborhoodConnector::Closest5::CacheHitRatio                     0       204
+
+
+Clock Name                                                        Time (Seconds)
+
+  BasicPRM::IndividualEvaluation::Connect                                 0.0147
+  BasicPRM::IndividualEvaluation::EvaluateMap                                  0
+  BasicPRM::IndividualEvaluation::GenerateGoals                                0
+  BasicPRM::IndividualEvaluation::GenerateStart                          6.8e-05
+  BasicPRM::IndividualEvaluation::InitAndRun                              0.0171
+  BasicPRM::IndividualEvaluation::Initialize                              0.0147
+  BasicPRM::IndividualEvaluation::Run                                          0
+  BasicPRM::IndividualEvaluation::Sample                                       0
+  BasicPRM::IndividualPRM-Local::Connect                                 0.00541
+  BasicPRM::IndividualPRM-Local::EvaluateMap                                   0
+  BasicPRM::IndividualPRM-Local::GenerateGoals                                 0
+  BasicPRM::IndividualPRM-Local::GenerateStart                                 0
+  BasicPRM::IndividualPRM-Local::InitAndRun                              0.00765
+  BasicPRM::IndividualPRM-Local::Initialize                                    0
+  BasicPRM::IndividualPRM-Local::Run                                     0.00541
+  BasicPRM::IndividualPRM-Local::Sample                                        0
+  BasicPRM::IndividualPRM-Wait::Connect                                     0.22
+  BasicPRM::IndividualPRM-Wait::EvaluateMap                                    0
+  BasicPRM::IndividualPRM-Wait::GenerateGoals                                  0
+  BasicPRM::IndividualPRM-Wait::GenerateStart                                  0
+  BasicPRM::IndividualPRM-Wait::InitAndRun                                  0.22
+  BasicPRM::IndividualPRM-Wait::Initialize                                  0.22
+  BasicPRM::IndividualPRM-Wait::Run                                            0
+  BasicPRM::IndividualPRM-Wait::Sample                                         0
+  BasicPRM::SharedRoadmapPRM::Connect                                       0.04
+  BasicPRM::SharedRoadmapPRM::EvaluateMap                                      0
+  BasicPRM::SharedRoadmapPRM::InitAndRun                                   0.042
+  BasicPRM::SharedRoadmapPRM::Initialize                                       0
+  BasicPRM::SharedRoadmapPRM::Run                                          0.041
+  BasicPRM::SharedRoadmapPRM::Sample                                       0.001
+  BruteForceNF::BFNF0::FindNeighbors                                           0
+  BruteForceNF::BFNF3::FindNeighbors                                       0.001
+  BruteForceNF::BFNF5::FindNeighbors                                       0.001
+  CCTracker::AddEdge                                                       0.003
+  CCTracker::AddVertex                                                         0
+  CCTracker::DeleteVertex                                                      0
+  ComposeEvaluator::BoundedCompositeQuery                                      0
+  ComposeEvaluator::BoundedDecoupledQuery                                  0.017
+  ConditionalEvaluator::NodesEval                                              0
+  GroupDecoupledQuery::DecoupledQuery::ComputeIntervals                    0.001
+  GroupDecoupledQuery::DecoupledQuery::ValidationFunction                0.00465
+  GroupDecoupledQuery::DecoupledQuerySolveIndividualTask                  0.0123
+  GroupDecoupledStrategy::ARC10::EvaluateMap                               0.339
+  GroupDecoupledStrategy::ARC10::InitAndRun                                0.407
+  GroupDecoupledStrategy::ARC10::Initialize                                    0
+  GroupDecoupledStrategy::ARC10::Run                                       0.407
+  GroupDecoupledStrategy::DecoupledPRM-local-regular::EvaluateMap        0.00695
+  GroupDecoupledStrategy::DecoupledPRM-local-regular::InitAndRun          0.0146
+  GroupDecoupledStrategy::DecoupledPRM-local-regular::Initialize               0
+  GroupDecoupledStrategy::DecoupledPRM-local-regular::Run                 0.0146
+  GroupDecoupledStrategy::DecoupledPRM-local-wait::EvaluateMap              0.01
+  GroupDecoupledStrategy::DecoupledPRM-local-wait::InitAndRun              0.231
+  GroupDecoupledStrategy::DecoupledPRM-local-wait::Initialize                  0
+  GroupDecoupledStrategy::DecoupledPRM-local-wait::Run                     0.231
+  GroupPRM::CompositePRM-local::Connect                                    0.008
+  GroupPRM::CompositePRM-local::EvaluateMap                                    0
+  GroupPRM::CompositePRM-local::InitAndRun                                 0.008
+  GroupPRM::CompositePRM-local::Initialize                                     0
+  GroupPRM::CompositePRM-local::Run                                        0.008
+  GroupPRM::CompositePRM-local::Sample                                         0
+  GroupPRM::GenerateGoals                                                      0
+  GroupPRM::GenerateStart                                                      0
+  GroupQuery::GeneratePath                                                     0
+  LocalRepair::LocalRepair10RunningLocalMPStrategy                         0.254
+  LocalRepair::LocalRepair10SingleResolution                               0.255
+  LocalRepairQuery::LocalRepair10                                          0.339
+  LocalRepairQuery::LocalRepair10::SolveIndividualTask                    0.0344
+  LocalRepairQuery::LocalRepair10::Time spent on repair                    0.259
+  LocalRepairQuery::LocalRepair10::ValidationFunction                      0.046
+  MPLibrary::Initialize                                                        0
+  NeighborhoodConnector::Closest0::Connect                                  0.22
+  NeighborhoodConnector::Closest3::Connect                                0.0201
+  NeighborhoodConnector::Closest5::Connect                                 0.048
+  QueryMethod::GeneratePath                                             0.000205
+  QueryMethod::IndividualQuery                                                 0
+  SIPPMethod::GeneratePath                                               0.00669
+  StraightLine::sl::IsConnected                                            0.285
+  StraightLine::sl::IsConnectedFunc                                        0.001
+  TrueEvaluation::AlwaysTrue                                                   0
+  UniformRandomSampler::UniformRandomFree::GroupSample                         0
+  UniformRandomSampler::UniformRandomFree::IndividualSample                    0
+  UniformRandomSampler::UniformRandomFree::Sample                              0

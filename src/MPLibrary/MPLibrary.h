@@ -349,6 +349,13 @@ class MPLibraryType
         AbstractRoadmapType* const _roadmap,
         const VID _source, const VID _target);
 
+    /// @overload This version a specific number of steps, instead of computing
+    ///     by using the resolution
+    std::vector<typename RoadmapType::VP> ReconstructEdge(
+        RoadmapType* const _roadmap,
+        const VID _source, const VID _target, size_t _numSteps);
+
+
     ///@}
     ///@name Execution Interface
     ///@{
@@ -970,6 +977,26 @@ ReconstructEdge(RoadmapType* const _roadmap, const VID _source,
   // Construct a resolution-level path along the recreated edge.
   auto lp = this->GetLocalPlanner(lpLabel);
   return lp->BlindPath(waypoints, _posRes, _oriRes);
+}
+
+template <typename MPTraits>
+std::vector<typename MPTraits::RoadmapType::VP>
+MPLibraryType<MPTraits>::
+ReconstructEdge(RoadmapType* const _roadmap, const VID _source,
+    const VID _target, size_t _numSteps) {
+
+  const auto& start         = _roadmap->GetVertex(_source);
+  const auto& end           = _roadmap->GetVertex(_target);
+
+  // Construct the set of start, intermediates, and end waypoints as needed.
+  std::vector<CfgType> waypoints;
+  waypoints.push_back(start);
+  waypoints.push_back(end);
+
+  // Construct a resolution-level path along the recreated edge.
+  auto lp = this->GetLocalPlanner("sl");
+  return lp->BlindPath(waypoints,_numSteps);
+
 }
 
 

@@ -33,6 +33,7 @@
 #include "MPLibrary/ValidityCheckers/ComposeValidity.h"
 #include "MPLibrary/ValidityCheckers/ComposeCollision.h"
 #include "MPLibrary/ValidityCheckers/TerrainValidityChecker.h" 
+#include "MPLibrary/ValidityCheckers/LocalBoundaryValidity.h"
 
 //neighborhood finder includes
 #include "MPLibrary/NeighborhoodFinders/BruteForceNF.h"
@@ -69,6 +70,7 @@
 #include "MPLibrary/Metrics/TimeMetric.h"
 
 //map evaluator includes
+#include "MPLibrary/MapEvaluators/ARCQuery.h"
 #include "MPLibrary/MapEvaluators/CBSQuery.h"
 #include "MPLibrary/MapEvaluators/GroupQuery.h"
 #include "MPLibrary/MapEvaluators/ComposeEvaluator.h"
@@ -81,8 +83,11 @@
 #include "MPLibrary/MapEvaluators/TimeEvaluator.h"
 #include "MPLibrary/MapEvaluators/PathEvaluator.h"
 #include "MPLibrary/MapEvaluators/CollisionEvaluator.h"
+#include "MPLibrary/MapEvaluators/IterationCountEvaluator.h"
+#include "MPLibrary/MapEvaluators/GroupDecoupledQuery.h"
 
 //mp strategies includes
+#include "MPLibrary/MPStrategies/ARCStrategy.h"
 #include "MPLibrary/MPStrategies/AdaptiveRRT.h"
 #include "MPLibrary/MPStrategies/GroupPRM.h"
 #include "MPLibrary/MPStrategies/EET.h"
@@ -148,7 +153,8 @@ struct MPTraits {
     AlwaysTrueValidity<MPTraits>,
     ComposeValidity<MPTraits>,
     ComposeCollision<MPTraits>,
-    TerrainValidityChecker<MPTraits>
+    TerrainValidityChecker<MPTraits>,
+    LocalBoundaryValidity<MPTraits>
      > ValidityCheckerMethodList;
 
   //types of neighborhood finders available in our world
@@ -204,6 +210,7 @@ struct MPTraits {
 
   //types of map evaluators available in our world
   typedef boost::mpl::list<
+    ARCQuery<MPTraits>,
     CBSQuery<MPTraits>,
     GroupQuery<MPTraits>,
     ComposeEvaluator<MPTraits>,
@@ -215,11 +222,14 @@ struct MPTraits {
     SIPPMethod<MPTraits>,
     PathEvaluator<MPTraits>,
     TimeEvaluator<MPTraits>,
-    CollisionEvaluator<MPTraits>
+    CollisionEvaluator<MPTraits>,
+    IterationCountEvaluator<MPTraits>,
+    GroupDecoupledQuery<MPTraits>
       > MapEvaluatorMethodList;
 
   //types of motion planning strategies available in our world
   typedef boost::mpl::list<
+    ARCStrategy<MPTraits>,
     AdaptiveRRT<MPTraits>,
     GroupPRM<MPTraits>,
     BasicPRM<MPTraits>,

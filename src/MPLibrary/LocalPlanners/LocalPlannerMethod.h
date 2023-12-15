@@ -130,6 +130,12 @@ class LocalPlannerMethod : public MPBaseObject<MPTraits> {
     std::vector<CfgType> BlindPath(const std::vector<CfgType>& _waypoints,
         const double _posRes, const double _oriRes);
 
+    // @overload This version computes only the intermediates between a pair of cfgs
+    // (contained on waypoints). It assumes that the edge was already
+    // validity-checked and is only used for specific purposes.
+    std::vector<CfgType> BlindPath(const std::vector<CfgType>& _waypoints,
+        size_t _numSteps);
+
     /// @overload This version assumes the environment's resolution values.
     std::vector<CfgType> BlindPath(const std::vector<CfgType>& _waypoints);
 
@@ -257,6 +263,38 @@ LocalPlannerMethod<MPTraits>::
 BlindPath(const std::vector<CfgType>& _waypoints) {
   auto env = this->GetEnvironment();
   return BlindPath(_waypoints, env->GetPositionRes(), env->GetOrientationRes());
+}
+
+template <typename MPTraits>
+std::vector<typename MPTraits::CfgType>
+LocalPlannerMethod<MPTraits>::
+BlindPath(const std::vector<CfgType>& _waypoints, size_t _numSteps) {
+  // Blind local-plan between each intermediate,
+  std::vector<CfgType> out;
+  //Adding front cfg
+  out.push_back(_waypoints[0]);
+
+  // Compute the number of resolution-level steps required to transition from
+  // _c1 to _c2.
+  auto robot = _waypoints[0].GetRobot();
+  CfgType increment(robot);
+  auto const numSteps = _numSteps;
+  increment.FindIncrement(_waypoints[0], _waypoints[1], numSteps);
+  if(this->m_debug)
+    std::cout << "\n\tComputed increment for " << numSteps << " steps: "
+              << increment.PrettyPrint() << std::endl;
+
+  // Step from _c1 by a distance increment, either numSteps - 1 times,
+  // because we the final step will land at _c2, which  we don't need to check).
+  CfgType currentStep = _waypoints[0];
+  for(size_t i = 1; i < numSteps; ++i) {
+    // Update the current step.
+    currentStep += increment;
+    out.push_back(currentStep);
+  }
+  //Ading last cfg
+  out.push_back(_waypoints[1]);
+  return out;
 }
 
 

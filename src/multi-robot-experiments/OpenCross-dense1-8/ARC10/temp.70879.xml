@@ -1,0 +1,313 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<MotionPlanning warnings="true" warningsAsErrors="true" print="false">
+
+  <!-- Here we specify input files, such as environment and query. The
+       'baseFilename in the Problem node is for Simulator stat output only. -->
+  <Problem baseFilename="example">
+
+    <Environment filename="/home/yudiqin2/PMPL/local-repair-new-3/pmpl/src/multi-robot-experiments/local-repair-experiments/envs/OpenCross-dense1-8/3d.xml" positionRes="0.05" orientationRes="0.05"/>
+
+    <Robot label="robot1" filename="/home/yudiqin2/PMPL/local-repair-new-3/pmpl/src/multi-robot-experiments/local-repair-experiments/envs/OpenCross-dense1-8/iCreate.xml">
+      <Agent type="planning"/>
+    </Robot>
+    <Robot label="robot2" filename="/home/yudiqin2/PMPL/local-repair-new-3/pmpl/src/multi-robot-experiments/local-repair-experiments/envs/OpenCross-dense1-8/iCreate.xml">
+      <Agent type="planning"/>
+    </Robot>
+    <Robot label="robot3" filename="/home/yudiqin2/PMPL/local-repair-new-3/pmpl/src/multi-robot-experiments/local-repair-experiments/envs/OpenCross-dense1-8/iCreate.xml">
+      <Agent type="planning"/>
+    </Robot>
+    <Robot label="robot4" filename="/home/yudiqin2/PMPL/local-repair-new-3/pmpl/src/multi-robot-experiments/local-repair-experiments/envs/OpenCross-dense1-8/iCreate.xml">
+      <Agent type="planning"/>
+    </Robot> 
+    <Robot label="robot5" filename="/home/yudiqin2/PMPL/local-repair-new-3/pmpl/src/multi-robot-experiments/local-repair-experiments/envs/OpenCross-dense1-8/iCreate.xml">
+      <Agent type="planning"/>
+    </Robot>
+    <Robot label="robot6" filename="/home/yudiqin2/PMPL/local-repair-new-3/pmpl/src/multi-robot-experiments/local-repair-experiments/envs/OpenCross-dense1-8/iCreate.xml">
+      <Agent type="planning"/>
+    </Robot>
+    <Robot label="robot7" filename="/home/yudiqin2/PMPL/local-repair-new-3/pmpl/src/multi-robot-experiments/local-repair-experiments/envs/OpenCross-dense1-8/iCreate.xml">
+      <Agent type="planning"/>
+    </Robot>
+    <Robot label="robot8" filename="/home/yudiqin2/PMPL/local-repair-new-3/pmpl/src/multi-robot-experiments/local-repair-experiments/envs/OpenCross-dense1-8/iCreate.xml">
+      <Agent type="planning"/>
+    </Robot>        
+
+    <RobotGroup label="robotGroup" robotLabels="robot1 robot2 robot3 robot4 robot5 robot6 robot7 robot8"/>
+
+
+	<GroupTask label="groupQuery" group="robotGroup">
+    <Task label="query-1" robot="robot1">
+      <StartConstraints>
+        <CSpaceConstraint point="-5.7  3.6  0.0"/>
+            </StartConstraints>
+      <GoalConstraints>
+        <CSpaceConstraint point=" 5.7  3.6  0.0"/>
+      </GoalConstraints>
+    </Task>
+    <Task label="query-2" robot="robot2">
+      <StartConstraints>
+        <CSpaceConstraint point="-5.7  1.2  0.0"/>
+            </StartConstraints>
+      <GoalConstraints>
+        <CSpaceConstraint point=" 5.7  1.2  0.0"/>
+      </GoalConstraints>
+    </Task>
+    <Task label="query-3" robot="robot3">
+      <StartConstraints>
+        <CSpaceConstraint point="-5.7  -1.2  0.0"/>
+            </StartConstraints>
+      <GoalConstraints>
+        <CSpaceConstraint point="5.7  -1.2  0.0"/>
+      </GoalConstraints>
+    </Task>
+    <Task label="query-4" robot="robot4">
+      <StartConstraints>
+        <CSpaceConstraint point="-5.7  -3.6  0.0"/>
+            </StartConstraints>
+      <GoalConstraints>
+        <CSpaceConstraint point="5.7  -3.6  0.0"/>
+      </GoalConstraints>
+    </Task> 
+    <Task label="query-5" robot="robot5">
+      <StartConstraints>
+        <CSpaceConstraint point=" 5.7  3.6  0.0"/>
+            </StartConstraints>
+      <GoalConstraints>
+        <CSpaceConstraint point="-5.7  3.6  0.0"/>
+      </GoalConstraints>
+    </Task>
+    <Task label="query-6" robot="robot6">
+      <StartConstraints>
+        <CSpaceConstraint point=" 5.7  1.2  0.0"/>
+            </StartConstraints>
+      <GoalConstraints>
+        <CSpaceConstraint point="-5.7  1.2  0.0"/>
+      </GoalConstraints>
+    </Task>
+    <Task label="query-7" robot="robot7">
+      <StartConstraints>
+        <CSpaceConstraint point=" 5.7  -1.2  0.0"/>
+            </StartConstraints>
+      <GoalConstraints>
+        <CSpaceConstraint point="-5.7  -1.2  0.0"/>
+      </GoalConstraints>
+    </Task>
+    <Task label="query-8" robot="robot8">
+      <StartConstraints>
+        <CSpaceConstraint point=" 5.7  -3.6  0.0"/>
+            </StartConstraints>
+      <GoalConstraints>
+        <CSpaceConstraint point="-5.7  -3.6  0.0"/>
+      </GoalConstraints>
+    </Task>      
+ 	</GroupTask>
+
+  </Problem>
+
+  <!-- Set available algorithms and parameters. -->
+  <Library>
+
+    <Metrics>
+      <NumNodesMetric label="NumNodes"/>
+    </Metrics>
+
+    <DistanceMetrics>
+      <Euclidean label="euclidean"/>
+    </DistanceMetrics>
+
+    <ValidityCheckers>
+      <CollisionDetection label="pqp_solid" method="PQP_SOLID" interRobotCollision="false" 
+        debug="false" ignoreAdjacentLinks="true"/>
+      <!-- Used by all local strategies -->
+      <LocalBoundaryValidity label="local"/>
+    </ValidityCheckers>
+
+    <NeighborhoodFinders>
+      <BruteForceNF label="BFNF0" dmLabel="euclidean" unconnected="false" k="0"/>
+      <BruteForceNF label="BFNF3" dmLabel="euclidean" unconnected="false" k="3"/>
+      <BruteForceNF label="BFNF5" dmLabel="euclidean" unconnected="false" k="5"/>
+    </NeighborhoodFinders>
+
+    <Samplers>
+      <UniformRandomSampler label="UniformRandomFree" vcLabel="pqp_solid"
+        debug="false"/>
+    </Samplers>
+
+    <LocalPlanners>
+      <StraightLine label="sl" binaryEvaluation="false" vcLabel="pqp_solid"
+        saveIntermediates="true"/>
+    </LocalPlanners>
+
+    <PathModifiers>
+    </PathModifiers>
+
+    <Connectors>
+      <NeighborhoodConnector label="Closest0" nfLabel="BFNF0" lpLabel="sl"
+        checkIfSameCC="false" debug="false"/>
+      <NeighborhoodConnector label="Closest3" nfLabel="BFNF3" lpLabel="sl"
+        checkIfSameCC="false" debug="false"/>
+      <NeighborhoodConnector label="Closest5" nfLabel="BFNF5" lpLabel="sl"
+        checkIfSameCC="false" debug="false"/>
+    </Connectors>
+
+    <MapEvaluators>
+      <TrueEvaluation label="AlwaysTrue"/>
+      <IterationCountEvaluator label="IterationEval" minCount="1"/>
+      <TimeEvaluator label="TimeEval" timeout="1000"/>
+
+      <ConditionalEvaluator label="NodesEval" metric_method="NumNodes"
+        value="32" operator=">="/>
+
+      <QueryMethod label="IndividualQuery" debug="false"
+        safeIntervalToolLabel="SI"/>
+
+      <!-- Composite Query -->
+      <GroupQuery label="CompositeQuery" debug="false"/>
+
+      <!-- Decoupled Query -->
+      <GroupDecoupledQuery label="DecoupledQuery" queryLabel="SIPP"
+        debug="false" vcLabel="pqp_solid" ignoreOtherRobots="false"/>
+
+      <!-- CBS Query -->
+      <CBSQuery label="CBSQuery" queryLabel="SIPP" debug="false" vcLabel="pqp_solid"
+        alpha="0.01" X="0.999" buffer="30"/>
+
+      <!-- Local Repair Queries -->
+      <LocalRepairQuery label="LocalRepair10" queryLabel="IndividualQuery"
+        debug="false" vcLabel="pqp_solid" repairStrategyLabel="LocalRepair10" />
+
+      <!-- Used by composite-local -->
+      <ComposeEvaluator label="BoundedCompositeQuery" operator="or" debug="false">
+        <Evaluator label="CompositeQuery"/>
+        <Evaluator label="IterationEval"/>
+      </ComposeEvaluator>
+
+      <!-- Used by decoupled-local-wait and decoupled-local-regular -->
+      <ComposeEvaluator label="BoundedDecoupledQuery" operator="or" debug="false">
+        <Evaluator label="DecoupledQuery"/>
+        <Evaluator label="IterationEval"/>
+      </ComposeEvaluator>
+
+      <!-- CBS Query -->
+      <CBSQuery label="CBSQueryExhaustive" queryLabel="SIPP" debug="false" vcLabel="pqp_solid"
+        alpha="0.001" X="1" buffer="30"/>
+      <ComposeEvaluator label="CBSCostEval" operator="and" debug="false">
+        <Evaluator label="DecoupledQuery"/>
+        <Evaluator label="CBSQueryExhaustive"/>
+      </ComposeEvaluator>
+
+      <SIPPMethod label="SIPP"/>
+    </MapEvaluators>
+
+
+    <MPStrategies>
+
+     <!-- SharedPRM -->
+      <BasicPRM label="SharedRoadmapPRM" debug="false" writeOutput="false">
+        <Sampler label="UniformRandomFree" number="4" attempts="5"/>
+        <Connector label="Closest5"/>
+        <Evaluator label="NodesEval"/>
+      </BasicPRM>
+
+      <BasicPRM label="IndividualEvaluation" debug="false" querySampler="UniformRandomFree" writeOutput="false">
+        <Connector label="Closest3"/>
+        <Evaluator label="AlwaysTrue"/>
+      </BasicPRM>
+
+      <!-- BasicPRM -->
+      <!-- Used by decoupled-local-wait -->
+      <BasicPRM label="IndividualPRM-Wait" debug="false" writeOutput="false">
+        <Sampler label="UniformRandomFree" number="0" attempts="5"/>
+        <Connector label="Closest0"/>
+        <Evaluator label="IndividualQuery"/>
+      </BasicPRM>
+
+      <!-- BasicPRM -->
+      <!-- Used by decoupled-local-regular -->
+      <BasicPRM label="IndividualPRM-Local" debug="false" writeOutput="false">
+        <Sampler label="UniformRandomFree" number="5" attempts="5"/>
+        <Connector label="Closest3"/>
+        <Evaluator label="IndividualQuery"/>
+      </BasicPRM>
+
+      <!-- DecoupledPRM -->
+      <GroupDecoupledStrategy label="DecoupledPRM"
+        strategyLabel="IndividualEvaluation" srStrategyLabel="SharedRoadmapPRM"
+        writeOutput="true" debug="false" ifSharedRoadmap="true">
+        <Evaluator label="DecoupledQuery"/>
+      </GroupDecoupledStrategy>
+
+      <!-- CBSPRM -->
+      <GroupDecoupledStrategy label="CBSPRM" 
+        strategyLabel="IndividualEvaluation" srStrategyLabel="SharedRoadmapPRM"
+        writeOutput="true" debug="false" ifSharedRoadmap="true">
+        <Evaluator label="CBSQuery"/>
+      </GroupDecoupledStrategy>
+
+      <!-- CBSPRM -->
+      <GroupDecoupledStrategy label="CBS+" 
+        strategyLabel="IndividualEvaluation" srStrategyLabel="SharedRoadmapPRM"
+        writeOutput="true" debug="false" ifSharedRoadmap="true">
+        <Evaluator label="CBSCostEval"/>
+      </GroupDecoupledStrategy>
+
+      <!-- CompositePRM -->
+      <GroupPRM label="CompositePRM" debug="false">
+        <Sampler label="UniformRandomFree" number="1" attempts="5"/>
+        <Connector label="Closest5"/>
+        <Evaluator label="CompositeQuery"/>
+      </GroupPRM>
+
+      <!-- RepairPRM-LocalRepair1 -->
+      <GroupDecoupledStrategy label="ARC10"
+        strategyLabel="IndividualEvaluation" srStrategyLabel="SharedRoadmapPRM"
+        writeOutput="true" debug="false" ifSharedRoadmap="true">
+        <Evaluator label="LocalRepair10"/>
+      </GroupDecoupledStrategy>
+
+      <!-- CompositePRM-local -->
+      <GroupPRM label="CompositePRM-local" debug="false" writeOutput="false">
+        <Sampler label="UniformRandomFree" number="10" attempts="5"/>
+        <Connector label="Closest5"/>
+        <Evaluator label="BoundedCompositeQuery"/>
+      </GroupPRM>
+
+      <!-- DecoupledPRM-local-wait -->
+      <GroupDecoupledStrategy label="DecoupledPRM-local-wait"
+        strategyLabel="IndividualPRM-Wait"
+        writeOutput="false" debug="false">
+        <Evaluator label="BoundedDecoupledQuery"/>
+      </GroupDecoupledStrategy>
+
+      <!-- DecoupledPRM-local-regular -->
+      <GroupDecoupledStrategy label="DecoupledPRM-local-regular"
+        strategyLabel="IndividualPRM-Local"
+        writeOutput="false" debug="false">
+        <Evaluator label="BoundedDecoupledQuery"/>
+      </GroupDecoupledStrategy>
+
+    </MPStrategies>
+
+    <RepairStrategies>
+      <LocalRepair label="LocalRepair10" windowSize="10" increment="2"
+        radius="1.1" probabilityDiscount="0.8"
+        strategyLabel="CompositePRM-local" debug="false" vcLabel="local" behavior=""
+        ifExpandRobot="true" iterationEval="IterationEval" ifHierarchical="true">
+        <Expander label="queries" increment="10"/>
+        <LocalStrategy label="DecoupledPRM-local-wait"/>
+        <LocalStrategy label="DecoupledPRM-local-regular"/>
+        <LocalStrategy label="CompositePRM-local"/>
+      </LocalRepair>
+    </RepairStrategies>
+
+    <MPTools>
+      <SafeIntervalTool label="SI" vcLabel="pqp_solid" debug="false"/>
+    </MPTools>
+    <!-- MPProblem allows multiple solvers to be specified and executed. -->
+
+    <Solver mpStrategyLabel="ARC10" seed="70879"
+      baseFilename="ARC10" vizmoDebug="false"/>
+
+  </Library>
+
+</MotionPlanning>

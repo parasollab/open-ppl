@@ -60,6 +60,8 @@ class GroupPRM : public GroupStrategyMethod<MPTraits> {
 
     virtual void Initialize() override;
 
+    virtual void SetLocalBoundaries(std::map<Robot*,Boundary*> _boundaries) override;
+
     ///@}
 
   protected:
@@ -68,6 +70,8 @@ class GroupPRM : public GroupStrategyMethod<MPTraits> {
     ///@{
 
     virtual void Iterate() override;
+
+    virtual void Finalize() override;
 
     ///@}
     ///@name Helpers
@@ -89,6 +93,8 @@ class GroupPRM : public GroupStrategyMethod<MPTraits> {
     std::vector<SamplerSetting> m_samplers;
     /// Connector labels for node-to-node.
     std::vector<std::string> m_connectorLabels;
+
+    std::map<Robot*,Boundary*> m_localBoundaries;
 
     ///@}
 
@@ -156,6 +162,7 @@ Initialize() {
   // Try to connect the starts/goals to any existing nodes.
   if(start != INVALID_VID)
     goals.push_back(start);
+
   Connect(goals);
 }
 
@@ -173,6 +180,56 @@ Iterate() {
     Connect(vids);
 }
 
+template <typename MPTraits>
+void
+GroupPRM<MPTraits>::
+Finalize() {
+
+  if(!this->m_writeOutput)
+    return;
+
+  //TODO: This is output info is temporaly used here for testing the individual
+  //    paths extraction from group paths, we may need to move this to the
+  //    GroupStrategyMethod class.
+  //const std::string base = this->GetBaseFilename();
+  const std::string base = this->GetBaseFilename() + "." +
+    this->GetNameAndLabel();
+  auto path = this->GetGroupPath();
+  auto roadmap = this->GetGroupRoadmap();
+  roadmap->Write(base + ".map", this->GetEnvironment());
+  auto robotGroup = path->GetRoadmap()->GetGroup();
+  auto robots = robotGroup->GetRobots();
+  for(auto robot : robots) {
+    auto label = robot->GetLabel();
+    auto robotIndex = robotGroup->GetGroupIndex(robot);
+    auto individualRoadmap = roadmap->GetIndividualGraph(robotIndex);
+    individualRoadmap->Write(base + "."+ label +".map", this->GetEnvironment());
+    auto individualPath = path->GetIndividualPath(robot);
+    if(individualPath.Size()) {
+      if(this->m_writeOutput)
+        ::WritePath(base + "." + label + ".fromGroupPRM.path", individualPath.FullCfgs(this->GetMPLibrary()));
+    }
+  }
+  // Output path vertices. Write both full and roadmap paths for now.
+  if(path and path->Size()) {
+    //::WritePath(base + ".rdmp.path", path->Cfgs());
+    if(this->m_writeOutput)
+      ::WritePath(base + ".path", path->FullCfgs(this->GetMPLibrary()));
+  }
+
+  // this->ModifyPath();
+  // this->GetStatClass()->SetStat("GroupCompositeQuery::TotalCost",path->Length());
+  const double timeRes = this->GetEnvironment()->GetTimeRes();
+  this->GetStatClass()->SetStat(this->GetNameAndLabel() + "::TotalCost",path->TimeSteps() * timeRes * robots.size());
+  this->GetStatClass()->SetStat(this->GetNameAndLabel() + "::NumEdges",roadmap->get_num_edges());
+  this->GetStatClass()->SetStat(this->GetNameAndLabel() + "::NumVertices",roadmap->get_num_vertices());
+
+  // Output stats.
+  std::ofstream osStat(base + ".stat");
+  this->GetStatClass()->PrintAllStats(osStat, roadmap);
+
+}
+
 /*--------------------------------- Helpers ----------------------------------*/
 
 template <typename MPTraits>
@@ -184,27 +241,35 @@ Sample() {
     std::cout << "Sampling new nodes..." << std::endl;
 
   auto r = this->GetGroupRoadmap();
-  const Boundary* const boundary = this->GetEnvironment()->GetBoundary();
+  //const Boundary* const boundary = this->GetEnvironment()->GetBoundary();
 
   // Generate nodes with each sampler.
   std::vector<VID> out;
-  std::vector<GroupCfgType> samples;
+  std::vector<GroupCfgType> validSamples;
+  std::vector<GroupCfgType> invalidSamples;
   for(auto& sampler : m_samplers) {
-    samples.clear();
-    samples.reserve(sampler.count);
+    validSamples.clear();
+    validSamples.reserve(sampler.count);
+
+    invalidSamples.clear();
+    invalidSamples.reserve(sampler.count);
 
     auto s = this->GetSampler(sampler.label);
-    s->Sample(sampler.count, sampler.attempts, boundary,
-        std::back_inserter(samples));
+    s->Sample(sampler.count, sampler.attempts, m_localBoundaries,
+        std::back_inserter(validSamples), std::back_inserter(invalidSamples));
+
+    this->GetStatClass()->SetStat("Free samples", validSamples.size());
+    this->GetStatClass()->SetStat("Obstacle samples", invalidSamples.size());
 
     if(this->m_debug)
       std::cout << "\tSampler '" << sampler.label << "' generated "
-                << samples.size() << "/" << sampler.count << " configurations."
+                << validSamples.size() << " valid configurations and "
+                << invalidSamples.size() << " invalid configurations."
                 << std::endl;
 
     // Add valid samples to roadmap.
-    out.reserve(out.size() + samples.size());
-    for(auto& sample : samples)
+    out.reserve(out.size() + validSamples.size());
+    for(auto& sample : validSamples)
       out.push_back(r->AddVertex(sample));
   }
 
@@ -231,11 +296,21 @@ Connect(const std::vector<VID>& _vids) {
 
   if(this->m_debug)
     std::cout << "\tGraph has "
+              << r->get_num_vertices() << " vertices, "
               << r->get_num_edges() << " edges and "
-              //<< r->GetCCTracker()->GetNumCCs()
-              << "?" /// @todo Setup CC tracker for groups to fix this.
+              << r->GetCCTracker()->GetNumCCs()
+              //<< "?" /// @todo Setup CC tracker for groups to fix this.
               << " connected components."
               << std::endl;
+}
+
+
+template<typename MPTraits>
+void
+GroupPRM<MPTraits>::
+SetLocalBoundaries(std::map<Robot*,Boundary*> _boundaries) {
+  MPStrategyMethod<MPTraits>::SetLocalBoundaries(_boundaries);
+  m_localBoundaries = _boundaries;
 }
 
 /*----------------------------------------------------------------------------*/

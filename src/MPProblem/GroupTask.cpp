@@ -20,6 +20,16 @@ GroupTask(RobotGroup* const _robotGroup)
 { }
 
 GroupTask::
+GroupTask(RobotGroup* const _robot, TaskSet const _taskSet)
+  : m_group(_robot)//, m_individualTasks(_taskSet)
+{
+  for(auto task : _taskSet) {
+    auto temp = task;
+    m_individualTasks.push_back(temp);
+  }
+}
+
+GroupTask::
 GroupTask(MPProblem* const _problem, XMLNode& _node) {
   // Parse task and robot labels.
   m_label = _node.Read("label", true, "", "Unique label for this task");

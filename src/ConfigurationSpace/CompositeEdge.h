@@ -162,6 +162,9 @@ class CompositeEdge {
     /// be invalid if an individual edge is local.
     virtual std::vector<ED>& GetEdgeDescriptors() noexcept;
 
+    /// Get the edge descriptor given the specific robot
+    ED GetEdgeDescriptor(Robot* const _robot);
+
     /// Get the number of robots given in this group local plan.
     virtual size_t GetNumRobots() const noexcept;
 
@@ -174,6 +177,8 @@ class CompositeEdge {
 
     /// Get the number of timesteps along this composite edge.
     virtual size_t GetTimeSteps() const;
+
+    bool SkipEdge() const {return m_skipEdge;};
 
     ///@}
     ///@name Stapl graph interface
@@ -220,6 +225,8 @@ class CompositeEdge {
 
     /// Note that any edges added to m_localEdges must be valid and complete.
     std::vector<IndividualEdge> m_localEdges; ///< Edges which are not in a map.
+
+    bool m_skipEdge{false}; ///< Flag to skip full recreation in GroupPath::FullCfgs.
 
     size_t m_timesteps; ///< The number of timesteps along this edge.
 
@@ -500,6 +507,15 @@ std::vector<typename CompositeEdge<GraphType>::ED>&
 CompositeEdge<GraphType>::
 GetEdgeDescriptors() noexcept {
   return m_edges;
+}
+
+template <typename GraphType>
+typename CompositeEdge<GraphType>::ED
+CompositeEdge<GraphType>::
+GetEdgeDescriptor(Robot* const _robot) {
+  const size_t index = m_groupMap->GetGroup()->GetGroupIndex(_robot);
+  const ED& descriptor = m_edges.at(index);
+  return descriptor;
 }
 
 

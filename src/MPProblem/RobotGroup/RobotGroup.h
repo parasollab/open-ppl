@@ -35,6 +35,12 @@ class RobotGroup final {
     RobotGroup(MPProblem* const _problem, const std::string& _label,
         const std::vector<Robot*>& _robots);
 
+    /// Construct a group from a set of robots with no label.
+    /// @param _problem The owning MPProblem.
+    /// @param _robot The set of robots in this group.
+    RobotGroup(MPProblem* const _problem, const std::vector<Robot*>& _robots);    
+
+
     /// Construct a group from an XML node. The referenced robots must be
     /// specified before the group in the XML file.
     /// @param _problem The owning MPProblem.

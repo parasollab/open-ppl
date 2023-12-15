@@ -27,6 +27,8 @@ class UniformRandomSampler : virtual public SamplerMethod<MPTraits> {
     ///@{
 
     using typename SamplerMethod<MPTraits>::BoundaryMap;
+    using typename SamplerMethod<MPTraits>::NonConstBoundaryMap;
+    using typename SamplerMethod<MPTraits>::RobotMap;
 
     ///@}
     ///@name Construction
@@ -62,6 +64,14 @@ class UniformRandomSampler : virtual public SamplerMethod<MPTraits> {
     virtual bool Sampler(GroupCfgType& _cfg, const BoundaryMap& _boundaryMap,
         std::vector<GroupCfgType>& _valid, std::vector<GroupCfgType>& _invalid)
         override;
+
+    virtual bool Sampler(GroupCfgType& _cfg, NonConstBoundaryMap& _boundaryMap,
+        std::vector<GroupCfgType>& _valid, std::vector<GroupCfgType>& _invalid)
+        override;
+
+    virtual bool Sampler(GroupCfgType& _cfg, const BoundaryMap& _boundaryMap,
+        std::vector<GroupCfgType>& _valid, std::vector<GroupCfgType>& _invalid,
+        const RobotMap& _robotMap) override;
 
     ///@}
 
@@ -172,6 +182,64 @@ Sampler(GroupCfgType& _cfg, const BoundaryMap& _boundaryMap,
 
   return isValid;
 }
+
+
+template <typename MPTraits>
+bool
+UniformRandomSampler<MPTraits>::
+Sampler(GroupCfgType& _cfg, NonConstBoundaryMap& _boundaryMap,
+    std::vector<GroupCfgType>& _valid, std::vector<GroupCfgType>& _invalid) {
+  // Check Validity.
+  auto vc = this->GetValidityChecker(m_vcLabel);
+  const std::string callee = this->GetNameAndLabel() + "::Sampler";
+  const bool isValid = vc->IsValid(_cfg, callee);
+
+  // Store result.
+  if(isValid)
+    _valid.push_back(_cfg);
+  else
+    _invalid.push_back(_cfg);
+
+  // Debug.
+  if(this->m_debug) {
+    std::cout << "Sampled Cfg: " << _cfg.PrettyPrint()
+              << "\n\tValidity:  " << isValid
+              << std::endl;
+  }
+
+  return isValid;
+}
+
+
+
+template <typename MPTraits>
+bool
+UniformRandomSampler<MPTraits>::
+Sampler(GroupCfgType& _cfg, const BoundaryMap& _boundaryMap,
+    std::vector<GroupCfgType>& _valid, std::vector<GroupCfgType>& _invalid,
+    const RobotMap& _robotMap) {
+  // Check Validity.
+  auto vc = this->GetValidityChecker(m_vcLabel);
+  const std::string callee = this->GetNameAndLabel() + "::Sampler";
+  const bool isValid = vc->IsValid(_cfg, _robotMap, callee);
+
+  // Store result.
+  if(isValid)
+    _valid.push_back(_cfg);
+  else
+    _invalid.push_back(_cfg);
+
+  // Debug.
+  if(this->m_debug) {
+    std::cout << "Sampled Cfg: " << _cfg.PrettyPrint()
+              << "\n\tValidity:  " << isValid
+              << std::endl;
+  }
+
+  return isValid;
+}
+
+
 
 /*----------------------------------------------------------------------------*/
 

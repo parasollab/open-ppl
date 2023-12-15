@@ -24,6 +24,7 @@ class GroupPath final {
 
     typedef typename MPTraits::GroupCfgType       GroupCfg;
     typedef typename MPTraits::GroupRoadmapType   GroupRoadmapType;
+    typedef typename MPTraits::Path               Path;
     typedef typename GroupRoadmapType::VID        VID;
 
     ///@}
@@ -112,6 +113,9 @@ class GroupPath final {
   
     /// Get the wait times at each vertex in the path.
     std::vector<size_t> GetWaitTimes();
+
+    /// Get an individual path represented as path object.
+    Path GetIndividualPath(Robot* _robot);
 
     /// Get the (source,target) of the path at the input timestep.
     /// @param _timestep The timestep to find the corresponding edge.
@@ -449,6 +453,33 @@ GroupPath<MPTraits>::
 GetWaitTimes() {
   return m_waitingTimesteps;
 }
+
+
+template <typename MPTraits>
+typename MPTraits::Path
+GroupPath<MPTraits>::
+GetIndividualPath(Robot* _robot) {
+
+  std::vector<size_t> singleVIDs;
+  std::vector<size_t> durations;
+  for(auto it = m_vids.begin(); it + 1 < m_vids.end(); ++it) {
+    const VID source = *it,
+              target = *(it + 1);
+    durations.push_back(m_roadmap->GetEdge(source, target).GetTimeSteps());
+    auto singleEdge = m_roadmap->GetEdge(source, target).GetEdgeDescriptor(_robot);
+    singleVIDs.push_back(singleEdge.source());
+    if(it + 2 == m_vids.end()) // This means we reached the end of the path
+      singleVIDs.push_back(singleEdge.target());
+  }
+  auto robotGroup = m_roadmap->GetGroup();
+  auto robotIndex = robotGroup->GetGroupIndex(_robot);
+  auto roadmap = m_roadmap->GetIndividualGraph(robotIndex);
+  Path singlePath(roadmap);
+  singlePath.SetVIDs(singleVIDs);
+  singlePath.SetDurations(durations);
+  return singlePath;
+}
+
 
 template <typename MPTraits>
 std::pair<size_t,size_t>

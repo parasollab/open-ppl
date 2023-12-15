@@ -409,6 +409,12 @@ class GoalTrackerType final : public MPBaseObject<MPTraits> {
     /// Clear all goal maps.
     void Clear();
 
+    void Clear(RoadmapType* const _roadmap,
+        const MPTask* const _task);
+
+    void Clear(GroupRoadmapType* const _roadmap,
+        const GroupTask* const _task);
+
     ///@}
 
   private:
@@ -665,6 +671,41 @@ Clear() {
   m_individualMaps.clear();
   m_groupMaps.clear();
 }
+
+
+template <typename MPTraits>
+void
+GoalTrackerType<MPTraits>::
+Clear(RoadmapType* const _roadmap, const MPTask* const _task) {
+
+  IndividualKey key{_roadmap, _task};
+  try {
+    auto& map = m_individualMaps.at(key);
+    map.RemoveHooks();
+  }
+  catch(const std::out_of_range&) {
+    auto robot = _roadmap->GetRobot();
+    throw RunTimeException(WHERE) << "Map for individual robot '"
+                                  << robot->GetLabel() << "' (" << robot << "), "
+                                  << "task '" << _task->GetLabel() << "' ("
+                                  << _task << ") does not exist.";
+  }
+
+  m_individualMaps.erase(key);
+}
+
+template <typename MPTraits>
+void
+GoalTrackerType<MPTraits>::
+Clear(GroupRoadmapType* const _roadmap, const GroupTask* const _task) {
+  for(auto& task : *_task) {
+    auto roadmap = this->GetRoadmap(task.GetRobot());
+    if(IsMap(roadmap, &task))
+      Clear(roadmap,&task);
+  }
+  m_groupMaps.erase(std::make_pair(_roadmap,_task));
+}
+
 
 /*--------------------------------- Helpers ----------------------------------*/
 
