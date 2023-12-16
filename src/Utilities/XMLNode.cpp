@@ -175,6 +175,44 @@ Read(const std::string& _name, const bool _req, const std::string& _default,
 }
 
 
+template <>
+size_t
+XMLNode::
+Read(const std::string& _name, const bool _req, const size_t& _default, const size_t& _min,
+    const size_t& _max, const std::string& _desc) {
+    m_accessed = true;
+  m_reqAttributes.insert(_name);
+  int toReturn;
+
+  tinyxml2::XMLError qr = m_node->ToElement()->QueryAttribute(_name.c_str(), &toReturn);
+  switch(qr) {
+    case tinyxml2::XML_WRONG_ATTRIBUTE_TYPE:
+      throw ParseException(Where(), AttrWrongType(_name, _desc));
+      break;
+    case tinyxml2::XML_NO_ATTRIBUTE:
+      {
+        if(_req)
+          throw ParseException(Where(), AttrMissing(_name, _desc));
+        else
+          return _default;
+        break;
+      }
+    case tinyxml2::XML_SUCCESS:
+      {
+        size_t stoReturn = size_t(toReturn);
+        if(stoReturn < _min || stoReturn > _max)
+          throw ParseException(Where(),
+              AttrInvalidBounds(_name, _desc, _min, _max, stoReturn));
+        break;
+      }
+    default:
+      throw RunTimeException(WHERE, "Logic shouldn't be able to reach this.");
+  }
+
+  return size_t(toReturn);
+}
+
+
 void
 XMLNode::
 Ignore() {

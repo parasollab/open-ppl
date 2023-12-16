@@ -45,8 +45,12 @@ class Terrain {
     Terrain(XMLNode& _node);
 
     Terrain(const Terrain& _terrain);
-    ///@}
 
+    ///@}
+    ///@name Assignment
+    ///@{
+    
+    Terrain& operator=(const Terrain& _terrain);
 
     ///@name Accessors
     ///@{
