@@ -380,7 +380,9 @@ namespace nonstd {
   matrix_type<T, Rows, Cols>&
   matrix_type<T, Rows, Cols>::
   operator=(const matrix_type& _other) noexcept {
-    for(auto i = begin(), o = _other.begin(); i != end(); ++i, ++o)
+    auto i = begin();
+    auto o = _other.begin();
+    for(; i != end(); ++i, ++o)
       *i = *o;
     return *this;
   }

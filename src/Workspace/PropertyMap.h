@@ -170,7 +170,7 @@ GetVertexFilteredSkeleton(VertexFilterFunction&& _f)  {
   for(auto mit = m_vertexMap.begin();
 	mit != m_vertexMap.end(); ++mit) {
     if(_f(mit->second)) {
-      m_skeleton->delete_vertex(mit->first);
+      m_skeleton->DeleteVertex(mit->first);
     }
   }
 

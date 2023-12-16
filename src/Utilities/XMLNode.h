@@ -259,6 +259,13 @@ class XMLNode {
     ///@}
 };
 
+// specialization for size_t since tinyxml2 doesn't support it
+template <>
+size_t 
+XMLNode::
+Read(const std::string& _name, const bool _req, const size_t& _default,
+    const size_t& _min, const size_t& _max, const std::string& _desc);
+
 /*---------------------------- Templated Members -----------------------------*/
 
 template <typename T>
