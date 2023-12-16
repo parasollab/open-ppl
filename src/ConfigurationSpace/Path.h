@@ -462,7 +462,6 @@ template <typename MPTraits>
 size_t
 PathType<MPTraits>::
 TimeSteps() const {
-  /// TODO: maybe there's still more bugs with timesteps for local paths
 
   //if(m_timestepsCached)
   //  return m_timesteps;

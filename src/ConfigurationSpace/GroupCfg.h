@@ -32,7 +32,7 @@ class RobotGroup;
 /// storage (m_localCfgs) which stores individual cfgs not yet in a roadmap.
 /// When adding a group cfg to a group roadmap, the VID is used in place after
 /// adding the individual cfg to the individual roadmap.
-/// 
+///
 /// 'GraphType' represents the individual roadmap type for a single robot.
 ////////////////////////////////////////////////////////////////////////////////
 template <typename GraphType>
@@ -48,7 +48,7 @@ class GroupCfg final : public CompositeState<GraphType> {
 
     typedef typename BaseType::VID                            VID;
     typedef typename BaseType::GroupGraphType                 GroupGraphType;
-    typedef typename BaseType::CfgType                        IndividualCfg; 
+    typedef typename BaseType::CfgType                        IndividualCfg;
 
     /// A formation represents a group of robots which are maintaining their
     /// configurations relative to a leader, such as maintaining a square or
@@ -88,21 +88,21 @@ class GroupCfg final : public CompositeState<GraphType> {
     ///@name Arithmetic
     ///@{
 
-    /// Find the sum of the current and a given group configuration, 
+    /// Find the sum of the current and a given group configuration,
     /// by each degree of freedom.
-    /// @param _other The group configuration to be added. 
+    /// @param _other The group configuration to be added.
     /// @return The sum of the group configurations.
     GroupCfg operator+(const GroupCfg& _other) const;
 
-    /// Find the difference of the current and a 
+    /// Find the difference of the current and a
     /// given group configuration, by each degree of freedom.
-    /// @param _other The group configuration to be subtracted. 
+    /// @param _other The group configuration to be subtracted.
     /// @return The difference of the group configurations.
     GroupCfg operator-(const GroupCfg& _other) const;
 
-    /// Find the product of the current and a given group configuration, 
+    /// Find the product of the current and a given group configuration,
     /// by each degree of freedom.
-    /// @param _other The group configuration used to multiply the current. 
+    /// @param _other The group configuration used to multiply the current.
     /// @return The product of the group configurations.
     GroupCfg operator*(const double& _other) const;
 
@@ -132,6 +132,7 @@ class GroupCfg final : public CompositeState<GraphType> {
     /// @note Does NOT add this new cfg to any roadmap, but makes all cfg info
     ///       local (everything will be in m_localCfgs) so that there are no
     ///       issues when adding to the roadmap later.
+
     void SetGroupRoadmap(GroupRoadmapType* const _newRoadmap);
 
     ///@}
@@ -311,6 +312,7 @@ class GroupCfg final : public CompositeState<GraphType> {
     template<typename DistanceMetricPointer>
     void GetRandomRay(const double _length, DistanceMetricPointer _dm, const bool _norm=true);
 
+
     /// Normalize Orientation DOFs for a Group Cfg
     virtual void NormalizeOrientation(const std::vector<size_t>& _robots = {})
         noexcept;
@@ -322,27 +324,148 @@ class GroupCfg final : public CompositeState<GraphType> {
     std::string PrettyPrint(const size_t _precision = 4) const;
 
     ///@}
+    ///@name I/O
+    ///@{
+
+    /// Read a configuration from an input stream.
+    /// @param _is The input stream to read from.
+    virtual void Read(std::istream& _is);
+
+    ///@}
 
   private:
 
     ///@name Helpers
     ///@{
 
+    /// Return whether the cfg for the robot is local to the group cfg, or if
+    /// it's in an individual roadmap already.
+    // bool IsLocalCfg(const size_t _robotIndex) const noexcept;
+
     /// Initialize the set of local configurations if not already done.
     virtual void InitializeLocalCfgs() noexcept override;
+
+    ///@}
+    ///@name Internal State
+    ///@{
+
+    // std::vector<IndividualCfg> m_localCfgs; ///< Individual cfgs not in a map.
+
+    /// The function to use for normalizing orientation DOFs.
+    mutable double (*m_normalizer)(const double&){Normalize};
 
     ///@}
 
 };
 
+//std::istream& operator>>(std::istream& _is, typename GraphType::GroupCfg& _groupCfg);
+
+
+
 template <typename GraphType>
 GroupCfg<GraphType>::
-GroupCfg(GroupRoadmapType* const& _groupMap) 
+GroupCfg(GroupRoadmapType* const& _groupMap)
      : CompositeState<GraphType>((GroupGraphType*)_groupMap) {}
 
 template <typename GraphType>
 GroupCfg<GraphType>::
 GroupCfg(RobotGroup* const& _group) : CompositeState<GraphType>(_group) {}
+
+/*--------------------------------- I/O ---------------------------------*/
+
+template <typename GraphType>
+void
+GroupCfg<GraphType>::
+Read(istream& _is) {
+  // Require the groupCfg to already have a robot pointer for now.
+  if(!this->m_group)
+    throw RunTimeException(WHERE) << "Cannot read in a Cfg without knowing the "
+                                  << "robot. Use inputRobot member to specify "
+                                  << "the default robot pointer.";
+
+#ifdef VIZMO_MAP
+  // If we are using the vizmo roadmap format, we need to read and discard the
+  // robot index.
+  size_t index;
+  _is >> index;
+#endif
+
+  // We get all the RobotCfgs,
+  const auto& robots = this->GetRobots();
+
+  for(size_t i = 0; i < robots.size(); ++i) {
+    auto& cfg = this->GetRobotCfg(i);
+    cfg.SetRobot(robots[i]);
+    // Read cfg's DOFs.
+
+    std::vector<double> data;
+    for(size_t j = 0; j < cfg.DOF(); ++j) {
+      double value;
+      _is >> value;
+      data.push_back(value);
+      //if(_is.fail()) {
+      //  // If we fail, print the DOFS we actually read with the error message.
+      //  string dofs;
+      //  for(size_t k = 0; k < j; ++k)
+      //    dofs += to_string(cfg.m_dofs[j]) + " ";
+      //
+      //  throw ParseException(WHERE) << "Failed reading values for robot "
+      //                              <<  cfg.GetRobot()->GetLabel() << " dofs"
+      //                              << "Expected " << cfg.DOF()
+      //                             << ", but read " << j << ":\n\t" << dofs;
+      //}
+    }
+    cfg.SetData(data);
+    data.clear();
+  }
+  std::cout << "Calling GorupCfg::Read()" << endl;
+  //// Read one DOF first. If that fails, return and rely on checking _is.fail()
+  //// from the call site to determine that no more Cfg's are available.
+  //_is >> m_dofs[0];
+  //if(_is.fail())
+  //  return;
+
+  //// Read remaining DOFs.
+  //for(size_t i = 1; i < DOF(); ++i) {
+  //  _is >> m_dofs[i];
+  //  if(_is.fail()) {
+  //    // If we fail, print the DOFS we actually read with the error message.
+  //    string dofs;
+  //    for(size_t k = 0; k < i; ++k)
+  //      dofs += to_string(m_dofs[i]) + " ";
+
+  //    throw ParseException(WHERE) << "Failed reading values for all dofs. "
+  //                                << "Expected " << m_dofs.size()
+  //                                << ", but read " << i << ":\n\t" << dofs;
+  //  }
+  //}
+
+  //// Read velocities, if any.
+  //for(size_t i = 0; i < m_vel.size(); ++i) {
+  //  _is >> m_vel[i];
+  //  if(_is.fail()) {
+  //    // If we fail, print the DOFS we actually read with the error message.
+  //    string err;
+  //    for(size_t k = 0; k < i; ++k)
+  //      err += to_string(m_vel[i]) + " ";
+
+  //    throw ParseException(WHERE) << "Failed reading values for all velocities. "
+  //                                << "Expected " << m_vel.size()
+  //                                << ", but read " << i << ":\n\t" << err;
+  //  }
+
+  //}
+
+  //m_witnessCfg.reset();
+}
+
+
+template <typename GraphType>
+std::istream&
+operator>>(std::istream& _is, GroupCfg<GraphType>& _groupCfg) {
+  _groupCfg.Read(_is);
+  return _is;
+}
 
 /*--------------------------------- Equality ---------------------------------*/
 
@@ -525,6 +648,17 @@ template <typename GraphType>
 double
 GroupCfg<GraphType>::
 Magnitude() const {
+  double max = 0.0;
+  for(size_t i = 0; i < this->GetNumRobots(); ++i)
+    max = std::max(max,this->GetRobotCfg(i).Magnitude());
+  return max;
+}
+
+/*
+template <typename GraphType>
+double
+GroupCfg<GraphType>::
+Magnitude() const {
   double result = 0;
   for(size_t i = 0; i < this->GetNumRobots(); ++i) {
     const double m = this->GetRobotCfg(i).Magnitude();
@@ -532,8 +666,19 @@ Magnitude() const {
   }
   return std::sqrt(result);
 }
+*/
 
+template <typename GraphType>
+double
+GroupCfg<GraphType>::
+PositionMagnitude() const {
+  double max = 0.0;
+  for(size_t i = 0; i < this->GetNumRobots(); ++i)
+    max = std::max(max,this->GetRobotCfg(i).PositionMagnitude());
 
+  return max;
+}
+/*
 template <typename GraphType>
 double
 GroupCfg<GraphType>::
@@ -545,8 +690,20 @@ PositionMagnitude() const {
   }
   return std::sqrt(result);
 }
+*/
 
+template <typename GraphType>
+double
+GroupCfg<GraphType>::
+OrientationMagnitude() const {
+  double max = 0.0;
+  for(size_t i = 0; i < this->GetNumRobots(); ++i)
+    max = std::max(max,this->GetRobotCfg(i).OrientationMagnitude());
 
+  return max;
+}
+
+/*
 template <typename GraphType>
 double
 GroupCfg<GraphType>::
@@ -558,7 +715,7 @@ OrientationMagnitude() const {
   }
   return std::sqrt(result);
 }
-
+*/
 /*------------------------- Configuration Helpers ----------------------------*/
 
 template <typename GraphType>
@@ -872,6 +1029,27 @@ GetRandomGroupCfg(Environment* _env) {
   GetRandomGroupCfg(_env->GetBoundary());
 }
 
+
+template <typename GraphType>
+template <class DistanceMetricPointer>
+void
+GroupCfg<GraphType>::
+GetRandomRay(const double _length, DistanceMetricPointer _dm, const bool _norm) {
+  // Randomly sample DOFs.
+
+    for(size_t j = 0; j < this->GetNumRobots(); ++j) {
+        for(size_t i = 0; i < this->GetRobotCfg(j).DOF(); ++i)
+            this->GetRobotCfg(j)[i] = GRand();
+    }
+  // Scale to appropriate length. 
+  _dm->ScaleCfg(_length, *this);
+
+  // Normalize if requested.
+  if(_norm)
+    NormalizeOrientation();
+}
+
+
 template <typename GraphType>
 void
 GroupCfg<GraphType>::
@@ -923,25 +1101,6 @@ InitializeLocalCfgs() noexcept {
     this->m_localCfgs[i] = IndividualCfg(this->GetRobot(i));
 }
 
-template <typename GraphType>
-template <class DistanceMetricPointer>
-void
-GroupCfg<GraphType>::
-GetRandomRay(const double _length, DistanceMetricPointer _dm, const bool _norm) {
-  // Randomly sample DOFs.
-
-    for(size_t j = 0; j < this->GetNumRobots(); ++j) {
-        for(size_t i = 0; i < this->GetRobotCfg(j).DOF(); ++i)
-            this->GetRobotCfg(j)[i] = GRand();
-    }
-  // Scale to appropriate length. 
-  _dm->ScaleCfg(_length, *this);
-
-  // Normalize if requested.
-  if(_norm)
-    NormalizeOrientation();
-}
-
 /*----------------------------------------------------------------------------*/
 
 template <typename GraphType>
@@ -952,9 +1111,30 @@ operator<<(std::ostream& _os, const GroupCfg<GraphType>& _groupCfg) {
   _os << "0 ";
 #endif
 
+  _os << scientific << setprecision(16);
   // Loop through all robots in the group and print each one's cfg in order.
-  for(size_t i = 0; i < _groupCfg.GetNumRobots(); ++i)
-    _os << _groupCfg.GetRobotCfg(i);
+  for(size_t i = 0; i < _groupCfg.GetNumRobots(); ++i) {
+    //_os << _groupCfg.GetRobotCfg(i);
+
+    auto cfg = _groupCfg.GetRobotCfg(i);
+    // Write DOFs.
+    auto data = cfg.GetData();
+    for(size_t i = 0; i < data.size(); i++) {
+      _os << setw(25) << data[i] << ' ';
+    }
+    #ifndef VIZMO_MAP
+    auto vel = cfg.GetVelocity();
+    for(size_t i = 0; i < m_vel.size(); i++) {
+      _os << setw(25) << vel[i] << ' ';
+    }
+    #endif
+  }
+
+  // Unset scientific/precision options.
+  _os.unsetf(ios_base::floatfield);
+  if(_os.fail()) {
+    throw RunTimeException(WHERE) << "Failed to write to file.";
+  }
 
   return _os;
 }

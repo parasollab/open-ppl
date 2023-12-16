@@ -13,7 +13,7 @@
 ///
 /// Stores all information available from local plan computations, including
 /// intermediates along edges (not straight line), the path
-/// generated, and the edge weights to be added to the RoadmapGraph.
+/// generated, and the edge weights to be added to the GenericStateGraph.
 ///
 /// @todo Destroy this object and have LPs/Extenders work directly with a
 ///       GroupLocalPlan.
@@ -45,6 +45,7 @@ struct GroupLPOutput {
 
   GroupRoadmapType* m_groupRoadmap{nullptr}; // Group this local plan is for.
 
+  //TODO::Redundancy in m_path and m_intermediates
   GroupCfgPath m_path;           // Path found by local planner.
   GroupCfgPath m_intermediates;
 
@@ -76,7 +77,9 @@ struct GroupLPOutput {
 
   void SetIndividualEdges(const std::vector<size_t>& _formation);
 
-  std::vector<size_t> GetFormation() {return m_edge.first.GetFormation();}
+  void SetIndividualEdges(const std::vector<size_t>& _activeRobots, const int _numSteps);
+
+  std::vector<size_t> GetActiveRobots() {return m_edge.first.GetActiveRobots();}
 
   void SetSkipEdge();
 
@@ -136,13 +139,25 @@ AddIntermediatesToWeights(const bool _saveIntermediates) {
 
   // Make a copy of the intermediates in reverse order for the backward edge.
   GroupCfgPath tmp;
-  tmp.reserve(m_intermediates.size());
-  std::copy(m_intermediates.rbegin(), m_intermediates.rend(),
-            std::back_inserter(tmp));
 
-  // Set both edges.
-  m_edge.first.SetIntermediates(m_intermediates);
-  m_edge.second.SetIntermediates(tmp);
+  if(m_intermediates.size() > 0) {
+    tmp.reserve(m_intermediates.size());
+    std::copy(m_intermediates.rbegin(), m_intermediates.rend(),
+        std::back_inserter(tmp));
+
+    // Set both edges.
+    m_edge.first.SetIntermediates(m_intermediates);
+    m_edge.second.SetIntermediates(tmp);
+  }
+  else {
+    tmp.reserve(m_path.size());
+    std::copy(m_path.rbegin(), m_path.rend(),
+        std::back_inserter(tmp));
+
+    // Set both edges.
+    m_edge.first.SetIntermediates(m_path);
+    m_edge.second.SetIntermediates(tmp);
+  }
 }
 
 template <typename MPTraits>
@@ -181,6 +196,36 @@ SetIndividualEdges(const std::vector<size_t>& _formation) {
   else for(const size_t robotIndex : _formation) {
     m_edge.first.SetEdge(robotIndex, IndividualEdge(label, weight));
     m_edge.second.SetEdge(robotIndex, IndividualEdge(label, weight));
+  }
+}
+
+template <typename MPTraits>
+void
+GroupLPOutput<MPTraits>::
+SetIndividualEdges(const std::vector<size_t>& _activeRobots, const int _numSteps) {
+  /// @todo We need to preserve the intermediates.
+  /// @todo This is not a correct edge for each individual robot - they will not
+  ///       all have the same weight. This needs to be tracked separately.
+  if(!m_edge.first.GetIntermediates().empty())
+    std::cerr << "GroupLPOutput Warning: intermediates detected in group edge "
+              << "are not being added in the individual edge yet!"
+              << std::endl;
+
+  const std::string label = m_edge.first.GetLPLabel();
+  const double weight = m_edge.first.GetWeight();
+
+  // If there are no active robots, then we need to set the individual edges for
+  // all of them.
+  if(_activeRobots.empty()) {
+    const size_t numRobots = m_groupRoadmap->GetGroup()->Size();
+    for(size_t i = 0; i < numRobots; ++i) {
+      m_edge.first.SetEdge(i, IndividualEdge(_numSteps, label, weight));
+      m_edge.second.SetEdge(i, IndividualEdge(_numSteps, label, weight));
+    }
+  }
+  else for(const size_t robotIndex : _activeRobots) {
+    m_edge.first.SetEdge(robotIndex, IndividualEdge(_numSteps, label, weight));
+    m_edge.second.SetEdge(robotIndex, IndividualEdge(_numSteps, label, weight));
   }
 }
 

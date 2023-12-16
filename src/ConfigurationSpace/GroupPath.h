@@ -27,6 +27,7 @@ class GroupPath final {
     typedef typename MPTraits::Path               Path;
     typedef typename GroupRoadmapType::VID        VID;
 
+
     ///@}
     ///@name Construction
     ///@{
@@ -110,7 +111,7 @@ class GroupPath final {
     /// Set the wait times at each vertex in path
     /// Used in Safe Interval Path Planning
     void SetWaitTimes(std::vector<size_t> _waitTimes);
-  
+
     /// Get the wait times at each vertex in the path.
     std::vector<size_t> GetWaitTimes();
 
@@ -279,12 +280,13 @@ FullCfgs(MPLibrary* const _lib) const {
   for(auto it = m_vids.begin(); it + 1 < m_vids.end(); ++it) {
     const VID source = *it,
               target = *(it + 1);
-    const auto& edge = m_roadmap->GetEdge(source, target);
+    //const auto& edge = m_roadmap->GetEdge(source, target);
 
     // Insert intermediates between vertices. For assembly planning (skip edge):
     // don't reconstruct the edge when it's for a part that has been placed off
     // to the side, just use the two cfgs. This edge will just be (start, end).
-    if(!edge.SkipEdge()) {
+    //if(!edge.SkipEdge()) {
+    {
       auto e = m_roadmap->GetEdge(source,target);
       auto edge = !e.GetIntermediates().empty() ? e.GetIntermediates()
                                               : _lib->ReconstructEdge(m_roadmap, source, target);
@@ -298,7 +300,7 @@ FullCfgs(MPLibrary* const _lib) const {
         out.insert(out.end(), startIter, endIter);
       }
     }
-  
+
     // Insert the next vertex.
     out.push_back(m_roadmap->GetVertex(target));
   }
@@ -354,6 +356,32 @@ FullCfgsWithWait(MPLibrary* const _lib) const {
   }
   return out;
 }
+
+template <typename MPTraits>
+typename MPTraits::Path
+GroupPath<MPTraits>::
+GetIndividualPath(Robot* _robot) {
+
+  std::vector<size_t> singleVIDs;
+  std::vector<size_t> durations;
+  for(auto it = m_vids.begin(); it + 1 < m_vids.end(); ++it) {
+    const VID source = *it,
+              target = *(it + 1);
+    durations.push_back(m_roadmap->GetEdge(source, target).GetTimeSteps());
+    auto singleEdge = m_roadmap->GetEdge(source, target).GetEdgeDescriptor(_robot);
+    singleVIDs.push_back(singleEdge.source());
+    if(it + 2 == m_vids.end()) // This means we reached the end of the path
+      singleVIDs.push_back(singleEdge.target());
+  }
+  auto robotGroup = m_roadmap->GetGroup();
+  auto robotIndex = robotGroup->GetGroupIndex(_robot);
+  auto roadmap = m_roadmap->GetIndividualGraph(robotIndex);
+  Path singlePath(roadmap);
+  singlePath.SetVIDs(singleVIDs);
+  singlePath.SetDurations(durations);
+  return singlePath;
+}
+
 
 template <typename MPTraits>
 GroupPath<MPTraits>&
@@ -454,44 +482,17 @@ GetWaitTimes() {
   return m_waitingTimesteps;
 }
 
-
-template <typename MPTraits>
-typename MPTraits::Path
-GroupPath<MPTraits>::
-GetIndividualPath(Robot* _robot) {
-
-  std::vector<size_t> singleVIDs;
-  std::vector<size_t> durations;
-  for(auto it = m_vids.begin(); it + 1 < m_vids.end(); ++it) {
-    const VID source = *it,
-              target = *(it + 1);
-    durations.push_back(m_roadmap->GetEdge(source, target).GetTimeSteps());
-    auto singleEdge = m_roadmap->GetEdge(source, target).GetEdgeDescriptor(_robot);
-    singleVIDs.push_back(singleEdge.source());
-    if(it + 2 == m_vids.end()) // This means we reached the end of the path
-      singleVIDs.push_back(singleEdge.target());
-  }
-  auto robotGroup = m_roadmap->GetGroup();
-  auto robotIndex = robotGroup->GetGroupIndex(_robot);
-  auto roadmap = m_roadmap->GetIndividualGraph(robotIndex);
-  Path singlePath(roadmap);
-  singlePath.SetVIDs(singleVIDs);
-  singlePath.SetDurations(durations);
-  return singlePath;
-}
-
-
 template <typename MPTraits>
 std::pair<size_t,size_t>
 GroupPath<MPTraits>::
 GetEdgeAtTimestep(size_t _timestep) {
- 
+
   size_t step = 0;
   for(size_t i = 0; i + 1 < m_vids.size(); i++) {
 
     if(!m_waitingTimesteps.empty())
       step += m_waitingTimesteps[i];
-    
+
     if(_timestep <= step)
       return std::make_pair(m_vids[i],m_vids[i]);
 

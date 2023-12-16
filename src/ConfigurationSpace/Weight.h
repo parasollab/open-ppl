@@ -47,6 +47,10 @@ class DefaultWeight {
     DefaultWeight(const std::string& _label = "", const double _w = 0,
         const std::vector<CfgType>& _intermediates = std::vector<CfgType>());
 
+   DefaultWeight(const size_t _numSteps, const std::string& _label = "", const double _w = 0, 
+        const std::vector<CfgType>& _intermediates = std::vector<CfgType>()); 
+
+
     virtual ~DefaultWeight() = default;
 
     ///@}
@@ -170,6 +174,10 @@ class DefaultWeight {
     ///@name Internal State
     ///@{
 
+    // For nonholonomic robots.
+    ControlSet m_controls;   ///< The controls used.
+    size_t m_timeSteps{0};   ///< The number of timesteps to apply the controls.      
+
     std::string m_lpLabel;   ///< Label of local planner that built this edge.
 
     double m_weight{0.};                  ///< The edge length.
@@ -181,9 +189,7 @@ class DefaultWeight {
     /// The clearance value, or inf if not evaluated.
     double m_clearance{std::numeric_limits<double>::infinity()};
 
-    // For nonholonomic robots.
-    ControlSet m_controls;   ///< The controls used.
-    size_t m_timeSteps{0};   ///< The number of timesteps to apply the controls.
+
 
     ///@}
 
@@ -207,6 +213,14 @@ DefaultWeight(const std::string& _label, const double _w,
     const std::vector<CfgType>& _intermediates) :
     m_lpLabel(_label), m_weight(_w), m_intermediates(_intermediates) {
 }
+
+template <typename CfgType>
+DefaultWeight<CfgType>::
+DefaultWeight(const size_t _numSteps, const std::string& _label, const double _w,
+    const std::vector<CfgType>& _intermediates) :
+    m_timeSteps(_numSteps), m_lpLabel(_label), m_weight(_w), m_intermediates(_intermediates) {
+}
+
 
 /*------------------------------- Assignment ---------------------------------*/
 
@@ -368,6 +382,7 @@ template <typename CfgType>
 void
 DefaultWeight<CfgType>::
 SetTimeSteps(std::size_t _steps) noexcept {
+
   m_timeSteps = _steps;
 }
 
