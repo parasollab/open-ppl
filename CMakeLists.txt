@@ -113,7 +113,7 @@ set(PPL_EXECUTABLE ppl_executable)
 set(PPL_LIBRARY ppl_library)
 set(PPL_MP_LIBRARY ppl_mp_library)
 set(PPL_MP_EXECUTABLE ppl_mp_executable)
-# set(SIMULATOR simulator)
+set(SIMULATOR simulator)
 set(PPL_XML_EXECUTABLE ppl_xml_executable)
 
 # build [base object library]
@@ -235,9 +235,9 @@ target_link_libraries(${PPL_MP_EXECUTABLE} PRIVATE ${PPL_MP_LIBRARY})
 set_target_properties(${PPL_MP_EXECUTABLE} PROPERTIES OUTPUT_NAME ppl_mp)
 
 # build [sim executable]
-# add_executable(${SIMULATOR} src/sim_main.cpp)
-# target_link_libraries(${SIMULATOR} PRIVATE ${PPL_LIBRARY})
-# set_target_properties(${SIMULATOR} PROPERTIES OUTPUT_NAME sim)
+add_executable(${SIMULATOR} src/sim_main.cpp)
+target_link_libraries(${SIMULATOR} PRIVATE ${PPL_LIBRARY})
+set_target_properties(${SIMULATOR} PROPERTIES OUTPUT_NAME sim)
 
 # build [tests]
 if(BUILD_TESTS)
