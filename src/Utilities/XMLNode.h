@@ -115,10 +115,6 @@ class XMLNode {
     T Read(const std::string& _name, const bool _req, const T& _default,
         const T& _min, const T& _max, const std::string& _desc);
 
-    template <>
-    size_t Read(const std::string& _name, const bool _req, const size_t& _default,
-        const size_t& _min, const size_t& _max, const std::string& _desc);
-
     /// Read XML boolean attribute
     /// @param _name Name of attribute
     /// @param _req Is attribute required
@@ -262,6 +258,13 @@ class XMLNode {
 
     ///@}
 };
+
+// specialization for size_t since tinyxml2 doesn't support it
+template <>
+size_t 
+XMLNode::
+Read(const std::string& _name, const bool _req, const size_t& _default,
+    const size_t& _min, const size_t& _max, const std::string& _desc);
 
 /*---------------------------- Templated Members -----------------------------*/
 
