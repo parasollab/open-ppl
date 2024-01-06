@@ -1,0 +1,85 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<MotionPlanning warnings="true" warningsAsErrors="true" print="false">
+  <Problem>
+    <Environment filename="../../../Examples/3D/hallway.xml"/>
+    <Robot label="boxy" filename="../../../Examples/3D/iCreate.xml">
+      <Agent type="planning"/>
+    </Robot>
+
+    <Task label="query" robot="boxy">
+      <StartConstraints>
+          <CSpaceConstraint point="-5 0 0 0 0 0" />
+      </StartConstraints>
+
+      <GoalConstraints>
+          <CSpaceConstraint point="5 1 0 0 0 0" />
+      </GoalConstraints>
+    </Task>
+
+  </Problem>
+  <Library>
+
+    <DistanceMetrics>
+      <Euclidean label="euclidean"/>
+    </DistanceMetrics>
+
+    <ValidityCheckers>
+      <CollisionDetection label="rapid" method="RAPID"/>
+      <CollisionDetection label="pqp_solid" method="PQP_SOLID"/>
+      <AlwaysTrueValidity label="alwaysTrue"/>
+    </ValidityCheckers>
+
+    <NeighborhoodFinders>
+      <BruteForceNF label="Nearest" dmLabel="euclidean" unconnected="false"
+        k="1"/>
+    </NeighborhoodFinders>
+
+    <Samplers>
+      <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
+      <UniformRandomSampler label="UniformRandomFree" vcLabel="pqp_solid"/>
+    </Samplers>
+
+    <LocalPlanners>
+      <StraightLine label="sl" binaryEvaluation="true" vcLabel="rapid"/>
+    </LocalPlanners>
+
+    <Extenders>
+      <BasicExtender label="BERO" debug="false" dmLabel="euclidean"
+        vcLabel="rapid" maxDist="4." minDist=".01"/>
+    </Extenders>
+
+    <Connectors>
+      <NeighborhoodConnector label="Closest" debug="false"
+        nfLabel="BFNF" lpLabel="sl" checkIfSameCC="false"/>
+    </Connectors>
+
+    <MapEvaluators>
+      <QueryMethod label="Query" debug="false"
+        graphSearchAlg="dijkstras" safeIntervalToolLabel="SI"/>
+    </MapEvaluators>
+
+    <MPStrategies>
+      <!-- DynamicRegionPRM -->
+      <DynamicRegionsPRM label="DynamicRegionsPRM" debug="true"
+        nfLabel="Nearest" lpLabel="sl" extenderLabel="BERO"
+        skeletonType="ma" exploreBias=".5" minRegionRadius="10"
+        skeletonIO="write" skeletonFile="../Envs/3D/hallway_ma_skeleton.graph">
+        <Sampler label="UniformRandomFree" number="10" attempts="1"/>
+        <Evaluator label="Query"/>
+      </DynamicRegionsPRM>
+
+      <ValidationStrategy label="Test" target="DynamicRegionsPRM" debug="true">
+        <GoldStandard robot="boxy" type="roadmap"
+          filename="../Outputs/DynamicRegionsPRM.0.query.map"/>
+        <GoldStandard robot="boxy" type="cfgpath"
+          filename="../Outputs/DynamicRegionsPRM.0.query.rdmp.path"/>
+      </ValidationStrategy>
+    </MPStrategies>
+
+    <!-- MPProblem allows multiple solvers to be specified and executed. -->
+
+    <Solver mpStrategyLabel="Test" seed="0" baseFilename="../Scratch/DynamicRegionsPRM"/>
+
+  </Library>
+
+</MotionPlanning>

@@ -4,7 +4,9 @@
 #include "Geometry/Boundaries/Range.h"
 
 #include <string>
-#include <QtGui>
+#include <QGroupBox>
+#include <QLineEdit>
+#include <QSlider>
 
 
 ////////////////////////////////////////////////////////////////////////////////

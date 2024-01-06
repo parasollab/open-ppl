@@ -83,6 +83,13 @@ class CollisionDetectionValidity
     /// @return True if _p is inside an obstacle.
     virtual bool IsInsideObstacle(const Point3d& _p) override;
 
+    /// Determine whether a workspace point lies inside of an obstacle from
+    /// a specific subset of obstacles
+    /// @param _p The workspace point.
+    /// @param _obstIdxs The indices of the subset of obstacles 
+    /// @return True if _p is inside an obstacle.
+    virtual bool IsInsideObstacle(const Point3d& _p, vector<size_t>* _obstIdxs);
+
     /// Check if two workspace points are mutually visible.
     /// @param _a The first point.
     /// @param _b The second point.
@@ -259,6 +266,35 @@ IsInsideObstacle(const Point3d& _p) {
 
   // Check each obstacle.
   for(size_t i = 0; i < numObstacles; ++i) {
+    auto obst = env->GetObstacle(i);
+
+    // Check each body.
+    for(size_t j = 0; j < obst->GetNumBodies(); ++j) {
+      this->GetStatClass()->IncNumCollDetCalls(m_cdMethod->GetName(),
+          "IsInsideObstacle");
+
+      const Body* const b = obst->GetBody(j);
+      if(m_cdMethod->IsInsideObstacle(_p, b->GetPolyhedron(),
+            b->GetWorldTransformation()))
+        return true;
+    }
+  }
+
+  return false;
+}
+
+
+template <typename MPTraits>
+bool
+CollisionDetectionValidity<MPTraits>::
+IsInsideObstacle(const Point3d& _p, vector<size_t>* _obstIdxs) {
+  /// @todo Implement a bounding box check (per multibody and body) before
+  ///       calling m_cdMethod.
+
+  auto env = this->GetEnvironment();
+
+  // Check each obstacle.
+  for(size_t i : *_obstIdxs) {
     auto obst = env->GetObstacle(i);
 
     // Check each body.

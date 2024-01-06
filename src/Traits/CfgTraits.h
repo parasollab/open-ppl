@@ -32,7 +32,7 @@
 #include "MPLibrary/ValidityCheckers/ComposeCollision.h"
 #include "MPLibrary/ValidityCheckers/NodeClearanceValidity.h"
 #include "MPLibrary/ValidityCheckers/ObstacleClearanceValidity.h"
-#include "MPLibrary/ValidityCheckers/TerrainValidityChecker.h"
+#include "MPLibrary/ValidityCheckers/TerrainValidityChecker.h" 
 #include "MPLibrary/ValidityCheckers/TopologicalMapValidity.h"
 
 // neighborhood finder includes
@@ -45,6 +45,8 @@
 #include "MPLibrary/Samplers/MixSampler.h"
 #include "MPLibrary/Samplers/ObstacleBasedSampler.h"
 #include "MPLibrary/Samplers/UniformRandomSampler.h"
+#include "MPLibrary/Samplers/UniformObstacleBasedSampler.h"
+#include "MPLibrary/Samplers/GaussianSampler.h"
 
 // local planner includes
 #include "MPLibrary/LocalPlanners/HierarchicalLP.h"
@@ -54,7 +56,11 @@
 #include "MPLibrary/Extenders/BasicExtender.h"
 #include "MPLibrary/Extenders/RotationThenTranslation.h"
 
-// path smoothing includes
+//path smoothing includes
+#include "MPLibrary/PathModifiers/ShortcuttingPathModifier.h"
+
+//edge validity checkers includes
+#include "MPLibrary/EdgeValidityCheckers/IntermediatesEdgeValidityChecker.h"
 
 // connector includes
 #include "MPLibrary/Connectors/CCsConnector.h"
@@ -72,16 +78,20 @@
 #include "MPLibrary/MapEvaluators/ConditionalEvaluator.h"
 #include "MPLibrary/MapEvaluators/GroupQuery.h"
 #include "MPLibrary/MapEvaluators/LazyQuery.h"
+#include "MPLibrary/MapEvaluators/ClearanceQuery.h"
 #include "MPLibrary/MapEvaluators/MinimumDistanceEvaluator.h"
 #include "MPLibrary/MapEvaluators/PrintMapEvaluation.h"
 #include "MPLibrary/MapEvaluators/QueryMethod.h"
 #include "MPLibrary/MapEvaluators/SIPPMethod.h"
 #include "MPLibrary/MapEvaluators/TimeEvaluator.h"
+#include "MPLibrary/MapEvaluators/PathEvaluator.h"
+#include "MPLibrary/MapEvaluators/CollisionEvaluator.h"
 #include "MPLibrary/MapEvaluators/NegateEvaluator.h"
 
 // mp strategies includes
 #include "MPLibrary/MPStrategies/AdaptiveRRT.h"
 #include "MPLibrary/MPStrategies/BasicPRM.h"
+#include "MPLibrary/MPStrategies/WrenchAccessibilityStrategy.h"
 #include "MPLibrary/MPStrategies/BasicRRTStrategy.h"
 #include "MPLibrary/MPStrategies/DynamicDomainRRT.h"
 #include "MPLibrary/MPStrategies/DynamicRegionRRT.h"
@@ -93,6 +103,7 @@
 #include "MPLibrary/MPStrategies/PathStrategy.h"
 #include "MPLibrary/MPStrategies/Syclop.h"
 #include "MPLibrary/MPStrategies/TogglePRMStrategy.h"
+#include "MPLibrary/MPStrategies/ModifyPath.h"
 #include "MPLibrary/MPStrategies/ValidationStrategy.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -154,15 +165,17 @@ struct MPTraits {
   // types of neighborhood finders available in our world
   typedef boost::mpl::list<
     BruteForceNF<MPTraits>,
-    RandomNF<MPTraits>
+    RandomNF<MPTraits>,
+    RadiusNF<MPTraits>
       > NeighborhoodFinderMethodList;
 
   // types of samplers available in our world
   typedef boost::mpl::list<
     BridgeTestSampler<MPTraits>,
-    MixSampler<MPTraits>,
+    MixSampler<MPTraits>, 
     ObstacleBasedSampler<MPTraits>,
-    UniformRandomSampler<MPTraits>,
+    UniformRandomSampler<MPTraits>, 
+    UniformObstacleBasedSampler<MPTraits>,
     GaussianSampler<MPTraits>
       > SamplerMethodList;
 
@@ -180,8 +193,13 @@ struct MPTraits {
 
   //types of path smoothing available in our world
   typedef boost::mpl::list<
+    ShortcuttingPathModifier<MPTraits>
       > PathModifierMethodList;
 
+  //types of edge validity checkers available in our world
+  typedef boost::mpl::list<
+    IntermediatesEdgeValidityChecker<MPTraits>
+      > EdgeValidityCheckerMethodList;
   // types of connectors available in our world
   typedef boost::mpl::list<
       NeighborhoodConnector<MPTraits>,
@@ -203,12 +221,15 @@ struct MPTraits {
       ComposeEvaluator<MPTraits>,
       ConditionalEvaluator<MPTraits>,
       LazyQuery<MPTraits>,
+      ClearanceQuery<MPTraits>,
       MinimumDistanceEvaluator<MPTraits>,
       NegateEvaluator<MPTraits>,
       PrintMapEvaluation<MPTraits>,
       QueryMethod<MPTraits>,
       SIPPMethod<MPTraits>,
-      TimeEvaluator<MPTraits>>
+      PathEvaluator<MPTraits>,
+      TimeEvaluator<MPTraits>,
+      CollisionEvaluator<MPTraits>>
       MapEvaluatorMethodList;
 
   // types of motion planning strategies available in our world
@@ -216,11 +237,13 @@ struct MPTraits {
       AdaptiveRRT<MPTraits>,
       GroupPRM<MPTraits>,
       BasicPRM<MPTraits>,
+      WrenchAccessibilityStrategy<MPTraits>,
       BasicRRTStrategy<MPTraits>,
       DynamicDomainRRT<MPTraits>,
       DynamicRegionRRT<MPTraits>,
       DynamicRegionsPRM<MPTraits>,
       EET<MPTraits>,
+      ModifyPath<MPTraits>,
       GroupDecoupledStrategy<MPTraits>,
       GroupStrategyMethod<MPTraits>,
       PathStrategy<MPTraits>,
@@ -231,3 +254,5 @@ struct MPTraits {
 };
 
 #endif
+
+

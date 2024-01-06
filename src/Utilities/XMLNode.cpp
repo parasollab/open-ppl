@@ -3,36 +3,48 @@
 #include <algorithm>
 #include <functional>
 
+#include "tinyxml2.h"
 
 /*------------------------------ Construction --------------------------------*/
 
-XMLNode::
-XMLNode(const std::string& _filename, const std::string& _desiredNode) :
-    m_filename(_filename) {
-  // Read the XML file into a tinyxml document.
-  m_doc = std::shared_ptr<TiXmlDocument>(new TiXmlDocument(_filename));
-  if(!m_doc->LoadFile())
-    throw ParseException(
-        Where(_filename, m_doc->ErrorRow(), m_doc->ErrorCol(), false),
-        "TinyXML failed to load file: " + std::string(m_doc->ErrorDesc()) +
-        " Note that TinyXML's error reporting is really terrible. This could "
-        "mean anything from encoding problems to duplicated node attributes.");
+XMLNode::XMLNode(const std::string& _filename, const std::string& _desiredNode) : m_filename(_filename) {
+    // Read the XML file into a tinyxml2 document.
+    m_doc = std::make_shared<tinyxml2::XMLDocument>();
+    tinyxml2::XMLError loadResult = m_doc->LoadFile(_filename.c_str());
+    if(loadResult != tinyxml2::XML_SUCCESS)
+        throw ParseException(
+                Where(_filename, m_doc->ErrorLineNum(), 0),  // No direct support for column in TinyXML2.
+                "TinyXML2 failed to load file: " + std::string(m_doc->ErrorStr()) +
+                " Note that TinyXML2's error reporting is more detailed compared to its previous version, but it's still important to check the actual error.");
 
+    FindNode(_desiredNode);
+}
+
+XMLNode::
+XMLNode(const std::string& filename, std::shared_ptr<tinyxml2::XMLDocument> doc, const std::string& desiredNode) :
+    m_filename(filename), m_doc(doc) {
+
+    FindNode(desiredNode);
+}
+
+void
+XMLNode::
+FindNode(const std::string& _desiredNode) {
   // Define a DFS search to locate the desired node in the XML tree.
-  std::function<TiXmlNode*(TiXmlNode* const)> findNode =
-      [&findNode, &_desiredNode](TiXmlNode* const _node) -> TiXmlNode* {
+  std::function<tinyxml2::XMLNode*(tinyxml2::XMLNode* const)> findNode =
+      [&findNode, &_desiredNode](tinyxml2::XMLNode* const _node) -> tinyxml2::XMLNode* {
         // Skip nodes that don't represnt elements.
-        if(_node->Type() != TiXmlNode::ELEMENT)
+        if(!_node->ToElement())
           return nullptr;
 
         // Check this node for the desired tag.
-        if(_node->ValueStr() == _desiredNode)
+        if(_node->Value() == _desiredNode)
           return _node;
 
         // If this isn't it, check direct children.
-        TiXmlNode* child = _node->FirstChild();
+        tinyxml2::XMLNode* child = _node->FirstChild();
         while(child) {
-          TiXmlNode* result = findNode(child);
+          tinyxml2::XMLNode* result = findNode(child);
           if(result)
             return result;
           child = child->NextSibling();
@@ -45,14 +57,14 @@ XMLNode(const std::string& _filename, const std::string& _desiredNode) :
   // Search the XML node tree for the node with the desired description.
   m_node = findNode(m_doc->RootElement());
   if(!m_node)
-    throw ParseException(_filename, "Unable to find XML node '" + _desiredNode +
+    throw ParseException(m_filename, "Unable to find XML node '" + _desiredNode +
         "'.");
 }
 
 
 XMLNode::
-XMLNode(TiXmlNode* _node, const std::string& _filename,
-    std::shared_ptr<TiXmlDocument> _doc) :
+XMLNode(tinyxml2::XMLNode* _node, const std::string& _filename,
+    std::shared_ptr<tinyxml2::XMLDocument> _doc) :
     m_node(_node), m_filename(_filename), m_doc(_doc) {
 }
 
@@ -75,10 +87,10 @@ end() {
 
 /*--------------------------- Metadata Accessors -----------------------------*/
 
-const std::string&
-XMLNode::
-Name() const {
-  return m_node->ValueStr();
+const std::string& XMLNode::Name() const {
+    static std::string nameValue;
+    nameValue = m_node->Value();
+    return nameValue;
 }
 
 
@@ -170,7 +182,7 @@ Ignore() {
 
   // Set the list of requested attributes to those found in the node.
   m_reqAttributes.clear();
-  for(const TiXmlAttribute* attr = m_node->ToElement()->FirstAttribute();
+  for(const tinyxml2::XMLAttribute* attr = m_node->ToElement()->FirstAttribute();
       attr != nullptr; attr = attr->Next()) {
     m_reqAttributes.insert(attr->Name());
   }
@@ -191,7 +203,7 @@ WarnAll(const bool _warningsAsErrors) {
 std::string
 XMLNode::
 Where() const {
-  return Where(m_filename, m_node->Row(), m_node->Column());
+  return Where(m_filename, m_node->GetLineNum(), 0);
 }
 
 /*--------------------------------- Helpers ----------------------------------*/
@@ -209,23 +221,21 @@ Where(const std::string& _f, const int _l, const int _c, const bool _name) const
 }
 
 
-void
-XMLNode::
-BuildChildVector() {
-  // Guard against building the child vector more than once.
-  if(m_childBuilt)
-    return;
-  m_childBuilt = true;
+void XMLNode::BuildChildVector() {
+    // Guard against building the child vector more than once.
+    if(m_childBuilt)
+        return;
+    m_childBuilt = true;
 
-  TiXmlNode* child = m_node->FirstChild();
-  while(child != NULL) {
-    if(child->Type() == TiXmlNode::ELEMENT)
-      m_children.push_back(XMLNode(child, m_filename, m_doc));
-    else if(child->Type() != TiXmlNode::COMMENT)
-      throw ParseException(Where(m_filename, child->Row(), child->Column()),
-          "Invalid XML element.");
-    child = child->NextSibling();
-  }
+    tinyxml2::XMLNode* child = m_node->FirstChild();
+    while(child != NULL) {
+        if(child->ToElement()) // Checks if it is an element.
+            m_children.push_back(XMLNode(child, m_filename, m_doc));
+        else if(!child->ToComment()) // Checks if it is NOT a comment.
+            // TinyXML2 doesn't support Column(). So, it's set to 0 for now.
+            throw ParseException(Where(m_filename, child->GetLineNum(), 0),"Invalid XML element.");
+        child = child->NextSibling();
+    }
 }
 
 
@@ -287,8 +297,7 @@ WarnUnknownNode() {
             << "\nXML Warning:: Unknown or Unrequested Node"
             << "\nFile:: " << m_filename
             << "\nNode: " << Name()
-            << "\nLine: " << m_node->Row()
-            << "\nCol: " << m_node->Column()
+            << "\nLine: " << m_node->GetLineNum()
             << "\nIf you expected this to work, make sure:"
             << "\n\t- There is a default (no arguments) constructor."
             << "\n\t- No constructor is defined with = default."
@@ -305,7 +314,7 @@ XMLNode::
 WarnUnrequestedAttributes() {
   // Read all the attributes and check if they were requested.
   std::vector<std::string> unreqAttr;
-  const TiXmlAttribute* attr = m_node->ToElement()->FirstAttribute();
+  const tinyxml2::XMLAttribute* attr = m_node->ToElement()->FirstAttribute();
   while(attr != NULL) {
     if(m_reqAttributes.count(attr->Name()) == 0)
       unreqAttr.push_back(attr->Name());
@@ -318,8 +327,7 @@ WarnUnrequestedAttributes() {
               << "\nXML Warning:: Unrequested Attributes Exist"
               << "\nFile:: " << m_filename
               << "\nNode: " << Name()
-              << "\nLine: " << m_node->Row()
-              << "\nCol: " << m_node->Column()
+              << "\nLine: " << m_node->GetLineNum()
               << "\nUnrequested Attributes::";
     for(const auto& a : unreqAttr)
       std::cerr << "\n\t" << a;

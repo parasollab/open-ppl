@@ -1,7 +1,7 @@
 #ifndef EDIT_CONNECTION_DIALOG_H_
 #define EDIT_CONNECTION_DIALOG_H_
 
-#include <QtGui>
+#include <QDialog>
 
 class Connection;
 class DrawableMultiBody;

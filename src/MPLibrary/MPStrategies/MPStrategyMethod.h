@@ -305,12 +305,15 @@ Finalize() {
 
   // Output path vertices. If you want all of the intermediates as well,
   // override this function in the derived class.
-  if(this->GetPath() and this->GetPath()->Size())
+  if(this->GetPath() and this->GetPath()->Size()){
     ::WritePath(base + ".rdmp.path", this->GetPath()->Cfgs());
+    ::WritePath(base + ".path", this->GetPath()->FullCfgs(this->GetMPLibrary()));
+  }
 
   // Output stats.
   std::ofstream osStat(base + ".stat");
   this->GetStatClass()->PrintAllStats(osStat, roadmap);
+
 }
 
 

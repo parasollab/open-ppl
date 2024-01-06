@@ -1,0 +1,115 @@
+# Copyright (c) 2000-2009, Texas Engineering Experiment Station (TEES), a
+# component of the Texas A&M University System.
+#
+# All rights reserved.
+#
+# The information and source code contained herein is the exclusive
+# property of TEES and may not be disclosed, examined or reproduced
+# in whole or in part without explicit written authorization from TEES.
+
+##############################################################################
+# These Makefile were taken from include/runtime but put here to
+# facilitate centralized managment of the Makefiles (updating 3+ sets of
+# of Makefiles is tedious and lends itself to errors).
+#
+# It DOES require GNU make (gmake)... the more recent the better
+# (easy enough to build if not available)
+#
+# STAPL should be set by the "calling" Makefile before including this one.
+#
+# I think calling Makefiles should be able to override anything here.
+#
+# 16jun2004/JKP
+###############################################################################
+#
+# Using the new make files with applications that use STAPL
+#
+# If you would like to create make files for applications that use STAPL
+# and provide the same portability that STAPL presently provides:
+#
+# 1) First of all, you will need GNU make.  You will also need to make
+#    sure that "make" resolves to "gmake" by default (either via path or alias).
+#
+# 2) It is suggested you use the name GNUmakefile since that is what GNU make
+#    defaults to.
+#
+# 3) Include the following two lines at the top of your make file:
+#
+#      STAPL=<path/to/stapl>
+#      include $(STAPL)/GNUmakefile.STAPLdefaults
+#
+# 4) Construct your make files to use the following variables (defined
+#    by GNUmakefile.STAPLdefaults)
+#
+#      CC, LD, AR, STAPL_CXXFLAGS, CXXFLAGS, STAPL_LIBRARIES, LIB
+#
+#    the definitions of which are provided below.
+#
+# 5) provide a target named "default:" which defines/redirects to
+#    default target builds
+#
+# For examples, see the GNUmakefile's in the test/ directory.
+#
+###############################################################################
+#
+# Overriding install paths for base STL
+#
+# There are a number of variables in GNUmakefile.STAPLdefaults that control
+# the version of STL to use that can be overridden on the command line:
+#
+# STLFLAGS	- Typically used to define _STLPORT when using STLport.
+#		  Provides STL related compiler options.
+#
+# MYSTLINCLUDEPATH - "-I"nclude path for STAPL's redefintions of std:: STL
+#		  classes (define_type() and HOARD).  This is set by the
+#		  "stl" parameter and should not need to be modified in
+#		  most cases.
+#
+# STLINCLUDEPATH - "-I"nclude path for underlaying STL if not
+#                 in the compiler's default include path.  Override
+#		  on command line as needed to point to installed STL.
+#
+# STLLIBPATH	- "-L"ocation of STL libraries (if needed).  Override
+#		  on command line as needed to point to installed STL.
+#
+# STLPORTLIB	- Name of the STLport "-l"ibrary (typically -lstlport_gcc<.a/.so>).
+#		  Should be right in most cases but can be overriden at
+#		  command line if necessary.
+#
+# For example to build STAPL on titan (SGI/MIPSpro) using a stock version
+# of STLport 4.6.2 built somewhere in my home directory, I can do:
+#
+#  gmake platform=SGI_CC rts=MPI stl=mystlport-4.6.2 STLINCLUDEPATH="-I/home/jkp2866/STAPL/stapl/mystlport-4.6.2 -I/home/jkp2866/STLport/STLport-4.6.2.jkp/stlport/" STLLIBPATH="-L/home/jkp2866/STLport/STLport-4.6.2.jkp/lib/"
+#
+# The STLINCLUDEPATH tells it to first use STAPL includes for STLport
+# 4.6.2 and then use stock versions of STLport 4.6.2 includes.
+#
+# The STLLIBPATH tells it where to find libstlport_gcc.(a/so)
+#
+###############################################################################
+# This Makefile demonstrates the basic flags required to compile STAPL programs.
+# It is designed for GNU make (gmake), and probably won't work with other make
+# implementations because of its use of conditional if statements to set the
+# appropriate flags for a given platform.
+#
+# To correctly compile the runtime system for different platforms, this
+# makefile requires arguments specifying the desired system and compiler.  An
+# empty call (e.g., '> gmake') will display the supported platforms.
+#
+# VARIABLE DICTIONARY (included from GNUmakefile.STAPLdefaults):
+# platform        - the desired target platform (e.g., LINUX_gcc)
+# stl             - the underlying ISO C++ STL to build upon
+# STAPL           - the path to stapl (should be overloaded if this Makefile is
+#                   is included by another Makefile in another directory)
+# CC              - the compiler
+# LD              - the linker and necessary flags to link
+# AR              - the archiver and necessary flags to create an archive
+# CXXFLAGS        - compiler and platform flags
+# LIB             - compiler and platform libraries
+# STAPL_CXXFLAGS  - STAPL required flags
+# STAPL_LIBRARIES - STAPL required libraries
+# USER_CXXFLAGS   - optimization levels and other user flags
+# USER_LIB        - user libraries
+# staplrun        - function to execute stapl, where $(1) is the number of
+#                   locations
+###############################################################################

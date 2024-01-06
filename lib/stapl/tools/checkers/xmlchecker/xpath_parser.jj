@@ -1,0 +1,586 @@
+/*
+// Copyright (c) 2000-2009, Texas Engineering Experiment Station (TEES), a
+// component of the Texas A&M University System.
+
+// All rights reserved.
+
+// The information and source code contained herein is the exclusive
+// property of TEES and may not be disclosed, examined or reproduced
+// in whole or in part without explicit written authorization from TEES.
+*/
+
+
+options {
+    IGNORE_CASE = false;
+    OPTIMIZE_TOKEN_MANAGER = true;
+  //  LOOKAHEAD = 2;
+  //FORCE_LA_CHECK=  true;
+}
+ 
+PARSER_BEGIN(xpath)
+
+import java.util.*;
+import java.io.*;
+
+ 
+public class xpath {
+    static Token xpath_expr1, xpath_expr2, xpath_expr3, xpath_for  ;
+    static Token  rel_op, op, num, f ;
+
+    static helpRoutines hp = new helpRoutines();
+
+	static String[] items = new String[100];
+        static checker ch = new checker();
+	static int intStart, intEnd, rhsCons, r_f;
+	static double rhsConst;
+	static double floatStart, floatEnd, d1, d2;
+	static Token t1, t2;
+	static Token type;
+	static int ni=0;
+	static int  checkVal = -1;
+	static double  chkVal = -1.0;
+	static java.util.Stack argStack = new java.util.Stack();
+	
+        static Vector xpathVector = new Vector();
+        static Vector xpathVector1 = new Vector();
+        static Vector xpathVector2 = new Vector();
+         static Vector   vec_double1 = new Vector();
+         static Vector   vec_double2 = new Vector();
+
+	static int rangeSuccess;
+        static boolean defined = true;
+
+    public static void main(String[] args) throws ParseException
+    {  
+              
+		if ( args.length != 1 ) {
+	    	System.out.println("Usage: java xpath filename");
+	   		System.exit(1);		}  
+
+                        ch = new checker(args[0]);
+
+xpath parser;
+
+/*
+String choose_input = " ";
+BufferedReader br, input_file=null;
+
+System.out.println("type  0 to check all the rules  or 1 to type a rule");
+ 
+    br = new BufferedReader(new InputStreamReader(System.in), 1);
+
+    try
+    {
+    choose_input= br.readLine();
+    }
+    catch (IOException ex)
+    {      System.out.println(ex); }
+
+if (  Integer.parseInt( choose_input ) == 0 ){
+
+       try{
+            input_file = new 	BufferedReader( new FileReader("rules.txt"));
+         } catch (FileNotFoundException ex) { }
+ 	 parser = new xpath (input_file);
+     }
+	
+ else {
+			 parser = new xpath (System.in);
+      } 	
+  
+*/ 
+
+BufferedReader input_file=null;
+     try{
+           input_file = new 	BufferedReader( new FileReader("rules.txt"));
+         } catch (FileNotFoundException ex) { }
+
+ 	 parser = new xpath (input_file);
+
+    
+
+		while (true) {
+		 //   System.out.print ("Enter rule: ");
+	         //	System.out.flush();
+      
+	    
+	    	try {
+				switch (parser.one_line()) {
+				case -1:
+			    	System.exit(0);
+				case 0:
+			    	break;
+				case 1:
+			    	continue;
+				}
+	    	}
+	    	catch (ParseException x) {
+				System.out.println ("Exiting");
+				throw x;
+	    	}
+		}
+    }
+
+} 
+PARSER_END(xpath)
+ 
+SKIP: /* Whitespace */
+ { "\t" | "\r" | " "}
+
+TOKEN: 
+{
+  <EQUAL_OPERATOR:    ["=", ">"]>
+/*| <ARITH_OPERATOR: (["*", "/", "+", "-"])>*/
+| <ARITH_OPERATOR: (["+", "-"])>
+| <MUL_OPERATOR: (["*", "/"])>
+| <REL_OPERATOR: ( (["<",">"])+ ("=")* )>
+| <XPATH:	    ("$" (["a"-"z", ".", "_",  "/", "A"-"Z"])+ "$")>
+| <FOR_ALL:      "[i]"> 
+| <EOL:       "\n">
+| <IF: "IF">
+| <IF_DEF: "IF_DEFINED">
+| <THEN: "THEN">
+| <COUNT:  "COUNT">
+| <UNIQUE: "UNIQUE">
+| <MAX:  "MAX">
+| <MIN:  "MIN">
+| <SUM:  "SUM">
+| <RANGE: "RANGE">
+| <INTEGER: "int">
+| <FLO: "float">
+| <STRING: "STRING">
+| <OTHER_OPERATOR: "SUBSET_OF">
+| <LEFT_PAREN: "{">
+| <RIGHT_PAREN: "}">
+| <COMMA: ",">
+| <NUMBER:    (["0"-"9"])+>
+| <FLOAT: ((["0"-"9"])+ "." (["0"-"9"])+) >
+| <UNION: "UNION">
+| <IDENTIFIER: (["a"-"z", "_", "A"-"Z", "0"-"9"])+ >
+| <LEFT_BRKT: "(">
+| <RIGHT_BRKT: ")">
+}
+
+int one_line():
+{}
+{ statement() ( <EOL> {
+                     defined = true;
+                     return 1; }
+              )   
+| <EOF> { return -1; }
+
+}
+
+void statement():
+{ Token t; 
+  String x, xpathExpr; 
+  int retr;
+  int opType;
+  float retVal = 0;
+}
+{    
+  retr=  term() {
+ 
+			if (checkVal == 1 | chkVal == 1.0)
+				System.out.println ("Check succeeded");
+			else
+			  if(defined)	System.out.println ("Check Failed");
+		          else  System.out.println ("Check Skiped");  
+                	checkVal = -1; chkVal = -1.0;
+         	} 
+}
+
+int term():
+{
+	Token t;
+	String s;
+	int success;
+	int value;
+        int ret; 
+	double result;
+	int i1, i2;
+}
+{ 
+      
+  
+        <IF> <LEFT_BRKT>
+         ret=term() <RIGHT_BRKT> 
+          { if(ret==0) 
+               defined =false;
+            
+          } 
+           <THEN> ret= term()
+             { return ret; } 
+
+       | <IF_DEF>  <LEFT_BRKT> xpath_expr1 = <XPATH> <RIGHT_BRKT> 
+            { defined= ch.checkDefined( xpath_expr1.image);           
+             }
+           <THEN> ret=term()
+             { return ret; } 
+
+  /*       |  xpathArith()    rel_op = <EQUAL_OPERATOR> num = <NUMBER>
+         {
+              if(defined) d1=((Double) argStack.pop()).doubleValue(); 
+             if( d1 == num) return 1;
+             else return 0;   
+           }
+  */
+ 
+  	|xpath_expr1 = <XPATH> 
+	( rel_op = <EQUAL_OPERATOR> 
+	  ( num = <NUMBER>  
+		{
+    if(defined==true)
+	     checkVal = ch.checkTypeA (xpath_expr1.image, rel_op.image, Integer.parseInt(num.image));
+		 return  checkVal;
+		}
+		| <LEFT_PAREN>  {ni=0;}  
+			( 
+			  (
+			   t = <IDENTIFIER> { items[ni++] = t.image; }
+			   (<COMMA> t = <IDENTIFIER> {items[ni++] = t.image;})*
+			  ) <RIGHT_PAREN>
+		      {
+ 		checkVal = ch.checkTypeC (items, ni, xpath_expr1.image, rel_op.image);
+		 return  checkVal;
+		      }
+			| 
+			  (
+			   t = <NUMBER> { items[ni++] = t.image; }
+			   (<COMMA> t = <NUMBER> {items[ni++] = t.image;})*
+			  ) <RIGHT_PAREN>
+		      {
+
+ 		checkVal = ch.checkTypeC (items, ni, xpath_expr1.image, rel_op.image);
+                 return  checkVal;
+		      }
+		   )
+     | f = <RANGE> <LEFT_BRKT>
+	    ( type=<INTEGER> 
+		  (
+		   <COMMA> xpathArith() { if(defined) d1=((Double) argStack.pop()).doubleValue(); }
+				<COMMA> xpathArith() {if(defined) d2=((Double) argStack.pop()).doubleValue(); }
+				<RIGHT_BRKT>
+			{
+				i1= (int)d1; i2 = (int)d2;
+				System.out.println ("i1:" + i1 + " i2:"+ i2);
+				System.out.println ("Checking int range");
+	  		  checkVal = ch.checkIntRange ( xpath_expr1.image,i1, i2 );
+                 return  checkVal;
+       		}
+
+		  )
+		  | type=<FLO> 
+		  (
+		   <COMMA> xpathArith() { d1=((Double) argStack.pop()).doubleValue(); }
+				<COMMA> xpathArith() { d2=((Double) argStack.pop()).doubleValue(); }
+				<RIGHT_BRKT>
+		     { 
+				System.out.println ("d1:" + d1 + " d2:"+ d2);
+				System.out.println ("Checking float range");
+          	checkVal = ch.checkFloatRange ( xpath_expr1.image,d1, d2 );
+                 return  checkVal;
+             }
+		  )
+		)
+	  )
+	 | rel_op = <OTHER_OPERATOR>
+		(
+	      xpath_expr2 = <XPATH>
+		  {
+       	checkVal = ch.checkTypeB (xpath_expr1.image, xpath_expr2.image);
+                 return  checkVal;
+		  }
+        | <LEFT_PAREN>  { ni=0;  }
+            ( t = <IDENTIFIER> { items[ni++] = t.image; }
+               (<COMMA> t = <IDENTIFIER> {items[ni++] = t.image;})*
+            ) <RIGHT_PAREN>
+           {
+
+		checkVal = ch.checkTypeC (items, ni, xpath_expr1.image, rel_op.image);
+                 return  checkVal;
+           }
+        )
+	) 
+	|  f = <COUNT> { xpathVector = new Vector() ; } 
+	
+	   (  <LEFT_BRKT> xpath_for() <RIGHT_BRKT> 
+               {
+                 xpathVector1 = xpathVector; // though no xpath vector on
+                                             // the right hand side
+        
+                    System.out.println (" getting xpathVector1 "); }
+		
+			( rel_op = <EQUAL_OPERATOR> 
+			  (
+			    <COUNT> <LEFT_BRKT> xpath_expr2=<XPATH> <RIGHT_BRKT>
+				  {
+         if(defined) 
+                              	checkVal =     ch.checkCount1(xpathVector, xpath_expr2.image, rel_op.image); 
+
+                                  return 4; }
+
+			    | xpathArith()
+				  { 
+                    if( defined) {
+                      result=((Double) argStack.pop()).doubleValue();
+					rhsCons = (int)result;
+ 
+                           	checkVal =       ch.checkCount2(xpathVector, rhsCons, rel_op.image); 
+                     }
+       
+                            return  checkVal;
+    				  }	
+			  )
+			  | rel_op = <REL_OPERATOR>
+			    (
+			    <COUNT> <LEFT_BRKT> xpath_expr2=<XPATH> <RIGHT_BRKT>
+				  {
+         if(defined) 
+                              	checkVal =     ch.checkCount1(xpathVector, xpath_expr2.image, rel_op.image); 
+
+                                return  checkVal;
+                                                   
+                            }
+
+			    | xpathArith()
+				  { 
+           if(defined)
+               {        result=((Double) argStack.pop()).doubleValue();
+					rhsCons = (int)result;
+          
+
+                            	checkVal =       ch.checkCount2(xpathVector, rhsCons, rel_op.image); 
+
+              }
+				                 return  checkVal;    
+				  }	
+			    )
+			)		             
+		)
+   
+
+  | f = <UNIQUE> { xpathVector = new Vector() ; }
+      ( <LEFT_BRKT> xpath_for() <RIGHT_BRKT> )
+	        { 
+    checkVal   = ch.checkUnique(xpathVector);     //ch.checkTypeE   
+                 return  checkVal;
+                 }
+
+ |  f = <SUM>   { xpathVector = new Vector() ; }      
+    (        <LEFT_BRKT> xpath_for() <RIGHT_BRKT> 
+                     
+
+                 (	 <EQUAL_OPERATOR> xpathArith()
+				{rhsConst  =((Double) argStack.pop()).doubleValue();
+					
+                           // ch.checkTypeF (xpath_expr1.image, f.image, rhsConst);
+            chkVal= 	 ch.checkSum (xpathVector, f.image, rhsConst);
+                 return  checkVal;                                        
+                            }
+		      |     { ch.checkTypeF (xpath_expr1.image, f.image, -1.0);
+                     // ???????? ever used ?
+                 return  checkVal;
+                       }
+		   )
+	   )
+         
+    |  f = <MAX>  { xpathVector = new Vector() ; }   
+      ( <LEFT_BRKT> xpath_for() <RIGHT_BRKT> )
+	        {                     //not used directly now  
+    
+	      ch.getMinMax (xpathVector, f.image);
+                    
+                        return  0;
+                 }
+     |  f = <MIN>   { xpathVector = new Vector() ; } 
+       ( <LEFT_BRKT> xpath_for() <RIGHT_BRKT> )
+	        { 
+
+	  ch.getMinMax (xpathVector, f.image);
+
+            return 0;
+                 }
+  
+// for Union the [i] appears on both sides and inside the arguments of 
+// Min and Max.  The consitency of i troughout the check should be insured
+// that is i should be the same through the rule.
+// this wasn't a problem for the other rules, i.e Count, Unique, and Sum
+
+       |  <UNION> { xpathVector = new Vector() ; }
+  <LEFT_BRKT> xpath_for() <COMMA>  
+                           {    xpathVector1 = xpathVector; }           
+             (  
+              { xpathVector = new Vector() ; }
+                     xpath_for() <RIGHT_BRKT> 
+                        	{           xpathVector2 = xpathVector;
+                 
+                      ch.performUnion (xpathVector1, xpathVector2);
+                                // this never happens for now 
+				return 0;
+                         }
+              // this rule is too specific !! 
+              // to be worth comming up with a general rule to parse it!
+   
+              |  f = <MAX>   { xpathVector = new Vector() ; }
+ ( <LEFT_BRKT> xpath_for() <RIGHT_BRKT> ) <RIGHT_BRKT>  
+                 {     vec_double1  =  ch.getMinMax (xpathVector, f.image); 
+    System.out.println("vector retured by Max of size " +vec_double1.size() ); 
+                    }
+          
+               	 rel_op = <EQUAL_OPERATOR>
+   <UNION> { xpathVector = new Vector() ; }
+  <LEFT_BRKT> xpath_for() <COMMA>
+                           {    xpathVector2 = xpathVector; }   
+                  f = <MIN>  { xpathVector = new Vector() ; }
+  ( <LEFT_BRKT> xpath_for() <RIGHT_BRKT> ) <RIGHT_BRKT> 
+                     {        
+                     vec_double2  =  ch.getMinMax (xpathVector, f.image);  
+   System.out.println("vector retured by Min of size " +vec_double2.size() ); 
+           	            System.out.println ( "***checking union " );
+
+          checkVal=     ch.checkUnion(xpathVector1, xpathVector2, vec_double1, vec_double2 );
+                          return  checkVal;
+       	  }
+            )
+      
+}
+
+
+
+
+
+
+
+void xpath_for():
+{  
+}
+{  xpath_for = <XPATH>
+                    {  xpathVector.addElement( xpath_for); 
+                      System.out.println ("added to vector: " +xpath_for.image);  } 
+                   ( <FOR_ALL>  xpath_for() 
+             
+                   | {
+                      //  xpathVector.addElement( xpath_for); 
+                     }
+                    )           
+}
+
+
+
+
+void xpathArith():
+{
+	double xpathArithResult;
+ 	double value1, value2;
+}
+
+ {   
+
+        expression() 
+	( op=<ARITH_OPERATOR> expression() 
+		{ 
+            double a = ((Double) argStack.pop()).doubleValue();
+            double b = ((Double) argStack.pop()).doubleValue();
+			String oper = op.image;
+			System.out.println ("operator: "+oper);
+            if ( oper.equals("+"))
+                 { argStack.push(new Double(b + a));
+			 	  System.out.println ("pushing b+a:"+a+","+b); }
+            else
+                 { argStack.push(new Double(b - a));
+			 	  System.out.println ("pushing b-a:"+a+","+b); }
+			return;
+		}
+	)*
+}
+
+
+void expression():
+{
+double val1, val2;
+Token opr;
+}
+{
+	 xpathOrNumber()
+	( opr=<MUL_OPERATOR> xpathOrNumber()
+		{  
+            double a = ((Double) argStack.pop()).doubleValue();
+            double b = ((Double) argStack.pop()).doubleValue();
+			String oper = opr.image;
+			System.out.println ("operator: "+oper);
+            if ( oper.equals("*"))
+                { argStack.push(new Double(b * a));
+			 	  System.out.println ("pushing b*a:"+a+","+b); }
+            else
+                 { argStack.push(new Double(b / a));
+			 	  System.out.println ("pushing b/a:"+a+","+b); }
+			return;
+		}
+	)*
+}
+
+void xpathOrNumber(): 
+{
+double value;
+Token val;
+ }
+{  
+    /*	 <COUNT> { xpathVector = new Vector() ; } 
+           <LEFT_BRKT> xpath_for() <RIGHT_BRKT> 
+             {
+                value = ch.computeCount(xpathVector) ;
+     
+               try {
+                 argStack.push(new Double(value));
+                  System.out.println ("pushing into stack: "+value);
+               } catch (NumberFormatException ee) {
+                 argStack.push(new Double(0));
+                 }
+                return;
+            } 
+     */
+	xpath_expr3 = <XPATH>
+	{  	System.out.println(	xpath_expr3.image );
+
+       if(defined)
+          {  System.out.println( " +++ Defined was set to true +++ " );
+		value = ch.evaluateXpath (xpath_expr3.image);
+                  }
+       else return;  //check inside evaluateXpath if the nodes are defined  
+		try {
+             argStack.push(new Double(value));
+			 System.out.println ("pushing into stack: "+value);
+            } catch (NumberFormatException ee) {
+                argStack.push(new Double(0));
+            }
+		return;
+	} 
+
+	| val=<NUMBER>  
+		{ try {
+                value = Double.parseDouble(val.image);
+                argStack.push(new Double(value));
+			 System.out.println ("pushing into stack: "+value);
+            } catch (NumberFormatException ee) {
+						argStack.push(new Double(0));
+            }
+			return;
+		}
+	| val=<FLOAT> 
+		{ try {
+                value = Double.parseDouble(val.image);
+                argStack.push(new Double(value));
+			 System.out.println ("pushing into stack: "+value);
+            } catch (NumberFormatException ee) {
+						argStack.push(new Double(0));
+            }
+			return;
+		}
+	| <LEFT_BRKT> xpathArith() <RIGHT_BRKT>
+		{ return; }
+}
+
+
+  
+ 

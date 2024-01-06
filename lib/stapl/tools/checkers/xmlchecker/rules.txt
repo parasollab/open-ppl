@@ -1,0 +1,30 @@
+$/prototype/common/aggregation_type$ SUBSET_OF 	{PLANE_BASED, ROW_BASED, CELL_BASED, NIL_AGG}
+$/prototype/common/partition_type$ SUBSET_OF {NIL_PAR, KBA, HYB, VOL, OTHER}
+COUNT ($/prototype/energy_groups/energy_group$) = $/prototype/common/ngroups.int$
+$/prototype/energy_groups/energy_group/group_id$ = RANGE (int, 0,$/prototype/common/ngroups.int$ - 1)
+COUNT ($/prototype/groupsets/energy_set$)<=$/prototype/common/ngroups.int$
+$/prototype/groupsets/energy_set/set_include$  = RANGE (int, 0, $/prototype/common/ngroups.int$ - 1)
+$/prototype/groupsets/energy_set/set/set_include$ = RANGE (int, 0, $/prototype/groupsets/energy_set/quad_info/quad_order.int$ *($/prototype/groupsets/energy_set/quad_info/quad_order.int$ + 2)-1)
+$/prototype/dimension/dimension.id$ =  {1, 2, 3}
+UNIQUE ($/prototype/isotope_def$[i]$/isotope_def.clide.int$)
+COUNT ($/prototype/isotope_def$[i]$/isotope_def.group$) = COUNT ($/prototype/energy_groups/energy_group$)
+COUNT ($/prototype/isotope_def$[i]$/isotope_def.group$[i]$/isotope_def.sigs$) = 2*$/prototype/common/iscat.int$ + 1
+COUNT ($/prototype/isotope_def/isotope_def.group$[i]$/isotope_def.sigs/isotope_def.sigs.fp$) = COUNT ($/prototype/energy_groups/energy_group$)
+SUM ($/prototype/material_def$[i]$/material_def.isotop/material_def.isotop.intensity.fp$) = 1.0
+$/prototype/regions/regions_material_region/material_reg.material.str$ SUBSET_OF $/prototype/material_def/material_def.name$
+$/prototype/boundary_info/left_bound/bound_type$        SUBSET_OF {INCIDENT_ISOTROPIC, VACUUM}
+UNION($/prototype/dimension$[i]$/dim.division/dim.division.start.fp$ ,  MAX ($/prototype/dimension$[i]$/dim.division/dim.division.end.fp$)) = UNION($/prototype/dimension$[i]$/dim.division/dim.division.end.fp$ , MIN ($/prototype/dimension$[i]$/dim.division/dim.division.start.fp$))
+$/prototype/common/geometry$ SUBSET_OF  {XYZ, XY, RZ}
+UNIQUE ($/prototype/dimension$[i]$/dim.division/dim.division.start.fp$ )
+UNIQUE ($/prototype/dimension$[i]$/dim.division/dim.division.end.fp$ )
+IF_DEFINED($/prototype/common/TSA_info/TSA_levels$) THEN IF($/prototype/common/TSA_info/TSA_levels$ > 0) THEN COUNT($/prototype/common/TSA_level$) = $/prototype/common/TSA_info/TSA_levels$
+$/prototype/common/aggregation_factor_x$ =RANGE (int, 1,$/prototype/dimension/dim.division/dim.division.cells.int$ )
+$/prototype/common/aggregation_factor_y$ =RANGE (int, 1,$/prototype/dimension/dim.division/dim.division.cells.int$ ) 
+$/prototype/common/aggregation_factor_z$=RANGE (int, 1,$/prototype/dimension/dim.division/dim.division.cells.int$ )
+$/prototype/common/us_min.int$=RANGE (int, 1,$/prototype/common/us_max.int$ )
+$/prototype/common/wg_min.int$=RANGE (int, 1,$/prototype/common/wg_max.int$ )
+IF_DEFINED($/prototype/common/TSA_info/TSA_max.int$) THEN $/prototype/common/TSA_info/TSA_min.int$=RANGE (int, 1,$/prototype/common/TSA_info/TSA_max.int$ )
+IF($/prototype/common/geometry$ SUBSET_OF {XYZ}) THEN COUNT($prototype/regions/regions-material_region[i]/material_reg.dim_bounds) = 3
+IF($/prototype/common/geometry$ SUBSET_OF {XY, RZ}) THEN COUNT($prototype/regions/regions-material_region[i]/material_reg.dim_bounds) = 2
+IF($/prototype/common/geometry$ SUBSET_OF {XYZ}) THEN $prototype/common/dimensions.int = 3
+IF($/prototype/common/geometry$ SUBSET_OF {XY, RZ}) THEN $prototype/common/dimensions.int = 2

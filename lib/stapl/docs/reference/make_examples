@@ -1,0 +1,56 @@
+#
+rm -f algo/*.tex cont/*.tex view/*.tex gralg/*.tex
+rm -f algo_ex cont_ex view_ex gralg_ex
+
+for F in \
+accum adjfind adjdiff allanynone binsrch copy count eqrange equal fill \
+findend findfirst findif find foreach generate inprod iota ispart isperm \
+issort keepif lexcomp minmaxval maxelement maxvalue merge minelement minvalue \
+mismatch npart partition partsortcp partsort partsum radsort \
+randshuf remove replace replcopy reverse rmvcopy rotate sampsort searchn \
+search sort stpart transform uniqcopy unique uplobnd wtinprod wtnorm
+do
+  cat ex_pre algo/$F.cc ex_post > algo/$F.tex
+done
+echo DONE > algo_ex
+
+#
+for F in \
+array list map matrix multi set starray dygraf stgraf unordmap unordset vector
+do
+  cat ex_pre cont/$F.cc ex_post > cont/$F.tex
+done
+echo DONE > cont_ex
+
+#
+for F in \
+array vector list map multi matrix arrayro set graph \
+overlap repeat counting functor strided reverse filter transform \
+native segment zip cross partitioning distspec \
+band extend slices stencil
+do
+  cat ex_pre view/$F.cc ex_post > view/$F.tex
+done
+echo DONE > view_ex
+
+#
+for F in \
+betweenness_centrality breadth_first_search breadth_first_search_hmach \
+breadth_first_search_hubs \
+cc_stats color_graph connected_components connected_components_hmach \
+connected_components_hubs \
+create_hierarchy create_level create_level_hubs create_level_machine \
+create_level_partial_info cut_conductance flatten_hierarchy \
+get_graph_colors graph_metrics graph_paradigm graph_reader  \
+graph_sharder h_hubs_paradigm h_paradigm is_same_cc  \
+k_core k_core_dynamic kla_paradigm \
+level_sync_paradigm maximal_bipartite_matching mssp page_rank  \
+page_rank_h p_cc_stats p_is_same_cc preflow_push pscc \
+pscc_schudy pscc_single read_adj_list read_dimacs read_edge_list \
+read_edge_list_shuffle rebalance_diffusive rebalance_global \
+sharded_graph_reader sssp topological_sort write_adj_list write_dot \
+write_edge_list write_PMPL_graph
+do
+  cat ex_pre gralg/$F.cc ex_post > gralg/$F.tex
+done
+echo DONE > gralg_ex

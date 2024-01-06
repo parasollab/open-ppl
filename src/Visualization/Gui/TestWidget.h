@@ -1,7 +1,7 @@
 #ifndef TEST_WIDGET_H_
 #define TEST_WIDGET_H_
 
-#include <QtGui>
+#include <QWidget>
 
 class EditTransformationWidget;
 class main_window;

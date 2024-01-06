@@ -17,7 +17,6 @@
 #include "BulletDynamics/Featherstone/btMultiBodyJointLimitConstraint.h"
 #include "BulletCollision/Gimpact/btGImpactShape.h"
 #include "BulletCollision/Gimpact/btGImpactCollisionAlgorithm.h"
-#include "ConvexDecomposition/cd_wavefront.h"
 
 #include "nonstd/runtime.h"
 
@@ -121,17 +120,17 @@ GetObjectTransform(MultiBody* const _m, const size_t _j) const {
 
   btMultiBody* mb = m_models.at(_m)->GetBulletMultiBody();
 
-  std::array<double, 16> buffer;
+  btScalar buffer[16];
   if(_j == 0)
-    mb->getBaseWorldTransform().getOpenGLMatrix(buffer.data());
+    mb->getBaseWorldTransform().getOpenGLMatrix(buffer);
   else
-    mb->getLink(int(_j-1)).m_cachedWorldTransform.getOpenGLMatrix(buffer.data());
+    mb->getLink(int(_j-1)).m_cachedWorldTransform.getOpenGLMatrix(buffer);
 
   /// @TODO Fix this to avoid the extra copy.
-  glutils::transform t;
-  std::copy(buffer.begin(), buffer.end(), t.begin());
+  glutils::transform transform;
+  std::copy(std::begin(buffer), std::end(buffer), transform.begin());
 
-  return t;
+  return transform;
 }
 
 /*----------------------------- Modifiers ------------------------------------*/
@@ -223,7 +222,7 @@ CreateCarlikeCallback(btMultiBody* const _model) {
   CallbackFunction f = [_model]() {
     const btVector3 velocity = _model->getBaseVel();
     const btVector3 heading = _model->localDirToWorld(-1, {1, 0, 0});
-    const btScalar sign = velocity * heading < 0 ? -1 : 1;
+    const btScalar sign = (velocity.dot(heading) < 0) ? -1 : 1;
     _model->setBaseVel(heading * sign * velocity.length());
   };
 

@@ -1,0 +1,34 @@
+# !/bin/sh -f 
+# validate with different random seeds for selecting initial centroids
+# note results may NOT be in sorted order
+./km_nr.exe 2 2903 2 a_2.bin 16811
+./km_nr.exe 2 2903 2 a_2.bin 16823
+./km_nr.exe 2 2903 2 a_2.bin 16829
+./km_nr.exe 2 2903 2 a_2.bin 16831
+./km_nr.exe 2 2903 2 a_2.bin 16843
+./km_nr.exe 2 2903 2 a_2.bin 16871
+./km_nr.exe 2 2903 2 a_2.bin 16879
+./km_nr.exe 2 2903 2 a_2.bin 16883
+./km_nr.exe 2 2903 2 a_2.bin 16889
+
+# validate using default random seed set from the clock
+./km_nr.exe 3 4108 2 a_3.bin 
+./km_nr.exe 4 5420 2 a_4.bin
+
+# compare with other implementations
+exit
+
+./km_seq.exe 2 2903 2 a_2.bin
+./km_seq.exe 3 4108 2 a_3.bin
+./km_seq.exe 4 5420 2 a_4.bin
+
+EXEC='/usr/lib64/openmpi/bin/mpiexec'
+
+$EXEC -n 4 km_mpi.exe 2 2903 2 a_2.bin
+$EXEC -n 4 km_mpi.exe 3 4108 2 a_3.bin
+$EXEC -n 4 km_mpi.exe 4 5420 2 a_4.bin
+
+$EXEC -n 4 km_stapl.exe 2 2903 2 a_2.bin
+$EXEC -n 4 km_stapl.exe 3 4108 2 a_3.bin
+$EXEC -n 4 km_stapl.exe 4 5420 2 a_4.bin
+

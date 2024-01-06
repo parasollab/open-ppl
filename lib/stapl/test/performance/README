@@ -1,0 +1,3 @@
+# for performance testing with big data
+cd ~/stapl/trunk/test/performance
+co $STAPLSVN/data/performance/{10M,1M}*

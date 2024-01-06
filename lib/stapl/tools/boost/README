@@ -1,0 +1,54 @@
+The files in this directory are copies of the corresponding file in the
+Boost 1.63 distribution.  The files are copied here because they have been
+modified to either:
+
+1. Provide define_type functions to a data structure so it can be serialized and
+sent as a parameter of an RMI request, or
+
+2. In order to eliminate warnings and workaround bugs in the implementation
+provided by the Boost distribution (i.e., to pull in trac patches or commits to
+the Boost repository).
+
+The set of files copied from Boost and the reason for the copy are below.
+
+
+bind/*
+=====
+Added define_type functions to the data structures.
+
+
+graph/detail/adj_list_edge_iterator.hpp
+=====
+The edges data members are instances of Boost.Optional, and the unconditional
+comparison of edges.first causes gcc to issue a warning.  Checking to ensure the
+data members are initialized before performing the comparison eliminates the
+warning.
+
+See https://svn.boost.org/trac/boost/ticket/5706 for details and progress from
+Boost on resolving the issue in the release.
+
+
+icl/concept/container.hpp
+=====
+Adding template parameter to swap so that when std::swap and boost::icl::swap
+are both valid for the parameters being passed
+(e.g., std::tuple<boost::interval_set<int> > ) the std::swap implementation
+will be used as it requires fewer substitutions.  This modification was based
+on the approach discussed in https://svn.boost.org/trac/boost/ticket/2839 .
+https://svn.boost.org/trac/boost/ticket/9624 was opened to report the issue.
+
+
+icl/*
+=====
+Added define_type functions to the data structures.
+
+
+multi_array.hpp multi_array/*
+=====
+Added define_type functions to the data structures.
+
+serialization/*
+=====
+Files downloaded from https://svn.boost.org/trac/boost/ticket/5265 include
+Boost.Serialization support for boost unordered containers. Extentions ported
+to the files provided in Boost releases since 1.56.

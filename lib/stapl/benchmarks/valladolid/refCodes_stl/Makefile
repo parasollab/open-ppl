@@ -1,0 +1,60 @@
+#
+# Hitmap 1.1
+# Makefile template for examples
+#
+
+#
+# 1. DEFINITIONS, FLAGS, AND EXTERNAL LIBRARIES FOR THIS PARTICULAR APPLICATION
+# 	(THEY WILL BE AUTOMATICALLY ADDED TO THE MAIN COMPILATION COMMAND)
+#
+APP_FLAGS=-DPluto #-DDEBUG 
+APP_LIBS=
+
+#
+# 2. DECLARE APPLICATION TARGETS
+#
+APP_TARGETS=mix
+
+#
+# 3. DOES THIS APPLICATION CALL PLUGINS WHICH USE LIBRARIES EXTERNAL TO HITMAP ?
+#	( UNCOMMENT IF NEEDED )
+#
+#HIT_USE_METIS=y
+
+
+
+#
+# 5. DECLARE TARGET SOURCES, AND SPECIFIC BUILDING RULES FOR YOUR APPLICATION
+# 	( SUBSTITUTE THE EXAMPLES BELLOW )
+#
+
+default: for_each mix sort unique_copy
+
+%: %.cpp
+	g++ $< -O3 -std=gnu++11 -fopenmp -D_GLIBCXX_PARALLEL -DSTAPL_NDEBUG -o $@ 
+
+clean:
+	rm -f for_each mix sort unique_copy
+
+#cellAutom_diff: cell_dif.c
+#	$(HIT_COMPILE) $< $(HIT_LIBS) -o $@ 
+
+
+#
+# 6. CREATE OUTPUT FILES WRITING THE VALUES OF THE RESULT
+#
+#cellAutom_write:
+#	make cell_write_phony APP_FLAGS="-DWRITE_RESULT" OPTIMIZATION=""
+
+#cell_write_phony:  cell.c
+#	$(HIT_COMPILE) $< $(HIT_LIBS) -o cellAutom_write
+
+#
+# 7. REFERENCE SEQUENTIAL CODE
+#
+
+
+#
+# END
+#
+

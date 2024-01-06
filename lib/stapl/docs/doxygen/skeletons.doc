@@ -1,0 +1,280 @@
+//////////////////////////////////////////////////////////////////////
+/// @defgroup skeletons The STAPL Skeletons Framework
+/// @brief The STAPL Skeletons Framework is a high-level skeletal
+/// approach for parallel programming.
+///
+/// This framework abstracts the underlying details of data distribution
+/// and parallelism from programmers and allows them to express parallel
+/// programs as a composition of either existing elementary skeletons
+/// such as @ref map, @ref map_reduce, @ref scan, @ref zip,
+/// @ref butterfly, @ref allreduce, @ref alltoall or user-defined
+/// custom skeletons.
+///
+/// Skeletons in this framework are defined as parametric data flow graphs,
+/// and their compositions are defined in terms of data flow graph
+/// compositions. Defining the composition in this manner allows
+/// dependencies between skeletons to be defined in terms of
+/// point-to-point dependencies, avoiding unnecessary global
+/// synchronizations. In addition, this framework supports various
+/// transformations which enable applications written in terms of
+/// skeletons to run on more than 100,000 cores.
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+/// @ingroup skeletons
+/// @defgroup skeletonsEnvironments Spawning Environments
+/// @brief Environments define the representation of nodes and edges
+/// in the dataflow graphs generated from skeletons.
+///
+/// The default case of the environment is a @ref taskgraph_env in which
+/// nodes and edges (dataflow graph) are evaluated as PARAGRAPHs.
+///
+/// Other supported environments are @ref graphviz_env (a GraphViz
+/// environment), @ref local_env (which implements a sequential data
+/// flow machine), and @ref combined_env which puts several environments
+/// together.
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+/// @ingroup skeletonsEnvironments
+/// @defgroup skeletonsEnvironmentsInternal Spawning Environments Internal
+/// Implementations
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+/// @ingroup skeletons
+/// @defgroup skeletonsExecutors Skeleton Execution
+/// @brief Entities to facilitate the execution of skeletons in STAPL.
+///
+/// While skeletons define the specification of algorithms, the executors
+/// define how these specifications can be used to generate runnable
+/// programs. The executors keep track of the spawning process. In
+/// addition, they can pause, record, and resume the spawning process.
+///
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+/// @ingroup skeletonsExecutors
+/// @defgroup skeletonsExecutorsInternal Skeleton Execution Internal
+/// Implementations
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+/// @ingroup skeletons
+/// @defgroup skeletonsExplicitFactories Explicit Factories
+/// @brief The existing hand-written factories used prior to the existence
+/// of the Skeleton Framework
+///
+/// The explicit factories are the previous approach of expressing
+/// parallel algorithms. Most of the explicit factories are now
+/// replaced by their skeleton-based equivalent. A few remaining uses
+/// are used for testing purposes and will be removed as soon as their
+/// equivalent is implemented in the Skeletons Framework.
+///
+/// @todo Remove serial_io whenever the skeleton version is provided.
+///       The other hand-coded factories can remain for testing purposes.
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+/// @ingroup skeletonsExplicitFactories
+/// @defgroup skeletonsExplicitFactoriesInternal Explicit Factories Internal
+/// Implementations
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+/// @ingroup skeletons
+/// @defgroup skeletonsFlows Flows
+/// @brief Flows are used to customize skeleton compositional operators
+/// by modifying input and output dependencies between their underlying
+/// skeletons.
+///
+/// Flows are computation independent definitions of input and output
+/// dependencies in skeleton compositions. Similar to the flow-based
+/// programming, flows describe how the ports of each skeleton is
+/// connected to other skeletons.
+///
+/// Each compositional operator has a default flows construct defined
+/// (e.g., piped for @ref repeat and @ref compose, @ref forked for
+/// @ref elem). However, customized flows can be used instead to define
+/// new skeleton compositions such as @ref last_input_to_all for
+/// the @ref sink skeleton.
+///
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+/// @ingroup skeletonsFlows
+/// @defgroup skeletonsFlowsProdcuers Flows Producer Classes
+/// @brief Helper classes to specify source of flows.
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+/// @ingroup skeletonsFlows
+/// @defgroup skeletonsFlowsCompose Customized Compose Operator Flows
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+/// @ingroup skeletonsFlows
+/// @defgroup skeletonsFlowsRepeat Customized Repeat Operator Flows
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+/// @ingroup skeletonsFlows
+/// @defgroup skeletonsFlowsElem Customized Elem Operator Flows
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+/// @ingroup skeletonsFlows
+/// @defgroup skeletonsFlowsDoWhile Customized Do-While Operator Flows
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+/// @ingroup skeletonsFlows
+/// @defgroup skeletonsFlowsInline Inline Specified Flows
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+/// @ingroup skeletons
+/// @defgroup skeletonsFunctional Functional Definition of Skeletons
+/// @brief The functional definition of skeletons which can be composed
+/// and transformed in the Skeletons Framework.
+///
+/// Functional definition of skeletons as higher order functions allows
+/// composition, formal transformation and optimization defined in the
+/// literature to be applied on the skeletons prior to their execution.
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+/// @ingroup skeletonsFunctional
+/// @defgroup skeletonsFunctionalBroadcast Functional Definition of
+/// Broadcast-based Skeletons
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+/// @ingroup skeletonsFunctional
+/// @defgroup skeletonsFunctionalReduce Functional Definition of
+/// Reduce-based Skeletons
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+/// @ingroup skeletonsFunctional
+/// @defgroup skeletonsFunctionalAlgorithm Functional Definition of
+/// Algorithms as Skeletons
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+/// @ingroup skeletonsFunctional
+/// @defgroup skeletonsFunctionalExchange Functional Definition of
+/// Skeletons Exchanging Data
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+/// @ingroup skeletonsFunctional
+/// @defgroup skeletonsFunctionalInternal Functional Definition of
+/// Skeletons Internal Implementations.
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+/// @ingroup skeletons
+/// @defgroup skeletonsOperators Compositional Operators
+/// @brief Compositional operators allow new skeletons to be defined
+/// from existing skeletons.
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+/// @ingroup skeletonsOperators
+/// @defgroup skeletonsOperatorsProducerConsumer Producer-Consumer
+/// Relationship Helper Functions
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+/// @ingroup skeletonsOperators
+/// @defgroup skeletonsOperatorsInternal Compositional Operators Internal
+/// Implementations
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+/// @ingroup skeletons
+/// @defgroup skeletonsParamDeps Parametric Dependencies
+/// @brief Parametric dependencies define the finest-grain component
+/// of the Skeletons Framework. These entities are represented as
+/// nodes in the generated dataflow graphs in a given environment.
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+/// @ingroup skeletonsParamDeps
+/// @defgroup skeletonsParamDepsInternal Parametric Dependencies Internal
+/// Implementations.
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+/// @ingroup skeletonsParamDeps
+/// @defgroup skeletonsParamDepsExchange Parametric Dependencies of
+/// Data Exchange Skeletons
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+/// @ingroup skeletonsParamDeps
+/// @defgroup skeletonsParamDepsAlgorithm Algorithm Specific Parametric
+/// Dependencies
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+/// @ingroup skeletonsParamDeps
+/// @defgroup skeletonsParamDepsResize Input Resizing Parametric
+/// Dependencies
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+/// @ingroup skeletons
+/// @defgroup skeletonsSpans Elementary Operator Spans
+/// @brief Spans define the dimensions of the parametric dependencies
+/// in an elementary skeleton based on the given input sizes.
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+/// @ingroup skeletons
+/// @defgroup skeletonsTransformations Transformation Operators
+/// @brief Transform the skeletons to other skeletons for various reasons
+/// (e.g., faster execution, nested execution, etc.)
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+/// @ingroup skeletonsTransformations
+/// @defgroup skeletonsTransformationsInternal Transformation Operators
+/// Internal Implementations
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+/// @ingroup skeltonsTransformations
+/// @defgroup  skeletonsTransformationsCoarse Coarse Transformation
+/// Operator
+/// @brief The coarsening operator transform skeletons which generate
+/// very fine-grained dataflow graphs to the skeletons which can handle
+/// data with larger granularity.
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+/// @ingroup skeletons
+/// @defgroup skeletonsUtilities Utility Methods
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+/// @ingroup skeletons
+/// @defgroup skeletonsExecutable Executable Skeletons
+/// @brief Executable skeletons change functional skeletons from
+/// higher-order functions to regular functions by providing access to the
+/// input data.
+///
+​/// The executable skeletons are used across STAPL, primarily in
+/// algorithms (e.g., @ref map_func, @ref reduce, @ref scan, etc.). With
+/// the knowledge of the input, the executable skeletons
+/// transform skeletons in order to improve performance.
+/// An example of transformation is the coarsening of the @ref map skeleton
+/// based on the size of the input views.
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+/// @ingroup skeletonsExecutable
+/// @defgroup skeletonsExecutableInternal Executable Skeletons Internal
+/// Implementations.
+//////////////////////////////////////////////////////////////////////

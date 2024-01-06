@@ -1,7 +1,8 @@
 #ifndef EDIT_MULTIBODY_DIALOG_H_
 #define EDIT_MULTIBODY_DIALOG_H_
 
-#include <QtGui>
+#include <QDialog>
+#include <QListWidget>
 
 class DrawableMultiBody;
 class main_window;

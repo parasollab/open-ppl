@@ -1258,6 +1258,17 @@ PrettyPrint(const size_t _precision) const {
 }
 
 
+std::string
+Cfg::
+ToString() const{
+  std::ostringstream oss;
+  for(size_t i = 0; i < DOF(); ++i)
+    oss << m_dofs[i] << " ";
+  
+  return oss.str();
+}
+
+
 istream&
 operator>>(istream& _is, Cfg& _cfg) {
   _cfg.Read(_is);

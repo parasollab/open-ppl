@@ -1,0 +1,45 @@
+//*****************************************************************************
+// This section is the main page of the HTML and the first chapter in LaTeX.
+//*****************************************************************************
+
+/**
+ * \mainpage Overview
+ *
+ * \section overview Overview
+ * STAPL, the Standard Template Adaptive Parallel Library, is a parallel C++
+ * library with functionality similar to the C++ STL, the Standard Template
+ * Library.  STAPL executes on uni- or multi-processor architectures with shared
+ * or distributed memory and can co-exist in the same program with STL.
+ *
+ * STAPL implements parallel algorithms and data structures using standard
+ * C++ which provide a SPMD model of parallelism and support nested (recursive)
+ * parallelism. Nested parallelism is an important feature for two reasons:
+ *
+ * - many large parallel systems have a hierarchical architecture on which
+ * hierarchical parallelism would map naturally
+ *
+ * - library functions are often used as basic, elementary blocks which can be
+ * themselves nested or incorporated in a larger parallel application, thus
+ * requiring appropriate support.
+ *
+ * STAPL top-level components have well-defined counterparts in STL.
+ *
+ * - \ref pContainers - parallel equivalents of \c containers
+ *
+ * - \ref pAlgorithms - parallel equivalents of \c algorithms
+ *
+ * - \ref pViews - provide data access operations independent of the underlying
+ *   \c pContainer, as do STL  \c iterators
+ *
+ *
+ * A reasonable understanding of STL will greatly ease the learning curve for
+ * STAPL.
+ *
+ * STAPL provides portability across multiple systems by including its own
+ * \ref runtimeSystem to support high level parallel constructs (e.g.,
+ * task graph execution) and their supporting low level implementations (
+ * parallelPrimitives).  STAPL also provides its own scheduling and data
+ * distribution interfaces.  As such, there is no need for user code
+ * modification when porting a program from one system to another.
+ *
+ **/

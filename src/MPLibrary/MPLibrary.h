@@ -21,6 +21,7 @@
 #include "MPLibrary/MPTools/MPTools.h"
 #include "MPLibrary/NeighborhoodFinders/NeighborhoodFinderMethod.h"
 #include "MPLibrary/PathModifiers/PathModifierMethod.h"
+#include "MPLibrary/EdgeValidityCheckers/EdgeValidityCheckerMethod.h"
 #include "MPLibrary/Samplers/SamplerMethod.h"
 #include "MPLibrary/ValidityCheckers/CollisionDetectionValidity.h"
 #include "MPLibrary/ValidityCheckers/ValidityCheckerMethod.h"
@@ -84,6 +85,8 @@ class MPLibraryType
     typedef MethodSet<MPTraits, LocalPlannerMethod<MPTraits>>   LocalPlannerSet;
     typedef MethodSet<MPTraits, ExtenderMethod<MPTraits>>       ExtenderSet;
     typedef MethodSet<MPTraits, PathModifierMethod<MPTraits>>   PathModifierSet;
+    typedef MethodSet<MPTraits, EdgeValidityCheckerMethod<MPTraits>>
+                                                                EdgeValidityCheckerSet;
     typedef MethodSet<MPTraits, ConnectorMethod<MPTraits>>      ConnectorSet;
     typedef MethodSet<MPTraits, MetricMethod<MPTraits>>         MetricSet;
     typedef MethodSet<MPTraits, MapEvaluatorMethod<MPTraits>>   MapEvaluatorSet;
@@ -101,6 +104,8 @@ class MPLibraryType
     typedef typename LocalPlannerSet::MethodPointer    LocalPlannerPointer;
     typedef typename ExtenderSet::MethodPointer        ExtenderPointer;
     typedef typename PathModifierSet::MethodPointer    PathModifierPointer;
+    typedef typename EdgeValidityCheckerSet::MethodPointer
+                                                       EdgeValidityCheckerPointer;
     typedef typename ConnectorSet::MethodPointer       ConnectorPointer;
     typedef typename MetricSet::MethodPointer          MetricPointer;
     typedef typename MapEvaluatorSet::MethodPointer    MapEvaluatorPointer;
@@ -114,6 +119,8 @@ class MPLibraryType
 
     MPLibraryType(const std::string& _filename);
 
+    MPLibraryType(XMLNode& planningLibraryNode);
+
     virtual ~MPLibraryType();
 
     ///@}
@@ -123,6 +130,8 @@ class MPLibraryType
     /// Read an XML file to set the algorithms and parameters in this instance.
     /// @param _filename The XML file name.
     void ReadXMLFile(const std::string& _filename);
+
+    void ProcessXML(XMLNode &node);
 
     ///@}
     ///@name Distance Metric Accessors
@@ -208,6 +217,18 @@ class MPLibraryType
       m_pathModifiers->AddMethod(_ps, _l);
     }
 
+    ///@}
+    ///@name Edge Validity Checker Accessors
+    ///@{
+
+    EdgeValidityCheckerPointer GetEdgeValidityChecker(const std::string& _l) {
+      return m_edgeValidityCheckers->GetMethod(_l);
+    }
+    void AddEdgeValidityChecker(EdgeValidityCheckerPointer _ps, const std::string& _l) {
+      m_edgeValidityCheckers->AddMethod(_ps, _l);
+    }
+
+    ///@}
     ///@}
     ///@name Connector Accessors
     ///@{
@@ -463,17 +484,18 @@ class MPLibraryType
     /// Method sets hold and offer access to the motion planning objects of the
     /// corresponding type.
 
-    DistanceMetricSet*     m_distanceMetrics{nullptr};
-    ValidityCheckerSet*    m_validityCheckers{nullptr};
-    NeighborhoodFinderSet* m_neighborhoodFinders{nullptr};
-    SamplerSet*            m_samplers{nullptr};
-    LocalPlannerSet*       m_localPlanners{nullptr};
-    ExtenderSet*           m_extenders{nullptr};
-    PathModifierSet*       m_pathModifiers{nullptr};
-    ConnectorSet*          m_connectors{nullptr};
-    MetricSet*             m_metrics{nullptr};
-    MapEvaluatorSet*       m_mapEvaluators{nullptr};
-    MPStrategySet*         m_mpStrategies{nullptr};
+    DistanceMetricSet*      m_distanceMetrics{nullptr};
+    ValidityCheckerSet*     m_validityCheckers{nullptr};
+    NeighborhoodFinderSet*  m_neighborhoodFinders{nullptr};
+    SamplerSet*             m_samplers{nullptr};
+    LocalPlannerSet*        m_localPlanners{nullptr};
+    ExtenderSet*            m_extenders{nullptr};
+    PathModifierSet*        m_pathModifiers{nullptr};
+    EdgeValidityCheckerSet* m_edgeValidityCheckers{nullptr};
+    ConnectorSet*           m_connectors{nullptr};
+    MetricSet*              m_metrics{nullptr};
+    MapEvaluatorSet*        m_mapEvaluators{nullptr};
+    MPStrategySet*          m_mpStrategies{nullptr};
 
     ///@}
 };
@@ -497,6 +519,8 @@ MPLibraryType() {
       typename MPTraits::ExtenderMethodList(), "Extenders");
   m_pathModifiers = new PathModifierSet(this,
       typename MPTraits::PathModifierMethodList(), "PathModifiers");
+  m_edgeValidityCheckers = new EdgeValidityCheckerSet(this,
+      typename MPTraits::EdgeValidityCheckerMethodList(), "EdgeValidityCheckers");
   m_connectors = new ConnectorSet(this,
       typename MPTraits::ConnectorMethodList(), "Connectors");
   m_metrics = new MetricSet(this,
@@ -519,6 +543,13 @@ MPLibraryType(const std::string& _filename) : MPLibraryType() {
 
 template <typename MPTraits>
 MPLibraryType<MPTraits>::
+MPLibraryType(XMLNode& planningLibraryNode) : MPLibraryType() {
+  ProcessXML(planningLibraryNode);
+}
+
+
+template <typename MPTraits>
+MPLibraryType<MPTraits>::
 ~MPLibraryType() {
   delete m_distanceMetrics;
   delete m_validityCheckers;
@@ -527,6 +558,7 @@ MPLibraryType<MPTraits>::
   delete m_localPlanners;
   delete m_extenders;
   delete m_pathModifiers;
+  delete m_edgeValidityCheckers;
   delete m_connectors;
   delete m_metrics;
   delete m_mapEvaluators;
@@ -557,6 +589,7 @@ Initialize() {
   m_localPlanners->Initialize();
   m_extenders->Initialize();
   m_pathModifiers->Initialize();
+  m_edgeValidityCheckers->Initialize();
   m_connectors->Initialize();
   m_metrics->Initialize();
   m_mapEvaluators->Initialize();
@@ -602,27 +635,36 @@ ReadXMLFile(const std::string& _filename) {
   if(!planningLibrary)
     throw ParseException(WHERE) << "Cannot find MPLibrary node in XML file '"
                                 << _filename << "'.";
+  ProcessXML(*planningLibrary);
+}
+
+template <typename MPTraits>
+void
+MPLibraryType<MPTraits>::
+ProcessXML(XMLNode& planningLibraryNode) {
 
   // Parse the library node to set algorithms and parameters.
-  for(auto& child : *planningLibrary)
+  for(auto& child : planningLibraryNode)
     ParseChild(child);
 
   // Ensure we have at least one solver.
   if(m_solvers.empty())
-    throw ParseException(WHERE) << "Cannot find Solver node in XML file '"
-                                << _filename << "'.";
+    throw ParseException(WHERE) << "Cannot find Solver node in XML node '.";
+  
+  // Set the seed to the first solver
+  SetSeed();
 
   // Print XML details if requested.
-  bool print = mpNode.Read("print", false, false, "Print all XML input");
+  bool print = planningLibraryNode.Read("print", false, false, "Print all XML input");
   if(print)
     Print(cout);
 
   // Handle XML warnings/errors.
-  bool warnings = mpNode.Read("warnings", false, false, "Report warnings");
+  bool warnings = planningLibraryNode.Read("warnings", false, false, "Report warnings");
   if(warnings) {
-    bool warningsAsErrors = mpNode.Read("warningsAsErrors", false, false,
+    bool warningsAsErrors = planningLibraryNode.Read("warningsAsErrors", false, false,
         "XML warnings considered errors");
-    planningLibrary->WarnAll(warningsAsErrors);
+    planningLibraryNode.WarnAll(warningsAsErrors);
   }
 }
 
@@ -657,6 +699,10 @@ ParseChild(XMLNode& _node) {
   }
   else if(_node.Name() == "PathModifiers") {
     m_pathModifiers->ParseXML(_node);
+    return true;
+  }
+  else if(_node.Name() == "EdgeValidityCheckers") {
+    m_edgeValidityCheckers->ParseXML(_node);
     return true;
   }
   else if(_node.Name() == "Connectors") {
@@ -714,6 +760,7 @@ Print(ostream& _os) const {
   m_localPlanners->Print(_os);
   m_extenders->Print(_os);
   m_pathModifiers->Print(_os);
+  m_edgeValidityCheckers->Print(_os);
   m_connectors->Print(_os);
   m_metrics->Print(_os);
   m_mapEvaluators->Print(_os);

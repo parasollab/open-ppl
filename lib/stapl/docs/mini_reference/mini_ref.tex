@@ -1,0 +1,564 @@
+\documentclass{report}
+\begin{document}
+\title{STAPL Alpha Release Mini\-Reference -- VERSION 0.5}
+\date{\today}
+\maketitle
+
+\newenvironment{hashitemize}{%
+  \renewcommand{\labelitemi}{\bfseries \#\#}%
+        \begin{itemize}}{\end{itemize}}
+
+\newcommand{\stapl}{{\sc STAPL}}
+\newcommand{\stl}{{\sc STL}}
+\newcommand{\pview}{{\sc PVIEW}}
+\newcommand{\pviews}{{\sc PVIEWS}}
+\newcommand{\pcontainer}{{\sc PCONTAINER}}
+\newcommand{\pcontainers}{{\sc PCONTAINERS}}
+
+\pagestyle{myheadings}
+\renewcommand{\chaptermark}[1]{
+              \markboth{*** DRAFT 0.5 *** \chaptername\ \thechapter. #1 } {} }
+\renewcommand{\sectionmark}[1]{
+              \markright{*** DRAFT 0.5 *** \thesection. #1 } {}}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\vspace*{8cm}
+\begin{center}
+Copyright (c) 2014, Texas Engineering Experiment Station (TEES), a
+component of the Texas A\&M University System.
+
+All rights reserved.
+\end{center}
+\pagebreak
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\chapter{Introduction}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\section{What is \stapl?}
+
+\stapl\ is a framework for parallel C++ code development.
+
+What is a \stapl\ program?  It has three parts:
+\begin{itemize}
+\item Dependence graph
+\newline
+The dependence graph describes which memory operations must precede others,
+and which computations produce values that others consume.
+\item Data distribution
+\newline
+The data distribution describes how data aggregates should be partitioned
+among the memories associated with processing elements.
+\item Instructions
+\newline
+The instructions, as in any program, describe the computations.
+\end{itemize}
+
+The instructions are written in C++, using templated containers and algorithms
+analogous to those in the Standard Template Library (\stl\ ).
+The dependence graph is defined by the instructions written in C++.
+The data distribution takes on default values
+in the absence of an explicit specification.
+
+The \stapl\ system has the following characteristics:
+
+\begin{itemize}
+
+\item Execution Model
+
+The \stapl\ execution model is an asynchronous coarse-grain data flow machine.
+\stapl\ enables the programmer to describe the parallelism in the program
+at the finest granularity possible.  The \stapl\ system will coarsen the grain
+of the described parallelism to fit the execution platform,
+both at compile time and at execution time.
+
+\item Memory Model
+
+The \stapl\ memory model is a global address space with automatic data
+distribution.  This is often referred to as Partitioned Global
+Address Space (PGAS).  Data is never replicated in the memories associated
+with processing elements.
+
+\item Extensibility
+\newline
+The system is extensible because new kinds of each of the major features can
+be introduced by composition, inheritance, and even implementation from scratch.
+Programmers can create new kinds of views, containers, distributions,
+algorithms, schedulers, and skeletons.
+
+\item Engineering Excellence
+\newline
+The implementation of \stapl\ is engineered to be usable for real-world problems
+on the full range of parallel systems, providing robust, high-performance
+execution.
+\end{itemize}
+
+The following features implement the design principles of \stapl.
+
+\begin{itemize}
+
+\item Execution Model
+\begin{itemize}
+\item Multi-protocol parallelism:
+\newline
+Applications built with \stapl\ can employ message-passing on a coarse-grain
+basis, and threading on a fine-grain basis, without any effort required
+from the programmer.
+\end{itemize}
+
+\item Memory Model
+\begin{itemize}
+\item Transparent data distribution:
+Programmers can create applications using a shared memory address space and
+rely on \stapl\ to manage the distribution and data movement across distributed
+memory configurations.  In addition to the default behavior, the programmer
+can also select from a library of data distribution mechanisms, or even write
+their own.
+\newline
+\end{itemize}
+
+\item Extensibility
+\begin{itemize}
+\item Nested parallelism:
+\newline
+Programmers can compose parallelism using generic containers
+and generic algorithms.
+\item New container classes:
+\newline
+Programmers can use parallel data structures commonly employed in High Performance Computing which do not have serial analogs in the \stl\
+%% FOR THE BETA RELEASE
+%\item Library Interoperability
+%\newline
+%Applications built with \stapl\ will run in parallel with numerical libraries commonly used in High Performance Computing, such as LAPACK.
+\end{itemize}
+
+\item Engineering Excellence
+\begin{itemize}
+\item Scalable performance:
+\newline
+Applications built with \stapl\ will run in parallel on systems from
+multi-processor tablets to the largest supercomputers.
+\item Platform independence:
+\newline
+Applications built with \stapl\ can be deployed on both shared memory and distributed memory systems, requiring only a re-compile and re-link.  Execution is virtualized, providing a runtime system that is independent of the number or type of processors.
+\end{itemize}
+
+\end{itemize}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\chapter{A Complete \stapl\ Example Program}
+
+This chapter presents a complete \stapl\ program, in order to motivate
+the material that follows.  It reads numeric input from a file specified
+on the command line, computes some simple descriptive statistics, and
+displays the results to the user.  Comments in the code indicate the
+name of the chapter in which the corresponding construct is discussed.
+
+\vspace{0.2cm}
+\noindent
+\rule{12cm}{0.5mm}
+\vspace{0.2cm}
+
+\input{stats}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\chapter{C++ Concepts for Parallel Programmers}
+
+This chapter briefly describes C++ concepts and features that are
+essential for understanding the remainder of this document.
+
+\section{Class Declarations}
+
+A struct is a class in which the members are default public.
+Since it is undesirable to have data members which have public access,
+we adopt the convention in this document
+that classes with no data members are defined using the
+\texttt{{\bf struct}}
+keyword rather than the
+\texttt{{\bf class}}
+keyword.
+
+\section{Function Objects}
+
+A function object is a class that defines
+\texttt{{\bf operator()}}.
+This operator is known as the "function call" or "application" operator.
+
+Besides the application operator, a function object can also have
+data members.  This enables the function to have state.
+
+Each function object has its own type, unlike ordinary functions, which
+have different types only when they have different signatures.
+
+Because a function object is an object, it can be passed as a argument.
+An alternate name for function object is "functor".
+
+C++11 also supports lambdas, which are not used in this document.
+
+\section{Templates}
+
+A template is a class or function that is specified in terms of types
+or values, which are treated as parameters of the template.
+
+\section{Standard Template Library}
+
+The Standard Template Library (\stl) is a part of the C++ standard library.
+It provides the programmer with the ability to use \emph{generic programming}.
+The \stl\ includes collection classes for organizing data, and algorithms
+for applying to those collections.  The components of the \stl\ are all
+template, so they can be used with any elemental type.
+
+The \stl\ has three main features:
+\begin{itemize}
+\item
+Containers
+\newline
+Containers provide varying interfaces to collections of objects.
+These interfaces implement common Abstract Data Types.
+\item
+Iterators
+\newline
+Iterators are used to access the elements in collections of objects.
+The chief benefit of iterators is that they provide a simple and common
+interface for all of the container types.
+\item
+Algorithms
+\newline
+Algorithms use iterators to process the elements of containers.
+\end{itemize}
+
+\section{Namespaces}
+
+In the examples in this text, all \stapl\ constructs are qualified with
+\texttt{{\bf stapl::}}
+to emphasize the \stapl\ functionality, rather than use a
+\stapl\ namespace.
+This also avoids conflicts with \stl\ entities.  We recommend that users
+follow the same convention.  The alternative is to qualify all
+constructs with
+\texttt{{\bf std::}}.
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\chapter{Parallelism Concepts for C++ Programmers}
+
+This chapter briefly describes parallelism concepts that are
+essential for understanding the remainder of this document.
+
+\section{SPMD}
+
+SPMD (Single Program, Multiple Data)
+is a technique employed to achieve parallelism.
+In SPMD, multiple autonomous processors simultaneously execute
+the same program at independent points.
+
+\section{MPI}
+
+Message Passing Interface (MPI) is a de facto standard that supports portable
+message-passing programming in Fortran, C and and C++. It consists of a set
+of library routines that provide protocols for point-to-point and collective
+communication. Implementations are available on common processor architectures and operating systems.
+
+\section{OpenMP}
+
+Open Multi-Processing (OpenMP) is a standard that supports multi-platform
+shared memory multiprocessing programming in Fortran, C, and C++.
+It consists of a set of compiler directives (Fortran) or pragmas (C/C++), library routines, and environment variables that influence run-time behavior.
+Implementations are available on common processor architectures and operating systems.
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\chapter{Relationship between \stapl\ and \stl\ }
+
+\stapl\ has functionality similar to the \stl.  \stapl\ executes on uni-
+or multi-processor architectures with shared or distributed memory and
+can co-exist in the same program with \stl.  \stapl\ top-level components
+have well-defined counterparts in \stl.
+
+\begin{itemize}
+\item
+pContainers - parallel equivalents of \stl\ \emph{containers}.
+\item
+pAlgorithms - parallel equivalents of \stl\ \emph{algorithms}.
+\item
+pViews - provide data access operations independent of the underlying
+storage, as do \stl\ iterators.
+\end{itemize}
+
+Having a basic understanding of the major features of \stl\ will make it
+much easier to learn \stapl.
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\chapter{\stapl\ Concepts}
+
+This chapter briefly describes \stapl\ concepts that are
+essential for understanding the remainder of this document.
+
+\section{Parallel Containers}
+
+\stapl\ parallel containers (\pcontainers) are distributed,
+thread-safe, concurrent objects.  The are composable and extensible
+by C++ inheritance mechanisms.  Most \pcontainers\ have analogs in the
+\stl.  There are several additional containers not provided by the \stl\
+which are very important for High Performance Computing: the parallel
+multi-dimensional array (pMultiarray) and the parallel graph (pGraph).
+
+\pcontainers\ provide methods that correspond to the \stl\ container
+methods, where there is an analogous container.  They also provide
+additional methods specifically designed for parallel use.
+
+While the data in a \pcontainer\ is distributed, \pcontainers\ provide a
+\emph{shared object view}.  This means that they are shared data structures
+with a global address space.  Each \pcontainer\ element has a unique
+global identifier (GID).  \stapl\ automatically translates the GID so that
+it can locate both local and remote elements.
+
+The following containers are supported by \stapl:
+\begin{itemize}
+\item
+Sequence containers: {\tt list, vector }
+\item
+Associative containers: {\tt set, map }
+\item
+Indexed containers: {\tt array, matrix, multiarray (vector is also indexed) }
+\item
+Relational containers: {\tt graph, dynamic\_graph, multi\_graph }
+\end{itemize}
+
+\section{Iterators, Ranges, and Views}
+
+The \emph{iterator} is a common abstraction used to represent data
+in sequential programming.
+Iterators are used in generic algorithms, such as
+the \stl\ in C++, to specify the data.
+A key function of the iterator is to separate data structures from algorithms.
+All accesses to data are performed through iterators, which are implemented
+as memory pointers.  Iterators cannot encapsulate other information about the
+referenced data, e.g., length of the sequence.
+Moreover, the operations associated with iterators are essentially
+limited to {\em sequential} traversals of a collection of elements,
+and so algorithms using iterators have a linear, flat memory model
+that only supports {\em sequential access}.
+
+To allow concurrent access to multiple elements,
+some parallel systems provide the \emph{range}.
+A range defines a sequence of elements between two
+iterators. With the range abstraction, the program can create
+sub-ranges and process them in parallel.  Ranges alleviate the
+sequential access problem, but still offer only a flat memory model.
+
+In \stapl, a \pview\ encapsulates the information about the collection
+of elements it represents, the elements that can be accessed through it,
+and provides a set of operations to interact with the data.
+Using \pviews, parallel algorithms can be specified using abstract data
+types (ADTs).  The \pview\ encodes information about the partition of
+the data that allows it to operate in a distributed environment.
+The \emph{domain} of a \pview\ is the valid set of identifiers.
+The domain specifies which elements of the underlying container
+can be accessed through the \pview.
+
+\section{Parallel Views}
+
+Different ADTs provide common sets of operations or concepts.
+Views can have any of the following attributes, which control the
+operations they can perform.
+
+\texttt{read\_write}:
+Views that have this attribute support operations to read and
+write values for a given element identifier (i.e., index or key).
+Some views have the \emph{read} attribute, but not the \emph{write}
+attribute.
+
+\texttt{subscript}:
+Views that have this attribute support the square-bracket operator.
+This operator returns a reference over the element instead of
+returning a copy of the value, as the
+\texttt{read}
+operation does.
+
+\texttt{sequence}:
+Views that have this attribute support the operations
+\texttt{begin},
+and
+\texttt{end}
+and the required associated types
+required for use with iterators.
+
+\texttt{insert\_erase}:
+Views that have this attribute provide the dynamic
+operations \emph{insert} and \emph{erase}.
+
+\stapl\ views fall into the following categories:
+
+\begin{itemize}
+\item
+Model abstract data types:
+\newline
+array, vector, list, map, multiarray, heap, set, graph
+\item
+Modify access patterns to the container:
+\newline
+repeated, overlap, counting, strided, reverse, filter, transform, linear
+\item
+Modify distribution of the container:
+\newline
+native, balance, explicit, segmented
+\end{itemize}
+
+\section{Work Functions}
+
+A work function is a function object which is applied to each element
+of a view by a basic algorithm (see below).
+\texttt{{\bf operator()}}
+specified by the work function
+should have as many arguments as there views passed to the basic algorithm.
+
+A work function can have other members besides
+\texttt{{\bf operator()}}.
+It can have data members, which hold state.
+If the function object has data members, the class will need
+a constructor and/or "setter" method to give them values.  It will
+also need a
+\texttt{{\bf define\_type}}
+method (see Chapter 3).
+It may also need a "getter" method to retrieve updated state.
+
+\section{Basic Algorithms}
+
+These functions take one or more work functions as arguments,
+which are applied to the elements of the specified view(s),
+according to the dependence graph which defines the semantics
+of the particular basic algorithm.
+
+\texttt{{\bf map\_func }}
+
+When processing a single view, apply the work function to each
+item of the view independently.  When processing multiple views,
+apply the work function to a corresponding value from each view.
+The work function may return a void type, if it will not be used
+to create nested parallelism.
+
+The following pseudocode shows how map\_func acts on simple vectors.
+
+\begin{verbatim}
+  p <- [2 3 5 7 11]
+  f <- [1 1 2 3 5 ]
+  map_func( plus, p, f )
+3 4 7 10 16
+\end{verbatim}
+
+\texttt{{\bf map\_reduce }}
+
+Apply the first work function independently to each item of the view.
+Apply the second work function cumulatively to each item of the values from
+the first application.
+
+This function is sometimes used with an identity function for
+the map operation, thus becoming a simple reduction.
+Both of the work functions must return a non-void type.
+
+\begin{verbatim}
+  p <- [2 3 5 7 11]
+  f <- [1 1 2 3 5 ]
+  map_reduce( neg, plus, p, f )
+-3 -4 -7 -10 -16
+\end{verbatim}
+
+\texttt{{\bf reduce }}
+
+Apply the first work function independently to each item of the view.
+The work function must return a non-void type.
+
+\begin{verbatim}
+  p <- [2 3 5 7 11]
+  reduce( plus, p ]
+28
+\end{verbatim}
+
+\texttt{{\bf scan }}
+
+Apply the work function cumulatively to each item of the view,
+saving the intermediate results of each function application.
+The work function must return a non-void type.
+
+\begin{verbatim}
+  f <- [1 1 2 3 5 ]
+  scan( plus, f )
+1 2 4 7 12
+\end{verbatim}
+
+\texttt{{\bf serial }}
+
+Apply the work function to each item of the view in serial order.
+The work function may return a void type, if it will not be used
+in a nested fashion.
+
+\texttt{{\bf serial\_io }}
+
+Apply the work function to each item of the view in serial order,
+and execute it on location zero.
+The work function may return a void type, if it will not be used
+in a nested fashion.
+
+\texttt{{\bf do\_once }}
+
+Execute the work function a single time on location zero.
+
+All \stapl\ constructs are qualified with
+\texttt{{\bf stapl::}}
+to emphasize the \stapl\ functionality, rather than use a
+\stapl\ namespace.
+This also avoids conflicts with \stl\ entities.  We recommend that users
+follow the same convention.  The alternative is to qualify all
+constructs with
+\texttt{{\bf std::}}.
+
+\section{Nested Parallelism}
+
+\stapl\ implements parallel algorithms and data structures using standard C++,
+which provide an SPMD model of parallel, and which support nested (recursive)
+parallelism.  Nested parallelism is important because:
+
+\begin{itemize}
+\item
+Many large parallel systems have a hierarchical architecture onto which
+nested parallelism would naturally map.
+\item
+Library functions are often used as basic building blocks which themselves
+can be nested or incorporated into a larger parallel application.
+\end{itemize}
+
+\section{Portability}
+
+\stapl\ provides portability across multiple systems by including its own
+runtime system.  This supports high level parallel constructs (e.g. task
+graph execution) and their low level implementation.  \stapl\ also provides
+its own scheduling and data distribution interfaces.  So, there is no need
+to modify user code when porting a \stapl\ application from one system to
+another.
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\input{cont}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\input{view}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\input{alg}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\input{io}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+
+\end{document}

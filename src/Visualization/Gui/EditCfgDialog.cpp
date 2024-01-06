@@ -6,7 +6,9 @@
 
 #include "sandbox/gui/main_window.h"
 
-
+#include <QVBoxLayout>
+#include <QDialogButtonBox>
+#include <QScrollArea>
 
 /*------------------------------- Construction -------------------------------*/
 

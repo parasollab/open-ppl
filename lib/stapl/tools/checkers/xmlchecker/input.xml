@@ -1,0 +1,276 @@
+<prototype>
+	<!-- Information Common to the problem -->
+	<common>
+		<!-- Type of geometry used XYZ, XY, RZ -->
+		<geometry>XYZ</geometry>
+
+		<!-- although some of this information is redundant -->
+		<!-- it is used for check purposes -->
+		<ngroups.int>1</ngroups.int>
+		<dimensions.int>3</dimensions.int>
+		<iscat.int>0</iscat.int>
+		<dumpint.int>1000</dumpint.int>
+
+		<wg_tol.fp>1.0E-7</wg_tol.fp>
+		<wg_max.int>1000</wg_max.int>
+		<wg_min.int>1</wg_min.int>
+		
+		
+		<us_tol.fp>1.0E-5</us_tol.fp>
+		<us_max.int>1000</us_max.int>
+		<us_min.int>1</us_min.int>
+		
+		<alpha.fp>0</alpha.fp>
+		<beta.fp>0</beta.fp>
+		<gamma.fp>0</gamma.fp>
+		<aggregation_type>PLANE_BASED</aggregation_type>
+		<partition_type>KBA</partition_type>
+		<aggregation_factor>1</aggregation_factor>
+		<partition_params>
+			<partition_x>0</partition_x>
+			<partition_y>0</partition_y>
+			<partition_z>0</partition_z>	
+		</partition_params>
+	</common>
+
+
+
+	<!-- Information about individual energy groups -->
+	<energy_groups>
+		<!-- there must be ngroups energy_group-s -->
+		<energy_group>
+			<!-- Probably more parameters to be added in the future-->
+			<group_id>0</group_id>
+			<level.fp>3.0</level.fp>
+		</energy_group>
+		
+	</energy_groups>
+
+	<!-- Group sets -->
+	<!-- this section contains information about how energy groups get -->
+	<!-- grouped into group sets-->
+
+	<groupsets>
+		<energy_set>
+			<!-- IDs must be unique. it is not necessary for -->
+			<!-- them to be in order, but you can't leave holes-->
+			<!-- ex. if you include 1 and 3, you must include 2-->
+
+			<ID>0</ID>
+			<!-- a block implies that you include all numbers between -->
+			<!-- begin and end, including begin and end. -->
+
+			<set_include>0</set_include>
+			
+			<!--angle sets that belong to the energy group-->
+			<anglesets>
+				<set>
+					<ID>0</ID><!--ID is unique within-->
+						<!--the energy group-->
+					<set_include>0</set_include>
+				</set>
+				<set>
+					<ID>1</ID><!--ID is unique within-->
+						<!--the energy group-->
+					<set_include>1</set_include>
+				</set>
+				<set>
+					<ID>2</ID><!--ID is unique within-->
+						<!--the energy group-->
+					<set_include>2</set_include>
+				</set>
+				<set>
+					<ID>3</ID><!--ID is unique within-->
+						<!--the energy group-->
+					<set_include>3</set_include>
+				</set>
+				<set>
+					<ID>4</ID><!--ID is unique within-->
+						<!--the energy group-->
+					<set_include>4</set_include>
+				</set>
+				<set>
+					<ID>5</ID><!--ID is unique within-->
+						<!--the energy group-->
+					<set_include>5</set_include>
+				</set>
+				<set>
+					<ID>6</ID><!--ID is unique within-->
+						<!--the energy group-->
+					<set_include>6</set_include>
+				</set>
+				<set>
+					<ID>7</ID><!--ID is unique within-->
+						<!--the energy group-->
+					<set_include>7</set_include>
+				</set>
+			</anglesets>
+			<!-- Quadrature information for the Group Set-->
+			<quad_info>	
+				<quad_order.int>2</quad_order.int>
+				<quad_norm.fp>12.566371</quad_norm.fp>	
+				<quad_type.st>LevelSym</quad_type.st>
+			</quad_info>
+		</energy_set>
+	</groupsets>
+
+	
+<!-- Spatial Input Section -->
+
+
+	<dimension>
+		<dimension.id>1</dimension.id>
+		<dim.division>
+			<dim.division.cells.int>4</dim.division.cells.int>
+			<dim.division.start.fp>0.0</dim.division.start.fp>
+			<dim.division.end.fp>3.0</dim.division.end.fp>
+			<dim.division.id>1.1</dim.division.id>
+		</dim.division>
+		
+	</dimension>	
+<!-- another dimension -->
+
+	<dimension>
+		<dimension.id>2</dimension.id>
+		<dim.division>
+			<dim.division.cells.int>4</dim.division.cells.int>
+			<dim.division.start.fp>0.0</dim.division.start.fp>
+			<dim.division.end.fp>5.0</dim.division.end.fp>
+			<dim.division.id>2.1</dim.division.id>
+		</dim.division>
+		
+		
+	</dimension>
+<!-- another dimension -->
+	<dimension>
+		<dimension.id>3</dimension.id>
+		<dim.division>
+			<dim.division.cells.int>4</dim.division.cells.int>
+			<dim.division.start.fp>0.0</dim.division.start.fp>
+			<dim.division.end.fp>7.0</dim.division.end.fp>
+			<dim.division.id>3.1</dim.division.id>
+		</dim.division>
+		
+	</dimension>
+
+
+<!-- Materials Section -->
+<!-- Isotope Definitions-->
+	<isotope_def>
+		<isotope_def.clide.int>1</isotope_def.clide.int>
+		<isotope_def.scatt_order.int>0</isotope_def.scatt_order.int>
+		<isotope_def.group>
+			<isotope_def.sigtot.fp>1.0</isotope_def.sigtot.fp>
+			<isotope_def.nusigf.fp>0.0</isotope_def.nusigf.fp>
+			<isotope_def.chi.fp>0.0</isotope_def.chi.fp>
+			<isotope_def.sigs>
+				<isotope_def.sigs.fp>0.0</isotope_def.sigs.fp>
+			</isotope_def.sigs>
+		</isotope_def.group>
+		A
+		
+	</isotope_def>
+
+
+<!--Materials Definitions-->
+
+
+	<material_def>
+		<material_def.name>material1</material_def.name>
+		<material_def.isotop>
+			<material_def.isotop.clide.int>1</material_def.isotop.clide.int>
+			<material_def.isotop.intensity.fp>1.0</material_def.isotop.intensity.fp>
+		</material_def.isotop>
+	</material_def>
+
+
+<!--Material Regions -->
+	<regions>
+	<regions-material_region>
+		<material_reg.material.str>material1</material_reg.material.str>
+		<material_reg.dim_bounds>
+			<material_reg.dim_bounds.dim.int>1</material_reg.dim_bounds.dim.int>
+			<material_reg.dim_bounds.div_start.int>1</material_reg.dim_bounds.div_start.int>
+			<material_reg.dim_bounds.div_end.int>1</material_reg.dim_bounds.div_end.int>
+		</material_reg.dim_bounds>
+		<material_reg.dim_bounds>
+			<material_reg.dim_bounds.dim.int>2</material_reg.dim_bounds.dim.int>
+			<material_reg.dim_bounds.div_start.int>1</material_reg.dim_bounds.div_start.int>
+			<material_reg.dim_bounds.div_end.int>1</material_reg.dim_bounds.div_end.int>
+		</material_reg.dim_bounds>
+		<material_reg.dim_bounds>
+			<material_reg.dim_bounds.dim.int>3</material_reg.dim_bounds.dim.int>
+			<material_reg.dim_bounds.div_start.int>1</material_reg.dim_bounds.div_start.int>
+			<material_reg.dim_bounds.div_end.int>1</material_reg.dim_bounds.div_end.int>
+		</material_reg.dim_bounds>
+	</regions-material_region>	
+
+	</regions>
+	
+	<boundary_info>
+	<left_bound>	
+               <bound_type>INCIDENT_ISOTROPIC</bound_type>
+               	 <flux_for_e_group>
+               		<group_id>0</group_id>
+                        <flux>1.0</flux>
+                </flux_for_e_group>
+	</left_bound>
+
+	<right_bound>
+		<bound_type>VACUUM</bound_type>
+	</right_bound>
+
+	<front_bound>
+		<bound_type>VACUUM</bound_type>
+	</front_bound>
+
+	<back_bound>
+		<bound_type>VACUUM</bound_type>
+	</back_bound>
+
+	<top_bound>
+		<bound_type>VACUUM</bound_type>
+	</top_bound>
+
+	<bottom_bound>
+		<bound_type>VACUUM</bound_type>
+	</bottom_bound>
+
+	</boundary_info>
+
+
+	 <named_sources>
+          <source_def>
+            <source_def_name>Test_Source</source_def_name>
+            <intensity>0.0</intensity>
+          </source_def>
+        </named_sources>
+	
+	 <source_geometry>
+           <source_region>
+             <source_name>Test_Source</source_name>
+             <source_dim_bounds>
+                <source_dim_bounds_dim>0</source_dim_bounds_dim>
+                <source_dim_start>1</source_dim_start>
+                <source_dim_end>1</source_dim_end>
+             </source_dim_bounds>
+
+             <source_dim_bounds>
+                <source_dim_bounds_dim>1</source_dim_bounds_dim>
+                <source_dim_start>1</source_dim_start>
+                <source_dim_end>1</source_dim_end>
+             </source_dim_bounds>
+
+             <source_dim_bounds>
+                <source_dim_bounds_dim>2</source_dim_bounds_dim>
+                <source_dim_start>1</source_dim_start>
+                <source_dim_end>1</source_dim_end>
+             </source_dim_bounds>
+
+           </source_region>
+        </source_geometry>
+
+
+
+
+</prototype>

@@ -1,0 +1,4 @@
+The original source code that comes with metis has been modified to 
+compile with C++ compiler. Metis is written to be compiled with a C 
+compiler. In order to compile the code type 
+	make install

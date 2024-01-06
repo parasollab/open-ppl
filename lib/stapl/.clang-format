@@ -1,0 +1,109 @@
+---
+# YAML file used for project-wide formatting with clang-format.
+# Known to work with clang-format version 3.8.
+#
+# Rules based on the STAPL coding convention outlined in
+# docs/coding_conventions.
+#
+# Missing whitespace rules: 3, 5
+# Missing curly rules: 3
+# Missing variable rules: 1, 2, 3, 5
+# Missing naming conventions rules: all
+# Missing general rules: 13-23
+
+Language:        Cpp
+# Whitespace Rule 2b (docs/coding_conventions)
+AccessModifierOffset: -2
+AlignAfterOpenBracket: Align
+AlignConsecutiveAssignments: false
+AlignConsecutiveDeclarations: false
+AlignEscapedNewlinesLeft: false
+AlignOperands:   false
+AlignTrailingComments: true
+AllowAllParametersOfDeclarationOnNextLine: true
+AllowShortBlocksOnASingleLine: false
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: false
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
+AlwaysBreakAfterDefinitionReturnType: None
+# Variables Rule 8 (docs/coding_conventions)
+AlwaysBreakAfterReturnType: None
+AlwaysBreakBeforeMultilineStrings: false
+# Variables Rule 7 (docs/coding_conventions)
+AlwaysBreakTemplateDeclarations: true
+BinPackArguments: false
+BinPackParameters: false
+# Curly Brace Rules 1 and 2 (docs/coding_conventions)
+BraceWrapping:   
+  AfterClass:      true
+  AfterControlStatement: false
+  AfterEnum:       true
+  AfterFunction:   true
+  AfterNamespace:  false
+  AfterStruct:     true
+  AfterUnion:      true
+  BeforeCatch:     false
+  BeforeElse:      false
+  IndentBraces:    false
+BreakBeforeBinaryOperators: All
+BreakBeforeBraces: Custom
+BreakBeforeTernaryOperators: true
+BreakConstructorInitializersBeforeComma: true
+# Rule 6 (docs/coding_conventions)
+ColumnLimit:     80
+CommentPragmas:  '^ IWYU pragma:'
+ConstructorInitializerAllOnOneLineOrOnePerLine: true
+ConstructorInitializerIndentWidth: 2
+# Rule 6 (docs/coding_conventions)
+ContinuationIndentWidth: 2
+Cpp11BracedListStyle: false
+DerivePointerAlignment: false
+ForEachMacros:   [ BOOST_FOREACH ]
+IncludeCategories: 
+  - Regex:           '^".*'
+    Priority:        1
+  - Regex:           '^<stapl/'
+    Priority:        2
+  - Regex:           '^<boost/'
+    Priority:        3
+  - Regex:           '^<(benchmark|test)/'
+    Priority:        4
+  - Regex:           '^<.*'
+    Priority:        5
+IndentCaseLabels: true
+# Whitespace Rule 2 (docs/coding_conventions)
+IndentWidth:     2
+IndentWrappedFunctionNames: false
+KeepEmptyLinesAtTheStartOfBlocks: true
+MacroBlockBegin: ''
+MacroBlockEnd:   ''
+MaxEmptyLinesToKeep: 1
+# Whitespace Rule 2a (docs/coding_conventions)
+NamespaceIndentation: None
+PenaltyBreakBeforeFirstCallParameter: 19
+PenaltyBreakComment: 300
+PenaltyBreakFirstLessLess: 120
+PenaltyBreakString: 1000
+PenaltyExcessCharacter: 1000000
+PenaltyReturnTypeOnItsOwnLine: 60
+# Variable Rule 4 (docs/coding_conventions)
+PointerAlignment: Left
+ReflowComments:  true
+SortIncludes:    true
+SpaceAfterCStyleCast: true
+# SpaceAfterTemplateKeyword: false
+SpaceBeforeAssignmentOperators: true
+# Whitespace Rule 4 (docs/coding_conventions)
+SpaceBeforeParens: ControlStatements
+SpaceInEmptyParentheses: false
+SpacesBeforeTrailingComments: 1
+SpacesInAngles:  false
+SpacesInContainerLiterals: false
+SpacesInCStyleCastParentheses: false
+SpacesInParentheses: false
+SpacesInSquareBrackets: false
+Standard:        Cpp11
+# Whitespace Rule 1 (docs/coding_conventions)
+UseTab:          Never
+

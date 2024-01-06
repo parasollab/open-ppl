@@ -1,0 +1,855 @@
+# Generated automatically from Makefile.in by configure.
+# Makefile.in generated automatically by automake 1.4-p5 from Makefile.am
+
+# Copyright (C) 1994, 1995-8, 1999, 2001 Free Software Foundation, Inc.
+# This Makefile.in is free software; the Free Software Foundation
+# gives unlimited permission to copy and/or distribute it,
+# with or without modifications, as long as this notice is preserved.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY, to the extent permitted by law; without
+# even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+# PARTICULAR PURPOSE.
+
+
+SHELL = /bin/sh
+
+srcdir = .
+top_srcdir = ../..
+prefix = /usr/local
+exec_prefix = ${prefix}
+
+bindir = ${exec_prefix}/bin
+sbindir = ${exec_prefix}/sbin
+libexecdir = ${exec_prefix}/libexec
+datadir = ${prefix}/share
+sysconfdir = ${prefix}/etc
+sharedstatedir = ${prefix}/com
+localstatedir = ${prefix}/var
+libdir = ${exec_prefix}/lib
+infodir = ${prefix}/info
+mandir = ${prefix}/man
+includedir = ${prefix}/include
+oldincludedir = /usr/include
+
+DESTDIR =
+
+pkgdatadir = $(datadir)/mtl
+pkglibdir = $(libdir)/mtl
+pkgincludedir = $(includedir)/mtl
+
+top_builddir = ../..
+
+ACLOCAL = aclocal
+AUTOCONF = autoconf
+AUTOMAKE = automake
+AUTOHEADER = autoheader
+
+INSTALL = /usr/bin/install -c
+INSTALL_PROGRAM = ${INSTALL} $(AM_INSTALL_PROGRAM_FLAGS)
+INSTALL_DATA = ${INSTALL} -m 644
+INSTALL_SCRIPT = ${INSTALL_PROGRAM}
+transform = s,x,x,
+
+NORMAL_INSTALL = :
+PRE_INSTALL = :
+POST_INSTALL = :
+NORMAL_UNINSTALL = :
+PRE_UNINSTALL = :
+POST_UNINSTALL = :
+build_alias = i686-pc-linux-gnu
+build_triplet = i686-pc-linux-gnu
+host_alias = i686-pc-linux-gnu
+host_triplet = i686-pc-linux-gnu
+target_alias = i686-pc-linux-gnu
+target_triplet = i686-pc-linux-gnu
+BLASLIB =  
+CC = gcc
+CCFLAGS = 
+CC_DEBUG_FLAGS = 
+CC_OPTIMIZE_FLAGS = 
+CPP = @CPP@
+CXX = g++
+CXXFLAGS = -ftemplate-depth-30 -Wall
+CXX_DEBUG_FLAGS = -g -DBZ_DEBUG
+CXX_OPTIMIZE_FLAGS = -O2 -funroll-loops -fstrict-aliasing -fno-gcse
+F77 = g77
+FLIBS = 
+FORTLIBS = -lg2c
+LAPACK_EXAMPLES = 
+LDFLAGS = 
+LDOUT = -o 
+MAKEINFO = makeinfo
+MATHLIB = -lm
+MTLRELEASE = 21
+MTLVERSION = 2.1.2
+PACKAGE = mtl
+VERSION = 2.1.2-21
+contrib_dir = $(top_srcdir)/contrib
+mtl_include_dir = $(top_srcdir)
+
+EXTRA_DIST = makefile.mak
+AUTOMAKE_OPTIONS = no-dependencies
+
+MTL_EXAMPLES = \
+		abs_sum apply_givens banded_matvec_mult dot_prod 	\
+		euclid_norm external_matrix general_matvec_mult 	\
+		max_index rank_1_gen_mat sparse_copy sparse_matrix 	\
+		sparse_vec_prod swap_rows symm_banded_vec_prod 		\
+		symm_packed_vec_prod symm_sparse_vec_prod 		\
+		tri_band_sol tri_band_vect tri_matvec_mult tri_pack_sol \
+		tri_pack_vect tri_solve trans_mult vec_copy 		\
+		vec_max_index vec_scale y_ax_y gather_scatter 		\
+		partition lu_factorization 				\
+		banded_view_test blocked_matrix 			\
+		blocked_vector sparse_mult sparse_mult_col              \
+		transpose array2D rank_1_symm_sparse rank_one           \
+		symm_matvec_mult \
+		vecvec_add vecvec_add3 vecvec_copy vecvec_dot vecvec_ele_div \
+		vecvec_ele_mult vecvec_swap vec_two_norm vec_max vec_min \
+		range lu_solve neg_stride subrange_vector resize \
+	        banded_matmat sparse_tri_solve
+
+
+MTL_LAPACK_EXAMPLES = getrf geev gecon geequ kiester_geev
+
+EXTRA_PROGRAMS = $(MTL_EXAMPLES) $(MTL_LAPACK_EXAMPLES)
+
+# don't want any optimizations here
+OPTFLAGS = 
+
+LDADD = -lm
+
+getrf_LDADD =  
+geev_LDADD =  
+kiester_geev_LDADD =  
+gecon_LDADD =  
+geequ_LDADD =  
+
+CXXLD = g++
+CXXLINK = $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $@
+
+abs_sum_SOURCES = abs_sum.cc
+apply_givens_SOURCES = apply_givens.cc
+array2D_SOURCES = array2D.cc
+banded_matvec_mult_SOURCES = banded_matvec_mult.cc
+dot_prod_SOURCES = dot_prod.cc
+euclid_norm_SOURCES = euclid_norm.cc
+external_matrix_SOURCES = external_matrix.cc
+general_matvec_mult_SOURCES = general_matvec_mult.cc
+max_index_SOURCES = max_index.cc
+rank_1_gen_mat_SOURCES = rank_1_gen_mat.cc
+rank_1_symm_sparse_SOURCES = rank_1_symm_sparse.cc
+rank_one_SOURCES = rank_one.cc
+sparse_copy_SOURCES = sparse_copy.cc
+sparse_matrix_SOURCES = sparse_matrix.cc
+sparse_vec_prod_SOURCES = sparse_vec_prod.cc
+swap_rows_SOURCES = swap_rows.cc
+symm_banded_vec_prod_SOURCES = symm_banded_vec_prod.cc
+symm_packed_vec_prod_SOURCES = symm_packed_vec_prod.cc
+symm_sparse_vec_prod_SOURCES = symm_sparse_vec_prod.cc
+trans_mult_SOURCES = trans_mult.cc
+tri_band_sol_SOURCES = tri_band_sol.cc
+tri_band_vect_SOURCES = tri_band_vect.cc
+tri_matvec_mult_SOURCES = tri_matvec_mult.cc
+tri_pack_sol_SOURCES = tri_pack_sol.cc
+tri_pack_vect_SOURCES = tri_pack_vect.cc
+tri_solve_SOURCES = tri_solve.cc
+vec_copy_SOURCES = vec_copy.cc
+vec_max_index_SOURCES = vec_max_index.cc
+vec_max_SOURCES = vec_max.cc
+vec_min_SOURCES = vec_min.cc
+vec_scale_SOURCES = vec_scale.cc
+y_ax_y_SOURCES = y_ax_y.cc
+gather_scatter_SOURCES = gather_scatter.cc
+partition_SOURCES = partition.cc
+lu_factorization_SOURCES = lu_factorization.cc
+banded_view_test_SOURCES = banded_view_test.cc
+blocked_matrix_SOURCES = blocked_matrix.cc
+blocked_vector_SOURCES = blocked_vector.cc
+sparse_mult_SOURCES = sparse_mult.cc
+sparse_mult_col_SOURCES = sparse_mult_col.cc
+getrf_SOURCES = getrf.cc
+geev_SOURCES = geev.cc
+kiester_geev_SOURCES = kiester_geev.cc
+gecon_SOURCES = gecon.cc
+geequ_SOURCES = geequ.cc
+transpose_SOURCES = transpose.cc
+symm_matvec_mult_SOURCES = symm_matvec_mult.cc
+vecvec_add_SOURCES = vecvec_add.cc
+vecvec_add3_SOURCES = vecvec_add3.cc
+vecvec_copy_SOURCES = vecvec_copy.cc
+vecvec_dot_SOURCES = vecvec_dot.cc
+vecvec_ele_div_SOURCES = vecvec_ele_div.cc
+vecvec_ele_mult_SOURCES = vecvec_ele_mult.cc
+vecvec_swap_SOURCES = vecvec_swap.cc
+vec_two_norm_SOURCES = vec_two_norm.cc
+range_SOURCES = range.cc
+lu_solve_SOURCES = lu_solve.cc
+neg_stride_SOURCES = neg_stride.cc
+subrange_vector_SOURCES = subrange_vector.cc
+resize_SOURCES = resize.cc
+banded_matmat_SOURCES = banded_matmat.cc
+sparse_tri_solve_SOURCES = sparse_tri_solve.cc
+mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
+CONFIG_HEADER = ../../mtl/mtl_config.h
+CONFIG_CLEAN_FILES = 
+
+DEFS = -DHAVE_CONFIG_H -I. -I$(srcdir) -I../../mtl
+CPPFLAGS =  -I$(top_srcdir)   
+LIBS =  
+abs_sum_OBJECTS =  abs_sum.o
+abs_sum_LDADD = $(LDADD)
+abs_sum_DEPENDENCIES = 
+abs_sum_LDFLAGS = 
+apply_givens_OBJECTS =  apply_givens.o
+apply_givens_LDADD = $(LDADD)
+apply_givens_DEPENDENCIES = 
+apply_givens_LDFLAGS = 
+banded_matvec_mult_OBJECTS =  banded_matvec_mult.o
+banded_matvec_mult_LDADD = $(LDADD)
+banded_matvec_mult_DEPENDENCIES = 
+banded_matvec_mult_LDFLAGS = 
+dot_prod_OBJECTS =  dot_prod.o
+dot_prod_LDADD = $(LDADD)
+dot_prod_DEPENDENCIES = 
+dot_prod_LDFLAGS = 
+euclid_norm_OBJECTS =  euclid_norm.o
+euclid_norm_LDADD = $(LDADD)
+euclid_norm_DEPENDENCIES = 
+euclid_norm_LDFLAGS = 
+external_matrix_OBJECTS =  external_matrix.o
+external_matrix_LDADD = $(LDADD)
+external_matrix_DEPENDENCIES = 
+external_matrix_LDFLAGS = 
+general_matvec_mult_OBJECTS =  general_matvec_mult.o
+general_matvec_mult_LDADD = $(LDADD)
+general_matvec_mult_DEPENDENCIES = 
+general_matvec_mult_LDFLAGS = 
+max_index_OBJECTS =  max_index.o
+max_index_LDADD = $(LDADD)
+max_index_DEPENDENCIES = 
+max_index_LDFLAGS = 
+rank_1_gen_mat_OBJECTS =  rank_1_gen_mat.o
+rank_1_gen_mat_LDADD = $(LDADD)
+rank_1_gen_mat_DEPENDENCIES = 
+rank_1_gen_mat_LDFLAGS = 
+sparse_copy_OBJECTS =  sparse_copy.o
+sparse_copy_LDADD = $(LDADD)
+sparse_copy_DEPENDENCIES = 
+sparse_copy_LDFLAGS = 
+sparse_matrix_OBJECTS =  sparse_matrix.o
+sparse_matrix_LDADD = $(LDADD)
+sparse_matrix_DEPENDENCIES = 
+sparse_matrix_LDFLAGS = 
+sparse_vec_prod_OBJECTS =  sparse_vec_prod.o
+sparse_vec_prod_LDADD = $(LDADD)
+sparse_vec_prod_DEPENDENCIES = 
+sparse_vec_prod_LDFLAGS = 
+swap_rows_OBJECTS =  swap_rows.o
+swap_rows_LDADD = $(LDADD)
+swap_rows_DEPENDENCIES = 
+swap_rows_LDFLAGS = 
+symm_banded_vec_prod_OBJECTS =  symm_banded_vec_prod.o
+symm_banded_vec_prod_LDADD = $(LDADD)
+symm_banded_vec_prod_DEPENDENCIES = 
+symm_banded_vec_prod_LDFLAGS = 
+symm_packed_vec_prod_OBJECTS =  symm_packed_vec_prod.o
+symm_packed_vec_prod_LDADD = $(LDADD)
+symm_packed_vec_prod_DEPENDENCIES = 
+symm_packed_vec_prod_LDFLAGS = 
+symm_sparse_vec_prod_OBJECTS =  symm_sparse_vec_prod.o
+symm_sparse_vec_prod_LDADD = $(LDADD)
+symm_sparse_vec_prod_DEPENDENCIES = 
+symm_sparse_vec_prod_LDFLAGS = 
+tri_band_sol_OBJECTS =  tri_band_sol.o
+tri_band_sol_LDADD = $(LDADD)
+tri_band_sol_DEPENDENCIES = 
+tri_band_sol_LDFLAGS = 
+tri_band_vect_OBJECTS =  tri_band_vect.o
+tri_band_vect_LDADD = $(LDADD)
+tri_band_vect_DEPENDENCIES = 
+tri_band_vect_LDFLAGS = 
+tri_matvec_mult_OBJECTS =  tri_matvec_mult.o
+tri_matvec_mult_LDADD = $(LDADD)
+tri_matvec_mult_DEPENDENCIES = 
+tri_matvec_mult_LDFLAGS = 
+tri_pack_sol_OBJECTS =  tri_pack_sol.o
+tri_pack_sol_LDADD = $(LDADD)
+tri_pack_sol_DEPENDENCIES = 
+tri_pack_sol_LDFLAGS = 
+tri_pack_vect_OBJECTS =  tri_pack_vect.o
+tri_pack_vect_LDADD = $(LDADD)
+tri_pack_vect_DEPENDENCIES = 
+tri_pack_vect_LDFLAGS = 
+tri_solve_OBJECTS =  tri_solve.o
+tri_solve_LDADD = $(LDADD)
+tri_solve_DEPENDENCIES = 
+tri_solve_LDFLAGS = 
+trans_mult_OBJECTS =  trans_mult.o
+trans_mult_LDADD = $(LDADD)
+trans_mult_DEPENDENCIES = 
+trans_mult_LDFLAGS = 
+vec_copy_OBJECTS =  vec_copy.o
+vec_copy_LDADD = $(LDADD)
+vec_copy_DEPENDENCIES = 
+vec_copy_LDFLAGS = 
+vec_max_index_OBJECTS =  vec_max_index.o
+vec_max_index_LDADD = $(LDADD)
+vec_max_index_DEPENDENCIES = 
+vec_max_index_LDFLAGS = 
+vec_scale_OBJECTS =  vec_scale.o
+vec_scale_LDADD = $(LDADD)
+vec_scale_DEPENDENCIES = 
+vec_scale_LDFLAGS = 
+y_ax_y_OBJECTS =  y_ax_y.o
+y_ax_y_LDADD = $(LDADD)
+y_ax_y_DEPENDENCIES = 
+y_ax_y_LDFLAGS = 
+gather_scatter_OBJECTS =  gather_scatter.o
+gather_scatter_LDADD = $(LDADD)
+gather_scatter_DEPENDENCIES = 
+gather_scatter_LDFLAGS = 
+partition_OBJECTS =  partition.o
+partition_LDADD = $(LDADD)
+partition_DEPENDENCIES = 
+partition_LDFLAGS = 
+lu_factorization_OBJECTS =  lu_factorization.o
+lu_factorization_LDADD = $(LDADD)
+lu_factorization_DEPENDENCIES = 
+lu_factorization_LDFLAGS = 
+banded_view_test_OBJECTS =  banded_view_test.o
+banded_view_test_LDADD = $(LDADD)
+banded_view_test_DEPENDENCIES = 
+banded_view_test_LDFLAGS = 
+blocked_matrix_OBJECTS =  blocked_matrix.o
+blocked_matrix_LDADD = $(LDADD)
+blocked_matrix_DEPENDENCIES = 
+blocked_matrix_LDFLAGS = 
+blocked_vector_OBJECTS =  blocked_vector.o
+blocked_vector_LDADD = $(LDADD)
+blocked_vector_DEPENDENCIES = 
+blocked_vector_LDFLAGS = 
+sparse_mult_OBJECTS =  sparse_mult.o
+sparse_mult_LDADD = $(LDADD)
+sparse_mult_DEPENDENCIES = 
+sparse_mult_LDFLAGS = 
+sparse_mult_col_OBJECTS =  sparse_mult_col.o
+sparse_mult_col_LDADD = $(LDADD)
+sparse_mult_col_DEPENDENCIES = 
+sparse_mult_col_LDFLAGS = 
+transpose_OBJECTS =  transpose.o
+transpose_LDADD = $(LDADD)
+transpose_DEPENDENCIES = 
+transpose_LDFLAGS = 
+array2D_OBJECTS =  array2D.o
+array2D_LDADD = $(LDADD)
+array2D_DEPENDENCIES = 
+array2D_LDFLAGS = 
+rank_1_symm_sparse_OBJECTS =  rank_1_symm_sparse.o
+rank_1_symm_sparse_LDADD = $(LDADD)
+rank_1_symm_sparse_DEPENDENCIES = 
+rank_1_symm_sparse_LDFLAGS = 
+rank_one_OBJECTS =  rank_one.o
+rank_one_LDADD = $(LDADD)
+rank_one_DEPENDENCIES = 
+rank_one_LDFLAGS = 
+symm_matvec_mult_OBJECTS =  symm_matvec_mult.o
+symm_matvec_mult_LDADD = $(LDADD)
+symm_matvec_mult_DEPENDENCIES = 
+symm_matvec_mult_LDFLAGS = 
+vecvec_add_OBJECTS =  vecvec_add.o
+vecvec_add_LDADD = $(LDADD)
+vecvec_add_DEPENDENCIES = 
+vecvec_add_LDFLAGS = 
+vecvec_add3_OBJECTS =  vecvec_add3.o
+vecvec_add3_LDADD = $(LDADD)
+vecvec_add3_DEPENDENCIES = 
+vecvec_add3_LDFLAGS = 
+vecvec_copy_OBJECTS =  vecvec_copy.o
+vecvec_copy_LDADD = $(LDADD)
+vecvec_copy_DEPENDENCIES = 
+vecvec_copy_LDFLAGS = 
+vecvec_dot_OBJECTS =  vecvec_dot.o
+vecvec_dot_LDADD = $(LDADD)
+vecvec_dot_DEPENDENCIES = 
+vecvec_dot_LDFLAGS = 
+vecvec_ele_div_OBJECTS =  vecvec_ele_div.o
+vecvec_ele_div_LDADD = $(LDADD)
+vecvec_ele_div_DEPENDENCIES = 
+vecvec_ele_div_LDFLAGS = 
+vecvec_ele_mult_OBJECTS =  vecvec_ele_mult.o
+vecvec_ele_mult_LDADD = $(LDADD)
+vecvec_ele_mult_DEPENDENCIES = 
+vecvec_ele_mult_LDFLAGS = 
+vecvec_swap_OBJECTS =  vecvec_swap.o
+vecvec_swap_LDADD = $(LDADD)
+vecvec_swap_DEPENDENCIES = 
+vecvec_swap_LDFLAGS = 
+vec_two_norm_OBJECTS =  vec_two_norm.o
+vec_two_norm_LDADD = $(LDADD)
+vec_two_norm_DEPENDENCIES = 
+vec_two_norm_LDFLAGS = 
+vec_max_OBJECTS =  vec_max.o
+vec_max_LDADD = $(LDADD)
+vec_max_DEPENDENCIES = 
+vec_max_LDFLAGS = 
+vec_min_OBJECTS =  vec_min.o
+vec_min_LDADD = $(LDADD)
+vec_min_DEPENDENCIES = 
+vec_min_LDFLAGS = 
+range_OBJECTS =  range.o
+range_LDADD = $(LDADD)
+range_DEPENDENCIES = 
+range_LDFLAGS = 
+lu_solve_OBJECTS =  lu_solve.o
+lu_solve_LDADD = $(LDADD)
+lu_solve_DEPENDENCIES = 
+lu_solve_LDFLAGS = 
+neg_stride_OBJECTS =  neg_stride.o
+neg_stride_LDADD = $(LDADD)
+neg_stride_DEPENDENCIES = 
+neg_stride_LDFLAGS = 
+subrange_vector_OBJECTS =  subrange_vector.o
+subrange_vector_LDADD = $(LDADD)
+subrange_vector_DEPENDENCIES = 
+subrange_vector_LDFLAGS = 
+resize_OBJECTS =  resize.o
+resize_LDADD = $(LDADD)
+resize_DEPENDENCIES = 
+resize_LDFLAGS = 
+banded_matmat_OBJECTS =  banded_matmat.o
+banded_matmat_LDADD = $(LDADD)
+banded_matmat_DEPENDENCIES = 
+banded_matmat_LDFLAGS = 
+sparse_tri_solve_OBJECTS =  sparse_tri_solve.o
+sparse_tri_solve_LDADD = $(LDADD)
+sparse_tri_solve_DEPENDENCIES = 
+sparse_tri_solve_LDFLAGS = 
+getrf_OBJECTS =  getrf.o
+getrf_DEPENDENCIES = 
+getrf_LDFLAGS = 
+geev_OBJECTS =  geev.o
+geev_DEPENDENCIES = 
+geev_LDFLAGS = 
+gecon_OBJECTS =  gecon.o
+gecon_DEPENDENCIES = 
+gecon_LDFLAGS = 
+geequ_OBJECTS =  geequ.o
+geequ_DEPENDENCIES = 
+geequ_LDFLAGS = 
+kiester_geev_OBJECTS =  kiester_geev.o
+kiester_geev_DEPENDENCIES = 
+kiester_geev_LDFLAGS = 
+CXXCOMPILE = $(CXX) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
+DIST_COMMON =  Makefile.am Makefile.in
+
+
+DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
+
+TAR = gtar
+GZIP_ENV = --best
+SOURCES = $(abs_sum_SOURCES) $(apply_givens_SOURCES) $(banded_matvec_mult_SOURCES) $(dot_prod_SOURCES) $(euclid_norm_SOURCES) $(external_matrix_SOURCES) $(general_matvec_mult_SOURCES) $(max_index_SOURCES) $(rank_1_gen_mat_SOURCES) $(sparse_copy_SOURCES) $(sparse_matrix_SOURCES) $(sparse_vec_prod_SOURCES) $(swap_rows_SOURCES) $(symm_banded_vec_prod_SOURCES) $(symm_packed_vec_prod_SOURCES) $(symm_sparse_vec_prod_SOURCES) $(tri_band_sol_SOURCES) $(tri_band_vect_SOURCES) $(tri_matvec_mult_SOURCES) $(tri_pack_sol_SOURCES) $(tri_pack_vect_SOURCES) $(tri_solve_SOURCES) $(trans_mult_SOURCES) $(vec_copy_SOURCES) $(vec_max_index_SOURCES) $(vec_scale_SOURCES) $(y_ax_y_SOURCES) $(gather_scatter_SOURCES) $(partition_SOURCES) $(lu_factorization_SOURCES) $(banded_view_test_SOURCES) $(blocked_matrix_SOURCES) $(blocked_vector_SOURCES) $(sparse_mult_SOURCES) $(sparse_mult_col_SOURCES) $(transpose_SOURCES) $(array2D_SOURCES) $(rank_1_symm_sparse_SOURCES) $(rank_one_SOURCES) $(symm_matvec_mult_SOURCES) $(vecvec_add_SOURCES) $(vecvec_add3_SOURCES) $(vecvec_copy_SOURCES) $(vecvec_dot_SOURCES) $(vecvec_ele_div_SOURCES) $(vecvec_ele_mult_SOURCES) $(vecvec_swap_SOURCES) $(vec_two_norm_SOURCES) $(vec_max_SOURCES) $(vec_min_SOURCES) $(range_SOURCES) $(lu_solve_SOURCES) $(neg_stride_SOURCES) $(subrange_vector_SOURCES) $(resize_SOURCES) $(banded_matmat_SOURCES) $(sparse_tri_solve_SOURCES) $(getrf_SOURCES) $(geev_SOURCES) $(gecon_SOURCES) $(geequ_SOURCES) $(kiester_geev_SOURCES)
+OBJECTS = $(abs_sum_OBJECTS) $(apply_givens_OBJECTS) $(banded_matvec_mult_OBJECTS) $(dot_prod_OBJECTS) $(euclid_norm_OBJECTS) $(external_matrix_OBJECTS) $(general_matvec_mult_OBJECTS) $(max_index_OBJECTS) $(rank_1_gen_mat_OBJECTS) $(sparse_copy_OBJECTS) $(sparse_matrix_OBJECTS) $(sparse_vec_prod_OBJECTS) $(swap_rows_OBJECTS) $(symm_banded_vec_prod_OBJECTS) $(symm_packed_vec_prod_OBJECTS) $(symm_sparse_vec_prod_OBJECTS) $(tri_band_sol_OBJECTS) $(tri_band_vect_OBJECTS) $(tri_matvec_mult_OBJECTS) $(tri_pack_sol_OBJECTS) $(tri_pack_vect_OBJECTS) $(tri_solve_OBJECTS) $(trans_mult_OBJECTS) $(vec_copy_OBJECTS) $(vec_max_index_OBJECTS) $(vec_scale_OBJECTS) $(y_ax_y_OBJECTS) $(gather_scatter_OBJECTS) $(partition_OBJECTS) $(lu_factorization_OBJECTS) $(banded_view_test_OBJECTS) $(blocked_matrix_OBJECTS) $(blocked_vector_OBJECTS) $(sparse_mult_OBJECTS) $(sparse_mult_col_OBJECTS) $(transpose_OBJECTS) $(array2D_OBJECTS) $(rank_1_symm_sparse_OBJECTS) $(rank_one_OBJECTS) $(symm_matvec_mult_OBJECTS) $(vecvec_add_OBJECTS) $(vecvec_add3_OBJECTS) $(vecvec_copy_OBJECTS) $(vecvec_dot_OBJECTS) $(vecvec_ele_div_OBJECTS) $(vecvec_ele_mult_OBJECTS) $(vecvec_swap_OBJECTS) $(vec_two_norm_OBJECTS) $(vec_max_OBJECTS) $(vec_min_OBJECTS) $(range_OBJECTS) $(lu_solve_OBJECTS) $(neg_stride_OBJECTS) $(subrange_vector_OBJECTS) $(resize_OBJECTS) $(banded_matmat_OBJECTS) $(sparse_tri_solve_OBJECTS) $(getrf_OBJECTS) $(geev_OBJECTS) $(gecon_OBJECTS) $(geequ_OBJECTS) $(kiester_geev_OBJECTS)
+
+all: all-redirect
+.SUFFIXES:
+.SUFFIXES: .S .c .cc .o .s
+$(srcdir)/Makefile.in: Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4) 
+	cd $(top_srcdir) && $(AUTOMAKE) --gnu contrib/examples/Makefile
+
+Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status
+	cd $(top_builddir) \
+	  && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= $(SHELL) ./config.status
+
+
+.c.o:
+	$(COMPILE) -c $<
+
+.s.o:
+	$(COMPILE) -c $<
+
+.S.o:
+	$(COMPILE) -c $<
+
+mostlyclean-compile:
+	-rm -f *.o core *.core
+
+clean-compile:
+
+distclean-compile:
+	-rm -f *.tab.c
+
+maintainer-clean-compile:
+
+abs_sum: $(abs_sum_OBJECTS) $(abs_sum_DEPENDENCIES)
+	@rm -f abs_sum
+	$(CXXLINK) $(abs_sum_LDFLAGS) $(abs_sum_OBJECTS) $(abs_sum_LDADD) $(LIBS)
+
+apply_givens: $(apply_givens_OBJECTS) $(apply_givens_DEPENDENCIES)
+	@rm -f apply_givens
+	$(CXXLINK) $(apply_givens_LDFLAGS) $(apply_givens_OBJECTS) $(apply_givens_LDADD) $(LIBS)
+
+banded_matvec_mult: $(banded_matvec_mult_OBJECTS) $(banded_matvec_mult_DEPENDENCIES)
+	@rm -f banded_matvec_mult
+	$(CXXLINK) $(banded_matvec_mult_LDFLAGS) $(banded_matvec_mult_OBJECTS) $(banded_matvec_mult_LDADD) $(LIBS)
+
+dot_prod: $(dot_prod_OBJECTS) $(dot_prod_DEPENDENCIES)
+	@rm -f dot_prod
+	$(CXXLINK) $(dot_prod_LDFLAGS) $(dot_prod_OBJECTS) $(dot_prod_LDADD) $(LIBS)
+
+euclid_norm: $(euclid_norm_OBJECTS) $(euclid_norm_DEPENDENCIES)
+	@rm -f euclid_norm
+	$(CXXLINK) $(euclid_norm_LDFLAGS) $(euclid_norm_OBJECTS) $(euclid_norm_LDADD) $(LIBS)
+
+external_matrix: $(external_matrix_OBJECTS) $(external_matrix_DEPENDENCIES)
+	@rm -f external_matrix
+	$(CXXLINK) $(external_matrix_LDFLAGS) $(external_matrix_OBJECTS) $(external_matrix_LDADD) $(LIBS)
+
+general_matvec_mult: $(general_matvec_mult_OBJECTS) $(general_matvec_mult_DEPENDENCIES)
+	@rm -f general_matvec_mult
+	$(CXXLINK) $(general_matvec_mult_LDFLAGS) $(general_matvec_mult_OBJECTS) $(general_matvec_mult_LDADD) $(LIBS)
+
+max_index: $(max_index_OBJECTS) $(max_index_DEPENDENCIES)
+	@rm -f max_index
+	$(CXXLINK) $(max_index_LDFLAGS) $(max_index_OBJECTS) $(max_index_LDADD) $(LIBS)
+
+rank_1_gen_mat: $(rank_1_gen_mat_OBJECTS) $(rank_1_gen_mat_DEPENDENCIES)
+	@rm -f rank_1_gen_mat
+	$(CXXLINK) $(rank_1_gen_mat_LDFLAGS) $(rank_1_gen_mat_OBJECTS) $(rank_1_gen_mat_LDADD) $(LIBS)
+
+sparse_copy: $(sparse_copy_OBJECTS) $(sparse_copy_DEPENDENCIES)
+	@rm -f sparse_copy
+	$(CXXLINK) $(sparse_copy_LDFLAGS) $(sparse_copy_OBJECTS) $(sparse_copy_LDADD) $(LIBS)
+
+sparse_matrix: $(sparse_matrix_OBJECTS) $(sparse_matrix_DEPENDENCIES)
+	@rm -f sparse_matrix
+	$(CXXLINK) $(sparse_matrix_LDFLAGS) $(sparse_matrix_OBJECTS) $(sparse_matrix_LDADD) $(LIBS)
+
+sparse_vec_prod: $(sparse_vec_prod_OBJECTS) $(sparse_vec_prod_DEPENDENCIES)
+	@rm -f sparse_vec_prod
+	$(CXXLINK) $(sparse_vec_prod_LDFLAGS) $(sparse_vec_prod_OBJECTS) $(sparse_vec_prod_LDADD) $(LIBS)
+
+swap_rows: $(swap_rows_OBJECTS) $(swap_rows_DEPENDENCIES)
+	@rm -f swap_rows
+	$(CXXLINK) $(swap_rows_LDFLAGS) $(swap_rows_OBJECTS) $(swap_rows_LDADD) $(LIBS)
+
+symm_banded_vec_prod: $(symm_banded_vec_prod_OBJECTS) $(symm_banded_vec_prod_DEPENDENCIES)
+	@rm -f symm_banded_vec_prod
+	$(CXXLINK) $(symm_banded_vec_prod_LDFLAGS) $(symm_banded_vec_prod_OBJECTS) $(symm_banded_vec_prod_LDADD) $(LIBS)
+
+symm_packed_vec_prod: $(symm_packed_vec_prod_OBJECTS) $(symm_packed_vec_prod_DEPENDENCIES)
+	@rm -f symm_packed_vec_prod
+	$(CXXLINK) $(symm_packed_vec_prod_LDFLAGS) $(symm_packed_vec_prod_OBJECTS) $(symm_packed_vec_prod_LDADD) $(LIBS)
+
+symm_sparse_vec_prod: $(symm_sparse_vec_prod_OBJECTS) $(symm_sparse_vec_prod_DEPENDENCIES)
+	@rm -f symm_sparse_vec_prod
+	$(CXXLINK) $(symm_sparse_vec_prod_LDFLAGS) $(symm_sparse_vec_prod_OBJECTS) $(symm_sparse_vec_prod_LDADD) $(LIBS)
+
+tri_band_sol: $(tri_band_sol_OBJECTS) $(tri_band_sol_DEPENDENCIES)
+	@rm -f tri_band_sol
+	$(CXXLINK) $(tri_band_sol_LDFLAGS) $(tri_band_sol_OBJECTS) $(tri_band_sol_LDADD) $(LIBS)
+
+tri_band_vect: $(tri_band_vect_OBJECTS) $(tri_band_vect_DEPENDENCIES)
+	@rm -f tri_band_vect
+	$(CXXLINK) $(tri_band_vect_LDFLAGS) $(tri_band_vect_OBJECTS) $(tri_band_vect_LDADD) $(LIBS)
+
+tri_matvec_mult: $(tri_matvec_mult_OBJECTS) $(tri_matvec_mult_DEPENDENCIES)
+	@rm -f tri_matvec_mult
+	$(CXXLINK) $(tri_matvec_mult_LDFLAGS) $(tri_matvec_mult_OBJECTS) $(tri_matvec_mult_LDADD) $(LIBS)
+
+tri_pack_sol: $(tri_pack_sol_OBJECTS) $(tri_pack_sol_DEPENDENCIES)
+	@rm -f tri_pack_sol
+	$(CXXLINK) $(tri_pack_sol_LDFLAGS) $(tri_pack_sol_OBJECTS) $(tri_pack_sol_LDADD) $(LIBS)
+
+tri_pack_vect: $(tri_pack_vect_OBJECTS) $(tri_pack_vect_DEPENDENCIES)
+	@rm -f tri_pack_vect
+	$(CXXLINK) $(tri_pack_vect_LDFLAGS) $(tri_pack_vect_OBJECTS) $(tri_pack_vect_LDADD) $(LIBS)
+
+tri_solve: $(tri_solve_OBJECTS) $(tri_solve_DEPENDENCIES)
+	@rm -f tri_solve
+	$(CXXLINK) $(tri_solve_LDFLAGS) $(tri_solve_OBJECTS) $(tri_solve_LDADD) $(LIBS)
+
+trans_mult: $(trans_mult_OBJECTS) $(trans_mult_DEPENDENCIES)
+	@rm -f trans_mult
+	$(CXXLINK) $(trans_mult_LDFLAGS) $(trans_mult_OBJECTS) $(trans_mult_LDADD) $(LIBS)
+
+vec_copy: $(vec_copy_OBJECTS) $(vec_copy_DEPENDENCIES)
+	@rm -f vec_copy
+	$(CXXLINK) $(vec_copy_LDFLAGS) $(vec_copy_OBJECTS) $(vec_copy_LDADD) $(LIBS)
+
+vec_max_index: $(vec_max_index_OBJECTS) $(vec_max_index_DEPENDENCIES)
+	@rm -f vec_max_index
+	$(CXXLINK) $(vec_max_index_LDFLAGS) $(vec_max_index_OBJECTS) $(vec_max_index_LDADD) $(LIBS)
+
+vec_scale: $(vec_scale_OBJECTS) $(vec_scale_DEPENDENCIES)
+	@rm -f vec_scale
+	$(CXXLINK) $(vec_scale_LDFLAGS) $(vec_scale_OBJECTS) $(vec_scale_LDADD) $(LIBS)
+
+y_ax_y: $(y_ax_y_OBJECTS) $(y_ax_y_DEPENDENCIES)
+	@rm -f y_ax_y
+	$(CXXLINK) $(y_ax_y_LDFLAGS) $(y_ax_y_OBJECTS) $(y_ax_y_LDADD) $(LIBS)
+
+gather_scatter: $(gather_scatter_OBJECTS) $(gather_scatter_DEPENDENCIES)
+	@rm -f gather_scatter
+	$(CXXLINK) $(gather_scatter_LDFLAGS) $(gather_scatter_OBJECTS) $(gather_scatter_LDADD) $(LIBS)
+
+partition: $(partition_OBJECTS) $(partition_DEPENDENCIES)
+	@rm -f partition
+	$(CXXLINK) $(partition_LDFLAGS) $(partition_OBJECTS) $(partition_LDADD) $(LIBS)
+
+lu_factorization: $(lu_factorization_OBJECTS) $(lu_factorization_DEPENDENCIES)
+	@rm -f lu_factorization
+	$(CXXLINK) $(lu_factorization_LDFLAGS) $(lu_factorization_OBJECTS) $(lu_factorization_LDADD) $(LIBS)
+
+banded_view_test: $(banded_view_test_OBJECTS) $(banded_view_test_DEPENDENCIES)
+	@rm -f banded_view_test
+	$(CXXLINK) $(banded_view_test_LDFLAGS) $(banded_view_test_OBJECTS) $(banded_view_test_LDADD) $(LIBS)
+
+blocked_matrix: $(blocked_matrix_OBJECTS) $(blocked_matrix_DEPENDENCIES)
+	@rm -f blocked_matrix
+	$(CXXLINK) $(blocked_matrix_LDFLAGS) $(blocked_matrix_OBJECTS) $(blocked_matrix_LDADD) $(LIBS)
+
+blocked_vector: $(blocked_vector_OBJECTS) $(blocked_vector_DEPENDENCIES)
+	@rm -f blocked_vector
+	$(CXXLINK) $(blocked_vector_LDFLAGS) $(blocked_vector_OBJECTS) $(blocked_vector_LDADD) $(LIBS)
+
+sparse_mult: $(sparse_mult_OBJECTS) $(sparse_mult_DEPENDENCIES)
+	@rm -f sparse_mult
+	$(CXXLINK) $(sparse_mult_LDFLAGS) $(sparse_mult_OBJECTS) $(sparse_mult_LDADD) $(LIBS)
+
+sparse_mult_col: $(sparse_mult_col_OBJECTS) $(sparse_mult_col_DEPENDENCIES)
+	@rm -f sparse_mult_col
+	$(CXXLINK) $(sparse_mult_col_LDFLAGS) $(sparse_mult_col_OBJECTS) $(sparse_mult_col_LDADD) $(LIBS)
+
+transpose: $(transpose_OBJECTS) $(transpose_DEPENDENCIES)
+	@rm -f transpose
+	$(CXXLINK) $(transpose_LDFLAGS) $(transpose_OBJECTS) $(transpose_LDADD) $(LIBS)
+
+array2D: $(array2D_OBJECTS) $(array2D_DEPENDENCIES)
+	@rm -f array2D
+	$(CXXLINK) $(array2D_LDFLAGS) $(array2D_OBJECTS) $(array2D_LDADD) $(LIBS)
+
+rank_1_symm_sparse: $(rank_1_symm_sparse_OBJECTS) $(rank_1_symm_sparse_DEPENDENCIES)
+	@rm -f rank_1_symm_sparse
+	$(CXXLINK) $(rank_1_symm_sparse_LDFLAGS) $(rank_1_symm_sparse_OBJECTS) $(rank_1_symm_sparse_LDADD) $(LIBS)
+
+rank_one: $(rank_one_OBJECTS) $(rank_one_DEPENDENCIES)
+	@rm -f rank_one
+	$(CXXLINK) $(rank_one_LDFLAGS) $(rank_one_OBJECTS) $(rank_one_LDADD) $(LIBS)
+
+symm_matvec_mult: $(symm_matvec_mult_OBJECTS) $(symm_matvec_mult_DEPENDENCIES)
+	@rm -f symm_matvec_mult
+	$(CXXLINK) $(symm_matvec_mult_LDFLAGS) $(symm_matvec_mult_OBJECTS) $(symm_matvec_mult_LDADD) $(LIBS)
+
+vecvec_add: $(vecvec_add_OBJECTS) $(vecvec_add_DEPENDENCIES)
+	@rm -f vecvec_add
+	$(CXXLINK) $(vecvec_add_LDFLAGS) $(vecvec_add_OBJECTS) $(vecvec_add_LDADD) $(LIBS)
+
+vecvec_add3: $(vecvec_add3_OBJECTS) $(vecvec_add3_DEPENDENCIES)
+	@rm -f vecvec_add3
+	$(CXXLINK) $(vecvec_add3_LDFLAGS) $(vecvec_add3_OBJECTS) $(vecvec_add3_LDADD) $(LIBS)
+
+vecvec_copy: $(vecvec_copy_OBJECTS) $(vecvec_copy_DEPENDENCIES)
+	@rm -f vecvec_copy
+	$(CXXLINK) $(vecvec_copy_LDFLAGS) $(vecvec_copy_OBJECTS) $(vecvec_copy_LDADD) $(LIBS)
+
+vecvec_dot: $(vecvec_dot_OBJECTS) $(vecvec_dot_DEPENDENCIES)
+	@rm -f vecvec_dot
+	$(CXXLINK) $(vecvec_dot_LDFLAGS) $(vecvec_dot_OBJECTS) $(vecvec_dot_LDADD) $(LIBS)
+
+vecvec_ele_div: $(vecvec_ele_div_OBJECTS) $(vecvec_ele_div_DEPENDENCIES)
+	@rm -f vecvec_ele_div
+	$(CXXLINK) $(vecvec_ele_div_LDFLAGS) $(vecvec_ele_div_OBJECTS) $(vecvec_ele_div_LDADD) $(LIBS)
+
+vecvec_ele_mult: $(vecvec_ele_mult_OBJECTS) $(vecvec_ele_mult_DEPENDENCIES)
+	@rm -f vecvec_ele_mult
+	$(CXXLINK) $(vecvec_ele_mult_LDFLAGS) $(vecvec_ele_mult_OBJECTS) $(vecvec_ele_mult_LDADD) $(LIBS)
+
+vecvec_swap: $(vecvec_swap_OBJECTS) $(vecvec_swap_DEPENDENCIES)
+	@rm -f vecvec_swap
+	$(CXXLINK) $(vecvec_swap_LDFLAGS) $(vecvec_swap_OBJECTS) $(vecvec_swap_LDADD) $(LIBS)
+
+vec_two_norm: $(vec_two_norm_OBJECTS) $(vec_two_norm_DEPENDENCIES)
+	@rm -f vec_two_norm
+	$(CXXLINK) $(vec_two_norm_LDFLAGS) $(vec_two_norm_OBJECTS) $(vec_two_norm_LDADD) $(LIBS)
+
+vec_max: $(vec_max_OBJECTS) $(vec_max_DEPENDENCIES)
+	@rm -f vec_max
+	$(CXXLINK) $(vec_max_LDFLAGS) $(vec_max_OBJECTS) $(vec_max_LDADD) $(LIBS)
+
+vec_min: $(vec_min_OBJECTS) $(vec_min_DEPENDENCIES)
+	@rm -f vec_min
+	$(CXXLINK) $(vec_min_LDFLAGS) $(vec_min_OBJECTS) $(vec_min_LDADD) $(LIBS)
+
+range: $(range_OBJECTS) $(range_DEPENDENCIES)
+	@rm -f range
+	$(CXXLINK) $(range_LDFLAGS) $(range_OBJECTS) $(range_LDADD) $(LIBS)
+
+lu_solve: $(lu_solve_OBJECTS) $(lu_solve_DEPENDENCIES)
+	@rm -f lu_solve
+	$(CXXLINK) $(lu_solve_LDFLAGS) $(lu_solve_OBJECTS) $(lu_solve_LDADD) $(LIBS)
+
+neg_stride: $(neg_stride_OBJECTS) $(neg_stride_DEPENDENCIES)
+	@rm -f neg_stride
+	$(CXXLINK) $(neg_stride_LDFLAGS) $(neg_stride_OBJECTS) $(neg_stride_LDADD) $(LIBS)
+
+subrange_vector: $(subrange_vector_OBJECTS) $(subrange_vector_DEPENDENCIES)
+	@rm -f subrange_vector
+	$(CXXLINK) $(subrange_vector_LDFLAGS) $(subrange_vector_OBJECTS) $(subrange_vector_LDADD) $(LIBS)
+
+resize: $(resize_OBJECTS) $(resize_DEPENDENCIES)
+	@rm -f resize
+	$(CXXLINK) $(resize_LDFLAGS) $(resize_OBJECTS) $(resize_LDADD) $(LIBS)
+
+banded_matmat: $(banded_matmat_OBJECTS) $(banded_matmat_DEPENDENCIES)
+	@rm -f banded_matmat
+	$(CXXLINK) $(banded_matmat_LDFLAGS) $(banded_matmat_OBJECTS) $(banded_matmat_LDADD) $(LIBS)
+
+sparse_tri_solve: $(sparse_tri_solve_OBJECTS) $(sparse_tri_solve_DEPENDENCIES)
+	@rm -f sparse_tri_solve
+	$(CXXLINK) $(sparse_tri_solve_LDFLAGS) $(sparse_tri_solve_OBJECTS) $(sparse_tri_solve_LDADD) $(LIBS)
+
+getrf: $(getrf_OBJECTS) $(getrf_DEPENDENCIES)
+	@rm -f getrf
+	$(CXXLINK) $(getrf_LDFLAGS) $(getrf_OBJECTS) $(getrf_LDADD) $(LIBS)
+
+geev: $(geev_OBJECTS) $(geev_DEPENDENCIES)
+	@rm -f geev
+	$(CXXLINK) $(geev_LDFLAGS) $(geev_OBJECTS) $(geev_LDADD) $(LIBS)
+
+gecon: $(gecon_OBJECTS) $(gecon_DEPENDENCIES)
+	@rm -f gecon
+	$(CXXLINK) $(gecon_LDFLAGS) $(gecon_OBJECTS) $(gecon_LDADD) $(LIBS)
+
+geequ: $(geequ_OBJECTS) $(geequ_DEPENDENCIES)
+	@rm -f geequ
+	$(CXXLINK) $(geequ_LDFLAGS) $(geequ_OBJECTS) $(geequ_LDADD) $(LIBS)
+
+kiester_geev: $(kiester_geev_OBJECTS) $(kiester_geev_DEPENDENCIES)
+	@rm -f kiester_geev
+	$(CXXLINK) $(kiester_geev_LDFLAGS) $(kiester_geev_OBJECTS) $(kiester_geev_LDADD) $(LIBS)
+.cc.o:
+	$(CXXCOMPILE) -c $<
+
+tags: TAGS
+
+ID: $(HEADERS) $(SOURCES) $(LISP)
+	list='$(SOURCES) $(HEADERS)'; \
+	unique=`for i in $$list; do echo $$i; done | \
+	  awk '    { files[$$0] = 1; } \
+	       END { for (i in files) print i; }'`; \
+	here=`pwd` && cd $(srcdir) \
+	  && mkid -f$$here/ID $$unique $(LISP)
+
+TAGS:  $(HEADERS) $(SOURCES)  $(TAGS_DEPENDENCIES) $(LISP)
+	tags=; \
+	here=`pwd`; \
+	list='$(SOURCES) $(HEADERS)'; \
+	unique=`for i in $$list; do echo $$i; done | \
+	  awk '    { files[$$0] = 1; } \
+	       END { for (i in files) print i; }'`; \
+	test -z "$(ETAGS_ARGS)$$unique$(LISP)$$tags" \
+	  || (cd $(srcdir) && etags $(ETAGS_ARGS) $$tags  $$unique $(LISP) -o $$here/TAGS)
+
+mostlyclean-tags:
+
+clean-tags:
+
+distclean-tags:
+	-rm -f TAGS ID
+
+maintainer-clean-tags:
+
+distdir = $(top_builddir)/$(PACKAGE)-$(VERSION)/$(subdir)
+
+subdir = contrib/examples
+
+distdir: $(DISTFILES)
+	@for file in $(DISTFILES); do \
+	  d=$(srcdir); \
+	  if test -d $$d/$$file; then \
+	    cp -pr $$d/$$file $(distdir)/$$file; \
+	  else \
+	    test -f $(distdir)/$$file \
+	    || ln $$d/$$file $(distdir)/$$file 2> /dev/null \
+	    || cp -p $$d/$$file $(distdir)/$$file || :; \
+	  fi; \
+	done
+info-am:
+info: info-am
+dvi-am:
+dvi: dvi-am
+check-am: all-am
+check: check-am
+installcheck-am:
+installcheck: installcheck-am
+install-exec-am:
+install-exec: install-exec-am
+
+install-data-am:
+install-data: install-data-am
+
+install-am: all-am
+	@$(MAKE) $(AM_MAKEFLAGS) install-exec-am install-data-am
+install: install-am
+uninstall-am:
+uninstall: uninstall-am
+all-am: Makefile
+all-redirect: all-am
+install-strip:
+	$(MAKE) $(AM_MAKEFLAGS) AM_INSTALL_PROGRAM_FLAGS=-s install
+installdirs:
+
+
+mostlyclean-generic:
+
+clean-generic:
+
+distclean-generic:
+	-rm -f Makefile $(CONFIG_CLEAN_FILES)
+	-rm -f config.cache config.log stamp-h stamp-h[0-9]*
+
+maintainer-clean-generic:
+mostlyclean-am:  mostlyclean-compile mostlyclean-tags \
+		mostlyclean-generic
+
+mostlyclean: mostlyclean-am
+
+clean-am:  clean-compile clean-tags clean-generic mostlyclean-am
+
+clean: clean-am
+
+distclean-am:  distclean-compile distclean-tags distclean-generic \
+		clean-am
+
+distclean: distclean-am
+
+maintainer-clean-am:  maintainer-clean-compile maintainer-clean-tags \
+		maintainer-clean-generic distclean-am
+	@echo "This command is intended for maintainers to use;"
+	@echo "it deletes files that may require special tools to rebuild."
+
+maintainer-clean: maintainer-clean-am
+
+.PHONY: mostlyclean-compile distclean-compile clean-compile \
+maintainer-clean-compile tags mostlyclean-tags distclean-tags \
+clean-tags maintainer-clean-tags distdir info-am info dvi-am dvi check \
+check-am installcheck-am installcheck install-exec-am install-exec \
+install-data-am install-data install-am install uninstall-am uninstall \
+all-redirect all-am all installdirs mostlyclean-generic \
+distclean-generic clean-generic maintainer-clean-generic clean \
+mostlyclean distclean maintainer-clean
+
+
+mtl_examples			: $(MTL_EXAMPLES)
+lapack_examples			: $(MTL_LAPACK_EXAMPLES)
+examples			: mtl_examples lapack_examples
+
+all				: mtl_examples 
+clean				:
+				  /bin/rm -f $(EXTRA_PROGRAMS)
+
+# Tell versions [3.59,3.63) of GNU make to not export all variables.
+# Otherwise a system limit (for SysV at least) may be exceeded.
+.NOEXPORT:

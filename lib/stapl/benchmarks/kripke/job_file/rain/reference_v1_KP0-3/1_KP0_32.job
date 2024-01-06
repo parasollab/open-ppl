@@ -1,0 +1,23 @@
+#PBS -N v1_KP0_32
+#PBS -l walltime=24:00:00
+#PBS -q batch
+#PBS -l mppwidth=32
+#PBS -l mppnppn=32
+#PBS -j oe
+
+cd $PBS_O_WORKDIR
+
+NITER=10
+ZONES=24,48,48
+DLIST=1:12,2:6,3:4,4:3,6:2,12:1
+GLIST=1:64,2:32,4:16,8:8,16:4,32:2,64:1
+LEGENDRE=4
+NEST=DGZ,DZG,GDZ,GZD,ZDG,ZGD
+OUTFILE=KP0_32.out
+
+export STAPL_NUM_THREADS=1
+export OMP_NUM_THREADS=32
+
+aprun -n 1 -d 32 /home/tiyang/stapl/benchmarks/kripke/reference/kripke_Linux/src/tools/kripke --procs 1,1,1 --out $OUTFILE --zones $ZONES --niter $NITER --dir $DLIST --grp $GLIST --legendre $LEGENDRE --nest $NEST
+
+

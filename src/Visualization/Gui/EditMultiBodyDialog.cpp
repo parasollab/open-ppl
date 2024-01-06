@@ -12,6 +12,11 @@
 
 #include "nonstd/io.h"
 
+#include <QDialogButtonBox>
+#include <QDialog>
+#include <QPushButton>
+#include <QVBoxLayout>
+#include <QScrollArea>
 
 /*------------------------------- Construction -------------------------------*/
 

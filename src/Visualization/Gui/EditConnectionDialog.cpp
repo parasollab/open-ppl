@@ -12,6 +12,10 @@
 
 #include "Transformation.h"
 
+#include <QDialogButtonBox>
+#include <QVBoxLayout>
+#include <QScrollArea>
+
 using namespace mathtool;
 
 

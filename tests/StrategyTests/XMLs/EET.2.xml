@@ -1,0 +1,77 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<MotionPlanning warnings="true" warningsAsErrors="true" print="false">
+  <Problem>
+    <Environment filename="../../../Examples/2D/2d.env"/>
+    <Robot label="boxy" filename="../../../Examples/2D/boxy.robot"/>
+
+    <Task label="query" robot="boxy">
+      <StartConstraints>
+        <CSpaceConstraint point="0 0"/> 
+      </StartConstraints>
+
+      <GoalConstraints>
+        <CSpaceConstraint point="-10 10"/>
+      </GoalConstraints>
+    </Task>
+  </Problem>
+
+  <Library>
+    <DistanceMetrics>
+      <Euclidean label="euclidean"/>
+    </DistanceMetrics>
+
+    <ValidityCheckers>
+      <CollisionDetection label="rapid" method="RAPID"/>
+      <CollisionDetection label="pqp_solid" method="PQP_SOLID"/>
+      <AlwaysTrueValidity label="AlwaysTrue"/>
+    </ValidityCheckers>
+
+    <NeighborhoodFinders>
+      <BruteForceNF label="Nearest" dmLabel="euclidean" unconnected="false"
+          k="1"/>
+    </NeighborhoodFinders>
+
+    <Samplers>
+      <UniformRandomSampler label="UniformRandomFree" vcLabel="rapid"/>
+      <UniformRandomSampler label="UniformRandom" vcLabel="AlwaysTrue"/>
+      <GaussianSampler label="Gauss" vcLabel="rapid" d="0.2" dmLabel="euclidean"
+        useBBX="false"/>
+    </Samplers>
+
+    <Extenders>
+      <BasicExtender label="BERO" debug="false" dmLabel="euclidean" vcLabel="rapid"
+        maxDist="4" minDist=".01"/>
+    </Extenders>
+
+    <Metrics>
+      <NumNodesMetric label="NumNodes"/>
+    </Metrics>
+
+    <MapEvaluators>
+      <QueryMethod label="Query" debug="true"/>
+    </MapEvaluators>
+
+    <MPStrategies>
+      <EET label="EET" debug="true"
+        querySampler="UniformRandomFree" samplerLabel="UniformRandom"
+        nfLabel="Nearest" extenderLabel="BERO"
+        growGoals="false" growthFocus="0.01" m="1"
+        goalDmLabel="euclidean" goalThreshold="5" 
+        nSphereSamples="25" minSphereRadius=".1" wavefrontExplore="0"
+        gaussSamplerLabel="Gauss">
+        <Evaluator label="Query"/>
+      </EET>
+
+      <ValidationStrategy label="Test" target="EET" debug="true">
+        <GoldStandard robot="boxy" type="roadmap"
+          filename="../Outputs/EET.2.query.map"/>
+        <GoldStandard robot="boxy" type="cfgpath"
+          filename="../Outputs/EET.2.query.rdmp.path"/>
+      </ValidationStrategy>
+    </MPStrategies>
+
+    <Solver mpStrategyLabel="Test" seed="2"
+        baseFilename="../Scratch/EET"/>
+
+  </Library>
+</MotionPlanning>

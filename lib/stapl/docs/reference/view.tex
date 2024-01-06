@@ -1,0 +1,6092 @@
+\chapter{Parallel Views}
+
+Parallel views in STAPL are grouped into the following categories:
+\vspace{0.4cm}
+
+Model common abstract data types:
+\newline
+Array (Section \ref{sec-ary-vw}),
+Vector (Section \ref{sec-vec-vw}),
+List (Section \ref{sec-list-vw}),
+Map (Section \ref{sec-map-vw}),
+MultiArray (Section \ref{sec-multi-vw}),
+Matrix (Section \ref{sec-matrix-vw}),
+ArrayRO (Section \ref{sec-aryro-vw}),
+Set (Section \ref{sec-set-vw})
+\vspace{0.4cm}
+
+Model graph abstract data types:
+\newline
+Graph (Section \ref{sec-graf-vw}),
+\vspace{0.4cm}
+
+Present data without using concrete storage:
+\newline
+Overlap (Section \ref{sec-over-vw}),
+Repeated (Section \ref{sec-rep-vw}),
+Counting (Section \ref{sec-cnt-vw}),
+Functor (Section \ref{sec-func-vw})
+\vspace{0.4cm}
+
+Modify values retrieved from underlying view or container:
+\newline
+Strided (Section \ref{sec-str-vw}),
+Reverse (Section \ref{sec-rev-vw}),
+Filter (Section \ref{sec-filt-vw}),
+Transform (Section \ref{sec-trans-vw})
+\vspace{0.4cm}
+
+Access values from multiarrays in patterns used in numerical computation:
+\newline
+Banded (Section \ref{sec-band-vw}),
+Extended (Section \ref{sec-extend-vw}),
+Slices (Section \ref{sec-slices-vw})
+Stencil (Section \ref{sec-stencil-vw})
+\vspace{0.4cm}
+
+Group elements of underlying container:
+\newline
+Native (Section \ref{sec-nat-vw}),
+Segmented (Section \ref{sec-seg-vw})
+\vspace{0.4cm}
+
+Compose views with other views:
+\newline
+Zip (Section \ref{sec-zip-vw})
+Cross (Section \ref{sec-cross-vw})
+\vspace{0.4cm}
+
+Enable specification of an arbitrary data distribution:
+\newline
+System (Section \ref{sec-dist-sys-vw}),
+Mapping (Section \ref{sec-dist-map-vw}),
+Partitioning (Section \ref{sec-dist-part-vw}),
+Distribution specifications (Section \ref{sec-dist-spec-vw})
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{Introduction} \label{sec-intro-vw}
+
+\textit{WRITE}
+
+\subsection{Implementation}
+
+\textit{WRITE - implementation common to all views}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{Array View} \label{sec-ary-vw}
+\index{array!view}
+\index{view!array}
+
+\subsection{Definition}
+
+\textit{EXPAND - A view that provides the interface of an array abstract data type.}
+
+\subsection{Relationship to \stapl\ array container}
+
+\textit{WRITE}
+
+\subsection{Relationship to other \stapl\ views}
+
+\textit{WRITE}
+
+\subsection{Implementation}
+
+\textit{WRITE - details specific to this view}
+
+\subsection{Interface} \label{sec-ary-vw-inter}
+
+\subsubsection{Constructors}
+
+\noindent
+\textbf{array\_view}%
+\texttt{%
+(view\_container\_type *
+\textit{vcont,}%
+domain\_type const \&
+\textit{dom,}%
+map\_func\_type
+\textit{mfunc=MapFunc()}%
+)
+}
+
+\begin{itemize}
+\item
+Constructor used to pass ownership of the container to the view.
+\end{itemize}
+
+\noindent
+\textbf{array\_view}%
+\texttt{%
+(view\_container\_type *
+\textit{vcont,}%
+domain\_type const \&
+\textit{dom,}%
+map\_func\_type
+\textit{mfunc,}%
+array\_view const \&
+)
+}
+
+\begin{itemize}
+\item
+Constructor used to pass ownership of the container to the view.
+\end{itemize}
+
+\noindent
+\textbf{array\_view}%
+\texttt{%
+(view\_container\_type const \&
+\textit{vcont,}%
+domain\_type const \&
+\textit{dom,}%
+map\_func\_type
+\textit{mfunc=MapFunc()}%
+)
+}
+
+\begin{itemize}
+\item
+Constructor that does not takes ownership over the passed container.
+\end{itemize}
+
+\noindent
+\textbf{array\_view}%
+\texttt{%
+(view\_container\_type const \&
+\textit{vcont,}%
+domain\_type const \&
+\textit{dom,}%
+map\_func\_type
+\textit{mfunc,}%
+array\_view const \&
+)
+}
+
+\begin{itemize}
+\item
+Constructor that does not takes ownership over the passed container.
+\end{itemize}
+
+\noindent
+\textbf{array\_view}%
+\texttt{%
+(view\_container\_type *
+\textit{vcont}%
+)
+}
+
+\begin{itemize}
+\item
+Constructs a view that can reference all the elements of the passed container. The view takes ownership of the container.
+\end{itemize}
+
+\noindent
+\textbf{array\_view}%
+\texttt{%
+(view\_container\_type \&
+\textit{vcont}%
+)
+}
+
+\begin{itemize}
+\item
+Constructs a view that can reference all the elements of the passed container.
+\end{itemize}
+
+\noindent
+\texttt{%
+template<typename Derived1 >
+}
+\newline
+\textbf{array\_view}%
+\texttt{%
+(array\_view< C, Dom, MapFunc, Derived1 > const \&
+\textit{other}%
+)
+}
+
+\begin{itemize}
+\item
+Copy constructor when the passed view is not the most derived view.
+\end{itemize}
+
+\noindent
+\texttt{%
+void
+}
+\newline
+\textbf{resize}%
+\texttt{%
+(size\_t
+\textit{size}%
+)
+}
+
+\begin{itemize}
+\item
+Update the underlying container to hold the specified number of elements.
+\item
+All previous information is lost.
+\end{itemize}
+
+\subsubsection{View Atrributes}
+
+\noindent
+\texttt{%
+size\_type
+}
+\newline
+\textbf{size}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Returns the number of elements referenced for the view.
+\end{itemize}
+
+\noindent
+\texttt{%
+bool
+}
+\newline
+\textbf{empty}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Returns if the view does not reference any element.
+\end{itemize}
+
+\subsubsection{Element Manipulation}
+
+\noindent
+\texttt{%
+value\_type
+}
+\newline
+\textbf{get\_element}%
+\texttt{%
+(index\_t const \&
+\textit{index}%
+) const
+}
+
+\begin{itemize}
+\item
+Get the element index from the container.
+\end{itemize}
+
+\noindent
+\texttt{%
+template<class Functor >
+}
+\texttt{%
+Functor::result\_type
+}
+\newline
+\textbf{apply\_get}%
+\texttt{%
+(index\_t const \&
+\textit{index,}%
+Functor
+\textit{f}%
+)
+}
+
+\begin{itemize}
+\item
+Applies the provided function to the value referenced for the given index and returns the result of the operation.
+\end{itemize}
+
+\noindent
+\texttt{%
+void
+}
+\newline
+\textbf{set\_element}%
+\texttt{%
+(index\_t const \&
+\textit{index,}%
+value\_t const \&
+\textit{value}%
+)
+}
+
+\begin{itemize}
+\item
+Set the element index in the container to value value.
+\end{itemize}
+
+\noindent
+\texttt{%
+template<class Functor >
+}
+\texttt{%
+void
+}
+\newline
+\textbf{apply\_set}%
+\texttt{%
+(index\_t const \&
+\textit{index,}%
+Functor
+\textit{f}%
+)
+}
+
+\begin{itemize}
+\item
+Applies the provided function to the value referenced for the given index and mutates the element with the resulting value.
+\end{itemize}
+
+\noindent
+\texttt{%
+reference
+}
+\newline
+\textbf{operator[]}%
+\texttt{%
+(index\_t
+\textit{index}%
+) const
+}
+
+\begin{itemize}
+\item
+The bracket operator is the basic access method.
+\end{itemize}
+
+\noindent
+\texttt{%
+reference
+}
+\newline
+\textbf{make\_reference}%
+\texttt{%
+(index\_t
+\textit{index}%
+) const
+}
+
+\subsection{Usage Example} \label{sec-ary-vw-use}
+
+The following example shows how to use the \texttt{array view}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{view/array.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-ary-vw-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-ary-vw-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:ary-vw-assign-exper}
+shows the performance of assigning values through a \stapl\ array view
+whose elements are atomic values, \stl\ views, or \stapl\ views.
+\item
+Fig. \ref{fig:ary-vw-access-exper}
+shows the performance of accessing values through a \stapl\ array view
+whose elements are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/array_vw_assign}
+\caption{Assign Values through Array View Execution Time}
+\label{fig:ary-vw-assign-exper}
+\end{figure}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/array_vw_access}
+\caption{Access Values through Array View Execution Time}
+\label{fig:ary-vw-access-exper}
+\end{figure}
+
+\emph{WRITE - reference complexity of underlying container}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{Vector View} \label{sec-vec-vw}
+\index{vector!view}
+\index{view!vector}
+
+\subsection{Definition}
+
+\textit{EXPAND - A view that provides the interface of a vector abstract data type.}
+
+\subsection{Relationship to \stapl\ vector container}
+
+\textit{WRITE}
+
+\subsection{Relationship to other \stapl\ views}
+
+\textit{WRITE}
+
+\subsection{Implementation}
+
+\textit{WRITE - details specific to this view}
+
+\subsection{Interface} \label{sec-vec-vw-inter}
+
+\subsubsection{Constructors}
+
+\noindent
+\textbf{vector\_view}%
+\texttt{%
+(view\_container\_type
+\textit{*vcont,}%
+domain\_type const \&
+\textit{dom,}%
+map\_func\_type
+\textit{mfunc=MapFunc()}%
+)
+}
+
+\begin{itemize}
+\item
+Constructor used to pass ownership of the container to the view.
+\end{itemize}
+
+\noindent
+\textbf{vector\_view}%
+\texttt{%
+(view\_container\_type const \&
+\textit{vcont,}%
+domain\_type const \&
+\textit{dom,}%
+map\_func\_type
+\textit{mfunc=MapFunc(),}%
+vector\_view const \&
+\textit{other=vector\_view()}%
+)
+}
+
+\begin{itemize}
+\item
+Constructor that does not takes ownership over the passed container.
+\end{itemize}
+
+\noindent
+\textbf{vector\_view}%
+\texttt{%
+(view\_container\_type *
+\textit{vcont}%
+)
+}
+
+\begin{itemize}
+\item
+Constructs a view that can reference all the elements of the passed container. The view takes ownership of the container.
+\end{itemize}
+
+\noindent
+\textbf{vector\_view}%
+\texttt{%
+(view\_container\_type \&
+\textit{vcont}%
+)
+}
+
+\begin{itemize}
+\item
+Constructs a view that can reference all the elements of the passed container.
+\end{itemize}
+
+\subsubsection{ Element Manipulation}
+
+\noindent
+\texttt{%
+void
+}
+\newline
+\textbf{add}%
+\texttt{%
+(value\_type const \&
+\textit{val}%
+)
+}
+
+\begin{itemize}
+\item
+Insert a new element in the container locally.
+\end{itemize}
+
+\noindent
+\texttt{%
+void
+}
+\newline
+\textbf{insert}%
+\texttt{%
+(index\_type const \&
+\textit{index,}%
+value\_type const \&
+\textit{value}%
+)
+}
+
+\begin{itemize}
+\item
+Inserts the given value at the position index.
+\end{itemize}
+
+\noindent
+\texttt{%
+void
+}
+\newline
+\textbf{push\_back}%
+\texttt{%
+(value\_type const \&
+\textit{value}%
+)
+}
+
+\begin{itemize}
+\item
+Inserts the given value an the end of the underlying container.
+\end{itemize}
+
+\noindent
+\texttt{%
+void
+}
+\newline
+\textbf{pop\_back}%
+\texttt{%
+(void)
+}
+
+\begin{itemize}
+\item
+Removes the last element in the underlying container.
+\end{itemize}
+
+\noindent
+\texttt{%
+void
+}
+\newline
+\textbf{erase}%
+\texttt{%
+(index\_type const \&
+\textit{index}%
+)
+}
+
+\begin{itemize}
+\item
+Removes the element at the position index.
+\end{itemize}
+
+\noindent
+\texttt{%
+void
+}
+\newline
+\textbf{resize}%
+\texttt{%
+(size\_type
+\textit{n}%
+)
+}
+
+\begin{itemize}
+\item
+Update the underlying container to hold n elements.
+\end{itemize}
+
+\noindent
+\texttt{%
+void
+}
+\newline
+\textbf{flush}%
+\texttt{%
+(void)
+}
+
+\begin{itemize}
+\item
+Flushes pending update information of the underlying container.
+\end{itemize}
+
+\noindent
+\texttt{%
+iterator
+}
+\newline
+\textbf{find}%
+\texttt{%
+(index\_type const \&
+\textit{index}%
+)
+}
+
+\begin{itemize}
+\item
+Returns and iterator pointing to the element at position index.
+\end{itemize}
+
+\noindent
+\texttt{%
+reference
+}
+\newline
+\textbf{front}%
+\texttt{%
+(void)
+}
+
+\begin{itemize}
+\item
+Returns a reference to the element at the beginning of the underlying container.
+\end{itemize}
+
+\noindent
+\texttt{%
+reference
+}
+\newline
+\textbf{back}%
+\texttt{%
+(void)
+}
+
+\begin{itemize}
+\item
+Returns a reference to the element at the end of the underlying container.
+\end{itemize}
+
+\subsubsection{View Atrributes}
+
+\noindent
+\texttt{%
+size\_type
+}
+\newline
+\textbf{size}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Returns the number of elements referenced for the view.
+\end{itemize}
+
+\noindent
+\texttt{%
+bool
+}
+\newline
+\textbf{empty}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Returns if the view does not reference any element.
+\end{itemize}
+
+\noindent
+\texttt{%
+value\_type
+}
+\newline
+\textbf{get\_element}%
+\texttt{%
+(index\_t const \&
+\textit{index}%
+) const
+}
+
+\begin{itemize}
+\item
+Get the element index from the container.
+\end{itemize}
+
+\noindent
+\texttt{%
+template<class Functor >
+}
+\texttt{%
+Functor::result\_type
+}
+\newline
+\textbf{apply\_get}%
+\texttt{%
+(index\_t const \&
+\textit{index,}%
+Functor
+\textit{f}%
+)
+}
+
+\begin{itemize}
+\item
+Applies the provided function to the value referenced for the given index and returns the result of the operation.
+\end{itemize}
+
+\noindent
+\texttt{%
+void
+}
+\newline
+\textbf{set\_element}%
+\texttt{%
+(index\_t const \&
+\textit{index,}%
+value\_t const \&
+\textit{value}%
+)
+}
+
+\begin{itemize}
+\item
+Set the element index in the container to value value.
+\end{itemize}
+
+\noindent
+\texttt{%
+template<class Functor >
+}
+\texttt{%
+void
+}
+\newline
+\textbf{apply\_set}%
+\texttt{%
+(index\_t const \&
+\textit{index,}%
+Functor
+\textit{f}%
+)
+}
+
+\begin{itemize}
+\item
+Applies the provided function to the value referenced for the given index and mutates the element with the resulting value.
+\end{itemize}
+
+\noindent
+\texttt{%
+reference
+}
+\newline
+\textbf{operator[]}%
+\texttt{%
+(index\_t
+\textit{index}%
+) const
+}
+
+\begin{itemize}
+\item
+The bracket operator is the basic access method.
+\end{itemize}
+
+\noindent
+\texttt{%
+reference
+}
+\newline
+\textbf{make\_reference}%
+\texttt{%
+(index\_t
+\textit{index}%
+) const
+}
+
+\subsection{Usage Example} \label{sec-vec-vw-use}
+
+The following example shows how to use the \texttt{vector view}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{view/vector.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-vec-vw-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-vec-vw-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:vec-vw-assign-exper}
+shows the performance of assigning values through a \stapl\ vector view
+whose elements are atomic values, \stl\ views, or \stapl\ views.
+\item
+Fig. \ref{fig:vec-vw-access-exper}
+shows the performance of accessing values through a \stapl\ vector view
+whose elements are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/vector_vw_assign}
+\caption{Assign Values through Vector View Execution Time}
+\label{fig:vec-vw-assign-exper}
+\end{figure}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/vector_vw_access}
+\caption{Access Values through Vector View Execution Time}
+\label{fig:vec-vw-access-exper}
+\end{figure}
+
+\emph{WRITE - reference complexity of underlying container}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{List View} \label{sec-list-vw}
+\index{list!view}
+\index{view!list}
+
+\subsection{Definition}
+
+\textit{EXPAND - A view that provides the interface of a list abstract data type.}
+
+\subsection{Relationship to \stapl\ list container}
+
+\textit{WRITE}
+
+\subsection{Relationship to other \stapl\ views}
+
+\textit{WRITE}
+
+\subsection{Implementation}
+
+\textit{WRITE - details specific to this view}
+
+\subsection{Interface} \label{sec-list-vw-inter}
+
+\subsubsection{Constructors}
+
+\noindent
+\textbf{list\_view}%
+\texttt{%
+(view\_container\_type *
+\textit{vcont,}%
+domain\_type const \&
+\textit{dom,}%
+    map\_func\_type
+\textit{mfunc=MapFunc()}%
+)
+}
+
+\begin{itemize}
+\item
+Constructor used to pass ownership of the container to the view.
+\end{itemize}
+
+\noindent
+\textbf{list\_view}%
+\texttt{%
+(view\_container\_type const \&
+\textit{vcont,}%
+domain\_type const \&
+\textit{dom,}%
+map\_func\_type
+\textit{mfunc=MapFunc(),}%
+list\_view const \&
+\textit{other=list\_view()}%
+)
+}
+
+\begin{itemize}
+\item
+Constructor that does not takes ownership over the passed container.
+\end{itemize}
+
+\noindent
+\textbf{list\_view}%
+\texttt{%
+(view\_container\_type *
+\textit{vcont}%
+)
+}
+
+\begin{itemize}
+\item
+Constructs a view that can reference all the elements of the passed container. The view takes ownership of the container.
+\end{itemize}
+
+\noindent
+\textbf{list\_view}%
+\texttt{%
+(view\_container\_type \&
+\textit{vcont}%
+)
+}
+
+\begin{itemize}
+\item
+Constructs a view that can reference all the elements of the passed container.
+\end{itemize}
+
+\noindent
+\texttt{%
+template<typename Derived1 >
+}
+\newline
+\textbf{list\_view}%
+\texttt{%
+(list\_view< C, Dom, MapFunc, Derived1 > const \&
+\textit{other}%
+)
+}
+
+\begin{itemize}
+\item
+Copy constructor when the passed view is not the most derived view.
+\end{itemize}
+
+\noindent
+\textbf{list\_view}%
+\texttt{%
+(list\_view const \&
+\textit{other}%
+)
+}
+
+\begin{itemize}
+\item
+\textit{WRITE - fix Doxygen and copy material here}
+\end{itemize}
+
+\subsubsection{ Element Manipulation}
+
+\noindent
+\texttt{%
+iterator
+}
+\newline
+\textbf{insert}%
+\texttt{%
+(iterator const \&
+\textit{pos,}%
+value\_type const \&
+\textit{value}%
+)
+}
+
+\begin{itemize}
+\item
+Inserts the given value at the position index.
+\end{itemize}
+
+\noindent
+\texttt{%
+void
+}
+\newline
+\textbf{push\_back}%
+\texttt{%
+(value\_type const \&
+\textit{value}%
+)
+}
+
+\begin{itemize}
+\item
+Inserts the given value an the end of the underlying container.
+\end{itemize}
+
+\noindent
+\texttt{%
+void
+}
+\newline
+\textbf{pop\_back}%
+\texttt{%
+(void)
+}
+
+\begin{itemize}
+\item
+Removes the last element in the underlying container.
+\end{itemize}
+
+\noindent
+\texttt{%
+void
+}
+\newline
+\textbf{erase}%
+\texttt{%
+(index\_type const \&
+\textit{index}%
+)
+}
+
+\begin{itemize}
+\item
+Removes the element at the position index.
+\end{itemize}
+
+\noindent
+\texttt{%
+iterator
+}
+\newline
+\textbf{find}%
+\texttt{%
+(index\_type const \&
+\textit{index}%
+)
+}
+
+\begin{itemize}
+\item
+Returns and iterator pointing to the element at position index.
+\end{itemize}
+
+\noindent
+\texttt{%
+reference
+}
+\newline
+\textbf{front}%
+\texttt{%
+(void)
+}
+
+\begin{itemize}
+\item
+Returns a reference to the element at the beginning of the underlying container.
+\end{itemize}
+
+\noindent
+\texttt{%
+reference
+}
+\newline
+\textbf{back}%
+\texttt{%
+(void)
+}
+
+\begin{itemize}
+\item
+Returns a reference to the element at the end of the underlying container.
+\end{itemize}
+
+\noindent
+\texttt{%
+void
+}
+\newline
+\textbf{add}%
+\texttt{%
+(value\_type const \&
+\textit{value}%
+)
+}
+
+\begin{itemize}
+\item
+Insert the given value into the underlying container.
+\end{itemize}
+
+\subsubsection{ View Attributes}
+
+\noindent
+\texttt{%
+size\_type
+}
+\newline
+\textbf{size}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Returns the number of elements referenced for the view.
+\end{itemize}
+
+\noindent
+\texttt{%
+bool
+}
+\newline
+\textbf{empty}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Returns if the view does not reference any element.
+\end{itemize}
+
+\subsection{Usage Example} \label{sec-list-vw-use}
+
+The following example shows how to use the \texttt{list view}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{view/list.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-list-vw-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-list-vw-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:list-vw-assign-exper}
+shows the performance of assigning values through a \stapl\ list view
+whose elements are atomic values, \stl\ views, or \stapl\ views.
+\item
+Fig. \ref{fig:list-vw-access-exper}
+shows the performance of accessing values through a \stapl\ list view
+whose elements are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/list_vw_assign}
+\caption{Assign Values through List View Execution Time}
+\label{fig:list-vw-assign-exper}
+\end{figure}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/list_vw_access}
+\caption{Access Values through List View Execution Time}
+\label{fig:list-vw-access-exper}
+\end{figure}
+
+\emph{WRITE - reference complexity of underlying container}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{Map View} \label{sec-map-vw}
+\index{map!view}
+\index{view!map}
+
+\subsection{Definition}
+
+\textit{EXPAND - A view that maps from keys to values.}
+
+\subsection{Relationship to \stapl\ map container}
+
+\textit{WRITE}
+
+\subsection{Relationship to other \stapl\ views}
+
+\textit{WRITE}
+
+\subsection{Implementation}
+
+\textit{WRITE - details specific to this view}
+
+\subsection{Interface} \label{sec-map-vw-inter}
+
+\subsubsection{Constructors}
+
+\noindent
+\textbf{map\_view}%
+\texttt{%
+(view\_container\_type *
+\textit{vcont,}%
+domain\_type const \&
+\textit{dom,}%
+    map\_func\_type
+\textit{mfunc=MapFunc()}%
+)
+}
+
+\begin{itemize}
+\item
+Constructor used to pass ownership of the container to the view.
+\end{itemize}
+
+\noindent
+\textbf{map\_view}%
+\texttt{%
+(view\_container\_type *
+\textit{vcont,}%
+domain\_type const \&
+\textit{dom,}%
+map\_func\_type
+\textit{mfunc,}%
+map\_view const \&
+\textit{other}%
+)
+}
+
+\begin{itemize}
+\item
+\textit{WRITE - fix Doxygen and copy material here}
+\end{itemize}
+
+\noindent
+\textbf{map\_view}%
+\texttt{%
+(view\_container\_type const \&
+\textit{vcont,}%
+domain\_type const \&
+\textit{dom,}%
+map\_func\_type
+\textit{mfunc=MapFunc(),}%
+map\_view const \&
+\textit{other=map\_view()}%
+)
+}
+
+\begin{itemize}
+\item
+Constructor that does not takes ownership over the passed container.
+\end{itemize}
+
+\noindent
+\textbf{map\_view}%
+\texttt{%
+(view\_container\_type *
+\textit{vcont}%
+)
+}
+
+\begin{itemize}
+\item
+Constructs a view that can reference all the elements of the passed container. The view takes ownership of the container.
+\end{itemize}
+
+\noindent
+\textbf{map\_view}%
+\texttt{%
+(view\_container\_type \&
+\textit{vcont}%
+)
+}
+
+\begin{itemize}
+\item
+Constructs a view that can reference all the elements of the passed container.
+\end{itemize}
+
+\noindent
+\texttt{%
+template<typename Derived1 >
+}
+\newline
+\textbf{map\_view}%
+\texttt{%
+(map\_view< C, Dom, MapFunc, Derived1 > const \&
+\textit{other}%
+)
+}
+
+\begin{itemize}
+\item
+\textit{WRITE - fix Doxygen and copy material here}
+\end{itemize}
+
+\subsubsection{ Element Manipulation}
+
+\noindent
+\texttt{%
+bool
+}
+\newline
+\textbf{insert}%
+\texttt{%
+(value\_type const \&
+\textit{value}%
+)
+}
+
+\begin{itemize}
+\item
+Inserts the given value if the value does not exist in the container.
+\end{itemize}
+
+\noindent
+\texttt{%
+void
+}
+\newline
+\textbf{insert}%
+\texttt{%
+(key\_type const \&
+\textit{key,}%
+mapped\_type const \&
+\textit{value}%
+)
+}
+
+\begin{itemize}
+\item
+Inserts the given value if the key does not exist in the container.
+\end{itemize}
+
+\noindent
+\texttt{%
+template<typename Functor >
+void
+}
+\newline
+\textbf{insert}%
+\texttt{%
+(value\_type const \&
+\textit{val,}%
+Functor const \&
+\textit{func}%
+)
+}
+
+\begin{itemize}
+\item
+Inserts the given <key,value> pair (val) if the key does not exist in the container, otherwise mutates the stored value by applying the given functor func.
+\end{itemize}
+
+\noindent
+\texttt{%
+template<typename Functor >
+}
+\texttt{%
+void
+}
+\newline
+\textbf{insert}%
+\texttt{%
+(key\_type const \&
+\textit{key,}%
+mapped\_type const \&
+\textit{value,}%
+Functor const \&
+\textit{on\_failure}%
+)
+}
+
+\begin{itemize}
+\item
+Inserts the given value associated with the given key if the key does not exist in the container, otherwise mutates the stored value by applying the given functor func.
+\end{itemize}
+
+\noindent
+\texttt{%
+mapped\_type
+}
+\newline
+\textbf{get}%
+\texttt{%
+(key\_type const \&
+\textit{key}%
+)
+}
+
+\begin{itemize}
+\item
+Fetch the value associated with the specified key.
+\end{itemize}
+
+\noindent
+\texttt{%
+size\_t
+}
+\newline
+\textbf{erase}%
+\texttt{%
+(key\_type const \&
+\textit{key}%
+)
+}
+
+\begin{itemize}
+\item
+Removes the value associated with the specified key.
+\end{itemize}
+
+\noindent
+\texttt{%
+iterator
+}
+\newline
+\textbf{find}%
+\texttt{%
+(key\_type const \&
+\textit{key}%
+)
+}
+
+\begin{itemize}
+\item
+Returns an iterator pointing to the element associated with the given key.
+\end{itemize}
+
+\noindent
+\texttt{%
+int
+}
+\newline
+\textbf{count}%
+\texttt{%
+(key\_type const \&
+\textit{key}%
+)
+}
+
+\begin{itemize}
+\item
+Returns 1 if the specified key exists, and otherwise 0.
+\end{itemize}
+
+\noindent
+\texttt{%
+void
+}
+\newline
+\textbf{clear}%
+\texttt{%
+(void)
+}
+
+\begin{itemize}
+\item
+Removes all the elements stored in the container.
+\end{itemize}
+
+\noindent
+\texttt{%
+value\_type
+}
+\newline
+\textbf{get\_element}%
+\texttt{%
+(index\_t const \&
+\textit{index}%
+) const
+}
+
+\begin{itemize}
+\item
+Get the element index from the container.
+\end{itemize}
+
+\noindent
+\texttt{%
+template<class Functor >
+}
+\texttt{%
+Functor::result\_type
+}
+\newline
+\textbf{apply\_get}%
+\texttt{%
+(index\_t const \&
+\textit{index,}%
+Functor
+\textit{f}%
+)
+}
+
+\begin{itemize}
+\item
+Applies the provided function to the value referenced for the given index and returns the result of the operation.
+\end{itemize}
+
+\noindent
+\texttt{%
+void
+}
+\newline
+\textbf{set\_element}%
+\texttt{%
+(index\_t const \&
+\textit{index,}%
+value\_t const \&
+\textit{value}%
+)
+}
+
+\begin{itemize}
+\item
+Set the element index in the container to value value.
+\end{itemize}
+
+\noindent
+\texttt{%
+template<class Functor >
+}
+\texttt{%
+void
+}
+\newline
+\textbf{apply\_set}%
+\texttt{%
+(index\_t const \&
+\textit{index,}%
+Functor
+\textit{f}%
+)
+}
+
+\begin{itemize}
+\item
+Applies the provided function to the value referenced for the given index and mutates the element with the resulting value.
+\end{itemize}
+
+\noindent
+\texttt{%
+reference
+}
+\newline
+\textbf{operator[]}%
+\texttt{%
+(index\_t
+\textit{index}%
+) const
+}
+
+\begin{itemize}
+\item
+The bracket operator is the basic access method.
+\end{itemize}
+
+\noindent
+\texttt{%
+reference
+}
+\newline
+\textbf{make\_reference}%
+\texttt{%
+(index\_t
+\textit{index}%
+) const
+}
+
+\subsubsection{ View Attributes}
+
+\noindent
+\texttt{%
+size\_type
+}
+\newline
+\textbf{size}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Returns the number of elements referenced for the view.
+\end{itemize}
+
+\noindent
+\texttt{%
+bool
+}
+\newline
+\textbf{empty}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Returns if the view does not reference any element.
+\end{itemize}
+
+\subsection{Usage Example} \label{sec-map-vw-use}
+
+The following example shows how to use the \texttt{map view}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{view/map.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-map-vw-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-map-vw-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:map-vw-assign-exper}
+shows the performance of assigning values through a \stapl\ map view
+whose elements are atomic values, \stl\ views, or \stapl\ views.
+\item
+Fig. \ref{fig:map-vw-access-exper}
+shows the performance of accessing values through a \stapl\ map view
+whose elements are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/map_vw_assign}
+\caption{Assign Values through Map View Execution Time}
+\label{fig:map-vw-assign-exper}
+\end{figure}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/map_vw_access}
+\caption{Access Values through Map View Execution Time}
+\label{fig:map-vw-access-exper}
+\end{figure}
+
+\emph{WRITE - reference complexity of underlying container}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{Multiarray View} \label{sec-multi-vw}
+\index{multiarray!view}
+\index{view!multiarray}
+
+\subsection{Definition}
+
+\textit{EXPAND - A view that provides that interface of a multi-dimensional array abstract data type.}
+
+\subsection{Relationship to \stapl\ multiarray container}
+
+\textit{WRITE}
+
+\subsection{Relationship to other \stapl\ views}
+
+\textit{WRITE}
+
+\subsection{Implementation}
+
+\textit{WRITE - details specific to this view}
+
+\subsection{Interface} \label{sec-multi-vw-inter}
+
+\subsubsection{Constructors}
+
+\noindent
+\textbf{multiarray\_view}%
+\texttt{%
+(view\_container\_type \&
+\textit{vcont,}%
+domain\_type const \&
+\textit{dom,}%
+map\_function
+\textit{mfunc=map\_function()}%
+)
+}
+
+\begin{itemize}
+\item
+Constructor that does not take ownership over the passed container.
+\end{itemize}
+
+\noindent
+\textbf{multiarray\_view}%
+\texttt{%
+(view\_container\_type *
+\textit{vcont}%
+)
+}
+
+\begin{itemize}
+\item
+Constructor used to pass ownership of the container to the view.
+\end{itemize}
+
+\noindent
+\textbf{multiarray\_view}%
+\texttt{%
+(view\_container\_type \&
+\textit{vcont}%
+)
+}
+
+\begin{itemize}
+\item
+Constructor that does not take ownership over the passed container.
+\end{itemize}
+
+\noindent
+\textbf{multiarray\_view}%
+\texttt{%
+(view\_container\_type *
+\textit{vcont,}%
+domain\_type const \&
+\textit{dom,}%
+map\_function
+\textit{mfunc=map\_function()}%
+)
+}
+
+\subsubsection{ View Attributes}
+
+\begin{itemize}
+\item
+Constructor used to pass ownership of the container to the view.
+\end{itemize}
+
+\noindent
+\texttt{%
+domain\_type::size\_type
+}
+\newline
+\textbf{dimensions}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+The length of each of the dimensions of the multiarray.
+\end{itemize}
+
+\noindent
+\texttt{%
+void
+}
+\newline
+\textbf{resize}%
+\texttt{%
+(typename domain\_type::size\_type
+\textit{size}%
+)
+}
+
+\begin{itemize}
+\item
+Update the underlying container to hold the specified number of elements.
+\end{itemize}
+All previous information is lost.
+
+\noindent
+\texttt{%
+size\_type
+}
+\newline
+\textbf{size}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Returns the number of elements referenced for the view.
+\end{itemize}
+
+\noindent
+\texttt{%
+bool
+}
+\newline
+\textbf{empty}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Returns if the view does not reference any element.
+\end{itemize}
+
+\subsubsection{ Element Manipulation}
+
+\noindent
+\texttt{%
+value\_type
+}
+\newline
+\textbf{get\_element}%
+\texttt{%
+(index\_t const \&
+\textit{index}%
+) const
+}
+
+\begin{itemize}
+\item
+Get the element index from the container.
+\end{itemize}
+
+\noindent
+\texttt{%
+template<class Functor >
+}
+\texttt{%
+Functor::result\_type
+}
+\newline
+\textbf{apply\_get}%
+\texttt{%
+(index\_t const \&
+\textit{index,}%
+Functor
+\textit{f}%
+)
+}
+
+\begin{itemize}
+\item
+Applies the provided function to the value referenced for the given index and returns the result of the operation.
+\end{itemize}
+
+\noindent
+\texttt{%
+void
+}
+\newline
+\textbf{set\_element}%
+\texttt{%
+(index\_t const \&
+\textit{index,}%
+value\_t const \&
+\textit{value}%
+)
+}
+
+\begin{itemize}
+\item
+Set the element index in the container to value value.
+\end{itemize}
+
+\noindent
+\texttt{%
+template<class Functor >
+}
+\texttt{%
+void
+\newline
+\textbf{apply\_set}%
+(index\_t const \&
+\textit{index,}%
+Functor
+\textit{f}%
+)
+}
+
+\begin{itemize}
+\item
+Applies the provided function to the value referenced for the given index and mutates the element with the resulting value.
+\end{itemize}
+
+\noindent
+\texttt{%
+reference
+}
+\newline
+\textbf{operator[]}%
+\texttt{%
+(index\_t
+\textit{index}%
+) const
+}
+
+\begin{itemize}
+\item
+The bracket operator is the basic access method.
+\end{itemize}
+
+\noindent
+\texttt{%
+reference
+}
+\newline
+\textbf{make\_reference}%
+\texttt{%
+(index\_t
+\textit{index}%
+) const
+}
+
+\subsection{Usage Example} \label{sec-multi-vw-use}
+
+The following example shows how to use the \texttt{multiarray view}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{view/multi.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-multi-vw-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-multi-vw-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:multi-vw-assign-exper}
+shows the performance of assigning values through a \stapl\ multiarray view
+whose elements are atomic values, \stl\ views, or \stapl\ views.
+\item
+Fig. \ref{fig:multi-vw-access-exper}
+shows the performance of accessing values through a \stapl\ multiarray view
+whose elements are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/multiarray_vw_assign}
+\caption{Assign Values through Multiarray View Execution Time}
+\label{fig:multi-vw-assign-exper}
+\end{figure}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/multiarray_vw_access}
+\caption{Access Values through Multiarray View Execution Time}
+\label{fig:multi-vw-access-exper}
+\end{figure}
+
+\emph{WRITE - reference complexity of underlying container}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{Matrix View} \label{sec-matrix-vw}
+\index{matrix!view}
+\index{view!matrix}
+
+\subsection{Definition}
+
+\textit{ EXPAND- A view that provides that interface of a two-dimensional array abstract data type.}
+
+\subsection{Relationship to \stapl\ matrix container}
+
+\textit{WRITE}
+
+\subsection{Relationship to other \stapl\ views}
+
+\textit{WRITE}
+
+\subsection{Implementation}
+
+\textit{WRITE - details specific to this view}
+
+\subsection{Interface} \label{sec-mat-vw-inter}
+
+\subsubsection{Constructors}
+
+\noindent
+\textbf{matrix\_view}%
+\texttt{%
+(view\_container\_type \&
+\textit{vcont,}%
+domain\_type const \&
+\textit{dom,}%
+map\_function
+\textit{mfunc=map\_function()}%
+)
+}
+
+\begin{itemize}
+\item
+Constructor that does not take ownership over the passed container.
+\end{itemize}
+
+\noindent
+\textbf{matrix\_view}%
+\texttt{%
+(view\_container\_type *
+\textit{vcont}%
+)
+}
+
+\begin{itemize}
+\item
+Constructor used to pass ownership of the container to the view.
+\end{itemize}
+
+\noindent
+\textbf{matrix\_view}%
+\texttt{%
+(view\_container\_type \&
+\textit{vcont}%
+)
+}
+
+\begin{itemize}
+\item
+Constructor that does not take ownership over the passed container.
+\end{itemize}
+
+\noindent
+\textbf{matrix\_view}%
+\texttt{%
+(view\_container\_type *
+\textit{vcont,}%
+domain\_type const \&
+\textit{dom,}%
+map\_function
+\textit{mfunc=map\_function()}%
+)
+}
+
+\begin{itemize}
+\item
+Constructor used to pass ownership of the container to the view.
+\end{itemize}
+
+\subsubsection{ View Attributes}
+
+\noindent
+\texttt{%
+domain\_type::size\_type
+}
+\newline
+\textbf{dimensions}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+The length of each of the dimensions of the matrix.
+\end{itemize}
+
+\noindent
+\texttt{%
+void
+}
+\newline
+\textbf{resize}%
+\texttt{%
+(typename domain\_type::size\_type
+\textit{size}%
+)
+}
+
+\begin{itemize}
+\item
+Update the underlying container to hold the specified number of elements.
+\end{itemize}
+All previous information is lost.
+
+\noindent
+\texttt{%
+size\_type
+}
+\newline
+\textbf{size}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Returns the number of elements referenced for the view.
+\end{itemize}
+
+\noindent
+\texttt{%
+bool
+}
+\newline
+\textbf{empty}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Returns if the view does not reference any element.
+\end{itemize}
+
+\subsubsection{Element Manipulation}
+
+\noindent
+\texttt{%
+value\_type
+}
+\newline
+\textbf{get\_element}%
+\texttt{%
+(index\_t const \&
+\textit{index}%
+) const
+}
+
+\begin{itemize}
+\item
+Get the element index from the container.
+\end{itemize}
+
+\noindent
+\texttt{%
+template<class Functor >
+}
+\texttt{%
+Functor::result\_type
+}
+\newline
+\textbf{apply\_get}%
+\texttt{%
+(index\_t const \&
+\textit{index,}%
+Functor
+\textit{f}%
+)
+}
+
+\begin{itemize}
+\item
+Applies the provided function to the value referenced for the given index and returns the result of the operation.
+\end{itemize}
+
+\noindent
+\texttt{%
+void
+}
+\newline
+\textbf{set\_element}%
+\texttt{%
+(index\_t const \&
+\textit{index,}%
+value\_t const \&
+\textit{value}%
+)
+}
+
+\begin{itemize}
+\item
+Set the element index in the container to value value.
+\end{itemize}
+
+\noindent
+\texttt{%
+template<class Functor >
+}
+\texttt{%
+void
+\newline
+\textbf{apply\_set}%
+(index\_t const \&
+\textit{index,}%
+Functor
+\textit{f}%
+)
+}
+
+\begin{itemize}
+\item
+Applies the provided function to the value referenced for the given index and mutates the element with the resulting value.
+\end{itemize}
+
+\noindent
+\texttt{%
+reference
+}
+\newline
+\textbf{operator[]}%
+\texttt{%
+(index\_t
+\textit{index}%
+) const
+}
+
+\begin{itemize}
+\item
+The bracket operator is the basic access method.
+\end{itemize}
+
+\noindent
+\texttt{%
+reference
+}
+\newline
+\textbf{make\_reference}%
+\texttt{%
+(index\_t
+\textit{index}%
+) const
+}
+
+\subsection{Usage Example} \label{sec-mat-vw-use}
+
+The following example shows how to use the \texttt{matrix view}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{view/matrix.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-mat-vw-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-mat-vw-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:mat-vw-assign-exper}
+shows the performance of assigning values through a \stapl\ matrix view
+whose elements are atomic values, \stl\ views, or \stapl\ views.
+\item
+Fig. \ref{fig:mat-vw-access-exper}
+shows the performance of accessing values through a \stapl\ matrix view
+whose elements are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/matrix_vw_assign}
+\caption{Assign Values through Matrix View Execution Time}
+\label{fig:mat-vw-assign-exper}
+\end{figure}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/matrix_vw_access}
+\caption{Access Values through Matrix View Execution Time}
+\label{fig:mat-vw-access-exper}
+\end{figure}
+
+\emph{WRITE - reference complexity of underlying container}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{Read-Only Array View} \label{sec-aryro-vw}
+\index{array!read-only view}
+\index{view!array!read-only}
+
+\subsection{Definition}
+
+\textit{EXPAND - A view that provides that interface of a one-dimensional array abstract data type, which is read-only.}
+\vspace{0.4cm}
+
+\subsection{Relationship to \stapl\ array container}
+
+\textit{WRITE}
+
+\subsection{Relationship to other \stapl\ views}
+
+\textit{WRITE}
+
+\subsection{Implementation}
+
+\textit{WRITE - details specific to this view}
+
+\subsection{Interface} \label{sec-aryro-vw-inter}
+
+\subsubsection{Constructors}
+
+\noindent
+\textbf{array\_ro\_view}%
+\texttt{%
+(view\_container\_type *
+\textit{(vcont)}%
+)
+}
+
+\begin{itemize}
+\item
+Constructs a view that can reference all the elements of the container provided. The view takes ownership of the container.
+\end{itemize}
+
+\noindent
+\textbf{array\_ro\_view}%
+\texttt{%
+(view\_container\_type *
+\textit{vcont,}%
+domain\_type const \&
+\textit{dom}%
+)
+}
+
+\begin{itemize}
+\item
+Constructs a view with a restricted domain of the elements of the container provided. The view takes ownership of the container.
+\end{itemize}
+
+\noindent
+\textbf{array\_ro\_view}%
+\texttt{%
+(view\_container\_type *
+\textit{vcont,}%
+domain\_type const \&
+\textit{dom,}%
+    map\_func\_type
+\textit{mfunc}%
+)
+}
+
+\begin{itemize}
+\item
+Constructs a view with a potentially restricted domain of the elements of the container provided and a non-identity mapping function. The view takes ownership of the container.
+\end{itemize}
+
+\noindent
+\textbf{array\_ro\_view}%
+\texttt{%
+(view\_container\_type const \&
+\textit{vcont}%
+)
+}
+
+\begin{itemize}
+\item
+Constructs a view that can reference all the elements of the container provided. The view does not take ownership of the container.
+\end{itemize}
+
+\noindent
+\textbf{array\_ro\_view}%
+\texttt{%
+(view\_container\_type const \&
+\textit{vcont,}%
+domain\_type const \&
+\textit{dom}%
+)
+}
+
+\begin{itemize}
+\item
+Constructs a view with a restricted domain of the elements of the container provided. The view does not take ownership of the container.
+\end{itemize}
+
+\noindent
+\textbf{array\_ro\_view}%
+\texttt{%
+(view\_container\_type const \&
+\textit{vcont,}%
+domain\_type const \&
+\textit{dom,}%
+    map\_func\_type
+\textit{mfunc}%
+)
+}
+
+\begin{itemize}
+\item
+Constructs a view with a potentially restricted domain of the elements of the container provided and a non-identity mapping function. The view does not take ownership of the container.
+\end{itemize}
+
+\noindent
+\textbf{array\_ro\_view}%
+\texttt{%
+(view\_container\_type const \&
+\textit{vcont,}%
+domain\_type const \&
+\textit{dom,}%
+map\_func\_type
+\textit{mfunc,}%
+array\_ro\_view const \&
+)
+}
+
+\begin{itemize}
+\item
+Constructs a view with a potentially restricted domain of the elements of the container provided and a non-identity mapping function. The constructor accepts another ArrayRO instance from which it could copy additional state. The view does not take ownership of the container.
+\end{itemize}
+
+\noindent
+\texttt{%
+template<typename Derived1 >
+}
+\newline
+\textbf{array\_ro\_view}%
+\texttt{%
+(array\_ro\_view< C, Dom, MapFunc, Derived1 > const \&
+\textit{other}%
+)
+}
+
+\begin{itemize}
+\item
+Copy constructor when the view provided is not the most derived view.
+\end{itemize}
+
+\noindent
+\textbf{array\_ro\_view}%
+\texttt{%
+(array\_ro\_view const \&
+\textit{other}%
+)
+}
+
+\subsubsection{ View Attributes}
+
+\noindent
+\texttt{%
+size\_type
+}
+\newline
+\textbf{size}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Returns the number of elements referenced for the view.
+\end{itemize}
+
+\noindent
+\texttt{%
+bool
+}
+\newline
+\textbf{empty}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Returns if the view does not reference any element.
+\end{itemize}
+
+\subsubsection{ Element Manipulation}
+
+\noindent
+\texttt{%
+value\_type
+}
+\newline
+\textbf{get\_element}%
+\texttt{%
+(index\_t const \&
+\textit{index}%
+) const
+}
+
+\begin{itemize}
+\item
+Get the element index from the container.
+\end{itemize}
+
+\noindent
+\texttt{%
+Functor::result\_type
+}
+\newline
+\textbf{apply\_get}%
+\texttt{%
+(index\_t const \&
+\textit{index,}%
+Functor
+f
+)
+}
+
+\begin{itemize}
+\item
+Applies the provided function to the value referenced for the given index and returns the result of the operation.
+\end{itemize}
+
+\noindent
+\texttt{%
+reference
+}
+\newline
+\textbf{operator[]}%
+\texttt{%
+(index\_t
+\textit{index}%
+) const
+}
+
+\begin{itemize}
+\item
+The bracket operator is the basic access method.
+\end{itemize}
+
+\noindent
+\texttt{%
+reference
+}
+\newline
+\textbf{make\_reference}%
+\texttt{%
+(index\_t index) const
+}
+
+\subsection{Usage Example} \label{sec-aryro-vw-use}
+
+The following example shows how to use the \texttt{array read-only view}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{view/arrayro.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-aryro-vw-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-aryro-vw-perf}
+
+\begin{itemize}
+%%\item
+%%Fig. \ref{fig:roary-vw-assign-exper}
+%%shows the performance of assigning values through a \stapl\ read-only array view
+%%whose elements are atomic values, \stl\ views, or \stapl\ views.
+\item
+Fig. \ref{fig:roary-vw-access-exper}
+shows the performance of accessing values through a \stapl\ read-only array view
+whose elements are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+%%\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/read-only array_vw_assign}
+%%\caption{Assign Values through Read-only Array View Execution Time}
+%%\label{fig:roary-vw-assign-exper}
+%%\end{figure}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/read-only array_vw_access}
+\caption{Access Values through Read-only Array View Execution Time}
+\label{fig:roary-vw-access-exper}
+\end{figure}
+
+\emph{WRITE - reference complexity of underlying container}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{Set View} \label{sec-set-vw}
+\index{set!view}
+\index{view!set}
+
+\subsection{Definition}
+
+\textit{EXPAND - A view that provides that interface of a set abstract data type.}
+
+\subsection{Relationship to \stapl\ set container}
+
+\textit{WRITE}
+
+\subsection{Relationship to other \stapl\ views}
+
+\textit{WRITE}
+
+\subsection{Implementation}
+
+\textit{WRITE - details specific to this view}
+
+\subsection{Interface} \label{sec-set-vw-inter}
+
+\subsubsection{Constructors}
+
+\noindent
+\textbf{set\_view}%
+\texttt{%
+(view\_container\_type *
+\textit{vcont,}%
+domain\_type const \&
+\textit{dom,}%
+map\_func\_type
+\textit{mfunc=MapFunc()}%
+)
+}
+
+\begin{itemize}
+\item
+Constructor used to pass ownership of the container to the view.
+\end{itemize}
+
+\noindent
+\textbf{set\_view}%
+\texttt{%
+(view\_container\_type *
+\textit{vcont,}%
+domain\_type const \&
+\textit{dom, }%
+map\_func\_type
+\textit{mfunc,}%
+set\_view const \&
+\textit{other}%
+)
+}
+
+\begin{itemize}
+\item
+Constructor used to pass ownership of the container to the view.
+\end{itemize}
+
+\noindent
+\textbf{set\_view}%
+\texttt{%
+(view\_container\_type const \&
+\textit{vcont,}%
+domain\_type const \&
+\textit{dom,}%
+map\_func\_type
+\textit{mfunc=MapFunc(),}%
+set\_view const \&
+\textit{other=set\_view()}%
+)
+}
+
+\begin{itemize}
+\item
+Constructor that does not takes ownership over the passed container.
+\end{itemize}
+
+\noindent
+\textbf{set\_view}%
+\texttt{%
+(view\_container\_type *
+\textit{vcont}%
+)
+}
+
+\begin{itemize}
+\item
+Constructs a view that can reference all the elements of the passed container. The view takes ownership of the container.
+\end{itemize}
+
+\noindent
+\textbf{set\_view}%
+\texttt{%
+(view\_container\_type \&
+\textit{vcont}%
+)
+}
+
+\begin{itemize}
+\item
+Constructs a view that can reference all the elements of the passed container.
+\end{itemize}
+
+\noindent
+\texttt{%
+template<typename Derived1 >
+}
+\newline
+\textbf{set\_view}%
+\texttt{%
+(set\_view< C, Dom, MapFunc, Derived1 > const \&
+\textit{other}%
+)
+}
+
+\begin{itemize}
+\item
+\textit{WRITE - fix Doxygen and copy material here}
+\end{itemize}
+
+\subsubsection{ View Attributes}
+
+\noindent
+\texttt{%
+size\_type
+}
+\newline
+\textbf{size}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Returns the number of elements referenced for the view.
+\end{itemize}
+
+\noindent
+\texttt{%
+bool
+}
+\newline
+\textbf{empty}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Returns if the view does not reference any element.
+\end{itemize}
+
+
+\subsubsection{ Element Manipulation}
+
+\noindent
+\texttt{%
+void
+}
+\newline
+\textbf{insert}%
+\texttt{%
+(key\_type const \&
+\textit{key)}%
+}
+
+\begin{itemize}
+\item
+Inserts the given key if the key does not exist in the container.
+\end{itemize}
+
+\noindent
+\texttt{%
+void
+}
+\newline
+\textbf{erase}%
+\texttt{%
+(key\_type const \&
+\textit{key)}%
+}
+
+\begin{itemize}
+\item
+Removes the value associated with the specified key.
+\end{itemize}
+
+\noindent
+\texttt{%
+iterator
+}
+\newline
+\textbf{find}%
+\texttt{%
+(key\_type const \&
+\textit{key)}%
+}
+
+\begin{itemize}
+\item
+Returns an iterator pointing to the element associated with the given key.
+\end{itemize}
+
+\noindent
+\texttt{%
+void
+}
+\newline
+\textbf{clear}%
+\texttt{%
+(void)
+}
+
+\begin{itemize}
+\item
+Removes all the elements stored in the container.
+\end{itemize}
+
+\noindent
+\texttt{%
+value\_type
+}
+\newline
+\textbf{get\_element}%
+\texttt{%
+(index\_t const \&
+\textit{index}%
+) const
+}
+
+\begin{itemize}
+\item
+Get the element index from the container.
+\end{itemize}
+
+\noindent
+\texttt{%
+template<class Functor >
+}
+\texttt{%
+Functor::result\_type
+}
+\newline
+\textbf{apply\_get}%
+\texttt{%
+(index\_t const \&
+\textit{index,}%
+Functor
+\textit{f}%
+)
+}
+
+\begin{itemize}
+\item
+Applies the provided function to the value referenced for the given index and returns the result of the operation.
+\end{itemize}
+
+\noindent
+\texttt{%
+void
+}
+\newline
+\textbf{set\_element}%
+\texttt{%
+(index\_t const \&
+\textit{index,}%
+value\_t const \&
+\textit{value}%
+)
+}
+
+\begin{itemize}
+\item
+Set the element index in the container to value value.
+\end{itemize}
+
+\noindent
+\texttt{%
+template<class Functor >
+}
+\texttt{%
+void
+}
+\newline
+\textbf{apply\_set}%
+\texttt{%
+(index\_t const \&
+\textit{index,}%
+Functor
+\textit{f}%
+)
+}
+
+\begin{itemize}
+\item
+Applies the provided function to the value referenced for the given index and mutates the element with the resulting value.
+\end{itemize}
+
+\noindent
+\texttt{%
+reference
+}
+\newline
+\textbf{operator[]}%
+\texttt{%
+(index\_t
+\textit{index}%
+) const
+}
+
+\begin{itemize}
+\item
+The bracket operator is the basic access method.
+\end{itemize}
+
+\noindent
+\texttt{%
+reference
+}
+\newline
+\textbf{make\_reference}%
+\texttt{%
+(index\_t
+\textit{index}%
+) const
+}
+
+\subsection{Usage Example} \label{sec-set-vw-use}
+
+The following example shows how to use the \texttt{set view}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{view/set.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-set-vw-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-set-vw-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:set-vw-assign-exper}
+shows the performance of assigning values through a \stapl\ set view
+whose elements are atomic values, \stl\ views, or \stapl\ views.
+\item
+Fig. \ref{fig:set-vw-access-exper}
+shows the performance of accessing values through a \stapl\ set view
+whose elements are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/set_vw_assign}
+\caption{Assign Values through Set View Execution Time}
+\label{fig:set-vw-assign-exper}
+\end{figure}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/set_vw_access}
+\caption{Access Values through Set View Execution Time}
+\label{fig:set-vw-access-exper}
+\end{figure}
+
+\emph{WRITE - reference complexity of underlying container}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{Graph View} \label{sec-graf-vw}
+\index{graph!view}
+\index{view!graph}
+
+\subsection{Definition}
+
+\textit{EXPAND - A view that provides that interface of a graph abstract data type.}
+
+\subsection{Relationship to \stapl\ static and dynamic graph containers}
+
+\textit{WRITE}
+
+\subsection{Relationship to other \stapl\ views}
+
+\textit{WRITE}
+
+\subsection{Implementation}
+
+\textit{WRITE - details specific to this view}
+
+\subsection{Interface} \label{sec-graf-vw-inter}
+
+\subsubsection{Constructors}
+
+\noindent
+\textbf{graph\_view}%
+\texttt{%
+(view\_container\_type *
+\textit{vcont,}%
+domain\_type const \&
+\textit{dom,}%
+map\_func\_type
+\textit{mfunc=MapFunc()}%
+)
+}
+
+\begin{itemize}
+\item
+Constructor used to pass ownership of the container to the view.
+\end{itemize}
+
+\noindent
+\texttt{%
+template<typename OV >
+}
+\newline
+\textbf{graph\_view}%
+\texttt{%
+(view\_container\_type *
+\textit{vcont,}%
+domain\_type const \&
+\textit{dom,}%
+map\_func\_type
+\textit{mfunc,}%
+OV const \&
+)
+}
+
+\begin{itemize}
+\item
+Constructor used to pass ownership of the container to the view.
+\end{itemize}
+
+\noindent
+\textbf{graph\_view}%
+\texttt{%
+(view\_container\_type const \&
+\textit{vcont,}%
+domain\_type const \&
+\textit{dom,}%
+map\_func\_type
+\textit{mfunc=MapFunc(),}%
+graph\_view const \&
+\textit{other=graph\_view()}%
+)
+}
+
+\begin{itemize}
+\item
+Constructor that does not takes ownership over the passed container.
+\end{itemize}
+
+\noindent
+\texttt{%
+template<typename OV >
+}
+\newline
+\textbf{graph\_view}%
+\texttt{%
+(view\_container\_type const \&
+\textit{vcont,}%
+domain\_type const \&
+\textit{dom,}%
+map\_func\_type
+\textit{mfunc,}%
+OV const \&
+)
+}
+
+\begin{itemize}
+\item
+Constructor that does not takes ownership over the passed container.
+\end{itemize}
+
+\noindent
+\textbf{graph\_view}%
+\texttt{%
+(view\_container\_type *
+\textit{vcont}%
+)
+}
+
+\begin{itemize}
+\item
+Constructs a view that can reference all the elements of the passed container. The view takes ownership of the container.
+\end{itemize}
+
+\noindent
+\textbf{graph\_view}%
+\texttt{%
+(view\_container\_type \&
+\textit{vcont}%
+)
+}
+
+\begin{itemize}
+\item
+Constructs a view that can reference all the elements of the passed container.
+\end{itemize}
+
+\noindent
+\textbf{graph\_view}%
+\texttt{%
+(view\_container\_type const \&
+\textit{vcont}%
+)
+}
+
+\begin{itemize}
+\item
+Constructs a view that can reference all the elements of the passed container.
+\end{itemize}
+
+\noindent
+\texttt{%
+template<typename Derived1 >
+}
+\newline
+\textbf{graph\_view}%
+\texttt{%
+(graph\_view< PG, Dom, MapFunc, Derived1 > const \&
+\textit{other}%
+)
+}
+
+\begin{itemize}
+\item
+Copy constructor when the passed view is not the most derived view.
+\end{itemize}
+
+\noindent
+\texttt{%
+template<typename T1, typename T2 >
+}
+\newline
+\textbf{graph\_view}%
+\texttt{%
+(graph\_view< PG, iterator\_domain< T1, T2 >, MapFunc, Derived > const \&
+\textit{other}%
+)
+}
+
+\begin{itemize}
+\item
+Copy constructor when the passed view has an iterator domain. This constructor converts a view using the default graph domain (iterator\_domain) to view using a gid-based domain (domset1D) as iterator domain can't handle a selective set of elements.
+\end{itemize}
+
+\subsubsection{ Element Manipulation}
+
+\noindent
+\texttt{%
+vertex\_descriptor
+}
+\newline
+\textbf{add\_vertex}%
+\texttt{%
+(void)
+}
+
+\begin{itemize}
+\item
+Adds a vertex to the graph with a default-constructed property.
+\end{itemize}
+
+\noindent
+\texttt{%
+vertex\_descriptor
+}
+\newline
+\textbf{add\_vertex}%
+\texttt{%
+(vertex\_property const \&
+\textit{vp}%
+)
+}
+
+\begin{itemize}
+\item
+Adds a vertex to the graph with the given property.
+\end{itemize}
+
+\noindent
+\texttt{%
+vertex\_descriptor
+}
+\newline
+\textbf{add\_vertex\_uniform}%
+\texttt{%
+(vertex\_property const \&
+\textit{vp}%
+)
+}
+
+\begin{itemize}
+\item
+Adds a vertex to the graph with the given property to a location based on the vertex descriptor assigned by the graph. This method is asynchronous. This method differs from the typical add\_vertex as it inserts the vertex into a potentially remote location, rather than the calling location.
+\end{itemize}
+
+\noindent
+\texttt{%
+void
+}
+\texttt{%
+void
+}
+\newline
+\textbf{add\_vertex}%
+\texttt{%
+(vertex\_descriptor const \&
+\textit{vd,}%
+vertex\_property const \&
+\textit{vp}%
+)
+}
+
+\begin{itemize}
+\item
+Adds a vertex to the graph with the given property and descriptor.
+\end{itemize}
+
+\noindent
+\texttt{%
+template<typename Functor >
+}
+\texttt{%
+void
+}
+\newline
+\textbf{add\_vertex}%
+\texttt{%
+(vertex\_descriptor const \&
+\textit{vd,}%
+vertex\_property const \&
+\textit{vp,}%
+Functor const \&
+\textit{f}%
+)
+}
+
+\begin{itemize}
+\item
+Adds a vertex to the graph with the given property and descriptor, if the vertex does not exist, or applies the given functor to the existing vertex. The vertex is added to the home location, unlike the other add\_vertex calls that add the vertex at the current location.
+\end{itemize}
+
+\noindent
+\texttt{%
+void
+}
+\newline
+\textbf{delete\_vertex}%
+\texttt{%
+(vertex\_descriptor const \&
+\textit{vd}%
+)
+}
+
+\begin{itemize}
+\item
+\textit{WRITE - fix Doxygen and copy material here}
+\end{itemize}
+
+\noindent
+\texttt{%
+void
+}
+\newline
+\textbf{add\_edge\_async}%
+\texttt{%
+(vertex\_descriptor const \&
+\textit{src,}%
+vertex\_descriptor const \&
+\textit{tgt}%
+)
+}
+
+\begin{itemize}
+\item
+Adds an edge between the two given vertices with given property. The edge is added asynchronously and method returns immediately. Edge is not guaranteed to be added until after a global synchronization.
+\end{itemize}
+
+\noindent
+\texttt{%
+void
+}
+\newline
+\textbf{add\_edge\_async}%
+\texttt{%
+(vertex\_descriptor const \&
+\textit{src,}%
+vertex\_descriptor
+const \&
+\textit{tgt,}%
+edge\_property const \&
+\textit{p}%
+)
+}
+
+\begin{itemize}
+\item
+Adds an edge between the two given vertices with given property. The edge is added asynchronously and method returns immediately. Edge is not guaranteed to be added until after a global synchronization.
+\end{itemize}
+
+\noindent
+\texttt{%
+void
+}
+\newline
+\textbf{add\_edge\_async}%
+\texttt{%
+(edge\_descriptor const \&
+\textit{ed}%
+)
+}
+
+\begin{itemize}
+\item
+Adds an edge with given descriptor. The edge is added asynchronously and method returns immediately. Edge is not guaranteed to be added until after a global synchronization.
+\end{itemize}
+
+\noindent
+\texttt{%
+void
+}
+\newline
+\textbf{add\_edge\_async}%
+\texttt{%
+(edge\_descriptor const \&
+\textit{ed,}%
+edge\_property const \&
+\textit{p}%
+)
+}
+
+\begin{itemize}
+\item
+Adds an edge with given descriptor and property. The edge is added asynchronously and method returns immediately. Edge is not guaranteed to be added until after a global synchronization.
+\end{itemize}
+
+\noindent
+\texttt{%
+edge\_descriptor
+}
+\newline
+\textbf{add\_edge}%
+\texttt{%
+(vertex\_descriptor const \&
+\textit{src,}%
+vertex\_descriptor const \&
+\textit{tgt}%
+)
+}
+
+\begin{itemize}
+\item
+Adds an edge between the two given vertices.
+\end{itemize}
+
+\noindent
+\texttt{%
+edge\_descriptor
+}
+\newline
+\textbf{add\_edge}%
+\texttt{%
+(vertex\_descriptor const \&
+\textit{src,}%
+vertex\_descriptor const \&
+\textit{tgt,}%
+edge\_property const \&
+\textit{p}%
+)
+}
+
+\begin{itemize}
+\item
+Adds an edge between the two given vertices with given property.
+\end{itemize}
+
+\noindent
+\texttt{%
+edge\_descriptor
+}
+\newline
+\textbf{add\_edge}%
+\texttt{%
+(edge\_descriptor const \&
+\textit{ed}%
+)
+}
+
+\begin{itemize}
+\item
+Adds an edge with given descriptor.
+\end{itemize}
+
+\noindent
+\texttt{%
+edge\_descriptor
+}
+\newline
+\textbf{add\_edge}%
+\texttt{%
+(edge\_descriptor const \&
+\textit{ed,}%
+edge\_property const \&
+\textit{p}%
+)
+}
+
+\begin{itemize}
+\item
+Adds an edge with given descriptor and property.
+\end{itemize}
+
+\noindent
+\texttt{%
+void
+}
+\newline
+\textbf{%
+ delete\_edge
+}
+\texttt{%
+(vertex\_descriptor const \&
+\textit{src,}%
+vertex\_descriptor const \&
+\textit{tgt}%
+)
+}
+
+\begin{itemize}
+\item
+Deletes the edge between the given source and target vertices. The edge is deleted asynchronously. The edge is not guaranteed to have been deleted until after a global synchronization.
+\end{itemize}
+
+\noindent
+\texttt{%
+void
+}
+\newline
+\textbf{%
+ delete\_edge
+}
+\texttt{%
+(edge\_descriptor const \&
+ed
+\textit{)}%
+}
+
+\begin{itemize}
+\item
+Deletes the edge with given descriptor. Asynchronous.
+\end{itemize}
+
+\noindent
+\texttt{%
+void
+}
+\newline
+\textbf{clear}%
+\texttt{%
+(void)
+}
+
+\begin{itemize}
+\item
+Clears the graph. This resets internal counters for vertex-descriptor and edge-id assignments, and clears graph storage.
+\end{itemize}
+
+\noindent
+\texttt{%
+vertex\_iterator
+}
+\newline
+\textbf{find\_vertex}%
+\texttt{%
+(vertex\_descriptor const \&
+\textit{vd}%
+) const
+}
+
+\begin{itemize}
+\item
+Returns a global vertex iterator to the given descriptor.
+\end{itemize}
+
+\noindent
+\texttt{%
+void
+}
+\newline
+\textbf{sort\_edges}%
+\texttt{%
+(void)
+}
+
+\begin{itemize}
+\item
+Sorts edges of each vertex by home-location of target-vertex.
+\end{itemize}
+
+\noindent
+\texttt{%
+template<typename F >
+}
+\texttt{%
+void
+}
+\newline
+\textbf{apply\_set}%
+\texttt{%
+(vertex\_descriptor const \&
+\textit{gid,}%
+F const \&
+\textit{f}%
+)
+}
+
+\begin{itemize}
+\item
+Applies a function to the vertex with the given descriptor.
+\end{itemize}
+
+\noindent
+\texttt{%
+template<class Functor >
+}
+\texttt{%
+void
+}
+\newline
+\textbf{vp\_apply\_async}%
+\texttt{%
+(vertex\_descriptor const \&
+\textit{vd,}%
+Functor const \&
+\textit{f}%
+)
+}
+
+\begin{itemize}
+\item
+Applies a function to the property of vertex with given descriptor. This method is asynchronous.
+\end{itemize}
+
+\noindent
+\texttt{%
+template<typename Functor >
+}
+\texttt{%
+Functor::result\_type
+}
+\newline
+\textbf{vp\_apply}%
+\texttt{%
+(vertex\_descriptor const \&
+\textit{vd,}%
+Functor const \&
+\textit{f}%
+) const
+}
+
+\begin{itemize}
+\item
+Applies a function to the property of vertex with given descriptor.
+\end{itemize}
+
+\noindent
+\texttt{%
+template<class Functor >
+}
+\texttt{%
+void ep\_apply\_async
+}
+\newline
+\textbf{ep\_apply\_async}%
+\texttt{%
+(edge\_descriptor const \&
+\textit{ed,}%
+Functor const \&
+\textit{f}%
+)
+}
+
+\begin{itemize}
+\item
+Applies a function to the property of edge with given descriptor. This method is asynchronous.
+\end{itemize}
+
+\noindent
+\texttt{%
+template<class Functor >
+}
+\texttt{%
+Functor::result\_type
+}
+\newline
+\textbf{ep\_apply}%
+\texttt{%
+(edge\_descriptor const \&
+\textit{ed,}%
+Functor const \&
+\textit{f })}%
+
+\begin{itemize}
+\item
+Applies a function to the property of edge with given descriptor.
+\end{itemize}
+
+\noindent
+\texttt{%
+vertices\_view\_type
+}
+\newline
+\textbf{vertices}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Returns an Array over the vertices of the graph.
+\end{itemize}
+
+\noindent
+\texttt{%
+value\_type
+}
+\newline
+\textbf{get\_element}%
+\texttt{%
+(index\_t const \&
+\textit{index}%
+) const
+}
+
+\begin{itemize}
+\item
+Get the element index from the container.
+\end{itemize}
+
+\noindent
+\texttt{%
+template<class Functor >
+}
+\texttt{%
+Functor::result\_type
+}
+\newline
+\textbf{apply\_get}%
+\texttt{%
+(index\_t const \&
+\textit{index,}%
+Functor
+\textit{f}%
+)
+}
+
+\begin{itemize}
+\item
+Applies the provided function to the value referenced for the given index and returns the result of the operation.
+\end{itemize}
+
+\noindent
+\texttt{%
+void
+}
+\newline
+\textbf{set\_element}%
+\texttt{%
+(index\_t const \&
+\textit{index,}%
+value\_t const \&
+\textit{value}%
+)
+}
+
+\begin{itemize}
+\item
+Set the element index in the container to value value.
+\end{itemize}
+
+\noindent
+\texttt{%
+template<class Functor >
+}
+\texttt{%
+void
+}
+\newline
+\textbf{apply\_set}%
+\texttt{%
+(index\_t const \&
+\textit{index,}%
+Functor
+\textit{f}%
+)
+}
+
+\begin{itemize}
+\item
+Applies the provided function to the value referenced for the given index and mutates the element with the resulting value.
+\end{itemize}
+
+\noindent
+\texttt{%
+reference
+}
+\newline
+\textbf{operator[]}%
+\texttt{%
+(index\_t
+\textit{index}%
+) const
+}
+
+\begin{itemize}
+\item
+The bracket operator is the basic access method.
+\end{itemize}
+
+\noindent
+\texttt{%
+reference
+}
+\newline
+\textbf{make\_reference}%
+\texttt{%
+(index\_t
+\textit{index }) const}%
+
+\subsubsection{ View Attributes}
+
+\noindent
+\texttt{%
+size\_t
+}
+\newline
+\textbf{num\_vertices}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Return the number of vertices in the graph.
+\end{itemize}
+
+\noindent
+\texttt{%
+size\_t
+}
+\newline
+\textbf{num\_edges}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Returns the number of edges in the graph. This method is a non-collective version of num\_edges. This must be used when not all locations are calling num\_edges.
+\end{itemize}
+
+\noindent
+\texttt{%
+size\_t
+}
+\newline
+\textbf{num\_edges\_collective}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Returns the number of edges in the graph.
+\end{itemize}
+
+\noindent
+\texttt{%
+size\_t
+}
+\newline
+\textbf{num\_local\_edges}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Returns the number of local outgoing edges in the graph. This is a non-blocking method.
+\end{itemize}
+
+\noindent
+\texttt{%
+bool
+}
+\newline
+\textbf{is\_directed}%
+\texttt{%
+(void) const
+}
+
+\noindent
+\texttt{%
+size\_type
+}
+\newline
+\textbf{size}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Returns the number of elements referenced for the view.
+\end{itemize}
+
+\noindent
+\texttt{%
+bool
+}
+\newline
+\textbf{empty}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Returns if the view does not reference any element.
+\end{itemize}
+
+\begin{itemize}
+\item
+\textit{WRITE - fix Doxygen and copy material here}
+\end{itemize}
+
+\subsection{Usage Example} \label{sec-graf-vw-use}
+
+The following example shows how to use the \texttt{graph view}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{view/graph.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-graf-vw-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-graf-vw-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:graf-vw-assign-exper}
+shows the performance of assigning values through a \stapl\ graph view
+whose elements are atomic values, \stl\ views, or \stapl\ views.
+\item
+Fig. \ref{fig:graf-vw-access-exper}
+shows the performance of accessing values through a \stapl\ graph view
+whose elements are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/graph_vw_assign}
+\caption{Assign Values through Graph View Execution Time}
+\label{fig:graf-vw-assign-exper}
+\end{figure}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/graph_vw_access}
+\caption{Access Values through Graph View Execution Time}
+\label{fig:graf-vw-access-exper}
+\end{figure}
+
+\emph{WRITE - reference complexity of underlying container}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section {Overlap View} \label{sec-over-vw}
+\index{overlap view}
+\index{view!overlap}
+
+\subsection{Definition}
+
+\textit{EXPAND - A view that provides overlapped access to elements.}
+
+\subsection{Relationship to other \stapl\ views}
+
+\textit{WRITE}
+
+\subsection{Implementation}
+
+\textit{WRITE - details specific to this view}
+
+\subsection{Interface} \label{sec-over-vw-inter}
+
+\subsubsection{Constructors}
+
+\textit{WRITE}
+
+\subsubsection{ Element Manipulation}
+
+\noindent
+\texttt{%
+view\_type
+}
+\newline
+\textbf{operator()}%
+\texttt{%
+(View \&
+\textit{v,}%
+size\_t
+\textit{c=1,}%
+size\_t
+\textit{l=0, }%
+size\_t
+\textit{r=0}%
+)
+}
+
+\begin{itemize}
+\item
+\textit{WRITE - fix Doxygen and copy material here}
+\end{itemize}
+
+\noindent
+\texttt{%
+view\_type
+}
+\newline
+\textbf{operator()}%
+\texttt{%
+(View const \&
+\textit{v,}%
+size\_t
+\textit{c=1,}%
+size\_t
+\textit{l=0,}%
+size\_t
+\textit{r=0}%
+)
+}
+
+\begin{itemize}
+\item
+\textit{WRITE - fix Doxygen and copy material here}
+\end{itemize}
+
+\subsection{Usage Example} \label{sec-over-vw-use}
+
+The following example shows how to use the \texttt{overlap view}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{view/overlap.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-over-vw-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-over-vw-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:over-vw-assign-exper}
+shows the performance of assigning values through a \stapl\ overlap view
+whose elements are atomic values, \stl\ views, or \stapl\ views.
+\item
+Fig. \ref{fig:over-vw-access-exper}
+shows the performance of accessing values through a \stapl\ overlap view
+whose elements are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/overlap_vw_assign}
+\caption{Assign Values through Overlap View Execution Time}
+\label{fig:over-vw-assign-exper}
+\end{figure}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/overlap_vw_access}
+\caption{Access Values through Overlap View Execution Time}
+\label{fig:over-vw-access-exper}
+\end{figure}
+
+\emph{WRITE - complexity}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{Repeat View} \label{sec-rep-vw}
+\index{repeat view}
+\index{view!repeat}
+
+\subsection{Definition}
+
+\textit{EXPAND - A view that can produce infinite copies of the same value.}
+
+\subsection{Relationship to other \stapl\ views}
+
+\textit{WRITEe}
+
+\subsection{Implementation}
+
+\textit{WRITE - details specific to this view}
+
+\subsection{Interface} \label{sec-rep-vw-inter}
+
+\subsubsection{Constructors}
+
+\noindent
+\textbf{repeated\_view}%
+\texttt{%
+(view\_container\_type *
+\textit{vcont,}%
+domain\_type const \&
+\textit{dom,}%
+map\_func\_type
+\textit{mfunc=map\_func\_type()}%
+)
+}
+
+\begin{itemize}
+\item
+Constructor used to pass ownership of the container to the view.
+\end{itemize}
+
+\noindent
+\textbf{repeated\_view}%
+\texttt{%
+(view\_container\_type const \&
+\textit{vcont,}%
+domain\_type const \&
+\textit{dom,}%
+map\_func\_type
+\textit{mfunc=map\_func\_type(),}%
+repeated\_view const \&
+\textit{other=repeated\_view()}%
+)
+}
+
+\begin{itemize}
+\item
+Constructor that does not takes ownership over the passed container.
+\end{itemize}
+
+\noindent
+\textbf{repeated\_view}%
+\texttt{%
+(value\_type const \&
+\textit{data}%
+)
+}
+
+\begin{itemize}
+\item
+Constructs a view that represents an infinite array of the same element (data).
+\end{itemize}
+
+\noindent
+\textbf{repeated\_view}%
+\texttt{%
+(repeated\_view const \&
+\textit{other}%
+)
+}
+
+\subsubsection{ View Attributes}
+
+\noindent
+\texttt{%
+size\_type
+}
+\newline
+\textbf{size}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Returns the number of elements referenced for the view.
+\end{itemize}
+
+\noindent
+\texttt{%
+bool
+}
+\newline
+\textbf{empty}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Returns if the view does not reference any element.
+\end{itemize}
+
+\noindent
+\texttt{%
+value\_type
+}
+\newline
+\textbf{get\_element}%
+\texttt{%
+(index\_t const \&
+\textit{index}%
+) const
+}
+
+\begin{itemize}
+\item
+Get the element index from the container.
+\end{itemize}
+
+\noindent
+\texttt{%
+Functor::result\_type
+}
+\newline
+\textbf{apply\_get}%
+\texttt{%
+(index\_t const \&
+\textit{index,}%
+Functor
+\textit{f}%
+)
+}
+
+\begin{itemize}
+\item
+Applies the provided function to the value referenced for the given index and returns the result of the operation.
+\end{itemize}
+
+\noindent
+\texttt{%
+reference
+}
+\newline
+\textbf{operator[]}%
+\texttt{%
+(index\_t
+\textit{%
+index
+}
+) const
+}
+
+\begin{itemize}
+\item
+The bracket operator is the basic access method.
+\end{itemize}
+
+\noindent
+\texttt{%
+reference
+}
+\newline
+\textbf{make\_reference}%
+\texttt{%
+(index\_t
+\textit{index}%
+) const
+}
+
+\subsection{Usage Example} \label{sec-rep-vw-use}
+
+The following example shows how to use the \texttt{repeat view}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{view/repeat.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-rep-vw-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-rep-vw-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:rep-vw-assign-exper}
+shows the performance of assigning values through a \stapl\ repeat view
+whose elements are atomic values, \stl\ views, or \stapl\ views.
+\item
+Fig. \ref{fig:rep-vw-access-exper}
+shows the performance of accessing values through a \stapl\ repeat view
+whose elements are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/repeat_vw_assign}
+\caption{Assign Values through Repeat View Execution Time}
+\label{fig:rep-vw-assign-exper}
+\end{figure}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/repeat_vw_access}
+\caption{Access Values through Repeat View Execution Time}
+\label{fig:rep-vw-access-exper}
+\end{figure}
+
+\emph{WRITE - complexity}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{Counting View} \label{sec-cnt-vw}
+\index{counting view}
+\index{view!counting}
+
+\subsection{Definition}
+
+\textit{EXPAND - A view that provides a sequence of integers.}
+
+\subsection{Relationship to other \stapl\ views}
+
+\textit{WRITE e}
+
+\subsection{Implementation}
+
+\textit{WRITE - details specific to this view}
+
+\subsection{Interface} \label{sec-cnt-vw-inter}
+
+\subsubsection{Classes}
+
+\noindent
+\texttt{%
+struct stapl::view\_impl::counting\_container< T >
+}
+
+\begin{itemize}
+\item
+Container that represents an increasing sequence of elements.
+\end{itemize}
+
+\noindent
+\texttt{%
+struct stapl::result\_of::counting\_view< T >
+}
+
+\begin{itemize}
+\item
+Defines the type of a counting view parameterized with T.
+\end{itemize}
+
+\subsubsection{Functions}
+
+\noindent
+\texttt{%
+template<typename T >
+}
+\texttt{%
+result\_of::counting\_view< T >::type
+}
+\newline
+\textbf{stapl::counting\_view}%
+\texttt{%
+(size\_t
+\textit{n,}%
+T
+\textit{init=0}%
+)
+}
+
+\begin{itemize}
+\item
+Helper function that creates a read-only view representing a set of increasing elements.
+\end{itemize}
+
+\subsection{Usage Example} \label{sec-cnt-vw-use}
+
+The following example shows how to use the \texttt{counting view}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{view/counting.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-cnt-vw-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-cnt-vw-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:cnt-vw-assign-exper}
+shows the performance of assigning values through a \stapl\ counting view
+whose elements are atomic values, \stl\ views, or \stapl\ views.
+\item
+Fig. \ref{fig:cnt-vw-access-exper}
+shows the performance of accessing values through a \stapl\ counting view
+whose elements are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/counting_vw_assign}
+\caption{Assign Values through Counting View Execution Time}
+\label{fig:cnt-vw-assign-exper}
+\end{figure}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/counting_vw_access}
+\caption{Access Values through Counting View Execution Time}
+\label{fig:cnt-vw-access-exper}
+\end{figure}
+
+\emph{WRITE - complexity}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{Functor View} \label{sec-func-vw}
+\index{functor view}
+\index{view!functor}
+
+\subsection{Definition}
+
+\textit{EXPAND - A view that creates an array view on top of a functor container.}
+
+\subsection{Relationship to other \stapl\ views}
+
+\textit{WRITEe}
+
+\subsection{Implementation}
+
+\textit{WRITE - details specific to this view}
+
+\subsection{Interface} \label{sec-func-vw-inter}
+
+\subsubsection{Constructors}
+
+\noindent
+\texttt{%
+template<typename Func>
+}
+\texttt{%
+typename functor\_view\_type<Func>::type
+}
+\newline
+\textbf{functor\_view}%
+\texttt{%
+(size\_t const \&
+\textit{n,}%
+Func const \&
+\textit{func}%
+)
+}
+
+\begin{itemize}
+\item
+Create an array view on top of a functor container.
+\end{itemize}
+
+\subsection{Usage Example} \label{sec-fun-vw-use}
+
+The following example shows how to use the \texttt{functor view}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{view/functor.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-fun-vw-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-fun-vw-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:fun-vw-assign-exper}
+shows the performance of assigning values through a \stapl\ Functor view
+whose elements are atomic values, \stl\ views, or \stapl\ views.
+\item
+Fig. \ref{fig:fun-vw-access-exper}
+shows the performance of accessing values through a \stapl\ Functor view
+whose elements are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/Functor_vw_assign}
+\caption{Assign Values through Functor View Execution Time}
+\label{fig:fun-vw-assign-exper}
+\end{figure}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/Functor_vw_access}
+\caption{Access Values through Functor View Execution Time}
+\label{fig:fun-vw-access-exper}
+\end{figure}
+
+\emph{WRITE - complexity}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{Strided View} \label{sec-str-vw}
+\index{strided view}
+\index{view!strided}
+
+\subsection{Definition}
+
+\textit{WRITE}
+
+\subsection{Relationship to other \stapl\ views}
+
+\textit{WRITE}
+
+\subsection{Implementation}
+
+\textit{WRITE - details specific to this view}
+
+\subsection{Interface} \label{sec-str-vw-inter}
+
+\subsubsection{Classes}
+
+\noindent
+\texttt{%
+struct stapl::strided\_view\_type< BV >
+}
+
+\begin{itemize}
+\item
+A metafunction that computes the type of a strided view based on a given view.
+\end{itemize}
+
+\subsubsection{Functions}
+
+\noindent
+\texttt{%
+template<typename BV >
+}
+\texttt{%
+strided\_view\_type< BV >::type
+}
+\newline
+\textbf{stapl::make\_strided\_view}%
+\texttt{%
+(BV
+\textit{view,}%
+typename view\_traits< BV >::index\_type const \&
+\textit{step,}%
+typename view\_traits< BV >::index\_type const \&
+\textit{start}%
+)
+}
+
+\begin{itemize}
+\item
+Takes an input view and creates a strided view over the original view's container.
+\end{itemize}
+
+\subsection{Usage Example} \label{sec-str-vw-use}
+
+The following example shows how to use the \texttt{strided view}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{view/strided.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-str-vw-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-str-vw-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:str-vw-assign-exper}
+shows the performance of assigning values through a \stapl\ Strided view
+whose elements are atomic values, \stl\ views, or \stapl\ views.
+\item
+Fig. \ref{fig:str-vw-access-exper}
+shows the performance of accessing values through a \stapl\ Strided view
+whose elements are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/Strided_vw_assign}
+\caption{Assign Values through Strided View Execution Time}
+\label{fig:str-vw-assign-exper}
+\end{figure}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/Strided_vw_access}
+\caption{Access Values through Strided View Execution Time}
+\label{fig:str-vw-access-exper}
+\end{figure}
+
+\emph{WRITE - complexity}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{Reverse View} \label{sec-rev-vw}
+\index{reverse view}
+\index{view!reverse}
+
+\subsection{Definition}
+
+\textit{EXPAND - A view that reverses the order of the elements in a sequence.}
+
+\subsection{Relationship to other \stapl\ views}
+
+\textit{WRITE}
+
+\subsection{Implementation}
+
+\textit{WRITE - details specific to this view}
+
+\subsection{Interface} \label{sec-rev-vw-inter}
+
+\subsubsection{Constructors}
+
+\noindent
+\textbf{reverse\_view}%
+\texttt{%
+(View const \&
+\textit{view}%
+)
+}
+
+\subsubsection{Classes}
+\begin{itemize}
+\item
+Constructs a reverse view over the given view.
+\end{itemize}
+
+\noindent
+\textbf{reverse\_view}%
+\texttt{%
+(view\_container\_type *
+\textit{vcont,}%
+domain\_type const \&
+\textit{dom,}%
+map\_func\_type
+\textit{mfunc=map\_func\_type()}%
+)
+}
+
+\begin{itemize}
+\item
+Constructor used to pass ownership of the container to the view.
+\end{itemize}
+
+\noindent
+\textbf{reverse\_view}%
+\texttt{%
+(view\_container\_type const \&
+\textit{vcont,}%
+domain\_type const \&
+\textit{dom,}%
+map\_func\_type
+\textit{mfunc,}%
+reverse\_view const \&
+\textit{other}%
+)
+}
+
+\begin{itemize}
+\item
+Constructor that does not takes ownership over the passed container.
+\end{itemize}
+
+\noindent
+\textbf{reverse\_view}%
+\texttt{%
+(view\_container\_type const \&
+\textit{vcont,}%
+domain\_type const \&
+\textit{dom,}%
+map\_func\_type
+\textit{mfunc=map\_func\_type()}%
+)
+}
+
+\begin{itemize}
+\item
+Constructor that does not takes ownership over the passed container.
+\end{itemize}
+
+\noindent
+\textbf{reverse\_view}%
+\texttt{%
+(reverse\_view const \&
+\textit{other}%
+)
+}
+
+\subsubsection{ View Attributes}
+
+\noindent
+\texttt{%
+size\_type
+}
+\newline
+\textbf{size}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Returns the number of elements referenced for the view.
+\end{itemize}
+
+\noindent
+\texttt{%
+bool
+}
+\newline
+\textbf{empty}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Returns if the view does not reference any element.
+\end{itemize}
+
+\subsection{Usage Example} \label{sec-rev-vw-use}
+
+The following example shows how to use the \texttt{reverse view}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{view/reverse.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-rev-vw-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-rev-vw-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:rev-vw-assign-exper}
+shows the performance of assigning values through a \stapl\ Reverse view
+whose elements are atomic values, \stl\ views, or \stapl\ views.
+\item
+Fig. \ref{fig:rev-vw-access-exper}
+shows the performance of accessing values through a \stapl\ Reverse view
+whose elements are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/Reverse_vw_assign}
+\caption{Assign Values through Reverse View Execution Time}
+\label{fig:rev-vw-assign-exper}
+\end{figure}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/Reverse_vw_access}
+\caption{Access Values through Reverse View Execution Time}
+\label{fig:rev-vw-access-exper}
+\end{figure}
+
+\emph{WRITE - complexity}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{Filter View} \label{sec-filt-vw}
+\index{filter view}
+\index{view!filter}
+
+\subsection{Definition}
+
+\textit{EXPAND - A view that filters the elements in a sequence.}
+
+\subsection{Relationship to other \stapl\ views}
+
+\textit{WRITE}
+
+\subsection{Implementation}
+
+\textit{WRITE - details specific to this view}
+
+\subsection{Interface} \label{sec-filt-vw-inter}
+
+\subsubsection{Constructors}
+
+\noindent
+\textbf{filter\_view}%
+\texttt{%
+(View const \&
+\textit{view,}%
+Pred const \&
+\textit{pred}%
+)
+}
+
+\begin{itemize}
+\item
+Constructs a filter view over the given view.
+\end{itemize}
+
+\noindent
+\textbf{filter\_view}%
+\texttt{%
+(view\_container\_type *
+\textit{vcont,}%
+domain\_type const \&
+\textit{dom,}%
+map\_func\_type
+\textit{mfunc=map\_func\_type(),}%
+Pred const \&
+\textit{pred=Pred()}%
+)
+}
+
+\begin{itemize}
+\item
+Constructor used to pass ownership of the container to the view.
+\end{itemize}
+
+\noindent
+\textbf{filter\_view}%
+\texttt{%
+(view\_container\_type const \&
+\textit{vcont,}%
+domain\_type const \&
+\textit{dom,}%
+map\_func\_type
+\textit{mfunc=map\_func\_type(),}%
+Pred const \&
+\textit{pred=Pred()}%
+)
+}
+
+\begin{itemize}
+\item
+Constructor that does not takes ownership over the passed container.
+\end{itemize}
+
+\noindent
+\textbf{filter\_view}%
+\texttt{%
+(view\_container\_type const \&
+\textit{vcont,}%
+domain\_type const \&
+\textit{dom,}%
+map\_func\_type
+\textit{mfunc,}%
+filter\_view const \&
+\textit{other}%
+)
+}
+
+\noindent
+\textbf{filter\_view}%
+\texttt{%
+(filter\_view const \&
+\textit{other}%
+)
+}
+
+\begin{itemize}
+\item
+Constructor that does not takes ownership over the passed container.
+\end{itemize}
+
+\subsubsection{ Element Manipulation}
+
+\noindent
+\texttt{%
+iterator
+}
+\newline
+\textbf{begin}%
+\texttt{%
+(void)
+}
+
+\begin{itemize}
+\item
+Return an iterator over the element whose GID is the first valid index,
+\end{itemize}
+based on applying the predicate to the element value.
+
+\noindent
+\texttt{%
+const\_iterator
+}
+\newline
+\textbf{begin}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Return an iterator over the element whose GID is the first valid index,
+\end{itemize}
+based on applying the predicate to the element value.
+
+\noindent
+\texttt{%
+iterator
+}
+\newline
+\textbf{end}%
+\texttt{%
+(void)
+}
+
+\begin{itemize}
+\item
+Return an iterator over the element whose GID is the last valid index,
+\end{itemize}
+based on applying the predicate to the element value.
+
+\noindent
+\texttt{%
+const\_iterator
+}
+\newline
+\textbf{end}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Return an iterator over the element whose GID is the last valid index,
+\end{itemize}
+based on applying the predicate to the element value.
+
+\noindent
+\texttt{%
+index\_type
+}
+\newline
+\textbf{next}%
+\texttt{%
+\textit{(index\_type}%
+index) const
+}
+
+\begin{itemize}
+\item
+Return an iterator over the element whose GID is the next valid index,
+\end{itemize}
+based on applying the predicate to the element value.
+
+\noindent
+\texttt{%
+value\_type
+}
+\newline
+\textbf{get\_element}%
+\texttt{%
+(index\_type
+\textit{index}%
+)
+}
+
+\begin{itemize}
+\item
+Returns the value at the specified index.
+\end{itemize}
+
+\noindent
+\texttt{%
+Pred const \&
+}
+\newline
+\textbf{predicate}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Returns the predicate used to filter the values.
+\end{itemize}
+
+\noindent
+\texttt{%
+size\_t
+}
+\newline
+\textbf{size}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Returns the number of elements referenced for the view.
+\end{itemize}
+
+\noindent
+\texttt{%
+bool
+}
+\newline
+\textbf{empty}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Returns true if the view does not reference any element.
+\end{itemize}
+
+\subsection{Usage Example} \label{sec-filt-vw-use}
+
+The following example shows how to use the \texttt{filter view}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{view/filter.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-filt-vw-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-filt-vw-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:filt-vw-assign-exper}
+shows the performance of assigning values through a \stapl\ Filter view
+whose elements are atomic values, \stl\ views, or \stapl\ views.
+\item
+Fig. \ref{fig:filt-vw-access-exper}
+shows the performance of accessing values through a \stapl\ Filter view
+whose elements are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/Filter_vw_assign}
+\caption{Assign Values through Filter View Execution Time}
+\label{fig:filt-vw-assign-exper}
+\end{figure}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/Filter_vw_access}
+\caption{Access Values through Filter View Execution Time}
+\label{fig:filt-vw-access-exper}
+\end{figure}
+
+\emph{WRITE - complexity}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{Transform View} \label{sec-trans-vw}
+\index{transform view}
+\index{view!transform}
+
+\subsection{Definition}
+
+\textit{EXPAND - A view that applies the given functor to the elements when they are returned by get data methods.}
+
+\subsection{Relationship to other \stapl\ views}
+
+\textit{WRITE}
+
+\subsection{Implementation}
+
+\textit{WRITE - details specific to this view}
+
+\subsection{Interface} \label{sec-trans-vw-inter}
+
+\subsubsection{Constructors}
+
+\noindent
+\textbf{transform\_view}%
+\texttt{%
+(container\_t \&
+\textit{vcont,}%
+domain\_t const \&
+\textit{dom,}%
+map\_func\_t
+\textit{mfunc,}%
+transform\_view const \&
+\textit{other}%
+)
+}
+
+\begin{itemize}
+\item
+\textit{WRITE - fix Doxygen  and copy material here}
+\end{itemize}
+
+\noindent
+\textbf{transform\_view}%
+\texttt{%
+(container\_t \&
+\textit{vcont,}%
+domain\_t const \&
+\textit{dom,}%
+map\_func\_t
+\textit{mfunc=map\_func\_t()}%
+)
+}
+
+\begin{itemize}
+\item
+\textit{WRITE - fix Doxygen and copy material here}
+\end{itemize}
+
+\noindent
+\textbf{transform\_view}%
+\texttt{%
+(View const \&
+\textit{view,}%
+Functor const \&
+\textit{func}%
+)
+}
+
+\begin{itemize}
+\item
+\textit{WRITE - fix Doxygen  and copy material here}
+\end{itemize}
+
+\subsubsection{ Element Manipulation}
+
+\noindent
+\texttt{%
+reference
+}
+\newline
+\textbf{operator[]}%
+\texttt{%
+(index\_type
+\textit{g}%
+) const
+}
+
+\begin{itemize}
+\item
+\textit{WRITE - fix Doxygen and copy material here}
+\end{itemize}
+
+\noindent
+\texttt{%
+Functor const \&
+}
+\newline
+\textbf{func}%
+\texttt{%
+(void) const
+}
+
+\subsection{Usage Example} \label{sec-trans-vw-use}
+
+The following example shows how to use the \texttt{transform view}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{view/transform.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-trans-vw-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-trans-vw-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:trans-vw-assign-exper}
+shows the performance of assigning values through a \stapl\ Transform view
+whose elements are atomic values, \stl\ views, or \stapl\ views.
+\item
+Fig. \ref{fig:trans-vw-access-exper}
+shows the performance of accessing values through a \stapl\ Transform view
+whose elements are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/Transform_vw_assign}
+\caption{Assign Values through Transform View Execution Time}
+\label{fig:trans-vw-assign-exper}
+\end{figure}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/Transform_vw_access}
+\caption{Access Values through Transform View Execution Time}
+\label{fig:trans-vw-access-exper}
+\end{figure}
+
+\emph{WRITE - complexity}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{Banded View} \label{sec-band-vw}
+\index{banded view}
+\index{view!banded}
+
+\subsection{Definition}
+
+\textit{WRITE}
+
+\subsection{Relationship to other \stapl\ views}
+
+\textit{WRITE}
+
+\subsection{Implementation}
+
+\textit{WRITE - details specific to this view}
+
+\subsection{Interface} \label{sec-band-vw-inter}
+
+\subsubsection{Constructors}
+
+\textit{WRITE - fix Doxygen link and copy material here}
+
+\subsubsection{ Element Manipulation}
+
+\noindent
+\texttt{%
+view\_type
+}
+\newline
+\textbf{operator()}%
+\texttt{%
+(View const \&
+\textit{v}%
+)
+}
+
+\begin{itemize}
+\item
+\textit{WRITE - fix Doxygen link and copy material here}
+\end{itemize}
+
+\subsection{Usage Example} \label{sec-band-vw-use}
+
+The following example shows how to use the \texttt{banded\_view }:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{view/band.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-band-vw-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-band-vw-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:band-vw-assign-exper}
+shows the performance of assigning values through a \stapl\ Banded view
+whose elements are atomic values, \stl\ views, or \stapl\ views.
+\item
+Fig. \ref{fig:band-vw-access-exper}
+shows the performance of accessing values through a \stapl\ Banded view
+whose elements are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/Banded_vw_assign}
+\caption{Assign Values through Banded View Execution Time}
+\label{fig:band-vw-assign-exper}
+\end{figure}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/Banded_vw_access}
+\caption{Access Values through Banded View Execution Time}
+\label{fig:band-vw-access-exper}
+\end{figure}
+
+\emph{WRITE - complexity}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{Extended View} \label{sec-extend-vw}
+\index{extended view}
+\index{view!extended}
+
+\subsection{Definition}
+
+\textit{WRITE}
+
+\subsection{Relationship to other \stapl\ views}
+
+\textit{WRITE}
+
+\subsection{Implementation}
+
+\textit{WRITE - details specific to this view}
+
+\subsection{Interface} \label{sec-ext-vw-inter}
+
+\subsubsection{Constructors}
+
+\textit{WRITE - fix Doxygen link and copy material here}
+
+\subsubsection{ Element Manipulation}
+
+\noindent
+\texttt{%%
+view\_type
+}
+\newline
+\textbf{operator()}%
+\texttt{%
+(View const \&
+\textit{v}%
+)
+}
+
+\begin{itemize}
+\item
+\textit{WRITE - fix Doxygen link and copy material here}
+\end{itemize}
+
+\subsection{Usage Example} \label{sec-ext-vw-use}
+
+The following example shows how to use the \texttt{extended\_view }:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{view/extend.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-ext-vw-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-ext-vw-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:ext-vw-assign-exper}
+shows the performance of assigning values through a \stapl\ Extended view
+whose elements are atomic values, \stl\ views, or \stapl\ views.
+\item
+Fig. \ref{fig:ext-vw-access-exper}
+shows the performance of accessing values through a \stapl\ Extended view
+whose elements are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/Extended_vw_assign}
+\caption{Assign Values through Extended View Execution Time}
+\label{fig:ext-vw-assign-exper}
+\end{figure}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/Extended_vw_access}
+\caption{Access Values through Extended View Execution Time}
+\label{fig:ext-vw-access-exper}
+\end{figure}
+
+\emph{WRITE - complexity}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{Slices View} \label{sec-slices-vw}
+\index{slices view}
+\index{view!slices}
+
+\subsection{Definition}
+
+\textit{WRITE}
+
+\subsection{Relationship to other \stapl\ views}
+
+\textit{WRITE}
+
+\subsection{Implementation}
+
+\textit{WRITE - details specific to this view}
+
+\subsection{Interface} \label{sec-slc-vw-inter}
+
+\subsubsection{Constructors}
+
+\textit{WRITE-  fix Doxygen link and copy material here}
+
+\subsubsection{ Element Manipulation}
+
+\noindent
+\texttt{%
+view\_type
+}
+\newline
+\textbf{operator()}%
+\texttt{%
+(View const \&
+\textit{v}%
+)
+}
+
+\begin{itemize}
+\item
+\textit{ WRITE - fix Doxygen and copy material here}
+\end{itemize}
+
+\subsection{Usage Example} \label{sec-slc-vw-use}
+
+The following example shows how to use the \texttt{slices\_view}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{view/slices.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-slc-vw-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-slc-vw-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:slc-vw-assign-exper}
+shows the performance of assigning values through a \stapl\ Slices view
+whose elements are atomic values, \stl\ views, or \stapl\ views.
+\item
+Fig. \ref{fig:slc-vw-access-exper}
+shows the performance of accessing values through a \stapl\ Slices view
+whose elements are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/Slices_vw_assign}
+\caption{Assign Values through Slices View Execution Time}
+\label{fig:slc-vw-assign-exper}
+\end{figure}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/Slices_vw_access}
+\caption{Access Values through Slices View Execution Time}
+\label{fig:slc-vw-access-exper}
+\end{figure}
+
+\emph{WRITE - complexity}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{Stencil View} \label{sec-stencil-vw}
+\index{stencil view}
+\index{view!stencil}
+
+\subsection{Definition}
+
+\textit{WRITE}
+
+\subsection{Relationship to other \stapl\ views}
+
+\textit{WRITE}
+
+\subsection{Implementation}
+
+\textit{WRITE - details specific to this view}
+
+\subsection{Interface} \label{sec-sten-vw-inter}
+
+\subsubsection{Constructors}
+
+\textit{WRITE-  fix Doxygen link and copy material here}
+
+\subsubsection{ Element Manipulation}
+
+\noindent
+\texttt{%
+view\_type
+}
+\newline
+\textbf{operator()}%
+\texttt{%
+(View const \&
+\textit{v}%
+)
+}
+
+\begin{itemize}
+\item
+\textit{WRITE -  fix Doxygen and copy material here }
+\end{itemize}
+
+\subsection{Usage Example} \label{sec-sten-vw-use}
+
+The following example shows how to use the \texttt{stencil\_view}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{view/stencil.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-sten-vw-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-sten-vw-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:sten-vw-assign-exper}
+shows the performance of assigning values through a \stapl\ Stencil view
+whose elements are atomic values, \stl\ views, or \stapl\ views.
+\item
+Fig. \ref{fig:sten-vw-access-exper}
+shows the performance of accessing values through a \stapl\ Stencil view
+whose elements are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/Stencil_vw_assign}
+\caption{Assign Values through Stencil View Execution Time}
+\label{fig:sten-vw-assign-exper}
+\end{figure}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/Stencil_vw_access}
+\caption{Access Values through Stencil View Execution Time}
+\label{fig:sten-vw-access-exper}
+\end{figure}
+
+\emph{WRITE - complexity}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{Native View} \label{sec-nat-vw}
+\index{native view}
+\index{view!native}
+
+\subsection{Definition}
+
+\textit{EXPAND - A view that creates a virtual container of views based on
+the native distribution of the container.}
+
+\subsection{Relationship to other \stapl\ views}
+
+\textit{WRITE}
+
+\subsection{Implementation}
+
+\textit{WRITE - details specific to this view}
+
+\subsection{Interface} \label{sec-nat-vw-inter}
+
+\subsubsection{Constructors}
+
+\textit{WRITE-  fix Doxygen link and copy material here}
+
+\subsubsection{ Element Manipulation}
+
+\noindent
+\texttt{%
+view\_type
+}
+\newline
+\textbf{operator()}%
+\texttt{%
+(View const \&
+\textit{v}%
+)
+}
+
+\begin{itemize}
+\item
+\textit{WRITE -  fix Doxygen and copy material here}
+\end{itemize}
+
+\subsection{Usage Example} \label{sec-nat-vw-use}
+
+The following example shows how to use the \texttt{ }:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{view/native.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-nat-vw-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-nat-vw-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:nat-vw-assign-exper}
+shows the performance of assigning values through a \stapl\ Native view
+whose elements are atomic values, \stl\ views, or \stapl\ views.
+\item
+Fig. \ref{fig:nat-vw-access-exper}
+shows the performance of accessing values through a \stapl\ Native view
+whose elements are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/Native_vw_assign}
+\caption{Assign Values through Native View Execution Time}
+\label{fig:nat-vw-assign-exper}
+\end{figure}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/Native_vw_access}
+\caption{Access Values through Native View Execution Time}
+\label{fig:nat-vw-access-exper}
+\end{figure}
+
+\emph{WRITE - complexity}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{Segmented View} \label{sec-seg-vw}
+\index{segmenteded view}
+\index{view!segmented}
+
+\subsection{Definition}
+
+\textit{EXPAND - A view that creates a virtual container of views based upon
+a set of segment lengths.}
+
+\subsection{Relationship to other \stapl\ views}
+
+\textit{WRITE}
+
+\subsection{Implementation}
+
+\textit{WRITE - details specific to this view}
+
+\subsection{Interface} \label{sec-seg-vw-inter}
+
+\subsubsection{Constructors}
+
+\noindent
+\textbf{segmented\_view}%
+\texttt{%
+(view\_container\_type *
+\textit{c,}%
+domain\_type const \&
+\textit{dom,}%
+const map\_func\_type
+\textit{mf=map\_func\_type()}%
+)
+}
+
+\begin{itemize}
+\item
+Constructor used to pass ownership of the container to the view.
+\end{itemize}
+
+\noindent
+\textbf{segmented\_view}%
+\texttt{%
+(view\_container\_type const \&
+\textit{c,}%
+domain\_type const \&
+\textit{dom,}%
+map\_func\_type const \&
+\textit{mf=map\_func\_type(),}%
+partitioned\_view const \&
+\textit{other=partitioned\_view()}%
+)
+}
+
+\begin{itemize}
+\item
+Constructor that does not takes ownership over the passed container.
+\end{itemize}
+
+\noindent
+\textbf{segmented\_view}%
+\texttt{%
+(view\_container\_type const \&
+\textit{c}%
+)
+}
+
+\begin{itemize}
+\item
+Constructs a view that can reference all the elements of the passed container.
+\end{itemize}
+
+\noindent
+\textbf{segmented\_view}%
+\texttt{%
+(C const \&
+\textit{c,}%
+partition\_type const \&
+\textit{part,}%
+map\_fun\_gen\_t
+const \&
+\textit{mfg=map\_fun\_gen\_t()}%
+)
+}
+
+\begin{itemize}
+\item
+Constructs a partitioned\_view over the container c using the partition part.
+\end{itemize}
+
+\subsubsection{ View Attributes}
+
+\noindent
+\texttt{%
+size\_type
+}
+\newline
+\textbf{size}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Returns the number of elements referenced for the view.
+\end{itemize}
+
+\noindent
+\texttt{%
+bool
+}
+\newline
+\textbf{empty}%
+\texttt{%
+(void) const
+}
+
+\begin{itemize}
+\item
+Returns if the view does not reference any element.
+\end{itemize}
+
+\noindent
+\texttt{%
+value\_type
+}
+\newline
+\textbf{get\_element}%
+\texttt{%
+(index\_t const \&
+\textit{index}%
+) const
+}
+
+\begin{itemize}
+\item
+Get the element index from the container.
+\end{itemize}
+
+\noindent
+\texttt{%
+template<class Functor >
+}
+\texttt{%
+Functor::result\_type
+}
+\newline
+\textbf{apply\_get}%
+\texttt{%
+(index\_t const \&
+\textit{index,}%
+Functor
+\textit{f}%
+)
+}
+
+\begin{itemize}
+\item
+Applies the provided function to the value referenced for the given index and returns the result of the operation.
+\end{itemize}
+
+\noindent
+\texttt{%
+reference
+}
+\newline
+\textbf{operator[]}%
+\texttt{%
+(index\_t
+\textit{index}%
+) const
+}
+
+\begin{itemize}
+\item
+The bracket operator is the basic access method.
+\end{itemize}
+
+\noindent
+\texttt{%
+reference
+}
+\newline
+\textbf{make\_reference}%
+\texttt{%
+(index\_t
+\textit{index}%
+) const
+}
+
+\subsection{Usage Example} \label{sec-seg-vw-use}
+
+The following example shows how to use the \texttt{segmented view }:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{view/segment.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-seg-vw-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-seg-vw-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:seg-vw-assign-exper}
+shows the performance of assigning values through a \stapl\ Segmented view
+whose elements are atomic values, \stl\ views, or \stapl\ views.
+\item
+Fig. \ref{fig:seg-vw-access-exper}
+shows the performance of accessing values through a \stapl\ Segmented view
+whose elements are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/Segmented_vw_assign}
+\caption{Assign Values through Segmented View Execution Time}
+\label{fig:seg-vw-assign-exper}
+\end{figure}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/Segmented_vw_access}
+\caption{Access Values through Segmented View Execution Time}
+\label{fig:seg-vw-access-exper}
+\end{figure}
+
+\emph{WRITE - complexity}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{Zip View} \label{sec-zip-vw}
+\index{zip view}
+\index{view!zip}
+
+\subsection{Definition}
+
+\textit{WRITE}
+
+\subsection{Relationship to other \stapl\ views}
+
+\textit{WRITE}
+
+\subsection{Implementation}
+
+\textit{WRITE - details specific to this view}
+
+\subsection{Interface} \label{sec-zip-vw-inter}
+
+\subsubsection{Constructors}
+
+\textit{WRITE-  fix Doxygen link and copy material here}
+
+\subsubsection{View Attributes}
+
+\textit{WRITE-  fix Doxygen link and copy material here}
+
+\subsection{Usage Example} \label{sec-zip-vw-use}
+
+The following example shows how to use the \texttt{zip view }:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{view/zip.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-zip-vw-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-zip-vw-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:zip-vw-assign-exper}
+shows the performance of assigning values through a \stapl\ Zip view
+whose elements are atomic values, \stl\ views, or \stapl\ views.
+\item
+Fig. \ref{fig:zip-vw-access-exper}
+shows the performance of accessing values through a \stapl\ Zip view
+whose elements are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/Zip_vw_assign}
+\caption{Assign Values through Zip View Execution Time}
+\label{fig:zip-vw-assign-exper}
+\end{figure}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/Zip_vw_access}
+\caption{Access Values through Zip View Execution Time}
+\label{fig:zip-vw-access-exper}
+\end{figure}
+
+\emph{WRITE - complexity}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{Cross View} \label{sec-cross-vw}
+\index{cross view}
+\index{view!cross}
+
+\subsection{Definition}
+
+\subsection{Relationship to other \stapl\ views}
+
+\textit{WRITE}
+
+\subsection{Implementation}
+
+\textit{WRITE - details specific to this view}
+
+\emph{WRITE}
+
+\subsection{Interface} \label{sec-cross-vw-inter}
+
+\subsubsection{Constructors}
+
+\textit{WRITE-  fix Doxygen link and copy material here}
+
+\subsubsection{View Attributes}
+
+\textit{WRITE-  fix Doxygen link and copy material here}
+
+\subsection{Usage Example} \label{sec-cross-vw-use}
+
+The following example shows how to use the \texttt{cross view }:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{view/cross.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-cross-vw-impl}
+
+\textit{WRITE}
+
+\subsection{Performance} \label{sec-cross-vw-perf}
+
+\begin{itemize}
+\item
+Fig. \ref{fig:cross-vw-assign-exper}
+shows the performance of assigning values through a \stapl\ Cross view
+whose elements are atomic values, \stl\ views, or \stapl\ views.
+\item
+Fig. \ref{fig:cross-vw-access-exper}
+shows the performance of accessing values through a \stapl\ Cross view
+whose elements are atomic values, \stl\ views, or \stapl\ views.
+\end{itemize}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/Cross_vw_assign}
+\caption{Assign Values through Cross View Execution Time}
+\label{fig:cross-vw-assign-exper}
+\end{figure}
+
+\begin{figure}[p]
+%%\includegraphics[scale=0.50]{figs/Cross_vw_access}
+\caption{Access Values through Cross View Execution Time}
+\label{fig:cross-vw-access-exper}
+\end{figure}
+
+\emph{WRITE - complexity}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{System View} \label{sec-dist-sys-vw}
+\index{system view}
+\index{view!system}
+
+\subsection{Definition}
+
+\textit{EXPAND - A view that provides a set of location ids on to which partition ids may be mapped.  Used to specify a data distribution.}
+
+\subsection{Relationship to other \stapl\ views}
+
+\textit{WRITE}
+
+\subsection{Implementation}
+
+\textit{WRITE - details specific to this view}
+
+\subsection{Interface} \label{sec-dist-sys-vw-inter}
+
+\subsubsection{Classes}
+\noindent
+
+\texttt{%
+struct stapl::dist\_view\_impl::system\_container
+}
+
+\begin{itemize}
+\item
+Container that represents the set of locations in the system.
+\end{itemize}
+
+\noindent
+\texttt{%
+struct stapl::result\_of::system\_view
+}
+
+Defines the type of a system view.
+
+\subsubsection{Functions}
+
+\noindent
+\texttt{%
+result\_of::system\_view::type * stapl::system\_view
+}
+\texttt{%
+    (location\_type
+\textit{nlocs=get\_num\_locations()}%
+)
+}
+
+\begin{itemize}
+\item
+Creates a read-only view representing the set of locations in the system. 
+\end{itemize}
+
+\subsection{Implementation} \label{sec-dist-sys-vw-impl}
+
+\textit{WRITE}
+
+\subsection{Usage Example} 
+
+See \ref{sec-dist-part-vw-use} for an example of using this view.
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{Mapping View} \label{sec-dist-map-vw}
+\index{mapping view}
+\index{view!mapping}
+
+\subsection{Definition}
+
+\textit{EXPAND - A view that maps partitions to location ids.  Used to specify a data distribution.}
+
+\subsection{Relationship to other \stapl\ views}
+
+\textit{WRITE}
+
+\subsection{Implementation}
+
+\textit{WRITE - details specific to this view}
+
+\subsection{Interface} \label{sec-dist-map-vw-inter}
+
+\subsubsection{Classes}
+
+\noindent
+\texttt{%
+struct stapl::result\_of::mapping\_view< SysView,
+PartitionIdDomain, MappingFunction >
+}
+
+\begin{itemize}
+\item
+Defines the type of a view that maps partition ids to locations.
+\end{itemize}
+
+\subsubsection{Functions}
+
+\noindent
+\texttt{%
+template<typename SysView, typename PartitionIds, typename MappingFunction >
+}
+\texttt{%
+result\_of::mapping\_view < SysView, PartitionIds, MappingFunction >::type
+}
+\newline
+\textbf{stapl::mapping\_view}%
+\texttt{%
+(SysView const \&system, PartitionIds const \&domain,
+    MappingFunction const \&
+mapping\_func
+)
+}
+
+\begin{itemize}
+\item
+Creates a read-only view whose domain is the identifiers of the partitions of an element partitioning and whose mapping function maps from partition id to location id.
+\end{itemize}
+
+\subsection{Usage Example} 
+
+See \ref{sec-dist-part-vw-use} for an example of using this view.
+
+\subsection{Implementation} \label{sec-dist-map-vw-impl}
+
+\textit{WRITE}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{Partitioning View} \label{sec-dist-part-vw}
+\index{partitioning view}
+\index{view!partitioning}
+
+\subsection{Definition}
+
+\textit{EXPAND - A view that maps element ids to partition ids.
+Used to specify a data distribution.}
+
+\subsection{Relationship to other \stapl\ views}
+
+\textit{WRITE}
+
+\subsection{Implementation}
+
+\textit{WRITE - details specific to this view}
+
+\subsection{Interface} \label{sec-dist-part-vw-inter}
+
+\subsubsection{Classes}
+
+\noindent
+\texttt{%
+struct stapl::result\_of::partitioning\_view< MappingView,
+GIDDomain, PartitioningFunction >
+}
+
+\begin{itemize}
+\item
+Defines the type of a view that partitions element GIDs to partition ids.
+\end{itemize}
+
+\subsubsection{Functions}
+
+\noindent
+\texttt{%
+template<typename MappingView, typename GIDDomain, typename PartitioningFunction >
+}
+\texttt{%
+result\_of::partitioning\_view < MappingView, GIDDomain, PartitioningFunction > ::type
+}
+\newline
+\textbf{stapl::partitioning\_view}%
+\texttt{%
+(MappingView const \&
+\textit{mapping\_view,}%
+GIDDomain const \&
+\textit{domain,}%
+PartitioningFunction const \&
+\textit{partitioning\_func}%
+)
+}
+
+\begin{itemize}
+\item
+Creates a read-only view whose domain is the identifiers of a container's elements and whose mapping function maps from element GID to partition id.
+\end{itemize}
+
+\subsection{Usage Example} \label{sec-dist-part-vw-use}
+
+The following example shows how to use the \texttt{partitioning view}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{view/partitioning.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-dist-part-vw-impl}
+
+\textit{WRITE}
+
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
+
+\section{Distribution Specifications View} \label{sec-dist-spec-vw}
+\index{distribution specifications view}
+\index{view!distribution specifications}
+
+\subsection{Definition} 
+
+\textit{EXPAND - A view that provides a collection of functions that create view-based specifications of common data distributions.  Used to specify a data distribution.}
+
+\subsection{Relationship to other \stapl\ views}
+
+\textit{WRITE}
+
+\subsection{Implementation}
+
+\textit{WRITE - details specific to this view}
+
+\subsection{Interface} \label{sec-dist-spec-vw-inter}
+
+\subsubsection{Functions}
+
+\noindent
+\textbf{distribution\_spec stapl::block}%
+\texttt{%
+(unsigned long int
+\textit{n,}%
+unsigned long int
+\textit{block\_size,}%
+location\_type
+\textit{num\_locs=get\_num\_locations()}%
+)
+}
+
+\begin{itemize}
+\item
+Construct the specification of a blocked distribution.
+\end{itemize}
+
+\noindent
+\textbf{distribution\_spec stapl::cyclic}%
+\texttt{%
+(unsigned long int
+\textit{n,}%
+location\_type
+\textit{num\_locs=get\_num\_locations()}%
+)
+}
+
+\begin{itemize}
+\item
+Construct the specification of a cyclic distribution.
+\end{itemize}
+
+\noindent
+\textbf{distribution\_spec stapl::block\_cyclic}%
+\texttt{%
+(unsigned long int
+\textit{n,}%
+nsigned long int
+\textit{block\_size,}%
+location\_type
+\textit{num\_locs=get\_num\_locations()}%
+)
+}
+
+\begin{itemize}
+\item
+Construct the specification of a block-cyclic distribution.
+\end{itemize}
+
+\noindent
+\textbf{distribution\_spec stapl::balance}%
+\texttt{%
+(unsigned long int
+\textit{n,}%
+location\_type
+\textit{num\_locs=get\_num\_locations()}%
+)
+}
+
+\begin{itemize}
+\item
+Construct the specification of a balanced distribution.
+\end{itemize}
+
+\noindent
+\texttt{%
+template<typename Traversal , typename Size >
+}
+\texttt{%
+dist\_spec\_impl::md\_distribution\_spec < tuple\_size< Size >::value,
+Traversal >::type
+}
+\newline
+\textbf{stapl::volumetric}%
+\texttt{%
+(Size const \&
+\textit{n,}%
+location\_type
+\textit{num\_locs=get\_num\_locations()}%
+)
+}
+
+\begin{itemize}
+\item
+Construct the specification of a volumetric distribution of a multidimensional container.
+\end{itemize}
+
+\subsection{Usage Example} \label{sec-dist-spec-vw-use}
+
+The following example shows how to use the \texttt{distribution specificationv iew}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+The following example shows how to use the \texttt{distribution specificationv iew}:
+%%\newline\vspace{0.4cm}\newline\rule{12cm}{0.5mm}
+\input{view/distspec.tex}
+%%\noindent\rule{12cm}{0.5mm}\vspace{0.5cm}
+
+\subsection{Implementation} \label{sec-dist-spec-vw-impl}
+
+\textit{WRITE}
+

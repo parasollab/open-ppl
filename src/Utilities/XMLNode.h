@@ -12,7 +12,7 @@
 #define TIXML_USE_STL
 #endif
 
-#include "tinyxml.h"
+#include "tinyxml2.h"
 
 #include "PMPLExceptions.h"
 
@@ -39,16 +39,26 @@ class XMLNode {
     /// \p _filename is poorly formed input
     XMLNode(const std::string& _filename, const std::string& _desiredNode);
 
+    /// Construct an XML node object from an XML document.
+    /// @param _filename XML Filename (used for error messages)
+    /// @param _desiredNode Desired XML Node to make root of tree
+    ///
+    /// Will throw ParseException when \p _desiredNode cannot be found or
+    /// \p doc is not valid
+    XMLNode(const std::string& _filename, std::shared_ptr<tinyxml2::XMLDocument> doc, const std::string& _desiredNode);
+
   private:
 
     /// Private constructor for use within BuildChildVector
     /// @param _node New TiXMLNode
     /// @param _filename XML filename
     /// @param _doc TiXmlDocument from tree's root node
-    XMLNode(TiXmlNode* _node, const std::string& _filename,
-        std::shared_ptr<TiXmlDocument> _doc);
+    XMLNode(tinyxml2::XMLNode* _node, const std::string& _filename,
+        std::shared_ptr<tinyxml2::XMLDocument> _doc);
 
     ///@}
+
+  void FindNode(const std::string& _desiredNode);
 
   public:
 
@@ -236,7 +246,7 @@ class XMLNode {
     ///@name Internal State
     ///@{
 
-    TiXmlNode* m_node{nullptr};      ///< TiXmlNode
+    tinyxml2::XMLNode* m_node{nullptr};      ///< TiXmlNode
     bool m_childBuilt{false};        ///< Have children been parsed into nodes?
     bool m_accessed{false};          ///< Has this node been accessed or not?
     std::vector<XMLNode> m_children; ///< Children of node
@@ -244,7 +254,7 @@ class XMLNode {
     std::string m_filename;          ///< XML Filename
 
     /// Overall TiXmlDocument. Can be shared by child nodes.
-    std::shared_ptr<TiXmlDocument> m_doc;
+    std::shared_ptr<tinyxml2::XMLDocument> m_doc;
 
     ///@}
 };
@@ -260,12 +270,12 @@ Read(const std::string& _name, const bool _req, const T& _default, const T& _min
   m_reqAttributes.insert(_name);
   T toReturn;
 
-  int qr = m_node->ToElement()->QueryValueAttribute(_name, &toReturn);
+  tinyxml2::XMLError qr = m_node->ToElement()->QueryAttribute(_name.c_str(), &toReturn);
   switch(qr) {
-    case TIXML_WRONG_TYPE:
+    case tinyxml2::XML_WRONG_ATTRIBUTE_TYPE:
       throw ParseException(Where(), AttrWrongType(_name, _desc));
       break;
-    case TIXML_NO_ATTRIBUTE:
+    case tinyxml2::XML_NO_ATTRIBUTE:
       {
         if(_req)
           throw ParseException(Where(), AttrMissing(_name, _desc));
@@ -273,7 +283,7 @@ Read(const std::string& _name, const bool _req, const T& _default, const T& _min
           toReturn = _default;
         break;
       }
-    case TIXML_SUCCESS:
+    case tinyxml2::XML_SUCCESS:
       {
         if(toReturn < _min || toReturn > _max)
           throw ParseException(Where(),

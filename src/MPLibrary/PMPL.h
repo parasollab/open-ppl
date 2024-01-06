@@ -8,7 +8,7 @@
 #ifndef PPL_TEST_TRAITS_H_
   #include "Traits/CfgTraits.h"
 #else
-  #include "Traits/TestTraits.h"
+  #include "../../tests/Traits/TestTraits.h"
 #endif
 
 typedef MPTraits<Cfg> PMPLTraits;
@@ -28,7 +28,7 @@ extern template class PathType<PMPLTraits>;
 
 // Set the templated types using the chosen traits.
 typedef PMPLTraits::CfgType     CfgType;
-typedef PMPLTraits::WeightType  WeightType;
+typedef PMPLTraits::WeightType  PMPLWeightType; // TODO revise as WeightType conflicts with LHK.h
 typedef PMPLTraits::RoadmapType RoadmapType;
 typedef PMPLTraits::Path        Path;
 typedef PMPLTraits::MPLibrary   MPLibrary;

@@ -1,0 +1,17 @@
+Total of 3 failures in 3 failed tests (out of 48 chances to fail in 30 total tests). Failure rates: 0.0625%, 0.1%. 
+
+test_numeric.results (381) rain.cse.tamu.edu (36) partial_sum stl exec_time (5) 
+https://parasol.tamu.edu/groups/rwergergroup/intranet/stapl_perf/performance.php?machineid=36&appid=381&test=partial_sum&version=stl&data_size=medium
+  Cores: 1, 2015-02-04 02:47:07 Test: 2.01111, 30 day average: 1.9200980952381, 90 day median: 1.8433 
+    The 30 day average is more than 1.02 times 90 day median value: 1.9200980952381 = 1.04166337288455 * 1.8433 
+
+test_non_mutating.results (380) rain.cse.tamu.edu (36) find stapl exec_time (5) 
+https://parasol.tamu.edu/groups/rwergergroup/intranet/stapl_perf/performance.php?machineid=36&appid=380&test=find&version=stapl&data_size=medium
+  Cores: 1, 2015-02-04 02:47:07 Test: 12.7141, 30 day average: 6.99833761904762, 90 day median: 6.44808 
+    Most recent value greater than 1.1 times 30 day average: 12.7141 = 1.81673144282088 * 6.99833761904762 
+    The 30 day average is more than 1.02 times 90 day median value: 6.99833761904762 = 1.08533666130811 * 6.44808 
+
+test_non_mutating.results (380) rain.cse.tamu.edu (36) find_first_of stapl exec_time (5) 
+https://parasol.tamu.edu/groups/rwergergroup/intranet/stapl_perf/performance.php?machineid=36&appid=380&test=find_first_of&version=stapl&data_size=medium
+  Cores: 1, 2015-02-04 02:47:07 Test: 0.011084, 30 day average: 0.0114293333333333, 90 day median: 0.011084 
+    The 30 day average is more than 1.02 times 90 day median value: 0.0114293333333333 = 1.03115602069048 * 0.011084 
