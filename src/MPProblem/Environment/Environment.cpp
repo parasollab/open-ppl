@@ -53,6 +53,21 @@ Terrain(const Terrain& _terrain) {
   m_wire = _terrain.m_wire;
 }
 
+
+Terrain&
+Terrain::
+operator=(const Terrain& _terrain) {
+    m_color = _terrain.m_color;
+    if(_terrain.m_boundary)
+      m_boundary = _terrain.m_boundary->Clone();
+    for(auto& boundary : _terrain.m_boundaries){
+      m_boundaries.push_back(std::move(boundary->Clone()));
+    }
+    m_virtual = _terrain.m_virtual;
+    m_wire = _terrain.m_wire;
+    return *this;
+}
+
 /*------------------------------- Accessors -------------------------------*/
 
 

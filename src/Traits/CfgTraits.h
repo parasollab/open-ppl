@@ -37,6 +37,7 @@
 
 // neighborhood finder includes
 #include "MPLibrary/NeighborhoodFinders/BruteForceNF.h"
+#include "MPLibrary/NeighborhoodFinders/RadiusNF.h"
 #include "MPLibrary/NeighborhoodFinders/RandomNF.h"
 
 // sampler includes

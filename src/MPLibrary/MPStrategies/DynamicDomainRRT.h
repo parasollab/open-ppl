@@ -76,7 +76,7 @@ class DynamicDomainRRT : public BasicRRTStrategy<MPTraits> {
     ///@{
 
     /// @return String for accessing Cfg::GetStat for radius value
-    static constexpr std::string RLabel() {return "DDRRT::R";}
+    static std::string RLabel() {return "DDRRT::R";}
 
     ///@}
     ///@name Internal State
