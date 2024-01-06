@@ -11,6 +11,7 @@
 *.o
 
 # generated make/cmake files
+CMakeUserPresets.json
 CMakeSettings.json
 build/
 out/
