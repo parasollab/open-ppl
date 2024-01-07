@@ -1,10 +1,11 @@
 #ifndef PMPL_STRAIGHT_LINE_H_
 #define PMPL_STRAIGHT_LINE_H_
 
-#include "LocalPlannerMethod.h"
+#include "ConfigurationSpace/GroupRoadmap.h"
+
 #include "GroupLPOutput.h"
 #include "LPOutput.h"
-
+#include "LocalPlannerMethod.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Check a straight-line path in c-space for valididty.
@@ -14,97 +15,128 @@
 /// @ingroup LocalPlanners
 ////////////////////////////////////////////////////////////////////////////////
 class StraightLine : virtual public LocalPlannerMethod {
+ public:
+  ///@name Motion Planning Types
+  ///@{
 
-  public:
+  typedef typename MPBaseObject::WeightType WeightType;
+  typedef typename MPBaseObject::GroupCfgType GroupCfgType;
+  typedef typename MPBaseObject::GroupRoadmapType GroupRoadmapType;
+  typedef typename GroupCfgType::Formation Formation;
 
-    ///@name Motion Planning Types
-    ///@{
+  ///@}
+  ///@name Construction
+  ///@{
 
-    typedef typename MPBaseObject::WeightType       WeightType;
-    typedef typename MPBaseObject::GroupCfgType     GroupCfgType;
-    typedef typename MPBaseObject::GroupRoadmapType GroupRoadmapType;
-    typedef typename GroupCfgType::Formation        Formation;
+  StraightLine(const std::string& _vcLabel = "",
+               bool _binary = false,
+               bool _saveIntermediates = false);
 
-    ///@}
-    ///@name Construction
-    ///@{
+  StraightLine(XMLNode& _node);
 
-    StraightLine(const std::string& _vcLabel = "", bool _binary = false,
-        bool _saveIntermediates = false);
+  virtual ~StraightLine() = default;
 
-    StraightLine(XMLNode& _node);
+  ///@}
+  ///@name MPBaseObject Overrides
+  ///@{
 
-    virtual ~StraightLine() = default;
+  virtual void Print(std::ostream& _os) const override;
 
-    ///@}
-    ///@name MPBaseObject Overrides
-    ///@{
+  ///@}
+  ///@name LocalPlannerMethod Overrides
+  ///@{
 
-    virtual void Print(std::ostream& _os) const override;
+  virtual bool IsConnected(const Cfg& _c1,
+                           const Cfg& _c2,
+                           Cfg& _col,
+                           LPOutput* _lpOutput,
+                           double _positionRes,
+                           double _orientationRes,
+                           bool _checkCollision = true,
+                           bool _savePath = false) override;
 
-    ///@}
-    ///@name LocalPlannerMethod Overrides
-    ///@{
+  virtual bool IsConnected(
+      const GroupCfgType& _c1,
+      const GroupCfgType& _c2,
+      GroupCfgType& _col,
+      GroupLPOutput* _lpOutput,
+      double _positionRes,
+      double _orientationRes,
+      bool _checkCollision = true,
+      bool _savePath = false,
+      const Formation& _robotIndexes = Formation()) override;
 
-    virtual bool IsConnected(
-        const Cfg& _c1, const Cfg& _c2, Cfg& _col,
-        LPOutput* _lpOutput,
-        double _positionRes, double _orientationRes,
-        bool _checkCollision = true, bool _savePath = false) override;
+  ///@}
 
-    virtual bool IsConnected(
-        const GroupCfgType& _c1, const GroupCfgType& _c2, GroupCfgType& _col,
-        GroupLPOutput* _lpOutput,
-        double _positionRes, double _orientationRes,
-        bool _checkCollision = true, bool _savePath = false,
-        const Formation& _robotIndexes = Formation()) override;
+ protected:
+  ///@name Helpers
+  ///@{
 
-    ///@}
+  /// Default for non closed chains
+  bool IsConnectedFunc(const Cfg& _c1,
+                       const Cfg& _c2,
+                       Cfg& _col,
+                       LPOutput* _lpOutput,
+                       double _positionRes,
+                       double _orientationRes,
+                       bool _checkCollision = true,
+                       bool _savePath = false);
 
-  protected:
+  /// Decides if the robots move at equal velocity.
+  /// This method implements an equal distance intermediate instead
+  /// of a fixed quanity across all paths.
+  /// If the cfg has reached its goal, increment will be set to 0
+  /// to wait for the other robots.
+  virtual bool IsConnectedEqualVelocities(const GroupCfgType& _c1,
+                                          const GroupCfgType& _c2,
+                                          GroupCfgType& _col,
+                                          GroupLPOutput* _lpOutput,
+                                          double _positionRes,
+                                          double _orientationRes,
+                                          bool _checkCollision,
+                                          bool _savePath,
+                                          const Formation& _robotIndexes);
 
-    ///@name Helpers
-    ///@{
+  /// Check if two Cfgs could be connected by straight line.
+  /// This method implements straight line connection local planner
+  /// by checking collision of each Cfg along the line.
+  /// If the is any Cfg causes Robot collides with any obstacle,
+  /// false will be returned.
+  virtual bool IsConnectedSLSequential(const Cfg& _c1,
+                                       const Cfg& _c2,
+                                       Cfg& _col,
+                                       LPOutput* _lpOutput,
+                                       int& _cdCounter,
+                                       double _positionRes,
+                                       double _orientationRes,
+                                       bool _checkCollision = true,
+                                       bool _savePath = false);
 
-    /// Default for non closed chains
-    bool IsConnectedFunc(
-        const Cfg& _c1, const Cfg& _c2, Cfg& _col,
-        LPOutput* _lpOutput,
-        double _positionRes, double _orientationRes,
-        bool _checkCollision = true, bool _savePath = false);
+  /// Check if two Cfgs could be connected by straight line
+  /// This method uses binary search to check clearances of Cfgs between _c1
+  /// and _c2.
+  virtual bool IsConnectedSLBinary(const Cfg& _c1,
+                                   const Cfg& _c2,
+                                   Cfg& _col,
+                                   LPOutput* _lpOutput,
+                                   int& _cdCounter,
+                                   double _positionRes,
+                                   double _orientationRes,
+                                   bool _checkCollision = true,
+                                   bool _savePath = false);
 
-    /// Check if two Cfgs could be connected by straight line.
-    /// This method implements straight line connection local planner
-    /// by checking collision of each Cfg along the line.
-    /// If the is any Cfg causes Robot collides with any obstacle,
-    /// false will be returned.
-    virtual bool IsConnectedSLSequential(
-        const Cfg& _c1, const Cfg& _c2, Cfg& _col,
-        LPOutput* _lpOutput, int& _cdCounter,
-        double _positionRes, double _orientationRes,
-        bool _checkCollision = true, bool _savePath = false);
+  ///@}
+  ///@name Internal State
+  ///@{
 
-    /// Check if two Cfgs could be connected by straight line
-    /// This method uses binary search to check clearances of Cfgs between _c1
-    /// and _c2.
-    virtual bool IsConnectedSLBinary(
-        const Cfg& _c1, const Cfg& _c2, Cfg& _col,
-        LPOutput* _lpOutput, int& _cdCounter,
-        double _positionRes, double _orientationRes,
-        bool _checkCollision = true, bool _savePath = false);
+  std::string m_dmLabel;           ///< The metric for measuring edge length.
+  std::string m_vcLabel;           ///< The validity checker.
+  bool m_binaryEvaluation{false};  ///< Use binary search?
+  bool m_equalVelocity{false};  ///< decides if multi-robots move at same speed
 
-    ///@}
-    ///@name Internal State
-    ///@{
+  double m_selfEdgeSteps{1};
 
-    std::string m_dmLabel;          ///< The metric for measuring edge length.
-    std::string m_vcLabel;          ///< The validity checker.
-    bool m_binaryEvaluation{false}; ///< Use binary search?
-
-		double m_selfEdgeSteps{1};
-
-    ///@}
-
+  ///@}
 };
 
 #endif

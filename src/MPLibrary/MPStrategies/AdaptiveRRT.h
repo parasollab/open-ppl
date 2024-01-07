@@ -4,11 +4,24 @@
 #include "BasicRRTStrategy.h"
 
 // assembly code to measure cpu cycles
-static inline uint64_t GetCycles(){
-  uint64_t n;
-  __asm__ __volatile__ ("rdtsc" : "=A"(n));
-  return n;
+#include <cstdint>
+#if defined(__x86_64__) || defined(_M_X64) // For x86_64 architecture
+static inline uint64_t GetCycles() {
+    uint64_t n;
+    __asm__ __volatile__("rdtsc" : "=A"(n));
+    return n;
 }
+#elif defined(__aarch64__) // For ARM64 architecture, like Apple Silicon
+#include <time.h>
+static inline uint64_t GetCycles() {
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return static_cast<uint64_t>(ts.tv_sec) * 1000000000ULL + ts.tv_nsec;
+}
+#else
+#error "Unsupported architecture"
+#endif
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Adaptively selects growth methods in RRT.

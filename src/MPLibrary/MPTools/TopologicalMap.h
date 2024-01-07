@@ -12,13 +12,6 @@
 #include "glutils/obj_file.h"
 #include "glutils/triangulated_model.h"
 
-
-#ifdef PMPL_USE_SIMULATOR
-#include "Simulator/Simulation.h"
-#include "Geometry/Boundaries/WorkspaceBoundingBox.h"
-#endif
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// A topological map from roadmap vertices to decomposition cells. The map is
 /// updated whenever a vertex is added or removed.
@@ -44,242 +37,243 @@
 ///          reset.
 ////////////////////////////////////////////////////////////////////////////////
 class TopologicalMap final : public MPBaseObject {
+ public:
+  ///@}
+  ///@name Local Types
+  ///@{
 
-  public:
+  typedef typename MPBaseObject::WeightType WeightType;
+  typedef typename MPBaseObject::RoadmapType RoadmapType;
+  typedef typename RoadmapType::VID VID;
+  typedef typename RoadmapType::VI VI;
+  typedef typename RoadmapType::VertexSet VertexSet;
 
-    ///@name Motion Planning Types
-    ///@{
+  typedef std::vector<const WorkspaceRegion*> NeighborhoodKey;
 
-    typedef typename MPBaseObject::WeightType         WeightType;
-    typedef typename MPBaseObject::RoadmapType        RoadmapType;
-    typedef typename RoadmapType::VID                 VID;
-    typedef typename RoadmapType::VI                  VI;
-    typedef typename RoadmapType::VertexSet           VertexSet;
+  /// A map describing the distance to a region from some starting point.
+  typedef std::unordered_map<const WorkspaceRegion*, double> DistanceMap;
 
-    ///@}
-    ///@name Local Types
-    ///@{
+  /// A map of the VIDs occupying a given region.
+  typedef std::map<const WorkspaceRegion*, VertexSet> OccupancyMap;
 
-    typedef std::vector<const WorkspaceRegion*>      NeighborhoodKey;
+  ///@}
+  ///@name Construction
+  ///@{
 
-    /// A map describing the distance to a region from some starting point.
-    typedef std::unordered_map<const WorkspaceRegion*, double> DistanceMap;
+  TopologicalMap();
+  TopologicalMap(double gridSize, string decomp_label) {
+    this->m_gridSize = gridSize;
+    this->m_decompositionLabel = decomp_label;
+  }
+  TopologicalMap(XMLNode& _node);
 
-    /// A map of the VIDs occupying a given region.
-    typedef std::map<const WorkspaceRegion*, VertexSet> OccupancyMap;
+  virtual ~TopologicalMap();
 
-    ///@}
-    ///@name Construction
-    ///@{
+  ///@}
+  ///@name MPBaseObject Overrides
+  ///@{
 
-    TopologicalMap();
+  virtual void Initialize() override;
 
-    TopologicalMap(XMLNode& _node);
+  ///@}
+  ///@name Map Queries
+  ///@{
 
-    virtual ~TopologicalMap();
+  /// Get the set of VIDs that are bucketed within a given region.
+  /// @param _region The region of interest.
+  /// @param _bodyIndex The body to use.
+  /// @return The set of VIDs that have body _bodyIndex mapped to _region.
+  const VertexSet* GetMappedVIDs(RoadmapType* const _r,
+                                 const WorkspaceRegion* const _region,
+                                 const size_t _bodyIndex = 0) const;
 
-    ///@}
-    ///@name MPBaseObject Overrides
-    ///@{
+  /// Get the workspace region to which a given VID is mapped.
+  /// @param _vid The VID of interest.
+  /// @param _bodyIndex The body to use.
+  /// @return The workspace region in which body _bodyIndex resides when
+  ///         configured at _vid.
+  const WorkspaceRegion* GetMappedRegion(RoadmapType* const _r,
+                                         const VID _vid,
+                                         const size_t _bodyIndex = 0) const;
 
-    virtual void Initialize() override;
+  /// Check if a region is populated.
+  /// @param _region The region to check.
+  /// @param _bodyIndex The body to use.
+  /// @return True if the region contains any configurations of _bodyIndex.
+  bool IsPopulated(RoadmapType* const _r,
+                   const WorkspaceRegion* const _region,
+                   const size_t _bodyIndex = 0) const;
 
-    ///@}
-    ///@name Map Queries
-    ///@{
+  ///@}
+  ///@name Region and Cell Location
+  ///@{
 
-    /// Get the set of VIDs that are bucketed within a given region.
-    /// @param _region The region of interest.
-    /// @param _bodyIndex The body to use.
-    /// @return The set of VIDs that have body _bodyIndex mapped to _region.
-    const VertexSet* GetMappedVIDs(RoadmapType* const _r,
-        const WorkspaceRegion* const _region,
-        const size_t _bodyIndex = 0) const;
+  /// Let it be a light for you in dark places, when all other lights go out.
+  const WorkspaceRegion* GetRandomRegion() const;
 
-    /// Get the workspace region to which a given VID is mapped.
-    /// @param _vid The VID of interest.
-    /// @param _bodyIndex The body to use.
-    /// @return The workspace region in which body _bodyIndex resides when
-    ///         configured at _vid.
-    const WorkspaceRegion* GetMappedRegion(RoadmapType* const _r, const VID _vid,
-        const size_t _bodyIndex = 0) const;
+  /// Find the workspace region that contains the reference point for a given
+  /// configuration and body.
+  /// @param _vid The configuration's VID.
+  /// @param _bodyIndex The body to use.
+  /// @return The region containing _bodyIndex at _vid, or null if in obstacle
+  ///         space.
+  const WorkspaceRegion* LocateRegion(RoadmapType* const _r,
+                                      const VID _vid,
+                                      const size_t _bodyIndex = 0) const;
 
-    /// Check if a region is populated.
-    /// @param _region The region to check.
-    /// @param _bodyIndex The body to use.
-    /// @return True if the region contains any configurations of _bodyIndex.
-    bool IsPopulated(RoadmapType* const _r, const WorkspaceRegion* const _region,
-        const size_t _bodyIndex = 0) const;
+  /// Find the workspace region that contains the reference point for a given
+  /// configuration and body.
+  /// @param _c The configuration.
+  /// @param _bodyIndex The body to use.
+  /// @return The region containing _bodyIndex at _c, or null if in obstacle
+  ///         space.
+  const WorkspaceRegion* LocateRegion(const Cfg& _c,
+                                      const size_t _bodyIndex = 0) const;
 
-    ///@}
-    ///@name Region and Cell Location
-    ///@{
+  /// Find the workspace region that contains a given point.
+  /// @param _p The workspace point.
+  /// @return The region containing _p, or null if _p is in obstacle space.
+  const WorkspaceRegion* LocateRegion(const Point3d& _p) const;
 
-    /// Let it be a light for you in dark places, when all other lights go out.
-    const WorkspaceRegion* GetRandomRegion() const;
+  /// Try to find the nearest region for a configuration in obstacle space.
+  /// @param _c The configuration in obstacle space.
+  /// @param _bodyIndex The body to use.
+  /// @return The nearest region to _p, or null if it cannot be found.
+  const WorkspaceRegion* LocateNearestRegion(const Cfg& _c,
+                                             const size_t _bodyIndex = 0) const;
 
-    /// Find the workspace region that contains the reference point for a given
-    /// configuration and body.
-    /// @param _vid The configuration's VID.
-    /// @param _bodyIndex The body to use.
-    /// @return The region containing _bodyIndex at _vid, or null if in obstacle
-    ///         space.
-    const WorkspaceRegion* LocateRegion(RoadmapType* const _r, const VID _vid,
-        const size_t _bodyIndex = 0) const;
+  /// Try to find the nearest region for a point in obstacle space.
+  /// @param _p The point in obstacle space.
+  /// @return The nearest region to _p, or null if it cannot be found.
+  const WorkspaceRegion* LocateNearestRegion(const Point3d& _p) const;
 
-    /// Find the workspace region that contains the reference point for a given
-    /// configuration and body.
-    /// @param _c The configuration.
-    /// @param _bodyIndex The body to use.
-    /// @return The region containing _bodyIndex at _c, or null if in obstacle
-    ///         space.
-    const WorkspaceRegion* LocateRegion(const Cfg& _c,
-        const size_t _bodyIndex = 0) const;
+  /// Find the grid cell index that holds a given configuration.
+  /// @param _v The configuration VID.
+  /// @param _bodyIndex The body to use.
+  /// @return The index of the grid cell which contains _bodyIndex when
+  ///         configured at _v.
+  size_t LocateCell(RoadmapType* const _r,
+                    const VID _v,
+                    const size_t _bodyIndex = 0) const;
 
-    /// Find the workspace region that contains a given point.
-    /// @param _p The workspace point.
-    /// @return The region containing _p, or null if _p is in obstacle space.
-    const WorkspaceRegion* LocateRegion(const Point3d& _p) const;
+  /// Find the grid cell index that holds a given configuration.
+  /// @param _c The configuration.
+  /// @param _bodyIndex The body to use.
+  /// @return The index of the grid cell which contains _bodyIndex when
+  ///         configured at _c.
+  size_t LocateCell(const Cfg& _c, const size_t _bodyIndex = 0) const;
 
-    /// Try to find the nearest region for a configuration in obstacle space.
-    /// @param _c The configuration in obstacle space.
-    /// @param _bodyIndex The body to use.
-    /// @return The nearest region to _p, or null if it cannot be found.
-    const WorkspaceRegion* LocateNearestRegion(const Cfg& _c,
-        const size_t _bodyIndex = 0) const;
+  /// Find the grid cell index that holds a workspace point.
+  /// @param _p The workspace point.
+  /// @return The index of the grid cell which contains _p.
+  size_t LocateCell(const Point3d& _p) const;
 
-    /// Try to find the nearest region for a point in obstacle space.
-    /// @param _p The point in obstacle space.
-    /// @return The nearest region to _p, or null if it cannot be found.
-    const WorkspaceRegion* LocateNearestRegion(const Point3d& _p) const;
+  ///@}
+  ///@name Neighborhood Keys
+  ///@{
+  /// A neighborhood key describes the workspace regions that are occupied by
+  /// each body of the robot. This is the result of LocateRegion for each
+  /// body.
 
-    /// Find the grid cell index that holds a given configuration.
-    /// @param _v The configuration VID.
-    /// @param _bodyIndex The body to use.
-    /// @return The index of the grid cell which contains _bodyIndex when
-    ///         configured at _v.
-    size_t LocateCell(RoadmapType* const _r, const VID _v,
-        const size_t _bodyIndex = 0) const;
+  /// Locate the neighborhood that is occupied by a robot in a particular
+  /// configuration.
+  NeighborhoodKey LocateNeighborhood(RoadmapType* const _r, const VID _v) const;
+  NeighborhoodKey LocateNeighborhood(const Cfg& _c) const;  ///< @overload
 
-    /// Find the grid cell index that holds a given configuration.
-    /// @param _c The configuration.
-    /// @param _bodyIndex The body to use.
-    /// @return The index of the grid cell which contains _bodyIndex when
-    ///         configured at _c.
-    size_t LocateCell(const Cfg& _c, const size_t _bodyIndex = 0) const;
+  ///@}
+  ///@name Decomposition Access
+  ///@{
 
-    /// Find the grid cell index that holds a workspace point.
-    /// @param _p The workspace point.
-    /// @return The index of the grid cell which contains _p.
-    size_t LocateCell(const Point3d& _p) const;
+  /// Get the decomposition used by this map.
+  const WorkspaceDecomposition* GetDecomposition() const;
 
-    ///@}
-    ///@name Neighborhood Keys
-    ///@{
-    /// A neighborhood key describes the workspace regions that are occupied by
-    /// each body of the robot. This is the result of LocateRegion for each
-    /// body.
+  ///@}
+  ///@name Inter-Region Distance
+  ///@{
 
-    /// Locate the neighborhood that is occupied by a robot in a particular
-    /// configuration.
-    NeighborhoodKey LocateNeighborhood(RoadmapType* const _r, const VID _v) const;
-    NeighborhoodKey LocateNeighborhood(const Cfg& _c) const; ///< @overload
+  /// Approximate the minimum inner distance between two regions. This
+  /// estimates the shortest-path distance through free space.
+  /// @param _source The source region.
+  /// @param _target The target region.
+  /// @return The approximate minimum distance from _source to _target
+  ///         measured through free workspace. If it hasn't already been
+  ///         computed, infinity will be returned. Passing null as one of the
+  ///         regions will return the max computed frontier distance (0 for
+  ///         none).
+  double ApproximateMinimumInnerDistance(const WorkspaceRegion* const _source,
+                                         const WorkspaceRegion* const _target);
 
-    ///@}
-    ///@name Decomposition Access
-    ///@{
+  /// Compute approximate minimum inner cell distances from a source region
+  /// out to a given radius.
+  /// @param _source The source cell.
+  /// @param _radius Compute inner distances for cells within this radius.
+  const DistanceMap& ComputeApproximateMinimumInnerDistances(
+      const WorkspaceRegion* const _source,
+      const double _radius);
 
-    /// Get the decomposition used by this map.
-    const WorkspaceDecomposition* GetDecomposition() const;
+  ///@}
 
-    ///@}
-    ///@name Inter-Region Distance
-    ///@{
+ private:
+  ///@name Cfg Mapping
+  ///@{
 
-    /// Approximate the minimum inner distance between two regions. This
-    /// estimates the shortest-path distance through free space.
-    /// @param _source The source region.
-    /// @param _target The target region.
-    /// @return The approximate minimum distance from _source to _target
-    ///         measured through free workspace. If it hasn't already been
-    ///         computed, infinity will be returned. Passing null as one of the
-    ///         regions will return the max computed frontier distance (0 for
-    ///         none).
-    double ApproximateMinimumInnerDistance(const WorkspaceRegion* const _source,
-        const WorkspaceRegion* const _target);
+  /// Create a new mapping for a robot.
+  void EnsureMap(RoadmapType* const _r);
 
-    /// Compute approximate minimum inner cell distances from a source region
-    /// out to a given radius.
-    /// @param _source The source cell.
-    /// @param _radius Compute inner distances for cells within this radius.
-    const DistanceMap& ComputeApproximateMinimumInnerDistances(
-        const WorkspaceRegion* const _source, const double _radius);
+  /// Map a new configuration to the appropriate decomposition region and vis
+  /// versa.
+  /// @param _vertex A roadmap graph iterator to the newly added vertex.
+  void MapCfg(RoadmapType* const _r, const VI _vertex);
 
-    ///@}
+  /// Unmap a to-be-deleted configuration.
+  /// @param _vertex A roadmap graph iterator to the to-be-deleted vertex.
+  void UnmapCfg(RoadmapType* const _r, const VI _vertex);
 
-  private:
+  /// Clear the cfg maps.
+  void ClearCfgMaps();
 
-    ///@name Cfg Mapping
-    ///@{
+  /// Get the forward map from region -> VIDs for a given body.
+  /// @param _bodyIndex The body index.
+  /// @return The map for this body.
+  const OccupancyMap& GetForwardMap(RoadmapType* const _r,
+                                    const size_t _bodyIndex) const;
 
-    /// Create a new mapping for a robot.
-    void EnsureMap(RoadmapType* const _r);
+  /// Get the inverse map from VID -> regions for each body.
+  /// @param _vid The VID to unmap.
+  /// @return The neighborhood key for this configuration.
+  const NeighborhoodKey& GetInverseMap(RoadmapType* const _r,
+                                       const VID _vid) const;
 
-    /// Map a new configuration to the appropriate decomposition region and vis
-    /// versa.
-    /// @param _vertex A roadmap graph iterator to the newly added vertex.
-    void MapCfg(RoadmapType* const _r, const VI _vertex);
+  ///@}
+  ///@name Internal State
+  ///@{
 
-    /// Unmap a to-be-deleted configuration.
-    /// @param _vertex A roadmap graph iterator to the to-be-deleted vertex.
-    void UnmapCfg(RoadmapType* const _r, const VI _vertex);
+  std::string m_decompositionLabel;  ///< The workspace decomposition to use.
 
-    /// Clear the cfg maps.
-    void ClearCfgMaps();
+  std::string m_pqpLabel;  ///< PQP CD for finding nearest regions.
 
-    /// Get the forward map from region -> VIDs for a given body.
-    /// @param _bodyIndex The body index.
-    /// @return The map for this body.
-    const OccupancyMap& GetForwardMap(RoadmapType* const _r,
-        const size_t _bodyIndex) const;
+  /// A grid matrix overlaid on the workspace.
+  std::unique_ptr<const GridOverlay> m_grid;
 
-    /// Get the inverse map from VID -> regions for each body.
-    /// @param _vid The VID to unmap.
-    /// @return The neighborhood key for this configuration.
-    const NeighborhoodKey& GetInverseMap(RoadmapType* const _r, const VID _vid)
-        const;
+  double m_gridSize{.1};  ///< Length of each grid cell.
 
-    ///@}
-    ///@name Internal State
-    ///@{
+  /// A mapping from grid cells to workspace regions.
+  GridOverlay::DecompositionMap m_cellToRegions;
 
-    std::string m_decompositionLabel; ///< The workspace decomposition to use.
+  /// A mapping from workspace regions to contained VIDs.
+  std::unordered_map<RoadmapType*, std::vector<OccupancyMap>> m_regionToVIDs;
 
-    std::string m_pqpLabel; ///< PQP CD for finding nearest regions.
+  /// An inverse mapping from VID to the containing neighborhood.
+  std::unordered_map<RoadmapType*, std::unordered_map<VID, NeighborhoodKey>>
+      m_vidToNeighborhood;
 
-    /// A grid matrix overlaid on the workspace.
-    std::unique_ptr<const GridOverlay> m_grid;
+  /// A set of grid cells which lie on the boundary of obstacle space.
+  std::unordered_set<size_t> m_boundaryCells;
 
-    double m_gridSize{.1}; ///< Length of each grid cell.
+  /// A cache for approximate inner-distance between regions.
+  std::unordered_map<const WorkspaceRegion*, DistanceMap> m_innerDistanceMap;
 
-    /// A mapping from grid cells to workspace regions.
-    GridOverlay::DecompositionMap m_cellToRegions;
-
-    /// A mapping from workspace regions to contained VIDs.
-    std::unordered_map<RoadmapType*, std::vector<OccupancyMap>> m_regionToVIDs;
-
-    /// An inverse mapping from VID to the containing neighborhood.
-    std::unordered_map<RoadmapType*, std::unordered_map<VID, NeighborhoodKey>>
-        m_vidToNeighborhood;
-
-    /// A set of grid cells which lie on the boundary of obstacle space.
-    std::unordered_set<size_t> m_boundaryCells;
-
-    /// A cache for approximate inner-distance between regions.
-    std::unordered_map<const WorkspaceRegion*, DistanceMap> m_innerDistanceMap;
-
-    ///@}
-
+  ///@}
 };
 
 #endif

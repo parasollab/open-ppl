@@ -2,27 +2,57 @@
 
 The PMPL library is a general code base for studying motion planning algorithms.
 This file lists the package dependencies for PMPL and how to install them.
-> Tested on Ubuntu 20.04, Ubuntu 22.04, macOS Sonoma
+> Tested on Ubuntu 20.04, Ubuntu 22.04, macOS Sonoma (Intel and Apple Silicon)
 
 ## Building on MacOS
 
-> Note: This has not yet been tested on Apple silicon
-
-Install cmake using homebrew:
+Install cmake using [homebrew](https://brew.sh/):
 
 ```bash
 brew install cmake
 ```
 
-PPL can be built on MacOS using Conan. Install conan:
+PPL can be built on MacOS using Conan. Install conan for Apple Silicon or Intel using the instructions below.
+
+### For Apple Silicon
+
+Install conan and set up the conan profile for your computer:
+
+```bash
+brew install conan
+conan profile detect
+```
+
+Install PPL dependencies:
+
+```bash
+brew install ninja doxygen graphviz
+```
+
+Install necessary packages with conan:
+
+```bash
+conan install . --output-folder=build --build=missing -c tools.system.package_manager:mode=install -c tools.system.package_manager:sudo=true -s build_type=Debug -s compiler.cppstd=gnu17
+```
+
+Build PPL with Conan:
+
+```bash
+cmake -DCMAKE_BUILD_TYPE=Debug -G Ninja -DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake -B build/
+```
+
+Build PPL with however many cores you'd prefer using `-j(number)`. By default, all cores will be used, which can potentially overwhelm your computer.
+
+```bash
+cmake --build build -j3
+```
+
+### For Intel
+
+Install conan and set up the conan profile for your computer:
 
 ```bash
 pip install conan
-```
-
-The first time you build, set up the conan profile for your computer:
-
-```bash
 conan profile detect
 ```
 
@@ -238,26 +268,12 @@ The executable built resides in /pmpl/build/pmpl_exec within the docker containe
 
 ## Tests
 
-### To run tests start by building the test target
+### Run the generated test executable
+
+From ppl, run
 
 ```bash
-cmake --build build --target test
-```
-
-### You can run the by running CTest
-
-```bash
-cd build
-ctest --output-on-failure
-```
-
-this will run the Basic PRM Tests by default
-
-### Or by running the generated test executable
-
-```bash
-cd build
-./ppl_tests -F CfgTests
+./build/tests/ppl_unit_test
 ```
 
 ## Consuming PPL Libraries

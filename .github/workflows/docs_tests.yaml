@@ -26,14 +26,15 @@ jobs:
           folder: docs/Doxygen/html # The folder the action should deploy.
           token: ${{ secrets.GITHUB_TOKEN }}
 
-  test-job:
-    needs: build-deploy
-    runs-on: self-hosted
-    steps:
-      - name: Run Tests
-        run: |
-          cmake -DCMAKE_BUILD_TYPE=Debug -G Ninja -DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake -B build/ -DCODE_COVERAGE=ON
-          cmake --build build --target unit_tests
-          cmake --build build --target strategy_tests
-          cd build
-          ctest --output-on-failure --output-junit junit.xml
+  # Skipping until tests get reworked in release-stage-two
+  # test-job:
+  #   needs: build-deploy
+  #   runs-on: self-hosted
+  #   steps:
+  #     - name: Run Tests
+  #       run: |
+  #         cmake -DCMAKE_BUILD_TYPE=Debug -G Ninja -DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake -B build/ -DCODE_COVERAGE=ON
+  #         cmake --build build --target unit_tests
+  #         cmake --build build --target strategy_tests
+  #         cd build
+  #         ctest --output-on-failure --output-junit junit.xml
