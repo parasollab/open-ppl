@@ -15,6 +15,7 @@ class Constraint;
 class MPProblem;
 class Robot;
 class XMLNode;
+class Environment;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -63,7 +64,7 @@ class MPTask final {
     /// Parse the set of task constraints described in an XML node.
     /// @param _problem The MPProblem for this task.
     /// @param _node The XML node to parse.
-    explicit MPTask(MPProblem* const _problem, XMLNode& _node);
+    explicit MPTask(MPProblem* const _problem, XMLNode& _node, Environment* _env = nullptr);
 
     MPTask(const MPTask& _other);  ///< Copy.
     MPTask(MPTask&& _other);       ///< Move.

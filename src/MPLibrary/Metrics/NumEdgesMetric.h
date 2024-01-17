@@ -8,8 +8,7 @@
 /// Count the number of edges in roadmap.
 /// @ingroup Metrics
 ////////////////////////////////////////////////////////////////////////////////
-template <typename MPTraits>
-class NumEdgesMetric : virtual public MetricMethod<MPTraits> {
+class NumEdgesMetric : virtual public MetricMethod {
 
   public:
 
@@ -31,34 +30,5 @@ class NumEdgesMetric : virtual public MetricMethod<MPTraits> {
     ///@}
 
 };
-
-/*------------------------------- Construction -------------------------------*/
-
-template <typename MPTraits>
-NumEdgesMetric<MPTraits>::
-NumEdgesMetric() {
-  this->SetName("NumEdgesMetric");
-}
-
-
-template <typename MPTraits>
-NumEdgesMetric<MPTraits>::
-NumEdgesMetric(XMLNode& _node) : MetricMethod<MPTraits>(_node) {
-  this->SetName("NumEdgesMetric");
-}
-
-/*--------------------------- MetricMethod Interface -------------------------*/
-
-template <typename MPTraits>
-double
-NumEdgesMetric<MPTraits>::
-operator()() {
-  if(this->GetGroupTask())
-    return this->GetGroupRoadmap()->get_num_edges();
-  else
-    return this->GetRoadmap()->get_num_edges();
-}
-
-/*----------------------------------------------------------------------------*/
 
 #endif

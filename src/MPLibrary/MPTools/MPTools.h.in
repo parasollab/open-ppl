@@ -1,0 +1,419 @@
+#ifndef MP_TOOLS_H_
+#define MP_TOOLS_H_
+
+#cmakedefine01 CLEARANCE_UTILS_AVAILABLE
+#cmakedefine01 MED_AXIS_AVAILABLE
+#cmakedefine01 POINT_CONSTRUCTION_AVAILABLE
+#cmakedefine01 REACHABILITY_UTIL_AVAILABLE
+#cmakedefine01 SAFE_INTERVAL_TOOL_AVAILABLE
+#cmakedefine01 SKELETON_CLEARANCE_AVAILABLE
+#cmakedefine01 TOPOLOGICAL_MAP_AVAILABLE
+#cmakedefine01 TET_GEN_DECOMP_AVAILABLE
+#cmakedefine01 REEB_GRAPH_AVAILABLE
+#cmakedefine01 MEAN_CURVE_SKEL_AVAILABLE
+#cmakedefine01 WRENCH_ACCESS_TOOL_AVAILABLE
+
+#include <string>
+#include <unordered_map>
+
+#include "Utilities/XMLNode.h"
+
+#ifdef CLEARANCE_UTILS_AVAILABLE
+    #include "ClearanceUtilities.h"
+#endif
+
+#ifdef MED_AXIS_AVAILABLE
+    #include "MedialAxisUtilities.h"
+#endif
+
+#ifdef MEAN_CURVE_SKEL_AVAILABLE
+    #include "MeanCurvatureSkeleton3D.h"
+#endif
+
+#ifdef REEB_GRAPH_AVAILABLE
+    #include "ReebGraphConstruction.h"
+#endif
+
+#ifdef SAFE_INTERVAL_TOOL_AVAILABLE
+    #include "SafeIntervalTool.h"
+#endif
+
+#ifdef SKELETON_CLEARANCE_AVAILABLE
+    #include "SkeletonClearanceUtility.h"
+#endif
+
+#ifdef TET_GEN_DECOMP_AVAILABLE
+    #include "TetGenDecomposition.h"
+    class WorkspaceDecomposition;
+#endif
+
+#ifdef TOPOLOGICAL_MAP_AVAILABLE
+    #include "TopologicalMap.h"
+#endif
+
+#ifdef REACHABILITY_UTIL_AVAILABLE
+    #include "ReachabilityUtil.h"
+#endif
+
+#ifdef POINT_CONSTRUCTION_AVAILABLE
+    #include "PointConstruction.h"
+#endif
+
+#ifdef WRENCH_ACCESS_TOOL_AVAILABLE
+    #include "WrenchAccessibilityTool.h"
+#endif
+
+
+class MPLibrary;
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// This class is a general tool box for stateful objects that don't belong
+/// elsewhere. It gives us a way to do XML parsing and uniform access for these
+/// odd-balls like medial axis tools.
+///
+/// For most utilities, this object creates and maintains a map of string ->
+/// instance. One instance will be generated for each MedialAxisUtility node in
+/// the XML file (with corresponding label). Instances can also be added
+/// manually with the Set functions.
+///
+/// For the other tools, this object parses a single XML node to set default
+/// parameters for the tool classes. Default-constructed tools then use those
+/// values. This effectively uses the XML to set default parameters so that we
+/// don't have to create an instance of the tool right away (or at all) in order
+/// to parse the input file. For these, there is no label attribute, and using
+/// multiple XML nodes will throw a parse error.
+////////////////////////////////////////////////////////////////////////////////
+class MPToolsType final {
+
+  ///@name Motion Planning Types
+  ///@{
+
+
+
+  ///@}
+  ///@name Local Types
+  ///@{
+
+  template <typename Utility>
+  using LabelMap = std::unordered_map<std::string, Utility*>;
+
+  ///@}
+  ///@name Internal State
+  ///@{
+
+  MPLibrary* const m_library; ///< The owning library.
+
+  #ifdef CLEARANCE_UTILS_AVAILABLE
+  LabelMap<ClearanceUtility>         m_clearanceUtils;
+  #endif
+
+  #ifdef MED_AXIS_AVAILABLE
+  LabelMap<MedialAxisUtility>        m_medialAxisUtils;
+  #endif
+
+  #ifdef SKELETON_CLEARANCE_AVAILABLE
+  LabelMap<SkeletonClearanceUtility> m_skeletonUtils;
+  #endif
+  
+  #ifdef TOPOLOGICAL_MAP_AVAILABLE
+  LabelMap<TopologicalMap>           m_topologicalMaps;
+  #endif
+  
+  #ifdef SAFE_INTERVAL_TOOL_AVAILABLE
+  LabelMap<SafeIntervalTool>         m_safeIntervalTools;
+  #endif
+
+  #ifdef REACHABILITY_UTIL_AVAILABLE
+  LabelMap<ReachabilityUtil>         m_reachabilityUtils;
+  #endif
+  
+  #ifdef POINT_CONSTRUCTION_AVAILABLE
+  LabelMap<PointConstruction>        m_pointConstruction;
+  #endif
+
+  #ifdef WRENCH_ACCESS_TOOL_AVAILABLE
+  LabelMap<WrenchAccessibilityTool>  m_wrenchAccessibilityTools;
+  #endif
+
+  #ifdef TET_GEN_DECOMP_AVAILABLE
+  std::unordered_map<std::string, TetGenDecomposition> m_tetgens;
+  std::unordered_map<std::string, const WorkspaceDecomposition*> m_decompositions;
+  #endif
+
+  ///@}
+
+  public:
+
+    ///@name Construction
+    ///@{
+
+    /// Construct a tool set.
+    /// @param _library The owning library.
+    MPToolsType(MPLibrary* const _library);
+
+    /// Parse an XML node.
+    /// @param _node The XML node object.
+    void ParseXML(XMLNode& _node);
+
+    /// Initialize the clearance and MA tools prior to use.
+    void Initialize();
+
+    /// Uninitialize the clearance and MA tools.
+    void Uninitialize();
+
+    ~MPToolsType();
+
+    ///@}
+
+    #ifdef CLEARANCE_UTILS_AVAILABLE
+    ///@name Clearance Utility
+    ///@{
+
+    /// Get a ClearanceUtility by label.
+    /// @param _label The string label of the desired utility as defined in the
+    ///               XML file.
+    /// @return The labeled utility.
+    ClearanceUtility* GetClearanceUtility(const std::string& _label)
+        const;
+
+    /// Set a ClearanceUtility. This object will take ownership of the utility
+    /// and delete it when necessary.
+    /// @param _label The string label for the new utility.
+    /// @param _utility The ClearanceUtility to use.
+    void SetClearanceUtility(const std::string& _label,
+        ClearanceUtility* const _utility);
+
+    ///@}
+    #endif
+    
+    #ifdef MED_AXIS_AVAILABLE
+    ///@name Medial Axis Utility
+    ///@{
+
+    /// Get a MedialAxisUtility by label.
+    /// @param _label The string label of the desired utility as defined in the
+    ///               XML file.
+    /// @return The labeled utility.
+    MedialAxisUtility* GetMedialAxisUtility(const std::string& _label)
+        const;
+
+    /// Set a MedialAxisUtility. This object will take ownership of the utility
+    /// and delete it when necessary.
+    /// @param _label The string label for the new utility.
+    /// @param _utility The MedialAxisUtility to use.
+    void SetMedialAxisUtility(const std::string& _label,
+        MedialAxisUtility* const _utility);
+
+    ///@}
+    #endif
+
+    #ifdef SKELETON_CLEARANCE_AVAILABLE
+    ///@name Skeleton Clearance Utility
+    ///@{
+
+    /// Get a SkeletonClearanceUtility by label.
+    /// @param _label The string label of the desired utility as defined in the
+    ///               XML file.
+    /// @return The labeled utility.
+    SkeletonClearanceUtility* GetSkeletonClearanceUtility(
+        const std::string& _label) const;
+
+    /// Set a SkeletonClearanceUtility. This object will take ownership of the
+    /// utility and delete it when necessary.
+    /// @param _label The string label for the new utility.
+    /// @param _utility The SkeletonClearanceUtility to use.
+    void SetSkeletonClearanceUtility(const std::string& _label,
+        SkeletonClearanceUtility* const _utility);
+
+    ///@}
+    #endif
+
+    #ifdef TOPOLOGICAL_MAP_AVAILABLE
+    ///@name Topological Map
+    ///@{
+
+    /// Get a TopologicalMap by label.
+    /// @param _label The string label of the desired utility as defined in the
+    ///               XML file.
+    /// @return The labeled utility.
+    TopologicalMap* GetTopologicalMap(const std::string& _label) const;
+
+    /// Set a TopologicalMap. This object will take ownership of the utility and
+    /// delete it when necessary.
+    /// @param _label The string label for the new utility.
+    /// @param _utility The TopologicalMap to use.
+    void SetTopologicalMap(const std::string& _label,
+        TopologicalMap* const _utility);
+
+    ///@}
+    #endif
+
+    #ifdef SAFE_INTERVAL_TOOL_AVAILABLE
+    ///@name Safe Interval Tool
+    ///@{
+
+    /// Get a SafeIntervalTool by label.
+    /// @param _label The string label of the desired utility as defined in the
+    ///               XML file.
+    /// @return The labeled utility.
+    SafeIntervalTool* GetSafeIntervalTool(const std::string& _label)
+        const;
+
+    /// Set a SafeIntervalTool. This object will take ownership of the utility and
+    /// delete it when necessary.
+    /// @param _label The string label for the new utility.
+    /// @param _utility The TopologicalMap to use.
+    void SetSafeIntervalTool(const std::string& _label,
+        SafeIntervalTool* const _utility);
+
+    ///@}
+    #endif
+
+    #ifdef TET_GEN_DECOMP_AVAILABLE
+    ///@name Decompositions
+    ///@{
+
+    /// Get a decomposition.
+    /// @param _label The label of the decomposition to use.
+    const WorkspaceDecomposition* GetDecomposition(const std::string& _label);
+
+    /// Set a workspace decomposition by label. This object will take ownership
+    /// the decomposition and delete it when necessary.
+    /// @param _label The label for this decomposition.
+    /// @param _decomposition The decomposition object to set.
+    void SetDecomposition(const std::string& _label,
+        const WorkspaceDecomposition* _decomposition);
+
+    ///@}
+    #endif
+
+    #ifdef REACHABILITY_UTIL_AVAILABLE
+    ///@name Reachability
+    ///@{
+
+    /// Get a Reachability Utility
+    /// @param _label The label of the decomposition to use.
+    ReachabilityUtil* GetReachabilityUtil(const std::string& _label) const;
+
+    /// Set a reachability utility  by label.
+    /// @param _label The label for this utility
+    /// @param _decomposition the reachability utility
+    void SetReachabilityUtil(const std::string& _label,
+        ReachabilityUtil* _util);
+
+    ///@}
+    #endif
+
+    #ifdef POINT_CONSTRUCTION_AVAILABLE
+    ///@name Point Construction
+    ///@{
+
+    /// Get a Point Construction
+    /// @param _label The label of the decomposition to use.
+    PointConstruction* GetPointConstruction(const std::string& _label) const;
+
+    /// Set a Point Construction  by label.
+    /// @param _label The label for this utility
+    /// @param _decomposition the point construction
+    void SetPointConstruction(const std::string& _label,
+        PointConstruction* _util);
+
+    ///@}
+    #endif
+
+    #ifdef WRENCH_ACCESS_TOOL_AVAILABLE
+    ///@name Wrench Accessibility Tool
+    ///@{
+    /// Get a WrenchAccessibilityTool by label.
+    /// @param _label The string label of the desired utility as defined in the
+    ///               XML file.
+    /// @return The labeled utility.
+    WrenchAccessibilityTool* GetWrenchAccessibilityTool(const std::string& _label) const;
+
+    /// Set a WrenchAccessibilityTool. This object will take ownership of the utility and
+    /// delete it when necessary.
+    /// @param _label The string label for the new utility.
+    /// @param _utility The GetWrenchAccessibilityTool to use.
+    void SetWrenchAccessibilityTool(const std::string& _label,
+        WrenchAccessibilityTool* const _utility);
+
+    ///@}
+    #endif
+
+  private:
+
+    ///@name Helpers
+    ///@{
+
+    /// Get a utility in a label map. Throws if not found.
+    /// @param _label The utility label.
+    /// @param _map The label map which holds _utility.
+    /// @return The named utility.
+    template <typename Utility>
+    Utility* GetUtility(const std::string& _label,
+        const LabelMap<Utility>& _map) const;
+
+
+    /// Set a utility in a label map.
+    /// @param _label The utility label.
+    /// @param _utility The utility to set.
+    /// @param _map The label map which holds _utility.
+    template <typename Utility>
+    void SetUtility(const std::string& _label, Utility* _utility,
+        LabelMap<Utility>& _map) const;
+
+    ///@}
+
+};
+
+/*---------------------------------- Helpers ---------------------------------*/
+
+template <typename Utility>
+inline
+Utility*
+MPToolsType::
+GetUtility(const std::string& _label, const LabelMap<Utility>& _map) const {
+  try {
+    return _map.at(_label);
+  }
+  catch(const std::out_of_range&) {
+    Utility dummy;
+    throw RunTimeException(WHERE) << "Requested " << dummy.GetName()
+                                  << " '" << _label  << "' does not exist.";
+  }
+  catch(const std::exception& _e) {
+    Utility dummy;
+    throw RunTimeException(WHERE) << "Error when fetching " << dummy.GetName()
+                                  << " '" << _label << "': " << _e.what();
+  }
+  catch(...) {
+    Utility dummy;
+    throw RunTimeException(WHERE) << "Error when fetching " << dummy.GetName()
+                                  << " '" << _label << "': (unknown).";
+  }
+}
+
+
+template <typename Utility>
+void
+MPToolsType::
+SetUtility(const std::string& _label, Utility* _utility,
+    LabelMap<Utility>& _map) const {
+  // Set the library pointer.
+  _utility->SetMPLibrary(m_library);
+
+  // Check if this label is already in use.
+  auto iter = _map.find(_label);
+  const bool alreadyExists = iter != _map.end();
+
+  // If the label already exists, we need to release the previous utility first.
+  if(alreadyExists) {
+    delete iter->second;
+    iter->second = _utility;
+  }
+  else
+    _map.insert({_label, _utility});
+}
+
+#endif

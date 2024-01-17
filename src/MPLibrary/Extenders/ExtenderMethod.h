@@ -1,6 +1,7 @@
 #ifndef PMPL_EXTENDER_METHOD_H_
 #define PMPL_EXTENDER_METHOD_H_
 
+#include "MPLibrary/MPBaseObject.h"
 #include "MPLibrary/LocalPlanners/LPOutput.h"
 #include "MPLibrary/LocalPlanners/GroupLPOutput.h"
 #include "MPLibrary/ValidityCheckers/CollisionDetection/CDInfo.h"
@@ -17,7 +18,7 @@
 /// @code
 /// ExtenderPointer e = this->GetExtender(m_exLabel);
 /// CfgType start, goal, new;
-/// LPOutput<MPTraits> lp;
+/// LPOutput lp;
 /// bool pass = e->Extend(start, goal, new, lp);
 /// @endcode
 ///
@@ -28,17 +29,16 @@
 ///
 /// @ingroup Extenders
 ////////////////////////////////////////////////////////////////////////////////
-template <class MPTraits>
-class ExtenderMethod : public MPBaseObject<MPTraits> {
+class ExtenderMethod : public MPBaseObject {
 
   public:
 
     ///@name Motion Planning Types
     ///@{
 
-    typedef typename MPTraits::CfgType CfgType;
-    typedef typename MPTraits::GroupCfgType GroupCfgType;
-    typedef typename MPTraits::GroupWeightType GroupWeightType;
+    typedef typename MPBaseObject::RoadmapType RoadmapType;
+    typedef typename MPBaseObject::GroupCfgType GroupCfgType;
+    typedef GroupLocalPlan<RoadmapType>      GroupWeightType;
 
     ///@}
     ///@name Construction
@@ -76,21 +76,21 @@ class ExtenderMethod : public MPBaseObject<MPTraits> {
     ///               weight.
     /// @return True if the extension produced a valid configuration that was
     ///         at least the minimum distance away from the starting point.
-    virtual bool Extend(const CfgType& _start, const CfgType& _end,
-        CfgType& _new, LPOutput<MPTraits>& _lp) = 0;
+    virtual bool Extend(const Cfg& _start, const Cfg& _end,
+        Cfg& _new, LPOutput& _lp) = 0;
     ///@example Extenders_UseCase.cpp
     /// This is an example of how to use the extender methods.
 
     /// An optional version if CDInfo is desired. Not required to implement.
-    virtual bool Extend(const CfgType& _start, const CfgType& _end,
-        CfgType& _new, LPOutput<MPTraits>& _lp, CDInfo& _cdInfo);
+    virtual bool Extend(const Cfg& _start, const Cfg& _end,
+        Cfg& _new, LPOutput& _lp, CDInfo& _cdInfo);
 
     /// For groups.
     /// @override
     /// @param _robotIndexes The indexes of the robots which should move (empty
     ///                      for all).
     virtual bool Extend(const GroupCfgType& _start, const GroupCfgType& _end,
-        GroupCfgType& _new, GroupLPOutput<MPTraits>& _lp,
+        GroupCfgType& _new, GroupLPOutput& _lp,
         const std::vector<size_t>& _robotIndexes = {});
 
     /// For groups, with CD info.
@@ -98,7 +98,7 @@ class ExtenderMethod : public MPBaseObject<MPTraits> {
     /// @param _robotIndexes The indexes of the robots which should move (empty
     ///                      for all).
     virtual bool Extend(const GroupCfgType& _start, const GroupCfgType& _end,
-        GroupCfgType& _new, GroupLPOutput<MPTraits>& _lp, CDInfo& _cdInfo,
+        GroupCfgType& _new, GroupLPOutput& _lp, CDInfo& _cdInfo,
         const std::vector<size_t>& _robotIndexes = {});
 
     ///@}
@@ -114,83 +114,5 @@ class ExtenderMethod : public MPBaseObject<MPTraits> {
     ///@}
 
 };
-
-/*------------------------------ Construction --------------------------------*/
-
-template <typename MPTraits>
-ExtenderMethod<MPTraits>::
-ExtenderMethod(XMLNode& _node) : MPBaseObject<MPTraits>(_node) {
-  // We do not require these to be specified because some extenders don't use
-  // them (like KinodynamicExtender).
-  m_maxDist = _node.Read("maxDist", false, m_maxDist,
-      std::numeric_limits<double>::min(), std::numeric_limits<double>::max(),
-      "The maximum allowed distance to expand from the starting node to the "
-      "target node.");
-
-  m_minDist = _node.Read("minDist", false, m_minDist,
-      std::numeric_limits<double>::min(), std::numeric_limits<double>::max(),
-      "The minimum valid distance when expanding from the starting node to the "
-      "target node (shorter extensions are considered invalid).");
-}
-
-/*------------------------- MPBaseObject Overrides ---------------------------*/
-
-template <typename MPTraits>
-void
-ExtenderMethod<MPTraits>::
-Print(std::ostream& _os) const {
-  MPBaseObject<MPTraits>::Print(_os);
-  _os << "\tMin distance: " << m_minDist
-      << "\n\tMax distance: " << m_maxDist
-      << std::endl;
-}
-
-/*------------------------- ExtenderMethod Interface -------------------------*/
-
-template <typename MPTraits>
-double
-ExtenderMethod<MPTraits>::
-GetMinDistance() const {
-  return m_minDist;
-}
-
-
-template <typename MPTraits>
-double
-ExtenderMethod<MPTraits>::
-GetMaxDistance() const {
-  return m_maxDist;
-}
-
-
-template <typename MPTraits>
-bool
-ExtenderMethod<MPTraits>::
-Extend(const CfgType& _start, const CfgType& _end, CfgType& _new,
-    LPOutput<MPTraits>& _lp, CDInfo& _cdInfo) {
-  throw NotImplementedException(WHERE);
-}
-
-
-template <typename MPTraits>
-bool
-ExtenderMethod<MPTraits>::
-Extend(const GroupCfgType& _start, const GroupCfgType& _end,
-    GroupCfgType& _new, GroupLPOutput<MPTraits>& _lp,
-    const std::vector<size_t>& _robotIndexes) {
-  throw NotImplementedException(WHERE);
-}
-
-
-template <typename MPTraits>
-bool
-ExtenderMethod<MPTraits>::
-Extend(const GroupCfgType& _start, const GroupCfgType& _end,
-    GroupCfgType& _new, GroupLPOutput<MPTraits>& _lp, CDInfo& _cdInfo,
-    const std::vector<size_t>& _robotIndexes) {
-  throw NotImplementedException(WHERE);
-}
-
-/*----------------------------------------------------------------------------*/
 
 #endif

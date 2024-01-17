@@ -17,7 +17,6 @@
 #include "BulletDynamics/Featherstone/btMultiBodyJointLimitConstraint.h"
 #include "BulletCollision/Gimpact/btGImpactShape.h"
 #include "BulletCollision/Gimpact/btGImpactCollisionAlgorithm.h"
-#include "ConvexDecomposition/cd_wavefront.h"
 
 #include "nonstd/runtime.h"
 
@@ -223,7 +222,7 @@ CreateCarlikeCallback(btMultiBody* const _model) {
   CallbackFunction f = [_model]() {
     const btVector3 velocity = _model->getBaseVel();
     const btVector3 heading = _model->localDirToWorld(-1, {1, 0, 0});
-    const btScalar sign = velocity * heading < 0 ? -1 : 1;
+    const btScalar sign = (velocity.dot(heading) < 0) ? -1 : 1;
     _model->setBaseVel(heading * sign * velocity.length());
   };
 

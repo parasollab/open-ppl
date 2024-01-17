@@ -17,7 +17,7 @@ option(BUILD_MATLAB "Build with MatLab support" OFF)
 # work from Matthew Bulluck's parallel branch.
 option(BUILD_PARALLEL "Build parallel version of PMPL" OFF)
 
-option(BUILD_TESTS "Build and Run Tests" ON)
+option(BUILD_TESTS "Build and Run Tests" OFF)
 option(CODE_COVERAGE "Enable code coverage reporting" ON)
 option(BUILD_DOCS "Build Documentation" ON)
 
@@ -39,8 +39,8 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 # ------------- add ppl dependencies --------------
 
 # Add Packages (needs to be installed)
-find_package(OpenGL REQUIRED)
-find_package(GLUT REQUIRED)
+#find_package(OpenGL REQUIRED)
+#find_package(GLUT REQUIRED)
 find_package(Qt6 CONFIG COMPONENTS Core Gui Widgets OpenGL OpenGLWidgets REQUIRED)
 
 # set(CMAKE_PREFIX_PATH ${QT_ROOT})
@@ -65,9 +65,8 @@ find_library(STAPL ${STAPL_PATH})
 # Find Packages (resolved by package manager)
 find_package(Boost REQUIRED)
 find_package(CGAL CONFIG REQUIRED)
-find_package(OpenCV CONFIG REQUIRED)
 find_package(Eigen3 CONFIG REQUIRED)
-find_package(tinyxml CONFIG REQUIRED)
+find_package(tinyxml2 CONFIG REQUIRED)
 find_package(Bullet CONFIG REQUIRED
         LinearMath Bullet3Common BulletDynamics BulletSoftBody BulletCollision BulletInverseDynamics)
 find_package(nlohmann_json CONFIG REQUIRED)
@@ -78,11 +77,8 @@ add_subdirectory(src)
 # include_directories(lib/stapl)
 # include_directories(lib/stapl/stapl)
 
-include_directories(${Qt6Widgets_INCLUDE_DIRS})
-include_directories(${Qt6OpenGLWidgets_INCLUDE_DIRS})
-
-
-
+# include_directories(${Qt6Widgets_INCLUDE_DIRS})
+# include_directories(${Qt6OpenGLWidgets_INCLUDE_DIRS})
 
 # -------------  build ppl targets  --------------
 
@@ -96,7 +92,6 @@ endif()
 if(BUILD_TESTS)
     enable_testing()
     find_package(Catch2 3 REQUIRED)
-    add_subdirectory(tests)
 
     if(CODE_COVERAGE)
         if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
@@ -114,13 +109,12 @@ if(MSVC)
 endif()
 
 # define target name variables
-set(PPL_EXECUTABLE ppl_executable)
-set(PPL_LIBRARY ppl_library)
+#set(PPL_EXECUTABLE ppl_executable)
+#set(PPL_LIBRARY ppl_library)
 set(PPL_MP_LIBRARY ppl_mp_library)
 set(PPL_MP_EXECUTABLE ppl_mp_executable)
-set(SIMULATOR simulator)
-set(PPL_XML_EXECUTABLE ppl_xml_executable)
-set(TESTS tests)
+#set(SIMULATOR simulator)
+#set(PPL_XML_EXECUTABLE ppl_xml_executable)
 
 # build [base object library]
 add_library(objlib OBJECT ${PMPL_SRCS})
@@ -138,11 +132,11 @@ target_include_directories(objlib
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
 )
 
-target_include_directories(objlib 
-        PUBLIC 
-        $<INSTALL_INTERFACE:include/LKH/SRC/INCLUDE>
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/LKH/SRC/INCLUDE>
-)
+# target_include_directories(objlib 
+#         PUBLIC 
+#         $<INSTALL_INTERFACE:include/LKH/SRC/INCLUDE>
+#         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/LKH/SRC/INCLUDE>
+# )
 
 target_include_directories(objlib 
         PUBLIC 
@@ -161,17 +155,16 @@ target_compile_options(objlib PRIVATE
 )
 
 # bullet order is very specific, do not modify
-target_link_libraries(objlib 
-        PUBLIC BulletSoftBody BulletDynamics BulletCollision LinearMath Bullet3Common
-        BulletInverseDynamics unofficial-tinyxml::unofficial-tinyxml )
+target_link_libraries(objlib
+        PUBLIC ${BULLET_LIBRARIES} tinyxml2::tinyxml2)
 target_link_libraries(objlib PUBLIC modelloader RAPID tetgen PQP glutils nonstd sandbox)
 
 # build [ppl library]
-add_library(${PPL_LIBRARY} STATIC ${HARDWARE_SRCS} ${TASK_SRCS})
+#add_library(${PPL_LIBRARY} STATIC ${HARDWARE_SRCS} ${TASK_SRCS})
 
-target_compile_options(${PPL_LIBRARY} PRIVATE
-  -Wno-terminate
-)
+#target_compile_options(${PPL_LIBRARY} PRIVATE
+#  -Wno-terminate
+#)
 
 # build [ppl_mp library]
 add_library(${PPL_MP_LIBRARY} STATIC ${HARDWARE_SRCS})
@@ -180,21 +173,21 @@ target_compile_options(${PPL_MP_LIBRARY} PRIVATE
   -Wno-terminate
 )
 
-target_include_directories(${PPL_LIBRARY}
-        PUBLIC 
-        $<INSTALL_INTERFACE:include/ppl>
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
-)
-target_include_directories(${PPL_LIBRARY}
-        PUBLIC
-        $<INSTALL_INTERFACE:include/mathtool>
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/mathtool>
-)
-target_include_directories(${PPL_LIBRARY} 
-        PUBLIC 
-        $<INSTALL_INTERFACE:include/LKH/SRC/INCLUDE>
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/LKH/SRC/INCLUDE>
-)
+#target_include_directories(${PPL_LIBRARY}
+#        PUBLIC 
+#        $<INSTALL_INTERFACE:include/ppl>
+#        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
+#)
+#target_include_directories(${PPL_LIBRARY}
+#        PUBLIC
+#        $<INSTALL_INTERFACE:include/mathtool>
+#        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/mathtool>
+#)
+#target_include_directories(${PPL_LIBRARY} 
+#        PUBLIC 
+#        $<INSTALL_INTERFACE:include/LKH/SRC/INCLUDE>
+#        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/LKH/SRC/INCLUDE>
+#)
 
 target_include_directories(${PPL_MP_LIBRARY} 
         PUBLIC 
@@ -206,37 +199,35 @@ target_include_directories(${PPL_MP_LIBRARY}
         $<INSTALL_INTERFACE:include/mathtool>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/mathtool>
 )
-target_include_directories(${PPL_MP_LIBRARY} 
-        PUBLIC
-        $<INSTALL_INTERFACE:include/LKH/SRC/INCLUDE>
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/LKH/SRC/INCLUDE>
-)
+# target_include_directories(${PPL_MP_LIBRARY} 
+#         PUBLIC
+#         $<INSTALL_INTERFACE:include/LKH/SRC/INCLUDE>
+#         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/LKH/SRC/INCLUDE>
+# )
 
 # [ppl library] - Link external packages
 # bullet order is very specific, do not modify
-target_link_libraries(${PPL_LIBRARY} PUBLIC objlib BulletSoftBody BulletDynamics BulletCollision LinearMath Bullet3Common
-        BulletInverseDynamics CGAL::CGAL Eigen3::Eigen
-        nlohmann_json::nlohmann_json Qt6::Core Qt6::Gui Qt6::OpenGL Qt6::Widgets
-        Qt6::OpenGLWidgets unofficial-tinyxml::unofficial-tinyxml)
-target_link_libraries(${PPL_LIBRARY} PUBLIC ${OPENGL_LIBRARIES} ${GLUT_LIBRARY})
+#target_link_libraries(${PPL_LIBRARY} PUBLIC objlib ${BULLET_LIBRARIES} CGAL::CGAL Eigen3::Eigen
+#        nlohmann_json::nlohmann_json Qt6::Core Qt6::Gui Qt6::OpenGL Qt6::Widgets
+#        Qt6::OpenGLWidgets tinyxml2::tinyxml2)
+##target_link_libraries(${PPL_LIBRARY} PUBLIC ${OPENGL_LIBRARIES} ${GLUT_LIBRARY})
 # [ppl library] - Link internal built packages
-target_link_libraries(${PPL_LIBRARY} PUBLIC modelloader RAPID tetgen PQP glutils nonstd sandbox ${PQP_LIBRARIES})
-set_target_properties(${PPL_LIBRARY} PROPERTIES OUTPUT_NAME ppl)
+#target_link_libraries(${PPL_LIBRARY} PUBLIC modelloader RAPID tetgen PQP glutils nonstd sandbox)
+#set_target_properties(${PPL_LIBRARY} PROPERTIES OUTPUT_NAME ppl)
 
 # [ppl_mp library] - Link external packages
-target_link_libraries(${PPL_MP_LIBRARY} PUBLIC objlib BulletSoftBody BulletDynamics BulletCollision LinearMath Bullet3Common
-        BulletInverseDynamics CGAL::CGAL Eigen3::Eigen
+target_link_libraries(${PPL_MP_LIBRARY} PUBLIC objlib ${BULLET_LIBRARIES} CGAL::CGAL Eigen3::Eigen
         nlohmann_json::nlohmann_json Qt6::Core Qt6::Gui Qt6::OpenGL Qt6::Widgets
-        Qt6::OpenGLWidgets unofficial-tinyxml::unofficial-tinyxml)
-target_link_libraries(${PPL_MP_LIBRARY} PUBLIC ${OPENGL_LIBRARIES} ${GLUT_LIBRARY})
+        Qt6::OpenGLWidgets tinyxml2::tinyxml2)
+#target_link_libraries(${PPL_MP_LIBRARY} PUBLIC ${OPENGL_LIBRARIES} ${GLUT_LIBRARY})
 # [ppl_mp library] - Link internal built packages
-target_link_libraries(${PPL_MP_LIBRARY} PUBLIC PQP glutils nonstd sandbox modelloader RAPID tetgen ${PQP_LIBRARIES})
+target_link_libraries(${PPL_MP_LIBRARY} PUBLIC PQP glutils nonstd sandbox modelloader RAPID tetgen)
 set_target_properties(${PPL_MP_LIBRARY} PROPERTIES OUTPUT_NAME ppl_mp)
 
 # build [ppl executable]
-add_executable(${PPL_EXECUTABLE} src/tmp_main.cpp)
-target_link_libraries(${PPL_EXECUTABLE} PRIVATE ${PPL_LIBRARY} RAPID tetgen)
-set_target_properties(${PPL_EXECUTABLE} PROPERTIES OUTPUT_NAME ppl)
+#add_executable(${PPL_EXECUTABLE} src/tmp_main.cpp)
+#target_link_libraries(${PPL_EXECUTABLE} PRIVATE ${PPL_LIBRARY} RAPID tetgen)
+#set_target_properties(${PPL_EXECUTABLE} PROPERTIES OUTPUT_NAME ppl)
 
 # build [ppl_mp executable]
 add_executable(${PPL_MP_EXECUTABLE} src/main.cpp)
@@ -244,30 +235,56 @@ target_link_libraries(${PPL_MP_EXECUTABLE} PRIVATE ${PPL_MP_LIBRARY})
 set_target_properties(${PPL_MP_EXECUTABLE} PROPERTIES OUTPUT_NAME ppl_mp)
 
 # build [sim executable]
-add_executable(${SIMULATOR} src/sim_main.cpp)
-target_link_libraries(${SIMULATOR} PRIVATE ${PPL_LIBRARY})
-set_target_properties(${SIMULATOR} PROPERTIES OUTPUT_NAME sim)
+#add_executable(${SIMULATOR} src/sim_main.cpp)
+#target_link_libraries(${SIMULATOR} PRIVATE ${PPL_LIBRARY})
+#set_target_properties(${SIMULATOR} PROPERTIES OUTPUT_NAME sim)
 
 # build [tests]
 if(BUILD_TESTS)
-    add_executable(${TESTS} tests/tests_main.cpp)
-    target_link_libraries(${TESTS} PRIVATE ${PPL_LIBRARY})
-    target_link_libraries(${TESTS} PRIVATE Catch2::Catch2)
-    set_target_properties(${TESTS} PROPERTIES OUTPUT_NAME ppl_tests)
+    set(TESTS_UNIT unit_tests)
+    set(TESTS_STRATEGY strategy_tests)
+
     include(CTest)
     include(Catch)
-    catch_discover_tests(${TESTS})
+
+    add_executable(${TESTS_UNIT} tests/tests_main.cpp
+        tests/TestBaseObject.cpp
+        tests/MPProblem/MPProblemTests.cpp
+        tests/TMPLibrary/TMPLibraryTests.cpp
+        tests/TMPLibrary/TaskAllocators/TaskAllocatorMethodTest.cpp
+        tests/TMPLibrary/TaskDecomposers/TaskDecomposerMethodTest.cpp
+        tests/TMPLibrary/TaskEvaluators/SimpleMotionEvaluatorTest.cpp
+        tests/TMPLibrary/TaskEvaluators/TaskEvaluatorMethodTest.cpp
+        tests/GeometryTests.cpp
+        tests/BehaviorTests.cpp
+        tests/MPLibraryTests.cpp    
+    )
+
+    target_link_libraries(${TESTS_UNIT} PRIVATE ${PPL_LIBRARY})
+    target_link_libraries(${TESTS_UNIT} PRIVATE Catch2::Catch2)
+    set_target_properties(${TESTS_UNIT} PROPERTIES OUTPUT_NAME ppl_unit_tests)
+    catch_discover_tests(${TESTS_UNIT})
+
+    add_executable(${TESTS_STRATEGY} tests/tests_strategy_main.cpp
+        tests/StrategyTests/StrategyTests.cpp
+    )
+
+    target_link_libraries(${TESTS_STRATEGY} PRIVATE ${PPL_LIBRARY})
+    target_link_libraries(${TESTS_STRATEGY} PRIVATE Catch2::Catch2)
+    set_target_properties(${TESTS_STRATEGY} PROPERTIES OUTPUT_NAME ppl_strategy_tests)
+    catch_discover_tests(${TESTS_STRATEGY})
 endif()
 
-add_executable(${PPL_XML_EXECUTABLE} src/xml_main.cpp)
-target_link_libraries(${PPL_XML_EXECUTABLE} PRIVATE ${PPL_LIBRARY})
+#add_executable(${PPL_XML_EXECUTABLE} src/xml_main.cpp)
+#target_link_libraries(${PPL_XML_EXECUTABLE} PRIVATE ${PPL_LIBRARY})
 
 
 # -------------  package ppl library for distribution --------------
 message("Generating targets for packaging")
 include(GNUInstallDirs)
 
-install(TARGETS ${PPL_LIBRARY} ${PPL_MP_LIBRARY} objlib
+#install(TARGETS ${PPL_LIBRARY} ${PPL_MP_LIBRARY} objlib
+install(TARGETS ${PPL_MP_LIBRARY} objlib
         EXPORT PPLTargets
         LIBRARY DESTINATION lib
         ARCHIVE DESTINATION lib)
@@ -304,4 +321,4 @@ install(FILES
 
 install(FILES
         ${CMAKE_CURRENT_SOURCE_DIR}/cmake/PPLConfig.cmake
-        DESTINATION "lib/cmake/ppl" )
+        DESTINATION "lib/cmake/ppl")

@@ -1,8 +1,8 @@
 #ifndef PPL_CONNECTION_METHOD_TEST_H_
 #define PPL_CONNECTION_METHOD_TEST_H_
 
-#include "MPLibrary/Connectors/ConnectorMethod.h"
-#include "Testing/TestBaseObject.h"
+#include "MPLibrary/Connectors/ConnectorMethod.h"   //src
+#include "../../TestBaseObject.h"
 
 template <typename MPTraits>
 class ConnectorMethodTest : virtual public ConnectorMethod<MPTraits>,

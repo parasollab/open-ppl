@@ -1,8 +1,8 @@
 #ifndef PPL_BRUTE_FORCE_NF_TEST_H_
 #define PPL_BRUTE_FORCE_NF_TEST_H_
 
-#include "MPLibrary/NeighborhoodFinders/BruteForceNF.h"
-#include "Testing/MPLibrary/NeighborhoodFinders/NeighborhoodFinderMethodTest.h"
+#include "MPLibrary/NeighborhoodFinders/BruteForceNF.h" //src
+#include "NeighborhoodFinderMethodTest.h"
 
 template <typename MPTraits>
 class BruteForceNFTest : virtual public BruteForceNF<MPTraits>,
@@ -114,15 +114,13 @@ IndividualRobotFindNeighborsTest() {
   if (this->m_k >= roadmap->Size() or this->m_k == 0) {
     if (neighbors.size() != (roadmap->Size() - 1)) {
       passed = false; 
-      message = message + "\n\tThe neighborhood finder did not return the"
-                          " correct number of neighbors.\n";
+      std::cout << "\n\tThe neighborhood finder did not return the correct number of neighbors." << std::endl;
     }
   } else {
     // Check that k neighbors were returned
     if (neighbors.size() != this->m_k) {
       passed = false; 
-      message = message + "\n\tThe neighborhood finder did not return the"
-                          " correct number of neighbors.\n";
+      std::cout << "\n\tThe neighborhood finder did not return the correct number of neighbors." << std::endl;
     } else {
       // Check that each of the returned neighbors are closer than the 
       // (k+1)th closest vertex to start
@@ -131,19 +129,14 @@ IndividualRobotFindNeighborsTest() {
       for (size_t i =0; i < neighbors.size(); i++) {
         if (neighbors[i].distance > distance_max) {
           passed = false; 
-          message = message + "\n\tThe neighborhood finder did not return the"
-                          " k nearest neighbors.\n";
+          std::cout << "\n\tThe neighborhood finder did not return the k nearest neighbors." << std::endl;
           break;
         }
       }
     }
   }
 
-  if (passed)
-    message = "IndividualRobotFindNeighbors::PASSED!\n";
-  else
-    message = "IndividualRobotFindNeighbors::FAILED :(\n" + message;
-
+  message = "\tFINISHED IndividualRobotFindNeighborsTest";
   return std::make_pair(passed,message);
 }
 
@@ -157,11 +150,8 @@ RobotGroupFindNeighborsTest() {
 
   // TODO Need support for Groups
 
-  if (passed)
-    message = "RobotGroupFindNeighbors::PASSED!\n";
-  else
-    message = "RobotGroupFindNeighbors::FAILED :(\n" + message;
-  return std::make_pair(passed,message);
+  message = "\tFINISHED RobotGroupFindNeighborsTest";
+  return std::make_pair(passed, message);
 }
 
 /*--------------------------------------------------------------------*/

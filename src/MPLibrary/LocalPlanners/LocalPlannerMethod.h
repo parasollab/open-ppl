@@ -4,10 +4,6 @@
 #include "MPLibrary/LocalPlanners/LPOutput.h"
 #include "MPLibrary/LocalPlanners/GroupLPOutput.h"
 #include "MPLibrary/MPBaseObject.h"
-#include "MPProblem/Environment/Environment.h"
-#include "Utilities/MetricUtils.h"
-#include "Utilities/MPUtils.h"
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Base algorithm abstraction for \ref LocalPlanners.
@@ -33,16 +29,14 @@
 ///
 /// @ingroup LocalPlanners
 ////////////////////////////////////////////////////////////////////////////////
-template <typename MPTraits>
-class LocalPlannerMethod : public MPBaseObject<MPTraits> {
+class LocalPlannerMethod : public MPBaseObject {
 
   public:
 
     ///@name Motion Planning Types
     ///@{
 
-    typedef typename MPTraits::CfgType       CfgType;
-    typedef typename MPTraits::GroupCfgType  GroupCfgType;
+    typedef typename MPBaseObject::GroupCfgType GroupCfgType;
     typedef typename GroupCfgType::Formation Formation;
 
     ///@}
@@ -81,33 +75,33 @@ class LocalPlannerMethod : public MPBaseObject<MPTraits> {
     /// LocalPlannerPointer lp = this->GetLocalPlanner(m_lpLabel);
     /// Environment* env = this->GetEnvironment();
     /// CfgType c1, c2, col;
-    /// LPOutput<MPTraits> lpOut;
+    /// LPOutput lpOut;
     /// lp->IsConnected(c1, c2, col, &lpOut, env->GetPositionRes(),
     ///     env->GetOrientationRes());
     /// @endcode
-    virtual bool IsConnected(const CfgType& _start, const CfgType& _end,
-        CfgType& _col, LPOutput<MPTraits>* _lpOutput, double _posRes,
+    virtual bool IsConnected(const Cfg& _start, const Cfg& _end,
+        Cfg& _col, LPOutput* _lpOutput, double _posRes,
         double _oriRes, bool _checkCollision = true, bool _savePath = false) = 0;
     ///@example LocalPlanner_UseCase.cpp
     /// This is an example of how to use the local planner methods.
 
     /// This version does not return a collision node.
     /// @overload
-    bool IsConnected(const CfgType& _start, const CfgType& _end,
-        LPOutput<MPTraits>* _lpOutput, double _posRes, double _oriRes,
+    bool IsConnected(const Cfg& _start, const Cfg& _end,
+        LPOutput* _lpOutput, double _posRes, double _oriRes,
         bool _checkCollision = true, bool _savePath = false);
 
     /// This version is for group configurations.
     /// @overload
     virtual bool IsConnected(const GroupCfgType& _start, const GroupCfgType& _end,
-        GroupCfgType& _col, GroupLPOutput<MPTraits>* _lpOutput, double _posRes,
+        GroupCfgType& _col, GroupLPOutput* _lpOutput, double _posRes,
         double _oriRes, bool _checkCollision = true, bool _savePath = false,
         const Formation& _formation = Formation());
 
     /// This version for group configurations does not return a collision node.
     /// @overload
     bool IsConnected(const GroupCfgType& _start, const GroupCfgType& _end,
-        GroupLPOutput<MPTraits>* _lpOutput, double _posRes, double _oriRes,
+        GroupLPOutput* _lpOutput, double _posRes, double _oriRes,
         bool _checkCollision = true, bool _savePath = false,
         const Formation& _formation = Formation());
 
@@ -124,14 +118,14 @@ class LocalPlannerMethod : public MPBaseObject<MPTraits> {
     /// @code
     /// LocalPlannerPointer lp = this->GetLocalPlanner(m_lpLabel);
     /// Environment* env = this->GetEnvironment();
-    /// CfgType c1, c2;
+    /// Cfg c1, c2;
     /// lp->BlindPath({c1, c2}, env->GetPositionRes(), env->GetOrientationRes());
     /// @endcode
-    std::vector<CfgType> BlindPath(const std::vector<CfgType>& _waypoints,
+    std::vector<Cfg> BlindPath(const std::vector<Cfg>& _waypoints,
         const double _posRes, const double _oriRes);
 
     /// @overload This version assumes the environment's resolution values.
-    std::vector<CfgType> BlindPath(const std::vector<CfgType>& _waypoints);
+    std::vector<Cfg> BlindPath(const std::vector<Cfg>& _waypoints);
 
     /// @overload This version is for group configurations.
     /// @param _formation A (possibly improper) subset of the robot group which
@@ -159,142 +153,4 @@ class LocalPlannerMethod : public MPBaseObject<MPTraits> {
     ///@}
 };
 
-/*------------------------------- Construction -------------------------------*/
-
-template <typename MPTraits>
-LocalPlannerMethod<MPTraits>::
-LocalPlannerMethod(const bool _saveIntermediates)
-  : m_saveIntermediates(_saveIntermediates)
-{ }
-
-
-template <typename MPTraits>
-LocalPlannerMethod<MPTraits>::
-LocalPlannerMethod(XMLNode& _node) : MPBaseObject<MPTraits>(_node) {
-  m_saveIntermediates = _node.Read("saveIntermediates", false,
-      m_saveIntermediates, "Save intermediate nodes");
-}
-
-/*------------------------- MPBaseObject Overrides ---------------------------*/
-
-template <typename MPTraits>
-void
-LocalPlannerMethod<MPTraits>::
-Print(std::ostream& _os) const {
-  _os << this->GetNameAndLabel()
-      << "\n\tSave intermediates: " << m_saveIntermediates
-      << std::endl;
-}
-
-/*------------------------ LocalPlanner Interface ----------------------------*/
-
-template <typename MPTraits>
-inline
-bool
-LocalPlannerMethod<MPTraits>::
-IsConnected(const CfgType& _start, const CfgType& _end,
-    LPOutput<MPTraits>* _lpOutput, double _posRes, double _oriRes,
-    bool _checkCollision, bool _savePath) {
-  CfgType col(_start.GetRobot());
-  return IsConnected(_start, _end, col, _lpOutput, _posRes,
-      _oriRes, _checkCollision, _savePath);
-}
-
-
-template <typename MPTraits>
-bool
-LocalPlannerMethod<MPTraits>::
-IsConnected(const GroupCfgType& _start, const GroupCfgType& _end,
-    GroupCfgType& _col,
-    GroupLPOutput<MPTraits>* _lpOutput, double _posRes, double _oriRes,
-    bool _checkCollision, bool _savePath, const Formation& _formation) {
-  throw NotImplementedException(WHERE) << "No default implementation provided.";
-}
-
-
-template <typename MPTraits>
-inline
-bool
-LocalPlannerMethod<MPTraits>::
-IsConnected(const GroupCfgType& _start, const GroupCfgType& _end,
-    GroupLPOutput<MPTraits>* _lpOutput, double _posRes, double _oriRes,
-    bool _checkCollision, bool _savePath, const Formation& _formation) {
-  GroupCfgType col(_start.GetGroupRoadmap());
-  return IsConnected(_start, _end, col, _lpOutput, _posRes,
-                     _oriRes, _checkCollision, _savePath, _formation);
-}
-
-
-template <typename MPTraits>
-std::vector<typename MPTraits::CfgType>
-LocalPlannerMethod<MPTraits>::
-BlindPath(const std::vector<CfgType>& _waypoints,
-    const double _posRes, const double _oriRes) {
-  // Blind local-plan between each intermediate,
-  bool first = true;
-  std::vector<CfgType> out;
-  LPOutput<MPTraits> lpOutput;
-  for(auto iter = _waypoints.begin(); iter + 1 != _waypoints.end(); ++iter) {
-    // If this isn't the first configuration, then its an intermediate and must
-    // be added to the path.
-    if(!first)
-      out.push_back(*iter);
-    else
-      first = false;
-
-    // Reconstruct the resolution-level edge and append it to the output.
-    lpOutput.Clear();
-    IsConnected(*iter, *(iter + 1), &lpOutput, _posRes, _oriRes, false, true);
-    out.insert(out.end(), lpOutput.m_path.begin(), lpOutput.m_path.end());
-  }
-  return out;
-}
-
-
-template <typename MPTraits>
-std::vector<typename MPTraits::CfgType>
-LocalPlannerMethod<MPTraits>::
-BlindPath(const std::vector<CfgType>& _waypoints) {
-  auto env = this->GetEnvironment();
-  return BlindPath(_waypoints, env->GetPositionRes(), env->GetOrientationRes());
-}
-
-
-template <typename MPTraits>
-std::vector<typename MPTraits::GroupCfgType>
-LocalPlannerMethod<MPTraits>::
-BlindPath(const std::vector<GroupCfgType>& _waypoints, const double _posRes,
-    const double _oriRes, const Formation& _formation) {
-  // Blind local-plan between each intermediate,
-  bool first = true;
-  std::vector<GroupCfgType> out;
-  GroupLPOutput<MPTraits> lpOutput(_waypoints.at(0).GetGroupRoadmap());
-  for(auto iter = _waypoints.begin(); iter + 1 != _waypoints.end(); ++iter) {
-    // If this isn't the first configuration, then its an intermediate and must
-    // be added to the path.
-    if(!first)
-      out.push_back(*iter);
-    else
-      first = false;
-
-    // Reconstruct the resolution-level edge and append it to the output.
-    lpOutput.Clear();
-    IsConnected(*iter, *(iter + 1), &lpOutput, _posRes, _oriRes, false, true);
-    out.insert(out.end(), lpOutput.m_path.begin(), lpOutput.m_path.end());
-  }
-  return out;
-}
-
-
-template <typename MPTraits>
-std::vector<typename MPTraits::GroupCfgType>
-LocalPlannerMethod<MPTraits>::
-BlindPath(const std::vector<GroupCfgType>& _waypoints,
-    const Formation& _formation) {
-  auto env = this->GetEnvironment();
-  return BlindPath(_waypoints, env->GetPositionRes(), env->GetOrientationRes(),
-      _formation);
-}
-
-/*----------------------------------------------------------------------------*/
 #endif

@@ -114,7 +114,7 @@
         nfLabel="Nearest" extenderLabel="BERO"
         growGoals="false" growthFocus="0.01" m="1"
         goalDmLabel="minkowski" goalThreshold="5"
-        wallPenalty=0.5 gamma=0.5 cost="reward">
+        wallPenalty="0.5" gamma="0.5" cost="reward">
 
         <GrowthSet threshold="0.0">
           <Extender label="BERO"/>

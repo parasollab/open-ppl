@@ -16,15 +16,14 @@
 ///
 /// @ingroup DistanceMetrics
 ////////////////////////////////////////////////////////////////////////////////
-template <typename MPTraits>
-class WorkspaceTranslationDistance : virtual public DistanceMetricMethod<MPTraits> {
+class WorkspaceTranslationDistance : virtual public DistanceMetricMethod {
 
   public:
 
     ///@name Local Types
     ///@{
 
-    typedef typename MPTraits::CfgType CfgType;
+    
 
     ///@}
     ///@name Construction
@@ -40,7 +39,7 @@ class WorkspaceTranslationDistance : virtual public DistanceMetricMethod<MPTrait
     ///@name Distance Interface
     ///@{
 
-    virtual double Distance(const CfgType& _c1, const CfgType& _c2) override;
+    virtual double Distance(const Cfg& _c1, const Cfg& _c2) override;
 
     ///@}
 
@@ -49,60 +48,11 @@ class WorkspaceTranslationDistance : virtual public DistanceMetricMethod<MPTrait
     ///@name Helpers
     ///@{
 
-    std::vector<mathtool::Vector3d> GetBodyCoordinates(const CfgType& _c) const
+    std::vector<mathtool::Vector3d> GetBodyCoordinates(const Cfg& _c) const
         noexcept;
 
     ///@}
 
 };
-
-/*------------------------------- Construction -------------------------------*/
-
-template <typename MPTraits>
-WorkspaceTranslationDistance<MPTraits>::
-WorkspaceTranslationDistance() : DistanceMetricMethod<MPTraits>() {
-  this->SetName("WorkspaceTranslation");
-}
-
-
-template <typename MPTraits>
-WorkspaceTranslationDistance<MPTraits>::
-WorkspaceTranslationDistance(XMLNode& _node)
-    : DistanceMetricMethod<MPTraits>(_node) {
-  this->SetName("WorkspaceTranslation");
-}
-
-/*----------------------------- Distance Interface ---------------------------*/
-
-template <typename MPTraits>
-double
-WorkspaceTranslationDistance<MPTraits>::
-Distance(const CfgType& _c1, const CfgType& _c2) {
-  auto x = GetBodyCoordinates(_c1),
-       y = GetBodyCoordinates(_c2);
-
-  double sum = 0;
-  for(size_t i = 0; i < x.size(); ++i)
-    sum += (x[i] - y[i]).normsqr();
-  return std::sqrt(sum);
-}
-
-/*---------------------------------- Helpers ---------------------------------*/
-
-template <typename MPTraits>
-std::vector<Vector3d>
-WorkspaceTranslationDistance<MPTraits>::
-GetBodyCoordinates(const CfgType& _c) const noexcept {
-  _c.ConfigureRobot();
-  const auto& bodies = _c.GetMultiBody()->GetBodies();
-
-  std::vector<Vector3d> coordinates;
-  for(const auto& body : bodies)
-    coordinates.push_back(body.GetWorldTransformation().translation());
-
-  return coordinates;
-}
-
-/*----------------------------------------------------------------------------*/
 
 #endif

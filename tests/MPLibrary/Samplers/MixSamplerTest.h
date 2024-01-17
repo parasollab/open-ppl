@@ -2,7 +2,7 @@
 #define PPL_MIX_SAMPLER_TEST_H_
 
 #include "MPLibrary/Samplers/MixSampler.h"
-#include "Testing/MPLibrary/Samplers/SamplerMethodTest.h"
+#include "SamplerMethodTest.h"
 #include "Utilities/MPUtils.h"
 
 template <class MPTraits>
@@ -97,7 +97,7 @@ TestIndividualCfgSample() {
   // Make a vector to calculate the sample instances of each of the samplers.
   std::vector<size_t> sampleProportions(this->m_samplers.size(), 0);
 
-  size_t numTrials= 500;
+  size_t numTrials= 1000;
 
   this->IndividualCfgSample(numTrials, boundary, cfgs, sampleProportions);
   
@@ -142,12 +142,7 @@ TestIndividualCfgSample() {
   //  if (tempValue <= criticalValue) { p_value += tempValue; }
   //}
 
-  if(passed) {
-    message = "IndividualCfgSample::PASSED!\n";
-  }
-  else {
-    message = "IndividualCfgSample::FAILED :(\n" + message;
-  }
+  message = "\tFINISHED TestIndividualCfgSample";
   return std::make_pair(passed,message);
 }
 
@@ -162,12 +157,7 @@ TestIndividualCfgSampleWithEEConstraint() {
   //TODO::Setup test of this function.
   //this->IndividualCfgSampleWithEEConstraint();
 
-  if(passed) {
-    message = "IndividualCfgSampleWithEEConstraint::PASSED!\n";
-  }
-  else {
-    message = "IndividualCfgSampleWithEEConstraint::FAILED :(\n" + message;
-  }
+  message = "\tFINISHED TestIndividualCfgSampleWithEEConstraint";
   return std::make_pair(passed,message);
 }
 
@@ -182,12 +172,7 @@ TestIndividualFilter() {
   //TODO::Setup test of this function.
   //this->IndividualFilter();
 
-  if(passed) {
-    message = "IndividualFilter::PASSED!\n";
-  }
-  else {
-    message = "IndividualFilter::FAILED :(\n" + message;
-  }
+  message = "\tFINISHED TestIndividualFilter";
   return std::make_pair(passed,message);
 }
 
@@ -202,12 +187,7 @@ TestGroupCfgSampleSingleBoundary() {
   //TODO::Setup test of this function.
   //this->GroupCfgSampleSingleBoundary();
 
-  if(passed) {
-    message = "GroupCfgSampleSingleBoundary::PASSED!\n";
-  }
-  else {
-    message = "GroupCfgSampleSingleBoundary::FAILED :(\n" + message;
-  }
+  message = "\tFINISHED TestGroupCfgSampleSingleBoundary";
   return std::make_pair(passed,message);
 }
 
@@ -222,12 +202,7 @@ TestGroupCfgSampleIndividualBoundaries() {
   //TODO::Setup test of this function.
   //this->GroupCfgSampleIndividualBoundaries();
 
-  if(passed) {
-    message = "GroupCfgSampleIndividualBoundaries::PASSED!\n";
-  }
-  else {
-    message = "GroupCfgSampleIndividualBoundaries::FAILED :(\n" + message;
-  }
+  message = "\tFINISHED TestGroupCfgSampleIndividualBoundaries";
   return std::make_pair(passed,message);
 }
 
@@ -242,12 +217,7 @@ TestGroupFilter() {
   //TODO::Setup test of this function.
   //this->GroupFilter();
 
-  if(passed) {
-    message = "GroupFilter::PASSED!\n";
-  }
-  else {
-    message = "GroupFilter::FAILED :(\n" + message;
-  }
+  message = "\tFINISHED TestGroupFilter"; 
   return std::make_pair(passed,message);
 }
 

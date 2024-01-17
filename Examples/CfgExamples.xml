@@ -19,12 +19,14 @@
     <Task label="query" robot="boxy">
       <StartConstraints>
         <!-- WARNING Support for multiple constraints is not yet implemented! -->
+        <!-- Use <Random/> to specify a randomly sampled configuration -->
         <CSpaceConstraint point="0 10 0 0 0 0"/>
       </StartConstraints>
 
       <GoalConstraints>
         <!-- Here multiple constraints indicates a compound goal. Each constraint
              represents a single intermediate goal. -->
+        <!-- Use <Random/> to specify a randomly sampled configuration -->
         <CSpaceConstraint point="0 -10 0 0.2 0.8 0.5"/>
       </GoalConstraints>
     </Task>
@@ -36,72 +38,70 @@
 
     <DistanceMetrics>
       <Euclidean label="euclidean"/>
-      <Manhattan label="manhattan"/>
+      <!-- <Manhattan label="manhattan"/>
       <Minkowski label="minkowski" r1="3.0" r2="3.0" r3="0.333"
-        normalize="false"/>
+        normalize="false"/> -->
     </DistanceMetrics>
 
     <ValidityCheckers>
       <CollisionDetection label="rapid" method="RAPID"/>
       <CollisionDetection label="pqp" method="PQP"/>
       <CollisionDetection label="pqp_solid" method="PQP_SOLID"/>
-      <CollisionDetection label="bounding_spheres" method="BoundingSpheres"/>
-      <CollisionDetection label="inside_spheres" method="InsideSpheres"/>
+      <!-- <CollisionDetection label="bounding_spheres" method="BoundingSpheres"/>
+      <CollisionDetection label="inside_spheres" method="InsideSpheres"/> -->
       <AlwaysTrueValidity label="alwaysTrue"/>
     </ValidityCheckers>
 
     <NeighborhoodFinders>
-      <BruteForceNF label="BFNF" dmLabel="euclidean" unconnected="false" k="4"/>
+      <!-- <BruteForceNF label="BFNF" dmLabel="euclidean" unconnected="false" k="4"/> -->
       <BruteForceNF label="Nearest" dmLabel="euclidean" unconnected="false"
         k="1"/>
-      <BruteForceNF label="BFNFAll" dmLabel="euclidean" k="0"/>
-      <RadiusNF label="RNF" dmLabel="euclidean" radius="8"/>
+      <!-- <BruteForceNF label="BFNFAll" dmLabel="euclidean" k="0"/>
+      <RadiusNF label="RNF" dmLabel="euclidean" radius="8"/> -->
     </NeighborhoodFinders>
 
     <Samplers>
       <UniformRandomSampler label="UniformRandom" vcLabel="alwaysTrue"/>
       <UniformRandomSampler label="UniformRandomFree" vcLabel="pqp_solid"/>
-      <ObstacleBasedSampler label="ObstacleBased" vcLabel="rapid" useBBX="false"
+      <!-- <ObstacleBasedSampler label="ObstacleBased" vcLabel="rapid" useBBX="false"
         pointSelection="cspace" dmLabel="euclidean" stepSize="0.0"
-        nShellsColl="0" nShellsFree="10" debug="false"/>
+        nShellsColl="0" nShellsFree="10" debug="false"/> -->
       <!--<GaussianSampler label="Gauss" vcLabel="rapid" d="0.2" dmLabel="euclidean"
         useBBX="false"/>
         nShellsColl="0" nShellsFree="1" debug="false"/>
       <BridgeTestSampler label="Bridge" vcLabel="rapid" d="0.2"
         dmLabel="euclidean" useBBX="true"/> -->
-      <MixSampler label="MixSampler">
+      <!-- <MixSampler label="MixSampler">
         <Sampler label="UniformRandom" p="0.5"/>
         <Sampler label="ObstacleBased" p="0.5"/>
-      </MixSampler>
-
-   
+      </MixSampler> -->
     </Samplers>
 
     <LocalPlanners>
-      <StraightLine label="sl" binaryEvaluation="true" vcLabel="rapid"/>
+      <!-- <StraightLine label="sl" binaryEvaluation="true" vcLabel="rapid"/>
       <StraightLine label="slAlwaysTrue" binaryEvaluation="true"
-        vcLabel="alwaysTrue"/>
+        vcLabel="alwaysTrue"/> -->
     </LocalPlanners>
 
     <Extenders>
       <BasicExtender label="BERO" debug="false" dmLabel="euclidean"
         vcLabel="rapid" maxDist="4." minDist=".01"/>
-      <BasicExtender label="BESO" debug="false" dmLabel="euclidean"
-        vcLabel="rapid" maxDist="10." minDist=".001" randomOrientation="false"/>
+      <!-- <BasicExtender label="BESO" debug="false" dmLabel="euclidean"
+        vcLabel="rapid" maxDist="10." minDist=".001" randomOrientation="false"/> -->
     </Extenders>
 
     <PathModifiers>
     </PathModifiers>
 
     <EdgeValidityCheckers>
-      <IntermediatesEdgeValidityChecker label="intermediateEdgeVC"
+      <!-- <IntermediatesEdgeValidityChecker label="intermediateEdgeVC"
         lpLabel = "sl"
         vcLabel = "pqp_solid"
-        overrideLp = "true"/>
+        overrideLp = "true"/> -->
     </EdgeValidityCheckers>
 
     <Connectors>
-      <NeighborhoodConnector label="Closest" debug="true"
+      <!-- <NeighborhoodConnector label="Closest" debug="true"
         nfLabel="BFNF" lpLabel="sl" checkIfSameCC="false"/>
       <NeighborhoodConnector label="ToggleConnect" nfLabel="BFNF" lpLabel="sl"
         maxFailures="1" checkIfSameCC="false"/>
@@ -111,17 +111,20 @@
         checkIfSameCC="false"/>
       <CCsConnector label="CCs" debug="false"
         nfLabel="BFNF" lpLabel="slAlwaysTrue" checkIfSameCC="false"/>
-      <RewireConnector label="Rewire" nfLabel="OptimalK" lpLabel="sl"/>
+      <RewireConnector label="Rewire" nfLabel="OptimalK" lpLabel="sl"/> -->
     </Connectors>
 
     <Metrics>
       <NumNodesMetric label="NumNodes"/>
-      <NumEdgesMetric label="NumEdges"/>
-      <TimeMetric label="TimeInSec"/>
+      <!-- <NumEdgesMetric label="NumEdges"/>
+      <TimeMetric label="TimeInSec"/> -->
     </Metrics>
 
     <MapEvaluators>
-      <QueryMethod label="Query" debug="false"
+      <ConditionalEvaluator label="NodesEval" metric_method="NumNodes"
+        value="5" operator=">="/>
+
+      <!-- <QueryMethod label="Query" debug="false"
         graphSearchAlg="dijkstras" safeIntervalToolLabel="SI"/>
 
       <LazyQuery label="LazyQuery" debug="true"
@@ -166,44 +169,44 @@
 
       <TimeEvaluator label="TimeEval" timeout="10"/>
 
-      <CollisionEvaluator label="colEval" evcLabel="intermediateEdgeVC"/>
+      <CollisionEvaluator label="colEval" evcLabel="intermediateEdgeVC"/> -->
     </MapEvaluators>
 
     <MPStrategies>
-      <BasicPRM label="MixSamplerStrat" debug="true" querySampler="UniformRandomFree">
+      <!-- <BasicPRM label="MixSamplerStrat" debug="true" querySampler="UniformRandomFree">
         <Sampler label="MixSampler" number="10" attempts="1"/>
         <Connector label="Closest"/>
         <Evaluator label="NodesEval"/>
-      </BasicPRM>
+      </BasicPRM> -->
 
       <!-- Basic PRM where num samples is based on Number -->
-      <BasicPRM label="OBPRM" debug="true" querySampler="UniformRandomFree">
+      <!-- <BasicPRM label="OBPRM" debug="true" querySampler="UniformRandomFree">
         <Sampler label="ObstacleBased" number="10" attempts="10"/>
         <Connector label="Closest"/>
         <Evaluator label="NodesEval"/>
-      </BasicPRM>
+      </BasicPRM> -->
 
-      <BasicPRM label="BasicPRM1" debug="true" querySampler="UniformRandomFree">
+      <!-- <BasicPRM label="BasicPRM1" debug="true" querySampler="UniformRandomFree">
         <Sampler label="UniformRandomFree" number="25" attempts="1"/>
         <Connector label="ClosestAlwaysTrue"/>
         <Evaluator label="CollisionAfterQueryAfterNodes"/>
-      </BasicPRM>
+      </BasicPRM> -->
 
 
       <!-- Basic PRM restarted from an input roadmap input.map. -->
-      <BasicPRM label="BasicPRM2"
+      <!-- <BasicPRM label="BasicPRM2"
         inputMap="input.map">
         <Sampler label="UniformRandomFree" number="10" attempts="10"/>
         <Connector label="Closest"/>
         <Evaluator label="NodesEval"/>
-      </BasicPRM>
+      </BasicPRM> -->
 
       <!-- LazyPRM -->
-      <BasicPRM label="LazyPRM" debug="true">
+      <!-- <BasicPRM label="LazyPRM" debug="true">
         <Sampler label="UniformRandom" number="1" attempts="1"/>
         <Connector label="ClosestAlwaysTrue"/>
         <Evaluator label="LazyQuery"/>
-      </BasicPRM>
+      </BasicPRM> -->
 
       <!-- Basic RRT -->
       <BasicRRTStrategy label="RRT" debug="true"
@@ -211,26 +214,26 @@
         nfLabel="Nearest" extenderLabel="BERO"
         growGoals="false" growthFocus="0.01" m="1"
         goalDmLabel="euclidean" goalThreshold="5">
-        <Evaluator label="Query"/>
+        <Evaluator label="NodesEval"/>
       </BasicRRTStrategy>
 
       <!-- The connector needs to be Rewire for RRT* -->
-      <BasicRRTStrategy label="RRTstar"
+      <!-- <BasicRRTStrategy label="RRTstar"
         querySampler="UniformRandomFree" samplerLabel="UniformRandom"
         growGoals="false" growthFocus="0.01"
         nfLabel="Nearest" extenderLabel="BERO" connectorLabel="Rewire">
         <Evaluator label="NodesEval"/>
-      </BasicRRTStrategy>
+      </BasicRRTStrategy> -->
 
       <!-- DynamicRegionRRT -->
-      <DynamicRegionRRT label="DRRRT" debug="true" querySampler="UniformRandomFree"
+      <!-- <DynamicRegionRRT label="DRRRT" debug="true" querySampler="UniformRandomFree"
           samplerLabel="UniformRandom" nfLabel="Nearest" extenderLabel="BERO"
           growGoals="false" connectorLabel="Closest" explore=".2" regionFactor="2.5"
           penetration="1" velocityBiasing="false" velocityAlignment=".4"
           decompositionLabel="fine" skeletonType="ma" goalThreshold="5"
           goalDmLabel="euclidean">
           <Evaluator label="BoundedQuery" />
-      </DynamicRegionRRT>
+      </DynamicRegionRRT> -->
 
     </MPStrategies>
 
@@ -260,7 +263,7 @@
       <TopologicalMap label="tm-fine" decompositionLabel="fine"
         gridSize="1"/> -->
 
-      <ReebGraphConstruction debug="false" write="false" filename=""/>
+      <!-- <ReebGraphConstruction debug="false" write="false" filename=""/> -->
 
       <!--MedialAxisUtility label="maUtil" vcLabel="pqp_solid"
         dmLabel="euclidean" clearanceType="exact" penetrationType="exact"
@@ -268,18 +271,18 @@
 
       <!--SkeletonClearanceUtility label="scu" mauLabel="maUtil"/-->
 
-      <SafeIntervalTool label="SI" vcLabel="rapid"/>
+      <!-- <SafeIntervalTool label="SI" vcLabel="rapid"/> -->
 
     </MPTools>
 
     <!-- MPProblem allows multiple solvers to be specified and executed. -->
 
-    <Solver mpStrategyLabel="BasicPRM1" seed="12345678"
+    <Solver mpStrategyLabel="RRT" seed="12345678"
       baseFilename="example" vizmoDebug="true"/>
 
   </Library>
 
-  <TMPLibrary>
+  <!-- <TMPLibrary>
     <TMPStrategies>
     </TMPStrategies>
 
@@ -288,6 +291,6 @@
     </TaskEvaluators>
 
     <Solver tmpStrategyLabel="SimpleMotion" baseFilename="tmp_examples" />
-  </TMPLibrary>
+  </TMPLibrary> -->
 
 </MotionPlanning>

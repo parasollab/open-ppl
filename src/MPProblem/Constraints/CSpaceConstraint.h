@@ -30,7 +30,7 @@ class CSpaceConstraint : public BoundaryConstraint {
     /// Construct a constraint from an XML node.
     /// @param _r The robot to constrain.
     /// @param _node The node to parse.
-    explicit CSpaceConstraint(Robot* const _r, XMLNode& _node);
+    explicit CSpaceConstraint(Robot* const _r, XMLNode& _node, Environment* _env = nullptr);
 
     /// Construct a constraint from message strings.
     /// @param _r The robot to constrain.

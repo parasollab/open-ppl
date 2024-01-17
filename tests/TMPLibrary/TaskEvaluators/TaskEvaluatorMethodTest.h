@@ -1,8 +1,8 @@
 #ifndef PPL_TASK_EVALUATOR_METHOD_TEST_H_
 #define PPL_TASK_EVALUATOR_METHOD_TEST_H_
 
-#include "TMPLibrary/TaskEvaluators/TaskEvaluatorMethod.h"
-#include "Testing/TestBaseObject.h"
+#include "TMPLibrary/TaskEvaluators/TaskEvaluatorMethod.h"  //src
+#include "../../TestBaseObject.h"
 
 class TaskEvaluatorMethodTest : virtual public TaskEvaluatorMethod,
                                 public TestBaseObject {

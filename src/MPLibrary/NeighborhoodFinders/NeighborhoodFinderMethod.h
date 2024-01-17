@@ -5,6 +5,7 @@
 #include <boost/mpl/for_each.hpp>
 
 #include "Neighbors.h"
+#include "MPLibrary/MPBaseObject.h"
 #include "Utilities/MPUtils.h"
 #include "ConfigurationSpace/GenericStateGraph.h"
 
@@ -19,7 +20,7 @@
 /// @usage
 /// @code
 /// NeighborhoodFinderPointer nf = this->GetNeighborhoodFinder(m_nfLabel);
-/// CfgType queryCfg;
+/// Cfg queryCfg;
 /// VertexSet candidates;
 /// std::vector<Neighbor> neighbors;
 /// nf->FindNeighbors(this->GetRoadmap(), queryCfg, candidates,
@@ -28,20 +29,18 @@
 ///
 /// @ingroup NeighborhoodFinders
 ////////////////////////////////////////////////////////////////////////////////
-template <typename MPTraits>
-class NeighborhoodFinderMethod : public MPBaseObject<MPTraits> {
+class NeighborhoodFinderMethod : public MPBaseObject {
 
   public:
 
     ///@name Motion Planning Types
     ///@{
 
-    typedef typename MPTraits::RoadmapType            RoadmapType;
+    typedef typename MPBaseObject::RoadmapType        RoadmapType;
     typedef typename RoadmapType::VID                 VID;
     typedef typename RoadmapType::VertexSet           VertexSet;
-    typedef typename MPTraits::CfgType                CfgType;
-    typedef typename MPTraits::GroupRoadmapType       GroupRoadmapType;
-    typedef typename MPTraits::GroupCfgType           GroupCfgType;
+    typedef typename MPBaseObject::GroupRoadmapType   GroupRoadmapType;
+    typedef typename MPBaseObject::GroupCfgType       GroupCfgType;
 
     ///@}
     ///@name Local Types
@@ -108,10 +107,8 @@ class NeighborhoodFinderMethod : public MPBaseObject<MPTraits> {
     /// @param _cfg The query configuration.
     /// @param _candidates The set of candidate VIDs.
     /// @param _out Output iterator.
-    virtual void FindNeighbors(RoadmapType* const _r, const CfgType& _cfg,
+    virtual void FindNeighbors(RoadmapType* const _r, const Cfg& _cfg,
         const VertexSet& _candidates, OutputIterator _out) = 0;
-    ///@example NeighborhoodFinder_UseCase.cpp
-    /// This is an example of how to use the neighborhood finder methods.
 
     /// @overload This version is for group roadmaps.
     virtual void FindNeighbors(GroupRoadmapType* const _r,
@@ -159,110 +156,11 @@ class NeighborhoodFinderMethod : public MPBaseObject<MPTraits> {
 
 };
 
-/*------------------------------ Construction --------------------------------*/
-
-template <typename MPTraits>
-NeighborhoodFinderMethod<MPTraits>::
-NeighborhoodFinderMethod(const Type _type) : MPBaseObject<MPTraits>(),
-    m_nfType(_type) {
-}
-
-
-template <typename MPTraits>
-NeighborhoodFinderMethod<MPTraits>::
-NeighborhoodFinderMethod(XMLNode& _node, const Type _type,
-    const bool _requireDM) : MPBaseObject<MPTraits>(_node) {
-  if(_requireDM)
-    m_dmLabel = _node.Read("dmLabel", true, "", "Distance Metric Method");
-
-  m_unconnected = _node.Read("unconnected", false, m_unconnected,
-      "Require neighbors to be non-adjacent to the query configuration");
-
-  m_nfType = _type;
-  switch(_type) {
-    case Type::K:
-    {
-      m_k = _node.Read("k", true,
-          m_k, size_t(0), std::numeric_limits<size_t>::max(),
-          "The number of neighbors to find. Zero for all.");
-      break;
-    }
-    case Type::RADIUS:
-    {
-      m_radius = _node.Read("radius", true,
-          m_radius, 0., std::numeric_limits<double>::max(),
-          "Include all neighbors within this metric radius.");
-      break;
-    }
-    default:
-      break;
-  }
-}
-
-/*-------------------------- MPBaseObject Overrides --------------------------*/
-
-template <typename MPTraits>
-void
-NeighborhoodFinderMethod<MPTraits>::
-Print(std::ostream& _os) const {
-  MPBaseObject<MPTraits>::Print(_os);
-  _os << "\tdmLabel: " << m_dmLabel
-      << "\n\tunconnected: " << m_unconnected
-      << std::endl;
-}
-
-/*-------------------------------- Accessors ---------------------------------*/
-
-template <typename MPTraits>
-inline
-typename NeighborhoodFinderMethod<MPTraits>::Type
-NeighborhoodFinderMethod<MPTraits>::
-GetType() const noexcept {
-  return m_nfType;
-}
-
-
-template <typename MPTraits>
-inline
-size_t&
-NeighborhoodFinderMethod<MPTraits>::
-GetK() noexcept {
-  return m_k;
-}
-
-
-template <typename MPTraits>
-inline
-double&
-NeighborhoodFinderMethod<MPTraits>::
-GetRadius() noexcept {
-  return m_radius;
-}
-
-
-template <typename MPTraits>
-inline
-void
-NeighborhoodFinderMethod<MPTraits>::
-SetDMLabel(const std::string& _label) noexcept {
-  m_dmLabel = _label;
-}
-
-
-template <typename MPTraits>
-inline
-const std::string&
-NeighborhoodFinderMethod<MPTraits>::
-GetDMLabel() const noexcept {
-  return m_dmLabel;
-}
-
 /*------------------------ Nearest-Neighbor Queries --------------------------*/
 
-template <typename MPTraits>
 template <typename AbstractRoadmapType>
 void
-NeighborhoodFinderMethod<MPTraits>::
+NeighborhoodFinderMethod::
 FindNeighbors(AbstractRoadmapType* const _r,
     const typename AbstractRoadmapType::CfgType& _cfg,
     OutputIterator _out) {
@@ -271,11 +169,10 @@ FindNeighbors(AbstractRoadmapType* const _r,
 
 /*-------------------------------- Helpers -----------------------------------*/
 
-template <typename MPTraits>
 template <typename AbstractRoadmapType>
 inline
 bool
-NeighborhoodFinderMethod<MPTraits>::
+NeighborhoodFinderMethod::
 DirectEdge(const AbstractRoadmapType* _g,
     const typename AbstractRoadmapType::CfgType& _c,
     const typename AbstractRoadmapType::VID _v) const noexcept {
@@ -283,7 +180,5 @@ DirectEdge(const AbstractRoadmapType* _g,
   const typename AbstractRoadmapType::VID vid = _g->GetVID(_c);
   return vid != INVALID_VID and _g->IsEdge(vid, _v);
 }
-
-/*----------------------------------------------------------------------------*/
 
 #endif

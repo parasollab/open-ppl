@@ -8,16 +8,14 @@
 /// Always report valid and mark the configuration for lazy validation.
 /// @ingroup ValidityCheckers
 ////////////////////////////////////////////////////////////////////////////////
-template <typename MPTraits>
-class AlwaysTrueValidity : virtual public ValidityCheckerMethod<MPTraits> {
+class AlwaysTrueValidity : virtual public ValidityCheckerMethod {
 
   public:
 
     ///@name Local Types
     ///@{
 
-    typedef typename MPTraits::CfgType CfgType;
-    typedef typename MPTraits::GroupCfgType  GroupCfgType;
+    typedef typename MPBaseObject::GroupCfgType  GroupCfgType;
     typedef typename GroupCfgType::Formation Formation;
 
     ///@}
@@ -32,45 +30,12 @@ class AlwaysTrueValidity : virtual public ValidityCheckerMethod<MPTraits> {
     ///@name ValidityChecker Interface
     ///@{
 
-    virtual bool IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo,
+    virtual bool IsValidImpl(Cfg& _cfg, CDInfo& _cdInfo,
         const std::string& _callName) override;
 
     bool IsValidImpl(GroupCfgType& _cfg, CDInfo& _cdInfo, 
         const std::string& _caller) override;
     ///@}
 };
-
-/*------------------------------ Construction --------------------------------*/
-
-template <typename MPTraits>
-AlwaysTrueValidity<MPTraits>::
-AlwaysTrueValidity() {
-  this->SetName("AlwaysTrueValidity");
-}
-
-
-template <typename MPTraits>
-AlwaysTrueValidity<MPTraits>::
-AlwaysTrueValidity(XMLNode& _node) : ValidityCheckerMethod<MPTraits>(_node) {
-  this->SetName("AlwaysTrueValidity");
-}
-
-/*------------------------- ValidityChecker Interface ------------------------*/
-
-template <typename MPTraits>
-bool
-AlwaysTrueValidity<MPTraits>::
-IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo, const std::string& _callName) {
-  _cfg.SetLabel("Lazy", true);
-  return true;
-}
-
-template <typename MPTraits>
-bool
-AlwaysTrueValidity<MPTraits>::
-IsValidImpl(GroupCfgType& _cfg, CDInfo& _cdInfo, const std::string& _caller) {
-  return true;
-}
-/*----------------------------------------------------------------------------*/
 
 #endif

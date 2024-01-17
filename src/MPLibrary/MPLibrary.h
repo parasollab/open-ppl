@@ -1,6 +1,10 @@
 #ifndef PMPL_MP_LIBRARY_H_
 #define PMPL_MP_LIBRARY_H_
 
+#include "MPLibrary/MPSolution.h"
+
+#include "MPLibrary/MPBaseObject.h"
+
 #include "MPProblem/MPProblem.h"
 #include "MPProblem/MPTask.h"
 #include "MPProblem/GroupTask.h"
@@ -10,6 +14,9 @@
 #include "Utilities/MetricUtils.h"
 #include "Utilities/MPUtils.h"
 #include "Utilities/XMLNode.h"
+#include "Utilities/MethodSet.h"
+
+#include "Traits/Methods.h"
 
 #include "MPLibrary/Connectors/ConnectorMethod.h"
 #include "MPLibrary/DistanceMetrics/DistanceMetricMethod.h"
@@ -25,21 +32,17 @@
 #include "MPLibrary/Samplers/SamplerMethod.h"
 #include "MPLibrary/ValidityCheckers/CollisionDetectionValidity.h"
 #include "MPLibrary/ValidityCheckers/ValidityCheckerMethod.h"
-
-#include <algorithm>
-#include <atomic>
-#include <unordered_map>
+#include "MPLibrary/GoalTracker.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// A collection of planning algorithms that can operate on a specific
 /// MPProblem and MPTask.
 ////////////////////////////////////////////////////////////////////////////////
-template <typename MPTraits>
 #ifdef _PARALLEL
-class MPLibraryType : public stapl::p_object
+class MPLibrary : public stapl::p_object
 #else
-class MPLibraryType
+class MPLibrary
 #endif
 {
 
@@ -48,22 +51,18 @@ class MPLibraryType
     ///@name Motion Planning Types
     ///@{
 
-    typedef typename MPTraits::MPSolution       MPSolution;
-    typedef typename MPTraits::RoadmapType      RoadmapType;
-    typedef typename RoadmapType::VID           VID;
-    typedef typename MPTraits::CfgType          CfgType;
-    typedef typename MPTraits::GroupRoadmapType GroupRoadmapType;
-    typedef typename MPTraits::Path             Path;
-    typedef typename MPTraits::GroupPathType    GroupPath;
-    typedef typename MPTraits::MPTools          MPTools;
-    typedef typename MPTraits::LocalObstacleMap LocalObstacleMap;
-    typedef typename MPTraits::GoalTracker      GoalTracker;
+    typedef MPSolutionType MPSolution;
+    typedef GenericStateGraph<Cfg, DefaultWeight<Cfg>> RoadmapType;
+    typedef GroupRoadmap<GroupCfg<RoadmapType>, GroupLocalPlan<RoadmapType>> GroupRoadmapType;
+    typedef size_t VID;
+    typedef MPToolsType MPTools;
+    typedef GoalTrackerType GoalTracker;
 
     ///@}
     ///@name Local Types
     ///@{
 
-    /// Solver represents an input set to MPLibraryType. It includes an
+    /// Solver represents an input set to MPLibrary. It includes an
     /// MPStrategy label, seed, base file name, and vizmo debug option.
     struct Solver {
       std::string label;         ///< The XML label for the strategy to use.
@@ -76,21 +75,21 @@ class MPLibraryType
     ///@name Method Set Types
     ///@{
 
-    typedef MethodSet<MPTraits, DistanceMetricMethod<MPTraits>> DistanceMetricSet;
-    typedef MethodSet<MPTraits, ValidityCheckerMethod<MPTraits>>
+    typedef MethodSet<DistanceMetricMethod> DistanceMetricSet;
+    typedef MethodSet<ValidityCheckerMethod>
                                                             ValidityCheckerSet;
-    typedef MethodSet<MPTraits, NeighborhoodFinderMethod<MPTraits>>
+    typedef MethodSet<NeighborhoodFinderMethod>
                                                             NeighborhoodFinderSet;
-    typedef MethodSet<MPTraits, SamplerMethod<MPTraits>>        SamplerSet;
-    typedef MethodSet<MPTraits, LocalPlannerMethod<MPTraits>>   LocalPlannerSet;
-    typedef MethodSet<MPTraits, ExtenderMethod<MPTraits>>       ExtenderSet;
-    typedef MethodSet<MPTraits, PathModifierMethod<MPTraits>>   PathModifierSet;
-    typedef MethodSet<MPTraits, EdgeValidityCheckerMethod<MPTraits>>
+    typedef MethodSet<SamplerMethod>        SamplerSet;
+    typedef MethodSet<LocalPlannerMethod>   LocalPlannerSet;
+    typedef MethodSet<ExtenderMethod>       ExtenderSet;
+    typedef MethodSet<PathModifierMethod>   PathModifierSet;
+    typedef MethodSet<EdgeValidityCheckerMethod>
                                                                 EdgeValidityCheckerSet;
-    typedef MethodSet<MPTraits, ConnectorMethod<MPTraits>>      ConnectorSet;
-    typedef MethodSet<MPTraits, MetricMethod<MPTraits>>         MetricSet;
-    typedef MethodSet<MPTraits, MapEvaluatorMethod<MPTraits>>   MapEvaluatorSet;
-    typedef MethodSet<MPTraits, MPStrategyMethod<MPTraits>>     MPStrategySet;
+    typedef MethodSet<ConnectorMethod>      ConnectorSet;
+    typedef MethodSet<MetricMethod>         MetricSet;
+    typedef MethodSet<MapEvaluatorMethod>   MapEvaluatorSet;
+    typedef MethodSet<MPStrategyMethod>     MPStrategySet;
 
     ///@}
     ///@name Method Pointer Types
@@ -115,13 +114,13 @@ class MPLibraryType
     ///@name Construction
     ///@{
 
-    MPLibraryType();
+    MPLibrary();
 
-    MPLibraryType(const std::string& _filename);
+    MPLibrary(const std::string& _filename);
 
-    MPLibraryType(XMLNode& planningLibraryNode);
+    MPLibrary(XMLNode& planningLibraryNode);
 
-    virtual ~MPLibraryType();
+    virtual ~MPLibrary();
 
     ///@}
     ///@name Configuration
@@ -155,7 +154,7 @@ class MPLibraryType
       m_validityCheckers->AddMethod(_vc, _l);
     }
 
-    /// Toggle (negate) the validity output for ALL validity checkers.
+    // Toggle (negate) the validity output for ALL validity checkers.
     void ToggleValidity() {
       for(auto& vc : *m_validityCheckers)
         vc.second->ToggleValidity();
@@ -263,7 +262,7 @@ class MPLibraryType
     /// For cases where we need to reset all instances of TimeEvaluator.
 /*    void ResetTimeEvaluators() {
       for(auto& labelPtr : *m_mapEvaluators) {
-        auto t = dynamic_cast<TimeEvaluator<MPTraits>*>(labelPtr.second.get());
+        auto t = dynamic_cast<TimeEvaluator*>(labelPtr.second.get());
         if(t)
           t->Initialize();
       }
@@ -423,7 +422,7 @@ class MPLibraryType
     ///@name Debugging
     ///@{
 
-    void Print(ostream& _os) const; ///< Print each method set.
+    void Print(std::ostream& _os) const; ///< Print each method set.
 
     ///@}
 
@@ -500,701 +499,15 @@ class MPLibraryType
     ///@}
 };
 
-/*---------------------------- Construction ----------------------------------*/
 
-template <typename MPTraits>
-MPLibraryType<MPTraits>::
-MPLibraryType() {
-  m_distanceMetrics = new DistanceMetricSet(this,
-      typename MPTraits::DistanceMetricMethodList(), "DistanceMetrics");
-  m_validityCheckers = new ValidityCheckerSet(this,
-      typename MPTraits::ValidityCheckerMethodList(), "ValidityCheckers");
-  m_neighborhoodFinders = new NeighborhoodFinderSet(this,
-      typename MPTraits::NeighborhoodFinderMethodList(), "NeighborhoodFinders");
-  m_samplers = new SamplerSet(this,
-      typename MPTraits::SamplerMethodList(), "Samplers");
-  m_localPlanners = new LocalPlannerSet(this,
-      typename MPTraits::LocalPlannerMethodList(), "LocalPlanners");
-  m_extenders = new ExtenderSet(this,
-      typename MPTraits::ExtenderMethodList(), "Extenders");
-  m_pathModifiers = new PathModifierSet(this,
-      typename MPTraits::PathModifierMethodList(), "PathModifiers");
-  m_edgeValidityCheckers = new EdgeValidityCheckerSet(this,
-      typename MPTraits::EdgeValidityCheckerMethodList(), "EdgeValidityCheckers");
-  m_connectors = new ConnectorSet(this,
-      typename MPTraits::ConnectorMethodList(), "Connectors");
-  m_metrics = new MetricSet(this,
-      typename MPTraits::MetricMethodList(), "Metrics");
-  m_mapEvaluators = new MapEvaluatorSet(this,
-      typename MPTraits::MapEvaluatorMethodList(), "MapEvaluators");
-  m_mpStrategies = new MPStrategySet(this,
-      typename MPTraits::MPStrategyMethodList(), "MPStrategies");
-  m_mpTools = new MPTools(this);
-  m_goalTracker.reset(new GoalTracker(this));
-}
-
-
-template <typename MPTraits>
-MPLibraryType<MPTraits>::
-MPLibraryType(const std::string& _filename) : MPLibraryType() {
-  ReadXMLFile(_filename);
-}
-
-
-template <typename MPTraits>
-MPLibraryType<MPTraits>::
-MPLibraryType(XMLNode& planningLibraryNode) : MPLibraryType() {
-  ProcessXML(planningLibraryNode);
-}
-
-
-template <typename MPTraits>
-MPLibraryType<MPTraits>::
-~MPLibraryType() {
-  delete m_distanceMetrics;
-  delete m_validityCheckers;
-  delete m_neighborhoodFinders;
-  delete m_samplers;
-  delete m_localPlanners;
-  delete m_extenders;
-  delete m_pathModifiers;
-  delete m_edgeValidityCheckers;
-  delete m_connectors;
-  delete m_metrics;
-  delete m_mapEvaluators;
-  delete m_mpStrategies;
-  delete m_mpTools;
-}
-
-
-template <typename MPTraits>
-void
-MPLibraryType<MPTraits>::
-Initialize() {
-  MethodTimer mt(this->GetStatClass(), "MPLibrary::Initialize");
-
-  // Set up the goal tracker.
-  m_goalTracker->Clear();
-  if(this->GetTask())
-    m_goalTracker->AddMap(GetRoadmap(), GetTask());
-  else if(this->GetGroupTask())
-    m_goalTracker->AddMap(GetGroupRoadmap(), GetGroupTask());
-  else
-    throw RunTimeException(WHERE) << "No current task was set.";
-
-  m_distanceMetrics->Initialize();
-  m_validityCheckers->Initialize();
-  m_neighborhoodFinders->Initialize();
-  m_samplers->Initialize();
-  m_localPlanners->Initialize();
-  m_extenders->Initialize();
-  m_pathModifiers->Initialize();
-  m_edgeValidityCheckers->Initialize();
-  m_connectors->Initialize();
-  m_metrics->Initialize();
-  m_mapEvaluators->Initialize();
-  m_mpTools->Initialize();
-
-  m_running = true;
-}
-
-
-template <typename MPTraits>
-void
-MPLibraryType<MPTraits>::
-Uninitialize() {
-  // Clear goal tracker.
-  m_goalTracker->Clear();
-
-  // Clear group hooks.
-  GroupRoadmapType* const groupMap = this->GetGroupRoadmap();
-  if(groupMap)
-    groupMap->ClearHooks();
-
-  // Also clear hooks for the individual robot if it exists:
-  if(m_solution->GetRobot())
-    this->GetRoadmap()->ClearHooks();
-}
-
-/*---------------------------- XML Helpers -----------------------------------*/
-
-template <typename MPTraits>
-void
-MPLibraryType<MPTraits>::
-ReadXMLFile(const std::string& _filename) {
-  // Open the XML and get the root node.
-  XMLNode mpNode(_filename, "MotionPlanning");
-
-  // Find the 'MPLibrary' node.
-  XMLNode* planningLibrary = nullptr;
-  for(auto& child : mpNode)
-    if(child.Name() == "Library")
-      planningLibrary = &child;
-
-  // Throw exception if we can't find it.
-  if(!planningLibrary)
-    throw ParseException(WHERE) << "Cannot find MPLibrary node in XML file '"
-                                << _filename << "'.";
-  ProcessXML(*planningLibrary);
-}
-
-template <typename MPTraits>
-void
-MPLibraryType<MPTraits>::
-ProcessXML(XMLNode& planningLibraryNode) {
-
-  // Parse the library node to set algorithms and parameters.
-  for(auto& child : planningLibraryNode)
-    ParseChild(child);
-
-  // Ensure we have at least one solver.
-  if(m_solvers.empty())
-    throw ParseException(WHERE) << "Cannot find Solver node in XML node '.";
-
-  // Print XML details if requested.
-  bool print = planningLibraryNode.Read("print", false, false, "Print all XML input");
-  if(print)
-    Print(cout);
-
-  // Handle XML warnings/errors.
-  bool warnings = planningLibraryNode.Read("warnings", false, false, "Report warnings");
-  if(warnings) {
-    bool warningsAsErrors = planningLibraryNode.Read("warningsAsErrors", false, false,
-        "XML warnings considered errors");
-    planningLibraryNode.WarnAll(warningsAsErrors);
-  }
-}
-
-
-template <typename MPTraits>
-bool
-MPLibraryType<MPTraits>::
-ParseChild(XMLNode& _node) {
-  if(_node.Name() == "DistanceMetrics") {
-    m_distanceMetrics->ParseXML(_node);
-    return true;
-  }
-  else if(_node.Name() == "ValidityCheckers") {
-    m_validityCheckers->ParseXML(_node);
-    return true;
-  }
-  else if(_node.Name() == "NeighborhoodFinders") {
-    m_neighborhoodFinders->ParseXML(_node);
-    return true;
-  }
-  else if(_node.Name() == "Samplers") {
-    m_samplers->ParseXML(_node);
-    return true;
-  }
-  else if(_node.Name() == "LocalPlanners") {
-    m_localPlanners->ParseXML(_node);
-    return true;
-  }
-  else if(_node.Name() == "Extenders") {
-    m_extenders->ParseXML(_node);
-    return true;
-  }
-  else if(_node.Name() == "PathModifiers") {
-    m_pathModifiers->ParseXML(_node);
-    return true;
-  }
-  else if(_node.Name() == "EdgeValidityCheckers") {
-    m_edgeValidityCheckers->ParseXML(_node);
-    return true;
-  }
-  else if(_node.Name() == "Connectors") {
-    m_connectors->ParseXML(_node);
-    return true;
-  }
-  else if(_node.Name() == "Metrics") {
-    m_metrics->ParseXML(_node);
-    return true;
-  }
-  else if(_node.Name() == "MapEvaluators") {
-    m_mapEvaluators->ParseXML(_node);
-    return true;
-  }
-  else if(_node.Name() == "MPStrategies") {
-    m_mpStrategies->ParseXML(_node);
-    return true;
-  }
-  else if(_node.Name() == "MPTools") {
-    m_mpTools->ParseXML(_node);
-    return true;
-  }
-  else if(_node.Name() == "Solver") {
-    const std::string label = _node.Read("mpStrategyLabel", true, "",
-        "The strategy to use.");
-
-    const long seed = _node.Read("seed", true, size_t(1), size_t(0),
-        std::numeric_limits<size_t>::max(),
-        "The random number generator seed.");
-
-    const std::string baseFilename = _node.Read("baseFilename", true, "",
-        "BaseFilename for the solver.") + "." + std::to_string(seed);
-
-    const bool vdOutput = _node.Read("vizmoDebug", false, false,
-        "True yields VizmoDebug output for the solver.");
-
-    m_solvers.emplace_back(Solver{label, seed, baseFilename, vdOutput});
-    return true;
-  }
-  else
-    return false;
-}
-
-/*-------------------------------- Debugging ---------------------------------*/
-
-template <typename MPTraits>
-void
-MPLibraryType<MPTraits>::
-Print(ostream& _os) const {
-  _os << "MPLibrary" << std::endl;
-  m_distanceMetrics->Print(_os);
-  m_validityCheckers->Print(_os);
-  m_neighborhoodFinders->Print(_os);
-  m_samplers->Print(_os);
-  m_localPlanners->Print(_os);
-  m_extenders->Print(_os);
-  m_pathModifiers->Print(_os);
-  m_edgeValidityCheckers->Print(_os);
-  m_connectors->Print(_os);
-  m_metrics->Print(_os);
-  m_mapEvaluators->Print(_os);
-  m_mpStrategies->Print(_os);
-}
-
-/*----------------------------- Input Accessors ------------------------------*/
-
-template <typename MPTraits>
-inline
-MPProblem*
-MPLibraryType<MPTraits>::
-GetMPProblem() const noexcept {
-  return m_problem;
-}
-
-
-template <typename MPTraits>
-void
-MPLibraryType<MPTraits>::
-SetMPProblem(MPProblem* const _problem) noexcept
-{
-  m_problem = _problem;
-}
-
-
-template <typename MPTraits>
-inline
-MPTask*
-MPLibraryType<MPTraits>::
-GetTask() const noexcept {
-  return m_task;
-}
-
-
-template <typename MPTraits>
-inline
-void
-MPLibraryType<MPTraits>::
-SetTask(MPTask* const _task) noexcept {
-  m_task = _task;
-}
-
-
-template <typename MPTraits>
-inline
-GroupTask*
-MPLibraryType<MPTraits>::
-GetGroupTask() const noexcept {
-  return m_groupTask;
-}
-
-
-template <typename MPTraits>
-inline
-void
-MPLibraryType<MPTraits>::
-SetGroupTask(GroupTask* const _task) noexcept {
-  m_groupTask = _task;
-}
-
-
-template <typename MPTraits>
-inline
-const std::string&
-MPLibraryType<MPTraits>::
-GetBaseFilename() const noexcept {
-  return m_problem->GetBaseFilename();
-}
-
-
-template <typename MPTraits>
-inline
-void
-MPLibraryType<MPTraits>::
-SetBaseFilename(const std::string& _s) noexcept {
-  m_problem->SetBaseFilename(_s);
-}
-
-/*---------------------------- Solution Accessors ----------------------------*/
-
-template <typename MPTraits>
-inline
-typename MPTraits::MPSolution*
-MPLibraryType<MPTraits>::
-GetMPSolution() const noexcept {
-  return m_solution;
-}
-
-
-template <typename MPTraits>
-inline
-void
-MPLibraryType<MPTraits>::
-SetMPSolution(MPSolution* const _sol) noexcept {
-  m_solution = _sol;
-}
-
-
-template <typename MPTraits>
-inline
-typename MPTraits::RoadmapType*
-MPLibraryType<MPTraits>::
-GetRoadmap(Robot* const _r) const noexcept {
-  if(!_r and !GetTask())
-    return nullptr;
-  return m_solution->GetRoadmap(_r ? _r : GetTask()->GetRobot());
-}
-
-
-template <typename MPTraits>
-inline
-typename MPTraits::GroupRoadmapType*
-MPLibraryType<MPTraits>::
-GetGroupRoadmap(RobotGroup* const _g) const noexcept {
-  if(!_g and !GetGroupTask())
-    return nullptr;
-  return m_solution->GetGroupRoadmap(_g ? _g : GetGroupTask()->GetRobotGroup());
-}
-
-
-template <typename MPTraits>
-inline
-typename MPTraits::RoadmapType*
-MPLibraryType<MPTraits>::
-GetBlockRoadmap(Robot* const _r) const noexcept {
-  if(!_r and !GetTask())
-    return nullptr;
-  return m_solution->GetBlockRoadmap(_r ? _r : GetTask()->GetRobot());
-}
-
-
-template <typename MPTraits>
-typename MPTraits::Path*
-MPLibraryType<MPTraits>::
-GetPath(Robot* const _r) const noexcept {
-  if(!_r and !GetTask())
-    return nullptr;
-  return m_solution->GetPath(_r ? _r : GetTask()->GetRobot());
-}
-
-
-template <typename MPTraits>
-typename MPTraits::GroupPathType*
-MPLibraryType<MPTraits>::
-GetGroupPath(RobotGroup* const _g) const noexcept {
-  if(!_g and !GetGroupTask())
-    return nullptr;
-  return m_solution->GetGroupPath(_g ? _g : GetGroupTask()->GetRobotGroup());
-}
-
-
-template <typename MPTraits>
-inline
-typename MPTraits::LocalObstacleMap*
-MPLibraryType<MPTraits>::
-GetLocalObstacleMap(Robot* const _r) const noexcept {
-  if(!_r and !GetTask())
-    return nullptr;
-  return m_solution->GetLocalObstacleMap(_r ? _r : GetTask()->GetRobot());
-}
-
-
-template <typename MPTraits>
-inline
-typename MPTraits::GoalTracker*
-MPLibraryType<MPTraits>::
-GetGoalTracker() const noexcept {
-  return m_goalTracker.get();
-}
-
-
-template <typename MPTraits>
-inline
-StatClass*
-MPLibraryType<MPTraits>::
-GetStatClass() const noexcept {
-  return m_solution->GetStatClass();
-}
-
-/*--------------------------- Edge Reconstruction ----------------------------*/
-
-template <typename MPTraits>
-std::vector<typename MPTraits::RoadmapType::VP>
-MPLibraryType<MPTraits>::
-ReconstructEdge(RoadmapType* const _roadmap, const VID _source,
-    const VID _target, const double _posRes,
-    const double _oriRes) {
-  const auto& start         = _roadmap->GetVertex(_source);
-  const auto& end           = _roadmap->GetVertex(_target);
-  const auto& edge          = _roadmap->GetEdge(_source, _target);
-  const auto& intermediates = edge.GetIntermediates();
-
-  // Construct the set of start, intermediates, and end waypoints as needed.
-  auto waypoints = intermediates;
-  waypoints.insert(waypoints.begin(), start);
-  waypoints.push_back(end);
-
-  // Check for intermediates. If there are any, we will use straight-line to
-  // recompute the path. Otherwise use the lp label if available, and fall back
-  // to straight-line if not (this will always happen with extenders).
-  const std::string lpLabel = !intermediates.size()
-                            and !edge.GetLPLabel().empty()
-                            ? edge.GetLPLabel()
-                            : "sl";
-
-  // Construct a resolution-level path along the recreated edge.
-  auto lp = this->GetLocalPlanner(lpLabel);
-  return lp->BlindPath(waypoints, _posRes, _oriRes);
-}
-
-
-template <typename MPTraits>
-std::vector<typename MPTraits::GroupRoadmapType::VP>
-MPLibraryType<MPTraits>::
-ReconstructEdge(GroupRoadmapType* const _roadmap, const VID _source,
-    const VID _target, const double _posRes,
-    const double _oriRes) {
-  const auto& start         = _roadmap->GetVertex(_source);
-  const auto& end           = _roadmap->GetVertex(_target);
-  const auto& edge          = _roadmap->GetEdge(_source, _target);
-  const auto& intermediates = edge.GetIntermediates();
-
-  // Construct the set of start, intermediates, and end waypoints as needed.
-  auto waypoints = intermediates;
-  waypoints.insert(waypoints.begin(), start);
-  waypoints.push_back(end);
-
-  // Check for intermediates. If there are any, we will use straight-line to
-  // recompute the path. Otherwise use the lp label if available, and fall back
-  // to straight-line if not (this will always happen with extenders).
-  const std::string lpLabel = !intermediates.size()
-                            and !edge.GetLPLabel().empty()
-                            ? edge.GetLPLabel()
-                            : "sl";
-
-  // Construct a resolution-level path along the recreated edge.
-  auto lp = this->GetLocalPlanner(lpLabel);
-  return lp->BlindPath(waypoints, _posRes, _oriRes, edge.GetFormation());
-}
-
-
-template< typename MPTraits>
 template <typename AbstractRoadmapType>
 std::vector<typename AbstractRoadmapType::VP>
-MPLibraryType<MPTraits>::
+MPLibrary::
 ReconstructEdge(AbstractRoadmapType* const _roadmap, const VID _source,
     const VID _target) {
   auto env = this->GetMPProblem()->GetEnvironment();
   return this->ReconstructEdge(_roadmap, _source, _target,
                                env->GetPositionRes(), env->GetOrientationRes());
 }
-
-/*--------------------------- Execution Interface ----------------------------*/
-
-template <typename MPTraits>
-void
-MPLibraryType<MPTraits>::
-Halt() {
-  m_running = false;
-}
-
-
-template <typename MPTraits>
-bool
-MPLibraryType<MPTraits>::
-IsRunning() const noexcept {
-  return m_running;
-}
-
-
-template <typename MPTraits>
-void
-MPLibraryType<MPTraits>::
-SetSeed() const noexcept {
-  if(m_solvers.empty())
-    throw RunTimeException(WHERE) << "No solver nodes.";
-  SetSeed(m_solvers[0].seed);
-}
-
-
-template <typename MPTraits>
-void
-MPLibraryType<MPTraits>::
-SetSeed(const long _seed) const noexcept {
-#ifdef _PARALLEL
-  SRand(_seed + get_location_id());
-#else
-  SRand(_seed);
-#endif
-}
-
-
-template <typename MPTraits>
-void
-MPLibraryType<MPTraits>::
-Solve(MPProblem* _problem, MPTask* _task, MPSolution* _solution) {
-  m_problem = _problem;
-  m_task = _task;
-  m_solution = _solution;
-
-  for(auto& solver : m_solvers)
-    RunSolver(solver);
-}
-
-
-template <typename MPTraits>
-void
-MPLibraryType<MPTraits>::
-Solve(MPProblem* _problem, MPTask* _task) {
-  m_problem = _problem;
-  m_task = _task;
-
-  for(auto& solver : m_solvers) {
-    // Create storage for the solution.
-    m_solution = new MPSolution(m_task->GetRobot());
-
-    RunSolver(solver);
-
-    delete m_solution;
-  }
-
-  m_solution = nullptr;
-}
-
-
-template <typename MPTraits>
-void
-MPLibraryType<MPTraits>::
-Solve(MPProblem* _problem, GroupTask* _task) {
-  m_problem = _problem;
-  m_groupTask = _task;
-
-  for(auto& solver : m_solvers) {
-    // Create storage for the solution.
-    m_solution = new MPSolution(m_groupTask->GetRobotGroup());
-
-    RunSolver(solver);
-
-    delete m_solution;
-  }
-
-  m_solution = nullptr;
-}
-
-
-template <typename MPTraits>
-void
-MPLibraryType<MPTraits>::
-Solve(MPProblem* _problem, GroupTask* _task, MPSolution* _solution) {
-  m_problem = _problem;
-  m_groupTask = _task;
-  m_solution = _solution;
-
-  for(auto& solver : m_solvers) {
-    RunSolver(solver);
-  }
-
-}
-
-
-template <typename MPTraits>
-void
-MPLibraryType<MPTraits>::
-Solve(MPProblem* _problem, MPTask* _task, MPSolution* _solution,
-    const std::string& _label, const long _seed,
-    const std::string& _baseFilename) {
-  m_problem = _problem;
-  m_task = _task;
-  m_solution = _solution;
-
-  Solver s{_label, _seed, _baseFilename, false};
-  RunSolver(s);
-}
-
-
-template <typename MPTraits>
-void
-MPLibraryType<MPTraits>::
-RunSolver(const Solver& _solver) {
-  // Announce the method label and seed.
-  std::cout << "\n\nMPLibrary is solving with MPStrategyMethod labeled "
-            << _solver.label << " using seed " << _solver.seed << "."
-            << std::endl;
-
-  // Save the original prefix for output files (base name).
-  const std::string originalBaseFilename = m_problem->GetBaseFilename();
-
-  // Use the solver node to set the base name for output files.
-  std::string baseFilename = _solver.baseFilename;
-
-  // If this task has a label, append it to the solver's output file name.
-  if(m_groupTask) {
-    if(!m_groupTask->GetLabel().empty())
-      baseFilename += "." + m_groupTask->GetLabel();
-  }
-  else if(!m_task->GetLabel().empty())
-    baseFilename += "." + m_task->GetLabel();
-
-  // Remove spaces to keep file names nice.
-  {
-    auto newEnd = std::remove_if(baseFilename.begin(), baseFilename.end(),
-        ::isspace);
-    baseFilename.erase(newEnd, baseFilename.end());
-  }
-
-  // Set the output file locations.
-  SetBaseFilename(GetMPProblem()->GetPath(baseFilename));
-  GetStatClass()->SetAuxDest(GetBaseFilename());
-
-  // Initialize vizmo debug if requested.
-  if(_solver.vizmoDebug) {
-    VDInit(GetBaseFilename() + ".vd");
-    if(m_groupTask)
-      VDTrackRoadmap(this->GetGroupRoadmap());
-    else
-      VDTrackRoadmap(this->GetRoadmap());
-  }
-
-  // Initialize the library's algorithms.
-  SetSeed(_solver.seed);
-  Initialize();
-
-  // Reset the seed
-  SetSeed(_solver.seed);
-
-  GetMPStrategy(_solver.label)->operator()();
-
-  // Close vizmo debug if necessary
-  if(_solver.vizmoDebug)
-    VDClose();
-
-  this->GetStatClass()->PrintClock("MPLibrary::Initialize", std::cout);
-  Uninitialize();
-  m_problem->SetBaseFilename(originalBaseFilename);
-}
-
-/*----------------------------------------------------------------------------*/
 
 #endif

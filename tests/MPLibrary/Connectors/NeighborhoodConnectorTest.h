@@ -1,8 +1,8 @@
 #ifndef PPL_NEIGHBORHOOD_CONNECTOR_TEST_H_
 #define PPL_NEIGHBORHOOD_CONNECTOR_TEST_H_
 
-#include "MPLibrary/Connectors/NeighborhoodConnector.h"
-#include "Testing/MPLibrary/Connectors/ConnectorMethodTest.h"
+#include "MPLibrary/Connectors/NeighborhoodConnector.h" //src
+#include "ConnectorMethodTest.h"
 
 template <typename MPTraits>
 class NeighborhoodConnectorTest : virtual public NeighborhoodConnector<MPTraits>,
@@ -95,15 +95,10 @@ IndividualRobotConnectTest() {
   // Make sure that all vertices were connected
   if (!(roadmap->IsEdge(v1, v2)) or !(roadmap->IsEdge(v1, v3))) {
     passed = false;
-    message = "\n\tDid not connect the correct vertices.\n";
+    std::cout << "\n\tDid not connect the correct vertices." << std::endl;
   }
 
-  if (passed) {
-    message = "IndividualRobotConnect::PASSED!\n";
-  } else {
-    message = "IndividualRobotConnect::FAILED :(\n" + message;
-  }
-
+  message = "\nCOMPLETED IndividualRobotConnectTest";
   return std::make_pair(passed, message);
 }
 
@@ -117,12 +112,7 @@ RobotGroupConnectTest() {
   // TODO the connector logic is the same between individual and group
   // roadmaps
 
-  if (passed) {
-    message = "RobotGroupConnect::PASSED!\n";
-  } else {
-    message = "RobotGroupConnect::FAILED :(\n" + message;
-  }
-
+  message = "\tFINISHED RobotGroupConnectTest";
   return std::make_pair(passed, message);
 }
 

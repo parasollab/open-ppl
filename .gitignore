@@ -1,4 +1,8 @@
+.DS_Store
+
 .vs/
+
+.idea/
 
 *.swp
 *.swo
@@ -9,6 +13,7 @@
 *.o
 
 # generated make/cmake files
+CMakeUserPresets.json
 CMakeSettings.json
 build/
 out/
@@ -18,10 +23,11 @@ lib/**/cmake-*/
 lib/gl_visualizer/**/cmake-*/
 .vscode
 
-src/Examples/example*
-src/Examples
+Examples/example*
+Examples
 tests/Testing/StrategyTests/Scratch*
-src/Doxygen/html
+docs/Doxygen/html/
+docs/Doxygen/latex/
 tests/StrategyTests/Scratch/*.map
 tests/StrategyTests/Scratch/*.path
 
@@ -38,3 +44,4 @@ conaninfo.txt
 graph_info.json
 .vscode/launch.json
 .vscode/settings.json
+/.vscode/

@@ -19,7 +19,6 @@
 /// This represents a Handoff Template, which stores the tasks required for
 /// robots to perform a handoff.
 ////////////////////////////////////////////////////////////////////////////////
-//template <typename MPTraits>
 class InteractionInformation {
 
   public:

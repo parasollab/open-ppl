@@ -5,6 +5,12 @@
 #include <utility>
 #include <vector>
 
+#include "ConfigurationSpace/GenericStateGraph.h"
+#include "ConfigurationSpace/Cfg.h"
+#include "ConfigurationSpace/Weight.h"
+#include "ConfigurationSpace/GroupRoadmap.h"
+#include "ConfigurationSpace/GroupCfg.h"
+#include "ConfigurationSpace/GroupLocalPlan.h"
 #include "MPProblem/RobotGroup/RobotGroup.h"
 
 
@@ -20,18 +26,17 @@
 ///
 /// @ingroup LocalPlanners
 ////////////////////////////////////////////////////////////////////////////////
-template <typename MPTraits>
 struct GroupLPOutput {
 
   ///@name Motion Planning Types
   ///@{
 
-  typedef typename MPTraits::WeightType       IndividualEdge;
-
-  typedef typename MPTraits::GroupCfgType     GroupCfgType;
-  typedef typename MPTraits::GroupWeightType  GroupWeightType; // GroupLocalPlan
-  typedef typename MPTraits::GroupRoadmapType GroupRoadmapType;
-  typedef std::vector<GroupCfgType>           GroupCfgPath;
+  typedef DefaultWeight<Cfg> IndividualEdge;
+  typedef GenericStateGraph<Cfg, IndividualEdge> RoadmapType;
+  typedef GroupCfg<RoadmapType> GroupCfgType;
+  typedef GroupLocalPlan<RoadmapType> GroupWeightType;
+  typedef GroupRoadmap<GroupCfgType, GroupWeightType> GroupRoadmapType;
+  typedef std::vector<GroupCfgType> GroupCfgPath;
 
   ///@}
   ///@name Local Types
@@ -78,131 +83,12 @@ struct GroupLPOutput {
 
   std::vector<size_t> GetFormation() {return m_edge.first.GetFormation();}
 
-  void SetSkipEdge();
+  // void SetSkipEdge();
 
   void SetEdgeWeights(const double _weight);
 
   ///@}
 
 };
-
-/*------------------------------- Construction -------------------------------*/
-
-template <typename MPTraits>
-GroupLPOutput<MPTraits>::
-GroupLPOutput(GroupRoadmapType* const _map, GroupCfgPath _path,
-    GroupCfgPath _intermediates)
-    : m_groupRoadmap(_map), m_path(_path), m_intermediates(_intermediates),
-      m_edge(GroupWeightType(_map), GroupWeightType(_map))
-{ }
-
-
-template <typename MPTraits>
-GroupLPOutput<MPTraits>::
-GroupLPOutput(GroupRoadmapType* const _map, const GroupWeightType& _edge) :
-              m_groupRoadmap(_map), m_edge(_edge, _edge) {
-  // Reverse the second edge member's intermediates:
-  GroupCfgPath& reversePath = m_edge.second.GetIntermediates();
-  std::reverse(reversePath.begin(), reversePath.end());
-}
-
-
-template <typename MPTraits>
-void
-GroupLPOutput<MPTraits>::
-Clear() {
-  m_path.clear();
-  m_intermediates.clear();
-  m_edge.first.Clear();
-  m_edge.second.Clear();
-}
-
-
-template <typename MPTraits>
-void
-GroupLPOutput<MPTraits>::
-SetLPLabel(const std::string& _label) {
-  m_edge.first.SetLPLabel(_label);
-  m_edge.second.SetLPLabel(_label);
-}
-
-
-template <typename MPTraits>
-void
-GroupLPOutput<MPTraits>::
-AddIntermediatesToWeights(const bool _saveIntermediates) {
-  if(!_saveIntermediates)
-    return;
-
-  // Make a copy of the intermediates in reverse order for the backward edge.
-  GroupCfgPath tmp;
-  tmp.reserve(m_intermediates.size());
-  std::copy(m_intermediates.rbegin(), m_intermediates.rend(),
-            std::back_inserter(tmp));
-
-  // Set both edges.
-  m_edge.first.SetIntermediates(m_intermediates);
-  m_edge.second.SetIntermediates(tmp);
-}
-
-template <typename MPTraits>
-void
-GroupLPOutput<MPTraits>::
-SetFormation(const std::vector<size_t>& _formation) {
-  m_edge.first.SetFormation(_formation);
-  m_edge.second.SetFormation(_formation);
-}
-
-
-template <typename MPTraits>
-void
-GroupLPOutput<MPTraits>::
-SetIndividualEdges(const std::vector<size_t>& _formation) {
-  /// @todo We need to preserve the intermediates.
-  /// @todo This is not a correct edge for each individual robot - they will not
-  ///       all have the same weight. This needs to be tracked separately.
-  if(!m_edge.first.GetIntermediates().empty())
-    std::cerr << "GroupLPOutput Warning: intermediates detected in group edge "
-              << "are not being added in the individual edge yet!"
-              << std::endl;
-
-  const std::string label = m_edge.first.GetLPLabel();
-  const double weight = m_edge.first.GetWeight();
-
-  // If there are no robots in the formation, then we need to set the individual
-  // edges for all of them.
-  if(_formation.empty()) {
-    const size_t numRobots = m_groupRoadmap->GetGroup()->Size();
-    for(size_t i = 0; i < numRobots; ++i) {
-      m_edge.first.SetEdge(i, IndividualEdge(label, weight));
-      m_edge.second.SetEdge(i, IndividualEdge(label, weight));
-    }
-  }
-  else for(const size_t robotIndex : _formation) {
-    m_edge.first.SetEdge(robotIndex, IndividualEdge(label, weight));
-    m_edge.second.SetEdge(robotIndex, IndividualEdge(label, weight));
-  }
-}
-
-
-template <typename MPTraits>
-void
-GroupLPOutput<MPTraits>::
-SetSkipEdge() {
-  m_edge.first.SetSkipEdge();
-  m_edge.second.SetSkipEdge();
-}
-
-
-template <typename MPTraits>
-void
-GroupLPOutput<MPTraits>::
-SetEdgeWeights(const double _weight) {
-  m_edge.first.SetWeight(_weight);
-  m_edge.second.SetWeight(_weight);
-}
-
-
-/*----------------------------------------------------------------------------*/
 
 #endif

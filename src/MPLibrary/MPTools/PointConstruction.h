@@ -1,12 +1,10 @@
 #ifndef PMPL_POINT_CONSTRUCTION_H 
 #define PMPL_POINT_CONSTRUCTION_H
 
-#include <vector>
+#include "MPLibrary/MPBaseObject.h"
 #include "Vector.h"
-#include <cstdlib>
 
-template <typename MPTraits>
-class PointConstruction : public MPBaseObject<MPTraits> {
+class PointConstruction : public MPBaseObject {
     public:
         PointConstruction();
         PointConstruction(XMLNode& _node);
@@ -43,28 +41,10 @@ class PointConstruction : public MPBaseObject<MPTraits> {
                 Vector<double, D> a, Vector<double, D> b);
 };
 
-template <typename MPTraits>
-PointConstruction<MPTraits>::
-PointConstruction() {
-  this->SetName("PointConstruction");
-}
 
-
-template <typename MPTraits>
-PointConstruction<MPTraits>::
-PointConstruction(XMLNode& _node) : MPBaseObject<MPTraits>(_node) {
-  this->SetName("PointConstruction");
-}
-
-template <typename MPTraits>
-void
-PointConstruction<MPTraits>::
-Initialize() {}
-
-template <typename MPTraits>
 template <size_t D>
 std::vector<Vector<double, D>> 
-PointConstruction<MPTraits>::
+PointConstruction::
 SampleSphereSurface(Vector<double, D> center, double bounds, int nsamples) {
     double b[D];
     for (size_t i = 0; i<D; i++) { b[i] = bounds; }
@@ -72,10 +52,10 @@ SampleSphereSurface(Vector<double, D> center, double bounds, int nsamples) {
     return SampleSphereSurface(center, _bounds, nsamples);
 };
 
-template <typename MPTraits>
+
 template <size_t D>
 std::vector<Vector<double, D>> 
-PointConstruction<MPTraits>::
+PointConstruction::
 SampleSphereSurface(Vector<double, D> center, Vector<double, D> bounds, int nsamples) {
     std::vector<Vector<double, D>> samples;
     for (int i = 0; i < nsamples; i++) {
@@ -85,10 +65,10 @@ SampleSphereSurface(Vector<double, D> center, Vector<double, D> bounds, int nsam
     return samples;
 };
 
-template <typename MPTraits> 
+
 template <size_t D>
 Vector<double, D>
-PointConstruction<MPTraits>::
+PointConstruction::
 SampleSphereSurface(Vector<double, D> center, Vector<double, D> bounds) {
     // This follows the Muller Method (#3 and #19):
     // http://extremelearning.com.au/how-to-generate-uniformly-random-points-on-n-spheres-and-n-balls/
@@ -112,10 +92,10 @@ SampleSphereSurface(Vector<double, D> center, Vector<double, D> bounds) {
     return samples;
 }
 
-template <typename MPTraits> 
+
 template <size_t D>
 Vector<double, D>
-PointConstruction<MPTraits>::
+PointConstruction::
 ElementwiseMultiply(Vector<double, D> a, Vector<double, D> b) {
     Vector<double, D> multiplied;
     for (size_t i = 0; i < D; i++) {

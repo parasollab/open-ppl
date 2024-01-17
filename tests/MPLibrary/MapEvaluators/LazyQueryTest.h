@@ -1,10 +1,10 @@
 #ifndef PPL_LAZY_QUERY_TEST_H_
 #define PPL_LAZY_QUERY_TEST_H_
 
-#include "MPLibrary/MapEvaluators/LazyQuery.h"
-#include "Testing/MPLibrary/MapEvaluators/MapEvaluatorMethodTest.h"
-#include "Utilities/MPUtils.h"
-#include "MPLibrary/MPSolution.h"
+#include "MPLibrary/MapEvaluators/LazyQuery.h"  //src
+#include "MapEvaluatorMethodTest.h"
+#include "Utilities/MPUtils.h"                  //src
+#include "MPLibrary/MPSolution.h"               //src
 
 #include "Vector.h"
 
@@ -103,19 +103,14 @@ MainFunctionTest() {
 
   if(!singleResult) {
     passed = false;
-    message = message + "\n\tIndividual robot functionality testing failed ";
+    std::cout << "\n\tIndividual robot functionality testing failed." << std::endl;
   }
 
   // Clean up
   auto task = this->GetMPLibrary()->GetTask();
   task->ClearGoalConstraints();
 
-  if (passed) {
-    message = "MainFunctionTest::PASSED!\n";
-  } else {
-    message = "MainFunctionTest::FAILED :(\n" + message;
-  }
-
+  message = "\tFINISHED MainFunctionTest";
   return std::make_pair(passed, message);
 }
 

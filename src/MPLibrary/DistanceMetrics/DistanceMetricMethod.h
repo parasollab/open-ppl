@@ -14,7 +14,7 @@
 /// @usage
 /// @code
 /// auto dm = this->GetDistanceMetric(m_dmLabel);
-/// CfgType c1, c2;
+/// Cfg c1, c2;
 /// double dist = dm->Distance(c1, c2);
 /// @endcode
 ///
@@ -30,18 +30,16 @@
 ///
 /// @ingroup DistanceMetrics
 ////////////////////////////////////////////////////////////////////////////////
-template <typename MPTraits>
-class DistanceMetricMethod  : public MPBaseObject<MPTraits> {
+class DistanceMetricMethod  : public MPBaseObject {
 
   public:
 
     ///@name Motion Planning Types
     ///@{
 
-    typedef typename MPTraits::CfgType       CfgType;
-    typedef typename MPTraits::RoadmapType   RoadmapType;
+    typedef typename MPBaseObject::RoadmapType  RoadmapType;
     typedef typename RoadmapType::VID        VID;
-    typedef typename MPTraits::GroupCfgType  GroupCfgType;
+    typedef typename MPBaseObject::GroupCfgType GroupCfgType;
     typedef typename GroupCfgType::Formation Formation;
 
     ///@}
@@ -60,7 +58,7 @@ class DistanceMetricMethod  : public MPBaseObject<MPTraits> {
     /// @param _c1 The first configuration.
     /// @param _c2 The second configuration.
     /// @return The computed distance between _c1 and _c2.
-    virtual double Distance(const CfgType& _c1, const CfgType& _c2) = 0;
+    virtual double Distance(const Cfg& _c1, const Cfg& _c2) = 0;
 
     /// This version is for group configurations. The default implementation
     /// returns the summed individual distances.
@@ -100,11 +98,11 @@ class DistanceMetricMethod  : public MPBaseObject<MPTraits> {
     /// @param _length Desired magnitude.
     /// @param _c Configuration to be scaled.
     /// @param _o Origin of scaling.
-    virtual void ScaleCfg(double _length, CfgType& _c, const CfgType& _o);
+    virtual void ScaleCfg(double _length, Cfg& _c, const Cfg& _o);
 
     /// This version uses the default origin.
     /// @overload
-    void ScaleCfg(double _length, CfgType& _c);
+    void ScaleCfg(double _length, Cfg& _c);
 
     /// This version is for group configurations.
     /// @overload
@@ -118,137 +116,5 @@ class DistanceMetricMethod  : public MPBaseObject<MPTraits> {
     ///@}
 
 };
-
-/*------------------------------- Construction -------------------------------*/
-
-template <typename MPTraits>
-DistanceMetricMethod<MPTraits>::
-DistanceMetricMethod(XMLNode& _node) : MPBaseObject<MPTraits>(_node) {
-}
-
-/*----------------------------- Distance Interface ---------------------------*/
-
-template <typename MPTraits>
-double
-DistanceMetricMethod<MPTraits>::
-Distance(const GroupCfgType& _c1, const GroupCfgType& _c2) {
-  double sum = 0;
-  for(size_t i = 0; i < _c1.GetNumRobots(); ++i)
-    sum += Distance(_c1.GetRobotCfg(i), _c2.GetRobotCfg(i));
-
-  return sum;
-}
-
-
-template <typename MPTraits>
-double
-DistanceMetricMethod<MPTraits>::
-EdgeWeight(const RoadmapType* const _r, const typename RoadmapType::CEI& _edge)
-    noexcept {
-  // Get the intermediates. If there aren't any, the weight is just from source
-  // to target.
-  const auto& edge = *_edge;
-  const auto& intermediates = edge.property().GetIntermediates();
-  const typename RoadmapType::VP& source = _r->GetVertex(edge.source()),
-                                & target = _r->GetVertex(edge.target());
-  if(intermediates.empty())
-    return Distance(source, target);
-
-  // If we're still here, there are intermediates. Add up the distance through
-  // the intermediates.
-  double totalDistance = Distance(source, intermediates.front())
-                       + Distance(intermediates.back(), target);
-
-  for(size_t i = 0; i < intermediates.size() - 1; ++i)
-    totalDistance += Distance(intermediates[i], intermediates[i + 1]);
-
-  return totalDistance;
-}
-
-
-template <typename MPTraits>
-double
-DistanceMetricMethod<MPTraits>::
-EdgeWeight(const RoadmapType* const _r, const VID _source,
-    const VID _target) noexcept {
-  // Find the edge and ensure it exists.
-  typename RoadmapType::CEI edge;
-  if(!_r->GetEdge(_source, _target, edge))
-    throw RunTimeException(WHERE) << "Requested non-existent edge ("
-                                  << _source << ", " << _target
-                                  << ") in roadmap " << _r << "."
-                                  << std::endl;
-  return EdgeWeight(_r, edge);
-}
-
-/*---------------------------- Configuration Scaling -------------------------*/
-
-template <typename MPTraits>
-void
-DistanceMetricMethod<MPTraits>::
-ScaleCfg(double _length, CfgType& _c, const CfgType& _o) {
-  /// @todo This is a very expensive way to scale a configuration. We should
-  ///       probably remove it and require derived classes to implement a more
-  ///       efficient function (this is the best we can do for a base class that
-  ///       does not know anything about the properties of the metric space).
-
-  _length = fabs(_length); //a distance must be positive
-  CfgType origin = _o;
-  CfgType outsideCfg = _c;
-
-  // first find an outsite configuration with sufficient size
-  while(Distance(origin, outsideCfg) < 2 * _length)
-    for(size_t i = 0; i < outsideCfg.DOF(); ++i)
-      outsideCfg[i] *= 2.0;
-  // now, using binary search find a configuration with the approximate length
-  CfgType aboveCfg = outsideCfg;
-  CfgType belowCfg = origin;
-  CfgType currentCfg = _c;
-  while (1) {
-    for(size_t i=0; i<currentCfg.DOF(); ++i)
-      currentCfg[i] = (aboveCfg[i] + belowCfg[i]) / 2.0;
-    double magnitude = Distance(origin, currentCfg);
-    if((magnitude >= _length*0.9) && (magnitude <= _length*1.1))
-      break;
-    if(magnitude>_length)
-      aboveCfg = currentCfg;
-    else
-      belowCfg = currentCfg;
-  }
-
-  _c = currentCfg;
-}
-
-
-template <typename MPTraits>
-void
-DistanceMetricMethod<MPTraits>::
-ScaleCfg(double _length, CfgType& _c) {
-  ScaleCfg(_length, _c, CfgType(_c.GetRobot()));
-}
-
-
-template <typename MPTraits>
-void
-DistanceMetricMethod<MPTraits>::
-ScaleCfg(double _length, GroupCfgType& _c, const GroupCfgType& _o) {
-  // throw NotImplementedException(WHERE) << "Not yet implemented.";
-
-   for(size_t j = 0; j < _c.GetNumRobots(); ++j) {
-      ScaleCfg(_length, _c.GetRobotCfg(j));
-   }
-
-}
-
-
-template <typename MPTraits>
-void
-DistanceMetricMethod<MPTraits>::
-ScaleCfg(double _length, GroupCfgType& _c) {
-  const GroupCfgType origin(_c.GetGroupRoadmap());
-  ScaleCfg(_length, _c, origin);
-}
-
-/*----------------------------------------------------------------------------*/
 
 #endif

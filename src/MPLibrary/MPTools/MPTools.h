@@ -1,26 +1,70 @@
 #ifndef MP_TOOLS_H_
 #define MP_TOOLS_H_
 
+#define CLEARANCE_UTILS_AVAILABLE 1
+#define MED_AXIS_AVAILABLE 1
+#define POINT_CONSTRUCTION_AVAILABLE 1
+#define REACHABILITY_UTIL_AVAILABLE 1
+#define SAFE_INTERVAL_TOOL_AVAILABLE 1
+#define SKELETON_CLEARANCE_AVAILABLE 1
+#define TOPOLOGICAL_MAP_AVAILABLE 1
+#define TET_GEN_DECOMP_AVAILABLE 1
+#define REEB_GRAPH_AVAILABLE 1
+#define MEAN_CURVE_SKEL_AVAILABLE 1
+#define WRENCH_ACCESS_TOOL_AVAILABLE 1
+
 #include <string>
 #include <unordered_map>
 
 #include "Utilities/XMLNode.h"
 
-#include "MedialAxisUtilities.h"
-#include "MeanCurvatureSkeleton3D.h"
-#include "ReebGraphConstruction.h"
-#include "SafeIntervalTool.h"
-#include "SkeletonClearanceUtility.h"
-#include "TetGenDecomposition.h"
-#include "TopologicalMap.h"
-#include "TRPTool.h"
-#include "ReachabilityUtil.h"
-#include "MPLibrary/MPTools/LKHSearch.h"
-#include "PointConstruction.h"
-//#include "MPLibrary/LearningModels/SVMModel.h"
+#ifdef CLEARANCE_UTILS_AVAILABLE
+    #include "ClearanceUtilities.h"
+#endif
+
+#ifdef MED_AXIS_AVAILABLE
+    #include "MedialAxisUtilities.h"
+#endif
+
+#ifdef MEAN_CURVE_SKEL_AVAILABLE
+    #include "MeanCurvatureSkeleton3D.h"
+#endif
+
+#ifdef REEB_GRAPH_AVAILABLE
+    #include "ReebGraphConstruction.h"
+#endif
+
+#ifdef SAFE_INTERVAL_TOOL_AVAILABLE
+    #include "SafeIntervalTool.h"
+#endif
+
+#ifdef SKELETON_CLEARANCE_AVAILABLE
+    #include "SkeletonClearanceUtility.h"
+#endif
+
+#ifdef TET_GEN_DECOMP_AVAILABLE
+    #include "TetGenDecomposition.h"
+    class WorkspaceDecomposition;
+#endif
+
+#ifdef TOPOLOGICAL_MAP_AVAILABLE
+    #include "TopologicalMap.h"
+#endif
+
+#ifdef REACHABILITY_UTIL_AVAILABLE
+    #include "ReachabilityUtil.h"
+#endif
+
+#ifdef POINT_CONSTRUCTION_AVAILABLE
+    #include "PointConstruction.h"
+#endif
+
+#ifdef WRENCH_ACCESS_TOOL_AVAILABLE
+    #include "WrenchAccessibilityTool.h"
+#endif
 
 
-class WorkspaceDecomposition;
+class MPLibrary;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -40,20 +84,19 @@ class WorkspaceDecomposition;
 /// to parse the input file. For these, there is no label attribute, and using
 /// multiple XML nodes will throw a parse error.
 ////////////////////////////////////////////////////////////////////////////////
-template <typename MPTraits>
 class MPToolsType final {
 
   ///@name Motion Planning Types
   ///@{
 
-  typedef typename MPTraits::MPLibrary MPLibrary;
+
 
   ///@}
   ///@name Local Types
   ///@{
 
-  template <template <typename> class Utility>
-  using LabelMap = std::unordered_map<std::string, Utility<MPTraits>*>;
+  template <typename Utility>
+  using LabelMap = std::unordered_map<std::string, Utility*>;
 
   ///@}
   ///@name Internal State
@@ -61,18 +104,42 @@ class MPToolsType final {
 
   MPLibrary* const m_library; ///< The owning library.
 
+  #ifdef CLEARANCE_UTILS_AVAILABLE
   LabelMap<ClearanceUtility>         m_clearanceUtils;
-  LabelMap<MedialAxisUtility>        m_medialAxisUtils;
-  LabelMap<SkeletonClearanceUtility> m_skeletonUtils;
-  LabelMap<TopologicalMap>           m_topologicalMaps;
-  LabelMap<SafeIntervalTool>         m_safeIntervalTools;
-  LabelMap<LKHSearch>                m_lkhSearchTools;
-  LabelMap<TRPTool>                  m_trpTools;
-  LabelMap<ReachabilityUtil>         m_reachabilityUtils;
-  LabelMap<PointConstruction>        m_pointConstruction;
+  #endif
 
+  #ifdef MED_AXIS_AVAILABLE
+  LabelMap<MedialAxisUtility>        m_medialAxisUtils;
+  #endif
+
+  #ifdef SKELETON_CLEARANCE_AVAILABLE
+  LabelMap<SkeletonClearanceUtility> m_skeletonUtils;
+  #endif
+  
+  #ifdef TOPOLOGICAL_MAP_AVAILABLE
+  LabelMap<TopologicalMap>           m_topologicalMaps;
+  #endif
+  
+  #ifdef SAFE_INTERVAL_TOOL_AVAILABLE
+  LabelMap<SafeIntervalTool>         m_safeIntervalTools;
+  #endif
+
+  #ifdef REACHABILITY_UTIL_AVAILABLE
+  LabelMap<ReachabilityUtil>         m_reachabilityUtils;
+  #endif
+  
+  #ifdef POINT_CONSTRUCTION_AVAILABLE
+  LabelMap<PointConstruction>        m_pointConstruction;
+  #endif
+
+  #ifdef WRENCH_ACCESS_TOOL_AVAILABLE
+  LabelMap<WrenchAccessibilityTool>  m_wrenchAccessibilityTools;
+  #endif
+
+  #ifdef TET_GEN_DECOMP_AVAILABLE
   std::unordered_map<std::string, TetGenDecomposition> m_tetgens;
   std::unordered_map<std::string, const WorkspaceDecomposition*> m_decompositions;
+  #endif
 
   ///@}
 
@@ -98,6 +165,8 @@ class MPToolsType final {
     ~MPToolsType();
 
     ///@}
+
+    #ifdef CLEARANCE_UTILS_AVAILABLE
     ///@name Clearance Utility
     ///@{
 
@@ -105,7 +174,7 @@ class MPToolsType final {
     /// @param _label The string label of the desired utility as defined in the
     ///               XML file.
     /// @return The labeled utility.
-    ClearanceUtility<MPTraits>* GetClearanceUtility(const std::string& _label)
+    ClearanceUtility* GetClearanceUtility(const std::string& _label)
         const;
 
     /// Set a ClearanceUtility. This object will take ownership of the utility
@@ -113,9 +182,12 @@ class MPToolsType final {
     /// @param _label The string label for the new utility.
     /// @param _utility The ClearanceUtility to use.
     void SetClearanceUtility(const std::string& _label,
-        ClearanceUtility<MPTraits>* const _utility);
+        ClearanceUtility* const _utility);
 
     ///@}
+    #endif
+    
+    #ifdef MED_AXIS_AVAILABLE
     ///@name Medial Axis Utility
     ///@{
 
@@ -123,7 +195,7 @@ class MPToolsType final {
     /// @param _label The string label of the desired utility as defined in the
     ///               XML file.
     /// @return The labeled utility.
-    MedialAxisUtility<MPTraits>* GetMedialAxisUtility(const std::string& _label)
+    MedialAxisUtility* GetMedialAxisUtility(const std::string& _label)
         const;
 
     /// Set a MedialAxisUtility. This object will take ownership of the utility
@@ -131,9 +203,12 @@ class MPToolsType final {
     /// @param _label The string label for the new utility.
     /// @param _utility The MedialAxisUtility to use.
     void SetMedialAxisUtility(const std::string& _label,
-        MedialAxisUtility<MPTraits>* const _utility);
+        MedialAxisUtility* const _utility);
 
     ///@}
+    #endif
+
+    #ifdef SKELETON_CLEARANCE_AVAILABLE
     ///@name Skeleton Clearance Utility
     ///@{
 
@@ -141,7 +216,7 @@ class MPToolsType final {
     /// @param _label The string label of the desired utility as defined in the
     ///               XML file.
     /// @return The labeled utility.
-    SkeletonClearanceUtility<MPTraits>* GetSkeletonClearanceUtility(
+    SkeletonClearanceUtility* GetSkeletonClearanceUtility(
         const std::string& _label) const;
 
     /// Set a SkeletonClearanceUtility. This object will take ownership of the
@@ -149,9 +224,12 @@ class MPToolsType final {
     /// @param _label The string label for the new utility.
     /// @param _utility The SkeletonClearanceUtility to use.
     void SetSkeletonClearanceUtility(const std::string& _label,
-        SkeletonClearanceUtility<MPTraits>* const _utility);
+        SkeletonClearanceUtility* const _utility);
 
     ///@}
+    #endif
+
+    #ifdef TOPOLOGICAL_MAP_AVAILABLE
     ///@name Topological Map
     ///@{
 
@@ -159,16 +237,19 @@ class MPToolsType final {
     /// @param _label The string label of the desired utility as defined in the
     ///               XML file.
     /// @return The labeled utility.
-    TopologicalMap<MPTraits>* GetTopologicalMap(const std::string& _label) const;
+    TopologicalMap* GetTopologicalMap(const std::string& _label) const;
 
     /// Set a TopologicalMap. This object will take ownership of the utility and
     /// delete it when necessary.
     /// @param _label The string label for the new utility.
     /// @param _utility The TopologicalMap to use.
     void SetTopologicalMap(const std::string& _label,
-        TopologicalMap<MPTraits>* const _utility);
+        TopologicalMap* const _utility);
 
     ///@}
+    #endif
+
+    #ifdef SAFE_INTERVAL_TOOL_AVAILABLE
     ///@name Safe Interval Tool
     ///@{
 
@@ -176,7 +257,7 @@ class MPToolsType final {
     /// @param _label The string label of the desired utility as defined in the
     ///               XML file.
     /// @return The labeled utility.
-    SafeIntervalTool<MPTraits>* GetSafeIntervalTool(const std::string& _label)
+    SafeIntervalTool* GetSafeIntervalTool(const std::string& _label)
         const;
 
     /// Set a SafeIntervalTool. This object will take ownership of the utility and
@@ -184,41 +265,12 @@ class MPToolsType final {
     /// @param _label The string label for the new utility.
     /// @param _utility The TopologicalMap to use.
     void SetSafeIntervalTool(const std::string& _label,
-        SafeIntervalTool<MPTraits>* const _utility);
+        SafeIntervalTool* const _utility);
 
     ///@}
-    ///@name LKH Search
-    ///@{
+    #endif
 
-    /// Get an LKH Search by label.
-    /// @param _label The string label of the desired utility as defined in the
-    ///               XML file.
-    /// @return The labeled utility.
-    LKHSearch<MPTraits>* GetLKHSearch(const std::string& _label) const;
-
-    /// Set an LKH Search
-    /// @param _label The string label for the new utility
-    /// @param _utility The LKHSearch to use
-    void SetLKHSearch(const std::string& _label,
-        LKHSearch<MPTraits>* const _utility);
-
-    ///@}
-    ////@name TRP Tool
-    ///@{
-
-    /// Get a TRP Tool by label.
-    /// @param _label The string label of the desired utility as defined in the
-    ///               XML file.
-    /// @return The labeled utility.
-    TRPTool<MPTraits>* GetTRPTool(const std::string& _label) const;
-
-    /// Set a TRP Tool
-    /// @param _label The string label for the new utility
-    /// @param _utility The LKHSearch to use
-    void SetTRPTool(const std::string& _label,
-        TRPTool<MPTraits>* const _utility);
-
-    ///@}
+    #ifdef TET_GEN_DECOMP_AVAILABLE
     ///@name Decompositions
     ///@{
 
@@ -234,34 +286,60 @@ class MPToolsType final {
         const WorkspaceDecomposition* _decomposition);
 
     ///@}
+    #endif
+
+    #ifdef REACHABILITY_UTIL_AVAILABLE
     ///@name Reachability
     ///@{
 
     /// Get a Reachability Utility
     /// @param _label The label of the decomposition to use.
-    ReachabilityUtil<MPTraits>* GetReachabilityUtil(const std::string& _label) const;
+    ReachabilityUtil* GetReachabilityUtil(const std::string& _label) const;
 
     /// Set a reachability utility  by label.
     /// @param _label The label for this utility
     /// @param _decomposition the reachability utility
     void SetReachabilityUtil(const std::string& _label,
-        ReachabilityUtil<MPTraits>* _util);
+        ReachabilityUtil* _util);
 
-    ///}
+    ///@}
+    #endif
 
+    #ifdef POINT_CONSTRUCTION_AVAILABLE
+    ///@name Point Construction
     ///@{
 
     /// Get a Point Construction
     /// @param _label The label of the decomposition to use.
-    PointConstruction<MPTraits>* GetPointConstruction(const std::string& _label) const;
+    PointConstruction* GetPointConstruction(const std::string& _label) const;
 
     /// Set a Point Construction  by label.
     /// @param _label The label for this utility
     /// @param _decomposition the point construction
     void SetPointConstruction(const std::string& _label,
-        PointConstruction<MPTraits>* _util);
+        PointConstruction* _util);
 
-    ///}
+    ///@}
+    #endif
+
+    #ifdef WRENCH_ACCESS_TOOL_AVAILABLE
+    ///@name Wrench Accessibility Tool
+    ///@{
+    /// Get a WrenchAccessibilityTool by label.
+    /// @param _label The string label of the desired utility as defined in the
+    ///               XML file.
+    /// @return The labeled utility.
+    WrenchAccessibilityTool* GetWrenchAccessibilityTool(const std::string& _label) const;
+
+    /// Set a WrenchAccessibilityTool. This object will take ownership of the utility and
+    /// delete it when necessary.
+    /// @param _label The string label for the new utility.
+    /// @param _utility The GetWrenchAccessibilityTool to use.
+    void SetWrenchAccessibilityTool(const std::string& _label,
+        WrenchAccessibilityTool* const _utility);
+
+    ///@}
+    #endif
 
   private:
 
@@ -272,8 +350,8 @@ class MPToolsType final {
     /// @param _label The utility label.
     /// @param _map The label map which holds _utility.
     /// @return The named utility.
-    template <template <typename> class Utility>
-    Utility<MPTraits>* GetUtility(const std::string& _label,
+    template <typename Utility>
+    Utility* GetUtility(const std::string& _label,
         const LabelMap<Utility>& _map) const;
 
 
@@ -281,468 +359,46 @@ class MPToolsType final {
     /// @param _label The utility label.
     /// @param _utility The utility to set.
     /// @param _map The label map which holds _utility.
-    template <template <typename> class Utility>
-    void SetUtility(const std::string& _label, Utility<MPTraits>* _utility,
+    template <typename Utility>
+    void SetUtility(const std::string& _label, Utility* _utility,
         LabelMap<Utility>& _map) const;
 
     ///@}
 
 };
 
-/*------------------------------ Construction --------------------------------*/
-
-template <typename MPTraits>
-MPToolsType<MPTraits>::
-MPToolsType(MPLibrary* const _library) : m_library(_library) { }
-
-
-template <typename MPTraits>
-void
-MPToolsType<MPTraits>::
-ParseXML(XMLNode& _node) {
-  // For the tools that use the XML to set defaults, keep track of whether we've
-  // seen them before.
-  bool parsedReebGraph = false,
-//       parsedSVMModel  = false,
-       parsedMCS       = false;
-
-  // MPTools shouldn't have any data of its own, only child nodes.
-  for(auto& child : _node) {
-    if(child.Name() == "ClearanceUtility") {
-      auto utility = new ClearanceUtility<MPTraits>(child);
-
-      // A second node with the same label is an error during XML parsing.
-      if(m_clearanceUtils.count(utility->GetLabel()))
-        throw ParseException(child.Where(), "Second ClearanceUtility node with "
-            "the label '" + utility->GetLabel() + "'. Labels must be unique.");
-
-      SetClearanceUtility(utility->GetLabel(), utility);
-    }
-    else if(child.Name() == "MedialAxisUtility") {
-      auto utility = new MedialAxisUtility<MPTraits>(child);
-
-      // A second node with the same label is an error during XML parsing.
-      if(m_medialAxisUtils.count(utility->GetLabel()))
-        throw ParseException(child.Where(), "Second MedialAxisUtility node with "
-            "the label '" + utility->GetLabel() + "'. Labels must be unique.");
-
-      SetMedialAxisUtility(utility->GetLabel(), utility);
-    }
-    else if(child.Name() == "SkeletonClearanceUtility") {
-      auto utility = new SkeletonClearanceUtility<MPTraits>(child);
-
-      // A second node with the same label is an error during XML parsing.
-      if(m_skeletonUtils.count(utility->GetLabel()))
-        throw ParseException(child.Where(), "Second SkeletonClearanceUtility "
-            "node with the label '" + utility->GetLabel() + "'. Labels must be "
-            "unique.");
-
-      SetSkeletonClearanceUtility(utility->GetLabel(), utility);
-    }
-    else if(child.Name() == "TopologicalMap") {
-      auto utility = new TopologicalMap<MPTraits>(child);
-
-      // A second node with the same label is an error during XML parsing.
-      if(m_topologicalMaps.count(utility->GetLabel()))
-        throw ParseException(child.Where(), "Second TopologicalMap "
-            "node with the label '" + utility->GetLabel() + "'. Labels must be "
-            "unique.");
-
-      SetTopologicalMap(utility->GetLabel(), utility);
-    }
-    else if(child.Name() == "TetGenDecomposition") {
-      // Parse the label and check that it is unique.
-      const std::string label = child.Read("label", true, "",
-          "The label for this decomposition.");
-
-      if(m_decompositions.count(label))
-        throw ParseException(child.Where(), "Second decomposition node "
-            "with the label " + label + ". Labels must be unique across all "
-            "types of decomposition.");
-
-      m_tetgens[label] = TetGenDecomposition(child);
-      SetDecomposition(label, nullptr);
-    }
-    else if(child.Name() == "SafeIntervalTool") {
-      auto utility = new SafeIntervalTool<MPTraits>(child);
-
-      // A second node with the same label is an error during XML parsing.
-      if(m_safeIntervalTools.count(utility->GetLabel()))
-        throw ParseException(child.Where(), "Second SafeIntervalTool "
-            "node with the label '" + utility->GetLabel() + "'. Labels must be "
-            "unique.");
-
-      SetSafeIntervalTool(utility->GetLabel(), utility);
-    }
-    else if(child.Name() == "LKHSearch") {
-      auto utility = new LKHSearch<MPTraits>(child);
-
-      // A second node with the same label is an error during XML parsing.
-      if(m_lkhSearchTools.count(utility->GetLabel()))
-        throw ParseException(child.Where(), "Second LKHSearch "
-            "node with the label '" + utility->GetLabel() + "'. Labels must be "
-            "unique.");
-
-      SetLKHSearch(utility->GetLabel(), utility);
-    }
-    else if(child.Name() == "TRPTool") {
-      auto utility = new TRPTool<MPTraits>(child);
-
-      // A second node with the same label is an error during XML parsing.
-      if(m_trpTools.count(utility->GetLabel()))
-        throw ParseException(child.Where(), "Second TRPTool "
-            "node with the label '" + utility->GetLabel() + "'. Labels must be "
-            "unique.");
-
-      SetTRPTool(utility->GetLabel(), utility);
-    }
-    // Below here we are setting defaults rather than creating instances.
-    else if(child.Name() == "ReebGraphConstruction") {
-      if(parsedReebGraph)
-        throw ParseException(child.Where(),
-            "Second ReebGraphConstruction node detected. This node sets "
-            "default parameters - only one is allowed.");
-      parsedReebGraph = true;
-
-      ReebGraphConstruction::SetDefaultParameters(child);
-    }
-    else if(child.Name() == "MeanCurvatureSkeleton3D") {
-      if(parsedMCS)
-        throw ParseException(child.Where(),
-            "Second meanCurvatureSkeleton3D node detected. This node sets "
-            "default parameters - only one is allowed.");
-      parsedMCS = true;
-
-      MeanCurvatureSkeleton3D::SetDefaultParameters(child);
-    }
-/*    else if(child.Name() == "SVMModel") {
-      if(parsedSVMModel)
-        throw ParseException(child.Where(), "Second SVMModel node detected. "
-            "This node sets default parameters - only one is allowed.");
-      parsedSVMModel = true;
-
-      SVMModel<MPTraits>::SetDefaultParameters(child);
-    }
-*/
-    else if(child.Name() == "ReachabilityUtil") {
-      auto util = new ReachabilityUtil<MPTraits>(child);
-      SetReachabilityUtil(util->GetLabel(), util);
-    }
-    
-    else if(child.Name() == "PointConstruction") {
-      auto util = new PointConstruction<MPTraits>(child);
-      SetPointConstruction(util->GetLabel(), util);
-    }
-  }
-}
-
-
-template <typename MPTraits>
-void
-MPToolsType<MPTraits>::
-Initialize() {
-  //Uninitialize();
-  for(auto& pair : m_clearanceUtils)
-    pair.second->Initialize();
-  for(auto& pair : m_medialAxisUtils)
-    pair.second->Initialize();
-  for(auto& pair : m_skeletonUtils)
-    pair.second->Initialize();
-  for(auto& pair : m_topologicalMaps)
-    pair.second->Initialize();
-  for(auto& pair : m_safeIntervalTools)
-    pair.second->Initialize();
-  for(auto& pair : m_lkhSearchTools)
-    pair.second->Initialize();
-  /// @todo Homogenize trp tool initialization.
-  //for(auto& pair : m_trpTools)
-  //  pair.second->Initialize();
-  for(auto& pair : m_reachabilityUtils)
-    pair.second->Initialize();
-  for(auto& pair : m_pointConstruction)
-    pair.second->Initialize();
-}
-
-template <typename MPTraits>
-void
-MPToolsType<MPTraits>::
-Uninitialize() {
-  for(auto& pair : m_decompositions){
-    delete pair.second;
-    pair.second = nullptr;
-  }
-}
-
-template <typename MPTraits>
-MPToolsType<MPTraits>::
-~MPToolsType() {
-  for(auto& pair : m_clearanceUtils)
-    delete pair.second;
-  for(auto& pair : m_medialAxisUtils)
-    delete pair.second;
-  for(auto& pair : m_skeletonUtils)
-    delete pair.second;
-  for(auto& pair : m_topologicalMaps)
-    delete pair.second;
-  for(auto& pair : m_safeIntervalTools)
-    delete pair.second;
-  for(auto& pair : m_decompositions)
-    delete pair.second;
-  for(auto& pair : m_lkhSearchTools)
-    delete pair.second;
-  for(auto& pair : m_trpTools)
-    delete pair.second;
-  for(auto& pair : m_reachabilityUtils)
-    delete pair.second;
-  for(auto& pair : m_pointConstruction) 
-    delete pair.second;
-}
-
-/*--------------------------- Clearance Utility ------------------------------*/
-
-template <typename MPTraits>
-ClearanceUtility<MPTraits>*
-MPToolsType<MPTraits>::
-GetClearanceUtility(const std::string& _label) const {
-  return GetUtility(_label, m_clearanceUtils);
-}
-
-
-template <typename MPTraits>
-void
-MPToolsType<MPTraits>::
-SetClearanceUtility(const std::string& _label,
-    ClearanceUtility<MPTraits>* const _utility) {
-  SetUtility(_label, _utility, m_clearanceUtils);
-}
-
-
-/*-------------------------- Medial Axis Utility -----------------------------*/
-
-template <typename MPTraits>
-MedialAxisUtility<MPTraits>*
-MPToolsType<MPTraits>::
-GetMedialAxisUtility(const std::string& _label) const {
-  return GetUtility(_label, m_medialAxisUtils);
-}
-
-
-template <typename MPTraits>
-void
-MPToolsType<MPTraits>::
-SetMedialAxisUtility(const std::string& _label,
-    MedialAxisUtility<MPTraits>* const _utility) {
-  SetUtility(_label, _utility, m_medialAxisUtils);
-}
-
-/*----------------------------- Skeleton Tools -------------------------------*/
-
-template <typename MPTraits>
-SkeletonClearanceUtility<MPTraits>*
-MPToolsType<MPTraits>::
-GetSkeletonClearanceUtility(const std::string& _label) const {
-  return GetUtility(_label, m_skeletonUtils);
-}
-
-
-template <typename MPTraits>
-void
-MPToolsType<MPTraits>::
-SetSkeletonClearanceUtility(const std::string& _label,
-    SkeletonClearanceUtility<MPTraits>* const _utility) {
-  SetUtility(_label, _utility, m_skeletonUtils);
-}
-
-/*------------------------------ Topological Map -----------------------------*/
-
-template <typename MPTraits>
-TopologicalMap<MPTraits>*
-MPToolsType<MPTraits>::
-GetTopologicalMap(const std::string& _label) const {
-  return GetUtility(_label, m_topologicalMaps);
-}
-
-
-template <typename MPTraits>
-void
-MPToolsType<MPTraits>::
-SetTopologicalMap(const std::string& _label,
-    TopologicalMap<MPTraits>* const _utility) {
-  SetUtility(_label, _utility, m_topologicalMaps);
-}
-
-/*---------------------------- Safe Interval Tool ----------------------------*/
-
-template <typename MPTraits>
-SafeIntervalTool<MPTraits>*
-MPToolsType<MPTraits>::
-GetSafeIntervalTool(const std::string& _label) const {
-  return GetUtility(_label, m_safeIntervalTools);
-}
-
-
-template <typename MPTraits>
-void
-MPToolsType<MPTraits>::
-SetSafeIntervalTool(const std::string& _label,
-    SafeIntervalTool<MPTraits>* const _utility) {
-  SetUtility(_label, _utility, m_safeIntervalTools);
-}
-
-/*------------------------------- LKH Search ---------------------------------*/
-
-template <typename MPTraits>
-LKHSearch<MPTraits>*
-MPToolsType<MPTraits>::
-GetLKHSearch(const std::string& _label) const {
-  return GetUtility(_label, m_lkhSearchTools);
-}
-
-
-
-template <typename MPTraits>
-void
-MPToolsType<MPTraits>::
-SetLKHSearch(const std::string& _label,
-    LKHSearch<MPTraits>* const _utility) {
-  SetUtility(_label, _utility, m_lkhSearchTools);
-}
-
-/*-------------------------------- TRP Tool ----------------------------------*/
-
-template <typename MPTraits>
-TRPTool<MPTraits>*
-MPToolsType<MPTraits>::
-GetTRPTool(const std::string& _label) const {
-  return GetUtility(_label, m_trpTools);
-}
-
-
-
-template <typename MPTraits>
-void
-MPToolsType<MPTraits>::
-SetTRPTool(const std::string& _label,
-    TRPTool<MPTraits>* const _utility) {
-  SetUtility(_label, _utility, m_trpTools);
-}
-
-
-/*----------------------------- Decompositions -------------------------------*/
-
-template <typename MPTraits>
-const WorkspaceDecomposition*
-MPToolsType<MPTraits>::
-GetDecomposition(const std::string& _label) {
-  // Initialize the decomposition if not already.
-  typename decltype(m_decompositions)::iterator iter;
-  try {
-    iter = m_decompositions.find(_label);
-  }
-  catch(const std::out_of_range&) {
-    throw RunTimeException(WHERE) << "Requested decomposition '" << _label
-                                  << "' does not exist.";
-  }
-
-  if(iter->second == nullptr) {
-    MethodTimer mt(m_library->GetStatClass(), "TetGenDecomposition::" + _label);
-    iter->second = m_tetgens[_label](m_library->GetMPProblem()->GetEnvironment());
-  }
-  return iter->second;
-}
-
-
-template <typename MPTraits>
-void
-MPToolsType<MPTraits>::
-SetDecomposition(const std::string& _label,
-    const WorkspaceDecomposition* _decomposition) {
-  // If a decomposition was already assigned to this label, delete it before
-  // storing the new one.
-  auto iter = m_decompositions.find(_label);
-  const bool alreadyExists = iter != m_decompositions.end();
-
-  if(alreadyExists) {
-    delete iter->second;
-    iter->second = _decomposition;
-  }
-  else
-    m_decompositions[_label] = _decomposition;
-}
-
-/*----------------------------- Reachability Utils -------------------------------*/
-
-template <typename MPTraits>
-ReachabilityUtil<MPTraits>*
-MPToolsType<MPTraits>::
-GetReachabilityUtil(const std::string& _label) const {
-  return GetUtility(_label, m_reachabilityUtils);
-}
-
-
-template <typename MPTraits>
-void
-MPToolsType<MPTraits>::
-SetReachabilityUtil(const std::string& _label,
-    ReachabilityUtil<MPTraits>* _util) {
-  SetUtility(_label, _util, m_reachabilityUtils);
-}
-
-
-
-/*----------------------------- Point Construction -------------------------------*/
-
-template <typename MPTraits>
-PointConstruction<MPTraits>*
-MPToolsType<MPTraits>::
-GetPointConstruction(const std::string& _label) const {
-  return GetUtility(_label, m_pointConstruction);
-}
-
-
-template <typename MPTraits>
-void
-MPToolsType<MPTraits>::
-SetPointConstruction(const std::string& _label,
-    PointConstruction<MPTraits>* _util) {
-  SetUtility(_label, _util, m_pointConstruction);
-}
-
-
 /*---------------------------------- Helpers ---------------------------------*/
 
-template <typename MPTraits>
-template <template <typename> class Utility>
+template <typename Utility>
 inline
-Utility<MPTraits>*
-MPToolsType<MPTraits>::
+Utility*
+MPToolsType::
 GetUtility(const std::string& _label, const LabelMap<Utility>& _map) const {
   try {
     return _map.at(_label);
   }
   catch(const std::out_of_range&) {
-    Utility<MPTraits> dummy;
+    Utility dummy;
     throw RunTimeException(WHERE) << "Requested " << dummy.GetName()
                                   << " '" << _label  << "' does not exist.";
   }
   catch(const std::exception& _e) {
-    Utility<MPTraits> dummy;
+    Utility dummy;
     throw RunTimeException(WHERE) << "Error when fetching " << dummy.GetName()
                                   << " '" << _label << "': " << _e.what();
   }
   catch(...) {
-    Utility<MPTraits> dummy;
+    Utility dummy;
     throw RunTimeException(WHERE) << "Error when fetching " << dummy.GetName()
                                   << " '" << _label << "': (unknown).";
   }
 }
 
 
-template <typename MPTraits>
-template <template <typename> class Utility>
+template <typename Utility>
 void
-MPToolsType<MPTraits>::
-SetUtility(const std::string& _label, Utility<MPTraits>* _utility,
+MPToolsType::
+SetUtility(const std::string& _label, Utility* _utility,
     LabelMap<Utility>& _map) const {
   // Set the library pointer.
   _utility->SetMPLibrary(m_library);
@@ -759,7 +415,5 @@ SetUtility(const std::string& _label, Utility<MPTraits>* _utility,
   else
     _map.insert({_label, _utility});
 }
-
-/*----------------------------------------------------------------------------*/
 
 #endif

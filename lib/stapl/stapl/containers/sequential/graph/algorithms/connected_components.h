@@ -100,8 +100,13 @@ class visitor_cc
 /// @todo move into a detail namespace
 //////////////////////////////////////////////////////////////
 template <class T>
+#ifdef __APPLE__
+struct __CCVID_Compare
+         : public std::__binary_function<T, T, bool>
+#else
 struct __CCVID_Compare
          : public std::binary_function<T, T, bool>
+#endif
 {
   bool operator()(T x, T y)
   {

@@ -14,8 +14,7 @@
 ///
 /// @ingroup DistanceMetrics
 ////////////////////////////////////////////////////////////////////////////////
-template <typename MPTraits>
-class ManhattanDistance : virtual public MinkowskiDistance<MPTraits> {
+class ManhattanDistance : virtual public MinkowskiDistance {
 
   public:
 
@@ -29,30 +28,5 @@ class ManhattanDistance : virtual public MinkowskiDistance<MPTraits> {
     ///@}
 
 };
-
-/*------------------------------- Construction -------------------------------*/
-
-template <typename MPTraits>
-ManhattanDistance<MPTraits>::
-ManhattanDistance(bool _normalize) :
-    MinkowskiDistance<MPTraits>(1, 1, 1, _normalize) {
-  this->SetName("Manhattan");
-}
-
-
-template <typename MPTraits>
-ManhattanDistance<MPTraits>::
-ManhattanDistance(XMLNode& _node) : DistanceMetricMethod<MPTraits>(_node),
-                                    MinkowskiDistance<MPTraits>(_node) {
-  this->SetName("Manhattan");
-
-  this->m_r1 = 1;
-  this->m_r2 = 1;
-  this->m_r3 = 1;
-  this->m_normalize = _node.Read("normalize", false, false,
-      "flag if position dof should be normalized by environment diagonal");
-}
-
-/*----------------------------------------------------------------------------*/
 
 #endif

@@ -140,8 +140,11 @@
 
     <ValidityCheckers>
       <AlwaysTrueValidity label="alwaysTrue"/>
+      <ObstacleClearance label="obst_clrnc" clearanceThreshold="2" vcLabel="pqp_solid"/>
       <TerrainValidity label="terrainValidity"/>
-
+      <NodeClearanceValidity label="ncValidity" delta="3" nfLabel="Nearest4"/>
+      <TopologicalMapValidity label="topologicalMapValidity"/>
+      
       <!-- Test not yet added -->
       <CollisionDetection label="pqp_solid" method="PQP_SOLID"/>
       <CollisionDetection label="rapid" method="RAPID"/>
@@ -152,13 +155,14 @@
       <BruteForceNF label="Nearest" dmLabel="euclidean" unconnected="false" k="1"/>
       <BruteForceNF label="Nearest4" dmLabel="euclidean" unconnected="true" k="4"/>
       <BruteForceNF label="BFNF" dmLabel="euclidean" unconnected="false" k="10"/>
+      <RandomNF label = "RandomTest" dmLabel="euclidean" unconnected="false" k="2"/>
     </NeighborhoodFinders>
 
     <Samplers>
       <BridgeTestSampler label="BridgeTest" d="10" dmLabel="euclidean" vcLabel="pqp_solid"/>
       <MixSampler label="MixSampler">
-        <Sampler label="OBPRM" p=0.5/>
-        <Sampler label="UniformRandom" p=0.5/>
+        <Sampler label="OBPRM" p=0.4/>
+        <Sampler label="UniformRandom" p=0.6/>
       </MixSampler>
       <ObstacleBasedSampler label="OBPRM" vcLabel="rapid" useBBX="false"
         pointSelection="cspace" dmLabel="euclidean" stepSize="0.0"
@@ -170,11 +174,17 @@
       <StraightLine label="slAlwaysTrue" binaryEvaluation="true"
             vcLabel="alwaysTrue"/>
       <StraightLine label="sl" binaryEvaluation="true" vcLabel="rapid"/>
+      <HierarchicalLP label="hierarchical">
+        <LocalPlanner method="sl"/>
+        <LocalPlanner method="slAlwaysTrue"/>
+      </HierarchicalLP>
     </LocalPlanners>
 
     <Extenders>
       <BasicExtender label="BERO" debug="false" dmLabel="euclidean"
-        vcLabel="alwaysTrue" maxDist="4." minDist=".01"/>
+        vcLabel="pqp_solid" maxDist="4." minDist=".01"/>
+      <RotationThenTranslation label="RTTE" debug="false" dmLabel="euclidean"
+        vcLabel="rapid" maxDist="4." minDist=".01"/>
     </Extenders>
 
     <PathModifiers>
@@ -185,6 +195,7 @@
         nfLabel="BFNF" lpLabel="slAlwaysTrue" checkIfSameCC="false"/>
       <NeighborhoodConnector label="ClosestAlwaysTrue" nfLabel="BFNF"
       lpLabel="slAlwaysTrue" checkIfSameCC="false"/>
+      <NeighborhoodConnector label="ClosestHierarchical" debug="true" nfLabel="BFNF" lpLabel="hierarchical" checkIfSameCC="false"/>
       <RewireConnector label="Rewire" nfLabel="Nearest4" lpLabel="slAlwaysTrue"/>
     </Connectors>
 
@@ -203,9 +214,10 @@
         <Resolution mult="16"/>
         <Resolution mult="1"/>
       </LazyQuery>
-
+      <NegateEvaluator label="Neg" evalLabel="Query"/>
       <QueryMethod label="Query" debug="false"
         graphSearchAlg="dijkstras" safeIntervalToolLabel="SI"/>
+      <MinimumDistanceEvaluator label="MinDist" minDist="10" dmLabel="euclidean"/>
     </MapEvaluators>
 
     <MPStrategies>
@@ -232,6 +244,12 @@
         <Sampler label="UniformRandom" number="1" attempts="1"/>
         <Connector label="ClosestAlwaysTrue" />
         <Evaluator label="LazyQuery"/>
+      </BasicPRM>
+
+      <BasicPRM label="WOOO" debug="false">
+        <Sampler label="UniformRandom" number="1" attempts="1"/>
+        <Connector label="ClosestAlwaysTrue" />
+        <Evaluator label="MinDist"/>
       </BasicPRM>
     </MPStrategies>
 

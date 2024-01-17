@@ -13,9 +13,7 @@
 /// set of criteria.
 /// @ingroup MapEvaluators
 ////////////////////////////////////////////////////////////////////////////////
-
-template <typename MPTraits>
-class MapEvaluatorMethod : public MPBaseObject<MPTraits> {
+class MapEvaluatorMethod : public MPBaseObject {
   public:
 
     ///@name Construction
@@ -80,31 +78,5 @@ class MapEvaluatorMethod : public MPBaseObject<MPTraits> {
     ///@}
 
 };
-
-
-template<typename MPTraits>
-MapEvaluatorMethod<MPTraits>::
-MapEvaluatorMethod(XMLNode& _node) : MPBaseObject<MPTraits>(_node) {
-}
-
-/*----------------------------- Active Robots --------------------------------*/
-
-template<typename MPTraits>
-void
-MapEvaluatorMethod<MPTraits>::
-SetActiveRobots(const std::vector<size_t>& _activeRobots) {
-  m_activeRobots = _activeRobots;
-}
-
-
-template<typename MPTraits>
-std::vector<size_t>
-MapEvaluatorMethod<MPTraits>::
-GetActiveRobots() const {
-  return m_activeRobots;
-}
-
-/*----------------------------------------------------------------------------*/
-
 
 #endif

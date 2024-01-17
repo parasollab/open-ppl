@@ -21,7 +21,7 @@
 /// @usage
 /// @code
 /// ValidityCheckerPointer vc = this->GetValidityChecker(m_vcLabel);
-/// CfgType c;
+/// Cfg c;
 /// CDInfo cdInfo;
 /// string callee("SomeFunc");
 /// bool valid = vc->IsValid(c, cdInfo, callee);
@@ -29,16 +29,14 @@
 ///
 /// @ingroup ValidityCheckers
 ////////////////////////////////////////////////////////////////////////////////
-template <typename MPTraits>
-class ValidityCheckerMethod : public MPBaseObject<MPTraits> {
+class ValidityCheckerMethod : public MPBaseObject {
 
   public:
 
     ///@name Motion Planning Types
     ///@{
 
-    typedef typename MPTraits::CfgType       CfgType;
-    typedef typename MPTraits::GroupCfgType  GroupCfgType;
+    typedef typename MPBaseObject::GroupCfgType GroupCfgType;
     typedef typename GroupCfgType::Formation Formation;
 
     ///@}
@@ -47,7 +45,7 @@ class ValidityCheckerMethod : public MPBaseObject<MPTraits> {
 
     ValidityCheckerMethod() = default;
 
-    ValidityCheckerMethod(XMLNode& _node) : MPBaseObject<MPTraits>(_node) {}
+    ValidityCheckerMethod(XMLNode& _node) : MPBaseObject(_node) {}
 
     virtual ~ValidityCheckerMethod() = default;
 
@@ -70,13 +68,13 @@ class ValidityCheckerMethod : public MPBaseObject<MPTraits> {
     /// @param _cdInfo Output for extra computed information such as clearance.
     /// @param _caller Name of the calling function.
     /// @return True iff _cfg is in cfree, false otherwise.
-    bool IsValid(CfgType& _cfg, CDInfo& _cdInfo, const std::string& _caller);
+    bool IsValid(Cfg& _cfg, CDInfo& _cdInfo, const std::string& _caller);
     ///@example ValidityCheckers_UseCase.cpp
     /// This is an example of how to use the validity checker methods.
 
     /// This version does not return extra information.
     /// @overload
-    bool IsValid(CfgType& _cfg, const std::string& _caller);
+    bool IsValid(Cfg& _cfg, const std::string& _caller);
 
     ///@}
     ///@name Group Configuration Validity
@@ -106,7 +104,7 @@ class ValidityCheckerMethod : public MPBaseObject<MPTraits> {
     /// @param _cdInfo Output for extra computed information such as clearance.
     /// @param _caller Name of the calling function.
     /// @return True if _cfg is in cfree.
-    virtual bool IsValidImpl(CfgType& _cfg, CDInfo& _cdInfo,
+    virtual bool IsValidImpl(Cfg& _cfg, CDInfo& _cdInfo,
         const std::string& _caller) = 0;
 
     /// Implementation of group cfg classification.
@@ -126,74 +124,5 @@ class ValidityCheckerMethod : public MPBaseObject<MPTraits> {
     ///@}
 
 };
-
-/*------------------------ Validity Checker Interface ------------------------*/
-
-template <typename MPTraits>
-inline
-bool
-ValidityCheckerMethod<MPTraits>::
-GetValidity() const {
-  return m_validity;
-}
-
-
-template <typename MPTraits>
-inline
-void
-ValidityCheckerMethod<MPTraits>::
-ToggleValidity() {
-  m_validity = !m_validity;
-}
-
-
-template <typename MPTraits>
-inline
-bool
-ValidityCheckerMethod<MPTraits>::
-IsValid(CfgType& _cfg, CDInfo& _cdInfo, const std::string& _caller) {
-  return m_validity == IsValidImpl(_cfg, _cdInfo, _caller);
-}
-
-
-template <typename MPTraits>
-inline
-bool
-ValidityCheckerMethod<MPTraits>::
-IsValid(CfgType& _cfg, const std::string& _caller) {
-  CDInfo cdInfo;
-  return IsValid(_cfg, cdInfo, _caller);
-}
-
-
-template <typename MPTraits>
-inline
-bool
-ValidityCheckerMethod<MPTraits>::
-IsValid(GroupCfgType& _cfg, CDInfo& _cdInfo, const std::string& _caller) {
-  return m_validity == IsValidImpl(_cfg, _cdInfo, _caller);
-}
-
-
-template <typename MPTraits>
-inline
-bool
-ValidityCheckerMethod<MPTraits>::
-IsValid(GroupCfgType& _cfg, const std::string& _caller) {
-  CDInfo cdInfo;
-  return IsValid(_cfg, cdInfo, _caller);
-}
-
-/*--------------------------------- Helpers ----------------------------------*/
-
-template <typename MPTraits>
-bool
-ValidityCheckerMethod<MPTraits>::
-IsValidImpl(GroupCfgType& _cfg, CDInfo& _cdInfo, const std::string& _caller) {
-  throw NotImplementedException(WHERE) << "No base class implementation is "
-                                       << "provided.";
-}
-
-/*----------------------------------------------------------------------------*/
 
 #endif
