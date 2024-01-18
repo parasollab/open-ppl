@@ -465,15 +465,21 @@ bool
 CollisionDetectionValidity::
 IsInObstacleCollision(CDInfo& _cdInfo, const MultiBody* const _multibody,
     const std::string& _caller) {
-  auto env = this->GetEnvironment();
 
+  bool subsetFlag = !(this->m_obstacleSubset.empty());
+  auto env;
+  if(!subsetFlag) { env = this->GetEnvironment(); }
   bool collision = false;
   const bool allInfo = _cdInfo.m_retAllInfo;
-  const size_t numObst = env->NumObstacles();
+  const size_t numObst = (subsetFlag) ? 
+    this->m_obstacleSubset.size() : env->NumObstacles();
+  MultiBody* obstacle;
 
   for(size_t i = 0; i < numObst; ++i) {
     CDInfo cdInfo(allInfo);
-    const bool c = IsMultiBodyCollision(cdInfo, _multibody, env->GetObstacle(i),
+    obstacle = (subsetFlag) ? 
+        this->m_obstacleSubset[i] : env->GetObstacle(i);
+    const bool c = IsMultiBodyCollision(cdInfo, _multibody, obstacle,
         _caller);
     collision |= c;
 
@@ -545,6 +551,13 @@ IsInInterRobotCollision(CDInfo& _cdInfo, Robot* const _robot,
   }
 
   return collision;
+}
+
+bool
+CollisionDetectionValidity::
+setObstacleSubset(const std::vector<Multibody*>& _obstacleSubset){
+    this->m_obstacleSubset = _obstacleSubset;
+    return true;
 }
 
 /*----------------------------------------------------------------------------*/
