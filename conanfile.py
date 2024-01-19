@@ -28,10 +28,10 @@ class PPLRecipe(ConanFile):
 
     def requirements(self):
         self.requires("cgal/5.5.2")
-        self.requires("boost/1.82.0")
+        self.requires("boost/1.83.0")
         self.requires("eigen/3.4.0")
         self.requires("bullet3/3.25")
-        self.requires("mpfr/4.1.0")
+        self.requires("mpfr/4.2.1")
         self.requires("gmp/6.3.0")
         self.requires("nlohmann_json/3.10.5")
         self.requires("tinyxml2/9.0.0")
