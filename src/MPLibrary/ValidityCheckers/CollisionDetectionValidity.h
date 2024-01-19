@@ -181,7 +181,7 @@ class CollisionDetectionValidity
     /// If it is not set or empty it will check for collision with all 
     /// obstacles in the environment
     /// @param _obstacleSubset A subset of obstacle multibodies in the environment
-    virtual bool setObstacleSubset(const std::vector<Multibody*>& _obstacleSubset); 
+    virtual bool setObstacleSubset(const std::vector<MultiBody*>& _obstacleSubset); 
 
     ///@}
     ///@name Internal State
@@ -194,7 +194,7 @@ class CollisionDetectionValidity
     bool m_interRobotCollision{false};    ///< Check inter-robot collisions
     bool m_ignoreAdjacentLinks{false};    ///< Ignore adj links in self collisions
     bool m_ignoreSiblingCollisions{false}; ///< Ignore sibling links in self collisions
-    std::vector<Multibody*> m_obstacleSubset; ///< Subset of obstacles to check for
+    std::vector<MultiBody*> m_obstacleSubset; ///< Subset of obstacles to check for
 
     ///@}
 
