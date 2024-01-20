@@ -80,6 +80,7 @@ option(COMPILE_WRENCH_ACCESS_TOOL " Compile WrenchAccessibilityTool " ON)
 
 # NeighborhoodFinders
 option(COMPILE_BRUTE_FORCE_NF " Compile BruteForceNF " ON)
+option(COMPILE_KDTREE_NF " Compile KdTreeNF " ON)
 option(COMPILE_RADIUS_NF " Compile RadiusNF " ON)
 option(COMPILE_RANDOM_NF " Compile RandomNF " ON)
 
@@ -750,6 +751,13 @@ if(COMPILE_BRUTE_FORCE_NF)
     list(APPEND PMPL_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/NeighborhoodFinders/BruteForceNF.cpp)
 else()
     set(BRUTE_FORCE_NF_AVAILABLE 0)
+endif()
+
+if(COMPILE_KDTREE_NF)
+    set(KDTREE_NF_AVAILABLE 1)
+    list(APPEND PMPL_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/NeighborhoodFinders/KdTreeNF.cpp)
+else()
+    set(KDTREE_NF_AVAILABLE 0)
 endif()
 
 if(COMPILE_RADIUS_NF)
