@@ -71,6 +71,7 @@
 
 // NeighborhoodFinders
 #define BRUTE_FORCE_NF_AVAILABLE 1
+#define KDTREE_NF_AVAILABLE 1
 #define RADIUS_NF_AVAILABLE 1
 #define RANDOM_NF_AVAILABLE 1
 
@@ -323,6 +324,9 @@
 #if BRUTE_FORCE_NF_AVAILABLE
 #include "MPLibrary/NeighborhoodFinders/BruteForceNF.h"
 #endif
+#if KDTREE_NF_AVAILABLE
+#include "MPLibrary/NeighborhoodFinders/KdTreeNF.h"
+#endif
 #if RADIUS_NF_AVAILABLE
 #include "MPLibrary/NeighborhoodFinders/RadiusNF.h"
 #endif
@@ -331,8 +335,8 @@
 #endif
 
 #define NF_CLASSES                                                             \
-  ((BruteForceNF, BRUTE_FORCE_NF_AVAILABLE))((RadiusNF, RADIUS_NF_AVAILABLE))( \
-      (RandomNF, RANDOM_NF_AVAILABLE))
+  ((BruteForceNF, BRUTE_FORCE_NF_AVAILABLE))((KdTreeNF, KDTREE_NF_AVAILABLE))( \
+      (RandomNF, RANDOM_NF_AVAILABLE))((RadiusNF, RADIUS_NF_AVAILABLE))
 
 /***************************** PathModifiers **********************************/
 #if SHORTCUTTING_AVAILABLE
