@@ -205,6 +205,10 @@ Build PPL with however many cores you'd prefer using `-j(number)`. By default, a
 cmake --build build -j3
 ```
 
+##### Common dependency issues with conan:
+Boost 1.82.0 vs 1.83.0 (CGAL vs PPL req.) => Change boost ver. in conanfile.py to 1.83.0
+mpfr 4.1.0 vs 4.2.1 => mpfr boost ver. in conanfile.py to 4.2.1
+
 ### Install and build using vcpkg
 
 #### Install vcpkg
@@ -245,6 +249,9 @@ Build PPL with however many cores you'd prefer using `-j(number)`. By default, a
 ```bash
 cmake --build build -j3
 ```
+
+##### Common dependency issues with vcpkg:
+CGAL version 5.5.2 is incompatible => Change CGAL ver. in vcpkg.json to 5.4.2
 
 ## Docker
 
@@ -324,3 +331,4 @@ We provide `Examples/CfgExamples.xml` as an example of how to create an xml file
 ```bash
 ./build/ppl_mp -f Examples/CfgExamples.xml
 ```
+
