@@ -188,76 +188,83 @@ $(function() {
 <div class="line"><a name="l00258"></a><span class="lineno">  258</span>&#160; </div>
 <div class="line"><a name="l00260"></a><span class="lineno">  260</span>&#160;};</div>
 <div class="line"><a name="l00261"></a><span class="lineno">  261</span>&#160; </div>
-<div class="line"><a name="l00262"></a><span class="lineno">  262</span>&#160;<span class="comment">/*---------------------------- Templated Members -----------------------------*/</span></div>
-<div class="line"><a name="l00263"></a><span class="lineno">  263</span>&#160; </div>
-<div class="line"><a name="l00264"></a><span class="lineno">  264</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
-<div class="line"><a name="l00265"></a><span class="lineno">  265</span>&#160;T</div>
-<div class="line"><a name="l00266"></a><span class="lineno"><a class="line" href="classXMLNode.html#af0e81db89948e52fdee6bf2bf029037f">  266</a></span>&#160;<a class="code" href="classXMLNode.html#af0e81db89948e52fdee6bf2bf029037f">XMLNode::</a></div>
-<div class="line"><a name="l00267"></a><span class="lineno">  267</span>&#160;<a class="code" href="classXMLNode.html#af0e81db89948e52fdee6bf2bf029037f">Read</a>(<span class="keyword">const</span> std::string&amp; _name, <span class="keyword">const</span> <span class="keywordtype">bool</span> _req, <span class="keyword">const</span> T&amp; _default, <span class="keyword">const</span> T&amp; _min,</div>
-<div class="line"><a name="l00268"></a><span class="lineno">  268</span>&#160;    <span class="keyword">const</span> T&amp; _max, <span class="keyword">const</span> std::string&amp; _desc) {</div>
-<div class="line"><a name="l00269"></a><span class="lineno">  269</span>&#160;  m_accessed = <span class="keyword">true</span>;</div>
-<div class="line"><a name="l00270"></a><span class="lineno">  270</span>&#160;  m_reqAttributes.insert(_name);</div>
-<div class="line"><a name="l00271"></a><span class="lineno">  271</span>&#160;  T toReturn;</div>
-<div class="line"><a name="l00272"></a><span class="lineno">  272</span>&#160; </div>
-<div class="line"><a name="l00273"></a><span class="lineno">  273</span>&#160;  tinyxml2::XMLError qr = m_node-&gt;ToElement()-&gt;QueryAttribute(_name.c_str(), &amp;toReturn);</div>
-<div class="line"><a name="l00274"></a><span class="lineno">  274</span>&#160;  <span class="keywordflow">switch</span>(qr) {</div>
-<div class="line"><a name="l00275"></a><span class="lineno">  275</span>&#160;    <span class="keywordflow">case</span> tinyxml2::XML_WRONG_ATTRIBUTE_TYPE:</div>
-<div class="line"><a name="l00276"></a><span class="lineno">  276</span>&#160;      <span class="keywordflow">throw</span> <a class="code" href="structParseException.html">ParseException</a>(<a class="code" href="classXMLNode.html#ad8152f1ab4f8720572c66397f74e282c">Where</a>(), AttrWrongType(_name, _desc));</div>
-<div class="line"><a name="l00277"></a><span class="lineno">  277</span>&#160;      <span class="keywordflow">break</span>;</div>
-<div class="line"><a name="l00278"></a><span class="lineno">  278</span>&#160;    <span class="keywordflow">case</span> tinyxml2::XML_NO_ATTRIBUTE:</div>
-<div class="line"><a name="l00279"></a><span class="lineno">  279</span>&#160;      {</div>
-<div class="line"><a name="l00280"></a><span class="lineno">  280</span>&#160;        <span class="keywordflow">if</span>(_req)</div>
-<div class="line"><a name="l00281"></a><span class="lineno">  281</span>&#160;          <span class="keywordflow">throw</span> <a class="code" href="structParseException.html">ParseException</a>(<a class="code" href="classXMLNode.html#ad8152f1ab4f8720572c66397f74e282c">Where</a>(), AttrMissing(_name, _desc));</div>
-<div class="line"><a name="l00282"></a><span class="lineno">  282</span>&#160;        <span class="keywordflow">else</span></div>
-<div class="line"><a name="l00283"></a><span class="lineno">  283</span>&#160;          toReturn = _default;</div>
-<div class="line"><a name="l00284"></a><span class="lineno">  284</span>&#160;        <span class="keywordflow">break</span>;</div>
-<div class="line"><a name="l00285"></a><span class="lineno">  285</span>&#160;      }</div>
-<div class="line"><a name="l00286"></a><span class="lineno">  286</span>&#160;    <span class="keywordflow">case</span> tinyxml2::XML_SUCCESS:</div>
-<div class="line"><a name="l00287"></a><span class="lineno">  287</span>&#160;      {</div>
-<div class="line"><a name="l00288"></a><span class="lineno">  288</span>&#160;        <span class="keywordflow">if</span>(toReturn &lt; _min || toReturn &gt; _max)</div>
-<div class="line"><a name="l00289"></a><span class="lineno">  289</span>&#160;          <span class="keywordflow">throw</span> <a class="code" href="structParseException.html">ParseException</a>(<a class="code" href="classXMLNode.html#ad8152f1ab4f8720572c66397f74e282c">Where</a>(),</div>
-<div class="line"><a name="l00290"></a><span class="lineno">  290</span>&#160;              AttrInvalidBounds(_name, _desc, _min, _max, toReturn));</div>
+<div class="line"><a name="l00262"></a><span class="lineno">  262</span>&#160;<span class="comment">// specialization for size_t since tinyxml2 doesn&#39;t support it</span></div>
+<div class="line"><a name="l00263"></a><span class="lineno">  263</span>&#160;<span class="keyword">template</span> &lt;&gt;</div>
+<div class="line"><a name="l00264"></a><span class="lineno">  264</span>&#160;<span class="keywordtype">size_t</span> </div>
+<div class="line"><a name="l00265"></a><span class="lineno">  265</span>&#160;<a class="code" href="classXMLNode.html#af0e81db89948e52fdee6bf2bf029037f">XMLNode::</a></div>
+<div class="line"><a name="l00266"></a><span class="lineno">  266</span>&#160;<a class="code" href="classXMLNode.html#af0e81db89948e52fdee6bf2bf029037f">Read</a>(<span class="keyword">const</span> std::string&amp; _name, <span class="keyword">const</span> <span class="keywordtype">bool</span> _req, <span class="keyword">const</span> <span class="keywordtype">size_t</span>&amp; _default,</div>
+<div class="line"><a name="l00267"></a><span class="lineno">  267</span>&#160;    <span class="keyword">const</span> <span class="keywordtype">size_t</span>&amp; _min, <span class="keyword">const</span> <span class="keywordtype">size_t</span>&amp; _max, <span class="keyword">const</span> std::string&amp; _desc);</div>
+<div class="line"><a name="l00268"></a><span class="lineno">  268</span>&#160; </div>
+<div class="line"><a name="l00269"></a><span class="lineno">  269</span>&#160;<span class="comment">/*---------------------------- Templated Members -----------------------------*/</span></div>
+<div class="line"><a name="l00270"></a><span class="lineno">  270</span>&#160; </div>
+<div class="line"><a name="l00271"></a><span class="lineno">  271</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
+<div class="line"><a name="l00272"></a><span class="lineno">  272</span>&#160;T</div>
+<div class="line"><a name="l00273"></a><span class="lineno"><a class="line" href="classXMLNode.html#af0e81db89948e52fdee6bf2bf029037f">  273</a></span>&#160;<a class="code" href="classXMLNode.html#af0e81db89948e52fdee6bf2bf029037f">XMLNode::</a></div>
+<div class="line"><a name="l00274"></a><span class="lineno">  274</span>&#160;<a class="code" href="classXMLNode.html#af0e81db89948e52fdee6bf2bf029037f">Read</a>(<span class="keyword">const</span> std::string&amp; _name, <span class="keyword">const</span> <span class="keywordtype">bool</span> _req, <span class="keyword">const</span> T&amp; _default, <span class="keyword">const</span> T&amp; _min,</div>
+<div class="line"><a name="l00275"></a><span class="lineno">  275</span>&#160;    <span class="keyword">const</span> T&amp; _max, <span class="keyword">const</span> std::string&amp; _desc) {</div>
+<div class="line"><a name="l00276"></a><span class="lineno">  276</span>&#160;  m_accessed = <span class="keyword">true</span>;</div>
+<div class="line"><a name="l00277"></a><span class="lineno">  277</span>&#160;  m_reqAttributes.insert(_name);</div>
+<div class="line"><a name="l00278"></a><span class="lineno">  278</span>&#160;  T toReturn;</div>
+<div class="line"><a name="l00279"></a><span class="lineno">  279</span>&#160; </div>
+<div class="line"><a name="l00280"></a><span class="lineno">  280</span>&#160;  tinyxml2::XMLError qr = m_node-&gt;ToElement()-&gt;QueryAttribute(_name.c_str(), &amp;toReturn);</div>
+<div class="line"><a name="l00281"></a><span class="lineno">  281</span>&#160;  <span class="keywordflow">switch</span>(qr) {</div>
+<div class="line"><a name="l00282"></a><span class="lineno">  282</span>&#160;    <span class="keywordflow">case</span> tinyxml2::XML_WRONG_ATTRIBUTE_TYPE:</div>
+<div class="line"><a name="l00283"></a><span class="lineno">  283</span>&#160;      <span class="keywordflow">throw</span> <a class="code" href="structParseException.html">ParseException</a>(<a class="code" href="classXMLNode.html#ad8152f1ab4f8720572c66397f74e282c">Where</a>(), AttrWrongType(_name, _desc));</div>
+<div class="line"><a name="l00284"></a><span class="lineno">  284</span>&#160;      <span class="keywordflow">break</span>;</div>
+<div class="line"><a name="l00285"></a><span class="lineno">  285</span>&#160;    <span class="keywordflow">case</span> tinyxml2::XML_NO_ATTRIBUTE:</div>
+<div class="line"><a name="l00286"></a><span class="lineno">  286</span>&#160;      {</div>
+<div class="line"><a name="l00287"></a><span class="lineno">  287</span>&#160;        <span class="keywordflow">if</span>(_req)</div>
+<div class="line"><a name="l00288"></a><span class="lineno">  288</span>&#160;          <span class="keywordflow">throw</span> <a class="code" href="structParseException.html">ParseException</a>(<a class="code" href="classXMLNode.html#ad8152f1ab4f8720572c66397f74e282c">Where</a>(), AttrMissing(_name, _desc));</div>
+<div class="line"><a name="l00289"></a><span class="lineno">  289</span>&#160;        <span class="keywordflow">else</span></div>
+<div class="line"><a name="l00290"></a><span class="lineno">  290</span>&#160;          toReturn = _default;</div>
 <div class="line"><a name="l00291"></a><span class="lineno">  291</span>&#160;        <span class="keywordflow">break</span>;</div>
 <div class="line"><a name="l00292"></a><span class="lineno">  292</span>&#160;      }</div>
-<div class="line"><a name="l00293"></a><span class="lineno">  293</span>&#160;    <span class="keywordflow">default</span>:</div>
-<div class="line"><a name="l00294"></a><span class="lineno">  294</span>&#160;      <span class="keywordflow">throw</span> <a class="code" href="structRunTimeException.html">RunTimeException</a>(<a class="code" href="RuntimeUtils_8h.html#acd4a2dee55f5359c0389baab37c2f468">WHERE</a>, <span class="stringliteral">&quot;Logic shouldn&#39;t be able to reach this.&quot;</span>);</div>
-<div class="line"><a name="l00295"></a><span class="lineno">  295</span>&#160;  }</div>
-<div class="line"><a name="l00296"></a><span class="lineno">  296</span>&#160; </div>
-<div class="line"><a name="l00297"></a><span class="lineno">  297</span>&#160;  <span class="keywordflow">return</span> toReturn;</div>
-<div class="line"><a name="l00298"></a><span class="lineno">  298</span>&#160;}</div>
-<div class="line"><a name="l00299"></a><span class="lineno">  299</span>&#160; </div>
-<div class="line"><a name="l00300"></a><span class="lineno">  300</span>&#160; </div>
-<div class="line"><a name="l00301"></a><span class="lineno">  301</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
-<div class="line"><a name="l00302"></a><span class="lineno">  302</span>&#160;std::string</div>
-<div class="line"><a name="l00303"></a><span class="lineno">  303</span>&#160;XMLNode::</div>
-<div class="line"><a name="l00304"></a><span class="lineno">  304</span>&#160;AttrInvalidBounds(<span class="keyword">const</span> std::string&amp; _name, <span class="keyword">const</span> std::string&amp; _desc,</div>
-<div class="line"><a name="l00305"></a><span class="lineno">  305</span>&#160;    <span class="keyword">const</span> T&amp; _min, <span class="keyword">const</span> T&amp; _max, <span class="keyword">const</span> T&amp; _val)<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l00306"></a><span class="lineno">  306</span>&#160;  std::ostringstream oss;</div>
-<div class="line"><a name="l00307"></a><span class="lineno">  307</span>&#160;  oss &lt;&lt; <span class="stringliteral">&quot;Invalid value for attribute &#39;&quot;</span> &lt;&lt; _name &lt;&lt; <span class="stringliteral">&quot;&#39;.&quot;</span></div>
-<div class="line"><a name="l00308"></a><span class="lineno">  308</span>&#160;      &lt;&lt; <span class="stringliteral">&quot;\n\tAttribute description: &quot;</span> &lt;&lt; _desc &lt;&lt; <span class="stringliteral">&quot;.&quot;</span></div>
-<div class="line"><a name="l00309"></a><span class="lineno">  309</span>&#160;      &lt;&lt; <span class="stringliteral">&quot;\n\tValid range: [&quot;</span> &lt;&lt; _min &lt;&lt; <span class="stringliteral">&quot;, &quot;</span> &lt;&lt; _max &lt;&lt; <span class="stringliteral">&quot;]&quot;</span></div>
-<div class="line"><a name="l00310"></a><span class="lineno">  310</span>&#160;      &lt;&lt; <span class="stringliteral">&quot;\n\tValue specified: &quot;</span> &lt;&lt; _val;</div>
-<div class="line"><a name="l00311"></a><span class="lineno">  311</span>&#160;  <span class="keywordflow">return</span> oss.str();</div>
-<div class="line"><a name="l00312"></a><span class="lineno">  312</span>&#160;}</div>
-<div class="line"><a name="l00313"></a><span class="lineno">  313</span>&#160; </div>
-<div class="line"><a name="l00314"></a><span class="lineno">  314</span>&#160;<span class="comment">/*----------------------------------------------------------------------------*/</span></div>
-<div class="line"><a name="l00315"></a><span class="lineno">  315</span>&#160; </div>
-<div class="line"><a name="l00316"></a><span class="lineno">  316</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00293"></a><span class="lineno">  293</span>&#160;    <span class="keywordflow">case</span> tinyxml2::XML_SUCCESS:</div>
+<div class="line"><a name="l00294"></a><span class="lineno">  294</span>&#160;      {</div>
+<div class="line"><a name="l00295"></a><span class="lineno">  295</span>&#160;        <span class="keywordflow">if</span>(toReturn &lt; _min || toReturn &gt; _max)</div>
+<div class="line"><a name="l00296"></a><span class="lineno">  296</span>&#160;          <span class="keywordflow">throw</span> <a class="code" href="structParseException.html">ParseException</a>(<a class="code" href="classXMLNode.html#ad8152f1ab4f8720572c66397f74e282c">Where</a>(),</div>
+<div class="line"><a name="l00297"></a><span class="lineno">  297</span>&#160;              AttrInvalidBounds(_name, _desc, _min, _max, toReturn));</div>
+<div class="line"><a name="l00298"></a><span class="lineno">  298</span>&#160;        <span class="keywordflow">break</span>;</div>
+<div class="line"><a name="l00299"></a><span class="lineno">  299</span>&#160;      }</div>
+<div class="line"><a name="l00300"></a><span class="lineno">  300</span>&#160;    <span class="keywordflow">default</span>:</div>
+<div class="line"><a name="l00301"></a><span class="lineno">  301</span>&#160;      <span class="keywordflow">throw</span> <a class="code" href="structRunTimeException.html">RunTimeException</a>(<a class="code" href="RuntimeUtils_8h.html#acd4a2dee55f5359c0389baab37c2f468">WHERE</a>, <span class="stringliteral">&quot;Logic shouldn&#39;t be able to reach this.&quot;</span>);</div>
+<div class="line"><a name="l00302"></a><span class="lineno">  302</span>&#160;  }</div>
+<div class="line"><a name="l00303"></a><span class="lineno">  303</span>&#160; </div>
+<div class="line"><a name="l00304"></a><span class="lineno">  304</span>&#160;  <span class="keywordflow">return</span> toReturn;</div>
+<div class="line"><a name="l00305"></a><span class="lineno">  305</span>&#160;}</div>
+<div class="line"><a name="l00306"></a><span class="lineno">  306</span>&#160; </div>
+<div class="line"><a name="l00307"></a><span class="lineno">  307</span>&#160; </div>
+<div class="line"><a name="l00308"></a><span class="lineno">  308</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
+<div class="line"><a name="l00309"></a><span class="lineno">  309</span>&#160;std::string</div>
+<div class="line"><a name="l00310"></a><span class="lineno">  310</span>&#160;XMLNode::</div>
+<div class="line"><a name="l00311"></a><span class="lineno">  311</span>&#160;AttrInvalidBounds(<span class="keyword">const</span> std::string&amp; _name, <span class="keyword">const</span> std::string&amp; _desc,</div>
+<div class="line"><a name="l00312"></a><span class="lineno">  312</span>&#160;    <span class="keyword">const</span> T&amp; _min, <span class="keyword">const</span> T&amp; _max, <span class="keyword">const</span> T&amp; _val)<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l00313"></a><span class="lineno">  313</span>&#160;  std::ostringstream oss;</div>
+<div class="line"><a name="l00314"></a><span class="lineno">  314</span>&#160;  oss &lt;&lt; <span class="stringliteral">&quot;Invalid value for attribute &#39;&quot;</span> &lt;&lt; _name &lt;&lt; <span class="stringliteral">&quot;&#39;.&quot;</span></div>
+<div class="line"><a name="l00315"></a><span class="lineno">  315</span>&#160;      &lt;&lt; <span class="stringliteral">&quot;\n\tAttribute description: &quot;</span> &lt;&lt; _desc &lt;&lt; <span class="stringliteral">&quot;.&quot;</span></div>
+<div class="line"><a name="l00316"></a><span class="lineno">  316</span>&#160;      &lt;&lt; <span class="stringliteral">&quot;\n\tValid range: [&quot;</span> &lt;&lt; _min &lt;&lt; <span class="stringliteral">&quot;, &quot;</span> &lt;&lt; _max &lt;&lt; <span class="stringliteral">&quot;]&quot;</span></div>
+<div class="line"><a name="l00317"></a><span class="lineno">  317</span>&#160;      &lt;&lt; <span class="stringliteral">&quot;\n\tValue specified: &quot;</span> &lt;&lt; _val;</div>
+<div class="line"><a name="l00318"></a><span class="lineno">  318</span>&#160;  <span class="keywordflow">return</span> oss.str();</div>
+<div class="line"><a name="l00319"></a><span class="lineno">  319</span>&#160;}</div>
+<div class="line"><a name="l00320"></a><span class="lineno">  320</span>&#160; </div>
+<div class="line"><a name="l00321"></a><span class="lineno">  321</span>&#160;<span class="comment">/*----------------------------------------------------------------------------*/</span></div>
+<div class="line"><a name="l00322"></a><span class="lineno">  322</span>&#160; </div>
+<div class="line"><a name="l00323"></a><span class="lineno">  323</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="ttc" id="aPMPLExceptions_8h_html"><div class="ttname"><a href="PMPLExceptions_8h.html">PMPLExceptions.h</a></div></div>
 <div class="ttc" id="aRuntimeUtils_8h_html_acd4a2dee55f5359c0389baab37c2f468"><div class="ttname"><a href="RuntimeUtils_8h.html#acd4a2dee55f5359c0389baab37c2f468">WHERE</a></div><div class="ttdeci">#define WHERE</div><div class="ttdoc">Macro for retrieving info about file, function, and line number.</div><div class="ttdef"><b>Definition:</b> RuntimeUtils.h:32</div></div>
 <div class="ttc" id="aclassXMLNode_html"><div class="ttname"><a href="classXMLNode.html">XMLNode</a></div><div class="ttdef"><b>Definition:</b> XMLNode.h:27</div></div>
-<div class="ttc" id="aclassXMLNode_html_a077b1feeefd56a65cde30a7c0d0d057a"><div class="ttname"><a href="classXMLNode.html#a077b1feeefd56a65cde30a7c0d0d057a">XMLNode::Ignore</a></div><div class="ttdeci">void Ignore()</div><div class="ttdoc">Ignore unrequested node/attribute errors for this node.</div><div class="ttdef"><b>Definition:</b> XMLNode.cpp:180</div></div>
+<div class="ttc" id="aclassXMLNode_html_a077b1feeefd56a65cde30a7c0d0d057a"><div class="ttname"><a href="classXMLNode.html#a077b1feeefd56a65cde30a7c0d0d057a">XMLNode::Ignore</a></div><div class="ttdeci">void Ignore()</div><div class="ttdoc">Ignore unrequested node/attribute errors for this node.</div><div class="ttdef"><b>Definition:</b> XMLNode.cpp:218</div></div>
 <div class="ttc" id="aclassXMLNode_html_a5f7209cd651701f86378e0516ed6b5ba"><div class="ttname"><a href="classXMLNode.html#a5f7209cd651701f86378e0516ed6b5ba">XMLNode::iterator</a></div><div class="ttdeci">std::vector&lt; XMLNode &gt;::iterator iterator</div><div class="ttdef"><b>Definition:</b> XMLNode.h:68</div></div>
 <div class="ttc" id="aclassXMLNode_html_a655a2d0b20512239b76d794c9067bf10"><div class="ttname"><a href="classXMLNode.html#a655a2d0b20512239b76d794c9067bf10">XMLNode::GetPath</a></div><div class="ttdeci">std::string GetPath() const</div><div class="ttdoc">Get the directory path containing the XML file.</div><div class="ttdef"><b>Definition:</b> XMLNode.cpp:106</div></div>
 <div class="ttc" id="aclassXMLNode_html_a90789c7622397fa244bde05c6c97d385"><div class="ttname"><a href="classXMLNode.html#a90789c7622397fa244bde05c6c97d385">XMLNode::Filename</a></div><div class="ttdeci">const std::string &amp; Filename() const</div><div class="ttdoc">Get the XML filename.</div><div class="ttdef"><b>Definition:</b> XMLNode.cpp:99</div></div>
 <div class="ttc" id="aclassXMLNode_html_a9d8686e035ad4acdd953d01f89eaaef2"><div class="ttname"><a href="classXMLNode.html#a9d8686e035ad4acdd953d01f89eaaef2">XMLNode::Name</a></div><div class="ttdeci">const std::string &amp; Name() const</div><div class="ttdoc">Get the XMLNode name.</div><div class="ttdef"><b>Definition:</b> XMLNode.cpp:90</div></div>
 <div class="ttc" id="aclassXMLNode_html_aa4fe9087a7de1cafe6f8369d757180ac"><div class="ttname"><a href="classXMLNode.html#aa4fe9087a7de1cafe6f8369d757180ac">XMLNode::XMLNode</a></div><div class="ttdeci">XMLNode(const std::string &amp;_filename, const std::string &amp;_desiredNode)</div><div class="ttdef"><b>Definition:</b> XMLNode.cpp:10</div></div>
-<div class="ttc" id="aclassXMLNode_html_ab0de1d4e8dd483e356afed89ebcc4034"><div class="ttname"><a href="classXMLNode.html#ab0de1d4e8dd483e356afed89ebcc4034">XMLNode::WarnAll</a></div><div class="ttdeci">void WarnAll(const bool _warningsAsErrors=false)</div><div class="ttdef"><b>Definition:</b> XMLNode.cpp:194</div></div>
+<div class="ttc" id="aclassXMLNode_html_ab0de1d4e8dd483e356afed89ebcc4034"><div class="ttname"><a href="classXMLNode.html#ab0de1d4e8dd483e356afed89ebcc4034">XMLNode::WarnAll</a></div><div class="ttdeci">void WarnAll(const bool _warningsAsErrors=false)</div><div class="ttdef"><b>Definition:</b> XMLNode.cpp:232</div></div>
 <div class="ttc" id="aclassXMLNode_html_acec1ac06067ee1e068e651053b216055"><div class="ttname"><a href="classXMLNode.html#acec1ac06067ee1e068e651053b216055">XMLNode::end</a></div><div class="ttdeci">iterator end()</div><div class="ttdoc">Get an iterator to this node's last child.</div><div class="ttdef"><b>Definition:</b> XMLNode.cpp:83</div></div>
-<div class="ttc" id="aclassXMLNode_html_ad8152f1ab4f8720572c66397f74e282c"><div class="ttname"><a href="classXMLNode.html#ad8152f1ab4f8720572c66397f74e282c">XMLNode::Where</a></div><div class="ttdeci">std::string Where() const</div><div class="ttdef"><b>Definition:</b> XMLNode.cpp:205</div></div>
+<div class="ttc" id="aclassXMLNode_html_ad8152f1ab4f8720572c66397f74e282c"><div class="ttname"><a href="classXMLNode.html#ad8152f1ab4f8720572c66397f74e282c">XMLNode::Where</a></div><div class="ttdeci">std::string Where() const</div><div class="ttdef"><b>Definition:</b> XMLNode.cpp:243</div></div>
 <div class="ttc" id="aclassXMLNode_html_ae09baf43572fac0e890b68cc57018069"><div class="ttname"><a href="classXMLNode.html#ae09baf43572fac0e890b68cc57018069">XMLNode::begin</a></div><div class="ttdeci">iterator begin()</div><div class="ttdoc">Get an iterator to this node's first child.</div><div class="ttdef"><b>Definition:</b> XMLNode.cpp:75</div></div>
 <div class="ttc" id="aclassXMLNode_html_ae8ce1864cce6d3a9b70d4fe39a825599"><div class="ttname"><a href="classXMLNode.html#ae8ce1864cce6d3a9b70d4fe39a825599">XMLNode::GetText</a></div><div class="ttdeci">std::string GetText() const</div><div class="ttdoc">Get the text between opening and closing tags.</div><div class="ttdef"><b>Definition:</b> XMLNode.cpp:116</div></div>
-<div class="ttc" id="aclassXMLNode_html_af0e81db89948e52fdee6bf2bf029037f"><div class="ttname"><a href="classXMLNode.html#af0e81db89948e52fdee6bf2bf029037f">XMLNode::Read</a></div><div class="ttdeci">T Read(const std::string &amp;_name, const bool _req, const T &amp;_default, const T &amp;_min, const T &amp;_max, const std::string &amp;_desc)</div><div class="ttdef"><b>Definition:</b> XMLNode.h:267</div></div>
+<div class="ttc" id="aclassXMLNode_html_af0e81db89948e52fdee6bf2bf029037f"><div class="ttname"><a href="classXMLNode.html#af0e81db89948e52fdee6bf2bf029037f">XMLNode::Read</a></div><div class="ttdeci">T Read(const std::string &amp;_name, const bool _req, const T &amp;_default, const T &amp;_min, const T &amp;_max, const std::string &amp;_desc)</div><div class="ttdef"><b>Definition:</b> XMLNode.h:274</div></div>
 <div class="ttc" id="astructParseException_html"><div class="ttname"><a href="structParseException.html">ParseException</a></div><div class="ttdef"><b>Definition:</b> PMPLExceptions.h:38</div></div>
 <div class="ttc" id="astructRunTimeException_html"><div class="ttname"><a href="structRunTimeException.html">RunTimeException</a></div><div class="ttdef"><b>Definition:</b> PMPLExceptions.h:62</div></div>
 </div><!-- fragment --></div><!-- contents -->

@@ -73,225 +73,70 @@ $(function() {
 <a href="PathEvaluator_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="preprocessor">#ifndef PMPL_PATH_EVALUATOR_H</span></div>
 <div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="preprocessor">#define PMPL_PATH_EVALUATOR_H</span></div>
 <div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160; </div>
-<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="Path_8h.html">ConfigurationSpace/Path.h</a>&quot;</span></div>
-<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="MapEvaluatorMethod_8h.html">MapEvaluatorMethod.h</a>&quot;</span></div>
-<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="preprocessor">#include &lt;string&gt;</span></div>
-<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160; </div>
-<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00015"></a><span class="lineno"><a class="line" href="classPathEvaluator.html">   15</a></span>&#160;<span class="keyword">class </span><a class="code" href="classPathEvaluator.html">PathEvaluator</a> : <span class="keyword">public</span> <a class="code" href="classMapEvaluatorMethod.html">MapEvaluatorMethod</a>&lt;MPTraits&gt; {</div>
-<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160; </div>
-<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;    <span class="keyword">public</span>:</div>
+<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="MapEvaluatorMethod_8h.html">MapEvaluatorMethod.h</a>&quot;</span></div>
+<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160; </div>
+<div class="line"><a name="l00012"></a><span class="lineno"><a class="line" href="classPathEvaluator.html">   12</a></span>&#160;<span class="keyword">class </span><a class="code" href="classPathEvaluator.html">PathEvaluator</a> : <span class="keyword">public</span> <a class="code" href="classMapEvaluatorMethod.html">MapEvaluatorMethod</a> {</div>
+<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160; </div>
+<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;    <span class="keyword">public</span>:</div>
+<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160; </div>
 <div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160; </div>
+<div class="line"><a name="l00019"></a><span class="lineno"><a class="line" href="classPathEvaluator.html#ada69475727014e7ced7d3e81be48cd0d">   19</a></span>&#160;    <span class="keyword">typedef</span> <span class="keyword">typename</span> <a class="code" href="classGenericStateGraph.html">MPBaseObject::RoadmapType</a>      <a class="code" href="classPathEvaluator.html#ada69475727014e7ced7d3e81be48cd0d">RoadmapType</a>;</div>
+<div class="line"><a name="l00020"></a><span class="lineno"><a class="line" href="classPathEvaluator.html#a3003085ce5da443d1dacc0e76913aa4c">   20</a></span>&#160;    <span class="keyword">typedef</span> <span class="keyword">typename</span> <a class="code" href="classGenericStateGraph.html#a337a1247796cb9bf56fbe6eb2b9497d2">RoadmapType::VID</a>               <a class="code" href="classPathEvaluator.html#a3003085ce5da443d1dacc0e76913aa4c">VID</a>;</div>
 <div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160; </div>
-<div class="line"><a name="l00022"></a><span class="lineno"><a class="line" href="classPathEvaluator.html#af8cbb8c5316b9c9e098f36d10b9e5325">   22</a></span>&#160;    <span class="keyword">typedef</span> <span class="keyword">typename</span> <a class="code" href="classGenericStateGraph.html">MPTraits::RoadmapType</a>          <a class="code" href="classPathEvaluator.html#af8cbb8c5316b9c9e098f36d10b9e5325">RoadmapType</a>;</div>
-<div class="line"><a name="l00023"></a><span class="lineno"><a class="line" href="classPathEvaluator.html#aa1d9ba7fe09c61f9f008f237cf52754a">   23</a></span>&#160;    <span class="keyword">typedef</span> <span class="keyword">typename</span> <a class="code" href="classGenericStateGraph.html#a337a1247796cb9bf56fbe6eb2b9497d2">RoadmapType::VID</a>               <a class="code" href="classPathEvaluator.html#aa1d9ba7fe09c61f9f008f237cf52754a">VID</a>;</div>
-<div class="line"><a name="l00024"></a><span class="lineno"><a class="line" href="classPathEvaluator.html#ad7e03427e08eef651c31b34907d31c9f">   24</a></span>&#160;    <span class="keyword">typedef</span> <span class="keyword">typename</span> <a class="code" href="classMPTraits.html#a1a5aab50ac12baaf6b22ff345c5ae138">MPTraits::CfgType</a>              <a class="code" href="classPathEvaluator.html#ad7e03427e08eef651c31b34907d31c9f">CfgType</a>;</div>
-<div class="line"><a name="l00025"></a><span class="lineno"><a class="line" href="classPathEvaluator.html#a9cc59e0f67f997bbda920895bb5070ce">   25</a></span>&#160;    <span class="keyword">typedef</span> <span class="keyword">typename</span> <a class="code" href="classPathType.html">MPTraits::Path</a>                 <a class="code" href="classPathEvaluator.html#a9cc59e0f67f997bbda920895bb5070ce">Path</a>;</div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160; </div>
 <div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160; </div>
-<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160; </div>
-<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160; </div>
-<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;    <a class="code" href="classPathEvaluator.html#ad9d355e17047ee45c7d152dbf9d36250">PathEvaluator</a>();</div>
-<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160; </div>
-<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;    <a class="code" href="classPathEvaluator.html#ad9d355e17047ee45c7d152dbf9d36250">PathEvaluator</a>(<a class="code" href="classXMLNode.html">XMLNode</a>&amp; _node);</div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160; </div>
-<div class="line"><a name="l00036"></a><span class="lineno"><a class="line" href="classPathEvaluator.html#a46dbff0efdbdcc42f350f097683d5ca1">   36</a></span>&#160;    <span class="keyword">virtual</span> <a class="code" href="classPathEvaluator.html#a46dbff0efdbdcc42f350f097683d5ca1">~PathEvaluator</a>() = <span class="keywordflow">default</span>;</div>
+<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;    <a class="code" href="classPathEvaluator.html#a7c9130efb78dcae00e7017cf785c134f">PathEvaluator</a>();</div>
+<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160; </div>
+<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;    <a class="code" href="classPathEvaluator.html#a7c9130efb78dcae00e7017cf785c134f">PathEvaluator</a>(<a class="code" href="classXMLNode.html">XMLNode</a>&amp; _node);</div>
+<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160; </div>
+<div class="line"><a name="l00031"></a><span class="lineno"><a class="line" href="classPathEvaluator.html#ad7790a41094720ee990ab103c4115679">   31</a></span>&#160;    <span class="keyword">virtual</span> <a class="code" href="classPathEvaluator.html#ad7790a41094720ee990ab103c4115679">~PathEvaluator</a>() = <span class="keywordflow">default</span>;</div>
+<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160; </div>
+<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160; </div>
 <div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160; </div>
+<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;    <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="classPathEvaluator.html#a672a9c65952da88379496b6166698726">Initialize</a>() <span class="keyword">override</span>;</div>
 <div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160; </div>
-<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160; </div>
-<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;    <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="classPathEvaluator.html#a0895be0fc44bacdb694e0eeb6045a5bc">Initialize</a>() <span class="keyword">override</span>;</div>
-<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160; </div>
-<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160; </div>
-<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;    <span class="keyword">virtual</span> <span class="keywordtype">bool</span> <a class="code" href="classPathEvaluator.html#a011861e64ca22bf0cb671e77af558225">operator()</a>() <span class="keyword">override</span>;</div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160; </div>
-<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160; </div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;    <span class="keyword">protected</span>:</div>
-<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160; </div>
-<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;    <span class="keyword">private</span>:</div>
-<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160; </div>
-<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;    std::vector&lt;double&gt; GetClearanceStats(<span class="keyword">const</span> <a class="code" href="classPathType.html">Path</a>* path);</div>
-<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160; </div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;    <span class="keywordtype">double</span> GetPathLength(<span class="keyword">const</span> <a class="code" href="classPathType.html">Path</a>* path);</div>
+<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160; </div>
+<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;    <span class="keyword">virtual</span> <span class="keywordtype">bool</span> <a class="code" href="classPathEvaluator.html#a6596cf9b9a24aec9710fb2b9ed5761cd">operator()</a>() <span class="keyword">override</span>;</div>
+<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160; </div>
+<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160; </div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;    <span class="keyword">protected</span>:</div>
+<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160; </div>
+<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;    <span class="keyword">private</span>:</div>
+<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160; </div>
+<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;    std::vector&lt;double&gt; GetClearanceStats(<span class="keyword">const</span> <a class="code" href="classPath.html">Path</a>* path);</div>
+<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160; </div>
+<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;    <span class="keywordtype">double</span> GetPathLength(<span class="keyword">const</span> <a class="code" href="classPath.html">Path</a>* path);</div>
+<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160; </div>
+<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;    std::string m_cuLabel{}; <span class="comment">// Clearance Utility (MPTool)</span></div>
+<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;    std::string m_ievcLabel{}; <span class="comment">// Intermediates Edge Validity Checker</span></div>
+<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;    std::string m_dmLabel{}; <span class="comment">// Distance Metric </span></div>
 <div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160; </div>
-<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;    std::string m_cuLabel{}; <span class="comment">// Clearance Utility (MPTool)</span></div>
-<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;    std::string m_ievcLabel{}; <span class="comment">// Intermediates Edge Validity Checker</span></div>
-<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;    std::string m_dmLabel{}; <span class="comment">// Distance Metric </span></div>
-<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160; </div>
-<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;    <span class="comment">// Why copy/paste when you could write a bunch of helper functions instead?</span></div>
-<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;    <span class="comment">// Each of these functions adds (key, value) to this&#39;s stat class</span></div>
-<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;    <span class="comment">// and prints them to std::cout. </span></div>
-<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;    <span class="comment">// You can find statistics in the .stat output file. </span></div>
-<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;    <span class="keywordtype">void</span> AddToStats(std::string _key, <span class="keywordtype">double</span> _value);</div>
-<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;    <span class="keyword">inline</span> <span class="keywordtype">void</span> AddToStats(std::string _key, <span class="keywordtype">int</span> _value) { AddToStats(_key, (<span class="keywordtype">double</span>)_value); };</div>
-<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;    <span class="keyword">inline</span> <span class="keywordtype">void</span> AddToStats(std::string _key, <span class="keywordtype">bool</span> _value) { AddToStats(_key, (<span class="keywordtype">double</span>)_value); };</div>
-<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;    <span class="keyword">inline</span> <span class="keywordtype">void</span> AddToStats(std::string _key, <span class="keywordtype">size_t</span> _value) { AddToStats(_key, (<span class="keywordtype">double</span>)_value); };</div>
-<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160; </div>
-<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160; </div>
-<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;};</div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;<span class="comment">/*------------------------------ Construction --------------------------------*/</span></div>
-<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160; </div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00085"></a><span class="lineno"><a class="line" href="classPathEvaluator.html#ad9d355e17047ee45c7d152dbf9d36250">   85</a></span>&#160;<a class="code" href="classPathEvaluator.html#ad9d355e17047ee45c7d152dbf9d36250">PathEvaluator&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;<a class="code" href="classPathEvaluator.html#ad9d355e17047ee45c7d152dbf9d36250">PathEvaluator</a>() : <a class="code" href="classMapEvaluatorMethod.html">MapEvaluatorMethod</a>&lt;<a class="code" href="classMPTraits.html">MPTraits</a>&gt;(){</div>
-<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;  this-&gt;<a class="code" href="classMPBaseObject.html#ab59d82cd734f77fdc17eddb8517461da">SetName</a>(<span class="stringliteral">&quot;PathEvaluator&quot;</span>);</div>
-<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;}</div>
-<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160; </div>
-<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160; </div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00092"></a><span class="lineno"><a class="line" href="classPathEvaluator.html#a7209cd2cbdb5f20a941fbcbe41ae69d6">   92</a></span>&#160;<a class="code" href="classPathEvaluator.html#ad9d355e17047ee45c7d152dbf9d36250">PathEvaluator&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;<a class="code" href="classPathEvaluator.html#ad9d355e17047ee45c7d152dbf9d36250">PathEvaluator</a>(<a class="code" href="classXMLNode.html">XMLNode</a>&amp; _node) : <a class="code" href="classMapEvaluatorMethod.html">MapEvaluatorMethod</a>&lt;<a class="code" href="classMPTraits.html">MPTraits</a>&gt;(_node) {</div>
-<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;  this-&gt;<a class="code" href="classMPBaseObject.html#ab59d82cd734f77fdc17eddb8517461da">SetName</a>(<span class="stringliteral">&quot;PathEvaluator&quot;</span>);</div>
-<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160; </div>
-<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;  m_cuLabel = _node.<a class="code" href="classXMLNode.html#af0e81db89948e52fdee6bf2bf029037f">Read</a>(<span class="stringliteral">&quot;cuLabel&quot;</span>, <span class="keyword">false</span>, <span class="stringliteral">&quot;&quot;</span>, <span class="stringliteral">&quot;Clearance Utility label&quot;</span>);</div>
-<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;  m_ievcLabel = _node.<a class="code" href="classXMLNode.html#af0e81db89948e52fdee6bf2bf029037f">Read</a>(<span class="stringliteral">&quot;ievcLabel&quot;</span>, <span class="keyword">false</span>, <span class="stringliteral">&quot;&quot;</span>, <span class="stringliteral">&quot;Intermediate Edge VC label&quot;</span>);</div>
-<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;  m_dmLabel = _node.<a class="code" href="classXMLNode.html#af0e81db89948e52fdee6bf2bf029037f">Read</a>(<span class="stringliteral">&quot;dmLabel&quot;</span>, <span class="keyword">false</span>, <span class="stringliteral">&quot;&quot;</span>, <span class="stringliteral">&quot;Distance Metric label&quot;</span>);</div>
-<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160; </div>
-<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;}</div>
-<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160; </div>
-<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;<span class="comment">/*------------------------- MPBaseObject Interface ---------------------------*/</span></div>
-<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160; </div>
-<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;<span class="keywordtype">void</span></div>
-<div class="line"><a name="l00106"></a><span class="lineno"><a class="line" href="classPathEvaluator.html#a0895be0fc44bacdb694e0eeb6045a5bc">  106</a></span>&#160;<a class="code" href="classPathEvaluator.html#a0895be0fc44bacdb694e0eeb6045a5bc">PathEvaluator&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;<a class="code" href="classPathEvaluator.html#a0895be0fc44bacdb694e0eeb6045a5bc">Initialize</a>() {</div>
-<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;  <span class="keywordflow">if</span>(this-&gt;m_debug)</div>
-<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;    std::cout &lt;&lt; <span class="stringliteral">&quot;PathEvaluator::Initialize()&quot;</span> &lt;&lt; std::endl;</div>
-<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;}</div>
-<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160; </div>
-<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;<span class="comment">/*---------------------- MapEvaluatorMethod Interface ------------------------*/</span></div>
-<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160; </div>
-<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;<span class="keywordtype">bool</span></div>
-<div class="line"><a name="l00116"></a><span class="lineno"><a class="line" href="classPathEvaluator.html#a011861e64ca22bf0cb671e77af558225">  116</a></span>&#160;<a class="code" href="classPathEvaluator.html#a011861e64ca22bf0cb671e77af558225">PathEvaluator&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;<a class="code" href="classPathEvaluator.html#a011861e64ca22bf0cb671e77af558225">operator()</a>() {</div>
-<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;    <span class="keyword">const</span> <a class="code" href="classPathType.html">Path</a>* path = this-&gt;GetMPSolution()-&gt;GetPath();</div>
-<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160; </div>
-<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;    <span class="keywordflow">if</span>(!path || path-&gt;<a class="code" href="classPathType.html#a347846a91931f19334e17173ac9fab72">Empty</a>()) {</div>
-<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;        <span class="keywordflow">if</span>(this-&gt;m_debug)</div>
-<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;          std::cout &lt;&lt; <span class="stringliteral">&quot;Path was not found. No Path evaluation can be done. &quot;</span> &lt;&lt; std::endl;</div>
-<div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;        </div>
-<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;        <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
-<div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;    }</div>
-<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160; </div>
-<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;    <span class="comment">// Edge Weight and size</span></div>
-<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;    AddToStats(<span class="stringliteral">&quot;TotalEdgeWeight&quot;</span>, path-&gt;<a class="code" href="classPathType.html#ac10ddc19e06072d4c46b71671d03671a">Length</a>());</div>
-<div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;    AddToStats(<span class="stringliteral">&quot;PathSize&quot;</span>, path-&gt;<a class="code" href="classPathType.html#ad587eee4c866d1bde0901b0d175e5903">Size</a>());</div>
-<div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160; </div>
-<div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;    <span class="comment">// Actual Path Length</span></div>
-<div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;    <span class="keywordflow">if</span> (!m_dmLabel.empty()) {</div>
-<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;        AddToStats(<span class="stringliteral">&quot;Actual Path Length&quot;</span>, GetPathLength(path));</div>
-<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;    }</div>
-<div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160; </div>
-<div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;    <span class="comment">// Clearance (pure)</span></div>
-<div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160;    <span class="keywordflow">if</span> (!m_cuLabel.empty()) {</div>
-<div class="line"><a name="l00138"></a><span class="lineno">  138</span>&#160;        <a class="code" href="classClearanceUtility.html">ClearanceUtility&lt;MPTraits&gt;</a>* cu = </div>
-<div class="line"><a name="l00139"></a><span class="lineno">  139</span>&#160;            this-&gt;GetMPTools()-&gt;GetClearanceUtility(m_cuLabel);</div>
-<div class="line"><a name="l00140"></a><span class="lineno">  140</span>&#160;        std::vector&lt;VID&gt; pathVIDs = this-&gt;GetPath()-&gt;VIDs();</div>
-<div class="line"><a name="l00141"></a><span class="lineno">  141</span>&#160;        <a class="code" href="structClearanceStats.html">ClearanceStats</a> cs = cu-&gt;<a class="code" href="classClearanceUtility.html#a73de114358e81644635b6b891afd35f2">PathClearance</a>(pathVIDs);</div>
-<div class="line"><a name="l00142"></a><span class="lineno">  142</span>&#160;        AddToStats(<span class="stringliteral">&quot;AvgClearance&quot;</span>, cs.<a class="code" href="structClearanceStats.html#a1ff76cd53561daeebacf06149315fe28">m_avg</a>);</div>
-<div class="line"><a name="l00143"></a><span class="lineno">  143</span>&#160;        AddToStats(<span class="stringliteral">&quot;MinClearance&quot;</span>, cs.<a class="code" href="structClearanceStats.html#aa028e921be67a7f0e2fbb8b256ae5af8">m_min</a>);</div>
-<div class="line"><a name="l00144"></a><span class="lineno">  144</span>&#160;        AddToStats(<span class="stringliteral">&quot;MaxClearance&quot;</span>, cs.<a class="code" href="structClearanceStats.html#a4c0ec640a4d90948fc84b9b306060ea5">m_max</a>);</div>
-<div class="line"><a name="l00145"></a><span class="lineno">  145</span>&#160;    } </div>
-<div class="line"><a name="l00146"></a><span class="lineno">  146</span>&#160; </div>
-<div class="line"><a name="l00147"></a><span class="lineno">  147</span>&#160;    <span class="comment">// Risk-weighted path clearance.</span></div>
-<div class="line"><a name="l00148"></a><span class="lineno">  148</span>&#160;    <span class="keywordflow">if</span> (!m_ievcLabel.empty()) {</div>
-<div class="line"><a name="l00149"></a><span class="lineno">  149</span>&#160;        <span class="keyword">auto</span> clearances = GetClearanceStats(path);</div>
-<div class="line"><a name="l00150"></a><span class="lineno">  150</span>&#160;        AddToStats(<span class="stringliteral">&quot;RiskWeightedMinClearance&quot;</span>, clearances[0]);</div>
-<div class="line"><a name="l00151"></a><span class="lineno">  151</span>&#160;        AddToStats(<span class="stringliteral">&quot;RiskWeightedMaxClearance&quot;</span>, clearances[1]);</div>
-<div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160;        AddToStats(<span class="stringliteral">&quot;RiskWeightedAvgClearance&quot;</span>, clearances[2]);</div>
-<div class="line"><a name="l00153"></a><span class="lineno">  153</span>&#160;    }</div>
-<div class="line"><a name="l00154"></a><span class="lineno">  154</span>&#160; </div>
-<div class="line"><a name="l00155"></a><span class="lineno">  155</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
-<div class="line"><a name="l00156"></a><span class="lineno">  156</span>&#160;}</div>
-<div class="line"><a name="l00157"></a><span class="lineno">  157</span>&#160; </div>
-<div class="line"><a name="l00158"></a><span class="lineno">  158</span>&#160;<span class="comment">/*--------------------------- Helper Methods ---------------------------------*/</span></div>
-<div class="line"><a name="l00159"></a><span class="lineno">  159</span>&#160; </div>
-<div class="line"><a name="l00160"></a><span class="lineno">  160</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00161"></a><span class="lineno">  161</span>&#160;<span class="keywordtype">double</span></div>
-<div class="line"><a name="l00162"></a><span class="lineno">  162</span>&#160;<a class="code" href="classPathEvaluator.html">PathEvaluator&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00163"></a><span class="lineno">  163</span>&#160;<a class="code" href="classPathEvaluator.html">GetPathLength</a>(<span class="keyword">const</span> <a class="code" href="PMPL_8h.html#ace97caaaddd799beb0c9f3ed793fc4c5">Path</a>* _path) {  </div>
-<div class="line"><a name="l00164"></a><span class="lineno">  164</span>&#160;  assert(!m_dmLabel.empty());</div>
-<div class="line"><a name="l00165"></a><span class="lineno">  165</span>&#160; </div>
-<div class="line"><a name="l00166"></a><span class="lineno">  166</span>&#160;  <span class="keyword">auto</span> r = this-&gt;GetRoadmap();</div>
-<div class="line"><a name="l00167"></a><span class="lineno">  167</span>&#160;  <span class="keyword">auto</span> dm = this-&gt;GetDistanceMetric(m_dmLabel);</div>
-<div class="line"><a name="l00168"></a><span class="lineno">  168</span>&#160;  <span class="keyword">auto</span> vids = _path-&gt;VIDs();</div>
-<div class="line"><a name="l00169"></a><span class="lineno">  169</span>&#160; </div>
-<div class="line"><a name="l00170"></a><span class="lineno">  170</span>&#160;  <span class="keywordtype">double</span> dist = 0;</div>
-<div class="line"><a name="l00171"></a><span class="lineno">  171</span>&#160;  <span class="keywordflow">for</span>(<span class="keyword">auto</span> start = vids.begin(); start + 1 &lt; vids.end(); ++start) {</div>
-<div class="line"><a name="l00172"></a><span class="lineno">  172</span>&#160;      <span class="keyword">auto</span> cfg1 = r-&gt;GetVertex(*start);</div>
-<div class="line"><a name="l00173"></a><span class="lineno">  173</span>&#160;      <span class="keyword">auto</span> cfg2 = r-&gt;GetVertex(*(start+1));</div>
-<div class="line"><a name="l00174"></a><span class="lineno">  174</span>&#160;      </div>
-<div class="line"><a name="l00175"></a><span class="lineno">  175</span>&#160;      dist += dm-&gt;Distance(cfg1, cfg2);</div>
-<div class="line"><a name="l00176"></a><span class="lineno">  176</span>&#160;  }</div>
-<div class="line"><a name="l00177"></a><span class="lineno">  177</span>&#160; </div>
-<div class="line"><a name="l00178"></a><span class="lineno">  178</span>&#160;  <span class="keywordflow">return</span> dist;</div>
-<div class="line"><a name="l00179"></a><span class="lineno">  179</span>&#160;}</div>
-<div class="line"><a name="l00180"></a><span class="lineno">  180</span>&#160; </div>
-<div class="line"><a name="l00181"></a><span class="lineno">  181</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00182"></a><span class="lineno">  182</span>&#160;std::vector&lt;double&gt;</div>
-<div class="line"><a name="l00183"></a><span class="lineno">  183</span>&#160;<a class="code" href="classPathEvaluator.html">PathEvaluator&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00184"></a><span class="lineno">  184</span>&#160;<a class="code" href="classPathEvaluator.html">GetClearanceStats</a>(<span class="keyword">const</span> <a class="code" href="PMPL_8h.html#ace97caaaddd799beb0c9f3ed793fc4c5">Path</a>* _path) {  </div>
-<div class="line"><a name="l00185"></a><span class="lineno">  185</span>&#160;  assert(!m_ievcLabel.empty());</div>
-<div class="line"><a name="l00186"></a><span class="lineno">  186</span>&#160; </div>
-<div class="line"><a name="l00187"></a><span class="lineno">  187</span>&#160;  <span class="keyword">auto</span> vc = this-&gt;GetEdgeValidityChecker(m_ievcLabel);</div>
-<div class="line"><a name="l00188"></a><span class="lineno">  188</span>&#160;  <span class="keyword">auto</span> vids = _path-&gt;VIDs();</div>
-<div class="line"><a name="l00189"></a><span class="lineno">  189</span>&#160; </div>
-<div class="line"><a name="l00190"></a><span class="lineno">  190</span>&#160;  <span class="keywordtype">double</span> minClearance = <a class="code" href="MPUtils_8h.html#a60030ce2c90c141b101048e1f92e9da9">MAX_DBL</a>;</div>
-<div class="line"><a name="l00191"></a><span class="lineno">  191</span>&#160;  <span class="keywordtype">double</span> maxClearance = 0;</div>
-<div class="line"><a name="l00192"></a><span class="lineno">  192</span>&#160;  <span class="keywordtype">double</span> clearanceSum = 0;</div>
-<div class="line"><a name="l00193"></a><span class="lineno">  193</span>&#160;  <span class="keywordflow">for</span>(<span class="keyword">auto</span> start = vids.begin(); start + 1 &lt; vids.end(); ++start) {</div>
-<div class="line"><a name="l00194"></a><span class="lineno">  194</span>&#160;    <span class="keywordtype">double</span> clearance = vc-&gt;EdgeWeightedClearance(*start, *(start+1));</div>
-<div class="line"><a name="l00195"></a><span class="lineno">  195</span>&#160; </div>
-<div class="line"><a name="l00196"></a><span class="lineno">  196</span>&#160;    clearanceSum += clearance;</div>
-<div class="line"><a name="l00197"></a><span class="lineno">  197</span>&#160;    minClearance = (clearance &lt; minClearance) ? clearance : minClearance;</div>
-<div class="line"><a name="l00198"></a><span class="lineno">  198</span>&#160;    maxClearance = (clearance &gt; maxClearance) ? clearance : maxClearance;</div>
-<div class="line"><a name="l00199"></a><span class="lineno">  199</span>&#160;  }</div>
-<div class="line"><a name="l00200"></a><span class="lineno">  200</span>&#160; </div>
-<div class="line"><a name="l00201"></a><span class="lineno">  201</span>&#160;  <span class="keywordflow">return</span> {minClearance, maxClearance, clearanceSum/_path-&gt;Size()};</div>
-<div class="line"><a name="l00202"></a><span class="lineno">  202</span>&#160;}</div>
-<div class="line"><a name="l00203"></a><span class="lineno">  203</span>&#160; </div>
-<div class="line"><a name="l00204"></a><span class="lineno">  204</span>&#160;<span class="comment">/*-------------------- Add to Stats Methods --------------------------*/</span></div>
-<div class="line"><a name="l00205"></a><span class="lineno">  205</span>&#160;    </div>
-<div class="line"><a name="l00206"></a><span class="lineno">  206</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00207"></a><span class="lineno">  207</span>&#160;<span class="keywordtype">void</span></div>
-<div class="line"><a name="l00208"></a><span class="lineno">  208</span>&#160;<a class="code" href="classPathEvaluator.html">PathEvaluator&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00209"></a><span class="lineno">  209</span>&#160;<a class="code" href="classPathEvaluator.html">AddToStats</a>(std::string _key, <span class="keywordtype">double</span> _value) {</div>
-<div class="line"><a name="l00210"></a><span class="lineno">  210</span>&#160;    std::string statKey = <span class="stringliteral">&quot;PathEvaluator::&quot;</span> + _key;</div>
-<div class="line"><a name="l00211"></a><span class="lineno">  211</span>&#160;    this-&gt;GetStatClass()-&gt;SetStat(statKey, _value);</div>
-<div class="line"><a name="l00212"></a><span class="lineno">  212</span>&#160;    std::cout &lt;&lt; statKey &lt;&lt; <span class="stringliteral">&quot;\t&quot;</span> &lt;&lt; _value &lt;&lt; std::endl;</div>
-<div class="line"><a name="l00213"></a><span class="lineno">  213</span>&#160;} </div>
-<div class="line"><a name="l00214"></a><span class="lineno">  214</span>&#160; </div>
-<div class="line"><a name="l00215"></a><span class="lineno">  215</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="ttc" id="aMPUtils_8h_html_a60030ce2c90c141b101048e1f92e9da9"><div class="ttname"><a href="MPUtils_8h.html#a60030ce2c90c141b101048e1f92e9da9">MAX_DBL</a></div><div class="ttdeci">#define MAX_DBL</div><div class="ttdef"><b>Definition:</b> MPUtils.h:33</div></div>
+<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;    <span class="comment">// Why copy/paste when you could write a bunch of helper functions instead?</span></div>
+<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;    <span class="comment">// Each of these functions adds (key, value) to this&#39;s stat class</span></div>
+<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;    <span class="comment">// and prints them to std::cout. </span></div>
+<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;    <span class="comment">// You can find statistics in the .stat output file. </span></div>
+<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;    <span class="keywordtype">void</span> AddToStats(std::string _key, <span class="keywordtype">double</span> _value);</div>
+<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;    <span class="keyword">inline</span> <span class="keywordtype">void</span> AddToStats(std::string _key, <span class="keywordtype">int</span> _value) { AddToStats(_key, (<span class="keywordtype">double</span>)_value); };</div>
+<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;    <span class="keyword">inline</span> <span class="keywordtype">void</span> AddToStats(std::string _key, <span class="keywordtype">bool</span> _value) { AddToStats(_key, (<span class="keywordtype">double</span>)_value); };</div>
+<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;    <span class="keyword">inline</span> <span class="keywordtype">void</span> AddToStats(std::string _key, <span class="keywordtype">size_t</span> _value) { AddToStats(_key, (<span class="keywordtype">double</span>)_value); };</div>
+<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160; </div>
+<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160; </div>
+<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;};</div>
+<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160; </div>
+<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="ttc" id="aMapEvaluatorMethod_8h_html"><div class="ttname"><a href="MapEvaluatorMethod_8h.html">MapEvaluatorMethod.h</a></div></div>
-<div class="ttc" id="aPMPL_8h_html_ace97caaaddd799beb0c9f3ed793fc4c5"><div class="ttname"><a href="PMPL_8h.html#ace97caaaddd799beb0c9f3ed793fc4c5">Path</a></div><div class="ttdeci">PMPLTraits::Path Path</div><div class="ttdef"><b>Definition:</b> PMPL.h:33</div></div>
-<div class="ttc" id="aPath_8h_html"><div class="ttname"><a href="Path_8h.html">Path.h</a></div></div>
-<div class="ttc" id="aclassClearanceUtility_html"><div class="ttname"><a href="classClearanceUtility.html">ClearanceUtility</a></div><div class="ttdef"><b>Definition:</b> ClearanceUtilities.h:51</div></div>
-<div class="ttc" id="aclassClearanceUtility_html_a73de114358e81644635b6b891afd35f2"><div class="ttname"><a href="classClearanceUtility.html#a73de114358e81644635b6b891afd35f2">ClearanceUtility::PathClearance</a></div><div class="ttdeci">ClearanceStats PathClearance(vector&lt; VID &gt; &amp;_path)</div><div class="ttdef"><b>Definition:</b> ClearanceUtilities.h:1118</div></div>
 <div class="ttc" id="aclassGenericStateGraph_html"><div class="ttname"><a href="classGenericStateGraph.html">GenericStateGraph</a></div><div class="ttdef"><b>Definition:</b> GenericStateGraph.h:67</div></div>
 <div class="ttc" id="aclassGenericStateGraph_html_a337a1247796cb9bf56fbe6eb2b9497d2"><div class="ttname"><a href="classGenericStateGraph.html#a337a1247796cb9bf56fbe6eb2b9497d2">GenericStateGraph::VID</a></div><div class="ttdeci">STAPLGraph::vertex_descriptor VID</div><div class="ttdef"><b>Definition:</b> GenericStateGraph.h:83</div></div>
-<div class="ttc" id="aclassMPBaseObject_html_ab59d82cd734f77fdc17eddb8517461da"><div class="ttname"><a href="classMPBaseObject.html#ab59d82cd734f77fdc17eddb8517461da">MPBaseObject::SetName</a></div><div class="ttdeci">void SetName(const std::string &amp;_s)</div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:229</div></div>
-<div class="ttc" id="aclassMPTraits_html"><div class="ttname"><a href="classMPTraits.html">MPTraits</a></div><div class="ttdoc">Defines available methods in the Motion Planning Universe for Cfg.</div><div class="ttdef"><b>Definition:</b> ParallelCfgTraits.h:144</div></div>
-<div class="ttc" id="aclassMPTraits_html_a1a5aab50ac12baaf6b22ff345c5ae138"><div class="ttname"><a href="classMPTraits.html#a1a5aab50ac12baaf6b22ff345c5ae138">MPTraits::CfgType</a></div><div class="ttdeci">C CfgType</div><div class="ttdef"><b>Definition:</b> CfgTraits.h:117</div></div>
-<div class="ttc" id="aclassMapEvaluatorMethod_html"><div class="ttname"><a href="classMapEvaluatorMethod.html">MapEvaluatorMethod</a></div><div class="ttdef"><b>Definition:</b> MapEvaluatorMethod.h:18</div></div>
-<div class="ttc" id="aclassPathEvaluator_html"><div class="ttname"><a href="classPathEvaluator.html">PathEvaluator</a></div><div class="ttdef"><b>Definition:</b> PathEvaluator.h:15</div></div>
-<div class="ttc" id="aclassPathEvaluator_html_a011861e64ca22bf0cb671e77af558225"><div class="ttname"><a href="classPathEvaluator.html#a011861e64ca22bf0cb671e77af558225">PathEvaluator::operator()</a></div><div class="ttdeci">virtual bool operator()() override</div><div class="ttdef"><b>Definition:</b> PathEvaluator.h:117</div></div>
-<div class="ttc" id="aclassPathEvaluator_html_a0895be0fc44bacdb694e0eeb6045a5bc"><div class="ttname"><a href="classPathEvaluator.html#a0895be0fc44bacdb694e0eeb6045a5bc">PathEvaluator::Initialize</a></div><div class="ttdeci">virtual void Initialize() override</div><div class="ttdef"><b>Definition:</b> PathEvaluator.h:107</div></div>
-<div class="ttc" id="aclassPathEvaluator_html_a46dbff0efdbdcc42f350f097683d5ca1"><div class="ttname"><a href="classPathEvaluator.html#a46dbff0efdbdcc42f350f097683d5ca1">PathEvaluator::~PathEvaluator</a></div><div class="ttdeci">virtual ~PathEvaluator()=default</div></div>
-<div class="ttc" id="aclassPathEvaluator_html_a9cc59e0f67f997bbda920895bb5070ce"><div class="ttname"><a href="classPathEvaluator.html#a9cc59e0f67f997bbda920895bb5070ce">PathEvaluator::Path</a></div><div class="ttdeci">MPTraits::Path Path</div><div class="ttdef"><b>Definition:</b> PathEvaluator.h:25</div></div>
-<div class="ttc" id="aclassPathEvaluator_html_aa1d9ba7fe09c61f9f008f237cf52754a"><div class="ttname"><a href="classPathEvaluator.html#aa1d9ba7fe09c61f9f008f237cf52754a">PathEvaluator::VID</a></div><div class="ttdeci">RoadmapType::VID VID</div><div class="ttdef"><b>Definition:</b> PathEvaluator.h:23</div></div>
-<div class="ttc" id="aclassPathEvaluator_html_ad7e03427e08eef651c31b34907d31c9f"><div class="ttname"><a href="classPathEvaluator.html#ad7e03427e08eef651c31b34907d31c9f">PathEvaluator::CfgType</a></div><div class="ttdeci">MPTraits::CfgType CfgType</div><div class="ttdef"><b>Definition:</b> PathEvaluator.h:24</div></div>
-<div class="ttc" id="aclassPathEvaluator_html_ad9d355e17047ee45c7d152dbf9d36250"><div class="ttname"><a href="classPathEvaluator.html#ad9d355e17047ee45c7d152dbf9d36250">PathEvaluator::PathEvaluator</a></div><div class="ttdeci">PathEvaluator()</div><div class="ttdef"><b>Definition:</b> PathEvaluator.h:86</div></div>
-<div class="ttc" id="aclassPathEvaluator_html_af8cbb8c5316b9c9e098f36d10b9e5325"><div class="ttname"><a href="classPathEvaluator.html#af8cbb8c5316b9c9e098f36d10b9e5325">PathEvaluator::RoadmapType</a></div><div class="ttdeci">MPTraits::RoadmapType RoadmapType</div><div class="ttdef"><b>Definition:</b> PathEvaluator.h:22</div></div>
-<div class="ttc" id="aclassPathType_html"><div class="ttname"><a href="classPathType.html">PathType</a></div><div class="ttdef"><b>Definition:</b> Path.h:18</div></div>
-<div class="ttc" id="aclassPathType_html_a347846a91931f19334e17173ac9fab72"><div class="ttname"><a href="classPathType.html#a347846a91931f19334e17173ac9fab72">PathType::Empty</a></div><div class="ttdeci">bool Empty() const noexcept</div><div class="ttdoc">Check if the path is empty.</div><div class="ttdef"><b>Definition:</b> Path.h:206</div></div>
-<div class="ttc" id="aclassPathType_html_ac10ddc19e06072d4c46b71671d03671a"><div class="ttname"><a href="classPathType.html#ac10ddc19e06072d4c46b71671d03671a">PathType::Length</a></div><div class="ttdeci">double Length() const</div><div class="ttdoc">Get the total edge weight.</div><div class="ttdef"><b>Definition:</b> Path.h:214</div></div>
-<div class="ttc" id="aclassPathType_html_ad587eee4c866d1bde0901b0d175e5903"><div class="ttname"><a href="classPathType.html#ad587eee4c866d1bde0901b0d175e5903">PathType::Size</a></div><div class="ttdeci">size_t Size() const noexcept</div><div class="ttdoc">Get the number of cfgs in the path.</div><div class="ttdef"><b>Definition:</b> Path.h:198</div></div>
+<div class="ttc" id="aclassMapEvaluatorMethod_html"><div class="ttname"><a href="classMapEvaluatorMethod.html">MapEvaluatorMethod</a></div><div class="ttdef"><b>Definition:</b> MapEvaluatorMethod.h:16</div></div>
+<div class="ttc" id="aclassPathEvaluator_html"><div class="ttname"><a href="classPathEvaluator.html">PathEvaluator</a></div><div class="ttdef"><b>Definition:</b> PathEvaluator.h:12</div></div>
+<div class="ttc" id="aclassPathEvaluator_html_a3003085ce5da443d1dacc0e76913aa4c"><div class="ttname"><a href="classPathEvaluator.html#a3003085ce5da443d1dacc0e76913aa4c">PathEvaluator::VID</a></div><div class="ttdeci">RoadmapType::VID VID</div><div class="ttdef"><b>Definition:</b> PathEvaluator.h:20</div></div>
+<div class="ttc" id="aclassPathEvaluator_html_a6596cf9b9a24aec9710fb2b9ed5761cd"><div class="ttname"><a href="classPathEvaluator.html#a6596cf9b9a24aec9710fb2b9ed5761cd">PathEvaluator::operator()</a></div><div class="ttdeci">virtual bool operator()() override</div><div class="ttdef"><b>Definition:</b> PathEvaluator.cpp:38</div></div>
+<div class="ttc" id="aclassPathEvaluator_html_a672a9c65952da88379496b6166698726"><div class="ttname"><a href="classPathEvaluator.html#a672a9c65952da88379496b6166698726">PathEvaluator::Initialize</a></div><div class="ttdeci">virtual void Initialize() override</div><div class="ttdef"><b>Definition:</b> PathEvaluator.cpp:29</div></div>
+<div class="ttc" id="aclassPathEvaluator_html_a7c9130efb78dcae00e7017cf785c134f"><div class="ttname"><a href="classPathEvaluator.html#a7c9130efb78dcae00e7017cf785c134f">PathEvaluator::PathEvaluator</a></div><div class="ttdeci">PathEvaluator()</div><div class="ttdef"><b>Definition:</b> PathEvaluator.cpp:10</div></div>
+<div class="ttc" id="aclassPathEvaluator_html_ad7790a41094720ee990ab103c4115679"><div class="ttname"><a href="classPathEvaluator.html#ad7790a41094720ee990ab103c4115679">PathEvaluator::~PathEvaluator</a></div><div class="ttdeci">virtual ~PathEvaluator()=default</div></div>
+<div class="ttc" id="aclassPathEvaluator_html_ada69475727014e7ced7d3e81be48cd0d"><div class="ttname"><a href="classPathEvaluator.html#ada69475727014e7ced7d3e81be48cd0d">PathEvaluator::RoadmapType</a></div><div class="ttdeci">MPBaseObject::RoadmapType RoadmapType</div><div class="ttdef"><b>Definition:</b> PathEvaluator.h:19</div></div>
+<div class="ttc" id="aclassPath_html"><div class="ttname"><a href="classPath.html">Path</a></div><div class="ttdef"><b>Definition:</b> Path.h:23</div></div>
 <div class="ttc" id="aclassXMLNode_html"><div class="ttname"><a href="classXMLNode.html">XMLNode</a></div><div class="ttdef"><b>Definition:</b> XMLNode.h:27</div></div>
-<div class="ttc" id="aclassXMLNode_html_af0e81db89948e52fdee6bf2bf029037f"><div class="ttname"><a href="classXMLNode.html#af0e81db89948e52fdee6bf2bf029037f">XMLNode::Read</a></div><div class="ttdeci">T Read(const std::string &amp;_name, const bool _req, const T &amp;_default, const T &amp;_min, const T &amp;_max, const std::string &amp;_desc)</div><div class="ttdef"><b>Definition:</b> XMLNode.h:267</div></div>
-<div class="ttc" id="astructClearanceStats_html"><div class="ttname"><a href="structClearanceStats.html">ClearanceStats</a></div><div class="ttdef"><b>Definition:</b> ClearanceUtilities.h:22</div></div>
-<div class="ttc" id="astructClearanceStats_html_a1ff76cd53561daeebacf06149315fe28"><div class="ttname"><a href="structClearanceStats.html#a1ff76cd53561daeebacf06149315fe28">ClearanceStats::m_avg</a></div><div class="ttdeci">double m_avg</div><div class="ttdef"><b>Definition:</b> ClearanceUtilities.h:23</div></div>
-<div class="ttc" id="astructClearanceStats_html_a4c0ec640a4d90948fc84b9b306060ea5"><div class="ttname"><a href="structClearanceStats.html#a4c0ec640a4d90948fc84b9b306060ea5">ClearanceStats::m_max</a></div><div class="ttdeci">double m_max</div><div class="ttdef"><b>Definition:</b> ClearanceUtilities.h:25</div></div>
-<div class="ttc" id="astructClearanceStats_html_aa028e921be67a7f0e2fbb8b256ae5af8"><div class="ttname"><a href="structClearanceStats.html#aa028e921be67a7f0e2fbb8b256ae5af8">ClearanceStats::m_min</a></div><div class="ttdeci">double m_min</div><div class="ttdef"><b>Definition:</b> ClearanceUtilities.h:24</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

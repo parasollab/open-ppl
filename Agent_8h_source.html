@@ -77,119 +77,121 @@ $(function() {
 <div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="preprocessor">#include &lt;memory&gt;</span></div>
 <div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="preprocessor">#include &lt;vector&gt;</span></div>
 <div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160; </div>
-<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="Control_8h.html">MPProblem/Robot/Control.h</a>&quot;</span></div>
-<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160; </div>
-<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="keyword">class </span><a class="code" href="classCfg.html">Cfg</a>;</div>
-<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="keyword">class </span><a class="code" href="classMPTask.html">MPTask</a>;</div>
-<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="keyword">class </span><a class="code" href="classRobot.html">Robot</a>;</div>
-<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="keyword">class </span><a class="code" href="classStepFunction.html">StepFunction</a>;</div>
-<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="keyword">class </span><a class="code" href="classXMLNode.html">XMLNode</a>;</div>
-<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160; </div>
-<div class="line"><a name="l00023"></a><span class="lineno"><a class="line" href="classAgent.html">   23</a></span>&#160;<span class="keyword">class </span><a class="code" href="classAgent.html">Agent</a> {</div>
-<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160; </div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;  <span class="keyword">protected</span>:</div>
-<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160; </div>
-<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160; </div>
-<div class="line"><a name="l00030"></a><span class="lineno"><a class="line" href="classAgent.html#a0eac0a2a8e453dcad8d464b938ca5ba5">   30</a></span>&#160;    <a class="code" href="classRobot.html">Robot</a>* <span class="keyword">const</span> <a class="code" href="classAgent.html#a0eac0a2a8e453dcad8d464b938ca5ba5">m_robot</a>;              </div>
-<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160; </div>
-<div class="line"><a name="l00032"></a><span class="lineno"><a class="line" href="classAgent.html#ad5e860ba007ed534b3dcf1e1b53e2748">   32</a></span>&#160;    <span class="keyword">mutable</span> <span class="keywordtype">bool</span> <a class="code" href="classAgent.html#ad5e860ba007ed534b3dcf1e1b53e2748">m_initialized</a>{<span class="keyword">false</span>}; </div>
-<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160; </div>
-<div class="line"><a name="l00034"></a><span class="lineno"><a class="line" href="classAgent.html#a07514890b9a74d20d8a5c78e18fa4236">   34</a></span>&#160;    std::shared_ptr&lt;MPTask&gt; <a class="code" href="classAgent.html#a07514890b9a74d20d8a5c78e18fa4236">m_task</a>;    </div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160; </div>
-<div class="line"><a name="l00036"></a><span class="lineno"><a class="line" href="classAgent.html#aff8fd816c381c17bbc221fdb139b791f">   36</a></span>&#160;    <a class="code" href="Control_8h.html#af0a65a08c5d85f0bfc93fc07119e5919">ControlSet</a> <a class="code" href="classAgent.html#aff8fd816c381c17bbc221fdb139b791f">m_currentControls</a>;      </div>
-<div class="line"><a name="l00037"></a><span class="lineno"><a class="line" href="classAgent.html#a01bb3c0a605e11f808887e670fe51cb2">   37</a></span>&#160;    <span class="keywordtype">size_t</span> <a class="code" href="classAgent.html#a01bb3c0a605e11f808887e670fe51cb2">m_stepsRemaining</a>{0};        </div>
-<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160; </div>
-<div class="line"><a name="l00039"></a><span class="lineno"><a class="line" href="classAgent.html#ac0f63715c8ab6c2e7d86c364908e0961">   39</a></span>&#160;    <span class="keywordtype">bool</span> <a class="code" href="classAgent.html#ac0f63715c8ab6c2e7d86c364908e0961">m_debug</a>{<span class="keyword">true</span>};                </div>
-<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160; </div>
-<div class="line"><a name="l00042"></a><span class="lineno"><a class="line" href="classAgent.html#aec9da6c8337f7f4c32ad12d7c8a18657">   42</a></span>&#160;    std::string <a class="code" href="classAgent.html#aec9da6c8337f7f4c32ad12d7c8a18657">m_capability</a>;</div>
-<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160; </div>
-<div class="line"><a name="l00045"></a><span class="lineno"><a class="line" href="classAgent.html#a062791ebdef54137ac9d8ccb3c5868ff">   45</a></span>&#160;    std::unique_ptr&lt;StepFunction&gt; <a class="code" href="classAgent.html#a062791ebdef54137ac9d8ccb3c5868ff">m_stepFunction</a>;</div>
-<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160; </div>
-<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160; </div>
-<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;  <span class="keyword">public</span>:</div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160; </div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160; </div>
-<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;    <a class="code" href="classAgent.html#acbe92779f9ed0f644d7c58eef8661182">Agent</a>(<a class="code" href="classRobot.html">Robot</a>* <span class="keyword">const</span> _r);</div>
-<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160; </div>
-<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;    <a class="code" href="classAgent.html#acbe92779f9ed0f644d7c58eef8661182">Agent</a>(<a class="code" href="classRobot.html">Robot</a>* <span class="keyword">const</span> _r, <a class="code" href="classXMLNode.html">XMLNode</a>&amp; _node);</div>
-<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160; </div>
-<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;    <a class="code" href="classAgent.html#acbe92779f9ed0f644d7c58eef8661182">Agent</a>(<a class="code" href="classRobot.html">Robot</a>* <span class="keyword">const</span> _r, <span class="keyword">const</span> <a class="code" href="classAgent.html">Agent</a>&amp; _a);</div>
-<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160; </div>
-<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;    <span class="keyword">static</span> std::unique_ptr&lt;Agent&gt; <a class="code" href="classAgent.html#a7ecd728ef706ae2ecc9790cfc11eec84">Factory</a>(<a class="code" href="classRobot.html">Robot</a>* <span class="keyword">const</span> _r, <a class="code" href="classXMLNode.html">XMLNode</a>&amp; _node);</div>
-<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160; </div>
-<div class="line"><a name="l00078"></a><span class="lineno"><a class="line" href="classAgent.html#acd90e7ef556c1ec97ab96da5d408547c">   78</a></span>&#160;    <span class="keyword">virtual</span> std::unique_ptr&lt;Agent&gt; <a class="code" href="classAgent.html#acd90e7ef556c1ec97ab96da5d408547c">Clone</a>(<a class="code" href="classRobot.html">Robot</a>* <span class="keyword">const</span> _r) <span class="keyword">const</span> = 0;</div>
-<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160; </div>
-<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;    <span class="keyword">virtual</span> <a class="code" href="classAgent.html#ab8dd8d152605cf1339fed595376e83cb">~Agent</a>();</div>
-<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160; </div>
-<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160; </div>
-<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;    <a class="code" href="classRobot.html">Robot</a>* <a class="code" href="classAgent.html#ae2703d84c02021fad9cde20d6b679c67">GetRobot</a>() const noexcept;</div>
-<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160; </div>
-<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;    virtual <span class="keywordtype">bool</span> <a class="code" href="classAgent.html#aacd3dcd4e39088c7fbc63c0a1ebbd003">IsChild</a>() const noexcept;</div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160; </div>
-<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160; </div>
-<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;    virtual <span class="keywordtype">void</span> <a class="code" href="classAgent.html#a83b7ae123cdcbe0075744f5a5d3dbfdd">SetTask</a>(const std::shared_ptr&lt;<a class="code" href="classMPTask.html">MPTask</a>&gt; _task);</div>
-<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160; </div>
-<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;    std::shared_ptr&lt;<a class="code" href="classMPTask.html">MPTask</a>&gt; <a class="code" href="classAgent.html#a0522277d3f284972747cf683a18a1752">GetTask</a>() const noexcept;</div>
-<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160; </div>
-<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;    virtual <span class="keywordtype">void</span> <a class="code" href="classAgent.html#a494802c63a036cb5f96c6c5a3265a5e2">ResetStartConstraint</a>();</div>
-<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160; </div>
-<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160; </div>
-<div class="line"><a name="l00114"></a><span class="lineno"><a class="line" href="classAgent.html#a48bb6d80837443a2dd7c6bd7541da688">  114</a></span>&#160;    virtual <span class="keywordtype">void</span> <a class="code" href="classAgent.html#a48bb6d80837443a2dd7c6bd7541da688">Initialize</a>() = 0;</div>
-<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160; </div>
-<div class="line"><a name="l00119"></a><span class="lineno"><a class="line" href="classAgent.html#ac91d299899c48e8f77352c2c97610712">  119</a></span>&#160;    virtual <span class="keywordtype">void</span> <a class="code" href="classAgent.html#ac91d299899c48e8f77352c2c97610712">Step</a>(const <span class="keywordtype">double</span> _dt) = 0;</div>
-<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160; </div>
-<div class="line"><a name="l00123"></a><span class="lineno"><a class="line" href="classAgent.html#abc140ef044bca189e200d473be9fbcc5">  123</a></span>&#160;    virtual <span class="keywordtype">void</span> <a class="code" href="classAgent.html#abc140ef044bca189e200d473be9fbcc5">Uninitialize</a>() = 0;</div>
-<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160; </div>
-<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;    <span class="keywordtype">size_t</span> <a class="code" href="classAgent.html#acd4b0ff70c0a9cb4d37a32724d6369f7">MinimumSteps</a>() const;</div>
-<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160; </div>
-<div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;    std::vector&lt;<a class="code" href="classAgent.html">Agent</a>*&gt; <a class="code" href="classAgent.html#a4df5f2cdb3863486ddd9de2ab399d5e0">ProximityCheck</a>(const <span class="keywordtype">double</span> _distance) const;</div>
-<div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160; </div>
-<div class="line"><a name="l00140"></a><span class="lineno">  140</span>&#160; </div>
-<div class="line"><a name="l00145"></a><span class="lineno">  145</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="classAgent.html#a86010f295d7943f10c76c44df8341233">Halt</a>();</div>
-<div class="line"><a name="l00146"></a><span class="lineno">  146</span>&#160; </div>
-<div class="line"><a name="l00151"></a><span class="lineno">  151</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="classAgent.html#aa0801f31becd4ae60fbe03bee4d7d081">PauseAgent</a>(const <span class="keywordtype">size_t</span> _steps);</div>
-<div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160; </div>
-<div class="line"><a name="l00156"></a><span class="lineno">  156</span>&#160; </div>
-<div class="line"><a name="l00158"></a><span class="lineno">  158</span>&#160;    const std::<span class="keywordtype">string</span>&amp; <a class="code" href="classAgent.html#a9a46ea14436a5a284ed25966026b89f9">GetCapability</a>() const noexcept;</div>
-<div class="line"><a name="l00159"></a><span class="lineno">  159</span>&#160; </div>
-<div class="line"><a name="l00161"></a><span class="lineno">  161</span>&#160;  protected:</div>
-<div class="line"><a name="l00162"></a><span class="lineno">  162</span>&#160; </div>
-<div class="line"><a name="l00164"></a><span class="lineno">  164</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="classAgent.html#a3dd3404d08954d263ee48d40b8e14969">Localize</a>();</div>
-<div class="line"><a name="l00165"></a><span class="lineno">  165</span>&#160; </div>
-<div class="line"><a name="l00167"></a><span class="lineno">  167</span>&#160;    <span class="keywordtype">bool</span> <a class="code" href="classAgent.html#a00e7ffa7f08797e69e9f55fce67c3cd0">IsLocalizing</a>() const noexcept;</div>
-<div class="line"><a name="l00168"></a><span class="lineno">  168</span>&#160; </div>
-<div class="line"><a name="l00170"></a><span class="lineno">  170</span>&#160;    <a class="code" href="classCfg.html">Cfg</a> <a class="code" href="classAgent.html#acdec4876978d5a77c3c7faea28861e36">EstimateState</a>();</div>
-<div class="line"><a name="l00171"></a><span class="lineno">  171</span>&#160; </div>
-<div class="line"><a name="l00175"></a><span class="lineno">  175</span>&#160;    <span class="keywordtype">bool</span> <a class="code" href="classAgent.html#ad5566bbbaa2c40fe0df167bc4f5fcdfd">ContinueLastControls</a>();</div>
-<div class="line"><a name="l00176"></a><span class="lineno">  176</span>&#160; </div>
-<div class="line"><a name="l00181"></a><span class="lineno">  181</span>&#160;    virtual <span class="keywordtype">void</span> <a class="code" href="classAgent.html#a5d00ea140118a7b10378f40a9031077d">ExecuteControls</a>(const <a class="code" href="Control_8h.html#af0a65a08c5d85f0bfc93fc07119e5919">ControlSet</a>&amp; _c, const <span class="keywordtype">size_t</span> _steps);</div>
-<div class="line"><a name="l00182"></a><span class="lineno">  182</span>&#160; </div>
-<div class="line"><a name="l00185"></a><span class="lineno">  185</span>&#160;    virtual <span class="keywordtype">void</span> <a class="code" href="classAgent.html#af32dee913e01cf0e5607a67b15a3b846">ExecuteControlsSimulation</a>(const <a class="code" href="Control_8h.html#af0a65a08c5d85f0bfc93fc07119e5919">ControlSet</a>&amp; _c, const <span class="keywordtype">size_t</span> _steps);</div>
-<div class="line"><a name="l00186"></a><span class="lineno">  186</span>&#160; </div>
-<div class="line"><a name="l00190"></a><span class="lineno">  190</span>&#160;    virtual <span class="keywordtype">void</span> <a class="code" href="classAgent.html#ad72e61ef5718189c03b1128dc68d6153">ExecuteControlsHardware</a>(const <a class="code" href="Control_8h.html#af0a65a08c5d85f0bfc93fc07119e5919">ControlSet</a>&amp; _c, const <span class="keywordtype">size_t</span> _steps);</div>
-<div class="line"><a name="l00191"></a><span class="lineno">  191</span>&#160; </div>
-<div class="line"><a name="l00193"></a><span class="lineno">  193</span>&#160;  private:</div>
-<div class="line"><a name="l00194"></a><span class="lineno">  194</span>&#160; </div>
-<div class="line"><a name="l00199"></a><span class="lineno">  199</span>&#160; </div>
-<div class="line"><a name="l00200"></a><span class="lineno">  200</span>&#160;    <a class="code" href="classAgent.html">Agent</a>(const <a class="code" href="classAgent.html">Agent</a>&amp;) = delete;</div>
-<div class="line"><a name="l00201"></a><span class="lineno">  201</span>&#160;    <a class="code" href="classAgent.html">Agent</a>(<a class="code" href="classAgent.html">Agent</a>&amp;&amp;)      = delete;</div>
-<div class="line"><a name="l00202"></a><span class="lineno">  202</span>&#160; </div>
-<div class="line"><a name="l00203"></a><span class="lineno">  203</span>&#160;    <a class="code" href="classAgent.html">Agent</a>&amp; operator=(const <a class="code" href="classAgent.html">Agent</a>&amp;) = delete;</div>
-<div class="line"><a name="l00204"></a><span class="lineno">  204</span>&#160;    <a class="code" href="classAgent.html">Agent</a>&amp; operator=(<a class="code" href="classAgent.html">Agent</a>&amp;&amp;)      = delete;</div>
-<div class="line"><a name="l00205"></a><span class="lineno">  205</span>&#160; </div>
-<div class="line"><a name="l00207"></a><span class="lineno">  207</span>&#160; </div>
-<div class="line"><a name="l00208"></a><span class="lineno">  208</span>&#160;};</div>
-<div class="line"><a name="l00209"></a><span class="lineno">  209</span>&#160; </div>
-<div class="line"><a name="l00210"></a><span class="lineno">  210</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="XMLNode_8h.html">Utilities/XMLNode.h</a>&quot;</span></div>
+<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="Control_8h.html">MPProblem/Robot/Control.h</a>&quot;</span></div>
+<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160; </div>
+<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="keyword">class </span><a class="code" href="classCfg.html">Cfg</a>;</div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="keyword">class </span><a class="code" href="classMPTask.html">MPTask</a>;</div>
+<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="keyword">class </span><a class="code" href="classRobot.html">Robot</a>;</div>
+<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="keyword">class </span><a class="code" href="classStepFunction.html">StepFunction</a>;</div>
+<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="keyword">class </span><a class="code" href="classXMLNode.html">XMLNode</a>;</div>
+<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160; </div>
+<div class="line"><a name="l00024"></a><span class="lineno"><a class="line" href="classAgent.html">   24</a></span>&#160;<span class="keyword">class </span><a class="code" href="classAgent.html">Agent</a> {</div>
+<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160; </div>
+<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;  <span class="keyword">protected</span>:</div>
+<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160; </div>
+<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160; </div>
+<div class="line"><a name="l00031"></a><span class="lineno"><a class="line" href="classAgent.html#a0eac0a2a8e453dcad8d464b938ca5ba5">   31</a></span>&#160;    <a class="code" href="classRobot.html">Robot</a>* <span class="keyword">const</span> <a class="code" href="classAgent.html#a0eac0a2a8e453dcad8d464b938ca5ba5">m_robot</a>;              </div>
+<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160; </div>
+<div class="line"><a name="l00033"></a><span class="lineno"><a class="line" href="classAgent.html#ad5e860ba007ed534b3dcf1e1b53e2748">   33</a></span>&#160;    <span class="keyword">mutable</span> <span class="keywordtype">bool</span> <a class="code" href="classAgent.html#ad5e860ba007ed534b3dcf1e1b53e2748">m_initialized</a>{<span class="keyword">false</span>}; </div>
+<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160; </div>
+<div class="line"><a name="l00035"></a><span class="lineno"><a class="line" href="classAgent.html#a07514890b9a74d20d8a5c78e18fa4236">   35</a></span>&#160;    std::shared_ptr&lt;MPTask&gt; <a class="code" href="classAgent.html#a07514890b9a74d20d8a5c78e18fa4236">m_task</a>;    </div>
+<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160; </div>
+<div class="line"><a name="l00037"></a><span class="lineno"><a class="line" href="classAgent.html#aff8fd816c381c17bbc221fdb139b791f">   37</a></span>&#160;    <a class="code" href="Control_8h.html#af0a65a08c5d85f0bfc93fc07119e5919">ControlSet</a> <a class="code" href="classAgent.html#aff8fd816c381c17bbc221fdb139b791f">m_currentControls</a>;      </div>
+<div class="line"><a name="l00038"></a><span class="lineno"><a class="line" href="classAgent.html#a01bb3c0a605e11f808887e670fe51cb2">   38</a></span>&#160;    <span class="keywordtype">size_t</span> <a class="code" href="classAgent.html#a01bb3c0a605e11f808887e670fe51cb2">m_stepsRemaining</a>{0};        </div>
+<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160; </div>
+<div class="line"><a name="l00040"></a><span class="lineno"><a class="line" href="classAgent.html#ac0f63715c8ab6c2e7d86c364908e0961">   40</a></span>&#160;    <span class="keywordtype">bool</span> <a class="code" href="classAgent.html#ac0f63715c8ab6c2e7d86c364908e0961">m_debug</a>{<span class="keyword">true</span>};                </div>
+<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160; </div>
+<div class="line"><a name="l00043"></a><span class="lineno"><a class="line" href="classAgent.html#aec9da6c8337f7f4c32ad12d7c8a18657">   43</a></span>&#160;    std::string <a class="code" href="classAgent.html#aec9da6c8337f7f4c32ad12d7c8a18657">m_capability</a>;</div>
+<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160; </div>
+<div class="line"><a name="l00046"></a><span class="lineno"><a class="line" href="classAgent.html#a062791ebdef54137ac9d8ccb3c5868ff">   46</a></span>&#160;    std::unique_ptr&lt;StepFunction&gt; <a class="code" href="classAgent.html#a062791ebdef54137ac9d8ccb3c5868ff">m_stepFunction</a>;</div>
+<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160; </div>
+<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160; </div>
+<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;  <span class="keyword">public</span>:</div>
+<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160; </div>
+<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160; </div>
+<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;    <a class="code" href="classAgent.html#acbe92779f9ed0f644d7c58eef8661182">Agent</a>(<a class="code" href="classRobot.html">Robot</a>* <span class="keyword">const</span> _r);</div>
+<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160; </div>
+<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;    <a class="code" href="classAgent.html#acbe92779f9ed0f644d7c58eef8661182">Agent</a>(<a class="code" href="classRobot.html">Robot</a>* <span class="keyword">const</span> _r, <a class="code" href="classXMLNode.html">XMLNode</a>&amp; _node);</div>
+<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160; </div>
+<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;    <a class="code" href="classAgent.html#acbe92779f9ed0f644d7c58eef8661182">Agent</a>(<a class="code" href="classRobot.html">Robot</a>* <span class="keyword">const</span> _r, <span class="keyword">const</span> <a class="code" href="classAgent.html">Agent</a>&amp; _a);</div>
+<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160; </div>
+<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;    <span class="keyword">static</span> std::unique_ptr&lt;Agent&gt; <a class="code" href="classAgent.html#a7ecd728ef706ae2ecc9790cfc11eec84">Factory</a>(<a class="code" href="classRobot.html">Robot</a>* <span class="keyword">const</span> _r, <a class="code" href="classXMLNode.html">XMLNode</a>&amp; _node);</div>
+<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160; </div>
+<div class="line"><a name="l00079"></a><span class="lineno"><a class="line" href="classAgent.html#acd90e7ef556c1ec97ab96da5d408547c">   79</a></span>&#160;    <span class="keyword">virtual</span> std::unique_ptr&lt;Agent&gt; <a class="code" href="classAgent.html#acd90e7ef556c1ec97ab96da5d408547c">Clone</a>(<a class="code" href="classRobot.html">Robot</a>* <span class="keyword">const</span> _r) <span class="keyword">const</span> = 0;</div>
+<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160; </div>
+<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;    <span class="keyword">virtual</span> <a class="code" href="classAgent.html#ab8dd8d152605cf1339fed595376e83cb">~Agent</a>();</div>
+<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160; </div>
+<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160; </div>
+<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;    <a class="code" href="classRobot.html">Robot</a>* <a class="code" href="classAgent.html#ae2703d84c02021fad9cde20d6b679c67">GetRobot</a>() const noexcept;</div>
+<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160; </div>
+<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;    virtual <span class="keywordtype">bool</span> <a class="code" href="classAgent.html#aacd3dcd4e39088c7fbc63c0a1ebbd003">IsChild</a>() const noexcept;</div>
+<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160; </div>
+<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160; </div>
+<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;    virtual <span class="keywordtype">void</span> <a class="code" href="classAgent.html#a83b7ae123cdcbe0075744f5a5d3dbfdd">SetTask</a>(const std::shared_ptr&lt;<a class="code" href="classMPTask.html">MPTask</a>&gt; _task);</div>
+<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160; </div>
+<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;    std::shared_ptr&lt;<a class="code" href="classMPTask.html">MPTask</a>&gt; <a class="code" href="classAgent.html#a0522277d3f284972747cf683a18a1752">GetTask</a>() const noexcept;</div>
+<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160; </div>
+<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;    virtual <span class="keywordtype">void</span> <a class="code" href="classAgent.html#a494802c63a036cb5f96c6c5a3265a5e2">ResetStartConstraint</a>();</div>
+<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160; </div>
+<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160; </div>
+<div class="line"><a name="l00115"></a><span class="lineno"><a class="line" href="classAgent.html#a48bb6d80837443a2dd7c6bd7541da688">  115</a></span>&#160;    virtual <span class="keywordtype">void</span> <a class="code" href="classAgent.html#a48bb6d80837443a2dd7c6bd7541da688">Initialize</a>() = 0;</div>
+<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160; </div>
+<div class="line"><a name="l00120"></a><span class="lineno"><a class="line" href="classAgent.html#ac91d299899c48e8f77352c2c97610712">  120</a></span>&#160;    virtual <span class="keywordtype">void</span> <a class="code" href="classAgent.html#ac91d299899c48e8f77352c2c97610712">Step</a>(const <span class="keywordtype">double</span> _dt) = 0;</div>
+<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160; </div>
+<div class="line"><a name="l00124"></a><span class="lineno"><a class="line" href="classAgent.html#abc140ef044bca189e200d473be9fbcc5">  124</a></span>&#160;    virtual <span class="keywordtype">void</span> <a class="code" href="classAgent.html#abc140ef044bca189e200d473be9fbcc5">Uninitialize</a>() = 0;</div>
+<div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160; </div>
+<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;    <span class="keywordtype">size_t</span> <a class="code" href="classAgent.html#acd4b0ff70c0a9cb4d37a32724d6369f7">MinimumSteps</a>() const;</div>
+<div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160; </div>
+<div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;    std::vector&lt;<a class="code" href="classAgent.html">Agent</a>*&gt; <a class="code" href="classAgent.html#a4df5f2cdb3863486ddd9de2ab399d5e0">ProximityCheck</a>(const <span class="keywordtype">double</span> _distance) const;</div>
+<div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160; </div>
+<div class="line"><a name="l00141"></a><span class="lineno">  141</span>&#160; </div>
+<div class="line"><a name="l00146"></a><span class="lineno">  146</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="classAgent.html#a86010f295d7943f10c76c44df8341233">Halt</a>();</div>
+<div class="line"><a name="l00147"></a><span class="lineno">  147</span>&#160; </div>
+<div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="classAgent.html#aa0801f31becd4ae60fbe03bee4d7d081">PauseAgent</a>(const <span class="keywordtype">size_t</span> _steps);</div>
+<div class="line"><a name="l00153"></a><span class="lineno">  153</span>&#160; </div>
+<div class="line"><a name="l00157"></a><span class="lineno">  157</span>&#160; </div>
+<div class="line"><a name="l00159"></a><span class="lineno">  159</span>&#160;    const std::<span class="keywordtype">string</span>&amp; <a class="code" href="classAgent.html#a9a46ea14436a5a284ed25966026b89f9">GetCapability</a>() const noexcept;</div>
+<div class="line"><a name="l00160"></a><span class="lineno">  160</span>&#160; </div>
+<div class="line"><a name="l00162"></a><span class="lineno">  162</span>&#160;  protected:</div>
+<div class="line"><a name="l00163"></a><span class="lineno">  163</span>&#160; </div>
+<div class="line"><a name="l00165"></a><span class="lineno">  165</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="classAgent.html#a3dd3404d08954d263ee48d40b8e14969">Localize</a>();</div>
+<div class="line"><a name="l00166"></a><span class="lineno">  166</span>&#160; </div>
+<div class="line"><a name="l00168"></a><span class="lineno">  168</span>&#160;    <span class="keywordtype">bool</span> <a class="code" href="classAgent.html#a00e7ffa7f08797e69e9f55fce67c3cd0">IsLocalizing</a>() const noexcept;</div>
+<div class="line"><a name="l00169"></a><span class="lineno">  169</span>&#160; </div>
+<div class="line"><a name="l00171"></a><span class="lineno">  171</span>&#160;    <a class="code" href="classCfg.html">Cfg</a> <a class="code" href="classAgent.html#acdec4876978d5a77c3c7faea28861e36">EstimateState</a>();</div>
+<div class="line"><a name="l00172"></a><span class="lineno">  172</span>&#160; </div>
+<div class="line"><a name="l00176"></a><span class="lineno">  176</span>&#160;    <span class="keywordtype">bool</span> <a class="code" href="classAgent.html#ad5566bbbaa2c40fe0df167bc4f5fcdfd">ContinueLastControls</a>();</div>
+<div class="line"><a name="l00177"></a><span class="lineno">  177</span>&#160; </div>
+<div class="line"><a name="l00182"></a><span class="lineno">  182</span>&#160;    virtual <span class="keywordtype">void</span> <a class="code" href="classAgent.html#a5d00ea140118a7b10378f40a9031077d">ExecuteControls</a>(const <a class="code" href="Control_8h.html#af0a65a08c5d85f0bfc93fc07119e5919">ControlSet</a>&amp; _c, const <span class="keywordtype">size_t</span> _steps);</div>
+<div class="line"><a name="l00183"></a><span class="lineno">  183</span>&#160; </div>
+<div class="line"><a name="l00186"></a><span class="lineno">  186</span>&#160;    virtual <span class="keywordtype">void</span> <a class="code" href="classAgent.html#af32dee913e01cf0e5607a67b15a3b846">ExecuteControlsSimulation</a>(const <a class="code" href="Control_8h.html#af0a65a08c5d85f0bfc93fc07119e5919">ControlSet</a>&amp; _c, const <span class="keywordtype">size_t</span> _steps);</div>
+<div class="line"><a name="l00187"></a><span class="lineno">  187</span>&#160; </div>
+<div class="line"><a name="l00191"></a><span class="lineno">  191</span>&#160;    virtual <span class="keywordtype">void</span> <a class="code" href="classAgent.html#ad72e61ef5718189c03b1128dc68d6153">ExecuteControlsHardware</a>(const <a class="code" href="Control_8h.html#af0a65a08c5d85f0bfc93fc07119e5919">ControlSet</a>&amp; _c, const <span class="keywordtype">size_t</span> _steps);</div>
+<div class="line"><a name="l00192"></a><span class="lineno">  192</span>&#160; </div>
+<div class="line"><a name="l00194"></a><span class="lineno">  194</span>&#160;  private:</div>
+<div class="line"><a name="l00195"></a><span class="lineno">  195</span>&#160; </div>
+<div class="line"><a name="l00200"></a><span class="lineno">  200</span>&#160; </div>
+<div class="line"><a name="l00201"></a><span class="lineno">  201</span>&#160;    <a class="code" href="classAgent.html">Agent</a>(const <a class="code" href="classAgent.html">Agent</a>&amp;) = delete;</div>
+<div class="line"><a name="l00202"></a><span class="lineno">  202</span>&#160;    <a class="code" href="classAgent.html">Agent</a>(<a class="code" href="classAgent.html">Agent</a>&amp;&amp;)      = delete;</div>
+<div class="line"><a name="l00203"></a><span class="lineno">  203</span>&#160; </div>
+<div class="line"><a name="l00204"></a><span class="lineno">  204</span>&#160;    <a class="code" href="classAgent.html">Agent</a>&amp; operator=(const <a class="code" href="classAgent.html">Agent</a>&amp;) = delete;</div>
+<div class="line"><a name="l00205"></a><span class="lineno">  205</span>&#160;    <a class="code" href="classAgent.html">Agent</a>&amp; operator=(<a class="code" href="classAgent.html">Agent</a>&amp;&amp;)      = delete;</div>
+<div class="line"><a name="l00206"></a><span class="lineno">  206</span>&#160; </div>
+<div class="line"><a name="l00208"></a><span class="lineno">  208</span>&#160; </div>
+<div class="line"><a name="l00209"></a><span class="lineno">  209</span>&#160;};</div>
+<div class="line"><a name="l00210"></a><span class="lineno">  210</span>&#160; </div>
+<div class="line"><a name="l00211"></a><span class="lineno">  211</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="ttc" id="aControl_8h_html"><div class="ttname"><a href="Control_8h.html">Control.h</a></div></div>
 <div class="ttc" id="aControl_8h_html_af0a65a08c5d85f0bfc93fc07119e5919"><div class="ttname"><a href="Control_8h.html#af0a65a08c5d85f0bfc93fc07119e5919">ControlSet</a></div><div class="ttdeci">std::vector&lt; Control &gt; ControlSet</div><div class="ttdoc">A discrete set of controls can be defined by a sequence of allowed controls.</div><div class="ttdef"><b>Definition:</b> Control.h:91</div></div>
-<div class="ttc" id="aclassAgent_html"><div class="ttname"><a href="classAgent.html">Agent</a></div><div class="ttdef"><b>Definition:</b> Agent.h:23</div></div>
+<div class="ttc" id="aXMLNode_8h_html"><div class="ttname"><a href="XMLNode_8h.html">XMLNode.h</a></div></div>
+<div class="ttc" id="aclassAgent_html"><div class="ttname"><a href="classAgent.html">Agent</a></div><div class="ttdef"><b>Definition:</b> Agent.h:24</div></div>
 <div class="ttc" id="aclassAgent_html_a00e7ffa7f08797e69e9f55fce67c3cd0"><div class="ttname"><a href="classAgent.html#a00e7ffa7f08797e69e9f55fce67c3cd0">Agent::IsLocalizing</a></div><div class="ttdeci">bool IsLocalizing() const noexcept</div><div class="ttdoc">Is the agent waiting on sensor data?</div><div class="ttdef"><b>Definition:</b> Agent.cpp:201</div></div>
-<div class="ttc" id="aclassAgent_html_a01bb3c0a605e11f808887e670fe51cb2"><div class="ttname"><a href="classAgent.html#a01bb3c0a605e11f808887e670fe51cb2">Agent::m_stepsRemaining</a></div><div class="ttdeci">size_t m_stepsRemaining</div><div class="ttdoc">Steps remaining on current controls.</div><div class="ttdef"><b>Definition:</b> Agent.h:37</div></div>
+<div class="ttc" id="aclassAgent_html_a01bb3c0a605e11f808887e670fe51cb2"><div class="ttname"><a href="classAgent.html#a01bb3c0a605e11f808887e670fe51cb2">Agent::m_stepsRemaining</a></div><div class="ttdeci">size_t m_stepsRemaining</div><div class="ttdoc">Steps remaining on current controls.</div><div class="ttdef"><b>Definition:</b> Agent.h:38</div></div>
 <div class="ttc" id="aclassAgent_html_a0522277d3f284972747cf683a18a1752"><div class="ttname"><a href="classAgent.html#a0522277d3f284972747cf683a18a1752">Agent::GetTask</a></div><div class="ttdeci">std::shared_ptr&lt; MPTask &gt; GetTask() const noexcept</div><div class="ttdoc">Get the task that the agent is currently working on.</div><div class="ttdef"><b>Definition:</b> Agent.cpp:65</div></div>
-<div class="ttc" id="aclassAgent_html_a062791ebdef54137ac9d8ccb3c5868ff"><div class="ttname"><a href="classAgent.html#a062791ebdef54137ac9d8ccb3c5868ff">Agent::m_stepFunction</a></div><div class="ttdeci">std::unique_ptr&lt; StepFunction &gt; m_stepFunction</div><div class="ttdef"><b>Definition:</b> Agent.h:45</div></div>
-<div class="ttc" id="aclassAgent_html_a07514890b9a74d20d8a5c78e18fa4236"><div class="ttname"><a href="classAgent.html#a07514890b9a74d20d8a5c78e18fa4236">Agent::m_task</a></div><div class="ttdeci">std::shared_ptr&lt; MPTask &gt; m_task</div><div class="ttdoc">The task this agent is working on.</div><div class="ttdef"><b>Definition:</b> Agent.h:34</div></div>
-<div class="ttc" id="aclassAgent_html_a0eac0a2a8e453dcad8d464b938ca5ba5"><div class="ttname"><a href="classAgent.html#a0eac0a2a8e453dcad8d464b938ca5ba5">Agent::m_robot</a></div><div class="ttdeci">Robot *const m_robot</div><div class="ttdoc">The robot that this agent controls.</div><div class="ttdef"><b>Definition:</b> Agent.h:30</div></div>
+<div class="ttc" id="aclassAgent_html_a062791ebdef54137ac9d8ccb3c5868ff"><div class="ttname"><a href="classAgent.html#a062791ebdef54137ac9d8ccb3c5868ff">Agent::m_stepFunction</a></div><div class="ttdeci">std::unique_ptr&lt; StepFunction &gt; m_stepFunction</div><div class="ttdef"><b>Definition:</b> Agent.h:46</div></div>
+<div class="ttc" id="aclassAgent_html_a07514890b9a74d20d8a5c78e18fa4236"><div class="ttname"><a href="classAgent.html#a07514890b9a74d20d8a5c78e18fa4236">Agent::m_task</a></div><div class="ttdeci">std::shared_ptr&lt; MPTask &gt; m_task</div><div class="ttdoc">The task this agent is working on.</div><div class="ttdef"><b>Definition:</b> Agent.h:35</div></div>
+<div class="ttc" id="aclassAgent_html_a0eac0a2a8e453dcad8d464b938ca5ba5"><div class="ttname"><a href="classAgent.html#a0eac0a2a8e453dcad8d464b938ca5ba5">Agent::m_robot</a></div><div class="ttdeci">Robot *const m_robot</div><div class="ttdoc">The robot that this agent controls.</div><div class="ttdef"><b>Definition:</b> Agent.h:31</div></div>
 <div class="ttc" id="aclassAgent_html_a3dd3404d08954d263ee48d40b8e14969"><div class="ttname"><a href="classAgent.html#a3dd3404d08954d263ee48d40b8e14969">Agent::Localize</a></div><div class="ttdeci">void Localize()</div><div class="ttdoc">Instruct the agent to enqueue a command for gathering sensor readings.</div><div class="ttdef"><b>Definition:</b> Agent.cpp:177</div></div>
 <div class="ttc" id="aclassAgent_html_a48bb6d80837443a2dd7c6bd7541da688"><div class="ttname"><a href="classAgent.html#a48bb6d80837443a2dd7c6bd7541da688">Agent::Initialize</a></div><div class="ttdeci">virtual void Initialize()=0</div></div>
 <div class="ttc" id="aclassAgent_html_a494802c63a036cb5f96c6c5a3265a5e2"><div class="ttname"><a href="classAgent.html#a494802c63a036cb5f96c6c5a3265a5e2">Agent::ResetStartConstraint</a></div><div class="ttdeci">virtual void ResetStartConstraint()</div><div class="ttdef"><b>Definition:</b> Agent.cpp:71</div></div>
@@ -203,19 +205,19 @@ $(function() {
 <div class="ttc" id="aclassAgent_html_aacd3dcd4e39088c7fbc63c0a1ebbd003"><div class="ttname"><a href="classAgent.html#aacd3dcd4e39088c7fbc63c0a1ebbd003">Agent::IsChild</a></div><div class="ttdeci">virtual bool IsChild() const noexcept</div><div class="ttdoc">Is this agent a child of some group/aggregate?</div><div class="ttdef"><b>Definition:</b> Agent.cpp:92</div></div>
 <div class="ttc" id="aclassAgent_html_ab8dd8d152605cf1339fed595376e83cb"><div class="ttname"><a href="classAgent.html#ab8dd8d152605cf1339fed595376e83cb">Agent::~Agent</a></div><div class="ttdeci">virtual ~Agent()</div><div class="ttdef"><b>Definition:</b> Agent.cpp:44</div></div>
 <div class="ttc" id="aclassAgent_html_abc140ef044bca189e200d473be9fbcc5"><div class="ttname"><a href="classAgent.html#abc140ef044bca189e200d473be9fbcc5">Agent::Uninitialize</a></div><div class="ttdeci">virtual void Uninitialize()=0</div></div>
-<div class="ttc" id="aclassAgent_html_ac0f63715c8ab6c2e7d86c364908e0961"><div class="ttname"><a href="classAgent.html#ac0f63715c8ab6c2e7d86c364908e0961">Agent::m_debug</a></div><div class="ttdeci">bool m_debug</div><div class="ttdoc">Toggle debug messages.</div><div class="ttdef"><b>Definition:</b> Agent.h:39</div></div>
+<div class="ttc" id="aclassAgent_html_ac0f63715c8ab6c2e7d86c364908e0961"><div class="ttname"><a href="classAgent.html#ac0f63715c8ab6c2e7d86c364908e0961">Agent::m_debug</a></div><div class="ttdeci">bool m_debug</div><div class="ttdoc">Toggle debug messages.</div><div class="ttdef"><b>Definition:</b> Agent.h:40</div></div>
 <div class="ttc" id="aclassAgent_html_ac91d299899c48e8f77352c2c97610712"><div class="ttname"><a href="classAgent.html#ac91d299899c48e8f77352c2c97610712">Agent::Step</a></div><div class="ttdeci">virtual void Step(const double _dt)=0</div></div>
 <div class="ttc" id="aclassAgent_html_acbe92779f9ed0f644d7c58eef8661182"><div class="ttname"><a href="classAgent.html#acbe92779f9ed0f644d7c58eef8661182">Agent::Agent</a></div><div class="ttdeci">Agent(Robot *const _r)</div><div class="ttdef"><b>Definition:</b> Agent.cpp:24</div></div>
 <div class="ttc" id="aclassAgent_html_acd4b0ff70c0a9cb4d37a32724d6369f7"><div class="ttname"><a href="classAgent.html#acd4b0ff70c0a9cb4d37a32724d6369f7">Agent::MinimumSteps</a></div><div class="ttdeci">size_t MinimumSteps() const</div><div class="ttdef"><b>Definition:</b> Agent.cpp:100</div></div>
 <div class="ttc" id="aclassAgent_html_acd90e7ef556c1ec97ab96da5d408547c"><div class="ttname"><a href="classAgent.html#acd90e7ef556c1ec97ab96da5d408547c">Agent::Clone</a></div><div class="ttdeci">virtual std::unique_ptr&lt; Agent &gt; Clone(Robot *const _r) const =0</div></div>
 <div class="ttc" id="aclassAgent_html_acdec4876978d5a77c3c7faea28861e36"><div class="ttname"><a href="classAgent.html#acdec4876978d5a77c3c7faea28861e36">Agent::EstimateState</a></div><div class="ttdeci">Cfg EstimateState()</div><div class="ttdoc">Estimate the state of the robot from the last localization data.</div><div class="ttdef"><b>Definition:</b> Agent.cpp:218</div></div>
 <div class="ttc" id="aclassAgent_html_ad5566bbbaa2c40fe0df167bc4f5fcdfd"><div class="ttname"><a href="classAgent.html#ad5566bbbaa2c40fe0df167bc4f5fcdfd">Agent::ContinueLastControls</a></div><div class="ttdeci">bool ContinueLastControls()</div><div class="ttdef"><b>Definition:</b> Agent.cpp:229</div></div>
-<div class="ttc" id="aclassAgent_html_ad5e860ba007ed534b3dcf1e1b53e2748"><div class="ttname"><a href="classAgent.html#ad5e860ba007ed534b3dcf1e1b53e2748">Agent::m_initialized</a></div><div class="ttdeci">bool m_initialized</div><div class="ttdoc">Is the agent initialized?</div><div class="ttdef"><b>Definition:</b> Agent.h:32</div></div>
+<div class="ttc" id="aclassAgent_html_ad5e860ba007ed534b3dcf1e1b53e2748"><div class="ttname"><a href="classAgent.html#ad5e860ba007ed534b3dcf1e1b53e2748">Agent::m_initialized</a></div><div class="ttdeci">bool m_initialized</div><div class="ttdoc">Is the agent initialized?</div><div class="ttdef"><b>Definition:</b> Agent.h:33</div></div>
 <div class="ttc" id="aclassAgent_html_ad72e61ef5718189c03b1128dc68d6153"><div class="ttname"><a href="classAgent.html#ad72e61ef5718189c03b1128dc68d6153">Agent::ExecuteControlsHardware</a></div><div class="ttdeci">virtual void ExecuteControlsHardware(const ControlSet &amp;_c, const size_t _steps)</div><div class="ttdef"><b>Definition:</b> Agent.cpp:283</div></div>
 <div class="ttc" id="aclassAgent_html_ae2703d84c02021fad9cde20d6b679c67"><div class="ttname"><a href="classAgent.html#ae2703d84c02021fad9cde20d6b679c67">Agent::GetRobot</a></div><div class="ttdeci">Robot * GetRobot() const noexcept</div><div class="ttdoc">Get the robot object to which this agent belongs.</div><div class="ttdef"><b>Definition:</b> Agent.cpp:53</div></div>
-<div class="ttc" id="aclassAgent_html_aec9da6c8337f7f4c32ad12d7c8a18657"><div class="ttname"><a href="classAgent.html#aec9da6c8337f7f4c32ad12d7c8a18657">Agent::m_capability</a></div><div class="ttdeci">std::string m_capability</div><div class="ttdoc">Specifies the type of agent for heterogenous multiagent teams.</div><div class="ttdef"><b>Definition:</b> Agent.h:42</div></div>
+<div class="ttc" id="aclassAgent_html_aec9da6c8337f7f4c32ad12d7c8a18657"><div class="ttname"><a href="classAgent.html#aec9da6c8337f7f4c32ad12d7c8a18657">Agent::m_capability</a></div><div class="ttdeci">std::string m_capability</div><div class="ttdoc">Specifies the type of agent for heterogenous multiagent teams.</div><div class="ttdef"><b>Definition:</b> Agent.h:43</div></div>
 <div class="ttc" id="aclassAgent_html_af32dee913e01cf0e5607a67b15a3b846"><div class="ttname"><a href="classAgent.html#af32dee913e01cf0e5607a67b15a3b846">Agent::ExecuteControlsSimulation</a></div><div class="ttdeci">virtual void ExecuteControlsSimulation(const ControlSet &amp;_c, const size_t _steps)</div><div class="ttdef"><b>Definition:</b> Agent.cpp:269</div></div>
-<div class="ttc" id="aclassAgent_html_aff8fd816c381c17bbc221fdb139b791f"><div class="ttname"><a href="classAgent.html#aff8fd816c381c17bbc221fdb139b791f">Agent::m_currentControls</a></div><div class="ttdeci">ControlSet m_currentControls</div><div class="ttdoc">The current control set.</div><div class="ttdef"><b>Definition:</b> Agent.h:36</div></div>
+<div class="ttc" id="aclassAgent_html_aff8fd816c381c17bbc221fdb139b791f"><div class="ttname"><a href="classAgent.html#aff8fd816c381c17bbc221fdb139b791f">Agent::m_currentControls</a></div><div class="ttdeci">ControlSet m_currentControls</div><div class="ttdoc">The current control set.</div><div class="ttdef"><b>Definition:</b> Agent.h:37</div></div>
 <div class="ttc" id="aclassCfg_html"><div class="ttname"><a href="classCfg.html">Cfg</a></div><div class="ttdef"><b>Definition:</b> Cfg.h:38</div></div>
 <div class="ttc" id="aclassMPTask_html"><div class="ttname"><a href="classMPTask.html">MPTask</a></div><div class="ttdef"><b>Definition:</b> MPTask.h:46</div></div>
 <div class="ttc" id="aclassRobot_html"><div class="ttname"><a href="classRobot.html">Robot</a></div><div class="ttdef"><b>Definition:</b> Robot.h:52</div></div>

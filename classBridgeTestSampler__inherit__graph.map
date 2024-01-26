@@ -1,5 +1,5 @@
-<map id="BridgeTestSampler&lt; MPTraits &gt;" name="BridgeTestSampler&lt; MPTraits &gt;">
-<area shape="rect" id="node1" title="This sampler validity checks the input sample and accepts it iff it passes the bridge test &#45; i...." alt="" coords="33,155,188,196"/>
-<area shape="rect" id="node2" href="$classSamplerMethod.html" title=" " alt="" coords="5,80,216,107"/>
-<area shape="rect" id="node3" href="$classMPBaseObject.html" title=" " alt="" coords="10,5,211,32"/>
+<map id="BridgeTestSampler" name="BridgeTestSampler">
+<area shape="rect" id="node1" title="This sampler validity checks the input sample and accepts it iff it passes the bridge test &#45; i...." alt="" coords="5,155,149,181"/>
+<area shape="rect" id="node2" href="$classSamplerMethod.html" title=" " alt="" coords="15,80,140,107"/>
+<area shape="rect" id="node3" href="$classMPBaseObject.html" title=" " alt="" coords="19,5,135,32"/>
 </map>

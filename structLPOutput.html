@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.9.1"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Parasol Planning Library (PPL): LPOutput&lt; MPTraits &gt; Struct Template Reference</title>
+<title>Parasol Planning Library (PPL): LPOutput Struct Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -63,107 +63,94 @@ $(function() {
 </div><!-- top -->
 <div class="header">
   <div class="headertitle">
-<div class="title">LPOutput&lt; MPTraits &gt; Struct Template Reference</div>  </div>
+<div class="title">LPOutput Struct Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 
 <p><code>#include &lt;<a class="el" href="LPOutput_8h_source.html">LPOutput.h</a>&gt;</code></p>
 <div class="dynheader">
-Collaboration diagram for LPOutput&lt; MPTraits &gt;:</div>
+Collaboration diagram for LPOutput:</div>
 <div class="dyncontent">
-<div class="center"><img src="structLPOutput__coll__graph.png" border="0" usemap="#aLPOutput_3_01MPTraits_01_4_coll__map" alt="Collaboration graph"/></div>
-<map name="aLPOutput_3_01MPTraits_01_4_coll__map" id="aLPOutput_3_01MPTraits_01_4_coll__map">
-<area shape="rect" title=" " alt="" coords="9,109,175,136"/>
-<area shape="rect" title=" " alt="" coords="5,5,179,32"/>
+<div class="center"><img src="structLPOutput__coll__graph.png" border="0" usemap="#aLPOutput_coll__map" alt="Collaboration graph"/></div>
+<map name="aLPOutput_coll__map" id="aLPOutput_coll__map">
+<area shape="rect" title=" " alt="" coords="1355,162,1436,189"/>
+<area shape="rect" title=" " alt="" coords="1048,162,1191,189"/>
+<area shape="rect" href="classCfg.html" title=" " alt="" coords="891,162,935,189"/>
+<area shape="rect" title=" " alt="" coords="563,5,725,47"/>
+<area shape="rect" title=" " alt="" coords="251,50,337,77"/>
+<area shape="rect" title=" " alt="" coords="563,71,725,112"/>
+<area shape="rect" title=" " alt="" coords="5,43,144,84"/>
+<area shape="rect" title=" " alt="" coords="559,137,729,163"/>
+<area shape="rect" href="classRobot.html" title=" " alt="" coords="614,191,674,218"/>
+<area shape="rect" href="structCDInfo.html" title=" " alt="" coords="611,242,677,269"/>
+<area shape="rect" href="classCDClearanceMap.html" title=" " alt="" coords="227,182,361,209"/>
+<area shape="rect" title=" " alt="" coords="255,242,333,269"/>
+<area shape="rect" title=" " alt="" coords="193,293,395,319"/>
+<area shape="rect" title=" " alt="" coords="561,297,727,323"/>
 </map>
 <center><span class="legend">[<a href="graph_legend.html">legend</a>]</span></center></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
 Public Types</h2></td></tr>
 <tr><td colspan="2"><div class="groupHeader">Motion Planning Types</div></td></tr>
-<tr class="memitem:afd5f3ae6ea638edff0e84c55c089dee7"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classMPTraits.html#a1a5aab50ac12baaf6b22ff345c5ae138">MPTraits::CfgType</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLPOutput.html#afd5f3ae6ea638edff0e84c55c089dee7">CfgType</a></td></tr>
-<tr class="separator:afd5f3ae6ea638edff0e84c55c089dee7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afff137041385a36e362105ec9d295630"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classMPTraits.html#af200e5838e4287604244d6aeaf4d4d40">MPTraits::WeightType</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLPOutput.html#afff137041385a36e362105ec9d295630">WeightType</a></td></tr>
-<tr class="separator:afff137041385a36e362105ec9d295630"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afb9c363aaba6b0ac7d06dd9c43eeda99"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classDefaultWeight.html">DefaultWeight</a>&lt; <a class="el" href="classCfg.html">Cfg</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLPOutput.html#afb9c363aaba6b0ac7d06dd9c43eeda99">WeightType</a></td></tr>
+<tr class="separator:afb9c363aaba6b0ac7d06dd9c43eeda99"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr><td colspan="2"><div class="groupHeader">Local Types</div></td></tr>
-<tr class="memitem:ad8ff1b6168b1699c9b9f8a965f144b10"><td class="memItemLeft" align="right" valign="top">typedef std::pair&lt; <a class="el" href="structLPOutput.html#afff137041385a36e362105ec9d295630">WeightType</a>, <a class="el" href="structLPOutput.html#afff137041385a36e362105ec9d295630">WeightType</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLPOutput.html#ad8ff1b6168b1699c9b9f8a965f144b10">LPEdge</a></td></tr>
-<tr class="separator:ad8ff1b6168b1699c9b9f8a965f144b10"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af4725dda6f4ee6618bf3d862549d3925"><td class="memItemLeft" align="right" valign="top">typedef std::pair&lt; <a class="el" href="structLPOutput.html#afb9c363aaba6b0ac7d06dd9c43eeda99">WeightType</a>, <a class="el" href="structLPOutput.html#afb9c363aaba6b0ac7d06dd9c43eeda99">WeightType</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLPOutput.html#af4725dda6f4ee6618bf3d862549d3925">LPEdge</a></td></tr>
+<tr class="separator:af4725dda6f4ee6618bf3d862549d3925"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
 <tr><td colspan="2"><div class="groupHeader">Construction</div></td></tr>
-<tr class="memitem:a0fed0d2f7991330b260a68b1a3edfa9a"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLPOutput.html#a0fed0d2f7991330b260a68b1a3edfa9a">LPOutput</a> ()</td></tr>
-<tr class="separator:a0fed0d2f7991330b260a68b1a3edfa9a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a65ecd12ba180f6aee34fb015650c89e2"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLPOutput.html#a65ecd12ba180f6aee34fb015650c89e2">LPOutput</a> ()</td></tr>
+<tr class="separator:a65ecd12ba180f6aee34fb015650c89e2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr><td colspan="2"><div class="groupHeader">Interface</div></td></tr>
-<tr class="memitem:a3e59042e596381024b540bdc0054891f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLPOutput.html#a3e59042e596381024b540bdc0054891f">Clear</a> ()</td></tr>
-<tr class="separator:a3e59042e596381024b540bdc0054891f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae614d177e9d67fd613d947584932aaea"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLPOutput.html#ae614d177e9d67fd613d947584932aaea">SetLPLabel</a> (const std::string &amp;_label)</td></tr>
-<tr class="separator:ae614d177e9d67fd613d947584932aaea"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a512f9966a8306f28814a3b800da3ba16"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLPOutput.html#a512f9966a8306f28814a3b800da3ba16">AddIntermediatesToWeights</a> (const bool _saveIntermediates)</td></tr>
-<tr class="separator:a512f9966a8306f28814a3b800da3ba16"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2aac7f3c6d70263fe61f03b7e969f84e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLPOutput.html#a2aac7f3c6d70263fe61f03b7e969f84e">Clear</a> ()</td></tr>
+<tr class="separator:a2aac7f3c6d70263fe61f03b7e969f84e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a99b69abe39e9c19df287dc858f527e7d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLPOutput.html#a99b69abe39e9c19df287dc858f527e7d">SetLPLabel</a> (const std::string &amp;_label)</td></tr>
+<tr class="separator:a99b69abe39e9c19df287dc858f527e7d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a003046130ac989d5b321748a4ce55348"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLPOutput.html#a003046130ac989d5b321748a4ce55348">AddIntermediatesToWeights</a> (const bool _saveIntermediates)</td></tr>
+<tr class="separator:a003046130ac989d5b321748a4ce55348"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Data Fields</h2></td></tr>
 <tr><td colspan="2"><div class="groupHeader">Internal State</div></td></tr>
-<tr class="memitem:a1440400d4fe40f5e2a803b6b033f5dab"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="structLPOutput.html#afd5f3ae6ea638edff0e84c55c089dee7">CfgType</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLPOutput.html#a1440400d4fe40f5e2a803b6b033f5dab">m_path</a></td></tr>
-<tr class="separator:a1440400d4fe40f5e2a803b6b033f5dab"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a75d0efaf6b95524ca676b42eeeb9e147"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="structLPOutput.html#afd5f3ae6ea638edff0e84c55c089dee7">CfgType</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLPOutput.html#a75d0efaf6b95524ca676b42eeeb9e147">m_intermediates</a></td></tr>
-<tr class="separator:a75d0efaf6b95524ca676b42eeeb9e147"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2723550ee1b99bb30d8c5759216025e6"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structLPOutput.html#ad8ff1b6168b1699c9b9f8a965f144b10">LPEdge</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLPOutput.html#a2723550ee1b99bb30d8c5759216025e6">m_edge</a></td></tr>
-<tr class="separator:a2723550ee1b99bb30d8c5759216025e6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a61f2da9d50c0986cff5b47a0ea557033"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="classCfg.html">Cfg</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLPOutput.html#a61f2da9d50c0986cff5b47a0ea557033">m_path</a></td></tr>
+<tr class="separator:a61f2da9d50c0986cff5b47a0ea557033"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6bd027b07c42f84c04a70de03037c80e"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="classCfg.html">Cfg</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLPOutput.html#a6bd027b07c42f84c04a70de03037c80e">m_intermediates</a></td></tr>
+<tr class="separator:a6bd027b07c42f84c04a70de03037c80e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7bd7ec3bb4ad89a253c1c57d7596f9d3"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structLPOutput.html#af4725dda6f4ee6618bf3d862549d3925">LPEdge</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structLPOutput.html#a7bd7ec3bb4ad89a253c1c57d7596f9d3">m_edge</a></td></tr>
+<tr class="separator:a7bd7ec3bb4ad89a253c1c57d7596f9d3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><h3>template&lt;typename MPTraits&gt;<br />
-struct LPOutput&lt; MPTraits &gt;</h3>
-
-<p>Computed information from a local plan.</p>
+<div class="textblock"><p>Computed information from a local plan.</p>
 <p>Stores all information available from local plan computations, including intermediates along edges (not straight line), the path generated, and the edge weights to be added to the RoadmapGraph.</p>
-<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000032">Todo:</a></b></dt><dd>Destroy this object and have LPs/Extenders work directly with a LocalPlan object, which should replace the <a class="el" href="classDefaultWeight.html">DefaultWeight</a> class as our roadmap edge.</dd></dl>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000031">Todo:</a></b></dt><dd>Destroy this object and have LPs/Extenders work directly with a LocalPlan object, which should replace the <a class="el" href="classDefaultWeight.html">DefaultWeight</a> class as our roadmap edge.</dd></dl>
 <dl class="section examples"><dt>Examples</dt><dd><a class="el" href="Extenders_UseCase_8cpp-example.html#_a0">Extenders_UseCase.cpp</a>, and <a class="el" href="LocalPlanner_UseCase_8cpp-example.html#_a2">LocalPlanner_UseCase.cpp</a>.</dd>
 </dl>
 </div><h2 class="groupheader">Member Typedef Documentation</h2>
-<a id="afd5f3ae6ea638edff0e84c55c089dee7"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#afd5f3ae6ea638edff0e84c55c089dee7">&#9670;&nbsp;</a></span>CfgType</h2>
+<a id="af4725dda6f4ee6618bf3d862549d3925"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af4725dda6f4ee6618bf3d862549d3925">&#9670;&nbsp;</a></span>LPEdge</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">typedef <a class="el" href="classMPTraits.html#a1a5aab50ac12baaf6b22ff345c5ae138">MPTraits::CfgType</a> <a class="el" href="structLPOutput.html">LPOutput</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::<a class="el" href="structLPOutput.html#afd5f3ae6ea638edff0e84c55c089dee7">CfgType</a></td>
+          <td class="memname">typedef std::pair&lt;<a class="el" href="structLPOutput.html#afb9c363aaba6b0ac7d06dd9c43eeda99">WeightType</a>, <a class="el" href="structLPOutput.html#afb9c363aaba6b0ac7d06dd9c43eeda99">WeightType</a>&gt; <a class="el" href="structLPOutput.html#af4725dda6f4ee6618bf3d862549d3925">LPOutput::LPEdge</a></td>
         </tr>
       </table>
 </div><div class="memdoc">
 
 </div>
 </div>
-<a id="ad8ff1b6168b1699c9b9f8a965f144b10"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad8ff1b6168b1699c9b9f8a965f144b10">&#9670;&nbsp;</a></span>LPEdge</h2>
+<a id="afb9c363aaba6b0ac7d06dd9c43eeda99"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afb9c363aaba6b0ac7d06dd9c43eeda99">&#9670;&nbsp;</a></span>WeightType</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">typedef std::pair&lt;<a class="el" href="structLPOutput.html#afff137041385a36e362105ec9d295630">WeightType</a>, <a class="el" href="structLPOutput.html#afff137041385a36e362105ec9d295630">WeightType</a>&gt; <a class="el" href="structLPOutput.html">LPOutput</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::<a class="el" href="structLPOutput.html#ad8ff1b6168b1699c9b9f8a965f144b10">LPEdge</a></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="afff137041385a36e362105ec9d295630"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#afff137041385a36e362105ec9d295630">&#9670;&nbsp;</a></span>WeightType</h2>
-
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
-      <table class="memname">
-        <tr>
-          <td class="memname">typedef <a class="el" href="classMPTraits.html#af200e5838e4287604244d6aeaf4d4d40">MPTraits::WeightType</a> <a class="el" href="structLPOutput.html">LPOutput</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::<a class="el" href="structLPOutput.html#afff137041385a36e362105ec9d295630">WeightType</a></td>
+          <td class="memname">typedef <a class="el" href="classDefaultWeight.html">DefaultWeight</a>&lt;<a class="el" href="classCfg.html">Cfg</a>&gt; <a class="el" href="structLPOutput.html#afb9c363aaba6b0ac7d06dd9c43eeda99">LPOutput::WeightType</a></td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -171,16 +158,17 @@ template&lt;typename MPTraits &gt; </div>
 </div>
 </div>
 <h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="a0fed0d2f7991330b260a68b1a3edfa9a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a0fed0d2f7991330b260a68b1a3edfa9a">&#9670;&nbsp;</a></span>LPOutput()</h2>
+<a id="a65ecd12ba180f6aee34fb015650c89e2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a65ecd12ba180f6aee34fb015650c89e2">&#9670;&nbsp;</a></span>LPOutput()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="structLPOutput.html">LPOutput</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::<a class="el" href="structLPOutput.html">LPOutput</a></td>
+          <td class="memname">LPOutput::LPOutput </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -188,16 +176,14 @@ template&lt;typename MPTraits &gt; </div>
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
-<a id="a512f9966a8306f28814a3b800da3ba16"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a512f9966a8306f28814a3b800da3ba16">&#9670;&nbsp;</a></span>AddIntermediatesToWeights()</h2>
+<a id="a003046130ac989d5b321748a4ce55348"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a003046130ac989d5b321748a4ce55348">&#9670;&nbsp;</a></span>AddIntermediatesToWeights()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="structLPOutput.html">LPOutput</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::AddIntermediatesToWeights </td>
+          <td class="memname">void LPOutput::AddIntermediatesToWeights </td>
           <td>(</td>
           <td class="paramtype">const bool&#160;</td>
           <td class="paramname"><em>_saveIntermediates</em></td><td>)</td>
@@ -208,32 +194,31 @@ template&lt;typename MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="a3e59042e596381024b540bdc0054891f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a3e59042e596381024b540bdc0054891f">&#9670;&nbsp;</a></span>Clear()</h2>
+<a id="a2aac7f3c6d70263fe61f03b7e969f84e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2aac7f3c6d70263fe61f03b7e969f84e">&#9670;&nbsp;</a></span>Clear()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="structLPOutput.html">LPOutput</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::Clear</td>
+          <td class="memname">void LPOutput::Clear </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
         </tr>
       </table>
 </div><div class="memdoc">
 
 </div>
 </div>
-<a id="ae614d177e9d67fd613d947584932aaea"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae614d177e9d67fd613d947584932aaea">&#9670;&nbsp;</a></span>SetLPLabel()</h2>
+<a id="a99b69abe39e9c19df287dc858f527e7d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a99b69abe39e9c19df287dc858f527e7d">&#9670;&nbsp;</a></span>SetLPLabel()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="structLPOutput.html">LPOutput</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::SetLPLabel </td>
+          <td class="memname">void LPOutput::SetLPLabel </td>
           <td>(</td>
           <td class="paramtype">const std::string &amp;&#160;</td>
           <td class="paramname"><em>_label</em></td><td>)</td>
@@ -245,16 +230,14 @@ template&lt;typename MPTraits &gt; </div>
 </div>
 </div>
 <h2 class="groupheader">Field Documentation</h2>
-<a id="a2723550ee1b99bb30d8c5759216025e6"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a2723550ee1b99bb30d8c5759216025e6">&#9670;&nbsp;</a></span>m_edge</h2>
+<a id="a7bd7ec3bb4ad89a253c1c57d7596f9d3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7bd7ec3bb4ad89a253c1c57d7596f9d3">&#9670;&nbsp;</a></span>m_edge</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="structLPOutput.html#ad8ff1b6168b1699c9b9f8a965f144b10">LPEdge</a> <a class="el" href="structLPOutput.html">LPOutput</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::m_edge</td>
+          <td class="memname"><a class="el" href="structLPOutput.html#af4725dda6f4ee6618bf3d862549d3925">LPEdge</a> LPOutput::m_edge</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -262,16 +245,14 @@ template&lt;typename MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="a75d0efaf6b95524ca676b42eeeb9e147"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a75d0efaf6b95524ca676b42eeeb9e147">&#9670;&nbsp;</a></span>m_intermediates</h2>
+<a id="a6bd027b07c42f84c04a70de03037c80e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6bd027b07c42f84c04a70de03037c80e">&#9670;&nbsp;</a></span>m_intermediates</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">std::vector&lt;<a class="el" href="structLPOutput.html#afd5f3ae6ea638edff0e84c55c089dee7">CfgType</a>&gt; <a class="el" href="structLPOutput.html">LPOutput</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::m_intermediates</td>
+          <td class="memname">std::vector&lt;<a class="el" href="classCfg.html">Cfg</a>&gt; LPOutput::m_intermediates</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -279,16 +260,14 @@ template&lt;typename MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="a1440400d4fe40f5e2a803b6b033f5dab"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a1440400d4fe40f5e2a803b6b033f5dab">&#9670;&nbsp;</a></span>m_path</h2>
+<a id="a61f2da9d50c0986cff5b47a0ea557033"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a61f2da9d50c0986cff5b47a0ea557033">&#9670;&nbsp;</a></span>m_path</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">std::vector&lt;<a class="el" href="structLPOutput.html#afd5f3ae6ea638edff0e84c55c089dee7">CfgType</a>&gt; <a class="el" href="structLPOutput.html">LPOutput</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::m_path</td>
+          <td class="memname">std::vector&lt;<a class="el" href="classCfg.html">Cfg</a>&gt; LPOutput::m_path</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -296,8 +275,9 @@ template&lt;typename MPTraits &gt; </div>
 
 </div>
 </div>
-<hr/>The documentation for this struct was generated from the following file:<ul>
+<hr/>The documentation for this struct was generated from the following files:<ul>
 <li>/opt/actions-runner/_work/open-ppl/open-ppl/src/MPLibrary/LocalPlanners/<a class="el" href="LPOutput_8h_source.html">LPOutput.h</a></li>
+<li>/opt/actions-runner/_work/open-ppl/open-ppl/src/MPLibrary/LocalPlanners/<a class="el" href="LPOutput_8cpp.html">LPOutput.cpp</a></li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->

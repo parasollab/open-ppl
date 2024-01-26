@@ -75,61 +75,29 @@ $(function() {
 <div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160; </div>
 <div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="MetricMethod_8h.html">MetricMethod.h</a>&quot;</span></div>
 <div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160; </div>
-<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00011"></a><span class="lineno"><a class="line" href="classNumNodesMetric.html">   11</a></span>&#160;<span class="keyword">class </span><a class="code" href="classNumNodesMetric.html">NumNodesMetric</a> : <span class="keyword">virtual</span> <span class="keyword">public</span> <a class="code" href="classMetricMethod.html">MetricMethod</a>&lt;MPTraits&gt; {</div>
-<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160; </div>
-<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;  <span class="keyword">public</span>:</div>
-<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160; </div>
-<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160; </div>
-<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;    <a class="code" href="classNumNodesMetric.html#ad359b5d66925c53b6aeb55b0d8680107">NumNodesMetric</a>();</div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160; </div>
-<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;    <a class="code" href="classNumNodesMetric.html#ad359b5d66925c53b6aeb55b0d8680107">NumNodesMetric</a>(<a class="code" href="classXMLNode.html">XMLNode</a>&amp; _node);</div>
-<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160; </div>
-<div class="line"><a name="l00022"></a><span class="lineno"><a class="line" href="classNumNodesMetric.html#a9ab1760e283d91528c197d5fbb7135b7">   22</a></span>&#160;    <span class="keyword">virtual</span> <a class="code" href="classNumNodesMetric.html#a9ab1760e283d91528c197d5fbb7135b7">~NumNodesMetric</a>() = <span class="keywordflow">default</span>;</div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160; </div>
-<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160; </div>
-<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;    <span class="keyword">virtual</span> <span class="keywordtype">double</span> <a class="code" href="classNumNodesMetric.html#acbf723d4584e0987bf875d1d147c5fa6">operator()</a>() <span class="keyword">override</span>;</div>
-<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160; </div>
-<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;};</div>
-<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160; </div>
-<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;<span class="comment">/*------------------------------ Construction --------------------------------*/</span></div>
-<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160; </div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00036"></a><span class="lineno"><a class="line" href="classNumNodesMetric.html#ad359b5d66925c53b6aeb55b0d8680107">   36</a></span>&#160;<a class="code" href="classNumNodesMetric.html#ad359b5d66925c53b6aeb55b0d8680107">NumNodesMetric&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;<a class="code" href="classNumNodesMetric.html#ad359b5d66925c53b6aeb55b0d8680107">NumNodesMetric</a>() {</div>
-<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;  this-&gt;SetName(<span class="stringliteral">&quot;NumNodesMetric&quot;</span>);</div>
-<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;}</div>
-<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160; </div>
-<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160; </div>
-<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00043"></a><span class="lineno"><a class="line" href="classNumNodesMetric.html#a8bc7ebc8d979d74bd0507cbaae20a088">   43</a></span>&#160;<a class="code" href="classNumNodesMetric.html#ad359b5d66925c53b6aeb55b0d8680107">NumNodesMetric&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;<a class="code" href="classNumNodesMetric.html#ad359b5d66925c53b6aeb55b0d8680107">NumNodesMetric</a>(<a class="code" href="classXMLNode.html">XMLNode</a>&amp; _node) : <a class="code" href="classMetricMethod.html">MetricMethod</a>&lt;<a class="code" href="classMPTraits.html">MPTraits</a>&gt;(_node){</div>
-<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;  this-&gt;<a class="code" href="classMPBaseObject.html#ab59d82cd734f77fdc17eddb8517461da">SetName</a>(<span class="stringliteral">&quot;NumNodesMetric&quot;</span>);</div>
-<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;}</div>
-<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160; </div>
-<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;<span class="comment">/*---------------------------- Metric Interface ------------------------------*/</span></div>
-<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160; </div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;<span class="keywordtype">double</span></div>
-<div class="line"><a name="l00052"></a><span class="lineno"><a class="line" href="classNumNodesMetric.html#acbf723d4584e0987bf875d1d147c5fa6">   52</a></span>&#160;<a class="code" href="classNumNodesMetric.html#acbf723d4584e0987bf875d1d147c5fa6">NumNodesMetric&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;<a class="code" href="classNumNodesMetric.html#acbf723d4584e0987bf875d1d147c5fa6">operator()</a>() {</div>
-<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;  <span class="keywordflow">if</span>(this-&gt;GetGroupRoadmap())</div>
-<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;    <span class="keywordflow">return</span> this-&gt;GetGroupRoadmap()-&gt;Size();</div>
-<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;  <span class="keywordflow">else</span></div>
-<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;    <span class="keywordflow">return</span> this-&gt;GetRoadmap()-&gt;Size();</div>
-<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;}</div>
-<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160; </div>
-<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;<span class="comment">/*----------------------------------------------------------------------------*/</span></div>
-<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160; </div>
-<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00010"></a><span class="lineno"><a class="line" href="classNumNodesMetric.html">   10</a></span>&#160;<span class="keyword">class </span><a class="code" href="classNumNodesMetric.html">NumNodesMetric</a> : <span class="keyword">virtual</span> <span class="keyword">public</span> <a class="code" href="classMetricMethod.html">MetricMethod</a> {</div>
+<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160; </div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;  <span class="keyword">public</span>:</div>
+<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160; </div>
+<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160; </div>
+<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;    <a class="code" href="classNumNodesMetric.html#acf3a3de04bf4a769dbd4304cf29797dc">NumNodesMetric</a>();</div>
+<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160; </div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;    <a class="code" href="classNumNodesMetric.html#acf3a3de04bf4a769dbd4304cf29797dc">NumNodesMetric</a>(<a class="code" href="classXMLNode.html">XMLNode</a>&amp; _node);</div>
+<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160; </div>
+<div class="line"><a name="l00021"></a><span class="lineno"><a class="line" href="classNumNodesMetric.html#a04f37e6023e5142a93f2ac23a83fdf02">   21</a></span>&#160;    <span class="keyword">virtual</span> <a class="code" href="classNumNodesMetric.html#a04f37e6023e5142a93f2ac23a83fdf02">~NumNodesMetric</a>() = <span class="keywordflow">default</span>;</div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160; </div>
+<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160; </div>
+<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;    <span class="keyword">virtual</span> <span class="keywordtype">double</span> <a class="code" href="classNumNodesMetric.html#a3bf76c16f3d4086c3fc4cd0fed6e0759">operator()</a>() <span class="keyword">override</span>;</div>
+<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160; </div>
+<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;};</div>
+<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160; </div>
+<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="ttc" id="aMetricMethod_8h_html"><div class="ttname"><a href="MetricMethod_8h.html">MetricMethod.h</a></div></div>
-<div class="ttc" id="aclassMPBaseObject_html_ab59d82cd734f77fdc17eddb8517461da"><div class="ttname"><a href="classMPBaseObject.html#ab59d82cd734f77fdc17eddb8517461da">MPBaseObject::SetName</a></div><div class="ttdeci">void SetName(const std::string &amp;_s)</div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:229</div></div>
-<div class="ttc" id="aclassMPTraits_html"><div class="ttname"><a href="classMPTraits.html">MPTraits</a></div><div class="ttdoc">Defines available methods in the Motion Planning Universe for Cfg.</div><div class="ttdef"><b>Definition:</b> ParallelCfgTraits.h:144</div></div>
 <div class="ttc" id="aclassMetricMethod_html"><div class="ttname"><a href="classMetricMethod.html">MetricMethod</a></div><div class="ttdef"><b>Definition:</b> MetricMethod.h:22</div></div>
-<div class="ttc" id="aclassNumNodesMetric_html"><div class="ttname"><a href="classNumNodesMetric.html">NumNodesMetric</a></div><div class="ttdef"><b>Definition:</b> NumNodesMetric.h:11</div></div>
-<div class="ttc" id="aclassNumNodesMetric_html_a9ab1760e283d91528c197d5fbb7135b7"><div class="ttname"><a href="classNumNodesMetric.html#a9ab1760e283d91528c197d5fbb7135b7">NumNodesMetric::~NumNodesMetric</a></div><div class="ttdeci">virtual ~NumNodesMetric()=default</div></div>
-<div class="ttc" id="aclassNumNodesMetric_html_acbf723d4584e0987bf875d1d147c5fa6"><div class="ttname"><a href="classNumNodesMetric.html#acbf723d4584e0987bf875d1d147c5fa6">NumNodesMetric::operator()</a></div><div class="ttdeci">virtual double operator()() override</div><div class="ttdef"><b>Definition:</b> NumNodesMetric.h:53</div></div>
-<div class="ttc" id="aclassNumNodesMetric_html_ad359b5d66925c53b6aeb55b0d8680107"><div class="ttname"><a href="classNumNodesMetric.html#ad359b5d66925c53b6aeb55b0d8680107">NumNodesMetric::NumNodesMetric</a></div><div class="ttdeci">NumNodesMetric()</div><div class="ttdef"><b>Definition:</b> NumNodesMetric.h:37</div></div>
+<div class="ttc" id="aclassNumNodesMetric_html"><div class="ttname"><a href="classNumNodesMetric.html">NumNodesMetric</a></div><div class="ttdef"><b>Definition:</b> NumNodesMetric.h:10</div></div>
+<div class="ttc" id="aclassNumNodesMetric_html_a04f37e6023e5142a93f2ac23a83fdf02"><div class="ttname"><a href="classNumNodesMetric.html#a04f37e6023e5142a93f2ac23a83fdf02">NumNodesMetric::~NumNodesMetric</a></div><div class="ttdeci">virtual ~NumNodesMetric()=default</div></div>
+<div class="ttc" id="aclassNumNodesMetric_html_a3bf76c16f3d4086c3fc4cd0fed6e0759"><div class="ttname"><a href="classNumNodesMetric.html#a3bf76c16f3d4086c3fc4cd0fed6e0759">NumNodesMetric::operator()</a></div><div class="ttdeci">virtual double operator()() override</div><div class="ttdef"><b>Definition:</b> NumNodesMetric.cpp:20</div></div>
+<div class="ttc" id="aclassNumNodesMetric_html_acf3a3de04bf4a769dbd4304cf29797dc"><div class="ttname"><a href="classNumNodesMetric.html#acf3a3de04bf4a769dbd4304cf29797dc">NumNodesMetric::NumNodesMetric</a></div><div class="ttdeci">NumNodesMetric()</div><div class="ttdef"><b>Definition:</b> NumNodesMetric.cpp:6</div></div>
 <div class="ttc" id="aclassXMLNode_html"><div class="ttname"><a href="classXMLNode.html">XMLNode</a></div><div class="ttdef"><b>Definition:</b> XMLNode.h:27</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->

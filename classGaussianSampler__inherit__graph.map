@@ -1,5 +1,5 @@
-<map id="GaussianSampler&lt; MPTraits &gt;" name="GaussianSampler&lt; MPTraits &gt;">
-<area shape="rect" id="node1" title="Gaussian&#45;distribution based sampling." alt="" coords="5,155,227,181"/>
-<area shape="rect" id="node2" href="$classSamplerMethod.html" title=" " alt="" coords="11,80,221,107"/>
-<area shape="rect" id="node3" href="$classMPBaseObject.html" title=" " alt="" coords="15,5,217,32"/>
+<map id="GaussianSampler" name="GaussianSampler">
+<area shape="rect" id="node1" title="Gaussian&#45;distribution based sampling." alt="" coords="5,155,141,181"/>
+<area shape="rect" id="node2" href="$classSamplerMethod.html" title=" " alt="" coords="11,80,136,107"/>
+<area shape="rect" id="node3" href="$classMPBaseObject.html" title=" " alt="" coords="15,5,131,32"/>
 </map>

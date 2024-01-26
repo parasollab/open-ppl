@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.9.1"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Parasol Planning Library (PPL): GroupPath&lt; MPTraits &gt; Class Template Reference</title>
+<title>Parasol Planning Library (PPL): GroupPath Class Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -65,7 +65,7 @@ $(function() {
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a>  </div>
   <div class="headertitle">
-<div class="title">GroupPath&lt; MPTraits &gt; Class Template Reference<span class="mlabels"><span class="mlabel">final</span></span></div>  </div>
+<div class="title">GroupPath Class Reference<span class="mlabels"><span class="mlabel">final</span></span></div>  </div>
 </div><!--header-->
 <div class="contents">
 
@@ -74,127 +74,134 @@ $(function() {
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
 Public Types</h2></td></tr>
 <tr><td colspan="2"><div class="groupHeader">Motion Planning Types</div></td></tr>
-<tr class="memitem:ab5a99baffa833cc77a1deb5cab8c8443"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classMPTraits.html#a42d63ac6993b02dda2ca15d6c2d5c69e">MPTraits::GroupCfgType</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGroupPath.html#ab5a99baffa833cc77a1deb5cab8c8443">GroupCfg</a></td></tr>
-<tr class="separator:ab5a99baffa833cc77a1deb5cab8c8443"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a08d14207e8adc366ff49db44b0b7373d"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classMPTraits.html#a806d8c2e8e5c191e0c985d571a489851">MPTraits::GroupRoadmapType</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGroupPath.html#a08d14207e8adc366ff49db44b0b7373d">GroupRoadmapType</a></td></tr>
-<tr class="separator:a08d14207e8adc366ff49db44b0b7373d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4e48187cf804749a0fff8128aebc7e4c"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classGenericStateGraph.html#a337a1247796cb9bf56fbe6eb2b9497d2">GroupRoadmapType::VID</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGroupPath.html#a4e48187cf804749a0fff8128aebc7e4c">VID</a></td></tr>
-<tr class="separator:a4e48187cf804749a0fff8128aebc7e4c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a23282f2c857628a6f4c722276ab0453a"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classGenericStateGraph.html">GenericStateGraph</a>&lt; <a class="el" href="classCfg.html">Cfg</a>, <a class="el" href="classDefaultWeight.html">DefaultWeight</a>&lt; <a class="el" href="classCfg.html">Cfg</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGroupPath.html#a23282f2c857628a6f4c722276ab0453a">RoadmapType</a></td></tr>
+<tr class="separator:a23282f2c857628a6f4c722276ab0453a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abbc6d9820d0976dde59db6ae9c0f86a7"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classGroupCfg.html">GroupCfg</a>&lt; <a class="el" href="classGroupPath.html#a23282f2c857628a6f4c722276ab0453a">RoadmapType</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGroupPath.html#abbc6d9820d0976dde59db6ae9c0f86a7">GroupCfgType</a></td></tr>
+<tr class="separator:abbc6d9820d0976dde59db6ae9c0f86a7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a290dd336e22d70c867670bb00f25c977"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classGroupRoadmap.html">GroupRoadmap</a>&lt; <a class="el" href="classGroupPath.html#abbc6d9820d0976dde59db6ae9c0f86a7">GroupCfgType</a>, <a class="el" href="classGroupLocalPlan.html">GroupLocalPlan</a>&lt; <a class="el" href="classGroupPath.html#a23282f2c857628a6f4c722276ab0453a">RoadmapType</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGroupPath.html#a290dd336e22d70c867670bb00f25c977">GroupRoadmapType</a></td></tr>
+<tr class="separator:a290dd336e22d70c867670bb00f25c977"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae1b5eec6cd7057dbfa4167ee66d97d27"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classGenericStateGraph.html#a337a1247796cb9bf56fbe6eb2b9497d2">GroupRoadmapType::VID</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGroupPath.html#ae1b5eec6cd7057dbfa4167ee66d97d27">VID</a></td></tr>
+<tr class="separator:ae1b5eec6cd7057dbfa4167ee66d97d27"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a6b80b458802fde183b36cae514aeb320"><td class="memTemplParams" colspan="2">template&lt;typename MPLibrary &gt; </td></tr>
-<tr class="memitem:a6b80b458802fde183b36cae514aeb320"><td class="memTemplItemLeft" align="right" valign="top">const std::vector&lt; typename <a class="el" href="classMPTraits.html#a42d63ac6993b02dda2ca15d6c2d5c69e">MPTraits::GroupCfgType</a> &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classGroupPath.html#a6b80b458802fde183b36cae514aeb320">FullCfgs</a> (<a class="el" href="PMPL_8h.html#a4829bbb5f410cd1931429c6c46ca6b42">MPLibrary</a> *const _lib) const</td></tr>
-<tr class="separator:a6b80b458802fde183b36cae514aeb320"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6095dfb1ecf57633a8094c19ca57a11a"><td class="memTemplParams" colspan="2">template&lt;typename MPLibrary &gt; </td></tr>
-<tr class="memitem:a6095dfb1ecf57633a8094c19ca57a11a"><td class="memTemplItemLeft" align="right" valign="top">const std::vector&lt; typename <a class="el" href="classMPTraits.html#a42d63ac6993b02dda2ca15d6c2d5c69e">MPTraits::GroupCfgType</a> &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classGroupPath.html#a6095dfb1ecf57633a8094c19ca57a11a">FullCfgsWithWait</a> (<a class="el" href="PMPL_8h.html#a4829bbb5f410cd1931429c6c46ca6b42">MPLibrary</a> *const _lib) const</td></tr>
-<tr class="separator:a6095dfb1ecf57633a8094c19ca57a11a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab9fb1938fff8b32fa41a02271279f09a"><td class="memTemplParams" colspan="2">template&lt;typename MPLibrary &gt; </td></tr>
+<tr class="memitem:ab9fb1938fff8b32fa41a02271279f09a"><td class="memTemplItemLeft" align="right" valign="top">const std::vector&lt; typename <a class="el" href="classGroupPath.html#abbc6d9820d0976dde59db6ae9c0f86a7">GroupPath::GroupCfgType</a> &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classGroupPath.html#ab9fb1938fff8b32fa41a02271279f09a">FullCfgs</a> (<a class="el" href="classMPLibrary.html">MPLibrary</a> *const _lib) const</td></tr>
+<tr class="separator:ab9fb1938fff8b32fa41a02271279f09a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac2350a04a4aa3e59e664e6e4515ee620"><td class="memTemplParams" colspan="2">template&lt;typename MPLibrary &gt; </td></tr>
+<tr class="memitem:ac2350a04a4aa3e59e664e6e4515ee620"><td class="memTemplItemLeft" align="right" valign="top">const std::vector&lt; typename <a class="el" href="classGroupPath.html#abbc6d9820d0976dde59db6ae9c0f86a7">GroupPath::GroupCfgType</a> &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classGroupPath.html#ac2350a04a4aa3e59e664e6e4515ee620">FullCfgsWithWait</a> (<a class="el" href="classMPLibrary.html">MPLibrary</a> *const _lib) const</td></tr>
+<tr class="separator:ac2350a04a4aa3e59e664e6e4515ee620"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr><td colspan="2"><div class="groupHeader">Construction</div></td></tr>
-<tr class="memitem:a5f94e5889527cf93c8e6c71837ab6d0d"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGroupPath.html#a5f94e5889527cf93c8e6c71837ab6d0d">GroupPath</a> (<a class="el" href="classGroupPath.html#a08d14207e8adc366ff49db44b0b7373d">GroupRoadmapType</a> *const _r=nullptr)</td></tr>
-<tr class="separator:a5f94e5889527cf93c8e6c71837ab6d0d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4baee1c5fe3e466d5512b0e9cc502be2"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGroupPath.html#a4baee1c5fe3e466d5512b0e9cc502be2">GroupPath</a> (<a class="el" href="classGroupPath.html#a290dd336e22d70c867670bb00f25c977">GroupRoadmapType</a> *const _r=nullptr)</td></tr>
+<tr class="separator:a4baee1c5fe3e466d5512b0e9cc502be2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr><td colspan="2"><div class="groupHeader">Path Interface</div></td></tr>
-<tr class="memitem:a0bcfdb314bef61bf2bcca6032e48b25a"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classGroupPath.html#a08d14207e8adc366ff49db44b0b7373d">GroupRoadmapType</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGroupPath.html#a0bcfdb314bef61bf2bcca6032e48b25a">GetRoadmap</a> () const noexcept</td></tr>
-<tr class="memdesc:a0bcfdb314bef61bf2bcca6032e48b25a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the roadmap used by this path.  <a href="classGroupPath.html#a0bcfdb314bef61bf2bcca6032e48b25a">More...</a><br /></td></tr>
-<tr class="separator:a0bcfdb314bef61bf2bcca6032e48b25a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a138b18b5370fade4f5e5f3cc7182422b"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGroupPath.html#a138b18b5370fade4f5e5f3cc7182422b">Size</a> () const noexcept</td></tr>
-<tr class="memdesc:a138b18b5370fade4f5e5f3cc7182422b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the number of cfgs in the path.  <a href="classGroupPath.html#a138b18b5370fade4f5e5f3cc7182422b">More...</a><br /></td></tr>
-<tr class="separator:a138b18b5370fade4f5e5f3cc7182422b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae137b301614a27b39e7a0b97a5007ce4"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGroupPath.html#ae137b301614a27b39e7a0b97a5007ce4">Empty</a> () const noexcept</td></tr>
-<tr class="memdesc:ae137b301614a27b39e7a0b97a5007ce4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Check if the path is empty.  <a href="classGroupPath.html#ae137b301614a27b39e7a0b97a5007ce4">More...</a><br /></td></tr>
-<tr class="separator:ae137b301614a27b39e7a0b97a5007ce4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0a9c83b3337c43f5243a640e54e303e1"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGroupPath.html#a0a9c83b3337c43f5243a640e54e303e1">Length</a> () const</td></tr>
-<tr class="memdesc:a0a9c83b3337c43f5243a640e54e303e1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the total edge weight.  <a href="classGroupPath.html#a0a9c83b3337c43f5243a640e54e303e1">More...</a><br /></td></tr>
-<tr class="separator:a0a9c83b3337c43f5243a640e54e303e1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6f3da8af378122a62a5d69819033614d"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGroupPath.html#a6f3da8af378122a62a5d69819033614d">TimeSteps</a> () const</td></tr>
-<tr class="separator:a6f3da8af378122a62a5d69819033614d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abb9c07fe206a2982cae95b760f5dead1"><td class="memItemLeft" align="right" valign="top">const std::vector&lt; <a class="el" href="classGroupPath.html#a4e48187cf804749a0fff8128aebc7e4c">VID</a> &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGroupPath.html#abb9c07fe206a2982cae95b760f5dead1">VIDs</a> () const noexcept</td></tr>
-<tr class="memdesc:abb9c07fe206a2982cae95b760f5dead1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the VIDs in the path.  <a href="classGroupPath.html#abb9c07fe206a2982cae95b760f5dead1">More...</a><br /></td></tr>
-<tr class="separator:abb9c07fe206a2982cae95b760f5dead1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a211a03f393e9cc87f33c40b2bbd5dd5f"><td class="memItemLeft" align="right" valign="top">const std::pair&lt; std::vector&lt; <a class="el" href="classGroupPath.html#a4e48187cf804749a0fff8128aebc7e4c">VID</a> &gt;, std::vector&lt; size_t &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGroupPath.html#a211a03f393e9cc87f33c40b2bbd5dd5f">VIDsWaiting</a> () const noexcept</td></tr>
-<tr class="memdesc:a211a03f393e9cc87f33c40b2bbd5dd5f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the VIDs and timesteps waiting in the path.  <a href="classGroupPath.html#a211a03f393e9cc87f33c40b2bbd5dd5f">More...</a><br /></td></tr>
-<tr class="separator:a211a03f393e9cc87f33c40b2bbd5dd5f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad71f8a89e49d68ec238e189c1e59d12e"><td class="memItemLeft" align="right" valign="top">const std::vector&lt; <a class="el" href="classGroupPath.html#ab5a99baffa833cc77a1deb5cab8c8443">GroupCfg</a> &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGroupPath.html#ad71f8a89e49d68ec238e189c1e59d12e">Cfgs</a> () const</td></tr>
-<tr class="separator:ad71f8a89e49d68ec238e189c1e59d12e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad9dc050edf4b29e18ce1d5dd49c516d2"><td class="memTemplParams" colspan="2">template&lt;typename MPLibrary &gt; </td></tr>
-<tr class="memitem:ad9dc050edf4b29e18ce1d5dd49c516d2"><td class="memTemplItemLeft" align="right" valign="top">const std::vector&lt; <a class="el" href="classGroupPath.html#ab5a99baffa833cc77a1deb5cab8c8443">GroupCfg</a> &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classGroupPath.html#ad9dc050edf4b29e18ce1d5dd49c516d2">FullCfgs</a> (<a class="el" href="PMPL_8h.html#a4829bbb5f410cd1931429c6c46ca6b42">MPLibrary</a> *const _lib) const</td></tr>
-<tr class="separator:ad9dc050edf4b29e18ce1d5dd49c516d2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7b38d2aa347d60aad993efee8af9e9d0"><td class="memTemplParams" colspan="2">template&lt;typename MPLibrary &gt; </td></tr>
-<tr class="memitem:a7b38d2aa347d60aad993efee8af9e9d0"><td class="memTemplItemLeft" align="right" valign="top">const std::vector&lt; <a class="el" href="classGroupPath.html#ab5a99baffa833cc77a1deb5cab8c8443">GroupCfg</a> &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classGroupPath.html#a7b38d2aa347d60aad993efee8af9e9d0">FullCfgsWithWait</a> (<a class="el" href="PMPL_8h.html#a4829bbb5f410cd1931429c6c46ca6b42">MPLibrary</a> *const _lib) const</td></tr>
-<tr class="separator:a7b38d2aa347d60aad993efee8af9e9d0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae71f7f87fd0bc37053bf810d4c7ae2e6"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classGroupPath.html">GroupPath</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGroupPath.html#ae71f7f87fd0bc37053bf810d4c7ae2e6">operator+=</a> (const <a class="el" href="classGroupPath.html">GroupPath</a> &amp;_p)</td></tr>
-<tr class="separator:ae71f7f87fd0bc37053bf810d4c7ae2e6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aecdbed2c5209a5e02c8a8e9c9ec1b4a5"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classGroupPath.html">GroupPath</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGroupPath.html#aecdbed2c5209a5e02c8a8e9c9ec1b4a5">operator+</a> (const <a class="el" href="classGroupPath.html">GroupPath</a> &amp;_p) const</td></tr>
-<tr class="separator:aecdbed2c5209a5e02c8a8e9c9ec1b4a5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6c102302dc8a7bbcb25b1a14d57db6ad"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classGroupPath.html">GroupPath</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGroupPath.html#a6c102302dc8a7bbcb25b1a14d57db6ad">operator+=</a> (const std::vector&lt; <a class="el" href="classGroupPath.html#a4e48187cf804749a0fff8128aebc7e4c">VID</a> &gt; &amp;_vids)</td></tr>
-<tr class="separator:a6c102302dc8a7bbcb25b1a14d57db6ad"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6a6226c1908b4e60b7434d72e271ff9b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classGroupPath.html">GroupPath</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGroupPath.html#a6a6226c1908b4e60b7434d72e271ff9b">operator+</a> (const std::vector&lt; <a class="el" href="classGroupPath.html#a4e48187cf804749a0fff8128aebc7e4c">VID</a> &gt; &amp;_vids) const</td></tr>
-<tr class="separator:a6a6226c1908b4e60b7434d72e271ff9b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac33ef3564f661acbea72485b13fa9cd2"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classGroupPath.html">GroupPath</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGroupPath.html#ac33ef3564f661acbea72485b13fa9cd2">operator=</a> (const <a class="el" href="classGroupPath.html">GroupPath</a> &amp;_p)</td></tr>
-<tr class="memdesc:ac33ef3564f661acbea72485b13fa9cd2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Copy assignment operator.  <a href="classGroupPath.html#ac33ef3564f661acbea72485b13fa9cd2">More...</a><br /></td></tr>
-<tr class="separator:ac33ef3564f661acbea72485b13fa9cd2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af27de0a3cc150578df14fe7bba86d674"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGroupPath.html#af27de0a3cc150578df14fe7bba86d674">Clear</a> ()</td></tr>
-<tr class="memdesc:af27de0a3cc150578df14fe7bba86d674"><td class="mdescLeft">&#160;</td><td class="mdescRight">Clear all data in the path.  <a href="classGroupPath.html#af27de0a3cc150578df14fe7bba86d674">More...</a><br /></td></tr>
-<tr class="separator:af27de0a3cc150578df14fe7bba86d674"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afbcc9b448d5fe15a86fb470b9044aaff"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGroupPath.html#afbcc9b448d5fe15a86fb470b9044aaff">FlushCache</a> ()</td></tr>
-<tr class="memdesc:afbcc9b448d5fe15a86fb470b9044aaff"><td class="mdescLeft">&#160;</td><td class="mdescRight">Clear cached data, but leave the VIDs.  <a href="classGroupPath.html#afbcc9b448d5fe15a86fb470b9044aaff">More...</a><br /></td></tr>
-<tr class="separator:afbcc9b448d5fe15a86fb470b9044aaff"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a27fa38d0a1cb8fdc1c974af2fb64136c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGroupPath.html#a27fa38d0a1cb8fdc1c974af2fb64136c">SetWaitTimes</a> (std::vector&lt; size_t &gt; _waitTimes)</td></tr>
-<tr class="separator:a27fa38d0a1cb8fdc1c974af2fb64136c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a44520c0f45addec729e095021b2cff66"><td class="memItemLeft" align="right" valign="top">std::vector&lt; size_t &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGroupPath.html#a44520c0f45addec729e095021b2cff66">GetWaitTimes</a> ()</td></tr>
-<tr class="memdesc:a44520c0f45addec729e095021b2cff66"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the wait times at each vertex in the path.  <a href="classGroupPath.html#a44520c0f45addec729e095021b2cff66">More...</a><br /></td></tr>
-<tr class="separator:a44520c0f45addec729e095021b2cff66"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7560bc59cc10ac0c6900bfb2a7078fa9"><td class="memItemLeft" align="right" valign="top">std::pair&lt; size_t, size_t &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGroupPath.html#a7560bc59cc10ac0c6900bfb2a7078fa9">GetEdgeAtTimestep</a> (size_t _timestep)</td></tr>
-<tr class="separator:a7560bc59cc10ac0c6900bfb2a7078fa9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad66c73ba9f7746427873e3e58b1664f1"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classGroupPath.html#a290dd336e22d70c867670bb00f25c977">GroupRoadmapType</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGroupPath.html#ad66c73ba9f7746427873e3e58b1664f1">GetRoadmap</a> () const noexcept</td></tr>
+<tr class="memdesc:ad66c73ba9f7746427873e3e58b1664f1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the roadmap used by this path.  <a href="classGroupPath.html#ad66c73ba9f7746427873e3e58b1664f1">More...</a><br /></td></tr>
+<tr class="separator:ad66c73ba9f7746427873e3e58b1664f1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad719f029fa7f794505461dd28b576e8b"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGroupPath.html#ad719f029fa7f794505461dd28b576e8b">Size</a> () const noexcept</td></tr>
+<tr class="memdesc:ad719f029fa7f794505461dd28b576e8b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the number of cfgs in the path.  <a href="classGroupPath.html#ad719f029fa7f794505461dd28b576e8b">More...</a><br /></td></tr>
+<tr class="separator:ad719f029fa7f794505461dd28b576e8b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af2f4d771fdaaecbd5a2e48a44183018d"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGroupPath.html#af2f4d771fdaaecbd5a2e48a44183018d">Empty</a> () const noexcept</td></tr>
+<tr class="memdesc:af2f4d771fdaaecbd5a2e48a44183018d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Check if the path is empty.  <a href="classGroupPath.html#af2f4d771fdaaecbd5a2e48a44183018d">More...</a><br /></td></tr>
+<tr class="separator:af2f4d771fdaaecbd5a2e48a44183018d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af4672f7a6f1636b786ded3df9d4571a7"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGroupPath.html#af4672f7a6f1636b786ded3df9d4571a7">Length</a> () const</td></tr>
+<tr class="memdesc:af4672f7a6f1636b786ded3df9d4571a7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the total edge weight.  <a href="classGroupPath.html#af4672f7a6f1636b786ded3df9d4571a7">More...</a><br /></td></tr>
+<tr class="separator:af4672f7a6f1636b786ded3df9d4571a7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a03deeb29ae92572d77851e98ddb50964"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGroupPath.html#a03deeb29ae92572d77851e98ddb50964">TimeSteps</a> () const</td></tr>
+<tr class="separator:a03deeb29ae92572d77851e98ddb50964"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aaea4aca05c3ff69a7c4305317843eb5b"><td class="memItemLeft" align="right" valign="top">const std::vector&lt; <a class="el" href="classGroupPath.html#ae1b5eec6cd7057dbfa4167ee66d97d27">VID</a> &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGroupPath.html#aaea4aca05c3ff69a7c4305317843eb5b">VIDs</a> () const noexcept</td></tr>
+<tr class="memdesc:aaea4aca05c3ff69a7c4305317843eb5b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the VIDs in the path.  <a href="classGroupPath.html#aaea4aca05c3ff69a7c4305317843eb5b">More...</a><br /></td></tr>
+<tr class="separator:aaea4aca05c3ff69a7c4305317843eb5b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5feb08efbb625c882e0991250b388e7a"><td class="memItemLeft" align="right" valign="top">const std::pair&lt; std::vector&lt; <a class="el" href="classGroupPath.html#ae1b5eec6cd7057dbfa4167ee66d97d27">VID</a> &gt;, std::vector&lt; size_t &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGroupPath.html#a5feb08efbb625c882e0991250b388e7a">VIDsWaiting</a> () const noexcept</td></tr>
+<tr class="memdesc:a5feb08efbb625c882e0991250b388e7a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the VIDs and timesteps waiting in the path.  <a href="classGroupPath.html#a5feb08efbb625c882e0991250b388e7a">More...</a><br /></td></tr>
+<tr class="separator:a5feb08efbb625c882e0991250b388e7a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa104e157176a7d39257de0c127d06bdf"><td class="memItemLeft" align="right" valign="top">const std::vector&lt; <a class="el" href="classGroupPath.html#abbc6d9820d0976dde59db6ae9c0f86a7">GroupCfgType</a> &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGroupPath.html#aa104e157176a7d39257de0c127d06bdf">Cfgs</a> () const</td></tr>
+<tr class="separator:aa104e157176a7d39257de0c127d06bdf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6a983569e540e0cce3ed059fe9be3c5d"><td class="memTemplParams" colspan="2">template&lt;typename MPLibrary &gt; </td></tr>
+<tr class="memitem:a6a983569e540e0cce3ed059fe9be3c5d"><td class="memTemplItemLeft" align="right" valign="top">const std::vector&lt; <a class="el" href="classGroupPath.html#abbc6d9820d0976dde59db6ae9c0f86a7">GroupCfgType</a> &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classGroupPath.html#a6a983569e540e0cce3ed059fe9be3c5d">FullCfgs</a> (<a class="el" href="classMPLibrary.html">MPLibrary</a> *const _lib) const</td></tr>
+<tr class="separator:a6a983569e540e0cce3ed059fe9be3c5d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a16cf95417aec3ee9562168e00bac0b79"><td class="memTemplParams" colspan="2">template&lt;typename MPLibrary &gt; </td></tr>
+<tr class="memitem:a16cf95417aec3ee9562168e00bac0b79"><td class="memTemplItemLeft" align="right" valign="top">const std::vector&lt; <a class="el" href="classGroupPath.html#abbc6d9820d0976dde59db6ae9c0f86a7">GroupCfgType</a> &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classGroupPath.html#a16cf95417aec3ee9562168e00bac0b79">FullCfgsWithWait</a> (<a class="el" href="classMPLibrary.html">MPLibrary</a> *const _lib) const</td></tr>
+<tr class="separator:a16cf95417aec3ee9562168e00bac0b79"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a64ab47cdac6e532c84eead4e98d0d17b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classGroupPath.html">GroupPath</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGroupPath.html#a64ab47cdac6e532c84eead4e98d0d17b">operator+=</a> (const <a class="el" href="classGroupPath.html">GroupPath</a> &amp;_p)</td></tr>
+<tr class="separator:a64ab47cdac6e532c84eead4e98d0d17b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6eaf781f078c439be8f4c4334143494d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classGroupPath.html">GroupPath</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGroupPath.html#a6eaf781f078c439be8f4c4334143494d">operator+</a> (const <a class="el" href="classGroupPath.html">GroupPath</a> &amp;_p) const</td></tr>
+<tr class="separator:a6eaf781f078c439be8f4c4334143494d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a06c8dead234501f459825cb0e5a289f3"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classGroupPath.html">GroupPath</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGroupPath.html#a06c8dead234501f459825cb0e5a289f3">operator+=</a> (const std::vector&lt; <a class="el" href="classGroupPath.html#ae1b5eec6cd7057dbfa4167ee66d97d27">VID</a> &gt; &amp;_vids)</td></tr>
+<tr class="separator:a06c8dead234501f459825cb0e5a289f3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab66affabdde1b007899079ad571a8454"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classGroupPath.html">GroupPath</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGroupPath.html#ab66affabdde1b007899079ad571a8454">operator+</a> (const std::vector&lt; <a class="el" href="classGroupPath.html#ae1b5eec6cd7057dbfa4167ee66d97d27">VID</a> &gt; &amp;_vids) const</td></tr>
+<tr class="separator:ab66affabdde1b007899079ad571a8454"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2a76f692957b0f734ac795cf26f58119"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classGroupPath.html">GroupPath</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGroupPath.html#a2a76f692957b0f734ac795cf26f58119">operator=</a> (const <a class="el" href="classGroupPath.html">GroupPath</a> &amp;_p)</td></tr>
+<tr class="memdesc:a2a76f692957b0f734ac795cf26f58119"><td class="mdescLeft">&#160;</td><td class="mdescRight">Copy assignment operator.  <a href="classGroupPath.html#a2a76f692957b0f734ac795cf26f58119">More...</a><br /></td></tr>
+<tr class="separator:a2a76f692957b0f734ac795cf26f58119"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a933a841fcdb080c68cf8e82ade1f7d2f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGroupPath.html#a933a841fcdb080c68cf8e82ade1f7d2f">Clear</a> ()</td></tr>
+<tr class="memdesc:a933a841fcdb080c68cf8e82ade1f7d2f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Clear all data in the path.  <a href="classGroupPath.html#a933a841fcdb080c68cf8e82ade1f7d2f">More...</a><br /></td></tr>
+<tr class="separator:a933a841fcdb080c68cf8e82ade1f7d2f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aadb59c1d11eb1f7b1c15830f38d9e88d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGroupPath.html#aadb59c1d11eb1f7b1c15830f38d9e88d">FlushCache</a> ()</td></tr>
+<tr class="memdesc:aadb59c1d11eb1f7b1c15830f38d9e88d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Clear cached data, but leave the VIDs.  <a href="classGroupPath.html#aadb59c1d11eb1f7b1c15830f38d9e88d">More...</a><br /></td></tr>
+<tr class="separator:aadb59c1d11eb1f7b1c15830f38d9e88d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a510862136de4a60413640d119d126634"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGroupPath.html#a510862136de4a60413640d119d126634">SetWaitTimes</a> (std::vector&lt; size_t &gt; _waitTimes)</td></tr>
+<tr class="separator:a510862136de4a60413640d119d126634"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a66e1f07ab116ce50e2ed46073b552262"><td class="memItemLeft" align="right" valign="top">std::vector&lt; size_t &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGroupPath.html#a66e1f07ab116ce50e2ed46073b552262">GetWaitTimes</a> ()</td></tr>
+<tr class="memdesc:a66e1f07ab116ce50e2ed46073b552262"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the wait times at each vertex in the path.  <a href="classGroupPath.html#a66e1f07ab116ce50e2ed46073b552262">More...</a><br /></td></tr>
+<tr class="separator:a66e1f07ab116ce50e2ed46073b552262"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a525deb2083d751f93f26b872f0cd0231"><td class="memItemLeft" align="right" valign="top">std::pair&lt; size_t, size_t &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classGroupPath.html#a525deb2083d751f93f26b872f0cd0231">GetEdgeAtTimestep</a> (size_t _timestep)</td></tr>
+<tr class="separator:a525deb2083d751f93f26b872f0cd0231"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><h3>template&lt;typename MPTraits&gt;<br />
-class GroupPath&lt; MPTraits &gt;</h3>
-
-<p>A path of connected configurations from a given roadmap.</p>
+<div class="textblock"><p>A path of connected configurations from a given roadmap.</p>
 <p>The implementation uses a vector of VID's as the primary representation. The corresponding configurations are computed lazily upon request. </p>
 </div><h2 class="groupheader">Member Typedef Documentation</h2>
-<a id="ab5a99baffa833cc77a1deb5cab8c8443"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab5a99baffa833cc77a1deb5cab8c8443">&#9670;&nbsp;</a></span>GroupCfg</h2>
+<a id="abbc6d9820d0976dde59db6ae9c0f86a7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abbc6d9820d0976dde59db6ae9c0f86a7">&#9670;&nbsp;</a></span>GroupCfgType</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">typedef <a class="el" href="classMPTraits.html#a42d63ac6993b02dda2ca15d6c2d5c69e">MPTraits::GroupCfgType</a> <a class="el" href="classGroupPath.html">GroupPath</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::<a class="el" href="classGroupPath.html#ab5a99baffa833cc77a1deb5cab8c8443">GroupCfg</a></td>
+          <td class="memname">typedef <a class="el" href="classGroupCfg.html">GroupCfg</a>&lt;<a class="el" href="classGroupPath.html#a23282f2c857628a6f4c722276ab0453a">RoadmapType</a>&gt; <a class="el" href="classGroupPath.html#abbc6d9820d0976dde59db6ae9c0f86a7">GroupPath::GroupCfgType</a></td>
         </tr>
       </table>
 </div><div class="memdoc">
 
 </div>
 </div>
-<a id="a08d14207e8adc366ff49db44b0b7373d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a08d14207e8adc366ff49db44b0b7373d">&#9670;&nbsp;</a></span>GroupRoadmapType</h2>
+<a id="a290dd336e22d70c867670bb00f25c977"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a290dd336e22d70c867670bb00f25c977">&#9670;&nbsp;</a></span>GroupRoadmapType</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">typedef <a class="el" href="classMPTraits.html#a806d8c2e8e5c191e0c985d571a489851">MPTraits::GroupRoadmapType</a> <a class="el" href="classGroupPath.html">GroupPath</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::<a class="el" href="classGroupPath.html#a08d14207e8adc366ff49db44b0b7373d">GroupRoadmapType</a></td>
+          <td class="memname">typedef <a class="el" href="classGroupRoadmap.html">GroupRoadmap</a>&lt;<a class="el" href="classGroupPath.html#abbc6d9820d0976dde59db6ae9c0f86a7">GroupCfgType</a>, <a class="el" href="classGroupLocalPlan.html">GroupLocalPlan</a>&lt;<a class="el" href="classGroupPath.html#a23282f2c857628a6f4c722276ab0453a">RoadmapType</a>&gt; &gt; <a class="el" href="classGroupPath.html#a290dd336e22d70c867670bb00f25c977">GroupPath::GroupRoadmapType</a></td>
         </tr>
       </table>
 </div><div class="memdoc">
 
 </div>
 </div>
-<a id="a4e48187cf804749a0fff8128aebc7e4c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a4e48187cf804749a0fff8128aebc7e4c">&#9670;&nbsp;</a></span>VID</h2>
+<a id="a23282f2c857628a6f4c722276ab0453a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a23282f2c857628a6f4c722276ab0453a">&#9670;&nbsp;</a></span>RoadmapType</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">typedef <a class="el" href="classGenericStateGraph.html#a337a1247796cb9bf56fbe6eb2b9497d2">GroupRoadmapType::VID</a> <a class="el" href="classGroupPath.html">GroupPath</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::<a class="el" href="classGroupPath.html#a4e48187cf804749a0fff8128aebc7e4c">VID</a></td>
+          <td class="memname">typedef <a class="el" href="classGenericStateGraph.html">GenericStateGraph</a>&lt;<a class="el" href="classCfg.html">Cfg</a>, <a class="el" href="classDefaultWeight.html">DefaultWeight</a>&lt;<a class="el" href="classCfg.html">Cfg</a>&gt; &gt; <a class="el" href="classGroupPath.html#a23282f2c857628a6f4c722276ab0453a">GroupPath::RoadmapType</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="ae1b5eec6cd7057dbfa4167ee66d97d27"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae1b5eec6cd7057dbfa4167ee66d97d27">&#9670;&nbsp;</a></span>VID</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">typedef <a class="el" href="classGenericStateGraph.html#a337a1247796cb9bf56fbe6eb2b9497d2">GroupRoadmapType::VID</a> <a class="el" href="classGroupPath.html#ae1b5eec6cd7057dbfa4167ee66d97d27">GroupPath::VID</a></td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -202,18 +209,16 @@ template&lt;typename MPTraits &gt; </div>
 </div>
 </div>
 <h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="a5f94e5889527cf93c8e6c71837ab6d0d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5f94e5889527cf93c8e6c71837ab6d0d">&#9670;&nbsp;</a></span>GroupPath()</h2>
+<a id="a4baee1c5fe3e466d5512b0e9cc502be2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4baee1c5fe3e466d5512b0e9cc502be2">&#9670;&nbsp;</a></span>GroupPath()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classGroupPath.html">GroupPath</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::<a class="el" href="classGroupPath.html">GroupPath</a> </td>
+          <td class="memname">GroupPath::GroupPath </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="classGroupPath.html#a08d14207e8adc366ff49db44b0b7373d">GroupRoadmapType</a> *const&#160;</td>
+          <td class="paramtype"><a class="el" href="classGroupPath.html#a290dd336e22d70c867670bb00f25c977">GroupRoadmapType</a> *const&#160;</td>
           <td class="paramname"><em>_r</em> = <code>nullptr</code></td><td>)</td>
           <td></td>
         </tr>
@@ -229,16 +234,17 @@ template&lt;typename MPTraits &gt; </div>
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
-<a id="ad71f8a89e49d68ec238e189c1e59d12e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad71f8a89e49d68ec238e189c1e59d12e">&#9670;&nbsp;</a></span>Cfgs()</h2>
+<a id="aa104e157176a7d39257de0c127d06bdf"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa104e157176a7d39257de0c127d06bdf">&#9670;&nbsp;</a></span>Cfgs()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">const std::vector&lt; typename <a class="el" href="classMPTraits.html#a42d63ac6993b02dda2ca15d6c2d5c69e">MPTraits::GroupCfgType</a> &gt; &amp; <a class="el" href="classGroupPath.html">GroupPath</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::Cfgs</td>
+          <td class="memname">const std::vector&lt; typename <a class="el" href="classGroupPath.html#abbc6d9820d0976dde59db6ae9c0f86a7">GroupPath::GroupCfgType</a> &gt; &amp; GroupPath::Cfgs </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -246,16 +252,17 @@ template&lt;typename MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="af27de0a3cc150578df14fe7bba86d674"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af27de0a3cc150578df14fe7bba86d674">&#9670;&nbsp;</a></span>Clear()</h2>
+<a id="a933a841fcdb080c68cf8e82ade1f7d2f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a933a841fcdb080c68cf8e82ade1f7d2f">&#9670;&nbsp;</a></span>Clear()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="classGroupPath.html">GroupPath</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::Clear</td>
+          <td class="memname">void GroupPath::Clear </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -264,19 +271,20 @@ template&lt;typename MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="ae137b301614a27b39e7a0b97a5007ce4"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae137b301614a27b39e7a0b97a5007ce4">&#9670;&nbsp;</a></span>Empty()</h2>
+<a id="af2f4d771fdaaecbd5a2e48a44183018d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af2f4d771fdaaecbd5a2e48a44183018d">&#9670;&nbsp;</a></span>Empty()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">bool <a class="el" href="classGroupPath.html">GroupPath</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::Empty</td>
+          <td class="memname">bool GroupPath::Empty </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
         </tr>
       </table>
   </td>
@@ -290,16 +298,17 @@ template&lt;typename MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="afbcc9b448d5fe15a86fb470b9044aaff"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#afbcc9b448d5fe15a86fb470b9044aaff">&#9670;&nbsp;</a></span>FlushCache()</h2>
+<a id="aadb59c1d11eb1f7b1c15830f38d9e88d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aadb59c1d11eb1f7b1c15830f38d9e88d">&#9670;&nbsp;</a></span>FlushCache()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="classGroupPath.html">GroupPath</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::FlushCache</td>
+          <td class="memname">void GroupPath::FlushCache </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -308,20 +317,18 @@ template&lt;typename MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="ad9dc050edf4b29e18ce1d5dd49c516d2"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad9dc050edf4b29e18ce1d5dd49c516d2">&#9670;&nbsp;</a></span>FullCfgs() <span class="overload">[1/2]</span></h2>
+<a id="a6a983569e540e0cce3ed059fe9be3c5d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6a983569e540e0cce3ed059fe9be3c5d">&#9670;&nbsp;</a></span>FullCfgs() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
-<div class="memtemplate">
 template&lt;typename MPLibrary &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">const std::vector&lt;<a class="el" href="classGroupPath.html#ab5a99baffa833cc77a1deb5cab8c8443">GroupCfg</a>&gt; <a class="el" href="classGroupPath.html">GroupPath</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::FullCfgs </td>
+          <td class="memname">const std::vector&lt;<a class="el" href="classGroupPath.html#abbc6d9820d0976dde59db6ae9c0f86a7">GroupCfgType</a>&gt; GroupPath::FullCfgs </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="PMPL_8h.html#a4829bbb5f410cd1931429c6c46ca6b42">MPLibrary</a> *const&#160;</td>
+          <td class="paramtype"><a class="el" href="classMPLibrary.html">MPLibrary</a> *const&#160;</td>
           <td class="paramname"><em>_lib</em></td><td>)</td>
           <td> const</td>
         </tr>
@@ -337,20 +344,18 @@ template&lt;typename MPLibrary &gt; </div>
 
 </div>
 </div>
-<a id="a6b80b458802fde183b36cae514aeb320"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6b80b458802fde183b36cae514aeb320">&#9670;&nbsp;</a></span>FullCfgs() <span class="overload">[2/2]</span></h2>
+<a id="ab9fb1938fff8b32fa41a02271279f09a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab9fb1938fff8b32fa41a02271279f09a">&#9670;&nbsp;</a></span>FullCfgs() <span class="overload">[2/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
-<div class="memtemplate">
 template&lt;typename MPLibrary &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">const std::vector&lt;typename <a class="el" href="classMPTraits.html#a42d63ac6993b02dda2ca15d6c2d5c69e">MPTraits::GroupCfgType</a>&gt; <a class="el" href="classGroupPath.html">GroupPath</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::FullCfgs </td>
+          <td class="memname">const std::vector&lt;typename <a class="el" href="classGroupPath.html#abbc6d9820d0976dde59db6ae9c0f86a7">GroupPath::GroupCfgType</a>&gt; GroupPath::FullCfgs </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="PMPL_8h.html#a4829bbb5f410cd1931429c6c46ca6b42">MPLibrary</a> *const&#160;</td>
+          <td class="paramtype"><a class="el" href="classMPLibrary.html">MPLibrary</a> *const&#160;</td>
           <td class="paramname"><em>_lib</em></td><td>)</td>
           <td> const</td>
         </tr>
@@ -359,20 +364,18 @@ template&lt;typename MPLibrary &gt; </div>
 
 </div>
 </div>
-<a id="a7b38d2aa347d60aad993efee8af9e9d0"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a7b38d2aa347d60aad993efee8af9e9d0">&#9670;&nbsp;</a></span>FullCfgsWithWait() <span class="overload">[1/2]</span></h2>
+<a id="a16cf95417aec3ee9562168e00bac0b79"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a16cf95417aec3ee9562168e00bac0b79">&#9670;&nbsp;</a></span>FullCfgsWithWait() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
-<div class="memtemplate">
 template&lt;typename MPLibrary &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">const std::vector&lt;<a class="el" href="classGroupPath.html#ab5a99baffa833cc77a1deb5cab8c8443">GroupCfg</a>&gt; <a class="el" href="classGroupPath.html">GroupPath</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::FullCfgsWithWait </td>
+          <td class="memname">const std::vector&lt;<a class="el" href="classGroupPath.html#abbc6d9820d0976dde59db6ae9c0f86a7">GroupCfgType</a>&gt; GroupPath::FullCfgsWithWait </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="PMPL_8h.html#a4829bbb5f410cd1931429c6c46ca6b42">MPLibrary</a> *const&#160;</td>
+          <td class="paramtype"><a class="el" href="classMPLibrary.html">MPLibrary</a> *const&#160;</td>
           <td class="paramname"><em>_lib</em></td><td>)</td>
           <td> const</td>
         </tr>
@@ -388,20 +391,18 @@ template&lt;typename MPLibrary &gt; </div>
 
 </div>
 </div>
-<a id="a6095dfb1ecf57633a8094c19ca57a11a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6095dfb1ecf57633a8094c19ca57a11a">&#9670;&nbsp;</a></span>FullCfgsWithWait() <span class="overload">[2/2]</span></h2>
+<a id="ac2350a04a4aa3e59e664e6e4515ee620"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac2350a04a4aa3e59e664e6e4515ee620">&#9670;&nbsp;</a></span>FullCfgsWithWait() <span class="overload">[2/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
-<div class="memtemplate">
 template&lt;typename MPLibrary &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">const std::vector&lt;typename <a class="el" href="classMPTraits.html#a42d63ac6993b02dda2ca15d6c2d5c69e">MPTraits::GroupCfgType</a>&gt; <a class="el" href="classGroupPath.html">GroupPath</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::FullCfgsWithWait </td>
+          <td class="memname">const std::vector&lt;typename <a class="el" href="classGroupPath.html#abbc6d9820d0976dde59db6ae9c0f86a7">GroupPath::GroupCfgType</a>&gt; GroupPath::FullCfgsWithWait </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="PMPL_8h.html#a4829bbb5f410cd1931429c6c46ca6b42">MPLibrary</a> *const&#160;</td>
+          <td class="paramtype"><a class="el" href="classMPLibrary.html">MPLibrary</a> *const&#160;</td>
           <td class="paramname"><em>_lib</em></td><td>)</td>
           <td> const</td>
         </tr>
@@ -410,16 +411,14 @@ template&lt;typename MPLibrary &gt; </div>
 
 </div>
 </div>
-<a id="a7560bc59cc10ac0c6900bfb2a7078fa9"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a7560bc59cc10ac0c6900bfb2a7078fa9">&#9670;&nbsp;</a></span>GetEdgeAtTimestep()</h2>
+<a id="a525deb2083d751f93f26b872f0cd0231"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a525deb2083d751f93f26b872f0cd0231">&#9670;&nbsp;</a></span>GetEdgeAtTimestep()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">std::pair&lt; size_t, size_t &gt; <a class="el" href="classGroupPath.html">GroupPath</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::GetEdgeAtTimestep </td>
+          <td class="memname">std::pair&lt; size_t, size_t &gt; GroupPath::GetEdgeAtTimestep </td>
           <td>(</td>
           <td class="paramtype">size_t&#160;</td>
           <td class="paramname"><em>_timestep</em></td><td>)</td>
@@ -437,19 +436,20 @@ template&lt;typename MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="a0bcfdb314bef61bf2bcca6032e48b25a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a0bcfdb314bef61bf2bcca6032e48b25a">&#9670;&nbsp;</a></span>GetRoadmap()</h2>
+<a id="ad66c73ba9f7746427873e3e58b1664f1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad66c73ba9f7746427873e3e58b1664f1">&#9670;&nbsp;</a></span>GetRoadmap()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classMPTraits.html#a806d8c2e8e5c191e0c985d571a489851">MPTraits::GroupRoadmapType</a> * <a class="el" href="classGroupPath.html">GroupPath</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::GetRoadmap</td>
+          <td class="memname"><a class="el" href="classGroupPath.html#a290dd336e22d70c867670bb00f25c977">GroupPath::GroupRoadmapType</a> * GroupPath::GetRoadmap </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
         </tr>
       </table>
   </td>
@@ -463,16 +463,17 @@ template&lt;typename MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="a44520c0f45addec729e095021b2cff66"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a44520c0f45addec729e095021b2cff66">&#9670;&nbsp;</a></span>GetWaitTimes()</h2>
+<a id="a66e1f07ab116ce50e2ed46073b552262"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a66e1f07ab116ce50e2ed46073b552262">&#9670;&nbsp;</a></span>GetWaitTimes()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">std::vector&lt; size_t &gt; <a class="el" href="classGroupPath.html">GroupPath</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::GetWaitTimes</td>
+          <td class="memname">std::vector&lt; size_t &gt; GroupPath::GetWaitTimes </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -481,16 +482,17 @@ template&lt;typename MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="a0a9c83b3337c43f5243a640e54e303e1"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a0a9c83b3337c43f5243a640e54e303e1">&#9670;&nbsp;</a></span>Length()</h2>
+<a id="af4672f7a6f1636b786ded3df9d4571a7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af4672f7a6f1636b786ded3df9d4571a7">&#9670;&nbsp;</a></span>Length()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">double <a class="el" href="classGroupPath.html">GroupPath</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::Length</td>
+          <td class="memname">double GroupPath::Length </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -500,18 +502,16 @@ template&lt;typename MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="aecdbed2c5209a5e02c8a8e9c9ec1b4a5"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aecdbed2c5209a5e02c8a8e9c9ec1b4a5">&#9670;&nbsp;</a></span>operator+() <span class="overload">[1/2]</span></h2>
+<a id="a6eaf781f078c439be8f4c4334143494d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6eaf781f078c439be8f4c4334143494d">&#9670;&nbsp;</a></span>operator+() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classGroupPath.html">GroupPath</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt; <a class="el" href="classGroupPath.html">GroupPath</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::operator+ </td>
+          <td class="memname"><a class="el" href="classGroupPath.html">GroupPath</a> GroupPath::operator+ </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="classGroupPath.html">GroupPath</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt; &amp;&#160;</td>
+          <td class="paramtype">const <a class="el" href="classGroupPath.html">GroupPath</a> &amp;&#160;</td>
           <td class="paramname"><em>_p</em></td><td>)</td>
           <td> const</td>
         </tr>
@@ -526,18 +526,16 @@ template&lt;typename MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="a6a6226c1908b4e60b7434d72e271ff9b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6a6226c1908b4e60b7434d72e271ff9b">&#9670;&nbsp;</a></span>operator+() <span class="overload">[2/2]</span></h2>
+<a id="ab66affabdde1b007899079ad571a8454"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab66affabdde1b007899079ad571a8454">&#9670;&nbsp;</a></span>operator+() <span class="overload">[2/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classGroupPath.html">GroupPath</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt; <a class="el" href="classGroupPath.html">GroupPath</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::operator+ </td>
+          <td class="memname"><a class="el" href="classGroupPath.html">GroupPath</a> GroupPath::operator+ </td>
           <td>(</td>
-          <td class="paramtype">const std::vector&lt; <a class="el" href="classGroupPath.html#a4e48187cf804749a0fff8128aebc7e4c">VID</a> &gt; &amp;&#160;</td>
+          <td class="paramtype">const std::vector&lt; <a class="el" href="classGroupPath.html#ae1b5eec6cd7057dbfa4167ee66d97d27">VID</a> &gt; &amp;&#160;</td>
           <td class="paramname"><em>_vids</em></td><td>)</td>
           <td> const</td>
         </tr>
@@ -552,18 +550,16 @@ template&lt;typename MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="ae71f7f87fd0bc37053bf810d4c7ae2e6"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae71f7f87fd0bc37053bf810d4c7ae2e6">&#9670;&nbsp;</a></span>operator+=() <span class="overload">[1/2]</span></h2>
+<a id="a64ab47cdac6e532c84eead4e98d0d17b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a64ab47cdac6e532c84eead4e98d0d17b">&#9670;&nbsp;</a></span>operator+=() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classGroupPath.html">GroupPath</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt; &amp; <a class="el" href="classGroupPath.html">GroupPath</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::operator+= </td>
+          <td class="memname"><a class="el" href="classGroupPath.html">GroupPath</a> &amp; GroupPath::operator+= </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="classGroupPath.html">GroupPath</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt; &amp;&#160;</td>
+          <td class="paramtype">const <a class="el" href="classGroupPath.html">GroupPath</a> &amp;&#160;</td>
           <td class="paramname"><em>_p</em></td><td>)</td>
           <td></td>
         </tr>
@@ -578,18 +574,16 @@ template&lt;typename MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="a6c102302dc8a7bbcb25b1a14d57db6ad"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6c102302dc8a7bbcb25b1a14d57db6ad">&#9670;&nbsp;</a></span>operator+=() <span class="overload">[2/2]</span></h2>
+<a id="a06c8dead234501f459825cb0e5a289f3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a06c8dead234501f459825cb0e5a289f3">&#9670;&nbsp;</a></span>operator+=() <span class="overload">[2/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classGroupPath.html">GroupPath</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt; &amp; <a class="el" href="classGroupPath.html">GroupPath</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::operator+= </td>
+          <td class="memname"><a class="el" href="classGroupPath.html">GroupPath</a> &amp; GroupPath::operator+= </td>
           <td>(</td>
-          <td class="paramtype">const std::vector&lt; <a class="el" href="classGroupPath.html#a4e48187cf804749a0fff8128aebc7e4c">VID</a> &gt; &amp;&#160;</td>
+          <td class="paramtype">const std::vector&lt; <a class="el" href="classGroupPath.html#ae1b5eec6cd7057dbfa4167ee66d97d27">VID</a> &gt; &amp;&#160;</td>
           <td class="paramname"><em>_vids</em></td><td>)</td>
           <td></td>
         </tr>
@@ -604,18 +598,16 @@ template&lt;typename MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="ac33ef3564f661acbea72485b13fa9cd2"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac33ef3564f661acbea72485b13fa9cd2">&#9670;&nbsp;</a></span>operator=()</h2>
+<a id="a2a76f692957b0f734ac795cf26f58119"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2a76f692957b0f734ac795cf26f58119">&#9670;&nbsp;</a></span>operator=()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classGroupPath.html">GroupPath</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt; &amp; <a class="el" href="classGroupPath.html">GroupPath</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::operator= </td>
+          <td class="memname"><a class="el" href="classGroupPath.html">GroupPath</a> &amp; GroupPath::operator= </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="classGroupPath.html">GroupPath</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt; &amp;&#160;</td>
+          <td class="paramtype">const <a class="el" href="classGroupPath.html">GroupPath</a> &amp;&#160;</td>
           <td class="paramname"><em>_p</em></td><td>)</td>
           <td></td>
         </tr>
@@ -626,16 +618,14 @@ template&lt;typename MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="a27fa38d0a1cb8fdc1c974af2fb64136c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a27fa38d0a1cb8fdc1c974af2fb64136c">&#9670;&nbsp;</a></span>SetWaitTimes()</h2>
+<a id="a510862136de4a60413640d119d126634"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a510862136de4a60413640d119d126634">&#9670;&nbsp;</a></span>SetWaitTimes()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="classGroupPath.html">GroupPath</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::SetWaitTimes </td>
+          <td class="memname">void GroupPath::SetWaitTimes </td>
           <td>(</td>
           <td class="paramtype">std::vector&lt; size_t &gt;&#160;</td>
           <td class="paramname"><em>_waitTimes</em></td><td>)</td>
@@ -643,23 +633,24 @@ template&lt;typename MPTraits &gt; </div>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Set the wait times at each vertex in path Used in Safe Interval Path Planning </p>
+<p>Set the wait times at each vertex in path Used in Safe Interval <a class="el" href="classPath.html">Path</a> Planning </p>
 
 </div>
 </div>
-<a id="a138b18b5370fade4f5e5f3cc7182422b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a138b18b5370fade4f5e5f3cc7182422b">&#9670;&nbsp;</a></span>Size()</h2>
+<a id="ad719f029fa7f794505461dd28b576e8b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad719f029fa7f794505461dd28b576e8b">&#9670;&nbsp;</a></span>Size()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">size_t <a class="el" href="classGroupPath.html">GroupPath</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::Size</td>
+          <td class="memname">size_t GroupPath::Size </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
         </tr>
       </table>
   </td>
@@ -673,16 +664,17 @@ template&lt;typename MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="a6f3da8af378122a62a5d69819033614d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6f3da8af378122a62a5d69819033614d">&#9670;&nbsp;</a></span>TimeSteps()</h2>
+<a id="a03deeb29ae92572d77851e98ddb50964"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a03deeb29ae92572d77851e98ddb50964">&#9670;&nbsp;</a></span>TimeSteps()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">size_t <a class="el" href="classGroupPath.html">GroupPath</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::TimeSteps</td>
+          <td class="memname">size_t GroupPath::TimeSteps </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -690,19 +682,20 @@ template&lt;typename MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="abb9c07fe206a2982cae95b760f5dead1"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#abb9c07fe206a2982cae95b760f5dead1">&#9670;&nbsp;</a></span>VIDs()</h2>
+<a id="aaea4aca05c3ff69a7c4305317843eb5b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aaea4aca05c3ff69a7c4305317843eb5b">&#9670;&nbsp;</a></span>VIDs()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">const std::vector&lt; typename <a class="el" href="classGroupPath.html">GroupPath</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::<a class="el" href="classGroupPath.html#a4e48187cf804749a0fff8128aebc7e4c">VID</a> &gt; &amp; <a class="el" href="classGroupPath.html">GroupPath</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::VIDs</td>
+          <td class="memname">const std::vector&lt; typename <a class="el" href="classGroupPath.html#ae1b5eec6cd7057dbfa4167ee66d97d27">GroupPath::VID</a> &gt; &amp; GroupPath::VIDs </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
         </tr>
       </table>
   </td>
@@ -716,19 +709,17 @@ template&lt;typename MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="a211a03f393e9cc87f33c40b2bbd5dd5f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a211a03f393e9cc87f33c40b2bbd5dd5f">&#9670;&nbsp;</a></span>VIDsWaiting()</h2>
+<a id="a5feb08efbb625c882e0991250b388e7a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5feb08efbb625c882e0991250b388e7a">&#9670;&nbsp;</a></span>VIDsWaiting()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">const std::pair&lt;std::vector&lt;<a class="el" href="classGroupPath.html#a4e48187cf804749a0fff8128aebc7e4c">VID</a>&gt;,std::vector&lt;size_t&gt; &gt; <a class="el" href="classGroupPath.html">GroupPath</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::VIDsWaiting </td>
+          <td class="memname">const std::pair&lt;std::vector&lt;<a class="el" href="classGroupPath.html#ae1b5eec6cd7057dbfa4167ee66d97d27">VID</a>&gt;,std::vector&lt;size_t&gt; &gt; GroupPath::VIDsWaiting </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const</td>
@@ -745,8 +736,9 @@ template&lt;typename MPTraits &gt; </div>
 
 </div>
 </div>
-<hr/>The documentation for this class was generated from the following file:<ul>
+<hr/>The documentation for this class was generated from the following files:<ul>
 <li>/opt/actions-runner/_work/open-ppl/open-ppl/src/ConfigurationSpace/<a class="el" href="GroupPath_8h_source.html">GroupPath.h</a></li>
+<li>/opt/actions-runner/_work/open-ppl/open-ppl/src/ConfigurationSpace/<a class="el" href="GroupPath_8cpp.html">GroupPath.cpp</a></li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->

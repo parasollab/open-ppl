@@ -1,6 +1,6 @@
-<map id="LPSweptDistance&lt; MPTraits &gt;" name="LPSweptDistance&lt; MPTraits &gt;">
-<area shape="rect" id="node1" title=" " alt="" coords="5,169,224,196"/>
-<area shape="rect" id="node4" href="$classBinaryLPSweptDistance.html" title=" " alt="" coords="27,244,203,285"/>
-<area shape="rect" id="node2" href="$classDistanceMetricMethod.html" title=" " alt="" coords="30,80,199,121"/>
-<area shape="rect" id="node3" href="$classMPBaseObject.html" title=" " alt="" coords="14,5,215,32"/>
+<map id="LPSweptDistance" name="LPSweptDistance">
+<area shape="rect" id="node1" title=" " alt="" coords="26,155,161,181"/>
+<area shape="rect" id="node4" href="$classBinaryLPSweptDistance.html" title=" " alt="" coords="5,229,181,256"/>
+<area shape="rect" id="node2" href="$classDistanceMetricMethod.html" title=" " alt="" coords="9,80,178,107"/>
+<area shape="rect" id="node3" href="$classMPBaseObject.html" title=" " alt="" coords="35,5,151,32"/>
 </map>

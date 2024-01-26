@@ -75,127 +75,39 @@ $(function() {
 <div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160; </div>
 <div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="SamplerMethod_8h.html">SamplerMethod.h</a>&quot;</span></div>
 <div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160; </div>
-<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="comment">// Samples by &quot;snapping&quot; random configurations to lattice points in a grid</span></div>
-<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00012"></a><span class="lineno"><a class="line" href="classMixSampler.html">   12</a></span>&#160;<span class="keyword">class </span><a class="code" href="classMixSampler.html">MixSampler</a> : <span class="keyword">virtual</span> <span class="keyword">public</span> <a class="code" href="classSamplerMethod.html">SamplerMethod</a>&lt;MPTraits&gt; {</div>
+<div class="line"><a name="l00010"></a><span class="lineno"><a class="line" href="classMixSampler.html">   10</a></span>&#160;<span class="keyword">class </span><a class="code" href="classMixSampler.html">MixSampler</a> : <span class="keyword">virtual</span> <span class="keyword">public</span> <a class="code" href="classSamplerMethod.html">SamplerMethod</a> {</div>
+<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160; </div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;  <span class="keyword">public</span>:</div>
 <div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160; </div>
-<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;  <span class="keyword">public</span>:</div>
-<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160; </div>
-<div class="line"><a name="l00016"></a><span class="lineno"><a class="line" href="classMixSampler.html#a7b7ebe0aeb20d312a84c34ad886fe901">   16</a></span>&#160;    <span class="keyword">typedef</span> <span class="keyword">typename</span> <a class="code" href="classMPTraits.html#a1a5aab50ac12baaf6b22ff345c5ae138">MPTraits::CfgType</a> <a class="code" href="classMixSampler.html#a7b7ebe0aeb20d312a84c34ad886fe901">CfgType</a>;</div>
-<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160; </div>
-<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;    <a class="code" href="classMixSampler.html#adf14a571beb19fef9fd3c2e436b89cc4">MixSampler</a>();</div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;    <a class="code" href="classMixSampler.html#adf14a571beb19fef9fd3c2e436b89cc4">MixSampler</a>(<a class="code" href="classXMLNode.html">XMLNode</a>&amp; _node);</div>
+<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;    <a class="code" href="classMixSampler.html#aede3cd7d64edd74614c3c00b4dbd9a11">MixSampler</a>();</div>
+<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;    <a class="code" href="classMixSampler.html#aede3cd7d64edd74614c3c00b4dbd9a11">MixSampler</a>(<a class="code" href="classXMLNode.html">XMLNode</a>&amp; _node);</div>
+<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160; </div>
+<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="classMixSampler.html#a553c304242ddda50fefea670b4fcc4db">ParseXML</a>(<a class="code" href="classXMLNode.html">XMLNode</a>&amp; _node);</div>
+<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160; </div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;    <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="classMixSampler.html#a4cec06a1eb6655f8e2e89d0bd12bdca5">Print</a>(ostream&amp; _os) <span class="keyword">const</span>;</div>
 <div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160; </div>
-<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="classMixSampler.html#a92050d3ac2bc148cae8bbd1878f36140">ParseXML</a>(<a class="code" href="classXMLNode.html">XMLNode</a>&amp; _node);</div>
-<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160; </div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;    <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="classMixSampler.html#a3a8c9dcd24ea15fb0197856aba5a86a4">Print</a>(ostream&amp; _os) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;  <span class="keyword">protected</span>:</div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;    <span class="keyword">virtual</span> <span class="keywordtype">bool</span> <a class="code" href="classMixSampler.html#a8ad152189903216e1dae2097dd22538b">Sampler</a>(<a class="code" href="classCfg.html">Cfg</a>&amp; _cfg, <span class="keyword">const</span> <a class="code" href="classBoundary.html">Boundary</a>* <span class="keyword">const</span> _boundary,</div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;        vector&lt;Cfg&gt;&amp; _result, vector&lt;Cfg&gt;&amp; _collision);</div>
 <div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160; </div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;  <span class="keyword">protected</span>:</div>
-<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;    <span class="keyword">virtual</span> <span class="keywordtype">bool</span> <a class="code" href="classMixSampler.html#a9aac788928e093b88574e044d0caf767">Sampler</a>(<a class="code" href="classMixSampler.html#a7b7ebe0aeb20d312a84c34ad886fe901">CfgType</a>&amp; _cfg, <span class="keyword">const</span> <a class="code" href="classBoundary.html">Boundary</a>* <span class="keyword">const</span> _boundary,</div>
-<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;        vector&lt;CfgType&gt;&amp; _result, vector&lt;CfgType&gt;&amp; _collision);</div>
-<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160; </div>
-<div class="line"><a name="l00029"></a><span class="lineno"><a class="line" href="classMixSampler.html#a4da4662b3b5df943983d528e37b06954">   29</a></span>&#160;    vector&lt;pair &lt;string, double&gt; &gt; <a class="code" href="classMixSampler.html#a4da4662b3b5df943983d528e37b06954">m_samplers</a>; <span class="comment">// Stores method label with cumulative probability</span></div>
-<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160; </div>
-<div class="line"><a name="l00031"></a><span class="lineno"><a class="line" href="classMixSampler.html#a6072825c643b1e1ba9fa1beb2bb28237">   31</a></span>&#160;    pair&lt;string, int&gt; <a class="code" href="classMixSampler.html#a6072825c643b1e1ba9fa1beb2bb28237">m_samplerLabels</a>; <span class="comment">// Stores label history and index</span></div>
-<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;};</div>
-<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160; </div>
-<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00035"></a><span class="lineno"><a class="line" href="classMixSampler.html#adf14a571beb19fef9fd3c2e436b89cc4">   35</a></span>&#160;<a class="code" href="classMixSampler.html#adf14a571beb19fef9fd3c2e436b89cc4">MixSampler&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;<a class="code" href="classMixSampler.html#adf14a571beb19fef9fd3c2e436b89cc4">MixSampler</a>() {</div>
-<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;  this-&gt;SetName(<span class="stringliteral">&quot;MixSampler&quot;</span>);</div>
-<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;}</div>
-<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160; </div>
-<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00041"></a><span class="lineno"><a class="line" href="classMixSampler.html#a51a3ebeeeeabd7aa7cccecc6a6137cd8">   41</a></span>&#160;<a class="code" href="classMixSampler.html#adf14a571beb19fef9fd3c2e436b89cc4">MixSampler&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;<a class="code" href="classMixSampler.html#adf14a571beb19fef9fd3c2e436b89cc4">MixSampler</a>(<a class="code" href="classXMLNode.html">XMLNode</a>&amp; _node) :</div>
-<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;  <a class="code" href="classSamplerMethod.html">SamplerMethod</a>&lt;<a class="code" href="classMPTraits.html">MPTraits</a>&gt;(_node) {</div>
-<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;    this-&gt;<a class="code" href="classMPBaseObject.html#ab59d82cd734f77fdc17eddb8517461da">SetName</a>(<span class="stringliteral">&quot;MixSampler&quot;</span>);</div>
-<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;    <a class="code" href="classMixSampler.html#a92050d3ac2bc148cae8bbd1878f36140">ParseXML</a>(_node);</div>
-<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;  }</div>
-<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160; </div>
-<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;<span class="keywordtype">void</span></div>
-<div class="line"><a name="l00050"></a><span class="lineno"><a class="line" href="classMixSampler.html#a92050d3ac2bc148cae8bbd1878f36140">   50</a></span>&#160;<a class="code" href="classMixSampler.html#a92050d3ac2bc148cae8bbd1878f36140">MixSampler&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;<a class="code" href="classMixSampler.html#a92050d3ac2bc148cae8bbd1878f36140">ParseXML</a>(<a class="code" href="classXMLNode.html">XMLNode</a>&amp; _node) {</div>
-<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;  <span class="comment">// Read samplers</span></div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;  <span class="keywordtype">double</span> totalP = 0.0;</div>
-<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;  <span class="keywordflow">for</span>(<span class="keyword">auto</span>&amp; child : _node) {</div>
-<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;    <span class="keywordflow">if</span>(child.Name() == <span class="stringliteral">&quot;Sampler&quot;</span>) {</div>
-<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;      <span class="keywordtype">string</span> method = child.Read(<span class="stringliteral">&quot;label&quot;</span>, <span class="keyword">true</span>,</div>
-<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;          <span class="stringliteral">&quot;Default&quot;</span>, <span class="stringliteral">&quot;Sampling method&quot;</span>);</div>
-<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;      <span class="keywordtype">double</span> p = child.Read(<span class="stringliteral">&quot;p&quot;</span>, <span class="keyword">true</span>, 0.0,</div>
-<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;          0.0, 1.0, <span class="stringliteral">&quot;Probability&quot;</span>);</div>
-<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;      <span class="keywordflow">if</span>(!p)</div>
-<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;        cerr &lt;&lt; <span class="stringliteral">&quot;Warning: MixSampler sampler method &quot;</span> &lt;&lt; method</div>
-<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;          &lt;&lt; <span class="stringliteral">&quot; has 0 probability.&quot;</span> &lt;&lt; endl;</div>
-<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;      totalP += p;</div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;      m_samplers.push_back(make_pair(method, totalP));</div>
-<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;    }</div>
-<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;  }</div>
-<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160; </div>
-<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;  <span class="keywordflow">if</span>(m_samplers.empty())</div>
-<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;    <span class="keywordflow">throw</span> <a class="code" href="structParseException.html">ParseException</a>(_node.<a class="code" href="classXMLNode.html#ad8152f1ab4f8720572c66397f74e282c">Where</a>(),</div>
-<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;        <span class="stringliteral">&quot;You must specify at least one sampler.&quot;</span>);</div>
-<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;  <span class="keywordflow">if</span>(totalP &gt; 1.000001)</div>
-<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;    <span class="keywordflow">throw</span> <a class="code" href="structParseException.html">ParseException</a>(_node.<a class="code" href="classXMLNode.html#ad8152f1ab4f8720572c66397f74e282c">Where</a>(),</div>
-<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;        <span class="stringliteral">&quot;Total probability greater than 1.&quot;</span>);</div>
-<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;  <span class="keywordflow">if</span>(totalP &lt; 0.999999) {</div>
-<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;    cerr &lt;&lt; <span class="stringliteral">&quot;Warning: MixSampler total probability less than 1.&quot;</span></div>
-<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;      <span class="stringliteral">&quot;Adding extra probability to last sampler.&quot;</span> &lt;&lt; endl;</div>
-<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;    m_samplers[m_samplers.size()-1].second = 1.0;</div>
-<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;  }</div>
-<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;}</div>
-<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160; </div>
-<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;<span class="keywordtype">void</span></div>
-<div class="line"><a name="l00083"></a><span class="lineno"><a class="line" href="classMixSampler.html#a3a8c9dcd24ea15fb0197856aba5a86a4">   83</a></span>&#160;<a class="code" href="classMixSampler.html#a3a8c9dcd24ea15fb0197856aba5a86a4">MixSampler&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;<a class="code" href="classMixSampler.html#a3a8c9dcd24ea15fb0197856aba5a86a4">Print</a>(ostream&amp; _os)<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;  <a class="code" href="classMPBaseObject.html#a4d111a2d7d53d243cdd4cd89ffa65212">SamplerMethod&lt;MPTraits&gt;::Print</a>(_os);</div>
-<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;  <span class="keywordflow">for</span>(<span class="keyword">auto</span>&amp;  sampler : m_samplers)</div>
-<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;    cout &lt;&lt; <span class="stringliteral">&quot;\tSampler = &quot;</span> &lt;&lt; sampler.first</div>
-<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;      &lt;&lt; <span class="stringliteral">&quot;, cumulative probability = &quot;</span> &lt;&lt; sampler.second &lt;&lt; endl;</div>
-<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;}</div>
-<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160; </div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;<span class="comment">// Attempts to sample, returns true if successful</span></div>
-<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;<span class="keywordtype">bool</span></div>
-<div class="line"><a name="l00094"></a><span class="lineno"><a class="line" href="classMixSampler.html#a9aac788928e093b88574e044d0caf767">   94</a></span>&#160;<a class="code" href="classMixSampler.html#a9aac788928e093b88574e044d0caf767">MixSampler&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;<a class="code" href="classMixSampler.html#a9aac788928e093b88574e044d0caf767">Sampler</a>(<a class="code" href="classMixSampler.html#a7b7ebe0aeb20d312a84c34ad886fe901">CfgType</a>&amp; _cfg, <span class="keyword">const</span> <a class="code" href="classBoundary.html">Boundary</a>* <span class="keyword">const</span> _boundary,</div>
-<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;    vector&lt;CfgType&gt;&amp; _result, vector&lt;CfgType&gt;&amp; _collision) {</div>
-<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;  <span class="keywordtype">double</span> rand = <a class="code" href="MPUtils_8cpp.html#a2cb0a8e0fa761380b41b3b66b5f76d48">DRand</a>();</div>
-<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;  <span class="keywordtype">int</span> samplerIndex = 0;</div>
-<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;  <span class="keywordflow">for</span>(<span class="keyword">auto</span>&amp;  sampler : m_samplers){</div>
-<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;    <span class="keywordflow">if</span>(rand &lt; sampler.second){</div>
-<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;      m_samplerLabels = make_pair(this-&gt;GetSampler(sampler.first)-&gt;GetNameAndLabel(), samplerIndex);</div>
-<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;      <span class="keywordflow">return</span> this-&gt;GetSampler(sampler.first)-&gt;</div>
-<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;        Sampler(_cfg, _boundary, _result, _collision);</div>
-<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;    }</div>
-<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160; </div>
-<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;    samplerIndex = samplerIndex + 1;</div>
-<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;  }</div>
-<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;  <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;}</div>
-<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160; </div>
-<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="ttc" id="aMPUtils_8cpp_html_a2cb0a8e0fa761380b41b3b66b5f76d48"><div class="ttname"><a href="MPUtils_8cpp.html#a2cb0a8e0fa761380b41b3b66b5f76d48">DRand</a></div><div class="ttdeci">double DRand()</div><div class="ttdef"><b>Definition:</b> MPUtils.cpp:8</div></div>
+<div class="line"><a name="l00025"></a><span class="lineno"><a class="line" href="classMixSampler.html#afe2c7f7d8e961d06869b2862b8730ad1">   25</a></span>&#160;    std::vector&lt;pair &lt;string, double&gt; &gt; <a class="code" href="classMixSampler.html#afe2c7f7d8e961d06869b2862b8730ad1">m_samplers</a>; <span class="comment">// Stores method label with cumulative probability</span></div>
+<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160; </div>
+<div class="line"><a name="l00027"></a><span class="lineno"><a class="line" href="classMixSampler.html#a03df9bf62f78363db177693581160501">   27</a></span>&#160;    pair&lt;string, int&gt; <a class="code" href="classMixSampler.html#a03df9bf62f78363db177693581160501">m_samplerLabels</a>; <span class="comment">// Stores label history and index</span></div>
+<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;};</div>
+<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160; </div>
+<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="ttc" id="aSamplerMethod_8h_html"><div class="ttname"><a href="SamplerMethod_8h.html">SamplerMethod.h</a></div></div>
 <div class="ttc" id="aclassBoundary_html"><div class="ttname"><a href="classBoundary.html">Boundary</a></div><div class="ttdef"><b>Definition:</b> Boundary.h:30</div></div>
-<div class="ttc" id="aclassMPBaseObject_html_a4d111a2d7d53d243cdd4cd89ffa65212"><div class="ttname"><a href="classMPBaseObject.html#a4d111a2d7d53d243cdd4cd89ffa65212">MPBaseObject::Print</a></div><div class="ttdeci">virtual void Print(std::ostream &amp;_os) const</div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:267</div></div>
-<div class="ttc" id="aclassMPBaseObject_html_ab59d82cd734f77fdc17eddb8517461da"><div class="ttname"><a href="classMPBaseObject.html#ab59d82cd734f77fdc17eddb8517461da">MPBaseObject::SetName</a></div><div class="ttdeci">void SetName(const std::string &amp;_s)</div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:229</div></div>
-<div class="ttc" id="aclassMPTraits_html"><div class="ttname"><a href="classMPTraits.html">MPTraits</a></div><div class="ttdoc">Defines available methods in the Motion Planning Universe for Cfg.</div><div class="ttdef"><b>Definition:</b> ParallelCfgTraits.h:144</div></div>
-<div class="ttc" id="aclassMPTraits_html_a1a5aab50ac12baaf6b22ff345c5ae138"><div class="ttname"><a href="classMPTraits.html#a1a5aab50ac12baaf6b22ff345c5ae138">MPTraits::CfgType</a></div><div class="ttdeci">C CfgType</div><div class="ttdef"><b>Definition:</b> CfgTraits.h:117</div></div>
-<div class="ttc" id="aclassMixSampler_html"><div class="ttname"><a href="classMixSampler.html">MixSampler</a></div><div class="ttdef"><b>Definition:</b> MixSampler.h:12</div></div>
-<div class="ttc" id="aclassMixSampler_html_a3a8c9dcd24ea15fb0197856aba5a86a4"><div class="ttname"><a href="classMixSampler.html#a3a8c9dcd24ea15fb0197856aba5a86a4">MixSampler::Print</a></div><div class="ttdeci">virtual void Print(ostream &amp;_os) const</div><div class="ttdef"><b>Definition:</b> MixSampler.h:84</div></div>
-<div class="ttc" id="aclassMixSampler_html_a4da4662b3b5df943983d528e37b06954"><div class="ttname"><a href="classMixSampler.html#a4da4662b3b5df943983d528e37b06954">MixSampler::m_samplers</a></div><div class="ttdeci">vector&lt; pair&lt; string, double &gt; &gt; m_samplers</div><div class="ttdef"><b>Definition:</b> MixSampler.h:29</div></div>
-<div class="ttc" id="aclassMixSampler_html_a6072825c643b1e1ba9fa1beb2bb28237"><div class="ttname"><a href="classMixSampler.html#a6072825c643b1e1ba9fa1beb2bb28237">MixSampler::m_samplerLabels</a></div><div class="ttdeci">pair&lt; string, int &gt; m_samplerLabels</div><div class="ttdef"><b>Definition:</b> MixSampler.h:31</div></div>
-<div class="ttc" id="aclassMixSampler_html_a7b7ebe0aeb20d312a84c34ad886fe901"><div class="ttname"><a href="classMixSampler.html#a7b7ebe0aeb20d312a84c34ad886fe901">MixSampler::CfgType</a></div><div class="ttdeci">MPTraits::CfgType CfgType</div><div class="ttdef"><b>Definition:</b> MixSampler.h:16</div></div>
-<div class="ttc" id="aclassMixSampler_html_a92050d3ac2bc148cae8bbd1878f36140"><div class="ttname"><a href="classMixSampler.html#a92050d3ac2bc148cae8bbd1878f36140">MixSampler::ParseXML</a></div><div class="ttdeci">void ParseXML(XMLNode &amp;_node)</div><div class="ttdef"><b>Definition:</b> MixSampler.h:51</div></div>
-<div class="ttc" id="aclassMixSampler_html_a9aac788928e093b88574e044d0caf767"><div class="ttname"><a href="classMixSampler.html#a9aac788928e093b88574e044d0caf767">MixSampler::Sampler</a></div><div class="ttdeci">virtual bool Sampler(CfgType &amp;_cfg, const Boundary *const _boundary, vector&lt; CfgType &gt; &amp;_result, vector&lt; CfgType &gt; &amp;_collision)</div><div class="ttdef"><b>Definition:</b> MixSampler.h:95</div></div>
-<div class="ttc" id="aclassMixSampler_html_adf14a571beb19fef9fd3c2e436b89cc4"><div class="ttname"><a href="classMixSampler.html#adf14a571beb19fef9fd3c2e436b89cc4">MixSampler::MixSampler</a></div><div class="ttdeci">MixSampler()</div><div class="ttdef"><b>Definition:</b> MixSampler.h:36</div></div>
-<div class="ttc" id="aclassSamplerMethod_html"><div class="ttname"><a href="classSamplerMethod.html">SamplerMethod</a></div><div class="ttdef"><b>Definition:</b> SamplerMethod.h:72</div></div>
+<div class="ttc" id="aclassCfg_html"><div class="ttname"><a href="classCfg.html">Cfg</a></div><div class="ttdef"><b>Definition:</b> Cfg.h:38</div></div>
+<div class="ttc" id="aclassMixSampler_html"><div class="ttname"><a href="classMixSampler.html">MixSampler</a></div><div class="ttdef"><b>Definition:</b> MixSampler.h:10</div></div>
+<div class="ttc" id="aclassMixSampler_html_a03df9bf62f78363db177693581160501"><div class="ttname"><a href="classMixSampler.html#a03df9bf62f78363db177693581160501">MixSampler::m_samplerLabels</a></div><div class="ttdeci">pair&lt; string, int &gt; m_samplerLabels</div><div class="ttdef"><b>Definition:</b> MixSampler.h:27</div></div>
+<div class="ttc" id="aclassMixSampler_html_a4cec06a1eb6655f8e2e89d0bd12bdca5"><div class="ttname"><a href="classMixSampler.html#a4cec06a1eb6655f8e2e89d0bd12bdca5">MixSampler::Print</a></div><div class="ttdeci">virtual void Print(ostream &amp;_os) const</div><div class="ttdef"><b>Definition:</b> MixSampler.cpp:55</div></div>
+<div class="ttc" id="aclassMixSampler_html_a553c304242ddda50fefea670b4fcc4db"><div class="ttname"><a href="classMixSampler.html#a553c304242ddda50fefea670b4fcc4db">MixSampler::ParseXML</a></div><div class="ttdeci">void ParseXML(XMLNode &amp;_node)</div><div class="ttdef"><b>Definition:</b> MixSampler.cpp:22</div></div>
+<div class="ttc" id="aclassMixSampler_html_a8ad152189903216e1dae2097dd22538b"><div class="ttname"><a href="classMixSampler.html#a8ad152189903216e1dae2097dd22538b">MixSampler::Sampler</a></div><div class="ttdeci">virtual bool Sampler(Cfg &amp;_cfg, const Boundary *const _boundary, vector&lt; Cfg &gt; &amp;_result, vector&lt; Cfg &gt; &amp;_collision)</div><div class="ttdef"><b>Definition:</b> MixSampler.cpp:66</div></div>
+<div class="ttc" id="aclassMixSampler_html_aede3cd7d64edd74614c3c00b4dbd9a11"><div class="ttname"><a href="classMixSampler.html#aede3cd7d64edd74614c3c00b4dbd9a11">MixSampler::MixSampler</a></div><div class="ttdeci">MixSampler()</div><div class="ttdef"><b>Definition:</b> MixSampler.cpp:7</div></div>
+<div class="ttc" id="aclassMixSampler_html_afe2c7f7d8e961d06869b2862b8730ad1"><div class="ttname"><a href="classMixSampler.html#afe2c7f7d8e961d06869b2862b8730ad1">MixSampler::m_samplers</a></div><div class="ttdeci">std::vector&lt; pair&lt; string, double &gt; &gt; m_samplers</div><div class="ttdef"><b>Definition:</b> MixSampler.h:25</div></div>
+<div class="ttc" id="aclassSamplerMethod_html"><div class="ttname"><a href="classSamplerMethod.html">SamplerMethod</a></div><div class="ttdef"><b>Definition:</b> SamplerMethod.h:70</div></div>
 <div class="ttc" id="aclassXMLNode_html"><div class="ttname"><a href="classXMLNode.html">XMLNode</a></div><div class="ttdef"><b>Definition:</b> XMLNode.h:27</div></div>
-<div class="ttc" id="aclassXMLNode_html_ad8152f1ab4f8720572c66397f74e282c"><div class="ttname"><a href="classXMLNode.html#ad8152f1ab4f8720572c66397f74e282c">XMLNode::Where</a></div><div class="ttdeci">std::string Where() const</div><div class="ttdef"><b>Definition:</b> XMLNode.cpp:205</div></div>
-<div class="ttc" id="astructParseException_html"><div class="ttname"><a href="structParseException.html">ParseException</a></div><div class="ttdef"><b>Definition:</b> PMPLExceptions.h:38</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

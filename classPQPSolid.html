@@ -291,7 +291,7 @@ Additional Inherited Members</h2></td></tr>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>True if _pt is inside _body. </dd></dl>
 <p>@TODO See if we can modify PQP_Collide to take const double arrays instead of just double arrays so we don't have to copy.</p>
-<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000065">Todo:</a></b></dt><dd>This can still fail. I.e., what if we collide with two entering and one leaving triangle, as if we shot straight past the tip of a tetrahedron with the seem exactly aligned with the starting point? We need to check <em>all</em> colocated points, not just a pair. On detection of a scrape (colocated and different type) we need to erase all of the colocated collisions. </dd></dl>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000067">Todo:</a></b></dt><dd>This can still fail. I.e., what if we collide with two entering and one leaving triangle, as if we shot straight past the tip of a tetrahedron with the seem exactly aligned with the starting point? We need to check <em>all</em> colocated points, not just a pair. On detection of a scrape (colocated and different type) we need to erase all of the colocated collisions. </dd></dl>
 
 <p>Reimplemented from <a class="el" href="classCollisionDetectionMethod.html#a3cc3e27640bddc3f7b2422b675db3e35">CollisionDetectionMethod</a>.</p>
 

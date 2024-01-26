@@ -1,7 +1,7 @@
-<map id="ScaledEuclideanDistance&lt; MPTraits &gt;" name="ScaledEuclideanDistance&lt; MPTraits &gt;">
-<area shape="rect" id="node1" title=" " alt="" coords="13,348,199,389"/>
-<area shape="rect" id="node2" href="$classEuclideanDistance.html" title=" " alt="" coords="29,259,183,300"/>
-<area shape="rect" id="node3" href="$classMinkowskiDistance.html" title=" " alt="" coords="27,169,185,211"/>
-<area shape="rect" id="node4" href="$classDistanceMetricMethod.html" title=" " alt="" coords="21,80,191,121"/>
-<area shape="rect" id="node5" href="$classMPBaseObject.html" title=" " alt="" coords="5,5,207,32"/>
+<map id="ScaledEuclideanDistance" name="ScaledEuclideanDistance">
+<area shape="rect" id="node1" title=" " alt="" coords="5,304,191,331"/>
+<area shape="rect" id="node2" href="$classEuclideanDistance.html" title=" " alt="" coords="27,229,169,256"/>
+<area shape="rect" id="node3" href="$classMinkowskiDistance.html" title=" " alt="" coords="24,155,172,181"/>
+<area shape="rect" id="node4" href="$classDistanceMetricMethod.html" title=" " alt="" coords="13,80,183,107"/>
+<area shape="rect" id="node5" href="$classMPBaseObject.html" title=" " alt="" coords="40,5,156,32"/>
 </map>

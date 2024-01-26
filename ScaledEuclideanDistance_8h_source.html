@@ -76,91 +76,43 @@ $(function() {
 <div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="EuclideanDistance_8h.html">EuclideanDistance.h</a>&quot;</span></div>
 <div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160; </div>
 <div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160; </div>
-<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00019"></a><span class="lineno"><a class="line" href="classScaledEuclideanDistance.html">   19</a></span>&#160;<span class="keyword">class </span><a class="code" href="classScaledEuclideanDistance.html">ScaledEuclideanDistance</a> : <span class="keyword">virtual</span> <span class="keyword">public</span> <a class="code" href="classEuclideanDistance.html">EuclideanDistance</a>&lt;MPTraits&gt; {</div>
-<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160; </div>
-<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;  <span class="keyword">public</span>:</div>
-<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160; </div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160; </div>
-<div class="line"><a name="l00026"></a><span class="lineno"><a class="line" href="classScaledEuclideanDistance.html#a21c1c9a81c0fba47a1525555df14a33a">   26</a></span>&#160;    <span class="keyword">typedef</span> <span class="keyword">typename</span> <a class="code" href="classMPTraits.html#a1a5aab50ac12baaf6b22ff345c5ae138">MPTraits::CfgType</a> <a class="code" href="classScaledEuclideanDistance.html#a21c1c9a81c0fba47a1525555df14a33a">CfgType</a>;</div>
-<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160; </div>
-<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160; </div>
-<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;    <a class="code" href="classScaledEuclideanDistance.html#acc72eae28f3e081fc4c9545e735ab3ba">ScaledEuclideanDistance</a>();</div>
-<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;    <a class="code" href="classScaledEuclideanDistance.html#acc72eae28f3e081fc4c9545e735ab3ba">ScaledEuclideanDistance</a>(<a class="code" href="classXMLNode.html">XMLNode</a>&amp; _node);</div>
-<div class="line"><a name="l00034"></a><span class="lineno"><a class="line" href="classScaledEuclideanDistance.html#a69e4cd5ed8b94ee31a6868a0a9aa23e7">   34</a></span>&#160;    <span class="keyword">virtual</span> <a class="code" href="classScaledEuclideanDistance.html#a69e4cd5ed8b94ee31a6868a0a9aa23e7">~ScaledEuclideanDistance</a>() = <span class="keywordflow">default</span>;</div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160; </div>
-<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160; </div>
-<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;    <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="classScaledEuclideanDistance.html#a4c48d6095c71c15ac2b3e51da74bae95">Print</a>(ostream&amp; _os) <span class="keyword">const override</span>;</div>
-<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160; </div>
-<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160; </div>
-<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;    <span class="keyword">virtual</span> <span class="keywordtype">double</span> <a class="code" href="classScaledEuclideanDistance.html#a878ffb178248c6ddbec4ecb987d36e69">Distance</a>(<span class="keyword">const</span> <a class="code" href="classDistanceMetricMethod.html#a52c4bb83b6009a209c7302918789d6fb">CfgType</a>&amp; _c1, <span class="keyword">const</span> <a class="code" href="classDistanceMetricMethod.html#a52c4bb83b6009a209c7302918789d6fb">CfgType</a>&amp; _c2) <span class="keyword">override</span>;</div>
-<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160; </div>
-<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160; </div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;  <span class="keyword">protected</span>:</div>
-<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160; </div>
-<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160; </div>
-<div class="line"><a name="l00055"></a><span class="lineno"><a class="line" href="classScaledEuclideanDistance.html#a354a52bf82fff050e67db00bdc9465fc">   55</a></span>&#160;    <span class="keywordtype">double</span> <a class="code" href="classScaledEuclideanDistance.html#a354a52bf82fff050e67db00bdc9465fc">m_scale</a>{.5}; </div>
-<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160; </div>
-<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;};</div>
-<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160; </div>
-<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;<span class="comment">/*------------------------------- Construction -------------------------------*/</span></div>
-<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160; </div>
-<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00063"></a><span class="lineno"><a class="line" href="classScaledEuclideanDistance.html#acc72eae28f3e081fc4c9545e735ab3ba">   63</a></span>&#160;<a class="code" href="classScaledEuclideanDistance.html#acc72eae28f3e081fc4c9545e735ab3ba">ScaledEuclideanDistance&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;<a class="code" href="classScaledEuclideanDistance.html#acc72eae28f3e081fc4c9545e735ab3ba">ScaledEuclideanDistance</a>() : <a class="code" href="classEuclideanDistance.html">EuclideanDistance</a>&lt;<a class="code" href="classMPTraits.html">MPTraits</a>&gt;() {</div>
-<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;  this-&gt;<a class="code" href="classMPBaseObject.html#ab59d82cd734f77fdc17eddb8517461da">SetName</a>(<span class="stringliteral">&quot;ScaledEuclidean&quot;</span>);</div>
-<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;}</div>
-<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160; </div>
-<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160; </div>
-<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00070"></a><span class="lineno"><a class="line" href="classScaledEuclideanDistance.html#a7ad534db169abe9746858b5f47ae2631">   70</a></span>&#160;<a class="code" href="classScaledEuclideanDistance.html#acc72eae28f3e081fc4c9545e735ab3ba">ScaledEuclideanDistance&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;<a class="code" href="classScaledEuclideanDistance.html#acc72eae28f3e081fc4c9545e735ab3ba">ScaledEuclideanDistance</a>(<a class="code" href="classXMLNode.html">XMLNode</a>&amp; _node) : <a class="code" href="classDistanceMetricMethod.html">DistanceMetricMethod</a>&lt;<a class="code" href="classMPTraits.html">MPTraits</a>&gt;(_node) {</div>
-<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;  this-&gt;<a class="code" href="classMPBaseObject.html#ab59d82cd734f77fdc17eddb8517461da">SetName</a>(<span class="stringliteral">&quot;ScaledEuclidean&quot;</span>);</div>
-<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;  <a class="code" href="classScaledEuclideanDistance.html#a354a52bf82fff050e67db00bdc9465fc">m_scale</a> = _node.<a class="code" href="classXMLNode.html#af0e81db89948e52fdee6bf2bf029037f">Read</a>(<span class="stringliteral">&quot;scale&quot;</span>, <span class="keyword">false</span>, <a class="code" href="classScaledEuclideanDistance.html#a354a52bf82fff050e67db00bdc9465fc">m_scale</a>, 0.0, 1.0, <span class="stringliteral">&quot;scale factor&quot;</span>);</div>
-<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;}</div>
-<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160; </div>
-<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;<span class="comment">/*--------------------------- MPBaseObject Overrides -------------------------*/</span></div>
-<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160; </div>
-<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;<span class="keywordtype">void</span></div>
-<div class="line"><a name="l00080"></a><span class="lineno"><a class="line" href="classScaledEuclideanDistance.html#a4c48d6095c71c15ac2b3e51da74bae95">   80</a></span>&#160;<a class="code" href="classScaledEuclideanDistance.html#a4c48d6095c71c15ac2b3e51da74bae95">ScaledEuclideanDistance&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;<a class="code" href="classScaledEuclideanDistance.html#a4c48d6095c71c15ac2b3e51da74bae95">Print</a>(ostream&amp; _os)<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;  <a class="code" href="classMinkowskiDistance.html#a0573b617a969785d73b8ae84e92e44c1">EuclideanDistance&lt;MPTraits&gt;::Print</a>(_os);</div>
-<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;  _os &lt;&lt; <span class="stringliteral">&quot;\tscale = &quot;</span> &lt;&lt; m_scale &lt;&lt; endl;</div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;}</div>
-<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160; </div>
-<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;<span class="comment">/*----------------------------- Distance Interface ---------------------------*/</span></div>
-<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160; </div>
-<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;<span class="keywordtype">double</span></div>
-<div class="line"><a name="l00090"></a><span class="lineno"><a class="line" href="classScaledEuclideanDistance.html#a878ffb178248c6ddbec4ecb987d36e69">   90</a></span>&#160;<a class="code" href="classScaledEuclideanDistance.html#a878ffb178248c6ddbec4ecb987d36e69">ScaledEuclideanDistance&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;<a class="code" href="classScaledEuclideanDistance.html#a878ffb178248c6ddbec4ecb987d36e69">Distance</a>(<span class="keyword">const</span> <a class="code" href="classDistanceMetricMethod.html#a52c4bb83b6009a209c7302918789d6fb">CfgType</a>&amp; _c1, <span class="keyword">const</span> <a class="code" href="classDistanceMetricMethod.html#a52c4bb83b6009a209c7302918789d6fb">CfgType</a>&amp; _c2) {</div>
-<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;  <span class="keyword">const</span> <a class="code" href="classDistanceMetricMethod.html#a52c4bb83b6009a209c7302918789d6fb">CfgType</a> c = _c2 - _c1;</div>
-<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;  </div>
-<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;  <span class="keywordflow">return</span> pow(m_scale * this-&gt;PositionDistance(c)</div>
-<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;      + (1 - m_scale) * this-&gt;OrientationDistance(c), this-&gt;m_r3);</div>
-<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;}</div>
-<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160; </div>
-<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;<span class="comment">/*----------------------------------------------------------------------------*/</span></div>
-<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160; </div>
-<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00018"></a><span class="lineno"><a class="line" href="classScaledEuclideanDistance.html">   18</a></span>&#160;<span class="keyword">class </span><a class="code" href="classScaledEuclideanDistance.html">ScaledEuclideanDistance</a> : <span class="keyword">virtual</span> <span class="keyword">public</span> <a class="code" href="classEuclideanDistance.html">EuclideanDistance</a> {</div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160; </div>
+<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;  <span class="keyword">public</span>:</div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160; </div>
+<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160; </div>
+<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;    </div>
+<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160; </div>
+<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160; </div>
+<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;    <a class="code" href="classScaledEuclideanDistance.html#ad688bb037009ba7f3a54412440e0ae13">ScaledEuclideanDistance</a>();</div>
+<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;    <a class="code" href="classScaledEuclideanDistance.html#ad688bb037009ba7f3a54412440e0ae13">ScaledEuclideanDistance</a>(<a class="code" href="classXMLNode.html">XMLNode</a>&amp; _node);</div>
+<div class="line"><a name="l00033"></a><span class="lineno"><a class="line" href="classScaledEuclideanDistance.html#a4482077250a2e17212b57f06c1e357bc">   33</a></span>&#160;    <span class="keyword">virtual</span> <a class="code" href="classScaledEuclideanDistance.html#a4482077250a2e17212b57f06c1e357bc">~ScaledEuclideanDistance</a>() = <span class="keywordflow">default</span>;</div>
+<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160; </div>
+<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160; </div>
+<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;    <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="classScaledEuclideanDistance.html#a920498b7e8360a8fe5cc6e0c63ace8d7">Print</a>(ostream&amp; _os) <span class="keyword">const override</span>;</div>
+<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160; </div>
+<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160; </div>
+<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;    <span class="keyword">virtual</span> <span class="keywordtype">double</span> <a class="code" href="classScaledEuclideanDistance.html#ac4101438ea9bcd023a654e62cb63eeb3">Distance</a>(<span class="keyword">const</span> <a class="code" href="classCfg.html">Cfg</a>&amp; _c1, <span class="keyword">const</span> <a class="code" href="classCfg.html">Cfg</a>&amp; _c2) <span class="keyword">override</span>;</div>
+<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160; </div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160; </div>
+<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;  <span class="keyword">protected</span>:</div>
+<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160; </div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160; </div>
+<div class="line"><a name="l00054"></a><span class="lineno"><a class="line" href="classScaledEuclideanDistance.html#a71f4216ae73a9d4e41a8442af5e591ea">   54</a></span>&#160;    <span class="keywordtype">double</span> <a class="code" href="classScaledEuclideanDistance.html#a71f4216ae73a9d4e41a8442af5e591ea">m_scale</a>{.5}; </div>
+<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160; </div>
+<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;};</div>
+<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160; </div>
+<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="ttc" id="aEuclideanDistance_8h_html"><div class="ttname"><a href="EuclideanDistance_8h.html">EuclideanDistance.h</a></div></div>
-<div class="ttc" id="aclassDistanceMetricMethod_html"><div class="ttname"><a href="classDistanceMetricMethod.html">DistanceMetricMethod</a></div><div class="ttdef"><b>Definition:</b> DistanceMetricMethod.h:34</div></div>
-<div class="ttc" id="aclassDistanceMetricMethod_html_a52c4bb83b6009a209c7302918789d6fb"><div class="ttname"><a href="classDistanceMetricMethod.html#a52c4bb83b6009a209c7302918789d6fb">DistanceMetricMethod::CfgType</a></div><div class="ttdeci">MPTraits::CfgType CfgType</div><div class="ttdef"><b>Definition:</b> DistanceMetricMethod.h:41</div></div>
-<div class="ttc" id="aclassEuclideanDistance_html"><div class="ttname"><a href="classEuclideanDistance.html">EuclideanDistance</a></div><div class="ttdef"><b>Definition:</b> EuclideanDistance.h:15</div></div>
-<div class="ttc" id="aclassMPBaseObject_html_ab59d82cd734f77fdc17eddb8517461da"><div class="ttname"><a href="classMPBaseObject.html#ab59d82cd734f77fdc17eddb8517461da">MPBaseObject::SetName</a></div><div class="ttdeci">void SetName(const std::string &amp;_s)</div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:229</div></div>
-<div class="ttc" id="aclassMPTraits_html"><div class="ttname"><a href="classMPTraits.html">MPTraits</a></div><div class="ttdoc">Defines available methods in the Motion Planning Universe for Cfg.</div><div class="ttdef"><b>Definition:</b> ParallelCfgTraits.h:144</div></div>
-<div class="ttc" id="aclassMPTraits_html_a1a5aab50ac12baaf6b22ff345c5ae138"><div class="ttname"><a href="classMPTraits.html#a1a5aab50ac12baaf6b22ff345c5ae138">MPTraits::CfgType</a></div><div class="ttdeci">C CfgType</div><div class="ttdef"><b>Definition:</b> CfgTraits.h:117</div></div>
-<div class="ttc" id="aclassMinkowskiDistance_html_a0573b617a969785d73b8ae84e92e44c1"><div class="ttname"><a href="classMinkowskiDistance.html#a0573b617a969785d73b8ae84e92e44c1">MinkowskiDistance::Print</a></div><div class="ttdeci">virtual void Print(std::ostream &amp;_os) const</div><div class="ttdef"><b>Definition:</b> MinkowskiDistance.h:110</div></div>
-<div class="ttc" id="aclassScaledEuclideanDistance_html"><div class="ttname"><a href="classScaledEuclideanDistance.html">ScaledEuclideanDistance</a></div><div class="ttdef"><b>Definition:</b> ScaledEuclideanDistance.h:19</div></div>
-<div class="ttc" id="aclassScaledEuclideanDistance_html_a21c1c9a81c0fba47a1525555df14a33a"><div class="ttname"><a href="classScaledEuclideanDistance.html#a21c1c9a81c0fba47a1525555df14a33a">ScaledEuclideanDistance::CfgType</a></div><div class="ttdeci">MPTraits::CfgType CfgType</div><div class="ttdef"><b>Definition:</b> ScaledEuclideanDistance.h:26</div></div>
-<div class="ttc" id="aclassScaledEuclideanDistance_html_a354a52bf82fff050e67db00bdc9465fc"><div class="ttname"><a href="classScaledEuclideanDistance.html#a354a52bf82fff050e67db00bdc9465fc">ScaledEuclideanDistance::m_scale</a></div><div class="ttdeci">double m_scale</div><div class="ttdoc">The ratio of positional to rotational weighting.</div><div class="ttdef"><b>Definition:</b> ScaledEuclideanDistance.h:55</div></div>
-<div class="ttc" id="aclassScaledEuclideanDistance_html_a4c48d6095c71c15ac2b3e51da74bae95"><div class="ttname"><a href="classScaledEuclideanDistance.html#a4c48d6095c71c15ac2b3e51da74bae95">ScaledEuclideanDistance::Print</a></div><div class="ttdeci">virtual void Print(ostream &amp;_os) const override</div><div class="ttdef"><b>Definition:</b> ScaledEuclideanDistance.h:81</div></div>
-<div class="ttc" id="aclassScaledEuclideanDistance_html_a69e4cd5ed8b94ee31a6868a0a9aa23e7"><div class="ttname"><a href="classScaledEuclideanDistance.html#a69e4cd5ed8b94ee31a6868a0a9aa23e7">ScaledEuclideanDistance::~ScaledEuclideanDistance</a></div><div class="ttdeci">virtual ~ScaledEuclideanDistance()=default</div></div>
-<div class="ttc" id="aclassScaledEuclideanDistance_html_a878ffb178248c6ddbec4ecb987d36e69"><div class="ttname"><a href="classScaledEuclideanDistance.html#a878ffb178248c6ddbec4ecb987d36e69">ScaledEuclideanDistance::Distance</a></div><div class="ttdeci">virtual double Distance(const CfgType &amp;_c1, const CfgType &amp;_c2) override</div><div class="ttdef"><b>Definition:</b> ScaledEuclideanDistance.h:91</div></div>
-<div class="ttc" id="aclassScaledEuclideanDistance_html_acc72eae28f3e081fc4c9545e735ab3ba"><div class="ttname"><a href="classScaledEuclideanDistance.html#acc72eae28f3e081fc4c9545e735ab3ba">ScaledEuclideanDistance::ScaledEuclideanDistance</a></div><div class="ttdeci">ScaledEuclideanDistance()</div><div class="ttdef"><b>Definition:</b> ScaledEuclideanDistance.h:64</div></div>
+<div class="ttc" id="aclassCfg_html"><div class="ttname"><a href="classCfg.html">Cfg</a></div><div class="ttdef"><b>Definition:</b> Cfg.h:38</div></div>
+<div class="ttc" id="aclassEuclideanDistance_html"><div class="ttname"><a href="classEuclideanDistance.html">EuclideanDistance</a></div><div class="ttdef"><b>Definition:</b> EuclideanDistance.h:14</div></div>
+<div class="ttc" id="aclassScaledEuclideanDistance_html"><div class="ttname"><a href="classScaledEuclideanDistance.html">ScaledEuclideanDistance</a></div><div class="ttdef"><b>Definition:</b> ScaledEuclideanDistance.h:18</div></div>
+<div class="ttc" id="aclassScaledEuclideanDistance_html_a4482077250a2e17212b57f06c1e357bc"><div class="ttname"><a href="classScaledEuclideanDistance.html#a4482077250a2e17212b57f06c1e357bc">ScaledEuclideanDistance::~ScaledEuclideanDistance</a></div><div class="ttdeci">virtual ~ScaledEuclideanDistance()=default</div></div>
+<div class="ttc" id="aclassScaledEuclideanDistance_html_a71f4216ae73a9d4e41a8442af5e591ea"><div class="ttname"><a href="classScaledEuclideanDistance.html#a71f4216ae73a9d4e41a8442af5e591ea">ScaledEuclideanDistance::m_scale</a></div><div class="ttdeci">double m_scale</div><div class="ttdoc">The ratio of positional to rotational weighting.</div><div class="ttdef"><b>Definition:</b> ScaledEuclideanDistance.h:54</div></div>
+<div class="ttc" id="aclassScaledEuclideanDistance_html_a920498b7e8360a8fe5cc6e0c63ace8d7"><div class="ttname"><a href="classScaledEuclideanDistance.html#a920498b7e8360a8fe5cc6e0c63ace8d7">ScaledEuclideanDistance::Print</a></div><div class="ttdeci">virtual void Print(ostream &amp;_os) const override</div><div class="ttdef"><b>Definition:</b> ScaledEuclideanDistance.cpp:21</div></div>
+<div class="ttc" id="aclassScaledEuclideanDistance_html_ac4101438ea9bcd023a654e62cb63eeb3"><div class="ttname"><a href="classScaledEuclideanDistance.html#ac4101438ea9bcd023a654e62cb63eeb3">ScaledEuclideanDistance::Distance</a></div><div class="ttdeci">virtual double Distance(const Cfg &amp;_c1, const Cfg &amp;_c2) override</div><div class="ttdef"><b>Definition:</b> ScaledEuclideanDistance.cpp:30</div></div>
+<div class="ttc" id="aclassScaledEuclideanDistance_html_ad688bb037009ba7f3a54412440e0ae13"><div class="ttname"><a href="classScaledEuclideanDistance.html#ad688bb037009ba7f3a54412440e0ae13">ScaledEuclideanDistance::ScaledEuclideanDistance</a></div><div class="ttdeci">ScaledEuclideanDistance()</div><div class="ttdef"><b>Definition:</b> ScaledEuclideanDistance.cpp:6</div></div>
 <div class="ttc" id="aclassXMLNode_html"><div class="ttname"><a href="classXMLNode.html">XMLNode</a></div><div class="ttdef"><b>Definition:</b> XMLNode.h:27</div></div>
-<div class="ttc" id="aclassXMLNode_html_af0e81db89948e52fdee6bf2bf029037f"><div class="ttname"><a href="classXMLNode.html#af0e81db89948e52fdee6bf2bf029037f">XMLNode::Read</a></div><div class="ttdeci">T Read(const std::string &amp;_name, const bool _req, const T &amp;_default, const T &amp;_min, const T &amp;_max, const std::string &amp;_desc)</div><div class="ttdef"><b>Definition:</b> XMLNode.h:267</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

@@ -73,190 +73,78 @@ $(function() {
 <a href="PathModifierMethod_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="preprocessor">#ifndef PATH_MODIFIER_METHOD_H_</span></div>
 <div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="preprocessor">#define PATH_MODIFIER_METHOD_H_</span></div>
 <div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160; </div>
-<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="MPUtils_8h.html">Utilities/MPUtils.h</a>&quot;</span></div>
-<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="LPOutput_8h.html">MPLibrary/LocalPlanners/LPOutput.h</a>&quot;</span></div>
-<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160; </div>
-<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00015"></a><span class="lineno"><a class="line" href="classPathModifierMethod.html">   15</a></span>&#160;<span class="keyword">class </span><a class="code" href="classPathModifierMethod.html">PathModifierMethod</a> : <span class="keyword">public</span> <a class="code" href="classMPBaseObject.html">MPBaseObject</a>&lt;MPTraits&gt; {</div>
+<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="MPBaseObject_8h.html">MPLibrary/MPBaseObject.h</a>&quot;</span></div>
+<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="MPUtils_8h.html">Utilities/MPUtils.h</a>&quot;</span></div>
+<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="LPOutput_8h.html">MPLibrary/LocalPlanners/LPOutput.h</a>&quot;</span></div>
+<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160; </div>
+<div class="line"><a name="l00015"></a><span class="lineno"><a class="line" href="classPathModifierMethod.html">   15</a></span>&#160;<span class="keyword">class </span><a class="code" href="classPathModifierMethod.html">PathModifierMethod</a> : <span class="keyword">public</span> <a class="code" href="classMPBaseObject.html">MPBaseObject</a> {</div>
 <div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160; </div>
 <div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;  <span class="keyword">public</span>:</div>
 <div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160; </div>
 <div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160; </div>
-<div class="line"><a name="l00022"></a><span class="lineno"><a class="line" href="classPathModifierMethod.html#a1384044e7a1269a8f2175146d17c8ae2">   22</a></span>&#160;    <span class="keyword">typedef</span> <span class="keyword">typename</span> <a class="code" href="classMPTraits.html#a1a5aab50ac12baaf6b22ff345c5ae138">MPTraits::CfgType</a>      <a class="code" href="classPathModifierMethod.html#a1384044e7a1269a8f2175146d17c8ae2">CfgType</a>;</div>
-<div class="line"><a name="l00023"></a><span class="lineno"><a class="line" href="classPathModifierMethod.html#a0e8d6bcd4f8751105e42c00feed7ba44">   23</a></span>&#160;    <span class="keyword">typedef</span> <span class="keyword">typename</span> <a class="code" href="classGenericStateGraph.html">MPTraits::RoadmapType</a>  <a class="code" href="classPathModifierMethod.html#a0e8d6bcd4f8751105e42c00feed7ba44">RoadmapType</a>;</div>
-<div class="line"><a name="l00024"></a><span class="lineno"><a class="line" href="classPathModifierMethod.html#af2425938c8a301fed304c51b425a8c54">   24</a></span>&#160;    <span class="keyword">typedef</span> <span class="keyword">typename</span> <a class="code" href="classGenericStateGraph.html#a337a1247796cb9bf56fbe6eb2b9497d2">RoadmapType::VID</a>       <a class="code" href="classPathModifierMethod.html#af2425938c8a301fed304c51b425a8c54">VID</a>;</div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160; </div>
-<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160; </div>
-<div class="line"><a name="l00030"></a><span class="lineno"><a class="line" href="classPathModifierMethod.html#aa6e78ecc2b2934682c76c0ed6c52c6ec">   30</a></span>&#160;    <a class="code" href="classPathModifierMethod.html#aa6e78ecc2b2934682c76c0ed6c52c6ec">PathModifierMethod</a>() = <span class="keywordflow">default</span>;</div>
-<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160; </div>
-<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;    <a class="code" href="classPathModifierMethod.html#aa6e78ecc2b2934682c76c0ed6c52c6ec">PathModifierMethod</a>(<a class="code" href="classXMLNode.html">XMLNode</a>&amp; _node);</div>
-<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160; </div>
-<div class="line"><a name="l00034"></a><span class="lineno"><a class="line" href="classPathModifierMethod.html#a6211a44012bb253e521a05d0cfb6b874">   34</a></span>&#160;    <span class="keyword">virtual</span> <a class="code" href="classPathModifierMethod.html#a6211a44012bb253e521a05d0cfb6b874">~PathModifierMethod</a>() = <span class="keywordflow">default</span>;</div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160; </div>
-<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160; </div>
-<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;    <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="classPathModifierMethod.html#a63ceb2493a7d90b5dd32329260a36e99">Print</a>(ostream&amp; _os) <span class="keyword">const override</span>;</div>
-<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160; </div>
-<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160; </div>
-<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;    <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="classPathModifierMethod.html#a814a36e8820844d5e075f53f57282812">Modify</a>(vector&lt;CfgType&gt;&amp; _path,</div>
-<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;        vector&lt;CfgType&gt;&amp; _newPath);</div>
-<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160; </div>
-<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;    <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="classPathModifierMethod.html#a814a36e8820844d5e075f53f57282812">Modify</a>(<a class="code" href="classGenericStateGraph.html">RoadmapType</a>* _graph, vector&lt;CfgType&gt;&amp; _path,</div>
-<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;                        vector&lt;CfgType&gt;&amp; _newPath);</div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160; </div>
-<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;  <span class="keyword">protected</span>:</div>
-<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160; </div>
-<div class="line"><a name="l00072"></a><span class="lineno"><a class="line" href="classPathModifierMethod.html#ab6ab7f5502c6704c8d535892315a775f">   72</a></span>&#160;    <span class="keyword">virtual</span> <span class="keywordtype">bool</span> <a class="code" href="classPathModifierMethod.html#ab6ab7f5502c6704c8d535892315a775f">ModifyImpl</a>(<a class="code" href="classGenericStateGraph.html">RoadmapType</a>* _graph, vector&lt;CfgType&gt;&amp; _path,</div>
-<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;        vector&lt;CfgType&gt;&amp; _newPath) = 0;</div>
-<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160; </div>
-<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="classPathModifierMethod.html#ae1b75f7344b2647636c33df1d0626d2a">AddToPath</a>(vector&lt;CfgType&gt;&amp; _path, <a class="code" href="structLPOutput.html">LPOutput&lt;MPTraits&gt;</a>* _lpOutput,</div>
-<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;        <a class="code" href="classPathModifierMethod.html#a1384044e7a1269a8f2175146d17c8ae2">CfgType</a>&amp; _end);</div>
-<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160; </div>
-<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;    vector&lt;VID&gt; <a class="code" href="classPathModifierMethod.html#a0f14e6b2a7f3fe4c26fca1afa21b286f">GetPathVIDs</a>(vector&lt;CfgType&gt;&amp; _path, <a class="code" href="classGenericStateGraph.html">RoadmapType</a>* _graph);</div>
-<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160; </div>
-<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="classPathModifierMethod.html#ab90aa451e3ae93623c025b7a3b6ee41c">RemoveBranches</a>(<span class="keyword">const</span> <span class="keywordtype">string</span>&amp; _dmLabel, vector&lt;CfgType&gt;&amp; _path,</div>
-<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;        vector&lt;CfgType&gt;&amp; _newPath);</div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160; </div>
-<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;  <span class="keyword">private</span>:</div>
-<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160; </div>
-<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;    <span class="keywordtype">void</span> OutputPath(vector&lt;CfgType&gt;&amp; _path);</div>
-<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160; </div>
-<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160; </div>
-<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;    <span class="keywordtype">string</span> m_pathFile; </div>
-<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160; </div>
-<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;};</div>
-<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160; </div>
-<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;<span class="comment">/*------------------------------ Construction --------------------------------*/</span></div>
-<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160; </div>
-<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00110"></a><span class="lineno"><a class="line" href="classPathModifierMethod.html#a53d03da942aea3018dd7b6f7eee98551">  110</a></span>&#160;<a class="code" href="classPathModifierMethod.html#aa6e78ecc2b2934682c76c0ed6c52c6ec">PathModifierMethod&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;<a class="code" href="classPathModifierMethod.html#aa6e78ecc2b2934682c76c0ed6c52c6ec">PathModifierMethod</a>(<a class="code" href="classXMLNode.html">XMLNode</a>&amp; _node) : <a class="code" href="classMPBaseObject.html">MPBaseObject</a>&lt;<a class="code" href="classMPTraits.html">MPTraits</a>&gt;(_node) {</div>
-<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;  m_pathFile = _node.<a class="code" href="classXMLNode.html#af0e81db89948e52fdee6bf2bf029037f">Read</a>(<span class="stringliteral">&quot;pathFile&quot;</span>, <span class="keyword">false</span>, <span class="stringliteral">&quot;&quot;</span>, <span class="stringliteral">&quot;Smoothed path filename&quot;</span>);</div>
-<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;}</div>
-<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160; </div>
-<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;<span class="comment">/*------------------------- MPBaseObject Overrides ---------------------------*/</span></div>
-<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160; </div>
-<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;<span class="keywordtype">void</span></div>
-<div class="line"><a name="l00119"></a><span class="lineno"><a class="line" href="classPathModifierMethod.html#a63ceb2493a7d90b5dd32329260a36e99">  119</a></span>&#160;<a class="code" href="classPathModifierMethod.html#a63ceb2493a7d90b5dd32329260a36e99">PathModifierMethod&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;<a class="code" href="classPathModifierMethod.html#a63ceb2493a7d90b5dd32329260a36e99">Print</a>(ostream&amp; _os)<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;  <a class="code" href="classMPBaseObject.html#a4d111a2d7d53d243cdd4cd89ffa65212">MPBaseObject&lt;MPTraits&gt;::Print</a>(_os);</div>
-<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;  _os &lt;&lt; <span class="stringliteral">&quot;\tpath file: \&quot;&quot;</span> &lt;&lt; m_pathFile &lt;&lt; <span class="stringliteral">&quot;\&quot;&quot;</span> &lt;&lt; endl;</div>
-<div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;}</div>
-<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160; </div>
-<div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;<span class="comment">/*--------------------------- PathModifier Interface -------------------------*/</span></div>
-<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160; </div>
-<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;<span class="keywordtype">void</span></div>
-<div class="line"><a name="l00129"></a><span class="lineno"><a class="line" href="classPathModifierMethod.html#a814a36e8820844d5e075f53f57282812">  129</a></span>&#160;<a class="code" href="classPathModifierMethod.html#a814a36e8820844d5e075f53f57282812">PathModifierMethod&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;<a class="code" href="classPathModifierMethod.html#a814a36e8820844d5e075f53f57282812">Modify</a>(vector&lt;CfgType&gt;&amp; _path, vector&lt;CfgType&gt;&amp; _newPath) {</div>
-<div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;  ModifyImpl(this-&gt;GetRoadmap(), _path, _newPath);</div>
-<div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;}</div>
-<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160; </div>
-<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;<span class="keywordtype">void</span></div>
-<div class="line"><a name="l00136"></a><span class="lineno"><a class="line" href="classPathModifierMethod.html#af90122027d79439308171cbc7a952b8d">  136</a></span>&#160;<a class="code" href="classPathModifierMethod.html#a814a36e8820844d5e075f53f57282812">PathModifierMethod&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160;<a class="code" href="classPathModifierMethod.html#a814a36e8820844d5e075f53f57282812">Modify</a>(<a class="code" href="classGenericStateGraph.html">RoadmapType</a>* _graph, vector&lt;CfgType&gt;&amp; _path, vector&lt;CfgType&gt;&amp; _newPath) {</div>
-<div class="line"><a name="l00138"></a><span class="lineno">  138</span>&#160;  ModifyImpl(_graph, _path, _newPath);</div>
-<div class="line"><a name="l00139"></a><span class="lineno">  139</span>&#160;}</div>
-<div class="line"><a name="l00140"></a><span class="lineno">  140</span>&#160; </div>
-<div class="line"><a name="l00141"></a><span class="lineno">  141</span>&#160; </div>
-<div class="line"><a name="l00142"></a><span class="lineno">  142</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00143"></a><span class="lineno">  143</span>&#160;<span class="keywordtype">void</span></div>
-<div class="line"><a name="l00144"></a><span class="lineno"><a class="line" href="classPathModifierMethod.html#ae1b75f7344b2647636c33df1d0626d2a">  144</a></span>&#160;<a class="code" href="classPathModifierMethod.html#ae1b75f7344b2647636c33df1d0626d2a">PathModifierMethod&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00145"></a><span class="lineno">  145</span>&#160;<a class="code" href="classPathModifierMethod.html#ae1b75f7344b2647636c33df1d0626d2a">AddToPath</a>(vector&lt;CfgType&gt;&amp; _path, <a class="code" href="structLPOutput.html">LPOutput&lt;MPTraits&gt;</a>* _lpOutput, <a class="code" href="classPathModifierMethod.html#a1384044e7a1269a8f2175146d17c8ae2">CfgType</a>&amp; _end) {</div>
-<div class="line"><a name="l00146"></a><span class="lineno">  146</span>&#160;  <span class="keywordflow">if</span>(!_lpOutput-&gt;<a class="code" href="structLPOutput.html#a1440400d4fe40f5e2a803b6b033f5dab">m_path</a>.empty())</div>
-<div class="line"><a name="l00147"></a><span class="lineno">  147</span>&#160;    _path.insert(_path.end(), _lpOutput-&gt;<a class="code" href="structLPOutput.html#a1440400d4fe40f5e2a803b6b033f5dab">m_path</a>.begin(),</div>
-<div class="line"><a name="l00148"></a><span class="lineno">  148</span>&#160;        _lpOutput-&gt;<a class="code" href="structLPOutput.html#a1440400d4fe40f5e2a803b6b033f5dab">m_path</a>.end());</div>
-<div class="line"><a name="l00149"></a><span class="lineno">  149</span>&#160;  _path.push_back(_end);</div>
-<div class="line"><a name="l00150"></a><span class="lineno">  150</span>&#160;}</div>
-<div class="line"><a name="l00151"></a><span class="lineno">  151</span>&#160; </div>
-<div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160; </div>
-<div class="line"><a name="l00153"></a><span class="lineno">  153</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00154"></a><span class="lineno">  154</span>&#160;vector&lt;typename MPTraits::RoadmapType::VID&gt;</div>
-<div class="line"><a name="l00155"></a><span class="lineno"><a class="line" href="classPathModifierMethod.html#a0f14e6b2a7f3fe4c26fca1afa21b286f">  155</a></span>&#160;<a class="code" href="classPathModifierMethod.html#a0f14e6b2a7f3fe4c26fca1afa21b286f">PathModifierMethod&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00156"></a><span class="lineno">  156</span>&#160;<a class="code" href="classPathModifierMethod.html#a0f14e6b2a7f3fe4c26fca1afa21b286f">GetPathVIDs</a>(vector&lt;CfgType&gt;&amp; _path, <a class="code" href="classGenericStateGraph.html">RoadmapType</a>* _graph) {</div>
-<div class="line"><a name="l00157"></a><span class="lineno">  157</span>&#160;  vector&lt;VID&gt; pathVIDs;</div>
-<div class="line"><a name="l00158"></a><span class="lineno">  158</span>&#160;  <span class="keywordflow">for</span>(<span class="keyword">auto</span>&amp;  cfg : _path) {</div>
-<div class="line"><a name="l00159"></a><span class="lineno">  159</span>&#160;    <a class="code" href="classPathModifierMethod.html#af2425938c8a301fed304c51b425a8c54">VID</a> v = _graph-&gt;<a class="code" href="classGenericStateGraph.html#af46e457490fcc70a37c94f19a3eef480">GetVID</a>(cfg);</div>
-<div class="line"><a name="l00160"></a><span class="lineno">  160</span>&#160;    <span class="keywordflow">if</span>(v != <a class="code" href="GenericStateGraph_8h.html#a361c0cc37b8ae0df94819fd94cd82ad5">INVALID_VID</a>)</div>
-<div class="line"><a name="l00161"></a><span class="lineno">  161</span>&#160;      pathVIDs.push_back(v);</div>
-<div class="line"><a name="l00162"></a><span class="lineno">  162</span>&#160;  }</div>
-<div class="line"><a name="l00163"></a><span class="lineno">  163</span>&#160;  <span class="keywordflow">return</span> pathVIDs;</div>
-<div class="line"><a name="l00164"></a><span class="lineno">  164</span>&#160;}</div>
-<div class="line"><a name="l00165"></a><span class="lineno">  165</span>&#160; </div>
-<div class="line"><a name="l00166"></a><span class="lineno">  166</span>&#160; </div>
-<div class="line"><a name="l00167"></a><span class="lineno">  167</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00168"></a><span class="lineno">  168</span>&#160;<span class="keywordtype">void</span></div>
-<div class="line"><a name="l00169"></a><span class="lineno"><a class="line" href="classPathModifierMethod.html#ab90aa451e3ae93623c025b7a3b6ee41c">  169</a></span>&#160;<a class="code" href="classPathModifierMethod.html#ab90aa451e3ae93623c025b7a3b6ee41c">PathModifierMethod&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00170"></a><span class="lineno">  170</span>&#160;<a class="code" href="classPathModifierMethod.html#ab90aa451e3ae93623c025b7a3b6ee41c">RemoveBranches</a>(<span class="keyword">const</span> <span class="keywordtype">string</span>&amp; _dmLabel, vector&lt;CfgType&gt;&amp; _path,</div>
-<div class="line"><a name="l00171"></a><span class="lineno">  171</span>&#160;    vector&lt;CfgType&gt;&amp; _newPath) {</div>
-<div class="line"><a name="l00172"></a><span class="lineno">  172</span>&#160;  _newPath.clear();</div>
-<div class="line"><a name="l00173"></a><span class="lineno">  173</span>&#160; </div>
-<div class="line"><a name="l00174"></a><span class="lineno">  174</span>&#160;  <a class="code" href="classEnvironment.html">Environment</a>* env = this-&gt;GetEnvironment();</div>
-<div class="line"><a name="l00175"></a><span class="lineno">  175</span>&#160;  <span class="keyword">auto</span> dm = this-&gt;GetDistanceMetric(_dmLabel);</div>
-<div class="line"><a name="l00176"></a><span class="lineno">  176</span>&#160; </div>
-<div class="line"><a name="l00177"></a><span class="lineno">  177</span>&#160;  <span class="comment">//RemoveBranches Algorithm</span></div>
-<div class="line"><a name="l00178"></a><span class="lineno">  178</span>&#160;  <span class="comment">//_path = {q_1, q_2, ..., q_m}</span></div>
-<div class="line"><a name="l00179"></a><span class="lineno">  179</span>&#160;  <span class="comment">//for i = 1 -&gt; m</span></div>
-<div class="line"><a name="l00180"></a><span class="lineno">  180</span>&#160;  <span class="comment">//  _newPath = _newPath + {q_i}</span></div>
-<div class="line"><a name="l00181"></a><span class="lineno">  181</span>&#160;  <span class="comment">//  j &lt;- m</span></div>
-<div class="line"><a name="l00182"></a><span class="lineno">  182</span>&#160;  <span class="comment">//  while(d(q_i, q_j) &gt; resolution</span></div>
-<div class="line"><a name="l00183"></a><span class="lineno">  183</span>&#160;  <span class="comment">//    j &lt;- j - 1</span></div>
-<div class="line"><a name="l00184"></a><span class="lineno">  184</span>&#160;  <span class="comment">//  i &lt;- j</span></div>
-<div class="line"><a name="l00185"></a><span class="lineno">  185</span>&#160;  <span class="comment">//return _newPath</span></div>
-<div class="line"><a name="l00186"></a><span class="lineno">  186</span>&#160; </div>
-<div class="line"><a name="l00187"></a><span class="lineno">  187</span>&#160;  <span class="keywordtype">double</span> res = min(env-&gt;<a class="code" href="classEnvironment.html#af299471962e62e39e44fbfdc013720d0">GetPositionRes</a>(), env-&gt;<a class="code" href="classEnvironment.html#a9df230a41e857461cb67b2949b5facc1">GetOrientationRes</a>());</div>
-<div class="line"><a name="l00188"></a><span class="lineno">  188</span>&#160; </div>
-<div class="line"><a name="l00189"></a><span class="lineno">  189</span>&#160;  <span class="keywordflow">for</span>(<span class="keyword">auto</span> cit = _path.begin(); cit != _path.end(); ++cit) {</div>
-<div class="line"><a name="l00190"></a><span class="lineno">  190</span>&#160;    _newPath.push_back(*cit);</div>
-<div class="line"><a name="l00191"></a><span class="lineno">  191</span>&#160; </div>
-<div class="line"><a name="l00192"></a><span class="lineno">  192</span>&#160;    <span class="keyword">auto</span> rcit = _path.rbegin();</div>
-<div class="line"><a name="l00193"></a><span class="lineno">  193</span>&#160;    <span class="keywordflow">while</span>(dm-&gt;Distance(*cit, *rcit) &gt; res)</div>
-<div class="line"><a name="l00194"></a><span class="lineno">  194</span>&#160;      rcit++;</div>
-<div class="line"><a name="l00195"></a><span class="lineno">  195</span>&#160; </div>
-<div class="line"><a name="l00196"></a><span class="lineno">  196</span>&#160;    <span class="comment">//when q_i != q_j,</span></div>
-<div class="line"><a name="l00197"></a><span class="lineno">  197</span>&#160;    <span class="comment">//push q_j onto the new path to avoid skipping it in the loop</span></div>
-<div class="line"><a name="l00198"></a><span class="lineno">  198</span>&#160;    <span class="keywordflow">if</span>(cit != rcit.base()-1)</div>
-<div class="line"><a name="l00199"></a><span class="lineno">  199</span>&#160;      _newPath.push_back(*rcit);</div>
-<div class="line"><a name="l00200"></a><span class="lineno">  200</span>&#160; </div>
-<div class="line"><a name="l00201"></a><span class="lineno">  201</span>&#160;    cit = rcit.base()-1;</div>
-<div class="line"><a name="l00202"></a><span class="lineno">  202</span>&#160;  }</div>
-<div class="line"><a name="l00203"></a><span class="lineno">  203</span>&#160;  <span class="comment">//the loop doesn&#39;t push the goal of the path, be sure to do it</span></div>
-<div class="line"><a name="l00204"></a><span class="lineno">  204</span>&#160;  _newPath.push_back(_path.back());</div>
-<div class="line"><a name="l00205"></a><span class="lineno">  205</span>&#160;}</div>
-<div class="line"><a name="l00206"></a><span class="lineno">  206</span>&#160; </div>
-<div class="line"><a name="l00207"></a><span class="lineno">  207</span>&#160;<span class="comment">/*----------------------------------------------------------------------------*/</span></div>
-<div class="line"><a name="l00208"></a><span class="lineno">  208</span>&#160; </div>
-<div class="line"><a name="l00209"></a><span class="lineno">  209</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="ttc" id="aGenericStateGraph_8h_html_a361c0cc37b8ae0df94819fd94cd82ad5"><div class="ttname"><a href="GenericStateGraph_8h.html#a361c0cc37b8ae0df94819fd94cd82ad5">INVALID_VID</a></div><div class="ttdeci">#define INVALID_VID</div><div class="ttdef"><b>Definition:</b> GenericStateGraph.h:23</div></div>
+<div class="line"><a name="l00022"></a><span class="lineno"><a class="line" href="classPathModifierMethod.html#a081bbc745ddaf1c6ceac3962c286a145">   22</a></span>&#160;    <span class="keyword">typedef</span> <span class="keyword">typename</span> <a class="code" href="classGenericStateGraph.html">MPBaseObject::RoadmapType</a> <a class="code" href="classPathModifierMethod.html#a081bbc745ddaf1c6ceac3962c286a145">RoadmapType</a>;</div>
+<div class="line"><a name="l00023"></a><span class="lineno"><a class="line" href="classPathModifierMethod.html#a2ac13f651551aa7cdd6cc32882943ad2">   23</a></span>&#160;    <span class="keyword">typedef</span> <span class="keyword">typename</span> <a class="code" href="classGenericStateGraph.html#a337a1247796cb9bf56fbe6eb2b9497d2">RoadmapType::VID</a>       <a class="code" href="classPathModifierMethod.html#a2ac13f651551aa7cdd6cc32882943ad2">VID</a>;</div>
+<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160; </div>
+<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160; </div>
+<div class="line"><a name="l00029"></a><span class="lineno"><a class="line" href="classPathModifierMethod.html#a734e1a9da44b8adfd77a7f03378acd21">   29</a></span>&#160;    <a class="code" href="classPathModifierMethod.html#a734e1a9da44b8adfd77a7f03378acd21">PathModifierMethod</a>() = <span class="keywordflow">default</span>;</div>
+<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160; </div>
+<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;    <a class="code" href="classPathModifierMethod.html#a734e1a9da44b8adfd77a7f03378acd21">PathModifierMethod</a>(<a class="code" href="classXMLNode.html">XMLNode</a>&amp; _node);</div>
+<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160; </div>
+<div class="line"><a name="l00033"></a><span class="lineno"><a class="line" href="classPathModifierMethod.html#a01e1a50930461c6b8fecfd5766da4692">   33</a></span>&#160;    <span class="keyword">virtual</span> <a class="code" href="classPathModifierMethod.html#a01e1a50930461c6b8fecfd5766da4692">~PathModifierMethod</a>() = <span class="keywordflow">default</span>;</div>
+<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160; </div>
+<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160; </div>
+<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;    <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="classPathModifierMethod.html#a56b34f15763e7eee89c103fe488d67cf">Print</a>(ostream&amp; _os) <span class="keyword">const override</span>;</div>
+<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160; </div>
+<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160; </div>
+<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;    <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="classPathModifierMethod.html#af6418df1ad4a869785cff01618ed70cc">Modify</a>(vector&lt;Cfg&gt;&amp; _path,</div>
+<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;        vector&lt;Cfg&gt;&amp; _newPath);</div>
+<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160; </div>
+<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;    <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="classPathModifierMethod.html#af6418df1ad4a869785cff01618ed70cc">Modify</a>(<a class="code" href="classGenericStateGraph.html">RoadmapType</a>* _graph, vector&lt;Cfg&gt;&amp; _path,</div>
+<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;                        vector&lt;Cfg&gt;&amp; _newPath);</div>
+<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160; </div>
+<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;  <span class="keyword">protected</span>:</div>
+<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160; </div>
+<div class="line"><a name="l00071"></a><span class="lineno"><a class="line" href="classPathModifierMethod.html#a86879674651ad46195e3bc1cd332723e">   71</a></span>&#160;    <span class="keyword">virtual</span> <span class="keywordtype">bool</span> <a class="code" href="classPathModifierMethod.html#a86879674651ad46195e3bc1cd332723e">ModifyImpl</a>(<a class="code" href="classGenericStateGraph.html">RoadmapType</a>* _graph, vector&lt;Cfg&gt;&amp; _path,</div>
+<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;        vector&lt;Cfg&gt;&amp; _newPath) = 0;</div>
+<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160; </div>
+<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="classPathModifierMethod.html#a0c2824f45626849a0ed042ed2886b56a">AddToPath</a>(vector&lt;Cfg&gt;&amp; _path, <a class="code" href="structLPOutput.html">LPOutput</a>* _lpOutput,</div>
+<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;        <a class="code" href="classCfg.html">Cfg</a>&amp; _end);</div>
+<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160; </div>
+<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;    vector&lt;VID&gt; <a class="code" href="classPathModifierMethod.html#a54a2007bc13d628b770e89307f9c8580">GetPathVIDs</a>(vector&lt;Cfg&gt;&amp; _path, <a class="code" href="classGenericStateGraph.html">RoadmapType</a>* _graph);</div>
+<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160; </div>
+<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="classPathModifierMethod.html#af0fbb462f0dc6e74747371df61a661e5">RemoveBranches</a>(<span class="keyword">const</span> <span class="keywordtype">string</span>&amp; _dmLabel, vector&lt;Cfg&gt;&amp; _path,</div>
+<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;        vector&lt;Cfg&gt;&amp; _newPath);</div>
+<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160; </div>
+<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;  <span class="keyword">private</span>:</div>
+<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160; </div>
+<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;    <span class="keywordtype">void</span> OutputPath(vector&lt;Cfg&gt;&amp; _path);</div>
+<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160; </div>
+<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160; </div>
+<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;    <span class="keywordtype">string</span> m_pathFile; </div>
+<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160; </div>
+<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;};</div>
+<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160; </div>
+<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="ttc" id="aLPOutput_8h_html"><div class="ttname"><a href="LPOutput_8h.html">LPOutput.h</a></div></div>
+<div class="ttc" id="aMPBaseObject_8h_html"><div class="ttname"><a href="MPBaseObject_8h.html">MPBaseObject.h</a></div></div>
 <div class="ttc" id="aMPUtils_8h_html"><div class="ttname"><a href="MPUtils_8h.html">MPUtils.h</a></div></div>
-<div class="ttc" id="aclassEnvironment_html"><div class="ttname"><a href="classEnvironment.html">Environment</a></div><div class="ttdef"><b>Definition:</b> Environment.h:133</div></div>
-<div class="ttc" id="aclassEnvironment_html_a9df230a41e857461cb67b2949b5facc1"><div class="ttname"><a href="classEnvironment.html#a9df230a41e857461cb67b2949b5facc1">Environment::GetOrientationRes</a></div><div class="ttdeci">double GetOrientationRes() const noexcept</div><div class="ttdoc">Get the orientation resolution.</div><div class="ttdef"><b>Definition:</b> Environment.cpp:585</div></div>
-<div class="ttc" id="aclassEnvironment_html_af299471962e62e39e44fbfdc013720d0"><div class="ttname"><a href="classEnvironment.html#af299471962e62e39e44fbfdc013720d0">Environment::GetPositionRes</a></div><div class="ttdeci">double GetPositionRes() const noexcept</div><div class="ttdoc">Get the position resolution.</div><div class="ttdef"><b>Definition:</b> Environment.cpp:571</div></div>
+<div class="ttc" id="aclassCfg_html"><div class="ttname"><a href="classCfg.html">Cfg</a></div><div class="ttdef"><b>Definition:</b> Cfg.h:38</div></div>
 <div class="ttc" id="aclassGenericStateGraph_html"><div class="ttname"><a href="classGenericStateGraph.html">GenericStateGraph</a></div><div class="ttdef"><b>Definition:</b> GenericStateGraph.h:67</div></div>
 <div class="ttc" id="aclassGenericStateGraph_html_a337a1247796cb9bf56fbe6eb2b9497d2"><div class="ttname"><a href="classGenericStateGraph.html#a337a1247796cb9bf56fbe6eb2b9497d2">GenericStateGraph::VID</a></div><div class="ttdeci">STAPLGraph::vertex_descriptor VID</div><div class="ttdef"><b>Definition:</b> GenericStateGraph.h:83</div></div>
-<div class="ttc" id="aclassGenericStateGraph_html_af46e457490fcc70a37c94f19a3eef480"><div class="ttname"><a href="classGenericStateGraph.html#af46e457490fcc70a37c94f19a3eef480">GenericStateGraph::GetVID</a></div><div class="ttdeci">VID GetVID(const T &amp;_t) const noexcept</div><div class="ttdef"><b>Definition:</b> GenericStateGraph.h:945</div></div>
-<div class="ttc" id="aclassMPBaseObject_html"><div class="ttname"><a href="classMPBaseObject.html">MPBaseObject</a></div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:37</div></div>
-<div class="ttc" id="aclassMPBaseObject_html_a4d111a2d7d53d243cdd4cd89ffa65212"><div class="ttname"><a href="classMPBaseObject.html#a4d111a2d7d53d243cdd4cd89ffa65212">MPBaseObject::Print</a></div><div class="ttdeci">virtual void Print(std::ostream &amp;_os) const</div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:267</div></div>
-<div class="ttc" id="aclassMPTraits_html"><div class="ttname"><a href="classMPTraits.html">MPTraits</a></div><div class="ttdoc">Defines available methods in the Motion Planning Universe for Cfg.</div><div class="ttdef"><b>Definition:</b> ParallelCfgTraits.h:144</div></div>
-<div class="ttc" id="aclassMPTraits_html_a1a5aab50ac12baaf6b22ff345c5ae138"><div class="ttname"><a href="classMPTraits.html#a1a5aab50ac12baaf6b22ff345c5ae138">MPTraits::CfgType</a></div><div class="ttdeci">C CfgType</div><div class="ttdef"><b>Definition:</b> CfgTraits.h:117</div></div>
+<div class="ttc" id="aclassMPBaseObject_html"><div class="ttname"><a href="classMPBaseObject.html">MPBaseObject</a></div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:46</div></div>
 <div class="ttc" id="aclassPathModifierMethod_html"><div class="ttname"><a href="classPathModifierMethod.html">PathModifierMethod</a></div><div class="ttdoc">Base algorithm abstraction for PathModifiers.</div><div class="ttdef"><b>Definition:</b> PathModifierMethod.h:15</div></div>
-<div class="ttc" id="aclassPathModifierMethod_html_a0e8d6bcd4f8751105e42c00feed7ba44"><div class="ttname"><a href="classPathModifierMethod.html#a0e8d6bcd4f8751105e42c00feed7ba44">PathModifierMethod::RoadmapType</a></div><div class="ttdeci">MPTraits::RoadmapType RoadmapType</div><div class="ttdef"><b>Definition:</b> PathModifierMethod.h:23</div></div>
-<div class="ttc" id="aclassPathModifierMethod_html_a0f14e6b2a7f3fe4c26fca1afa21b286f"><div class="ttname"><a href="classPathModifierMethod.html#a0f14e6b2a7f3fe4c26fca1afa21b286f">PathModifierMethod::GetPathVIDs</a></div><div class="ttdeci">vector&lt; VID &gt; GetPathVIDs(vector&lt; CfgType &gt; &amp;_path, RoadmapType *_graph)</div><div class="ttdef"><b>Definition:</b> PathModifierMethod.h:156</div></div>
-<div class="ttc" id="aclassPathModifierMethod_html_a1384044e7a1269a8f2175146d17c8ae2"><div class="ttname"><a href="classPathModifierMethod.html#a1384044e7a1269a8f2175146d17c8ae2">PathModifierMethod::CfgType</a></div><div class="ttdeci">MPTraits::CfgType CfgType</div><div class="ttdef"><b>Definition:</b> PathModifierMethod.h:22</div></div>
-<div class="ttc" id="aclassPathModifierMethod_html_a6211a44012bb253e521a05d0cfb6b874"><div class="ttname"><a href="classPathModifierMethod.html#a6211a44012bb253e521a05d0cfb6b874">PathModifierMethod::~PathModifierMethod</a></div><div class="ttdeci">virtual ~PathModifierMethod()=default</div></div>
-<div class="ttc" id="aclassPathModifierMethod_html_a63ceb2493a7d90b5dd32329260a36e99"><div class="ttname"><a href="classPathModifierMethod.html#a63ceb2493a7d90b5dd32329260a36e99">PathModifierMethod::Print</a></div><div class="ttdeci">virtual void Print(ostream &amp;_os) const override</div><div class="ttdef"><b>Definition:</b> PathModifierMethod.h:120</div></div>
-<div class="ttc" id="aclassPathModifierMethod_html_a814a36e8820844d5e075f53f57282812"><div class="ttname"><a href="classPathModifierMethod.html#a814a36e8820844d5e075f53f57282812">PathModifierMethod::Modify</a></div><div class="ttdeci">virtual void Modify(vector&lt; CfgType &gt; &amp;_path, vector&lt; CfgType &gt; &amp;_newPath)</div><div class="ttdef"><b>Definition:</b> PathModifierMethod.h:130</div></div>
-<div class="ttc" id="aclassPathModifierMethod_html_aa6e78ecc2b2934682c76c0ed6c52c6ec"><div class="ttname"><a href="classPathModifierMethod.html#aa6e78ecc2b2934682c76c0ed6c52c6ec">PathModifierMethod::PathModifierMethod</a></div><div class="ttdeci">PathModifierMethod()=default</div></div>
-<div class="ttc" id="aclassPathModifierMethod_html_ab6ab7f5502c6704c8d535892315a775f"><div class="ttname"><a href="classPathModifierMethod.html#ab6ab7f5502c6704c8d535892315a775f">PathModifierMethod::ModifyImpl</a></div><div class="ttdeci">virtual bool ModifyImpl(RoadmapType *_graph, vector&lt; CfgType &gt; &amp;_path, vector&lt; CfgType &gt; &amp;_newPath)=0</div></div>
-<div class="ttc" id="aclassPathModifierMethod_html_ab90aa451e3ae93623c025b7a3b6ee41c"><div class="ttname"><a href="classPathModifierMethod.html#ab90aa451e3ae93623c025b7a3b6ee41c">PathModifierMethod::RemoveBranches</a></div><div class="ttdeci">void RemoveBranches(const string &amp;_dmLabel, vector&lt; CfgType &gt; &amp;_path, vector&lt; CfgType &gt; &amp;_newPath)</div><div class="ttdoc">@TODO Figure out what this does and document it.</div><div class="ttdef"><b>Definition:</b> PathModifierMethod.h:170</div></div>
-<div class="ttc" id="aclassPathModifierMethod_html_ae1b75f7344b2647636c33df1d0626d2a"><div class="ttname"><a href="classPathModifierMethod.html#ae1b75f7344b2647636c33df1d0626d2a">PathModifierMethod::AddToPath</a></div><div class="ttdeci">void AddToPath(vector&lt; CfgType &gt; &amp;_path, LPOutput&lt; MPTraits &gt; *_lpOutput, CfgType &amp;_end)</div><div class="ttdef"><b>Definition:</b> PathModifierMethod.h:145</div></div>
-<div class="ttc" id="aclassPathModifierMethod_html_af2425938c8a301fed304c51b425a8c54"><div class="ttname"><a href="classPathModifierMethod.html#af2425938c8a301fed304c51b425a8c54">PathModifierMethod::VID</a></div><div class="ttdeci">RoadmapType::VID VID</div><div class="ttdef"><b>Definition:</b> PathModifierMethod.h:24</div></div>
+<div class="ttc" id="aclassPathModifierMethod_html_a01e1a50930461c6b8fecfd5766da4692"><div class="ttname"><a href="classPathModifierMethod.html#a01e1a50930461c6b8fecfd5766da4692">PathModifierMethod::~PathModifierMethod</a></div><div class="ttdeci">virtual ~PathModifierMethod()=default</div></div>
+<div class="ttc" id="aclassPathModifierMethod_html_a081bbc745ddaf1c6ceac3962c286a145"><div class="ttname"><a href="classPathModifierMethod.html#a081bbc745ddaf1c6ceac3962c286a145">PathModifierMethod::RoadmapType</a></div><div class="ttdeci">MPBaseObject::RoadmapType RoadmapType</div><div class="ttdef"><b>Definition:</b> PathModifierMethod.h:22</div></div>
+<div class="ttc" id="aclassPathModifierMethod_html_a0c2824f45626849a0ed042ed2886b56a"><div class="ttname"><a href="classPathModifierMethod.html#a0c2824f45626849a0ed042ed2886b56a">PathModifierMethod::AddToPath</a></div><div class="ttdeci">void AddToPath(vector&lt; Cfg &gt; &amp;_path, LPOutput *_lpOutput, Cfg &amp;_end)</div><div class="ttdef"><b>Definition:</b> PathModifierMethod.cpp:40</div></div>
+<div class="ttc" id="aclassPathModifierMethod_html_a2ac13f651551aa7cdd6cc32882943ad2"><div class="ttname"><a href="classPathModifierMethod.html#a2ac13f651551aa7cdd6cc32882943ad2">PathModifierMethod::VID</a></div><div class="ttdeci">RoadmapType::VID VID</div><div class="ttdef"><b>Definition:</b> PathModifierMethod.h:23</div></div>
+<div class="ttc" id="aclassPathModifierMethod_html_a54a2007bc13d628b770e89307f9c8580"><div class="ttname"><a href="classPathModifierMethod.html#a54a2007bc13d628b770e89307f9c8580">PathModifierMethod::GetPathVIDs</a></div><div class="ttdeci">vector&lt; VID &gt; GetPathVIDs(vector&lt; Cfg &gt; &amp;_path, RoadmapType *_graph)</div><div class="ttdef"><b>Definition:</b> PathModifierMethod.cpp:50</div></div>
+<div class="ttc" id="aclassPathModifierMethod_html_a56b34f15763e7eee89c103fe488d67cf"><div class="ttname"><a href="classPathModifierMethod.html#a56b34f15763e7eee89c103fe488d67cf">PathModifierMethod::Print</a></div><div class="ttdeci">virtual void Print(ostream &amp;_os) const override</div><div class="ttdef"><b>Definition:</b> PathModifierMethod.cpp:17</div></div>
+<div class="ttc" id="aclassPathModifierMethod_html_a734e1a9da44b8adfd77a7f03378acd21"><div class="ttname"><a href="classPathModifierMethod.html#a734e1a9da44b8adfd77a7f03378acd21">PathModifierMethod::PathModifierMethod</a></div><div class="ttdeci">PathModifierMethod()=default</div></div>
+<div class="ttc" id="aclassPathModifierMethod_html_a86879674651ad46195e3bc1cd332723e"><div class="ttname"><a href="classPathModifierMethod.html#a86879674651ad46195e3bc1cd332723e">PathModifierMethod::ModifyImpl</a></div><div class="ttdeci">virtual bool ModifyImpl(RoadmapType *_graph, vector&lt; Cfg &gt; &amp;_path, vector&lt; Cfg &gt; &amp;_newPath)=0</div></div>
+<div class="ttc" id="aclassPathModifierMethod_html_af0fbb462f0dc6e74747371df61a661e5"><div class="ttname"><a href="classPathModifierMethod.html#af0fbb462f0dc6e74747371df61a661e5">PathModifierMethod::RemoveBranches</a></div><div class="ttdeci">void RemoveBranches(const string &amp;_dmLabel, vector&lt; Cfg &gt; &amp;_path, vector&lt; Cfg &gt; &amp;_newPath)</div><div class="ttdoc">@TODO Figure out what this does and document it.</div><div class="ttdef"><b>Definition:</b> PathModifierMethod.cpp:63</div></div>
+<div class="ttc" id="aclassPathModifierMethod_html_af6418df1ad4a869785cff01618ed70cc"><div class="ttname"><a href="classPathModifierMethod.html#af6418df1ad4a869785cff01618ed70cc">PathModifierMethod::Modify</a></div><div class="ttdeci">virtual void Modify(vector&lt; Cfg &gt; &amp;_path, vector&lt; Cfg &gt; &amp;_newPath)</div><div class="ttdef"><b>Definition:</b> PathModifierMethod.cpp:26</div></div>
 <div class="ttc" id="aclassXMLNode_html"><div class="ttname"><a href="classXMLNode.html">XMLNode</a></div><div class="ttdef"><b>Definition:</b> XMLNode.h:27</div></div>
-<div class="ttc" id="aclassXMLNode_html_af0e81db89948e52fdee6bf2bf029037f"><div class="ttname"><a href="classXMLNode.html#af0e81db89948e52fdee6bf2bf029037f">XMLNode::Read</a></div><div class="ttdeci">T Read(const std::string &amp;_name, const bool _req, const T &amp;_default, const T &amp;_min, const T &amp;_max, const std::string &amp;_desc)</div><div class="ttdef"><b>Definition:</b> XMLNode.h:267</div></div>
-<div class="ttc" id="astructLPOutput_html"><div class="ttname"><a href="structLPOutput.html">LPOutput</a></div><div class="ttdef"><b>Definition:</b> LPOutput.h:22</div></div>
-<div class="ttc" id="astructLPOutput_html_a1440400d4fe40f5e2a803b6b033f5dab"><div class="ttname"><a href="structLPOutput.html#a1440400d4fe40f5e2a803b6b033f5dab">LPOutput::m_path</a></div><div class="ttdeci">std::vector&lt; CfgType &gt; m_path</div><div class="ttdef"><b>Definition:</b> LPOutput.h:42</div></div>
+<div class="ttc" id="astructLPOutput_html"><div class="ttname"><a href="structLPOutput.html">LPOutput</a></div><div class="ttdef"><b>Definition:</b> LPOutput.h:24</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

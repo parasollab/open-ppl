@@ -75,199 +75,40 @@ $(function() {
 <div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160; </div>
 <div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="PathModifierMethod_8h.html">PathModifierMethod.h</a>&quot;</span></div>
 <div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160; </div>
-<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00012"></a><span class="lineno"><a class="line" href="classShortcuttingPathModifier.html">   12</a></span>&#160;<span class="keyword">class </span><a class="code" href="classShortcuttingPathModifier.html">ShortcuttingPathModifier</a> : <span class="keyword">public</span> <a class="code" href="classPathModifierMethod.html">PathModifierMethod</a>&lt;MPTraits&gt; {</div>
-<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160; </div>
-<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;  <span class="keyword">public</span>:</div>
-<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160; </div>
-<div class="line"><a name="l00016"></a><span class="lineno"><a class="line" href="classShortcuttingPathModifier.html#ac42ae4bb45ea8b52efc66637cc476d4a">   16</a></span>&#160;    <span class="keyword">typedef</span> <span class="keyword">typename</span> <a class="code" href="classMPTraits.html#a1a5aab50ac12baaf6b22ff345c5ae138">MPTraits::CfgType</a>      <a class="code" href="classShortcuttingPathModifier.html#ac42ae4bb45ea8b52efc66637cc476d4a">CfgType</a>;</div>
-<div class="line"><a name="l00017"></a><span class="lineno"><a class="line" href="classShortcuttingPathModifier.html#a5440670b53846c6296e83ed0bf54ca54">   17</a></span>&#160;    <span class="keyword">typedef</span> <span class="keyword">typename</span> <a class="code" href="classGenericStateGraph.html">MPTraits::RoadmapType</a>  <a class="code" href="classShortcuttingPathModifier.html#a5440670b53846c6296e83ed0bf54ca54">RoadmapType</a>;</div>
-<div class="line"><a name="l00018"></a><span class="lineno"><a class="line" href="classShortcuttingPathModifier.html#af9c0d68f2426c5926743b2889f942329">   18</a></span>&#160;    <span class="keyword">typedef</span> <span class="keyword">typename</span> <a class="code" href="classGenericStateGraph.html#a337a1247796cb9bf56fbe6eb2b9497d2">RoadmapType::VID</a>       <a class="code" href="classShortcuttingPathModifier.html#af9c0d68f2426c5926743b2889f942329">VID</a>;</div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160; </div>
-<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;    <a class="code" href="classShortcuttingPathModifier.html#ab206030e716022ccf846276dee970fe3">ShortcuttingPathModifier</a>(<span class="keyword">const</span> <span class="keywordtype">string</span>&amp; _dmLabel = <span class="stringliteral">&quot;&quot;</span>,</div>
-<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;        <span class="keyword">const</span> <span class="keywordtype">string</span>&amp; _lpLabel = <span class="stringliteral">&quot;&quot;</span>);</div>
-<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;    <a class="code" href="classShortcuttingPathModifier.html#ab206030e716022ccf846276dee970fe3">ShortcuttingPathModifier</a>(<a class="code" href="classXMLNode.html">XMLNode</a>&amp; _node);</div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160; </div>
-<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;    <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="classShortcuttingPathModifier.html#aaf7a1b06f5ebb6f29d64142839548945">ParseXML</a>(<a class="code" href="classXMLNode.html">XMLNode</a>&amp; _node);</div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;    <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="classShortcuttingPathModifier.html#a6edb4d702dd8ed848394449dbf2483ce">Print</a>(ostream&amp; _os) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l00011"></a><span class="lineno"><a class="line" href="classShortcuttingPathModifier.html">   11</a></span>&#160;<span class="keyword">class </span><a class="code" href="classShortcuttingPathModifier.html">ShortcuttingPathModifier</a> : <span class="keyword">public</span> <a class="code" href="classPathModifierMethod.html">PathModifierMethod</a> {</div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160; </div>
+<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;  <span class="keyword">public</span>:</div>
+<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160; </div>
+<div class="line"><a name="l00015"></a><span class="lineno"><a class="line" href="classShortcuttingPathModifier.html#a78df125a7445016c717f39f9bea85d78">   15</a></span>&#160;    <span class="keyword">typedef</span> <span class="keyword">typename</span> <a class="code" href="classGenericStateGraph.html">MPBaseObject::RoadmapType</a>  <a class="code" href="classShortcuttingPathModifier.html#a78df125a7445016c717f39f9bea85d78">RoadmapType</a>;</div>
+<div class="line"><a name="l00016"></a><span class="lineno"><a class="line" href="classShortcuttingPathModifier.html#a8a08b9128703845f176a1e72820ea5b3">   16</a></span>&#160;    <span class="keyword">typedef</span> <span class="keyword">typename</span> <a class="code" href="classGenericStateGraph.html#a337a1247796cb9bf56fbe6eb2b9497d2">RoadmapType::VID</a>           <a class="code" href="classShortcuttingPathModifier.html#a8a08b9128703845f176a1e72820ea5b3">VID</a>;</div>
+<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160; </div>
+<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;    <a class="code" href="classShortcuttingPathModifier.html#acad281dc617441d79c61b9aa3c2e944d">ShortcuttingPathModifier</a>(<span class="keyword">const</span> <span class="keywordtype">string</span>&amp; _dmLabel = <span class="stringliteral">&quot;&quot;</span>,</div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;        <span class="keyword">const</span> <span class="keywordtype">string</span>&amp; _lpLabel = <span class="stringliteral">&quot;&quot;</span>);</div>
+<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;    <a class="code" href="classShortcuttingPathModifier.html#acad281dc617441d79c61b9aa3c2e944d">ShortcuttingPathModifier</a>(<a class="code" href="classXMLNode.html">XMLNode</a>&amp; _node);</div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160; </div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;    <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="classShortcuttingPathModifier.html#a59136e9d41e8ad270f7a0b4c3b9923e8">ParseXML</a>(<a class="code" href="classXMLNode.html">XMLNode</a>&amp; _node);</div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;    <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="classShortcuttingPathModifier.html#a38cd844bf411ea6df4d35f5fc9ad4e40">Print</a>(ostream&amp; _os) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160; </div>
+<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;    <span class="keywordtype">bool</span> <a class="code" href="classShortcuttingPathModifier.html#a9f403b940769d9c33ed6ea130fbc1b21">ModifyImpl</a>(<a class="code" href="classGenericStateGraph.html">RoadmapType</a>* _graph, std::vector&lt;Cfg&gt;&amp; _path, std::vector&lt;Cfg&gt;&amp; _newPath) <span class="keyword">override</span>;</div>
 <div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160; </div>
-<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;    <span class="keywordtype">bool</span> <a class="code" href="classShortcuttingPathModifier.html#a01dffbc9a5f2b390861c8c84cb429733">ModifyImpl</a>(<a class="code" href="classGenericStateGraph.html">RoadmapType</a>* _graph, vector&lt;CfgType&gt;&amp; _path, vector&lt;CfgType&gt;&amp; _newPath) <span class="keyword">override</span>;</div>
-<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160; </div>
-<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;  <span class="keyword">private</span>:</div>
-<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;    <span class="keywordtype">string</span> m_lpLabel; <span class="comment">// Local planner</span></div>
-<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;};</div>
+<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;  <span class="keyword">private</span>:</div>
+<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;    <span class="keywordtype">string</span> m_lpLabel; <span class="comment">// Local planner</span></div>
+<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;};</div>
+<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160; </div>
+<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160; </div>
-<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00034"></a><span class="lineno"><a class="line" href="classShortcuttingPathModifier.html#ab206030e716022ccf846276dee970fe3">   34</a></span>&#160;<a class="code" href="classShortcuttingPathModifier.html#ab206030e716022ccf846276dee970fe3">ShortcuttingPathModifier&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;<a class="code" href="classShortcuttingPathModifier.html#ab206030e716022ccf846276dee970fe3">ShortcuttingPathModifier</a>(<span class="keyword">const</span> <span class="keywordtype">string</span>&amp; _dmLabel, <span class="keyword">const</span> <span class="keywordtype">string</span>&amp; _lpLabel) :</div>
-<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;  <a class="code" href="classPathModifierMethod.html">PathModifierMethod</a>&lt;<a class="code" href="classMPTraits.html">MPTraits</a>&gt;(), m_lpLabel(_lpLabel) {</div>
-<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;    this-&gt;<a class="code" href="classMPBaseObject.html#ab59d82cd734f77fdc17eddb8517461da">SetName</a>(<span class="stringliteral">&quot;ShortcuttingPathModifier&quot;</span>);</div>
-<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;  }</div>
-<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160; </div>
-<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00041"></a><span class="lineno"><a class="line" href="classShortcuttingPathModifier.html#a0a5347d6bf2006d4273185c9b08d5604">   41</a></span>&#160;<a class="code" href="classShortcuttingPathModifier.html#ab206030e716022ccf846276dee970fe3">ShortcuttingPathModifier&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;<a class="code" href="classShortcuttingPathModifier.html#ab206030e716022ccf846276dee970fe3">ShortcuttingPathModifier</a>(<a class="code" href="classXMLNode.html">XMLNode</a>&amp; _node) :</div>
-<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;  <a class="code" href="classPathModifierMethod.html">PathModifierMethod</a>&lt;<a class="code" href="classMPTraits.html">MPTraits</a>&gt;(_node) {</div>
-<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;    this-&gt;<a class="code" href="classMPBaseObject.html#ab59d82cd734f77fdc17eddb8517461da">SetName</a>(<span class="stringliteral">&quot;ShortcuttingPathModifier&quot;</span>);</div>
-<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;    <a class="code" href="classShortcuttingPathModifier.html#aaf7a1b06f5ebb6f29d64142839548945">ParseXML</a>(_node);</div>
-<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;  }</div>
-<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160; </div>
-<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;<span class="keywordtype">void</span></div>
-<div class="line"><a name="l00050"></a><span class="lineno"><a class="line" href="classShortcuttingPathModifier.html#aaf7a1b06f5ebb6f29d64142839548945">   50</a></span>&#160;<a class="code" href="classShortcuttingPathModifier.html#aaf7a1b06f5ebb6f29d64142839548945">ShortcuttingPathModifier&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;<a class="code" href="classShortcuttingPathModifier.html#aaf7a1b06f5ebb6f29d64142839548945">ParseXML</a>(<a class="code" href="classXMLNode.html">XMLNode</a>&amp; _node) {</div>
-<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;  m_lpLabel = _node.<a class="code" href="classXMLNode.html#af0e81db89948e52fdee6bf2bf029037f">Read</a>(<span class="stringliteral">&quot;lpLabel&quot;</span>, <span class="keyword">true</span>, <span class="stringliteral">&quot;&quot;</span>, <span class="stringliteral">&quot;Local planner method&quot;</span>);</div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;}</div>
-<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160; </div>
-<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;<span class="keywordtype">void</span></div>
-<div class="line"><a name="l00057"></a><span class="lineno"><a class="line" href="classShortcuttingPathModifier.html#a6edb4d702dd8ed848394449dbf2483ce">   57</a></span>&#160;<a class="code" href="classShortcuttingPathModifier.html#a6edb4d702dd8ed848394449dbf2483ce">ShortcuttingPathModifier&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;<a class="code" href="classShortcuttingPathModifier.html#a6edb4d702dd8ed848394449dbf2483ce">Print</a>(ostream&amp; _os)<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;  <a class="code" href="classPathModifierMethod.html#a63ceb2493a7d90b5dd32329260a36e99">PathModifierMethod&lt;MPTraits&gt;::Print</a>(_os);</div>
-<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;  _os &lt;&lt; <span class="stringliteral">&quot;\tlocal planner = \&quot;&quot;</span> &lt;&lt; m_lpLabel &lt;&lt; <span class="stringliteral">&quot;\&quot;&quot;</span> &lt;&lt; endl;</div>
-<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;}</div>
-<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160; </div>
-<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;<span class="comment">// Shortens the path by skipping nodes with a greedy approach.</span></div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;<span class="comment">// This function is also supposed to be used before MedialAxisSmooth.</span></div>
-<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;<span class="keywordtype">bool</span></div>
-<div class="line"><a name="l00067"></a><span class="lineno"><a class="line" href="classShortcuttingPathModifier.html#a01dffbc9a5f2b390861c8c84cb429733">   67</a></span>&#160;<a class="code" href="classShortcuttingPathModifier.html#a01dffbc9a5f2b390861c8c84cb429733">ShortcuttingPathModifier&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;<a class="code" href="classShortcuttingPathModifier.html#a01dffbc9a5f2b390861c8c84cb429733">ModifyImpl</a>(<a class="code" href="classGenericStateGraph.html">RoadmapType</a>* _graph, vector&lt;CfgType&gt;&amp; _path, vector&lt;CfgType&gt;&amp; _newPath) {</div>
-<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;  <span class="keywordflow">if</span>(this-&gt;m_debug) cout &lt;&lt; <span class="stringliteral">&quot;\n*S* Executing ShortcuttingPathModifier::Modifier&quot;</span> &lt;&lt; endl;</div>
-<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160; </div>
-<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;  <span class="keyword">auto</span> graph = _graph ? _graph : this-&gt;GetRoadmap();</div>
-<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160; </div>
-<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;  vector&lt;VID&gt; originalPathVIDs = this-&gt;GetPathVIDs(_path, graph);</div>
-<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160; </div>
-<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;  <span class="keywordtype">bool</span> smoothFileOutput = <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160; </div>
-<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;  <span class="keywordflow">if</span>(!originalPathVIDs.empty()) {</div>
-<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;    smoothFileOutput = <span class="keyword">true</span>;</div>
-<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160; </div>
-<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;    <span class="keyword">auto</span> lp = this-&gt;GetLocalPlanner(m_lpLabel);</div>
-<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;    <a class="code" href="classEnvironment.html">Environment</a>* env = this-&gt;GetEnvironment();</div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;    <a class="code" href="classStatClass.html">StatClass</a>* stats = this-&gt;GetStatClass();</div>
-<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;    <a class="code" href="structLPOutput.html">LPOutput&lt;MPTraits&gt;</a> tmpOutput;</div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160; </div>
-<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;    <span class="keywordtype">bool</span> reconstruct, skip;</div>
-<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;    <span class="keywordtype">double</span> posRes = env-&gt;<a class="code" href="classEnvironment.html#af299471962e62e39e44fbfdc013720d0">GetPositionRes</a>();</div>
-<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;    <span class="keywordtype">double</span> oriRes = env-&gt;<a class="code" href="classEnvironment.html#a9df230a41e857461cb67b2949b5facc1">GetOrientationRes</a>();</div>
-<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160; </div>
-<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;    stats-&gt;<a class="code" href="classStatClass.html#adad709769bc369884b07d2647ef34c02">StartClock</a>(<span class="stringliteral">&quot;Path Modifier&quot;</span>);</div>
-<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;    <span class="comment">//This variable will store how many nodes were skipped</span></div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;    <span class="keywordtype">size_t</span> skips = 0;</div>
-<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160; </div>
-<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;    vector&lt;VID&gt; newPathVIDs;</div>
-<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;    <span class="comment">// Make room for the path</span></div>
-<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;    _newPath.clear();</div>
-<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160; </div>
-<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;    <span class="comment">//Save the first node in the path. (i.e. it can never be skipped)</span></div>
-<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;    newPathVIDs.push_back(originalPathVIDs[0]);</div>
-<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;    _newPath.push_back(graph-&gt;GetVertex(originalPathVIDs[0]));</div>
-<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160; </div>
-<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;    <span class="keywordtype">size_t</span> n = originalPathVIDs.size();</div>
-<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;    <span class="keywordtype">size_t</span> i = 0;   <span class="comment">//i is the index of the start VID (configuration)</span></div>
-<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;    <span class="keywordtype">size_t</span> j = n-1; <span class="comment">//j is the index of the goal VID (configuration)</span></div>
-<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;    <span class="keywordflow">while</span>(i &lt; j) {</div>
-<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;      <span class="keywordflow">if</span>((i+1) == j) {<span class="comment">//If the vertices are adjacent, there are no nodes to skip</span></div>
-<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;        <span class="comment">//Only reconstruct and save path if smoothing output is wanted.</span></div>
-<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;        <span class="keywordflow">if</span>(smoothFileOutput) {</div>
-<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;          reconstruct = lp-&gt;IsConnected(graph-&gt;GetVertex(originalPathVIDs[i]),</div>
-<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;              graph-&gt;GetVertex(originalPathVIDs[j]), &amp;tmpOutput,</div>
-<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;              posRes, oriRes, <span class="keyword">true</span>, <span class="keyword">true</span>);</div>
-<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;          this-&gt;AddToPath(_newPath, &amp;tmpOutput,</div>
-<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;              graph-&gt;GetVertex(originalPathVIDs[j]));</div>
-<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;          <span class="comment">//If could not reconstruct, abort the output,</span></div>
-<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;          <span class="comment">//but continue skipping nodes</span></div>
-<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;          <span class="keywordflow">if</span>(!reconstruct) {</div>
-<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;            cerr &lt;&lt; <span class="stringliteral">&quot;*S* Error. Could not reconstruct path in ShortcuttingPathModifier::Modifier()&quot;</span> &lt;&lt; endl;</div>
-<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;            smoothFileOutput = <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;            <span class="keywordflow">if</span>(_newPath.empty())</div>
-<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;              cerr &lt;&lt; <span class="stringliteral">&quot;*S*\t_newPath is empty. Cannot write anything&quot;</span> &lt;&lt; endl;</div>
-<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;            <span class="keywordflow">else</span>{</div>
-<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;              cerr &lt;&lt; <span class="stringliteral">&quot;*S*\tWill output failed path to \&quot;error.smooth.path\&quot;&quot;</span> &lt;&lt; endl;</div>
-<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;              <a class="code" href="IOUtils_8h.html#a252525f101277fd1a95967ceea202f94">WritePath</a>(<span class="stringliteral">&quot;error.smooth.path&quot;</span>, _newPath);</div>
-<div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;              _newPath.clear();</div>
-<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;            }</div>
-<div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;            <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;          }</div>
-<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;        }</div>
-<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;        newPathVIDs.push_back(originalPathVIDs[j]);</div>
-<div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;        i = j;</div>
-<div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;        j = n-1;</div>
-<div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;      }</div>
-<div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;      <span class="keywordflow">else</span> {</div>
-<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;        <span class="comment">//Try to make a connection by skipping nodes betwen i and j</span></div>
-<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;        skip = lp-&gt;IsConnected(graph-&gt;GetVertex(originalPathVIDs[i]),</div>
-<div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;            graph-&gt;GetVertex(originalPathVIDs[j]), &amp;tmpOutput,</div>
-<div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;            posRes, oriRes, <span class="keyword">true</span>, <span class="keyword">true</span>);</div>
-<div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160;        <span class="keywordflow">if</span>(skip) {</div>
-<div class="line"><a name="l00138"></a><span class="lineno">  138</span>&#160;          <span class="keywordflow">if</span>(smoothFileOutput)</div>
-<div class="line"><a name="l00139"></a><span class="lineno">  139</span>&#160;            this-&gt;AddToPath(_newPath, &amp;tmpOutput,</div>
-<div class="line"><a name="l00140"></a><span class="lineno">  140</span>&#160;                graph-&gt;GetVertex(originalPathVIDs[j]));</div>
-<div class="line"><a name="l00141"></a><span class="lineno">  141</span>&#160;          newPathVIDs.push_back(originalPathVIDs[j]);</div>
-<div class="line"><a name="l00142"></a><span class="lineno">  142</span>&#160;          skips += (j-i-1);</div>
-<div class="line"><a name="l00143"></a><span class="lineno">  143</span>&#160;          i = j;</div>
-<div class="line"><a name="l00144"></a><span class="lineno">  144</span>&#160;          j = n-1;</div>
-<div class="line"><a name="l00145"></a><span class="lineno">  145</span>&#160;        }</div>
-<div class="line"><a name="l00146"></a><span class="lineno">  146</span>&#160;        <span class="keywordflow">else</span> {</div>
-<div class="line"><a name="l00147"></a><span class="lineno">  147</span>&#160;          <span class="comment">//Could not skip. Try the previous node.</span></div>
-<div class="line"><a name="l00148"></a><span class="lineno">  148</span>&#160;          --j;</div>
-<div class="line"><a name="l00149"></a><span class="lineno">  149</span>&#160;        }</div>
-<div class="line"><a name="l00150"></a><span class="lineno">  150</span>&#160;      }</div>
-<div class="line"><a name="l00151"></a><span class="lineno">  151</span>&#160;    }</div>
-<div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160; </div>
-<div class="line"><a name="l00153"></a><span class="lineno">  153</span>&#160;    <span class="keywordflow">if</span>(this-&gt;m_debug) {</div>
-<div class="line"><a name="l00154"></a><span class="lineno">  154</span>&#160;      <span class="keywordflow">if</span>(skips == 0)</div>
-<div class="line"><a name="l00155"></a><span class="lineno">  155</span>&#160;        cout &lt;&lt; <span class="stringliteral">&quot;*S* Could not skip any nodes&quot;</span> &lt;&lt; endl;</div>
-<div class="line"><a name="l00156"></a><span class="lineno">  156</span>&#160;      <span class="keywordflow">else</span>{</div>
-<div class="line"><a name="l00157"></a><span class="lineno">  157</span>&#160;        cout &lt;&lt; <span class="stringliteral">&quot;*S* Smoothing operation skipped &quot;</span> &lt;&lt; skips;</div>
-<div class="line"><a name="l00158"></a><span class="lineno">  158</span>&#160;        <span class="keywordflow">if</span>(skips == 1)</div>
-<div class="line"><a name="l00159"></a><span class="lineno">  159</span>&#160;          cout &lt;&lt; <span class="stringliteral">&quot; node&quot;</span> &lt;&lt; endl;</div>
-<div class="line"><a name="l00160"></a><span class="lineno">  160</span>&#160;        <span class="keywordflow">else</span></div>
-<div class="line"><a name="l00161"></a><span class="lineno">  161</span>&#160;          cout &lt;&lt; <span class="stringliteral">&quot; nodes&quot;</span> &lt;&lt; endl;</div>
-<div class="line"><a name="l00162"></a><span class="lineno">  162</span>&#160;      }</div>
-<div class="line"><a name="l00163"></a><span class="lineno">  163</span>&#160;    }</div>
-<div class="line"><a name="l00164"></a><span class="lineno">  164</span>&#160; </div>
-<div class="line"><a name="l00165"></a><span class="lineno">  165</span>&#160;    stats-&gt;<a class="code" href="classStatClass.html#a2052351742160526ffbce663cb6ba3ce">StopClock</a>(<span class="stringliteral">&quot;Path Modifier&quot;</span>);</div>
-<div class="line"><a name="l00166"></a><span class="lineno">  166</span>&#160; </div>
-<div class="line"><a name="l00167"></a><span class="lineno">  167</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
-<div class="line"><a name="l00168"></a><span class="lineno">  168</span>&#160;  }</div>
-<div class="line"><a name="l00169"></a><span class="lineno">  169</span>&#160;  <span class="keywordflow">else</span>{</div>
-<div class="line"><a name="l00170"></a><span class="lineno">  170</span>&#160;    cerr &lt;&lt; <span class="stringliteral">&quot;*S* Error. originalPathVIDs in &quot;</span> &lt;&lt; this-&gt;GetNameAndLabel()</div>
-<div class="line"><a name="l00171"></a><span class="lineno">  171</span>&#160;      &lt;&lt; <span class="stringliteral">&quot; is empty. Aborting smoothing operation(s).&quot;</span> &lt;&lt; endl;</div>
-<div class="line"><a name="l00172"></a><span class="lineno">  172</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00173"></a><span class="lineno">  173</span>&#160;  }</div>
-<div class="line"><a name="l00174"></a><span class="lineno">  174</span>&#160;}</div>
-<div class="line"><a name="l00175"></a><span class="lineno">  175</span>&#160; </div>
-<div class="line"><a name="l00176"></a><span class="lineno">  176</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00177"></a><span class="lineno">  177</span>&#160; </div>
-<div class="ttc" id="aIOUtils_8h_html_a252525f101277fd1a95967ceea202f94"><div class="ttname"><a href="IOUtils_8h.html#a252525f101277fd1a95967ceea202f94">WritePath</a></div><div class="ttdeci">void WritePath(const std::string &amp;_filename, const std::vector&lt; CfgType &gt; &amp;_path)</div><div class="ttdoc">Write a list of Cfgs from a path to file.</div><div class="ttdef"><b>Definition:</b> IOUtils.h:145</div></div>
 <div class="ttc" id="aPathModifierMethod_8h_html"><div class="ttname"><a href="PathModifierMethod_8h.html">PathModifierMethod.h</a></div></div>
-<div class="ttc" id="aclassEnvironment_html"><div class="ttname"><a href="classEnvironment.html">Environment</a></div><div class="ttdef"><b>Definition:</b> Environment.h:133</div></div>
-<div class="ttc" id="aclassEnvironment_html_a9df230a41e857461cb67b2949b5facc1"><div class="ttname"><a href="classEnvironment.html#a9df230a41e857461cb67b2949b5facc1">Environment::GetOrientationRes</a></div><div class="ttdeci">double GetOrientationRes() const noexcept</div><div class="ttdoc">Get the orientation resolution.</div><div class="ttdef"><b>Definition:</b> Environment.cpp:585</div></div>
-<div class="ttc" id="aclassEnvironment_html_af299471962e62e39e44fbfdc013720d0"><div class="ttname"><a href="classEnvironment.html#af299471962e62e39e44fbfdc013720d0">Environment::GetPositionRes</a></div><div class="ttdeci">double GetPositionRes() const noexcept</div><div class="ttdoc">Get the position resolution.</div><div class="ttdef"><b>Definition:</b> Environment.cpp:571</div></div>
 <div class="ttc" id="aclassGenericStateGraph_html"><div class="ttname"><a href="classGenericStateGraph.html">GenericStateGraph</a></div><div class="ttdef"><b>Definition:</b> GenericStateGraph.h:67</div></div>
 <div class="ttc" id="aclassGenericStateGraph_html_a337a1247796cb9bf56fbe6eb2b9497d2"><div class="ttname"><a href="classGenericStateGraph.html#a337a1247796cb9bf56fbe6eb2b9497d2">GenericStateGraph::VID</a></div><div class="ttdeci">STAPLGraph::vertex_descriptor VID</div><div class="ttdef"><b>Definition:</b> GenericStateGraph.h:83</div></div>
-<div class="ttc" id="aclassMPBaseObject_html_ab59d82cd734f77fdc17eddb8517461da"><div class="ttname"><a href="classMPBaseObject.html#ab59d82cd734f77fdc17eddb8517461da">MPBaseObject::SetName</a></div><div class="ttdeci">void SetName(const std::string &amp;_s)</div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:229</div></div>
-<div class="ttc" id="aclassMPTraits_html"><div class="ttname"><a href="classMPTraits.html">MPTraits</a></div><div class="ttdoc">Defines available methods in the Motion Planning Universe for Cfg.</div><div class="ttdef"><b>Definition:</b> ParallelCfgTraits.h:144</div></div>
-<div class="ttc" id="aclassMPTraits_html_a1a5aab50ac12baaf6b22ff345c5ae138"><div class="ttname"><a href="classMPTraits.html#a1a5aab50ac12baaf6b22ff345c5ae138">MPTraits::CfgType</a></div><div class="ttdeci">C CfgType</div><div class="ttdef"><b>Definition:</b> CfgTraits.h:117</div></div>
 <div class="ttc" id="aclassPathModifierMethod_html"><div class="ttname"><a href="classPathModifierMethod.html">PathModifierMethod</a></div><div class="ttdoc">Base algorithm abstraction for PathModifiers.</div><div class="ttdef"><b>Definition:</b> PathModifierMethod.h:15</div></div>
-<div class="ttc" id="aclassPathModifierMethod_html_a63ceb2493a7d90b5dd32329260a36e99"><div class="ttname"><a href="classPathModifierMethod.html#a63ceb2493a7d90b5dd32329260a36e99">PathModifierMethod::Print</a></div><div class="ttdeci">virtual void Print(ostream &amp;_os) const override</div><div class="ttdef"><b>Definition:</b> PathModifierMethod.h:120</div></div>
-<div class="ttc" id="aclassShortcuttingPathModifier_html"><div class="ttname"><a href="classShortcuttingPathModifier.html">ShortcuttingPathModifier</a></div><div class="ttdef"><b>Definition:</b> ShortcuttingPathModifier.h:12</div></div>
-<div class="ttc" id="aclassShortcuttingPathModifier_html_a01dffbc9a5f2b390861c8c84cb429733"><div class="ttname"><a href="classShortcuttingPathModifier.html#a01dffbc9a5f2b390861c8c84cb429733">ShortcuttingPathModifier::ModifyImpl</a></div><div class="ttdeci">bool ModifyImpl(RoadmapType *_graph, vector&lt; CfgType &gt; &amp;_path, vector&lt; CfgType &gt; &amp;_newPath) override</div><div class="ttdef"><b>Definition:</b> ShortcuttingPathModifier.h:68</div></div>
-<div class="ttc" id="aclassShortcuttingPathModifier_html_a5440670b53846c6296e83ed0bf54ca54"><div class="ttname"><a href="classShortcuttingPathModifier.html#a5440670b53846c6296e83ed0bf54ca54">ShortcuttingPathModifier::RoadmapType</a></div><div class="ttdeci">MPTraits::RoadmapType RoadmapType</div><div class="ttdef"><b>Definition:</b> ShortcuttingPathModifier.h:17</div></div>
-<div class="ttc" id="aclassShortcuttingPathModifier_html_a6edb4d702dd8ed848394449dbf2483ce"><div class="ttname"><a href="classShortcuttingPathModifier.html#a6edb4d702dd8ed848394449dbf2483ce">ShortcuttingPathModifier::Print</a></div><div class="ttdeci">virtual void Print(ostream &amp;_os) const</div><div class="ttdef"><b>Definition:</b> ShortcuttingPathModifier.h:58</div></div>
-<div class="ttc" id="aclassShortcuttingPathModifier_html_aaf7a1b06f5ebb6f29d64142839548945"><div class="ttname"><a href="classShortcuttingPathModifier.html#aaf7a1b06f5ebb6f29d64142839548945">ShortcuttingPathModifier::ParseXML</a></div><div class="ttdeci">virtual void ParseXML(XMLNode &amp;_node)</div><div class="ttdef"><b>Definition:</b> ShortcuttingPathModifier.h:51</div></div>
-<div class="ttc" id="aclassShortcuttingPathModifier_html_ab206030e716022ccf846276dee970fe3"><div class="ttname"><a href="classShortcuttingPathModifier.html#ab206030e716022ccf846276dee970fe3">ShortcuttingPathModifier::ShortcuttingPathModifier</a></div><div class="ttdeci">ShortcuttingPathModifier(const string &amp;_dmLabel=&quot;&quot;, const string &amp;_lpLabel=&quot;&quot;)</div><div class="ttdef"><b>Definition:</b> ShortcuttingPathModifier.h:35</div></div>
-<div class="ttc" id="aclassShortcuttingPathModifier_html_ac42ae4bb45ea8b52efc66637cc476d4a"><div class="ttname"><a href="classShortcuttingPathModifier.html#ac42ae4bb45ea8b52efc66637cc476d4a">ShortcuttingPathModifier::CfgType</a></div><div class="ttdeci">MPTraits::CfgType CfgType</div><div class="ttdef"><b>Definition:</b> ShortcuttingPathModifier.h:16</div></div>
-<div class="ttc" id="aclassShortcuttingPathModifier_html_af9c0d68f2426c5926743b2889f942329"><div class="ttname"><a href="classShortcuttingPathModifier.html#af9c0d68f2426c5926743b2889f942329">ShortcuttingPathModifier::VID</a></div><div class="ttdeci">RoadmapType::VID VID</div><div class="ttdef"><b>Definition:</b> ShortcuttingPathModifier.h:18</div></div>
-<div class="ttc" id="aclassStatClass_html"><div class="ttname"><a href="classStatClass.html">StatClass</a></div><div class="ttdef"><b>Definition:</b> MetricUtils.h:29</div></div>
-<div class="ttc" id="aclassStatClass_html_a2052351742160526ffbce663cb6ba3ce"><div class="ttname"><a href="classStatClass.html#a2052351742160526ffbce663cb6ba3ce">StatClass::StopClock</a></div><div class="ttdeci">void StopClock(const std::string &amp;_name)</div><div class="ttdef"><b>Definition:</b> MetricUtils.cpp:102</div></div>
-<div class="ttc" id="aclassStatClass_html_adad709769bc369884b07d2647ef34c02"><div class="ttname"><a href="classStatClass.html#adad709769bc369884b07d2647ef34c02">StatClass::StartClock</a></div><div class="ttdeci">void StartClock(const std::string &amp;_name)</div><div class="ttdef"><b>Definition:</b> MetricUtils.cpp:90</div></div>
+<div class="ttc" id="aclassShortcuttingPathModifier_html"><div class="ttname"><a href="classShortcuttingPathModifier.html">ShortcuttingPathModifier</a></div><div class="ttdef"><b>Definition:</b> ShortcuttingPathModifier.h:11</div></div>
+<div class="ttc" id="aclassShortcuttingPathModifier_html_a38cd844bf411ea6df4d35f5fc9ad4e40"><div class="ttname"><a href="classShortcuttingPathModifier.html#a38cd844bf411ea6df4d35f5fc9ad4e40">ShortcuttingPathModifier::Print</a></div><div class="ttdeci">virtual void Print(ostream &amp;_os) const</div><div class="ttdef"><b>Definition:</b> ShortcuttingPathModifier.cpp:30</div></div>
+<div class="ttc" id="aclassShortcuttingPathModifier_html_a59136e9d41e8ad270f7a0b4c3b9923e8"><div class="ttname"><a href="classShortcuttingPathModifier.html#a59136e9d41e8ad270f7a0b4c3b9923e8">ShortcuttingPathModifier::ParseXML</a></div><div class="ttdeci">virtual void ParseXML(XMLNode &amp;_node)</div><div class="ttdef"><b>Definition:</b> ShortcuttingPathModifier.cpp:23</div></div>
+<div class="ttc" id="aclassShortcuttingPathModifier_html_a78df125a7445016c717f39f9bea85d78"><div class="ttname"><a href="classShortcuttingPathModifier.html#a78df125a7445016c717f39f9bea85d78">ShortcuttingPathModifier::RoadmapType</a></div><div class="ttdeci">MPBaseObject::RoadmapType RoadmapType</div><div class="ttdef"><b>Definition:</b> ShortcuttingPathModifier.h:15</div></div>
+<div class="ttc" id="aclassShortcuttingPathModifier_html_a8a08b9128703845f176a1e72820ea5b3"><div class="ttname"><a href="classShortcuttingPathModifier.html#a8a08b9128703845f176a1e72820ea5b3">ShortcuttingPathModifier::VID</a></div><div class="ttdeci">RoadmapType::VID VID</div><div class="ttdef"><b>Definition:</b> ShortcuttingPathModifier.h:16</div></div>
+<div class="ttc" id="aclassShortcuttingPathModifier_html_a9f403b940769d9c33ed6ea130fbc1b21"><div class="ttname"><a href="classShortcuttingPathModifier.html#a9f403b940769d9c33ed6ea130fbc1b21">ShortcuttingPathModifier::ModifyImpl</a></div><div class="ttdeci">bool ModifyImpl(RoadmapType *_graph, std::vector&lt; Cfg &gt; &amp;_path, std::vector&lt; Cfg &gt; &amp;_newPath) override</div><div class="ttdef"><b>Definition:</b> ShortcuttingPathModifier.cpp:39</div></div>
+<div class="ttc" id="aclassShortcuttingPathModifier_html_acad281dc617441d79c61b9aa3c2e944d"><div class="ttname"><a href="classShortcuttingPathModifier.html#acad281dc617441d79c61b9aa3c2e944d">ShortcuttingPathModifier::ShortcuttingPathModifier</a></div><div class="ttdeci">ShortcuttingPathModifier(const string &amp;_dmLabel=&quot;&quot;, const string &amp;_lpLabel=&quot;&quot;)</div><div class="ttdef"><b>Definition:</b> ShortcuttingPathModifier.cpp:7</div></div>
 <div class="ttc" id="aclassXMLNode_html"><div class="ttname"><a href="classXMLNode.html">XMLNode</a></div><div class="ttdef"><b>Definition:</b> XMLNode.h:27</div></div>
-<div class="ttc" id="aclassXMLNode_html_af0e81db89948e52fdee6bf2bf029037f"><div class="ttname"><a href="classXMLNode.html#af0e81db89948e52fdee6bf2bf029037f">XMLNode::Read</a></div><div class="ttdeci">T Read(const std::string &amp;_name, const bool _req, const T &amp;_default, const T &amp;_min, const T &amp;_max, const std::string &amp;_desc)</div><div class="ttdef"><b>Definition:</b> XMLNode.h:267</div></div>
-<div class="ttc" id="astructLPOutput_html"><div class="ttname"><a href="structLPOutput.html">LPOutput</a></div><div class="ttdef"><b>Definition:</b> LPOutput.h:22</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

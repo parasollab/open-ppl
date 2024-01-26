@@ -74,582 +74,155 @@ $(function() {
 <div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="preprocessor">#define PMPL_MP_BASE_OBJECT_H_</span></div>
 <div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="keyword">using namespace </span>std;</div>
 <div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160; </div>
-<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="MPProblem_8h.html">MPProblem/MPProblem.h</a>&quot;</span></div>
-<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="IOUtils_8h.html">Utilities/IOUtils.h</a>&quot;</span></div>
-<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="MethodSet_8h.html">Utilities/MethodSet.h</a>&quot;</span></div>
-<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="XMLNode_8h.html">Utilities/XMLNode.h</a>&quot;</span></div>
-<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160; </div>
-<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="preprocessor">#include &lt;iostream&gt;</span></div>
-<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="preprocessor">#include &lt;string&gt;</span></div>
-<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160; </div>
-<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="keyword">class </span><a class="code" href="classEnvironment.html">Environment</a>;</div>
-<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;<span class="keyword">class </span><a class="code" href="classMPTask.html">MPTask</a>;</div>
-<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;<span class="keyword">class </span><a class="code" href="classStatClass.html">StatClass</a>;</div>
+<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="GenericStateGraph_8h.html">ConfigurationSpace/GenericStateGraph.h</a>&quot;</span></div>
+<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="GroupCfg_8h.html">ConfigurationSpace/GroupCfg.h</a>&quot;</span></div>
+<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="GroupRoadmap_8h.html">ConfigurationSpace/GroupRoadmap.h</a>&quot;</span></div>
+<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="Path_8h.html">ConfigurationSpace/Path.h</a>&quot;</span></div>
+<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="GroupPath_8h.html">ConfigurationSpace/GroupPath.h</a>&quot;</span></div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160; </div>
+<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="MPProblem_8h.html">MPProblem/MPProblem.h</a>&quot;</span></div>
+<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="MPTask_8h.html">MPProblem/MPTask.h</a>&quot;</span></div>
+<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="IOUtils_8h.html">Utilities/IOUtils.h</a>&quot;</span></div>
+<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="MethodSet_8h.html">Utilities/MethodSet.h</a>&quot;</span></div>
+<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="XMLNode_8h.html">Utilities/XMLNode.h</a>&quot;</span></div>
 <div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160; </div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160; </div>
-<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00037"></a><span class="lineno"><a class="line" href="classMPBaseObject.html">   37</a></span>&#160;<span class="keyword">class </span><a class="code" href="classMPBaseObject.html">MPBaseObject</a> {</div>
-<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160; </div>
-<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;  <span class="keyword">public</span>:</div>
-<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160; </div>
-<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160; </div>
-<div class="line"><a name="l00044"></a><span class="lineno"><a class="line" href="classMPBaseObject.html#afdfe49d535de506c369d53c3f35c4861">   44</a></span>&#160;    <span class="keyword">typedef</span> <span class="keyword">typename</span> <a class="code" href="classGenericStateGraph.html">MPTraits::RoadmapType</a>             <a class="code" href="classMPBaseObject.html#afdfe49d535de506c369d53c3f35c4861">RoadmapType</a>;</div>
-<div class="line"><a name="l00045"></a><span class="lineno"><a class="line" href="classMPBaseObject.html#ad06ed006429808c548ad2c88d7362652">   45</a></span>&#160;    <span class="keyword">typedef</span> <span class="keyword">typename</span> <a class="code" href="classGroupRoadmap.html">MPTraits::GroupRoadmapType</a>        <a class="code" href="classMPBaseObject.html#ad06ed006429808c548ad2c88d7362652">GroupRoadmapType</a>;</div>
-<div class="line"><a name="l00046"></a><span class="lineno"><a class="line" href="classMPBaseObject.html#a1e5ed51342d87f6e4ca22300478d1754">   46</a></span>&#160;    <span class="keyword">typedef</span> <span class="keyword">typename</span> <a class="code" href="classLocalObstacleMapType.html">MPTraits::LocalObstacleMap</a>        <a class="code" href="classMPBaseObject.html#a1e5ed51342d87f6e4ca22300478d1754">LocalObstacleMap</a>;</div>
-<div class="line"><a name="l00047"></a><span class="lineno"><a class="line" href="classMPBaseObject.html#aea9c3bca368d8ed3aaf2687b159ca561">   47</a></span>&#160;    <span class="keyword">typedef</span> <span class="keyword">typename</span> <a class="code" href="classPathType.html">MPTraits::Path</a>                    <a class="code" href="classMPBaseObject.html#aea9c3bca368d8ed3aaf2687b159ca561">Path</a>;</div>
-<div class="line"><a name="l00048"></a><span class="lineno"><a class="line" href="classMPBaseObject.html#a171d332ff9e7d24af57efce2db4d7c60">   48</a></span>&#160;    <span class="keyword">typedef</span> <span class="keyword">typename</span> <a class="code" href="classGroupPath.html">MPTraits::GroupPathType</a>           <a class="code" href="classMPBaseObject.html#a171d332ff9e7d24af57efce2db4d7c60">GroupPath</a>;</div>
-<div class="line"><a name="l00049"></a><span class="lineno"><a class="line" href="classMPBaseObject.html#a15b148d41701475b3b94c4a163157f89">   49</a></span>&#160;    <span class="keyword">typedef</span> <span class="keyword">typename</span> <a class="code" href="classMPLibraryType.html">MPTraits::MPLibrary</a>               <a class="code" href="classMPBaseObject.html#a15b148d41701475b3b94c4a163157f89">MPLibrary</a>;</div>
-<div class="line"><a name="l00050"></a><span class="lineno"><a class="line" href="classMPBaseObject.html#a6aa70c68a7aa522d074423ca469a4611">   50</a></span>&#160;    <span class="keyword">typedef</span> <span class="keyword">typename</span> <a class="code" href="classMPSolutionType.html">MPTraits::MPSolution</a>              <a class="code" href="classMPBaseObject.html#a6aa70c68a7aa522d074423ca469a4611">MPSolution</a>;</div>
-<div class="line"><a name="l00051"></a><span class="lineno"><a class="line" href="classMPBaseObject.html#a59a6f8a70e1e9d3bc80ed1709f37adb9">   51</a></span>&#160;    <span class="keyword">typedef</span> <span class="keyword">typename</span> <a class="code" href="classGoalTrackerType.html">MPTraits::GoalTracker</a>             <a class="code" href="classMPBaseObject.html#a59a6f8a70e1e9d3bc80ed1709f37adb9">GoalTracker</a>;</div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="MPSolution_8h.html">MPLibrary/MPSolution.h</a>&quot;</span></div>
+<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160; </div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;<span class="preprocessor">#include &lt;iostream&gt;</span></div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;<span class="preprocessor">#include &lt;string&gt;</span></div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160; </div>
+<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> Vertex, <span class="keyword">typename</span> Edge&gt; <span class="keyword">class </span><a class="code" href="classGenericStateGraph.html">GenericStateGraph</a>;</div>
+<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;<span class="keyword">class </span><a class="code" href="classEnvironment.html">Environment</a>;</div>
+<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;<span class="keyword">class </span><a class="code" href="classMPTask.html">MPTask</a>;</div>
+<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;<span class="keyword">class </span><a class="code" href="classStatClass.html">StatClass</a>;</div>
+<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;<span class="keyword">class </span><a class="code" href="classMPLibrary.html">MPLibrary</a>;</div>
+<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160; </div>
+<div class="line"><a name="l00046"></a><span class="lineno"><a class="line" href="classMPBaseObject.html">   46</a></span>&#160;<span class="keyword">class </span><a class="code" href="classMPBaseObject.html">MPBaseObject</a> {</div>
+<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160; </div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;  <span class="keyword">public</span>:</div>
+<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160; </div>
 <div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160; </div>
-<div class="line"><a name="l00053"></a><span class="lineno"><a class="line" href="classMPBaseObject.html#aaf3cea401f0b3ade1d909fc527246a08">   53</a></span>&#160;    <span class="keyword">typedef</span> <span class="keyword">typename</span> <a class="code" href="classMPLibraryType.html#aa6e527bc3b9b27cc291d28982af14a62">MPLibrary::SamplerPointer</a>         <a class="code" href="classMPBaseObject.html#aaf3cea401f0b3ade1d909fc527246a08">SamplerPointer</a>;</div>
-<div class="line"><a name="l00054"></a><span class="lineno"><a class="line" href="classMPBaseObject.html#ae65bc5a79747909242133bf6d00c993d">   54</a></span>&#160;    <span class="keyword">typedef</span> <span class="keyword">typename</span> <a class="code" href="classMPLibraryType.html#a73832f63ee7b6525ea3a65441f770644">MPLibrary::LocalPlannerPointer</a>    <a class="code" href="classMPBaseObject.html#ae65bc5a79747909242133bf6d00c993d">LocalPlannerPointer</a>;</div>
-<div class="line"><a name="l00055"></a><span class="lineno"><a class="line" href="classMPBaseObject.html#a5eb6e9a2ee24cc60b2280c8d7a86dcf4">   55</a></span>&#160;    <span class="keyword">typedef</span> <span class="keyword">typename</span> <a class="code" href="classMPLibraryType.html#a22d44ff401d1d3a8fb3040428b9ea80e">MPLibrary::ExtenderPointer</a>        <a class="code" href="classMPBaseObject.html#a5eb6e9a2ee24cc60b2280c8d7a86dcf4">ExtenderPointer</a>;</div>
-<div class="line"><a name="l00056"></a><span class="lineno"><a class="line" href="classMPBaseObject.html#a9d8006e11da7b3e4d5ac8eee9c6af86a">   56</a></span>&#160;    <span class="keyword">typedef</span> <span class="keyword">typename</span> <a class="code" href="classMPLibraryType.html#a9a56c7dfe254f93974659d85a3eed328">MPLibrary::PathModifierPointer</a>    <a class="code" href="classMPBaseObject.html#a9d8006e11da7b3e4d5ac8eee9c6af86a">PathModifierPointer</a>;</div>
-<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;    <span class="keyword">typedef</span> <span class="keyword">typename</span> <a class="code" href="classMPLibraryType.html#a630c82fb84b011ad0b6af7b3982927bc">MPLibrary::EdgeValidityCheckerPointer</a>    </div>
-<div class="line"><a name="l00058"></a><span class="lineno"><a class="line" href="classMPBaseObject.html#a52cc83324263c010e07a138ab3515f5e">   58</a></span>&#160;                                                       <a class="code" href="classMPBaseObject.html#a52cc83324263c010e07a138ab3515f5e">EdgeValidityCheckerPointer</a>;</div>
-<div class="line"><a name="l00059"></a><span class="lineno"><a class="line" href="classMPBaseObject.html#a97ef39036c999f2b85697d651a3709b6">   59</a></span>&#160;    <span class="keyword">typedef</span> <span class="keyword">typename</span> <a class="code" href="classMPLibraryType.html#ad3d8787a8698ee7ea16e36fddce39739">MPLibrary::ConnectorPointer</a>       <a class="code" href="classMPBaseObject.html#a97ef39036c999f2b85697d651a3709b6">ConnectorPointer</a>;</div>
-<div class="line"><a name="l00060"></a><span class="lineno"><a class="line" href="classMPBaseObject.html#a1033e6b77f138cd5b0c963b85c2102c8">   60</a></span>&#160;    <span class="keyword">typedef</span> <span class="keyword">typename</span> <a class="code" href="classMPLibraryType.html#a1c453d86b99596468dbd80aea82172a0">MPLibrary::MetricPointer</a>          <a class="code" href="classMPBaseObject.html#a1033e6b77f138cd5b0c963b85c2102c8">MetricPointer</a>;</div>
-<div class="line"><a name="l00061"></a><span class="lineno"><a class="line" href="classMPBaseObject.html#ab26d90683e004e04060c66490f1abef9">   61</a></span>&#160;    <span class="keyword">typedef</span> <span class="keyword">typename</span> <a class="code" href="classMPLibraryType.html#adea960aa1d259e4b3675d137cfd8a796">MPLibrary::MapEvaluatorPointer</a>    <a class="code" href="classMPBaseObject.html#ab26d90683e004e04060c66490f1abef9">MapEvaluatorPointer</a>;</div>
-<div class="line"><a name="l00062"></a><span class="lineno"><a class="line" href="classMPBaseObject.html#a6c55c91725735d71ee1b6e07d0da9427">   62</a></span>&#160;    <span class="keyword">typedef</span> <span class="keyword">typename</span> <a class="code" href="classMPLibraryType.html#ab81bf0e7c1c186e6cf6380a310cf7965">MPLibrary::MPStrategyPointer</a>      <a class="code" href="classMPBaseObject.html#a6c55c91725735d71ee1b6e07d0da9427">MPStrategyPointer</a>;</div>
-<div class="line"><a name="l00063"></a><span class="lineno"><a class="line" href="classMPBaseObject.html#ae603ce0344d2bf534dd9623be0625f90">   63</a></span>&#160;    <span class="keyword">typedef</span> <span class="keyword">typename</span> <a class="code" href="classMPLibraryType.html#aba36f7b8363df2dcde92dd58958c2197">MPLibrary::DistanceMetricPointer</a>  <a class="code" href="classMPBaseObject.html#ae603ce0344d2bf534dd9623be0625f90">DistanceMetricPointer</a>;</div>
-<div class="line"><a name="l00064"></a><span class="lineno"><a class="line" href="classMPBaseObject.html#a96b8dadf9f28e3513e2bd059dfc0344a">   64</a></span>&#160;    <span class="keyword">typedef</span> <span class="keyword">typename</span> <a class="code" href="classMPLibraryType.html#a005889128c71659b542bb9cada97fa8b">MPLibrary::ValidityCheckerPointer</a> <a class="code" href="classMPBaseObject.html#a96b8dadf9f28e3513e2bd059dfc0344a">ValidityCheckerPointer</a>;</div>
-<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;    <span class="keyword">typedef</span> <span class="keyword">typename</span> <a class="code" href="classMPLibraryType.html#acd62482ea6c7a8063beaa94a300ce5f2">MPLibrary::NeighborhoodFinderPointer</a></div>
-<div class="line"><a name="l00066"></a><span class="lineno"><a class="line" href="classMPBaseObject.html#a931bd7b8fd743b7f7313046659866113">   66</a></span>&#160;                                                       <a class="code" href="classMPBaseObject.html#a931bd7b8fd743b7f7313046659866113">NeighborhoodFinderPointer</a>;</div>
-<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160; </div>
-<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160; </div>
-<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;    <a class="code" href="classMPBaseObject.html">MPBaseObject</a>(<span class="keyword">const</span> std::string&amp; _label = <span class="stringliteral">&quot;&quot;</span>, <span class="keyword">const</span> std::string&amp; _name = <span class="stringliteral">&quot;&quot;</span>,</div>
-<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;        <span class="keywordtype">bool</span> _debug = <span class="keyword">false</span>);</div>
-<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160; </div>
-<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;    <a class="code" href="classMPBaseObject.html">MPBaseObject</a>(<a class="code" href="classXMLNode.html">XMLNode</a>&amp; _node);</div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160; </div>
-<div class="line"><a name="l00083"></a><span class="lineno"><a class="line" href="classMPBaseObject.html#aba2b23fa368330ad7263eacb83dc1743">   83</a></span>&#160;    <span class="keyword">virtual</span> <a class="code" href="classMPBaseObject.html#aba2b23fa368330ad7263eacb83dc1743">~MPBaseObject</a>() = <span class="keywordflow">default</span>;</div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160; </div>
-<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160; </div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;    <span class="keyword">virtual</span> <span class="keywordtype">void</span> Print(std::ostream&amp; _os) <span class="keyword">const</span>;</div>
-<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160; </div>
-<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160; </div>
-<div class="line"><a name="l00107"></a><span class="lineno"><a class="line" href="classMPBaseObject.html#a09f350ffaec14a28dd2ced1b86ef9d9e">  107</a></span>&#160;    <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="classMPBaseObject.html#a09f350ffaec14a28dd2ced1b86ef9d9e">Initialize</a>() {}</div>
-<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160; </div>
+<div class="line"><a name="l00053"></a><span class="lineno"><a class="line" href="classMPBaseObject.html#a63f3af4b78d458b51ddad699de1f9287">   53</a></span>&#160;    <span class="keyword">typedef</span> <a class="code" href="classDefaultWeight.html">DefaultWeight&lt;Cfg&gt;</a> <a class="code" href="classMPBaseObject.html#a63f3af4b78d458b51ddad699de1f9287">WeightType</a>;</div>
+<div class="line"><a name="l00054"></a><span class="lineno"><a class="line" href="classMPBaseObject.html#a1cb9a08003cc7620b1534bdf69ceb1a4">   54</a></span>&#160;    <span class="keyword">typedef</span> <a class="code" href="classGenericStateGraph.html">GenericStateGraph&lt;Cfg, WeightType&gt;</a> <a class="code" href="classMPBaseObject.html#a1cb9a08003cc7620b1534bdf69ceb1a4">RoadmapType</a>;</div>
+<div class="line"><a name="l00055"></a><span class="lineno"><a class="line" href="classMPBaseObject.html#aad3c1d1dccb02cfd48da4438a2b2923b">   55</a></span>&#160;    <span class="keyword">typedef</span> <a class="code" href="classGroupCfg.html">GroupCfg&lt;RoadmapType&gt;</a> <a class="code" href="classMPBaseObject.html#aad3c1d1dccb02cfd48da4438a2b2923b">GroupCfgType</a>;</div>
+<div class="line"><a name="l00056"></a><span class="lineno"><a class="line" href="classMPBaseObject.html#a26059613b8543b300ece8b511aad7050">   56</a></span>&#160;    <span class="keyword">typedef</span> <a class="code" href="classGroupLocalPlan.html">GroupLocalPlan&lt;RoadmapType&gt;</a> <a class="code" href="classMPBaseObject.html#a26059613b8543b300ece8b511aad7050">GroupWeightType</a>;</div>
+<div class="line"><a name="l00057"></a><span class="lineno"><a class="line" href="classMPBaseObject.html#a062f6026973104069b7e08eb23a890f7">   57</a></span>&#160;    <span class="keyword">typedef</span> <a class="code" href="classGroupRoadmap.html">GroupRoadmap&lt;GroupCfgType, GroupWeightType&gt;</a> <a class="code" href="classMPBaseObject.html#a062f6026973104069b7e08eb23a890f7">GroupRoadmapType</a>;</div>
+<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160; </div>
+<div class="line"><a name="l00062"></a><span class="lineno"><a class="line" href="classMPStrategyMethod.html#a5d4ca9ff414d5e534de09475cd101154">   62</a></span>&#160; </div>
+<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;    <a class="code" href="classMPBaseObject.html">MPBaseObject</a>(<span class="keyword">const</span> std::string&amp; _label = <span class="stringliteral">&quot;&quot;</span>, <span class="keyword">const</span> std::string&amp; _name = <span class="stringliteral">&quot;&quot;</span>,</div>
+<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;        <span class="keywordtype">bool</span> _debug = <span class="keyword">false</span>);</div>
+<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160; </div>
+<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;    <a class="code" href="classMPBaseObject.html">MPBaseObject</a>(<a class="code" href="classXMLNode.html">XMLNode</a>&amp; _node);</div>
+<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160; </div>
+<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;    <span class="keyword">virtual</span> ~<a class="code" href="classMPBaseObject.html">MPBaseObject</a>();</div>
+<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160; </div>
+<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160; </div>
+<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;    <span class="keyword">virtual</span> <span class="keywordtype">void</span> Print(std::ostream&amp; _os) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160; </div>
+<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160; </div>
+<div class="line"><a name="l00098"></a><span class="lineno"><a class="line" href="classMPBaseObject.html#a5d4ca9ff414d5e534de09475cd101154">   98</a></span>&#160;    <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="classMPBaseObject.html#a5d4ca9ff414d5e534de09475cd101154">Initialize</a>() {}</div>
+<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160; </div>
+<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160; </div>
+<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;    <span class="keyword">const</span> std::string&amp; GetName() <span class="keyword">const</span>;</div>
+<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160; </div>
+<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;    <span class="keyword">const</span> std::string&amp; GetLabel() <span class="keyword">const</span>;</div>
+<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160; </div>
+<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;    std::string GetNameAndLabel() <span class="keyword">const</span>;</div>
 <div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160; </div>
-<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;    <span class="keyword">const</span> std::string&amp; GetName() <span class="keyword">const</span>;</div>
+<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;    <span class="keywordtype">void</span> SetLabel(<span class="keyword">const</span> std::string&amp;);</div>
 <div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160; </div>
-<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;    <span class="keyword">const</span> std::string&amp; GetLabel() <span class="keyword">const</span>;</div>
-<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160; </div>
-<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;    std::string GetNameAndLabel() <span class="keyword">const</span>;</div>
-<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160; </div>
-<div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;    <span class="keywordtype">void</span> SetLabel(<span class="keyword">const</span> std::string&amp;);</div>
-<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160; </div>
+<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160; </div>
+<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;    <span class="keywordtype">void</span> SetMPLibrary(<a class="code" href="classMPLibrary.html">MPLibrary</a>*) noexcept;</div>
+<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160; </div>
+<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;    <a class="code" href="classMPLibrary.html">MPLibrary</a>* GetMPLibrary() const noexcept;</div>
+<div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160; </div>
+<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;    <span class="keywordtype">bool</span> IsRunning() const noexcept;</div>
 <div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160; </div>
-<div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;    <span class="keywordtype">void</span> SetMPLibrary(<a class="code" href="PMPL_8h.html#a4829bbb5f410cd1931429c6c46ca6b42">MPLibrary</a>*) noexcept;</div>
-<div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160; </div>
-<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;    <a class="code" href="PMPL_8h.html#a4829bbb5f410cd1931429c6c46ca6b42">MPLibrary</a>* GetMPLibrary() const noexcept;</div>
-<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160; </div>
-<div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;    <span class="keywordtype">bool</span> IsRunning() const noexcept;</div>
-<div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160; </div>
-<div class="line"><a name="l00139"></a><span class="lineno">  139</span>&#160;    DistanceMetricPointer GetDistanceMetric(const std::<span class="keywordtype">string</span>&amp;) const noexcept;</div>
-<div class="line"><a name="l00140"></a><span class="lineno">  140</span>&#160; </div>
-<div class="line"><a name="l00142"></a><span class="lineno">  142</span>&#160;    ValidityCheckerPointer GetValidityChecker(const std::<span class="keywordtype">string</span>&amp;) const noexcept;</div>
-<div class="line"><a name="l00143"></a><span class="lineno">  143</span>&#160; </div>
-<div class="line"><a name="l00145"></a><span class="lineno">  145</span>&#160;    NeighborhoodFinderPointer GetNeighborhoodFinder(const std::<span class="keywordtype">string</span>&amp;) const noexcept;</div>
-<div class="line"><a name="l00146"></a><span class="lineno">  146</span>&#160; </div>
-<div class="line"><a name="l00148"></a><span class="lineno">  148</span>&#160;    SamplerPointer GetSampler(const std::<span class="keywordtype">string</span>&amp;) const noexcept;</div>
-<div class="line"><a name="l00149"></a><span class="lineno">  149</span>&#160; </div>
-<div class="line"><a name="l00151"></a><span class="lineno">  151</span>&#160;    LocalPlannerPointer GetLocalPlanner(const std::<span class="keywordtype">string</span>&amp;) const noexcept;</div>
-<div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160; </div>
-<div class="line"><a name="l00154"></a><span class="lineno">  154</span>&#160;    ExtenderPointer GetExtender(const std::<span class="keywordtype">string</span>&amp;) const noexcept;</div>
-<div class="line"><a name="l00155"></a><span class="lineno">  155</span>&#160; </div>
-<div class="line"><a name="l00157"></a><span class="lineno">  157</span>&#160;    PathModifierPointer GetPathModifier(const std::<span class="keywordtype">string</span>&amp;) const noexcept;</div>
-<div class="line"><a name="l00158"></a><span class="lineno">  158</span>&#160; </div>
-<div class="line"><a name="l00160"></a><span class="lineno">  160</span>&#160;    EdgeValidityCheckerPointer GetEdgeValidityChecker(const std::<span class="keywordtype">string</span>&amp;) const noexcept;</div>
-<div class="line"><a name="l00161"></a><span class="lineno">  161</span>&#160; </div>
-<div class="line"><a name="l00163"></a><span class="lineno">  163</span>&#160;    ConnectorPointer GetConnector(const std::<span class="keywordtype">string</span>&amp;) const noexcept;</div>
-<div class="line"><a name="l00164"></a><span class="lineno">  164</span>&#160; </div>
-<div class="line"><a name="l00166"></a><span class="lineno">  166</span>&#160;    MetricPointer GetMetric(const std::<span class="keywordtype">string</span>&amp;) const noexcept;</div>
-<div class="line"><a name="l00167"></a><span class="lineno">  167</span>&#160; </div>
-<div class="line"><a name="l00169"></a><span class="lineno">  169</span>&#160;    MapEvaluatorPointer GetMapEvaluator(const std::<span class="keywordtype">string</span>&amp;) const noexcept;</div>
-<div class="line"><a name="l00170"></a><span class="lineno">  170</span>&#160; </div>
-<div class="line"><a name="l00172"></a><span class="lineno">  172</span>&#160;    MPStrategyPointer GetMPStrategy(const std::<span class="keywordtype">string</span>&amp;) const noexcept;</div>
-<div class="line"><a name="l00173"></a><span class="lineno">  173</span>&#160; </div>
-<div class="line"><a name="l00175"></a><span class="lineno">  175</span>&#160;    typename <a class="code" href="classMPTraits.html">MPTraits</a>::MPTools* GetMPTools() const noexcept;</div>
+<div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160; </div>
+<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;    <a class="code" href="classMPProblem.html">MPProblem</a>* GetMPProblem() const noexcept;</div>
+<div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160; </div>
+<div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160;    <a class="code" href="classEnvironment.html">Environment</a>* GetEnvironment() const noexcept;</div>
+<div class="line"><a name="l00138"></a><span class="lineno">  138</span>&#160; </div>
+<div class="line"><a name="l00140"></a><span class="lineno">  140</span>&#160;    <a class="code" href="classMPTask.html">MPTask</a>* GetTask() const noexcept;</div>
+<div class="line"><a name="l00141"></a><span class="lineno">  141</span>&#160; </div>
+<div class="line"><a name="l00143"></a><span class="lineno">  143</span>&#160;    <a class="code" href="classGroupTask.html">GroupTask</a>* GetGroupTask() const noexcept;</div>
+<div class="line"><a name="l00144"></a><span class="lineno">  144</span>&#160; </div>
+<div class="line"><a name="l00148"></a><span class="lineno">  148</span>&#160; </div>
+<div class="line"><a name="l00149"></a><span class="lineno">  149</span>&#160;    <a class="code" href="classMPSolutionType.html">MPSolutionType</a>* GetMPSolution() const noexcept;</div>
+<div class="line"><a name="l00150"></a><span class="lineno">  150</span>&#160; </div>
+<div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160;    RoadmapType* GetRoadmap(<a class="code" href="classRobot.html">Robot</a>* const _r = <span class="keywordtype">nullptr</span>) const noexcept;</div>
+<div class="line"><a name="l00153"></a><span class="lineno">  153</span>&#160; </div>
+<div class="line"><a name="l00155"></a><span class="lineno">  155</span>&#160;    GroupRoadmapType* GetGroupRoadmap(<a class="code" href="classRobotGroup.html">RobotGroup</a>* const _g = <span class="keywordtype">nullptr</span>) const</div>
+<div class="line"><a name="l00156"></a><span class="lineno">  156</span>&#160;        noexcept;</div>
+<div class="line"><a name="l00157"></a><span class="lineno">  157</span>&#160; </div>
+<div class="line"><a name="l00159"></a><span class="lineno">  159</span>&#160;    RoadmapType* GetBlockRoadmap(<a class="code" href="classRobot.html">Robot</a>* const _r = <span class="keywordtype">nullptr</span>) const noexcept;</div>
+<div class="line"><a name="l00160"></a><span class="lineno">  160</span>&#160; </div>
+<div class="line"><a name="l00161"></a><span class="lineno">  161</span>&#160;    <span class="comment">// /// Get the current best path.</span></div>
+<div class="line"><a name="l00162"></a><span class="lineno">  162</span>&#160;    <a class="code" href="classPath.html">Path</a>* GetPath(<a class="code" href="classRobot.html">Robot</a>* const _r = <span class="keywordtype">nullptr</span>) const noexcept;</div>
+<div class="line"><a name="l00163"></a><span class="lineno">  163</span>&#160; </div>
+<div class="line"><a name="l00165"></a><span class="lineno">  165</span>&#160;    <a class="code" href="classGroupPath.html">GroupPath</a>* GetGroupPath(<a class="code" href="classRobotGroup.html">RobotGroup</a>* const _g = <span class="keywordtype">nullptr</span>) const noexcept;</div>
+<div class="line"><a name="l00166"></a><span class="lineno">  166</span>&#160; </div>
+<div class="line"><a name="l00168"></a><span class="lineno">  168</span>&#160;    <a class="code" href="classStatClass.html">StatClass</a>* GetStatClass() const noexcept;</div>
+<div class="line"><a name="l00169"></a><span class="lineno">  169</span>&#160; </div>
+<div class="line"><a name="l00171"></a><span class="lineno">  171</span>&#160;    <a class="code" href="classLocalObstacleMap.html">LocalObstacleMap</a>* GetLocalObstacleMap() const noexcept;</div>
+<div class="line"><a name="l00172"></a><span class="lineno">  172</span>&#160; </div>
+<div class="line"><a name="l00174"></a><span class="lineno">  174</span>&#160; </div>
+<div class="line"><a name="l00175"></a><span class="lineno">  175</span>&#160;  protected:</div>
 <div class="line"><a name="l00176"></a><span class="lineno">  176</span>&#160; </div>
-<div class="line"><a name="l00180"></a><span class="lineno">  180</span>&#160; </div>
-<div class="line"><a name="l00182"></a><span class="lineno">  182</span>&#160;    <a class="code" href="classMPProblem.html">MPProblem</a>* GetMPProblem() const noexcept;</div>
-<div class="line"><a name="l00183"></a><span class="lineno">  183</span>&#160; </div>
-<div class="line"><a name="l00185"></a><span class="lineno">  185</span>&#160;    <a class="code" href="classEnvironment.html">Environment</a>* GetEnvironment() const noexcept;</div>
+<div class="line"><a name="l00178"></a><span class="lineno"><a class="line" href="classMPBaseObject.html#af6aea751544b43f86b371ce432a05724">  178</a></span>&#160;    <span class="keywordtype">void</span> SetName(const std::<span class="keywordtype">string</span>&amp; _s) {m_name = _s;}</div>
+<div class="line"><a name="l00179"></a><span class="lineno">  179</span>&#160; </div>
+<div class="line"><a name="l00181"></a><span class="lineno">  181</span>&#160;    <span class="keyword">const</span> std::string&amp; GetBaseFilename() <span class="keyword">const</span>;</div>
+<div class="line"><a name="l00182"></a><span class="lineno">  182</span>&#160; </div>
+<div class="line"><a name="l00183"></a><span class="lineno"><a class="line" href="classMPBaseObject.html#a69f05ccf2fb3c91a2747dfd0afb385a2">  183</a></span>&#160;    <span class="keywordtype">bool</span> <a class="code" href="classMPBaseObject.html#a69f05ccf2fb3c91a2747dfd0afb385a2">m_debug</a>;                  </div>
+<div class="line"><a name="l00184"></a><span class="lineno">  184</span>&#160; </div>
+<div class="line"><a name="l00185"></a><span class="lineno">  185</span>&#160;  <span class="keyword">private</span>:</div>
 <div class="line"><a name="l00186"></a><span class="lineno">  186</span>&#160; </div>
-<div class="line"><a name="l00188"></a><span class="lineno">  188</span>&#160;    <a class="code" href="classMPTask.html">MPTask</a>* GetTask() const noexcept;</div>
-<div class="line"><a name="l00189"></a><span class="lineno">  189</span>&#160; </div>
-<div class="line"><a name="l00191"></a><span class="lineno">  191</span>&#160;    <a class="code" href="classGroupTask.html">GroupTask</a>* GetGroupTask() const noexcept;</div>
-<div class="line"><a name="l00192"></a><span class="lineno">  192</span>&#160; </div>
-<div class="line"><a name="l00196"></a><span class="lineno">  196</span>&#160; </div>
-<div class="line"><a name="l00197"></a><span class="lineno">  197</span>&#160;    <a class="code" href="PMPL_8h.html#a0e826882dd5f3e0bd4ae975ce04abd04">MPSolution</a>* GetMPSolution() const noexcept;</div>
-<div class="line"><a name="l00198"></a><span class="lineno">  198</span>&#160; </div>
-<div class="line"><a name="l00200"></a><span class="lineno">  200</span>&#160;    <a class="code" href="PMPL_8h.html#abf8ccf2b5a281c9ca6725c3364cb8f9b">RoadmapType</a>* GetRoadmap(<a class="code" href="classRobot.html">Robot</a>* const _r = <span class="keywordtype">nullptr</span>) const noexcept;</div>
-<div class="line"><a name="l00201"></a><span class="lineno">  201</span>&#160; </div>
-<div class="line"><a name="l00203"></a><span class="lineno">  203</span>&#160;    GroupRoadmapType* GetGroupRoadmap(<a class="code" href="classRobotGroup.html">RobotGroup</a>* const _g = <span class="keywordtype">nullptr</span>) const</div>
-<div class="line"><a name="l00204"></a><span class="lineno">  204</span>&#160;        noexcept;</div>
-<div class="line"><a name="l00205"></a><span class="lineno">  205</span>&#160; </div>
-<div class="line"><a name="l00207"></a><span class="lineno">  207</span>&#160;    <a class="code" href="PMPL_8h.html#abf8ccf2b5a281c9ca6725c3364cb8f9b">RoadmapType</a>* GetBlockRoadmap(<a class="code" href="classRobot.html">Robot</a>* const _r = <span class="keywordtype">nullptr</span>) const noexcept;</div>
-<div class="line"><a name="l00208"></a><span class="lineno">  208</span>&#160; </div>
-<div class="line"><a name="l00210"></a><span class="lineno">  210</span>&#160;    <a class="code" href="PMPL_8h.html#ace97caaaddd799beb0c9f3ed793fc4c5">Path</a>* GetPath(<a class="code" href="classRobot.html">Robot</a>* const _r = <span class="keywordtype">nullptr</span>) const noexcept;</div>
-<div class="line"><a name="l00211"></a><span class="lineno">  211</span>&#160; </div>
-<div class="line"><a name="l00213"></a><span class="lineno">  213</span>&#160;    <a class="code" href="classGroupPath.html">GroupPath</a>* GetGroupPath(<a class="code" href="classRobotGroup.html">RobotGroup</a>* const _g = <span class="keywordtype">nullptr</span>) const noexcept;</div>
-<div class="line"><a name="l00214"></a><span class="lineno">  214</span>&#160; </div>
-<div class="line"><a name="l00216"></a><span class="lineno">  216</span>&#160;    <a class="code" href="classStatClass.html">StatClass</a>* GetStatClass() const noexcept;</div>
-<div class="line"><a name="l00217"></a><span class="lineno">  217</span>&#160; </div>
-<div class="line"><a name="l00219"></a><span class="lineno">  219</span>&#160;    LocalObstacleMap* GetLocalObstacleMap() const noexcept;</div>
-<div class="line"><a name="l00220"></a><span class="lineno">  220</span>&#160; </div>
-<div class="line"><a name="l00222"></a><span class="lineno">  222</span>&#160;    GoalTracker* GetGoalTracker() const noexcept;</div>
-<div class="line"><a name="l00223"></a><span class="lineno">  223</span>&#160; </div>
-<div class="line"><a name="l00225"></a><span class="lineno">  225</span>&#160; </div>
-<div class="line"><a name="l00226"></a><span class="lineno">  226</span>&#160;  protected:</div>
-<div class="line"><a name="l00227"></a><span class="lineno">  227</span>&#160; </div>
-<div class="line"><a name="l00229"></a><span class="lineno"><a class="line" href="classMPBaseObject.html#ab59d82cd734f77fdc17eddb8517461da">  229</a></span>&#160;    <span class="keywordtype">void</span> SetName(const std::<span class="keywordtype">string</span>&amp; _s) {m_name = _s;}</div>
-<div class="line"><a name="l00230"></a><span class="lineno">  230</span>&#160; </div>
-<div class="line"><a name="l00232"></a><span class="lineno"><a class="line" href="classMPBaseObject.html#acf158aa0efa6679a73995f429d768a0b">  232</a></span>&#160;    <span class="keyword">const</span> std::string&amp; <a class="code" href="classMPBaseObject.html#acf158aa0efa6679a73995f429d768a0b">GetBaseFilename</a>()<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l00233"></a><span class="lineno">  233</span>&#160;      <span class="keywordflow">return</span> GetMPProblem()-&gt;GetBaseFilename();</div>
-<div class="line"><a name="l00234"></a><span class="lineno">  234</span>&#160;    }</div>
-<div class="line"><a name="l00235"></a><span class="lineno">  235</span>&#160; </div>
-<div class="line"><a name="l00236"></a><span class="lineno"><a class="line" href="classMPBaseObject.html#a4dce0c7792a2e35db03e46fbdc0038d3">  236</a></span>&#160;    <span class="keywordtype">bool</span> <a class="code" href="classMPBaseObject.html#a4dce0c7792a2e35db03e46fbdc0038d3">m_debug</a>;                  </div>
-<div class="line"><a name="l00237"></a><span class="lineno">  237</span>&#160; </div>
-<div class="line"><a name="l00238"></a><span class="lineno">  238</span>&#160;  <span class="keyword">private</span>:</div>
-<div class="line"><a name="l00239"></a><span class="lineno">  239</span>&#160; </div>
-<div class="line"><a name="l00240"></a><span class="lineno">  240</span>&#160;    std::string m_name;            </div>
-<div class="line"><a name="l00241"></a><span class="lineno">  241</span>&#160;    std::string m_label;           </div>
-<div class="line"><a name="l00242"></a><span class="lineno">  242</span>&#160;    <a class="code" href="classMPLibraryType.html">MPLibrary</a>* m_library{<span class="keyword">nullptr</span>}; </div>
-<div class="line"><a name="l00243"></a><span class="lineno">  243</span>&#160; </div>
-<div class="line"><a name="l00244"></a><span class="lineno"><a class="line" href="classMPBaseObject.html#a27ad119e2192b1d05f16d41d7dd4d717">  244</a></span>&#160;    <span class="keyword">template</span>&lt;<span class="keyword">typename</span> T, <span class="keyword">typename</span> U&gt; <span class="keyword">friend</span> <span class="keyword">class </span><a class="code" href="classMethodSet.html">MethodSet</a>;</div>
-<div class="line"><a name="l00245"></a><span class="lineno">  245</span>&#160;};</div>
-<div class="line"><a name="l00246"></a><span class="lineno">  246</span>&#160; </div>
-<div class="line"><a name="l00247"></a><span class="lineno">  247</span>&#160;<span class="comment">/*-------------------------------- Construction ------------------------------*/</span></div>
-<div class="line"><a name="l00248"></a><span class="lineno">  248</span>&#160; </div>
-<div class="line"><a name="l00249"></a><span class="lineno">  249</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00250"></a><span class="lineno"><a class="line" href="classMPBaseObject.html#ab41feac6877c3756dafbadb9916c792e">  250</a></span>&#160;<a class="code" href="classMPBaseObject.html#ab41feac6877c3756dafbadb9916c792e">MPBaseObject&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00251"></a><span class="lineno">  251</span>&#160;<a class="code" href="classMPBaseObject.html#ab41feac6877c3756dafbadb9916c792e">MPBaseObject</a>(<span class="keyword">const</span> std::string&amp; _label, <span class="keyword">const</span> std::string&amp; _name, <span class="keywordtype">bool</span> _debug) :</div>
-<div class="line"><a name="l00252"></a><span class="lineno">  252</span>&#160;    m_debug(_debug), m_name(_name), m_label(_label) { }</div>
-<div class="line"><a name="l00253"></a><span class="lineno">  253</span>&#160; </div>
-<div class="line"><a name="l00254"></a><span class="lineno">  254</span>&#160; </div>
-<div class="line"><a name="l00255"></a><span class="lineno">  255</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00256"></a><span class="lineno"><a class="line" href="classMPBaseObject.html#aea8003b827f45d6408545d97ce17a83f">  256</a></span>&#160;<a class="code" href="classMPBaseObject.html#ab41feac6877c3756dafbadb9916c792e">MPBaseObject&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00257"></a><span class="lineno">  257</span>&#160;<a class="code" href="classMPBaseObject.html#ab41feac6877c3756dafbadb9916c792e">MPBaseObject</a>(<a class="code" href="classXMLNode.html">XMLNode</a>&amp; _node) {</div>
-<div class="line"><a name="l00258"></a><span class="lineno">  258</span>&#160;  m_label = _node.<a class="code" href="classXMLNode.html#af0e81db89948e52fdee6bf2bf029037f">Read</a>(<span class="stringliteral">&quot;label&quot;</span>, <span class="keyword">true</span>, <span class="stringliteral">&quot;&quot;</span>, <span class="stringliteral">&quot;Label Identifier&quot;</span>);</div>
-<div class="line"><a name="l00259"></a><span class="lineno">  259</span>&#160;  m_debug = _node.<a class="code" href="classXMLNode.html#af0e81db89948e52fdee6bf2bf029037f">Read</a>(<span class="stringliteral">&quot;debug&quot;</span>, <span class="keyword">false</span>, <span class="keyword">false</span>, <span class="stringliteral">&quot;Show run-time debug info?&quot;</span>);</div>
-<div class="line"><a name="l00260"></a><span class="lineno">  260</span>&#160;}</div>
-<div class="line"><a name="l00261"></a><span class="lineno">  261</span>&#160; </div>
-<div class="line"><a name="l00262"></a><span class="lineno">  262</span>&#160;<span class="comment">/*------------------------------------ I/O -----------------------------------*/</span></div>
-<div class="line"><a name="l00263"></a><span class="lineno">  263</span>&#160; </div>
-<div class="line"><a name="l00264"></a><span class="lineno">  264</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00265"></a><span class="lineno">  265</span>&#160;<span class="keywordtype">void</span></div>
-<div class="line"><a name="l00266"></a><span class="lineno"><a class="line" href="classMPBaseObject.html#a4d111a2d7d53d243cdd4cd89ffa65212">  266</a></span>&#160;<a class="code" href="classMPBaseObject.html#a4d111a2d7d53d243cdd4cd89ffa65212">MPBaseObject&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00267"></a><span class="lineno">  267</span>&#160;<a class="code" href="classMPBaseObject.html#a4d111a2d7d53d243cdd4cd89ffa65212">Print</a>(std::ostream&amp; _os)<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l00268"></a><span class="lineno">  268</span>&#160;  _os &lt;&lt; this-&gt;GetNameAndLabel() &lt;&lt; endl;</div>
-<div class="line"><a name="l00269"></a><span class="lineno">  269</span>&#160;}</div>
-<div class="line"><a name="l00270"></a><span class="lineno">  270</span>&#160; </div>
-<div class="line"><a name="l00271"></a><span class="lineno">  271</span>&#160;<span class="comment">/*-------------------------- Name and Label Accessors ------------------------*/</span></div>
-<div class="line"><a name="l00272"></a><span class="lineno">  272</span>&#160; </div>
-<div class="line"><a name="l00273"></a><span class="lineno">  273</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00274"></a><span class="lineno">  274</span>&#160;<span class="keyword">inline</span></div>
-<div class="line"><a name="l00275"></a><span class="lineno">  275</span>&#160;<span class="keyword">const</span> std::string&amp;</div>
-<div class="line"><a name="l00276"></a><span class="lineno"><a class="line" href="classMPBaseObject.html#aca769e4192d06bd3f4926bf94b9c055a">  276</a></span>&#160;<a class="code" href="classMPBaseObject.html#aca769e4192d06bd3f4926bf94b9c055a">MPBaseObject&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00277"></a><span class="lineno">  277</span>&#160;<a class="code" href="classMPBaseObject.html#aca769e4192d06bd3f4926bf94b9c055a">GetName</a>()<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l00278"></a><span class="lineno">  278</span>&#160;  <span class="keywordflow">return</span> m_name;</div>
-<div class="line"><a name="l00279"></a><span class="lineno">  279</span>&#160;}</div>
-<div class="line"><a name="l00280"></a><span class="lineno">  280</span>&#160; </div>
-<div class="line"><a name="l00281"></a><span class="lineno">  281</span>&#160; </div>
-<div class="line"><a name="l00282"></a><span class="lineno">  282</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00283"></a><span class="lineno">  283</span>&#160;<span class="keyword">inline</span></div>
-<div class="line"><a name="l00284"></a><span class="lineno">  284</span>&#160;<span class="keyword">const</span> std::string&amp;</div>
-<div class="line"><a name="l00285"></a><span class="lineno"><a class="line" href="classMPBaseObject.html#ad34623e8bcd57c846f8ffe6afe6b427e">  285</a></span>&#160;<a class="code" href="classMPBaseObject.html#ad34623e8bcd57c846f8ffe6afe6b427e">MPBaseObject&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00286"></a><span class="lineno">  286</span>&#160;<a class="code" href="classMPBaseObject.html#ad34623e8bcd57c846f8ffe6afe6b427e">GetLabel</a>()<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l00287"></a><span class="lineno">  287</span>&#160;  <span class="keywordflow">return</span> m_label;</div>
-<div class="line"><a name="l00288"></a><span class="lineno">  288</span>&#160;}</div>
-<div class="line"><a name="l00289"></a><span class="lineno">  289</span>&#160; </div>
-<div class="line"><a name="l00290"></a><span class="lineno">  290</span>&#160; </div>
-<div class="line"><a name="l00291"></a><span class="lineno">  291</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00292"></a><span class="lineno">  292</span>&#160;<span class="keyword">inline</span></div>
-<div class="line"><a name="l00293"></a><span class="lineno">  293</span>&#160;std::string</div>
-<div class="line"><a name="l00294"></a><span class="lineno"><a class="line" href="classMPBaseObject.html#a57acdb0b1cc5dd45a2a0c08df914bfcf">  294</a></span>&#160;<a class="code" href="classMPBaseObject.html#a57acdb0b1cc5dd45a2a0c08df914bfcf">MPBaseObject&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00295"></a><span class="lineno">  295</span>&#160;<a class="code" href="classMPBaseObject.html#a57acdb0b1cc5dd45a2a0c08df914bfcf">GetNameAndLabel</a>()<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l00296"></a><span class="lineno">  296</span>&#160;  <span class="keywordflow">return</span> m_name + <span class="stringliteral">&quot;::&quot;</span> + m_label;</div>
-<div class="line"><a name="l00297"></a><span class="lineno">  297</span>&#160;}</div>
-<div class="line"><a name="l00298"></a><span class="lineno">  298</span>&#160; </div>
-<div class="line"><a name="l00299"></a><span class="lineno">  299</span>&#160; </div>
-<div class="line"><a name="l00300"></a><span class="lineno">  300</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00301"></a><span class="lineno">  301</span>&#160;<span class="keyword">inline</span></div>
-<div class="line"><a name="l00302"></a><span class="lineno">  302</span>&#160;<span class="keywordtype">void</span></div>
-<div class="line"><a name="l00303"></a><span class="lineno"><a class="line" href="classMPBaseObject.html#ac5466caf986b06ca41f1fea274dc47c6">  303</a></span>&#160;<a class="code" href="classMPBaseObject.html#ac5466caf986b06ca41f1fea274dc47c6">MPBaseObject&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00304"></a><span class="lineno">  304</span>&#160;<a class="code" href="classMPBaseObject.html#ac5466caf986b06ca41f1fea274dc47c6">SetLabel</a>(<span class="keyword">const</span> std::string&amp; _s) {</div>
-<div class="line"><a name="l00305"></a><span class="lineno">  305</span>&#160;  m_label = _s;</div>
-<div class="line"><a name="l00306"></a><span class="lineno">  306</span>&#160;}</div>
-<div class="line"><a name="l00307"></a><span class="lineno">  307</span>&#160; </div>
-<div class="line"><a name="l00308"></a><span class="lineno">  308</span>&#160;<span class="comment">/*----------------------------- MPLibrary Accessors --------------------------*/</span></div>
-<div class="line"><a name="l00309"></a><span class="lineno">  309</span>&#160; </div>
-<div class="line"><a name="l00310"></a><span class="lineno">  310</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00311"></a><span class="lineno">  311</span>&#160;<span class="keyword">inline</span></div>
-<div class="line"><a name="l00312"></a><span class="lineno">  312</span>&#160;<span class="keywordtype">void</span></div>
-<div class="line"><a name="l00313"></a><span class="lineno"><a class="line" href="classMPBaseObject.html#a697d226daf5f6a2745ef88d2d61a596e">  313</a></span>&#160;<a class="code" href="classMPBaseObject.html#a697d226daf5f6a2745ef88d2d61a596e">MPBaseObject&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00314"></a><span class="lineno">  314</span>&#160;<a class="code" href="classMPBaseObject.html#a697d226daf5f6a2745ef88d2d61a596e">SetMPLibrary</a>(<a class="code" href="classMPLibraryType.html">MPLibrary</a>* _l) noexcept {</div>
-<div class="line"><a name="l00315"></a><span class="lineno">  315</span>&#160;  m_library = _l;</div>
-<div class="line"><a name="l00316"></a><span class="lineno">  316</span>&#160;}</div>
-<div class="line"><a name="l00317"></a><span class="lineno">  317</span>&#160; </div>
-<div class="line"><a name="l00318"></a><span class="lineno">  318</span>&#160; </div>
-<div class="line"><a name="l00319"></a><span class="lineno">  319</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00320"></a><span class="lineno">  320</span>&#160;<span class="keyword">inline</span></div>
-<div class="line"><a name="l00321"></a><span class="lineno">  321</span>&#160;<span class="keyword">typename</span> <a class="code" href="classMPLibraryType.html">MPTraits::MPLibrary</a>*</div>
-<div class="line"><a name="l00322"></a><span class="lineno"><a class="line" href="classMPBaseObject.html#a521b705712b8e7d7197493e411226bda">  322</a></span>&#160;<a class="code" href="classMPBaseObject.html#a521b705712b8e7d7197493e411226bda">MPBaseObject&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00323"></a><span class="lineno">  323</span>&#160;<a class="code" href="classMPBaseObject.html#a521b705712b8e7d7197493e411226bda">GetMPLibrary</a>() const noexcept {</div>
-<div class="line"><a name="l00324"></a><span class="lineno">  324</span>&#160;  <span class="keywordflow">return</span> m_library;</div>
-<div class="line"><a name="l00325"></a><span class="lineno">  325</span>&#160;}</div>
-<div class="line"><a name="l00326"></a><span class="lineno">  326</span>&#160; </div>
-<div class="line"><a name="l00327"></a><span class="lineno">  327</span>&#160; </div>
-<div class="line"><a name="l00328"></a><span class="lineno">  328</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00329"></a><span class="lineno">  329</span>&#160;<span class="keyword">inline</span></div>
-<div class="line"><a name="l00330"></a><span class="lineno">  330</span>&#160;<span class="keywordtype">bool</span></div>
-<div class="line"><a name="l00331"></a><span class="lineno"><a class="line" href="classMPBaseObject.html#abfed57adb1cd6e9e6e75062427bc9f7e">  331</a></span>&#160;<a class="code" href="classMPBaseObject.html#abfed57adb1cd6e9e6e75062427bc9f7e">MPBaseObject&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00332"></a><span class="lineno">  332</span>&#160;<a class="code" href="classMPBaseObject.html#abfed57adb1cd6e9e6e75062427bc9f7e">IsRunning</a>() const noexcept {</div>
-<div class="line"><a name="l00333"></a><span class="lineno">  333</span>&#160;  <span class="keywordflow">return</span> m_library-&gt;IsRunning();</div>
-<div class="line"><a name="l00334"></a><span class="lineno">  334</span>&#160;}</div>
-<div class="line"><a name="l00335"></a><span class="lineno">  335</span>&#160; </div>
-<div class="line"><a name="l00336"></a><span class="lineno">  336</span>&#160; </div>
-<div class="line"><a name="l00337"></a><span class="lineno">  337</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00338"></a><span class="lineno">  338</span>&#160;<span class="keyword">inline</span></div>
-<div class="line"><a name="l00339"></a><span class="lineno">  339</span>&#160;<span class="keyword">typename</span> <a class="code" href="classMPBaseObject.html#ae603ce0344d2bf534dd9623be0625f90">MPBaseObject&lt;MPTraits&gt;::DistanceMetricPointer</a></div>
-<div class="line"><a name="l00340"></a><span class="lineno"><a class="line" href="classMPBaseObject.html#a8a20d7ea8dcfacc2900cc1862c4f8cc8">  340</a></span>&#160;<a class="code" href="classMPBaseObject.html#a8a20d7ea8dcfacc2900cc1862c4f8cc8">MPBaseObject&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00341"></a><span class="lineno">  341</span>&#160;<a class="code" href="classMPBaseObject.html#a8a20d7ea8dcfacc2900cc1862c4f8cc8">GetDistanceMetric</a>(<span class="keyword">const</span> std::string&amp; _label) <span class="keyword">const</span> noexcept {</div>
-<div class="line"><a name="l00342"></a><span class="lineno">  342</span>&#160;  <span class="keywordflow">return</span> m_library-&gt;GetDistanceMetric(_label);</div>
-<div class="line"><a name="l00343"></a><span class="lineno">  343</span>&#160;}</div>
-<div class="line"><a name="l00344"></a><span class="lineno">  344</span>&#160; </div>
-<div class="line"><a name="l00345"></a><span class="lineno">  345</span>&#160; </div>
-<div class="line"><a name="l00346"></a><span class="lineno">  346</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00347"></a><span class="lineno">  347</span>&#160;<span class="keyword">inline</span></div>
-<div class="line"><a name="l00348"></a><span class="lineno">  348</span>&#160;<span class="keyword">typename</span> <a class="code" href="classMPBaseObject.html#a96b8dadf9f28e3513e2bd059dfc0344a">MPBaseObject&lt;MPTraits&gt;::ValidityCheckerPointer</a></div>
-<div class="line"><a name="l00349"></a><span class="lineno"><a class="line" href="classMPBaseObject.html#a2342194564152d2f990223cb62844cbe">  349</a></span>&#160;<a class="code" href="classMPBaseObject.html#a2342194564152d2f990223cb62844cbe">MPBaseObject&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00350"></a><span class="lineno">  350</span>&#160;<a class="code" href="classMPBaseObject.html#a2342194564152d2f990223cb62844cbe">GetValidityChecker</a>(<span class="keyword">const</span> std::string&amp; _label) <span class="keyword">const</span> noexcept {</div>
-<div class="line"><a name="l00351"></a><span class="lineno">  351</span>&#160;  <span class="keywordflow">return</span> m_library-&gt;GetValidityChecker(_label);</div>
-<div class="line"><a name="l00352"></a><span class="lineno">  352</span>&#160;}</div>
-<div class="line"><a name="l00353"></a><span class="lineno">  353</span>&#160; </div>
-<div class="line"><a name="l00354"></a><span class="lineno">  354</span>&#160; </div>
-<div class="line"><a name="l00355"></a><span class="lineno">  355</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00356"></a><span class="lineno">  356</span>&#160;<span class="keyword">inline</span></div>
-<div class="line"><a name="l00357"></a><span class="lineno">  357</span>&#160;<span class="keyword">typename</span> <a class="code" href="classMPBaseObject.html#a931bd7b8fd743b7f7313046659866113">MPBaseObject&lt;MPTraits&gt;::NeighborhoodFinderPointer</a></div>
-<div class="line"><a name="l00358"></a><span class="lineno"><a class="line" href="classMPBaseObject.html#a66ba952d43ffc95ff56c889096e9a7d3">  358</a></span>&#160;<a class="code" href="classMPBaseObject.html#a66ba952d43ffc95ff56c889096e9a7d3">MPBaseObject&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00359"></a><span class="lineno">  359</span>&#160;<a class="code" href="classMPBaseObject.html#a66ba952d43ffc95ff56c889096e9a7d3">GetNeighborhoodFinder</a>(<span class="keyword">const</span> std::string&amp; _label) <span class="keyword">const</span> noexcept {</div>
-<div class="line"><a name="l00360"></a><span class="lineno">  360</span>&#160;  <span class="keywordflow">return</span> m_library-&gt;GetNeighborhoodFinder(_label);</div>
-<div class="line"><a name="l00361"></a><span class="lineno">  361</span>&#160;}</div>
-<div class="line"><a name="l00362"></a><span class="lineno">  362</span>&#160; </div>
-<div class="line"><a name="l00363"></a><span class="lineno">  363</span>&#160; </div>
-<div class="line"><a name="l00364"></a><span class="lineno">  364</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00365"></a><span class="lineno">  365</span>&#160;<span class="keyword">inline</span></div>
-<div class="line"><a name="l00366"></a><span class="lineno">  366</span>&#160;<span class="keyword">typename</span> <a class="code" href="classMPBaseObject.html#aaf3cea401f0b3ade1d909fc527246a08">MPBaseObject&lt;MPTraits&gt;::SamplerPointer</a></div>
-<div class="line"><a name="l00367"></a><span class="lineno"><a class="line" href="classMPBaseObject.html#a9a2dff0888a2ea84bb38a556654a4701">  367</a></span>&#160;<a class="code" href="classMPBaseObject.html#a9a2dff0888a2ea84bb38a556654a4701">MPBaseObject&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00368"></a><span class="lineno">  368</span>&#160;<a class="code" href="classMPBaseObject.html#a9a2dff0888a2ea84bb38a556654a4701">GetSampler</a>(<span class="keyword">const</span> std::string&amp; _label) <span class="keyword">const</span> noexcept {</div>
-<div class="line"><a name="l00369"></a><span class="lineno">  369</span>&#160;  <span class="keywordflow">return</span> m_library-&gt;GetSampler(_label);</div>
-<div class="line"><a name="l00370"></a><span class="lineno">  370</span>&#160;}</div>
-<div class="line"><a name="l00371"></a><span class="lineno">  371</span>&#160; </div>
-<div class="line"><a name="l00372"></a><span class="lineno">  372</span>&#160; </div>
-<div class="line"><a name="l00373"></a><span class="lineno">  373</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00374"></a><span class="lineno">  374</span>&#160;<span class="keyword">inline</span></div>
-<div class="line"><a name="l00375"></a><span class="lineno">  375</span>&#160;<span class="keyword">typename</span> <a class="code" href="classMPBaseObject.html#ae65bc5a79747909242133bf6d00c993d">MPBaseObject&lt;MPTraits&gt;::LocalPlannerPointer</a></div>
-<div class="line"><a name="l00376"></a><span class="lineno"><a class="line" href="classMPBaseObject.html#a23231ec80cf4dc6103fcbe6967611de8">  376</a></span>&#160;<a class="code" href="classMPBaseObject.html#a23231ec80cf4dc6103fcbe6967611de8">MPBaseObject&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00377"></a><span class="lineno">  377</span>&#160;<a class="code" href="classMPBaseObject.html#a23231ec80cf4dc6103fcbe6967611de8">GetLocalPlanner</a>(<span class="keyword">const</span> std::string&amp; _label) <span class="keyword">const</span> noexcept {</div>
-<div class="line"><a name="l00378"></a><span class="lineno">  378</span>&#160;  <span class="keywordflow">return</span> m_library-&gt;GetLocalPlanner(_label);</div>
-<div class="line"><a name="l00379"></a><span class="lineno">  379</span>&#160;}</div>
-<div class="line"><a name="l00380"></a><span class="lineno">  380</span>&#160; </div>
-<div class="line"><a name="l00381"></a><span class="lineno">  381</span>&#160; </div>
-<div class="line"><a name="l00382"></a><span class="lineno">  382</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00383"></a><span class="lineno">  383</span>&#160;<span class="keyword">inline</span></div>
-<div class="line"><a name="l00384"></a><span class="lineno">  384</span>&#160;<span class="keyword">typename</span> <a class="code" href="classMPBaseObject.html#a5eb6e9a2ee24cc60b2280c8d7a86dcf4">MPBaseObject&lt;MPTraits&gt;::ExtenderPointer</a></div>
-<div class="line"><a name="l00385"></a><span class="lineno"><a class="line" href="classMPBaseObject.html#ae1c21a5eb19462d7fbc1d9d7ad44a337">  385</a></span>&#160;<a class="code" href="classMPBaseObject.html#ae1c21a5eb19462d7fbc1d9d7ad44a337">MPBaseObject&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00386"></a><span class="lineno">  386</span>&#160;<a class="code" href="classMPBaseObject.html#ae1c21a5eb19462d7fbc1d9d7ad44a337">GetExtender</a>(<span class="keyword">const</span> std::string&amp; _label) <span class="keyword">const</span> noexcept {</div>
-<div class="line"><a name="l00387"></a><span class="lineno">  387</span>&#160;  <span class="keywordflow">return</span> m_library-&gt;GetExtender(_label);</div>
-<div class="line"><a name="l00388"></a><span class="lineno">  388</span>&#160;}</div>
-<div class="line"><a name="l00389"></a><span class="lineno">  389</span>&#160; </div>
-<div class="line"><a name="l00390"></a><span class="lineno">  390</span>&#160; </div>
-<div class="line"><a name="l00391"></a><span class="lineno">  391</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00392"></a><span class="lineno">  392</span>&#160;<span class="keyword">inline</span></div>
-<div class="line"><a name="l00393"></a><span class="lineno">  393</span>&#160;<span class="keyword">typename</span> <a class="code" href="classMPBaseObject.html#a9d8006e11da7b3e4d5ac8eee9c6af86a">MPBaseObject&lt;MPTraits&gt;::PathModifierPointer</a></div>
-<div class="line"><a name="l00394"></a><span class="lineno"><a class="line" href="classMPBaseObject.html#a2ba42a3ccbbe218c0ad5212b320647e2">  394</a></span>&#160;<a class="code" href="classMPBaseObject.html#a2ba42a3ccbbe218c0ad5212b320647e2">MPBaseObject&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00395"></a><span class="lineno">  395</span>&#160;<a class="code" href="classMPBaseObject.html#a2ba42a3ccbbe218c0ad5212b320647e2">GetPathModifier</a>(<span class="keyword">const</span> std::string&amp; _label) <span class="keyword">const</span> noexcept {</div>
-<div class="line"><a name="l00396"></a><span class="lineno">  396</span>&#160;  <span class="keywordflow">return</span> m_library-&gt;GetPathModifier(_label);</div>
-<div class="line"><a name="l00397"></a><span class="lineno">  397</span>&#160;}</div>
-<div class="line"><a name="l00398"></a><span class="lineno">  398</span>&#160; </div>
-<div class="line"><a name="l00399"></a><span class="lineno">  399</span>&#160; </div>
-<div class="line"><a name="l00400"></a><span class="lineno">  400</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00401"></a><span class="lineno">  401</span>&#160;<span class="keyword">inline</span></div>
-<div class="line"><a name="l00402"></a><span class="lineno">  402</span>&#160;<span class="keyword">typename</span> <a class="code" href="classMPBaseObject.html#a52cc83324263c010e07a138ab3515f5e">MPBaseObject&lt;MPTraits&gt;::EdgeValidityCheckerPointer</a></div>
-<div class="line"><a name="l00403"></a><span class="lineno"><a class="line" href="classMPBaseObject.html#a6ddd6d5795d5b1aa4e2205f758796d7b">  403</a></span>&#160;<a class="code" href="classMPBaseObject.html#a6ddd6d5795d5b1aa4e2205f758796d7b">MPBaseObject&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00404"></a><span class="lineno">  404</span>&#160;<a class="code" href="classMPBaseObject.html#a6ddd6d5795d5b1aa4e2205f758796d7b">GetEdgeValidityChecker</a>(<span class="keyword">const</span> std::string&amp; _label) <span class="keyword">const</span> noexcept {</div>
-<div class="line"><a name="l00405"></a><span class="lineno">  405</span>&#160;  <span class="keywordflow">return</span> m_library-&gt;GetEdgeValidityChecker(_label);</div>
-<div class="line"><a name="l00406"></a><span class="lineno">  406</span>&#160;}</div>
-<div class="line"><a name="l00407"></a><span class="lineno">  407</span>&#160; </div>
-<div class="line"><a name="l00408"></a><span class="lineno">  408</span>&#160; </div>
-<div class="line"><a name="l00409"></a><span class="lineno">  409</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00410"></a><span class="lineno">  410</span>&#160;<span class="keyword">inline</span></div>
-<div class="line"><a name="l00411"></a><span class="lineno">  411</span>&#160;<span class="keyword">typename</span> <a class="code" href="classMPBaseObject.html#a97ef39036c999f2b85697d651a3709b6">MPBaseObject&lt;MPTraits&gt;::ConnectorPointer</a></div>
-<div class="line"><a name="l00412"></a><span class="lineno"><a class="line" href="classMPBaseObject.html#a03a0372144b35900bd3783787d8ece23">  412</a></span>&#160;<a class="code" href="classMPBaseObject.html#a03a0372144b35900bd3783787d8ece23">MPBaseObject&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00413"></a><span class="lineno">  413</span>&#160;<a class="code" href="classMPBaseObject.html#a03a0372144b35900bd3783787d8ece23">GetConnector</a>(<span class="keyword">const</span> std::string&amp; _label) <span class="keyword">const</span> noexcept {</div>
-<div class="line"><a name="l00414"></a><span class="lineno">  414</span>&#160;  <span class="keywordflow">return</span> m_library-&gt;GetConnector(_label);</div>
-<div class="line"><a name="l00415"></a><span class="lineno">  415</span>&#160;}</div>
-<div class="line"><a name="l00416"></a><span class="lineno">  416</span>&#160; </div>
-<div class="line"><a name="l00417"></a><span class="lineno">  417</span>&#160; </div>
-<div class="line"><a name="l00418"></a><span class="lineno">  418</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00419"></a><span class="lineno">  419</span>&#160;<span class="keyword">inline</span></div>
-<div class="line"><a name="l00420"></a><span class="lineno">  420</span>&#160;<span class="keyword">typename</span> <a class="code" href="classMPBaseObject.html#a1033e6b77f138cd5b0c963b85c2102c8">MPBaseObject&lt;MPTraits&gt;::MetricPointer</a></div>
-<div class="line"><a name="l00421"></a><span class="lineno"><a class="line" href="classMPBaseObject.html#a6ae69fab32bc22d9a40183c2ddcad070">  421</a></span>&#160;<a class="code" href="classMPBaseObject.html#a6ae69fab32bc22d9a40183c2ddcad070">MPBaseObject&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00422"></a><span class="lineno">  422</span>&#160;<a class="code" href="classMPBaseObject.html#a6ae69fab32bc22d9a40183c2ddcad070">GetMetric</a>(<span class="keyword">const</span> std::string&amp; _label) <span class="keyword">const</span> noexcept {</div>
-<div class="line"><a name="l00423"></a><span class="lineno">  423</span>&#160;  <span class="keywordflow">return</span> m_library-&gt;GetMetric(_label);</div>
-<div class="line"><a name="l00424"></a><span class="lineno">  424</span>&#160;}</div>
-<div class="line"><a name="l00425"></a><span class="lineno">  425</span>&#160; </div>
-<div class="line"><a name="l00426"></a><span class="lineno">  426</span>&#160; </div>
-<div class="line"><a name="l00427"></a><span class="lineno">  427</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00428"></a><span class="lineno">  428</span>&#160;<span class="keyword">inline</span></div>
-<div class="line"><a name="l00429"></a><span class="lineno">  429</span>&#160;<span class="keyword">typename</span> <a class="code" href="classMPBaseObject.html#ab26d90683e004e04060c66490f1abef9">MPBaseObject&lt;MPTraits&gt;::MapEvaluatorPointer</a></div>
-<div class="line"><a name="l00430"></a><span class="lineno"><a class="line" href="classMPBaseObject.html#af952ecbef2818c807056dd1ee562dfa2">  430</a></span>&#160;<a class="code" href="classMPBaseObject.html#af952ecbef2818c807056dd1ee562dfa2">MPBaseObject&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00431"></a><span class="lineno">  431</span>&#160;<a class="code" href="classMPBaseObject.html#af952ecbef2818c807056dd1ee562dfa2">GetMapEvaluator</a>(<span class="keyword">const</span> std::string&amp; _label) <span class="keyword">const</span> noexcept {</div>
-<div class="line"><a name="l00432"></a><span class="lineno">  432</span>&#160;  <span class="keywordflow">return</span> m_library-&gt;GetMapEvaluator(_label);</div>
-<div class="line"><a name="l00433"></a><span class="lineno">  433</span>&#160;}</div>
-<div class="line"><a name="l00434"></a><span class="lineno">  434</span>&#160; </div>
-<div class="line"><a name="l00435"></a><span class="lineno">  435</span>&#160; </div>
-<div class="line"><a name="l00436"></a><span class="lineno">  436</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00437"></a><span class="lineno">  437</span>&#160;<span class="keyword">inline</span></div>
-<div class="line"><a name="l00438"></a><span class="lineno">  438</span>&#160;<span class="keyword">typename</span> <a class="code" href="classMPBaseObject.html#a6c55c91725735d71ee1b6e07d0da9427">MPBaseObject&lt;MPTraits&gt;::MPStrategyPointer</a></div>
-<div class="line"><a name="l00439"></a><span class="lineno"><a class="line" href="classMPBaseObject.html#ab5db3fdc249613226e1bfb9748d7e419">  439</a></span>&#160;<a class="code" href="classMPBaseObject.html#ab5db3fdc249613226e1bfb9748d7e419">MPBaseObject&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00440"></a><span class="lineno">  440</span>&#160;<a class="code" href="classMPBaseObject.html#ab5db3fdc249613226e1bfb9748d7e419">GetMPStrategy</a>(<span class="keyword">const</span> std::string&amp; _label) <span class="keyword">const</span> noexcept {</div>
-<div class="line"><a name="l00441"></a><span class="lineno">  441</span>&#160;  <span class="keywordflow">return</span> m_library-&gt;GetMPStrategy(_label);</div>
-<div class="line"><a name="l00442"></a><span class="lineno">  442</span>&#160;}</div>
-<div class="line"><a name="l00443"></a><span class="lineno">  443</span>&#160; </div>
-<div class="line"><a name="l00444"></a><span class="lineno">  444</span>&#160; </div>
-<div class="line"><a name="l00445"></a><span class="lineno">  445</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00446"></a><span class="lineno">  446</span>&#160;<span class="keyword">inline</span></div>
-<div class="line"><a name="l00447"></a><span class="lineno">  447</span>&#160;<span class="keyword">typename</span> <a class="code" href="classMPToolsType.html">MPTraits::MPTools</a>*</div>
-<div class="line"><a name="l00448"></a><span class="lineno"><a class="line" href="classMPBaseObject.html#a3cec62eec53411129380a74d357189c7">  448</a></span>&#160;<a class="code" href="classMPBaseObject.html#a3cec62eec53411129380a74d357189c7">MPBaseObject&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00449"></a><span class="lineno">  449</span>&#160;<a class="code" href="classMPBaseObject.html#a3cec62eec53411129380a74d357189c7">GetMPTools</a>() const noexcept {</div>
-<div class="line"><a name="l00450"></a><span class="lineno">  450</span>&#160;  <span class="keywordflow">return</span> m_library-&gt;GetMPTools();</div>
-<div class="line"><a name="l00451"></a><span class="lineno">  451</span>&#160;}</div>
-<div class="line"><a name="l00452"></a><span class="lineno">  452</span>&#160; </div>
-<div class="line"><a name="l00453"></a><span class="lineno">  453</span>&#160;<span class="comment">/*------------------------------ Problem Accessors ---------------------------*/</span></div>
-<div class="line"><a name="l00454"></a><span class="lineno">  454</span>&#160; </div>
-<div class="line"><a name="l00455"></a><span class="lineno">  455</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00456"></a><span class="lineno">  456</span>&#160;<span class="keyword">inline</span></div>
-<div class="line"><a name="l00457"></a><span class="lineno">  457</span>&#160;<a class="code" href="classMPProblem.html">MPProblem</a>*</div>
-<div class="line"><a name="l00458"></a><span class="lineno"><a class="line" href="classMPBaseObject.html#a2a18befe086f47ce26c93f08c4364397">  458</a></span>&#160;<a class="code" href="classMPBaseObject.html#a2a18befe086f47ce26c93f08c4364397">MPBaseObject&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00459"></a><span class="lineno">  459</span>&#160;<a class="code" href="classMPBaseObject.html#a2a18befe086f47ce26c93f08c4364397">GetMPProblem</a>() const noexcept {</div>
-<div class="line"><a name="l00460"></a><span class="lineno">  460</span>&#160;  <span class="keywordflow">return</span> m_library-&gt;GetMPProblem();</div>
-<div class="line"><a name="l00461"></a><span class="lineno">  461</span>&#160;}</div>
-<div class="line"><a name="l00462"></a><span class="lineno">  462</span>&#160; </div>
-<div class="line"><a name="l00463"></a><span class="lineno">  463</span>&#160; </div>
-<div class="line"><a name="l00464"></a><span class="lineno">  464</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00465"></a><span class="lineno">  465</span>&#160;<span class="keyword">inline</span></div>
-<div class="line"><a name="l00466"></a><span class="lineno">  466</span>&#160;<a class="code" href="classEnvironment.html">Environment</a>*</div>
-<div class="line"><a name="l00467"></a><span class="lineno"><a class="line" href="classMPBaseObject.html#a84dfed53d5b39787d1a9fa44f9a833e1">  467</a></span>&#160;<a class="code" href="classMPBaseObject.html#a84dfed53d5b39787d1a9fa44f9a833e1">MPBaseObject&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00468"></a><span class="lineno">  468</span>&#160;<a class="code" href="classMPBaseObject.html#a84dfed53d5b39787d1a9fa44f9a833e1">GetEnvironment</a>() const noexcept {</div>
-<div class="line"><a name="l00469"></a><span class="lineno">  469</span>&#160;  <span class="keywordflow">return</span> GetMPProblem()-&gt;GetEnvironment();</div>
-<div class="line"><a name="l00470"></a><span class="lineno">  470</span>&#160;}</div>
-<div class="line"><a name="l00471"></a><span class="lineno">  471</span>&#160; </div>
-<div class="line"><a name="l00472"></a><span class="lineno">  472</span>&#160; </div>
-<div class="line"><a name="l00473"></a><span class="lineno">  473</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00474"></a><span class="lineno">  474</span>&#160;<span class="keyword">inline</span></div>
-<div class="line"><a name="l00475"></a><span class="lineno">  475</span>&#160;<a class="code" href="classMPTask.html">MPTask</a>*</div>
-<div class="line"><a name="l00476"></a><span class="lineno"><a class="line" href="classMPBaseObject.html#aa73f5579b26a2391c5ef414cc3132602">  476</a></span>&#160;<a class="code" href="classMPBaseObject.html#aa73f5579b26a2391c5ef414cc3132602">MPBaseObject&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00477"></a><span class="lineno">  477</span>&#160;<a class="code" href="classMPBaseObject.html#aa73f5579b26a2391c5ef414cc3132602">GetTask</a>() const noexcept {</div>
-<div class="line"><a name="l00478"></a><span class="lineno">  478</span>&#160;  <span class="keywordflow">return</span> m_library-&gt;GetTask();</div>
-<div class="line"><a name="l00479"></a><span class="lineno">  479</span>&#160;}</div>
-<div class="line"><a name="l00480"></a><span class="lineno">  480</span>&#160; </div>
-<div class="line"><a name="l00481"></a><span class="lineno">  481</span>&#160; </div>
-<div class="line"><a name="l00482"></a><span class="lineno">  482</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00483"></a><span class="lineno">  483</span>&#160;<span class="keyword">inline</span></div>
-<div class="line"><a name="l00484"></a><span class="lineno">  484</span>&#160;<a class="code" href="classGroupTask.html">GroupTask</a>*</div>
-<div class="line"><a name="l00485"></a><span class="lineno"><a class="line" href="classMPBaseObject.html#a3eee19a7be268bff7c7497be8d0239a7">  485</a></span>&#160;<a class="code" href="classMPBaseObject.html#a3eee19a7be268bff7c7497be8d0239a7">MPBaseObject&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00486"></a><span class="lineno">  486</span>&#160;<a class="code" href="classMPBaseObject.html#a3eee19a7be268bff7c7497be8d0239a7">GetGroupTask</a>() const noexcept {</div>
-<div class="line"><a name="l00487"></a><span class="lineno">  487</span>&#160;  <span class="keywordflow">return</span> m_library-&gt;GetGroupTask();</div>
-<div class="line"><a name="l00488"></a><span class="lineno">  488</span>&#160;}</div>
-<div class="line"><a name="l00489"></a><span class="lineno">  489</span>&#160; </div>
-<div class="line"><a name="l00490"></a><span class="lineno">  490</span>&#160;<span class="comment">/*--------------------------- Solution Accessors -----------------------------*/</span></div>
-<div class="line"><a name="l00491"></a><span class="lineno">  491</span>&#160; </div>
-<div class="line"><a name="l00492"></a><span class="lineno">  492</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00493"></a><span class="lineno">  493</span>&#160;<span class="keyword">inline</span></div>
-<div class="line"><a name="l00494"></a><span class="lineno">  494</span>&#160;<span class="keyword">typename</span> <a class="code" href="classMPSolutionType.html">MPTraits::MPSolution</a>*</div>
-<div class="line"><a name="l00495"></a><span class="lineno"><a class="line" href="classMPBaseObject.html#a5c683b92e92fdc2c410b73ddecaf0ca5">  495</a></span>&#160;<a class="code" href="classMPBaseObject.html#a5c683b92e92fdc2c410b73ddecaf0ca5">MPBaseObject&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00496"></a><span class="lineno">  496</span>&#160;<a class="code" href="classMPBaseObject.html#a5c683b92e92fdc2c410b73ddecaf0ca5">GetMPSolution</a>() const noexcept {</div>
-<div class="line"><a name="l00497"></a><span class="lineno">  497</span>&#160;  <span class="keywordflow">return</span> m_library-&gt;GetMPSolution();</div>
-<div class="line"><a name="l00498"></a><span class="lineno">  498</span>&#160;}</div>
-<div class="line"><a name="l00499"></a><span class="lineno">  499</span>&#160; </div>
-<div class="line"><a name="l00500"></a><span class="lineno">  500</span>&#160; </div>
-<div class="line"><a name="l00501"></a><span class="lineno">  501</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00502"></a><span class="lineno">  502</span>&#160;<span class="keyword">inline</span></div>
-<div class="line"><a name="l00503"></a><span class="lineno">  503</span>&#160;<span class="keyword">typename</span> <a class="code" href="classGenericStateGraph.html">MPTraits::RoadmapType</a>*</div>
-<div class="line"><a name="l00504"></a><span class="lineno"><a class="line" href="classMPBaseObject.html#ab12b31f78fe0ead35bd1696477d6252b">  504</a></span>&#160;<a class="code" href="classMPBaseObject.html#ab12b31f78fe0ead35bd1696477d6252b">MPBaseObject&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00505"></a><span class="lineno">  505</span>&#160;<a class="code" href="classMPBaseObject.html#ab12b31f78fe0ead35bd1696477d6252b">GetRoadmap</a>(<a class="code" href="classRobot.html">Robot</a>* <span class="keyword">const</span> _r) <span class="keyword">const</span> noexcept {</div>
-<div class="line"><a name="l00506"></a><span class="lineno">  506</span>&#160;  <span class="keywordflow">return</span> m_library-&gt;GetRoadmap(_r);</div>
-<div class="line"><a name="l00507"></a><span class="lineno">  507</span>&#160;}</div>
-<div class="line"><a name="l00508"></a><span class="lineno">  508</span>&#160; </div>
-<div class="line"><a name="l00509"></a><span class="lineno">  509</span>&#160; </div>
-<div class="line"><a name="l00510"></a><span class="lineno">  510</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00511"></a><span class="lineno">  511</span>&#160;<span class="keyword">inline</span></div>
-<div class="line"><a name="l00512"></a><span class="lineno">  512</span>&#160;<span class="keyword">typename</span> <a class="code" href="classGroupRoadmap.html">MPTraits::GroupRoadmapType</a>*</div>
-<div class="line"><a name="l00513"></a><span class="lineno"><a class="line" href="classMPBaseObject.html#a4a2e6b0792de5ad4fea367b800c9104c">  513</a></span>&#160;<a class="code" href="classMPBaseObject.html#a4a2e6b0792de5ad4fea367b800c9104c">MPBaseObject&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00514"></a><span class="lineno">  514</span>&#160;<a class="code" href="classMPBaseObject.html#a4a2e6b0792de5ad4fea367b800c9104c">GetGroupRoadmap</a>(<a class="code" href="classRobotGroup.html">RobotGroup</a>* <span class="keyword">const</span> _g) <span class="keyword">const</span> noexcept {</div>
-<div class="line"><a name="l00515"></a><span class="lineno">  515</span>&#160;  <span class="keywordflow">return</span> m_library-&gt;GetGroupRoadmap(_g);</div>
-<div class="line"><a name="l00516"></a><span class="lineno">  516</span>&#160;}</div>
-<div class="line"><a name="l00517"></a><span class="lineno">  517</span>&#160; </div>
-<div class="line"><a name="l00518"></a><span class="lineno">  518</span>&#160; </div>
-<div class="line"><a name="l00519"></a><span class="lineno">  519</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00520"></a><span class="lineno">  520</span>&#160;<span class="keyword">inline</span></div>
-<div class="line"><a name="l00521"></a><span class="lineno">  521</span>&#160;<span class="keyword">typename</span> <a class="code" href="classGenericStateGraph.html">MPTraits::RoadmapType</a>*</div>
-<div class="line"><a name="l00522"></a><span class="lineno"><a class="line" href="classMPBaseObject.html#aa3b66c53b09bfd09ea85985e9594d612">  522</a></span>&#160;<a class="code" href="classMPBaseObject.html#aa3b66c53b09bfd09ea85985e9594d612">MPBaseObject&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00523"></a><span class="lineno">  523</span>&#160;<a class="code" href="classMPBaseObject.html#aa3b66c53b09bfd09ea85985e9594d612">GetBlockRoadmap</a>(<a class="code" href="classRobot.html">Robot</a>* <span class="keyword">const</span> _r) <span class="keyword">const</span> noexcept {</div>
-<div class="line"><a name="l00524"></a><span class="lineno">  524</span>&#160;  <span class="keywordflow">return</span> m_library-&gt;GetBlockRoadmap(_r);</div>
-<div class="line"><a name="l00525"></a><span class="lineno">  525</span>&#160;}</div>
-<div class="line"><a name="l00526"></a><span class="lineno">  526</span>&#160; </div>
-<div class="line"><a name="l00527"></a><span class="lineno">  527</span>&#160; </div>
-<div class="line"><a name="l00528"></a><span class="lineno">  528</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00529"></a><span class="lineno">  529</span>&#160;<span class="keyword">inline</span></div>
-<div class="line"><a name="l00530"></a><span class="lineno">  530</span>&#160;<span class="keyword">typename</span> <a class="code" href="classPathType.html">MPTraits::Path</a>*</div>
-<div class="line"><a name="l00531"></a><span class="lineno"><a class="line" href="classMPBaseObject.html#a5eed9cee8bec2a10ccb807252dd48b48">  531</a></span>&#160;<a class="code" href="classMPBaseObject.html#a5eed9cee8bec2a10ccb807252dd48b48">MPBaseObject&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00532"></a><span class="lineno">  532</span>&#160;<a class="code" href="classMPBaseObject.html#a5eed9cee8bec2a10ccb807252dd48b48">GetPath</a>(<a class="code" href="classRobot.html">Robot</a>* <span class="keyword">const</span> _r) <span class="keyword">const</span> noexcept {</div>
-<div class="line"><a name="l00533"></a><span class="lineno">  533</span>&#160;  <span class="keywordflow">return</span> m_library-&gt;GetPath(_r);</div>
-<div class="line"><a name="l00534"></a><span class="lineno">  534</span>&#160;}</div>
-<div class="line"><a name="l00535"></a><span class="lineno">  535</span>&#160; </div>
-<div class="line"><a name="l00536"></a><span class="lineno">  536</span>&#160; </div>
-<div class="line"><a name="l00537"></a><span class="lineno">  537</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00538"></a><span class="lineno">  538</span>&#160;<span class="keyword">inline</span></div>
-<div class="line"><a name="l00539"></a><span class="lineno">  539</span>&#160;<span class="keyword">typename</span> <a class="code" href="classGroupPath.html">MPTraits::GroupPathType</a>*</div>
-<div class="line"><a name="l00540"></a><span class="lineno"><a class="line" href="classMPBaseObject.html#a5876ac36ce7e8c97564a464ee25ca45e">  540</a></span>&#160;<a class="code" href="classMPBaseObject.html#a5876ac36ce7e8c97564a464ee25ca45e">MPBaseObject&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00541"></a><span class="lineno">  541</span>&#160;<a class="code" href="classMPBaseObject.html#a5876ac36ce7e8c97564a464ee25ca45e">GetGroupPath</a>(<a class="code" href="classRobotGroup.html">RobotGroup</a>* <span class="keyword">const</span> _g) <span class="keyword">const</span> noexcept {</div>
-<div class="line"><a name="l00542"></a><span class="lineno">  542</span>&#160;  <span class="keywordflow">return</span> m_library-&gt;GetGroupPath(_g);</div>
-<div class="line"><a name="l00543"></a><span class="lineno">  543</span>&#160;}</div>
-<div class="line"><a name="l00544"></a><span class="lineno">  544</span>&#160; </div>
-<div class="line"><a name="l00545"></a><span class="lineno">  545</span>&#160; </div>
-<div class="line"><a name="l00546"></a><span class="lineno">  546</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00547"></a><span class="lineno">  547</span>&#160;<span class="keyword">inline</span></div>
-<div class="line"><a name="l00548"></a><span class="lineno">  548</span>&#160;<a class="code" href="classStatClass.html">StatClass</a>*</div>
-<div class="line"><a name="l00549"></a><span class="lineno"><a class="line" href="classMPBaseObject.html#a375e4d95326ba7b0d9751aafd0e5e38f">  549</a></span>&#160;<a class="code" href="classMPBaseObject.html#a375e4d95326ba7b0d9751aafd0e5e38f">MPBaseObject&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00550"></a><span class="lineno">  550</span>&#160;<a class="code" href="classMPBaseObject.html#a375e4d95326ba7b0d9751aafd0e5e38f">GetStatClass</a>() const noexcept {</div>
-<div class="line"><a name="l00551"></a><span class="lineno">  551</span>&#160;  <span class="keywordflow">return</span> m_library-&gt;GetStatClass();</div>
-<div class="line"><a name="l00552"></a><span class="lineno">  552</span>&#160;}</div>
-<div class="line"><a name="l00553"></a><span class="lineno">  553</span>&#160; </div>
-<div class="line"><a name="l00554"></a><span class="lineno">  554</span>&#160; </div>
-<div class="line"><a name="l00555"></a><span class="lineno">  555</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00556"></a><span class="lineno">  556</span>&#160;<span class="keyword">inline</span></div>
-<div class="line"><a name="l00557"></a><span class="lineno">  557</span>&#160;<span class="keyword">typename</span> <a class="code" href="classLocalObstacleMapType.html">MPTraits::LocalObstacleMap</a>*</div>
-<div class="line"><a name="l00558"></a><span class="lineno"><a class="line" href="classMPBaseObject.html#a62a7924385a0268299e26f77e0a10f3d">  558</a></span>&#160;<a class="code" href="classMPBaseObject.html#a62a7924385a0268299e26f77e0a10f3d">MPBaseObject&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00559"></a><span class="lineno">  559</span>&#160;<a class="code" href="classMPBaseObject.html#a62a7924385a0268299e26f77e0a10f3d">GetLocalObstacleMap</a>() const noexcept {</div>
-<div class="line"><a name="l00560"></a><span class="lineno">  560</span>&#160;  <span class="keywordflow">return</span> m_library-&gt;GetLocalObstacleMap();</div>
-<div class="line"><a name="l00561"></a><span class="lineno">  561</span>&#160;}</div>
-<div class="line"><a name="l00562"></a><span class="lineno">  562</span>&#160; </div>
-<div class="line"><a name="l00563"></a><span class="lineno">  563</span>&#160; </div>
-<div class="line"><a name="l00564"></a><span class="lineno">  564</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00565"></a><span class="lineno">  565</span>&#160;<span class="keyword">inline</span></div>
-<div class="line"><a name="l00566"></a><span class="lineno">  566</span>&#160;<span class="keyword">typename</span> <a class="code" href="classGoalTrackerType.html">MPTraits::GoalTracker</a>*</div>
-<div class="line"><a name="l00567"></a><span class="lineno"><a class="line" href="classMPBaseObject.html#acb4f647ec2b50698e0c4bb676f1d103e">  567</a></span>&#160;<a class="code" href="classMPBaseObject.html#acb4f647ec2b50698e0c4bb676f1d103e">MPBaseObject&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00568"></a><span class="lineno">  568</span>&#160;<a class="code" href="classMPBaseObject.html#acb4f647ec2b50698e0c4bb676f1d103e">GetGoalTracker</a>() const noexcept {</div>
-<div class="line"><a name="l00569"></a><span class="lineno">  569</span>&#160;  <span class="keywordflow">return</span> m_library-&gt;<a class="code" href="classMPBaseObject.html#acb4f647ec2b50698e0c4bb676f1d103e">GetGoalTracker</a>();</div>
-<div class="line"><a name="l00570"></a><span class="lineno">  570</span>&#160;}</div>
-<div class="line"><a name="l00571"></a><span class="lineno">  571</span>&#160; </div>
-<div class="line"><a name="l00572"></a><span class="lineno">  572</span>&#160;<span class="comment">/*----------------------------------------------------------------------------*/</span></div>
-<div class="line"><a name="l00573"></a><span class="lineno">  573</span>&#160; </div>
-<div class="line"><a name="l00574"></a><span class="lineno">  574</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00187"></a><span class="lineno">  187</span>&#160;    std::string m_name;            </div>
+<div class="line"><a name="l00188"></a><span class="lineno">  188</span>&#160;    std::string m_label;           </div>
+<div class="line"><a name="l00189"></a><span class="lineno">  189</span>&#160;    <a class="code" href="classMPLibrary.html">MPLibrary</a>* m_library{<span class="keyword">nullptr</span>}; </div>
+<div class="line"><a name="l00190"></a><span class="lineno">  190</span>&#160; </div>
+<div class="line"><a name="l00191"></a><span class="lineno"><a class="line" href="classMPBaseObject.html#a1323360d72f79d85e8d03157cba09ab7">  191</a></span>&#160;    <span class="keyword">template</span>&lt;<span class="keyword">typename</span> U&gt; <span class="keyword">friend</span> <span class="keyword">class </span><a class="code" href="classMethodSet.html">MethodSet</a>;</div>
+<div class="line"><a name="l00192"></a><span class="lineno">  192</span>&#160;};</div>
+<div class="line"><a name="l00193"></a><span class="lineno">  193</span>&#160; </div>
+<div class="line"><a name="l00194"></a><span class="lineno">  194</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="ttc" id="aGenericStateGraph_8h_html"><div class="ttname"><a href="GenericStateGraph_8h.html">GenericStateGraph.h</a></div></div>
+<div class="ttc" id="aGroupCfg_8h_html"><div class="ttname"><a href="GroupCfg_8h.html">GroupCfg.h</a></div></div>
+<div class="ttc" id="aGroupPath_8h_html"><div class="ttname"><a href="GroupPath_8h.html">GroupPath.h</a></div></div>
+<div class="ttc" id="aGroupRoadmap_8h_html"><div class="ttname"><a href="GroupRoadmap_8h.html">GroupRoadmap.h</a></div></div>
 <div class="ttc" id="aIOUtils_8h_html"><div class="ttname"><a href="IOUtils_8h.html">IOUtils.h</a></div></div>
 <div class="ttc" id="aMPProblem_8h_html"><div class="ttname"><a href="MPProblem_8h.html">MPProblem.h</a></div></div>
+<div class="ttc" id="aMPSolution_8h_html"><div class="ttname"><a href="MPSolution_8h.html">MPSolution.h</a></div></div>
+<div class="ttc" id="aMPTask_8h_html"><div class="ttname"><a href="MPTask_8h.html">MPTask.h</a></div></div>
 <div class="ttc" id="aMethodSet_8h_html"><div class="ttname"><a href="MethodSet_8h.html">MethodSet.h</a></div></div>
-<div class="ttc" id="aPMPL_8h_html_a0e826882dd5f3e0bd4ae975ce04abd04"><div class="ttname"><a href="PMPL_8h.html#a0e826882dd5f3e0bd4ae975ce04abd04">MPSolution</a></div><div class="ttdeci">PMPLTraits::MPSolution MPSolution</div><div class="ttdef"><b>Definition:</b> PMPL.h:35</div></div>
-<div class="ttc" id="aPMPL_8h_html_a4829bbb5f410cd1931429c6c46ca6b42"><div class="ttname"><a href="PMPL_8h.html#a4829bbb5f410cd1931429c6c46ca6b42">MPLibrary</a></div><div class="ttdeci">PMPLTraits::MPLibrary MPLibrary</div><div class="ttdef"><b>Definition:</b> PMPL.h:34</div></div>
-<div class="ttc" id="aPMPL_8h_html_abf8ccf2b5a281c9ca6725c3364cb8f9b"><div class="ttname"><a href="PMPL_8h.html#abf8ccf2b5a281c9ca6725c3364cb8f9b">RoadmapType</a></div><div class="ttdeci">PMPLTraits::RoadmapType RoadmapType</div><div class="ttdef"><b>Definition:</b> PMPL.h:32</div></div>
-<div class="ttc" id="aPMPL_8h_html_ace97caaaddd799beb0c9f3ed793fc4c5"><div class="ttname"><a href="PMPL_8h.html#ace97caaaddd799beb0c9f3ed793fc4c5">Path</a></div><div class="ttdeci">PMPLTraits::Path Path</div><div class="ttdef"><b>Definition:</b> PMPL.h:33</div></div>
+<div class="ttc" id="aPath_8h_html"><div class="ttname"><a href="Path_8h.html">Path.h</a></div></div>
 <div class="ttc" id="aXMLNode_8h_html"><div class="ttname"><a href="XMLNode_8h.html">XMLNode.h</a></div></div>
-<div class="ttc" id="aclassEnvironment_html"><div class="ttname"><a href="classEnvironment.html">Environment</a></div><div class="ttdef"><b>Definition:</b> Environment.h:133</div></div>
+<div class="ttc" id="aclassDefaultWeight_html"><div class="ttname"><a href="classDefaultWeight.html">DefaultWeight</a></div><div class="ttdef"><b>Definition:</b> Weight.h:36</div></div>
+<div class="ttc" id="aclassEnvironment_html"><div class="ttname"><a href="classEnvironment.html">Environment</a></div><div class="ttdef"><b>Definition:</b> Environment.h:137</div></div>
 <div class="ttc" id="aclassGenericStateGraph_html"><div class="ttname"><a href="classGenericStateGraph.html">GenericStateGraph</a></div><div class="ttdef"><b>Definition:</b> GenericStateGraph.h:67</div></div>
-<div class="ttc" id="aclassGoalTrackerType_html"><div class="ttname"><a href="classGoalTrackerType.html">GoalTrackerType</a></div><div class="ttdoc">Maintains a set of GoalMap for multiple roadmap/task pairs.</div><div class="ttdef"><b>Definition:</b> GoalTracker.h:299</div></div>
-<div class="ttc" id="aclassGroupPath_html"><div class="ttname"><a href="classGroupPath.html">GroupPath</a></div><div class="ttdef"><b>Definition:</b> GroupPath.h:18</div></div>
+<div class="ttc" id="aclassGroupCfg_html"><div class="ttname"><a href="classGroupCfg.html">GroupCfg</a></div><div class="ttdef"><b>Definition:</b> GroupCfg.h:39</div></div>
+<div class="ttc" id="aclassGroupLocalPlan_html"><div class="ttname"><a href="classGroupLocalPlan.html">GroupLocalPlan</a></div><div class="ttdef"><b>Definition:</b> GroupLocalPlan.h:24</div></div>
+<div class="ttc" id="aclassGroupPath_html"><div class="ttname"><a href="classGroupPath.html">GroupPath</a></div><div class="ttdef"><b>Definition:</b> GroupPath.h:23</div></div>
 <div class="ttc" id="aclassGroupRoadmap_html"><div class="ttname"><a href="classGroupRoadmap.html">GroupRoadmap</a></div><div class="ttdef"><b>Definition:</b> GroupRoadmap.h:25</div></div>
 <div class="ttc" id="aclassGroupTask_html"><div class="ttname"><a href="classGroupTask.html">GroupTask</a></div><div class="ttdef"><b>Definition:</b> GroupTask.h:44</div></div>
-<div class="ttc" id="aclassLocalObstacleMapType_html"><div class="ttname"><a href="classLocalObstacleMapType.html">LocalObstacleMapType</a></div><div class="ttdef"><b>Definition:</b> LocalObstacleMap.h:25</div></div>
-<div class="ttc" id="aclassMPBaseObject_html"><div class="ttname"><a href="classMPBaseObject.html">MPBaseObject</a></div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:37</div></div>
-<div class="ttc" id="aclassMPBaseObject_html_a03a0372144b35900bd3783787d8ece23"><div class="ttname"><a href="classMPBaseObject.html#a03a0372144b35900bd3783787d8ece23">MPBaseObject::GetConnector</a></div><div class="ttdeci">ConnectorPointer GetConnector(const std::string &amp;) const noexcept</div><div class="ttdoc">Get a connector by label from the owning MPLibrary.</div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:413</div></div>
-<div class="ttc" id="aclassMPBaseObject_html_a09f350ffaec14a28dd2ced1b86ef9d9e"><div class="ttname"><a href="classMPBaseObject.html#a09f350ffaec14a28dd2ced1b86ef9d9e">MPBaseObject::Initialize</a></div><div class="ttdeci">virtual void Initialize()</div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:107</div></div>
-<div class="ttc" id="aclassMPBaseObject_html_a1033e6b77f138cd5b0c963b85c2102c8"><div class="ttname"><a href="classMPBaseObject.html#a1033e6b77f138cd5b0c963b85c2102c8">MPBaseObject::MetricPointer</a></div><div class="ttdeci">MPLibrary::MetricPointer MetricPointer</div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:60</div></div>
-<div class="ttc" id="aclassMPBaseObject_html_a15b148d41701475b3b94c4a163157f89"><div class="ttname"><a href="classMPBaseObject.html#a15b148d41701475b3b94c4a163157f89">MPBaseObject::MPLibrary</a></div><div class="ttdeci">MPTraits::MPLibrary MPLibrary</div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:49</div></div>
-<div class="ttc" id="aclassMPBaseObject_html_a171d332ff9e7d24af57efce2db4d7c60"><div class="ttname"><a href="classMPBaseObject.html#a171d332ff9e7d24af57efce2db4d7c60">MPBaseObject::GroupPath</a></div><div class="ttdeci">MPTraits::GroupPathType GroupPath</div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:48</div></div>
-<div class="ttc" id="aclassMPBaseObject_html_a1e5ed51342d87f6e4ca22300478d1754"><div class="ttname"><a href="classMPBaseObject.html#a1e5ed51342d87f6e4ca22300478d1754">MPBaseObject::LocalObstacleMap</a></div><div class="ttdeci">MPTraits::LocalObstacleMap LocalObstacleMap</div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:46</div></div>
-<div class="ttc" id="aclassMPBaseObject_html_a23231ec80cf4dc6103fcbe6967611de8"><div class="ttname"><a href="classMPBaseObject.html#a23231ec80cf4dc6103fcbe6967611de8">MPBaseObject::GetLocalPlanner</a></div><div class="ttdeci">LocalPlannerPointer GetLocalPlanner(const std::string &amp;) const noexcept</div><div class="ttdoc">Get a local planner by label from the owning MPLibrary.</div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:377</div></div>
-<div class="ttc" id="aclassMPBaseObject_html_a2342194564152d2f990223cb62844cbe"><div class="ttname"><a href="classMPBaseObject.html#a2342194564152d2f990223cb62844cbe">MPBaseObject::GetValidityChecker</a></div><div class="ttdeci">ValidityCheckerPointer GetValidityChecker(const std::string &amp;) const noexcept</div><div class="ttdoc">Get a validity checker by label from the owning MPLibrary.</div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:350</div></div>
-<div class="ttc" id="aclassMPBaseObject_html_a2a18befe086f47ce26c93f08c4364397"><div class="ttname"><a href="classMPBaseObject.html#a2a18befe086f47ce26c93f08c4364397">MPBaseObject::GetMPProblem</a></div><div class="ttdeci">MPProblem * GetMPProblem() const noexcept</div><div class="ttdoc">Get the library's current MPProblem.</div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:459</div></div>
-<div class="ttc" id="aclassMPBaseObject_html_a2ba42a3ccbbe218c0ad5212b320647e2"><div class="ttname"><a href="classMPBaseObject.html#a2ba42a3ccbbe218c0ad5212b320647e2">MPBaseObject::GetPathModifier</a></div><div class="ttdeci">PathModifierPointer GetPathModifier(const std::string &amp;) const noexcept</div><div class="ttdoc">Get a path modifier by label from the owning MPLibrary.</div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:395</div></div>
-<div class="ttc" id="aclassMPBaseObject_html_a375e4d95326ba7b0d9751aafd0e5e38f"><div class="ttname"><a href="classMPBaseObject.html#a375e4d95326ba7b0d9751aafd0e5e38f">MPBaseObject::GetStatClass</a></div><div class="ttdeci">StatClass * GetStatClass() const noexcept</div><div class="ttdoc">Get the current StatClass.</div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:550</div></div>
-<div class="ttc" id="aclassMPBaseObject_html_a3cec62eec53411129380a74d357189c7"><div class="ttname"><a href="classMPBaseObject.html#a3cec62eec53411129380a74d357189c7">MPBaseObject::GetMPTools</a></div><div class="ttdeci">MPTraits::MPTools * GetMPTools() const noexcept</div><div class="ttdoc">Get the MPTools container from the owning MPLibrary.</div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:449</div></div>
-<div class="ttc" id="aclassMPBaseObject_html_a3eee19a7be268bff7c7497be8d0239a7"><div class="ttname"><a href="classMPBaseObject.html#a3eee19a7be268bff7c7497be8d0239a7">MPBaseObject::GetGroupTask</a></div><div class="ttdeci">GroupTask * GetGroupTask() const noexcept</div><div class="ttdoc">Get the current group task.</div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:486</div></div>
-<div class="ttc" id="aclassMPBaseObject_html_a4a2e6b0792de5ad4fea367b800c9104c"><div class="ttname"><a href="classMPBaseObject.html#a4a2e6b0792de5ad4fea367b800c9104c">MPBaseObject::GetGroupRoadmap</a></div><div class="ttdeci">GroupRoadmapType * GetGroupRoadmap(RobotGroup *const _g=nullptr) const noexcept</div><div class="ttdoc">Get the current free-space group roadmap.</div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:514</div></div>
-<div class="ttc" id="aclassMPBaseObject_html_a4d111a2d7d53d243cdd4cd89ffa65212"><div class="ttname"><a href="classMPBaseObject.html#a4d111a2d7d53d243cdd4cd89ffa65212">MPBaseObject::Print</a></div><div class="ttdeci">virtual void Print(std::ostream &amp;_os) const</div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:267</div></div>
-<div class="ttc" id="aclassMPBaseObject_html_a4dce0c7792a2e35db03e46fbdc0038d3"><div class="ttname"><a href="classMPBaseObject.html#a4dce0c7792a2e35db03e46fbdc0038d3">MPBaseObject::m_debug</a></div><div class="ttdeci">bool m_debug</div><div class="ttdoc">Print debug info?</div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:236</div></div>
-<div class="ttc" id="aclassMPBaseObject_html_a521b705712b8e7d7197493e411226bda"><div class="ttname"><a href="classMPBaseObject.html#a521b705712b8e7d7197493e411226bda">MPBaseObject::GetMPLibrary</a></div><div class="ttdeci">MPLibrary * GetMPLibrary() const noexcept</div><div class="ttdoc">Get the owning MPLibrary.</div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:323</div></div>
-<div class="ttc" id="aclassMPBaseObject_html_a52cc83324263c010e07a138ab3515f5e"><div class="ttname"><a href="classMPBaseObject.html#a52cc83324263c010e07a138ab3515f5e">MPBaseObject::EdgeValidityCheckerPointer</a></div><div class="ttdeci">MPLibrary::EdgeValidityCheckerPointer EdgeValidityCheckerPointer</div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:58</div></div>
-<div class="ttc" id="aclassMPBaseObject_html_a57acdb0b1cc5dd45a2a0c08df914bfcf"><div class="ttname"><a href="classMPBaseObject.html#a57acdb0b1cc5dd45a2a0c08df914bfcf">MPBaseObject::GetNameAndLabel</a></div><div class="ttdeci">std::string GetNameAndLabel() const</div><div class="ttdoc">Get the unique string identifier for this object &quot;m_name::m_label&quot;.</div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:295</div></div>
-<div class="ttc" id="aclassMPBaseObject_html_a5876ac36ce7e8c97564a464ee25ca45e"><div class="ttname"><a href="classMPBaseObject.html#a5876ac36ce7e8c97564a464ee25ca45e">MPBaseObject::GetGroupPath</a></div><div class="ttdeci">GroupPath * GetGroupPath(RobotGroup *const _g=nullptr) const noexcept</div><div class="ttdoc">Get the current best group path.</div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:541</div></div>
-<div class="ttc" id="aclassMPBaseObject_html_a59a6f8a70e1e9d3bc80ed1709f37adb9"><div class="ttname"><a href="classMPBaseObject.html#a59a6f8a70e1e9d3bc80ed1709f37adb9">MPBaseObject::GoalTracker</a></div><div class="ttdeci">MPTraits::GoalTracker GoalTracker</div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:51</div></div>
-<div class="ttc" id="aclassMPBaseObject_html_a5c683b92e92fdc2c410b73ddecaf0ca5"><div class="ttname"><a href="classMPBaseObject.html#a5c683b92e92fdc2c410b73ddecaf0ca5">MPBaseObject::GetMPSolution</a></div><div class="ttdeci">MPSolution * GetMPSolution() const noexcept</div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:496</div></div>
-<div class="ttc" id="aclassMPBaseObject_html_a5eb6e9a2ee24cc60b2280c8d7a86dcf4"><div class="ttname"><a href="classMPBaseObject.html#a5eb6e9a2ee24cc60b2280c8d7a86dcf4">MPBaseObject::ExtenderPointer</a></div><div class="ttdeci">MPLibrary::ExtenderPointer ExtenderPointer</div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:55</div></div>
-<div class="ttc" id="aclassMPBaseObject_html_a5eed9cee8bec2a10ccb807252dd48b48"><div class="ttname"><a href="classMPBaseObject.html#a5eed9cee8bec2a10ccb807252dd48b48">MPBaseObject::GetPath</a></div><div class="ttdeci">Path * GetPath(Robot *const _r=nullptr) const noexcept</div><div class="ttdoc">Get the current best path.</div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:532</div></div>
-<div class="ttc" id="aclassMPBaseObject_html_a62a7924385a0268299e26f77e0a10f3d"><div class="ttname"><a href="classMPBaseObject.html#a62a7924385a0268299e26f77e0a10f3d">MPBaseObject::GetLocalObstacleMap</a></div><div class="ttdeci">LocalObstacleMap * GetLocalObstacleMap() const noexcept</div><div class="ttdoc">Get the local obstacle map.</div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:559</div></div>
-<div class="ttc" id="aclassMPBaseObject_html_a66ba952d43ffc95ff56c889096e9a7d3"><div class="ttname"><a href="classMPBaseObject.html#a66ba952d43ffc95ff56c889096e9a7d3">MPBaseObject::GetNeighborhoodFinder</a></div><div class="ttdeci">NeighborhoodFinderPointer GetNeighborhoodFinder(const std::string &amp;) const noexcept</div><div class="ttdoc">Get a neighborhood finder by label from the owning MPLibrary.</div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:359</div></div>
-<div class="ttc" id="aclassMPBaseObject_html_a697d226daf5f6a2745ef88d2d61a596e"><div class="ttname"><a href="classMPBaseObject.html#a697d226daf5f6a2745ef88d2d61a596e">MPBaseObject::SetMPLibrary</a></div><div class="ttdeci">void SetMPLibrary(MPLibrary *) noexcept</div><div class="ttdoc">Set the owning MPLibrary.</div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:314</div></div>
-<div class="ttc" id="aclassMPBaseObject_html_a6aa70c68a7aa522d074423ca469a4611"><div class="ttname"><a href="classMPBaseObject.html#a6aa70c68a7aa522d074423ca469a4611">MPBaseObject::MPSolution</a></div><div class="ttdeci">MPTraits::MPSolution MPSolution</div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:50</div></div>
-<div class="ttc" id="aclassMPBaseObject_html_a6ae69fab32bc22d9a40183c2ddcad070"><div class="ttname"><a href="classMPBaseObject.html#a6ae69fab32bc22d9a40183c2ddcad070">MPBaseObject::GetMetric</a></div><div class="ttdeci">MetricPointer GetMetric(const std::string &amp;) const noexcept</div><div class="ttdoc">Get a metric by label from the owning MPLibrary.</div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:422</div></div>
-<div class="ttc" id="aclassMPBaseObject_html_a6c55c91725735d71ee1b6e07d0da9427"><div class="ttname"><a href="classMPBaseObject.html#a6c55c91725735d71ee1b6e07d0da9427">MPBaseObject::MPStrategyPointer</a></div><div class="ttdeci">MPLibrary::MPStrategyPointer MPStrategyPointer</div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:62</div></div>
-<div class="ttc" id="aclassMPBaseObject_html_a6ddd6d5795d5b1aa4e2205f758796d7b"><div class="ttname"><a href="classMPBaseObject.html#a6ddd6d5795d5b1aa4e2205f758796d7b">MPBaseObject::GetEdgeValidityChecker</a></div><div class="ttdeci">EdgeValidityCheckerPointer GetEdgeValidityChecker(const std::string &amp;) const noexcept</div><div class="ttdoc">Get a path modifier by label from the owning MPLibrary.</div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:404</div></div>
-<div class="ttc" id="aclassMPBaseObject_html_a84dfed53d5b39787d1a9fa44f9a833e1"><div class="ttname"><a href="classMPBaseObject.html#a84dfed53d5b39787d1a9fa44f9a833e1">MPBaseObject::GetEnvironment</a></div><div class="ttdeci">Environment * GetEnvironment() const noexcept</div><div class="ttdoc">Get the current environment.</div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:468</div></div>
-<div class="ttc" id="aclassMPBaseObject_html_a8a20d7ea8dcfacc2900cc1862c4f8cc8"><div class="ttname"><a href="classMPBaseObject.html#a8a20d7ea8dcfacc2900cc1862c4f8cc8">MPBaseObject::GetDistanceMetric</a></div><div class="ttdeci">DistanceMetricPointer GetDistanceMetric(const std::string &amp;) const noexcept</div><div class="ttdoc">Get a distance metric by label from the owning MPLibrary.</div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:341</div></div>
-<div class="ttc" id="aclassMPBaseObject_html_a931bd7b8fd743b7f7313046659866113"><div class="ttname"><a href="classMPBaseObject.html#a931bd7b8fd743b7f7313046659866113">MPBaseObject::NeighborhoodFinderPointer</a></div><div class="ttdeci">MPLibrary::NeighborhoodFinderPointer NeighborhoodFinderPointer</div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:66</div></div>
-<div class="ttc" id="aclassMPBaseObject_html_a96b8dadf9f28e3513e2bd059dfc0344a"><div class="ttname"><a href="classMPBaseObject.html#a96b8dadf9f28e3513e2bd059dfc0344a">MPBaseObject::ValidityCheckerPointer</a></div><div class="ttdeci">MPLibrary::ValidityCheckerPointer ValidityCheckerPointer</div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:64</div></div>
-<div class="ttc" id="aclassMPBaseObject_html_a97ef39036c999f2b85697d651a3709b6"><div class="ttname"><a href="classMPBaseObject.html#a97ef39036c999f2b85697d651a3709b6">MPBaseObject::ConnectorPointer</a></div><div class="ttdeci">MPLibrary::ConnectorPointer ConnectorPointer</div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:59</div></div>
-<div class="ttc" id="aclassMPBaseObject_html_a9a2dff0888a2ea84bb38a556654a4701"><div class="ttname"><a href="classMPBaseObject.html#a9a2dff0888a2ea84bb38a556654a4701">MPBaseObject::GetSampler</a></div><div class="ttdeci">SamplerPointer GetSampler(const std::string &amp;) const noexcept</div><div class="ttdoc">Get a sampler by label from the owning MPLibrary.</div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:368</div></div>
-<div class="ttc" id="aclassMPBaseObject_html_a9d8006e11da7b3e4d5ac8eee9c6af86a"><div class="ttname"><a href="classMPBaseObject.html#a9d8006e11da7b3e4d5ac8eee9c6af86a">MPBaseObject::PathModifierPointer</a></div><div class="ttdeci">MPLibrary::PathModifierPointer PathModifierPointer</div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:56</div></div>
-<div class="ttc" id="aclassMPBaseObject_html_aa3b66c53b09bfd09ea85985e9594d612"><div class="ttname"><a href="classMPBaseObject.html#aa3b66c53b09bfd09ea85985e9594d612">MPBaseObject::GetBlockRoadmap</a></div><div class="ttdeci">RoadmapType * GetBlockRoadmap(Robot *const _r=nullptr) const noexcept</div><div class="ttdoc">Get the current obstacle-space roadmap.</div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:523</div></div>
-<div class="ttc" id="aclassMPBaseObject_html_aa73f5579b26a2391c5ef414cc3132602"><div class="ttname"><a href="classMPBaseObject.html#aa73f5579b26a2391c5ef414cc3132602">MPBaseObject::GetTask</a></div><div class="ttdeci">MPTask * GetTask() const noexcept</div><div class="ttdoc">Get the current task.</div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:477</div></div>
-<div class="ttc" id="aclassMPBaseObject_html_aaf3cea401f0b3ade1d909fc527246a08"><div class="ttname"><a href="classMPBaseObject.html#aaf3cea401f0b3ade1d909fc527246a08">MPBaseObject::SamplerPointer</a></div><div class="ttdeci">MPLibrary::SamplerPointer SamplerPointer</div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:53</div></div>
-<div class="ttc" id="aclassMPBaseObject_html_ab12b31f78fe0ead35bd1696477d6252b"><div class="ttname"><a href="classMPBaseObject.html#ab12b31f78fe0ead35bd1696477d6252b">MPBaseObject::GetRoadmap</a></div><div class="ttdeci">RoadmapType * GetRoadmap(Robot *const _r=nullptr) const noexcept</div><div class="ttdoc">Get the current free-space roadmap.</div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:505</div></div>
-<div class="ttc" id="aclassMPBaseObject_html_ab26d90683e004e04060c66490f1abef9"><div class="ttname"><a href="classMPBaseObject.html#ab26d90683e004e04060c66490f1abef9">MPBaseObject::MapEvaluatorPointer</a></div><div class="ttdeci">MPLibrary::MapEvaluatorPointer MapEvaluatorPointer</div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:61</div></div>
-<div class="ttc" id="aclassMPBaseObject_html_ab41feac6877c3756dafbadb9916c792e"><div class="ttname"><a href="classMPBaseObject.html#ab41feac6877c3756dafbadb9916c792e">MPBaseObject::MPBaseObject</a></div><div class="ttdeci">MPBaseObject(const std::string &amp;_label=&quot;&quot;, const std::string &amp;_name=&quot;&quot;, bool _debug=false)</div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:251</div></div>
-<div class="ttc" id="aclassMPBaseObject_html_ab5db3fdc249613226e1bfb9748d7e419"><div class="ttname"><a href="classMPBaseObject.html#ab5db3fdc249613226e1bfb9748d7e419">MPBaseObject::GetMPStrategy</a></div><div class="ttdeci">MPStrategyPointer GetMPStrategy(const std::string &amp;) const noexcept</div><div class="ttdoc">Get a strategy by label from the owning MPLibrary.</div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:440</div></div>
-<div class="ttc" id="aclassMPBaseObject_html_aba2b23fa368330ad7263eacb83dc1743"><div class="ttname"><a href="classMPBaseObject.html#aba2b23fa368330ad7263eacb83dc1743">MPBaseObject::~MPBaseObject</a></div><div class="ttdeci">virtual ~MPBaseObject()=default</div></div>
-<div class="ttc" id="aclassMPBaseObject_html_abfed57adb1cd6e9e6e75062427bc9f7e"><div class="ttname"><a href="classMPBaseObject.html#abfed57adb1cd6e9e6e75062427bc9f7e">MPBaseObject::IsRunning</a></div><div class="ttdeci">bool IsRunning() const noexcept</div><div class="ttdoc">Check the library's running flag.</div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:332</div></div>
-<div class="ttc" id="aclassMPBaseObject_html_ac5466caf986b06ca41f1fea274dc47c6"><div class="ttname"><a href="classMPBaseObject.html#ac5466caf986b06ca41f1fea274dc47c6">MPBaseObject::SetLabel</a></div><div class="ttdeci">void SetLabel(const std::string &amp;)</div><div class="ttdoc">Set the unique label for this object.</div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:304</div></div>
-<div class="ttc" id="aclassMPBaseObject_html_aca769e4192d06bd3f4926bf94b9c055a"><div class="ttname"><a href="classMPBaseObject.html#aca769e4192d06bd3f4926bf94b9c055a">MPBaseObject::GetName</a></div><div class="ttdeci">const std::string &amp; GetName() const</div><div class="ttdoc">Get the class name for this object.</div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:277</div></div>
-<div class="ttc" id="aclassMPBaseObject_html_acb4f647ec2b50698e0c4bb676f1d103e"><div class="ttname"><a href="classMPBaseObject.html#acb4f647ec2b50698e0c4bb676f1d103e">MPBaseObject::GetGoalTracker</a></div><div class="ttdeci">GoalTracker * GetGoalTracker() const noexcept</div><div class="ttdoc">Get the goal tracker.</div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:568</div></div>
-<div class="ttc" id="aclassMPBaseObject_html_acf158aa0efa6679a73995f429d768a0b"><div class="ttname"><a href="classMPBaseObject.html#acf158aa0efa6679a73995f429d768a0b">MPBaseObject::GetBaseFilename</a></div><div class="ttdeci">const std::string &amp; GetBaseFilename() const</div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:232</div></div>
-<div class="ttc" id="aclassMPBaseObject_html_ad06ed006429808c548ad2c88d7362652"><div class="ttname"><a href="classMPBaseObject.html#ad06ed006429808c548ad2c88d7362652">MPBaseObject::GroupRoadmapType</a></div><div class="ttdeci">MPTraits::GroupRoadmapType GroupRoadmapType</div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:45</div></div>
-<div class="ttc" id="aclassMPBaseObject_html_ad34623e8bcd57c846f8ffe6afe6b427e"><div class="ttname"><a href="classMPBaseObject.html#ad34623e8bcd57c846f8ffe6afe6b427e">MPBaseObject::GetLabel</a></div><div class="ttdeci">const std::string &amp; GetLabel() const</div><div class="ttdoc">Get the unique label for this object.</div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:286</div></div>
-<div class="ttc" id="aclassMPBaseObject_html_ae1c21a5eb19462d7fbc1d9d7ad44a337"><div class="ttname"><a href="classMPBaseObject.html#ae1c21a5eb19462d7fbc1d9d7ad44a337">MPBaseObject::GetExtender</a></div><div class="ttdeci">ExtenderPointer GetExtender(const std::string &amp;) const noexcept</div><div class="ttdoc">Get an extender by label from the owning MPLibrary.</div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:386</div></div>
-<div class="ttc" id="aclassMPBaseObject_html_ae603ce0344d2bf534dd9623be0625f90"><div class="ttname"><a href="classMPBaseObject.html#ae603ce0344d2bf534dd9623be0625f90">MPBaseObject::DistanceMetricPointer</a></div><div class="ttdeci">MPLibrary::DistanceMetricPointer DistanceMetricPointer</div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:63</div></div>
-<div class="ttc" id="aclassMPBaseObject_html_ae65bc5a79747909242133bf6d00c993d"><div class="ttname"><a href="classMPBaseObject.html#ae65bc5a79747909242133bf6d00c993d">MPBaseObject::LocalPlannerPointer</a></div><div class="ttdeci">MPLibrary::LocalPlannerPointer LocalPlannerPointer</div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:54</div></div>
-<div class="ttc" id="aclassMPBaseObject_html_aea9c3bca368d8ed3aaf2687b159ca561"><div class="ttname"><a href="classMPBaseObject.html#aea9c3bca368d8ed3aaf2687b159ca561">MPBaseObject::Path</a></div><div class="ttdeci">MPTraits::Path Path</div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:47</div></div>
-<div class="ttc" id="aclassMPBaseObject_html_af952ecbef2818c807056dd1ee562dfa2"><div class="ttname"><a href="classMPBaseObject.html#af952ecbef2818c807056dd1ee562dfa2">MPBaseObject::GetMapEvaluator</a></div><div class="ttdeci">MapEvaluatorPointer GetMapEvaluator(const std::string &amp;) const noexcept</div><div class="ttdoc">Get a map evaluator by label from the owning MPLibrary.</div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:431</div></div>
-<div class="ttc" id="aclassMPBaseObject_html_afdfe49d535de506c369d53c3f35c4861"><div class="ttname"><a href="classMPBaseObject.html#afdfe49d535de506c369d53c3f35c4861">MPBaseObject::RoadmapType</a></div><div class="ttdeci">MPTraits::RoadmapType RoadmapType</div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:44</div></div>
-<div class="ttc" id="aclassMPLibraryType_html"><div class="ttname"><a href="classMPLibraryType.html">MPLibraryType</a></div><div class="ttdef"><b>Definition:</b> MPLibrary.h:44</div></div>
-<div class="ttc" id="aclassMPLibraryType_html_a005889128c71659b542bb9cada97fa8b"><div class="ttname"><a href="classMPLibraryType.html#a005889128c71659b542bb9cada97fa8b">MPLibraryType::ValidityCheckerPointer</a></div><div class="ttdeci">ValidityCheckerSet::MethodPointer ValidityCheckerPointer</div><div class="ttdef"><b>Definition:</b> MPLibrary.h:99</div></div>
-<div class="ttc" id="aclassMPLibraryType_html_a1c453d86b99596468dbd80aea82172a0"><div class="ttname"><a href="classMPLibraryType.html#a1c453d86b99596468dbd80aea82172a0">MPLibraryType::MetricPointer</a></div><div class="ttdeci">MetricSet::MethodPointer MetricPointer</div><div class="ttdef"><b>Definition:</b> MPLibrary.h:110</div></div>
-<div class="ttc" id="aclassMPLibraryType_html_a22d44ff401d1d3a8fb3040428b9ea80e"><div class="ttname"><a href="classMPLibraryType.html#a22d44ff401d1d3a8fb3040428b9ea80e">MPLibraryType::ExtenderPointer</a></div><div class="ttdeci">ExtenderSet::MethodPointer ExtenderPointer</div><div class="ttdef"><b>Definition:</b> MPLibrary.h:105</div></div>
-<div class="ttc" id="aclassMPLibraryType_html_a630c82fb84b011ad0b6af7b3982927bc"><div class="ttname"><a href="classMPLibraryType.html#a630c82fb84b011ad0b6af7b3982927bc">MPLibraryType::EdgeValidityCheckerPointer</a></div><div class="ttdeci">EdgeValidityCheckerSet::MethodPointer EdgeValidityCheckerPointer</div><div class="ttdef"><b>Definition:</b> MPLibrary.h:108</div></div>
-<div class="ttc" id="aclassMPLibraryType_html_a73832f63ee7b6525ea3a65441f770644"><div class="ttname"><a href="classMPLibraryType.html#a73832f63ee7b6525ea3a65441f770644">MPLibraryType::LocalPlannerPointer</a></div><div class="ttdeci">LocalPlannerSet::MethodPointer LocalPlannerPointer</div><div class="ttdef"><b>Definition:</b> MPLibrary.h:104</div></div>
-<div class="ttc" id="aclassMPLibraryType_html_a9a56c7dfe254f93974659d85a3eed328"><div class="ttname"><a href="classMPLibraryType.html#a9a56c7dfe254f93974659d85a3eed328">MPLibraryType::PathModifierPointer</a></div><div class="ttdeci">PathModifierSet::MethodPointer PathModifierPointer</div><div class="ttdef"><b>Definition:</b> MPLibrary.h:106</div></div>
-<div class="ttc" id="aclassMPLibraryType_html_aa6e527bc3b9b27cc291d28982af14a62"><div class="ttname"><a href="classMPLibraryType.html#aa6e527bc3b9b27cc291d28982af14a62">MPLibraryType::SamplerPointer</a></div><div class="ttdeci">SamplerSet::MethodPointer SamplerPointer</div><div class="ttdef"><b>Definition:</b> MPLibrary.h:103</div></div>
-<div class="ttc" id="aclassMPLibraryType_html_ab81bf0e7c1c186e6cf6380a310cf7965"><div class="ttname"><a href="classMPLibraryType.html#ab81bf0e7c1c186e6cf6380a310cf7965">MPLibraryType::MPStrategyPointer</a></div><div class="ttdeci">MPStrategySet::MethodPointer MPStrategyPointer</div><div class="ttdef"><b>Definition:</b> MPLibrary.h:112</div></div>
-<div class="ttc" id="aclassMPLibraryType_html_aba36f7b8363df2dcde92dd58958c2197"><div class="ttname"><a href="classMPLibraryType.html#aba36f7b8363df2dcde92dd58958c2197">MPLibraryType::DistanceMetricPointer</a></div><div class="ttdeci">DistanceMetricSet::MethodPointer DistanceMetricPointer</div><div class="ttdef"><b>Definition:</b> MPLibrary.h:100</div></div>
-<div class="ttc" id="aclassMPLibraryType_html_acd62482ea6c7a8063beaa94a300ce5f2"><div class="ttname"><a href="classMPLibraryType.html#acd62482ea6c7a8063beaa94a300ce5f2">MPLibraryType::NeighborhoodFinderPointer</a></div><div class="ttdeci">NeighborhoodFinderSet::MethodPointer NeighborhoodFinderPointer</div><div class="ttdef"><b>Definition:</b> MPLibrary.h:102</div></div>
-<div class="ttc" id="aclassMPLibraryType_html_ad3d8787a8698ee7ea16e36fddce39739"><div class="ttname"><a href="classMPLibraryType.html#ad3d8787a8698ee7ea16e36fddce39739">MPLibraryType::ConnectorPointer</a></div><div class="ttdeci">ConnectorSet::MethodPointer ConnectorPointer</div><div class="ttdef"><b>Definition:</b> MPLibrary.h:109</div></div>
-<div class="ttc" id="aclassMPLibraryType_html_adea960aa1d259e4b3675d137cfd8a796"><div class="ttname"><a href="classMPLibraryType.html#adea960aa1d259e4b3675d137cfd8a796">MPLibraryType::MapEvaluatorPointer</a></div><div class="ttdeci">MapEvaluatorSet::MethodPointer MapEvaluatorPointer</div><div class="ttdef"><b>Definition:</b> MPLibrary.h:111</div></div>
+<div class="ttc" id="aclassLocalObstacleMap_html"><div class="ttname"><a href="classLocalObstacleMap.html">LocalObstacleMap</a></div><div class="ttdef"><b>Definition:</b> LocalObstacleMap.h:27</div></div>
+<div class="ttc" id="aclassMPBaseObject_html"><div class="ttname"><a href="classMPBaseObject.html">MPBaseObject</a></div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:46</div></div>
+<div class="ttc" id="aclassMPBaseObject_html_a062f6026973104069b7e08eb23a890f7"><div class="ttname"><a href="classMPBaseObject.html#a062f6026973104069b7e08eb23a890f7">MPBaseObject::GroupRoadmapType</a></div><div class="ttdeci">GroupRoadmap&lt; GroupCfgType, GroupWeightType &gt; GroupRoadmapType</div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:57</div></div>
+<div class="ttc" id="aclassMPBaseObject_html_a1cb9a08003cc7620b1534bdf69ceb1a4"><div class="ttname"><a href="classMPBaseObject.html#a1cb9a08003cc7620b1534bdf69ceb1a4">MPBaseObject::RoadmapType</a></div><div class="ttdeci">GenericStateGraph&lt; Cfg, WeightType &gt; RoadmapType</div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:54</div></div>
+<div class="ttc" id="aclassMPBaseObject_html_a26059613b8543b300ece8b511aad7050"><div class="ttname"><a href="classMPBaseObject.html#a26059613b8543b300ece8b511aad7050">MPBaseObject::GroupWeightType</a></div><div class="ttdeci">GroupLocalPlan&lt; RoadmapType &gt; GroupWeightType</div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:56</div></div>
+<div class="ttc" id="aclassMPBaseObject_html_a5d4ca9ff414d5e534de09475cd101154"><div class="ttname"><a href="classMPBaseObject.html#a5d4ca9ff414d5e534de09475cd101154">MPBaseObject::Initialize</a></div><div class="ttdeci">virtual void Initialize()</div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:98</div></div>
+<div class="ttc" id="aclassMPBaseObject_html_a63f3af4b78d458b51ddad699de1f9287"><div class="ttname"><a href="classMPBaseObject.html#a63f3af4b78d458b51ddad699de1f9287">MPBaseObject::WeightType</a></div><div class="ttdeci">DefaultWeight&lt; Cfg &gt; WeightType</div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:53</div></div>
+<div class="ttc" id="aclassMPBaseObject_html_a69f05ccf2fb3c91a2747dfd0afb385a2"><div class="ttname"><a href="classMPBaseObject.html#a69f05ccf2fb3c91a2747dfd0afb385a2">MPBaseObject::m_debug</a></div><div class="ttdeci">bool m_debug</div><div class="ttdoc">Print debug info?</div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:183</div></div>
+<div class="ttc" id="aclassMPBaseObject_html_aad3c1d1dccb02cfd48da4438a2b2923b"><div class="ttname"><a href="classMPBaseObject.html#aad3c1d1dccb02cfd48da4438a2b2923b">MPBaseObject::GroupCfgType</a></div><div class="ttdeci">GroupCfg&lt; RoadmapType &gt; GroupCfgType</div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:55</div></div>
+<div class="ttc" id="aclassMPLibrary_html"><div class="ttname"><a href="classMPLibrary.html">MPLibrary</a></div><div class="ttdef"><b>Definition:</b> MPLibrary.h:47</div></div>
 <div class="ttc" id="aclassMPProblem_html"><div class="ttname"><a href="classMPProblem.html">MPProblem</a></div><div class="ttdef"><b>Definition:</b> MPProblem.h:34</div></div>
-<div class="ttc" id="aclassMPSolutionType_html"><div class="ttname"><a href="classMPSolutionType.html">MPSolutionType</a></div><div class="ttdef"><b>Definition:</b> MPSolution.h:30</div></div>
+<div class="ttc" id="aclassMPSolutionType_html"><div class="ttname"><a href="classMPSolutionType.html">MPSolutionType</a></div><div class="ttdef"><b>Definition:</b> MPSolution.h:34</div></div>
 <div class="ttc" id="aclassMPTask_html"><div class="ttname"><a href="classMPTask.html">MPTask</a></div><div class="ttdef"><b>Definition:</b> MPTask.h:46</div></div>
-<div class="ttc" id="aclassMPToolsType_html"><div class="ttname"><a href="classMPToolsType.html">MPToolsType</a></div><div class="ttdef"><b>Definition:</b> MPTools.h:46</div></div>
-<div class="ttc" id="aclassMPTraits_html"><div class="ttname"><a href="classMPTraits.html">MPTraits</a></div><div class="ttdoc">Defines available methods in the Motion Planning Universe for Cfg.</div><div class="ttdef"><b>Definition:</b> ParallelCfgTraits.h:144</div></div>
-<div class="ttc" id="aclassMethodSet_html"><div class="ttname"><a href="classMethodSet.html">MethodSet</a></div><div class="ttdef"><b>Definition:</b> MethodSet.h:56</div></div>
-<div class="ttc" id="aclassPathType_html"><div class="ttname"><a href="classPathType.html">PathType</a></div><div class="ttdef"><b>Definition:</b> Path.h:18</div></div>
+<div class="ttc" id="aclassMethodSet_html"><div class="ttname"><a href="classMethodSet.html">MethodSet</a></div><div class="ttdef"><b>Definition:</b> MethodSet.h:58</div></div>
+<div class="ttc" id="aclassPath_html"><div class="ttname"><a href="classPath.html">Path</a></div><div class="ttdef"><b>Definition:</b> Path.h:23</div></div>
 <div class="ttc" id="aclassRobotGroup_html"><div class="ttname"><a href="classRobotGroup.html">RobotGroup</a></div><div class="ttdoc">A group of one or more robots.</div><div class="ttdef"><b>Definition:</b> RobotGroup.h:17</div></div>
 <div class="ttc" id="aclassRobot_html"><div class="ttname"><a href="classRobot.html">Robot</a></div><div class="ttdef"><b>Definition:</b> Robot.h:52</div></div>
 <div class="ttc" id="aclassStatClass_html"><div class="ttname"><a href="classStatClass.html">StatClass</a></div><div class="ttdef"><b>Definition:</b> MetricUtils.h:29</div></div>
 <div class="ttc" id="aclassXMLNode_html"><div class="ttname"><a href="classXMLNode.html">XMLNode</a></div><div class="ttdef"><b>Definition:</b> XMLNode.h:27</div></div>
-<div class="ttc" id="aclassXMLNode_html_af0e81db89948e52fdee6bf2bf029037f"><div class="ttname"><a href="classXMLNode.html#af0e81db89948e52fdee6bf2bf029037f">XMLNode::Read</a></div><div class="ttdeci">T Read(const std::string &amp;_name, const bool _req, const T &amp;_default, const T &amp;_min, const T &amp;_max, const std::string &amp;_desc)</div><div class="ttdef"><b>Definition:</b> XMLNode.h:267</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

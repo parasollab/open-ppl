@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.9.1"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Parasol Planning Library (PPL): DynamicRegionsPRM&lt; MPTraits &gt;::ExpansionRegion Struct Reference</title>
+<title>Parasol Planning Library (PPL): DynamicRegionsPRM::ExpansionRegion Struct Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -69,7 +69,7 @@ $(function() {
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a>  </div>
   <div class="headertitle">
-<div class="title">DynamicRegionsPRM&lt; MPTraits &gt;::ExpansionRegion Struct Reference</div>  </div>
+<div class="title">DynamicRegionsPRM::ExpansionRegion Struct Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 
@@ -80,73 +80,68 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a5cab776139db2af3e90b7c45e3980cd9"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDynamicRegionsPRM_1_1ExpansionRegion.html#a5cab776139db2af3e90b7c45e3980cd9">ExpansionRegion</a> (const <a class="el" href="classDynamicRegionsPRM.html#a828c0703aadc5cece3eb23196711fdc6">SkeletonEdgeIterator</a> &amp;_eit, const <a class="el" href="classDynamicRegionsPRM.html#a5852f55b03dcfe1c5675bcc9135e199e">VID</a> _representative)</td></tr>
-<tr class="separator:a5cab776139db2af3e90b7c45e3980cd9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a58380dda4ad9b0e666c1d5eb324cd1e6"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDynamicRegionsPRM_1_1ExpansionRegion.html#a58380dda4ad9b0e666c1d5eb324cd1e6">TrackSuccess</a> (const size_t _success, const size_t _attempts)</td></tr>
-<tr class="memdesc:a58380dda4ad9b0e666c1d5eb324cd1e6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Track the success rate of extending into this region.  <a href="structDynamicRegionsPRM_1_1ExpansionRegion.html#a58380dda4ad9b0e666c1d5eb324cd1e6">More...</a><br /></td></tr>
-<tr class="separator:a58380dda4ad9b0e666c1d5eb324cd1e6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a276e22c7ec3851af96ce261fdfcf71be"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDynamicRegionsPRM_1_1ExpansionRegion.html#a276e22c7ec3851af96ce261fdfcf71be">GetWeight</a> () const noexcept</td></tr>
-<tr class="memdesc:a276e22c7ec3851af96ce261fdfcf71be"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute the weight for this region (i.e. success rate).  <a href="structDynamicRegionsPRM_1_1ExpansionRegion.html#a276e22c7ec3851af96ce261fdfcf71be">More...</a><br /></td></tr>
-<tr class="separator:a276e22c7ec3851af96ce261fdfcf71be"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac6e0e6c6f1240d8dd0147c8c1b431e60"><td class="memItemLeft" align="right" valign="top">const Vector3d &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDynamicRegionsPRM_1_1ExpansionRegion.html#ac6e0e6c6f1240d8dd0147c8c1b431e60">GetCenter</a> () const noexcept</td></tr>
-<tr class="memdesc:ac6e0e6c6f1240d8dd0147c8c1b431e60"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the center of this region.  <a href="structDynamicRegionsPRM_1_1ExpansionRegion.html#ac6e0e6c6f1240d8dd0147c8c1b431e60">More...</a><br /></td></tr>
-<tr class="separator:ac6e0e6c6f1240d8dd0147c8c1b431e60"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad79011e32f3fdd1739ef5dd7fd9be7b9"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDynamicRegionsPRM_1_1ExpansionRegion.html#ad79011e32f3fdd1739ef5dd7fd9be7b9">LastPoint</a> () const noexcept</td></tr>
-<tr class="memdesc:ad79011e32f3fdd1739ef5dd7fd9be7b9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Check if this region is at the last point on its skeleton edge.  <a href="structDynamicRegionsPRM_1_1ExpansionRegion.html#ad79011e32f3fdd1739ef5dd7fd9be7b9">More...</a><br /></td></tr>
-<tr class="separator:ad79011e32f3fdd1739ef5dd7fd9be7b9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:add5fb929813b4d5cdd660d69fca41fd2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDynamicRegionsPRM_1_1ExpansionRegion.html#add5fb929813b4d5cdd660d69fca41fd2">Advance</a> () noexcept</td></tr>
-<tr class="memdesc:add5fb929813b4d5cdd660d69fca41fd2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Advance this region to the next skeleton edge point.  <a href="structDynamicRegionsPRM_1_1ExpansionRegion.html#add5fb929813b4d5cdd660d69fca41fd2">More...</a><br /></td></tr>
-<tr class="separator:add5fb929813b4d5cdd660d69fca41fd2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afcd179e417e8779a8c1e351e6e6e6183"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structDynamicRegionsPRM_1_1LocalComponentDescriptor.html">LocalComponentDescriptor</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDynamicRegionsPRM_1_1ExpansionRegion.html#afcd179e417e8779a8c1e351e6e6e6183">GetLocalComponentDescriptor</a> () const noexcept</td></tr>
-<tr class="memdesc:afcd179e417e8779a8c1e351e6e6e6183"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the descriptor for the local component this region is expanding.  <a href="structDynamicRegionsPRM_1_1ExpansionRegion.html#afcd179e417e8779a8c1e351e6e6e6183">More...</a><br /></td></tr>
-<tr class="separator:afcd179e417e8779a8c1e351e6e6e6183"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab6aef1278a1831eb46105dc2d6524672"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDynamicRegionsPRM_1_1ExpansionRegion.html#ab6aef1278a1831eb46105dc2d6524672">ExpansionRegion</a> (const <a class="el" href="classDynamicRegionsPRM.html#ac37d7f5063f4998b2aa73a4066323489">SkeletonEdgeIterator</a> &amp;_eit, const <a class="el" href="classDynamicRegionsPRM.html#ae5d78a3e247a4ee49c03a0f88092494c">VID</a> _representative)</td></tr>
+<tr class="separator:ab6aef1278a1831eb46105dc2d6524672"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab6705ca33988556f32cf0c9b7c3c1b30"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDynamicRegionsPRM_1_1ExpansionRegion.html#ab6705ca33988556f32cf0c9b7c3c1b30">TrackSuccess</a> (const size_t _success, const size_t _attempts)</td></tr>
+<tr class="memdesc:ab6705ca33988556f32cf0c9b7c3c1b30"><td class="mdescLeft">&#160;</td><td class="mdescRight">Track the success rate of extending into this region.  <a href="structDynamicRegionsPRM_1_1ExpansionRegion.html#ab6705ca33988556f32cf0c9b7c3c1b30">More...</a><br /></td></tr>
+<tr class="separator:ab6705ca33988556f32cf0c9b7c3c1b30"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7483a19a9bcece63baa73731897db0a2"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDynamicRegionsPRM_1_1ExpansionRegion.html#a7483a19a9bcece63baa73731897db0a2">GetWeight</a> () const noexcept</td></tr>
+<tr class="memdesc:a7483a19a9bcece63baa73731897db0a2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute the weight for this region (i.e. success rate).  <a href="structDynamicRegionsPRM_1_1ExpansionRegion.html#a7483a19a9bcece63baa73731897db0a2">More...</a><br /></td></tr>
+<tr class="separator:a7483a19a9bcece63baa73731897db0a2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4ebc3804e2d4069c7ab9781891128862"><td class="memItemLeft" align="right" valign="top">const Vector3d &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDynamicRegionsPRM_1_1ExpansionRegion.html#a4ebc3804e2d4069c7ab9781891128862">GetCenter</a> () const noexcept</td></tr>
+<tr class="memdesc:a4ebc3804e2d4069c7ab9781891128862"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the center of this region.  <a href="structDynamicRegionsPRM_1_1ExpansionRegion.html#a4ebc3804e2d4069c7ab9781891128862">More...</a><br /></td></tr>
+<tr class="separator:a4ebc3804e2d4069c7ab9781891128862"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae26482bce2b084b6cad97a47455432a6"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDynamicRegionsPRM_1_1ExpansionRegion.html#ae26482bce2b084b6cad97a47455432a6">LastPoint</a> () const noexcept</td></tr>
+<tr class="memdesc:ae26482bce2b084b6cad97a47455432a6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Check if this region is at the last point on its skeleton edge.  <a href="structDynamicRegionsPRM_1_1ExpansionRegion.html#ae26482bce2b084b6cad97a47455432a6">More...</a><br /></td></tr>
+<tr class="separator:ae26482bce2b084b6cad97a47455432a6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac0f4453a783b9174817888107b513369"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDynamicRegionsPRM_1_1ExpansionRegion.html#ac0f4453a783b9174817888107b513369">Advance</a> () noexcept</td></tr>
+<tr class="memdesc:ac0f4453a783b9174817888107b513369"><td class="mdescLeft">&#160;</td><td class="mdescRight">Advance this region to the next skeleton edge point.  <a href="structDynamicRegionsPRM_1_1ExpansionRegion.html#ac0f4453a783b9174817888107b513369">More...</a><br /></td></tr>
+<tr class="separator:ac0f4453a783b9174817888107b513369"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9c090c664bab1d64e86a5e0a90c6c7b8"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structDynamicRegionsPRM_1_1LocalComponentDescriptor.html">LocalComponentDescriptor</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDynamicRegionsPRM_1_1ExpansionRegion.html#a9c090c664bab1d64e86a5e0a90c6c7b8">GetLocalComponentDescriptor</a> () const noexcept</td></tr>
+<tr class="memdesc:a9c090c664bab1d64e86a5e0a90c6c7b8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the descriptor for the local component this region is expanding.  <a href="structDynamicRegionsPRM_1_1ExpansionRegion.html#a9c090c664bab1d64e86a5e0a90c6c7b8">More...</a><br /></td></tr>
+<tr class="separator:a9c090c664bab1d64e86a5e0a90c6c7b8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Data Fields</h2></td></tr>
 <tr><td colspan="2"><div class="groupHeader">Internal State</div></td></tr>
-<tr class="memitem:ae225cf452ff49b4a636480147908fea3"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="classDynamicRegionsPRM.html#a828c0703aadc5cece3eb23196711fdc6">SkeletonEdgeIterator</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDynamicRegionsPRM_1_1ExpansionRegion.html#ae225cf452ff49b4a636480147908fea3">edgeIterator</a></td></tr>
-<tr class="memdesc:ae225cf452ff49b4a636480147908fea3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Iterator to region's edge.  <a href="structDynamicRegionsPRM_1_1ExpansionRegion.html#ae225cf452ff49b4a636480147908fea3">More...</a><br /></td></tr>
-<tr class="separator:ae225cf452ff49b4a636480147908fea3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a88d2b04b5f2292d0b86f1769777ad1e3"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classDynamicRegionsPRM.html#a5852f55b03dcfe1c5675bcc9135e199e">VID</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDynamicRegionsPRM_1_1ExpansionRegion.html#a88d2b04b5f2292d0b86f1769777ad1e3">representative</a> {<a class="el" href="WorkspaceDecomposition_8cpp.html#a361c0cc37b8ae0df94819fd94cd82ad5">INVALID_VID</a>}</td></tr>
-<tr class="memdesc:a88d2b04b5f2292d0b86f1769777ad1e3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Representative roadmap vertex.  <a href="structDynamicRegionsPRM_1_1ExpansionRegion.html#a88d2b04b5f2292d0b86f1769777ad1e3">More...</a><br /></td></tr>
-<tr class="separator:a88d2b04b5f2292d0b86f1769777ad1e3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5b56e809d8782138b02172f336e76e33"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDynamicRegionsPRM_1_1ExpansionRegion.html#a5b56e809d8782138b02172f336e76e33">edgeIndex</a> {0}</td></tr>
-<tr class="memdesc:a5b56e809d8782138b02172f336e76e33"><td class="mdescLeft">&#160;</td><td class="mdescRight">Which edge point are we at?  <a href="structDynamicRegionsPRM_1_1ExpansionRegion.html#a5b56e809d8782138b02172f336e76e33">More...</a><br /></td></tr>
-<tr class="separator:a5b56e809d8782138b02172f336e76e33"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab16a161b3c797c1edaf7e59b21bfa98d"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDynamicRegionsPRM_1_1ExpansionRegion.html#ab16a161b3c797c1edaf7e59b21bfa98d">attempts</a> {1}</td></tr>
-<tr class="memdesc:ab16a161b3c797c1edaf7e59b21bfa98d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Number of attempts to extend into this region.  <a href="structDynamicRegionsPRM_1_1ExpansionRegion.html#ab16a161b3c797c1edaf7e59b21bfa98d">More...</a><br /></td></tr>
-<tr class="separator:ab16a161b3c797c1edaf7e59b21bfa98d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac7b076a7fca52659f0fe45186d3d165c"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDynamicRegionsPRM_1_1ExpansionRegion.html#ac7b076a7fca52659f0fe45186d3d165c">successes</a> {0}</td></tr>
-<tr class="memdesc:ac7b076a7fca52659f0fe45186d3d165c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Number of successful attempts.  <a href="structDynamicRegionsPRM_1_1ExpansionRegion.html#ac7b076a7fca52659f0fe45186d3d165c">More...</a><br /></td></tr>
-<tr class="separator:ac7b076a7fca52659f0fe45186d3d165c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a512670817358e768fbf766d9e92a5db9"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="classDynamicRegionsPRM.html#ac37d7f5063f4998b2aa73a4066323489">SkeletonEdgeIterator</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDynamicRegionsPRM_1_1ExpansionRegion.html#a512670817358e768fbf766d9e92a5db9">edgeIterator</a></td></tr>
+<tr class="memdesc:a512670817358e768fbf766d9e92a5db9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Iterator to region's edge.  <a href="structDynamicRegionsPRM_1_1ExpansionRegion.html#a512670817358e768fbf766d9e92a5db9">More...</a><br /></td></tr>
+<tr class="separator:a512670817358e768fbf766d9e92a5db9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa807421021cb8d8da43b81bc4421e040"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classDynamicRegionsPRM.html#ae5d78a3e247a4ee49c03a0f88092494c">VID</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDynamicRegionsPRM_1_1ExpansionRegion.html#aa807421021cb8d8da43b81bc4421e040">representative</a> {<a class="el" href="WorkspaceDecomposition_8cpp.html#a361c0cc37b8ae0df94819fd94cd82ad5">INVALID_VID</a>}</td></tr>
+<tr class="memdesc:aa807421021cb8d8da43b81bc4421e040"><td class="mdescLeft">&#160;</td><td class="mdescRight">Representative roadmap vertex.  <a href="structDynamicRegionsPRM_1_1ExpansionRegion.html#aa807421021cb8d8da43b81bc4421e040">More...</a><br /></td></tr>
+<tr class="separator:aa807421021cb8d8da43b81bc4421e040"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afb7cf6dd3726a72bd4b21cacef6060f2"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDynamicRegionsPRM_1_1ExpansionRegion.html#afb7cf6dd3726a72bd4b21cacef6060f2">edgeIndex</a> {0}</td></tr>
+<tr class="memdesc:afb7cf6dd3726a72bd4b21cacef6060f2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Which edge point are we at?  <a href="structDynamicRegionsPRM_1_1ExpansionRegion.html#afb7cf6dd3726a72bd4b21cacef6060f2">More...</a><br /></td></tr>
+<tr class="separator:afb7cf6dd3726a72bd4b21cacef6060f2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0bf3b71ec435a4e06369fd2efe965dd6"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDynamicRegionsPRM_1_1ExpansionRegion.html#a0bf3b71ec435a4e06369fd2efe965dd6">attempts</a> {1}</td></tr>
+<tr class="memdesc:a0bf3b71ec435a4e06369fd2efe965dd6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Number of attempts to extend into this region.  <a href="structDynamicRegionsPRM_1_1ExpansionRegion.html#a0bf3b71ec435a4e06369fd2efe965dd6">More...</a><br /></td></tr>
+<tr class="separator:a0bf3b71ec435a4e06369fd2efe965dd6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a890893ffa0b0a1d708f379f444c09fab"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDynamicRegionsPRM_1_1ExpansionRegion.html#a890893ffa0b0a1d708f379f444c09fab">successes</a> {0}</td></tr>
+<tr class="memdesc:a890893ffa0b0a1d708f379f444c09fab"><td class="mdescLeft">&#160;</td><td class="mdescRight">Number of successful attempts.  <a href="structDynamicRegionsPRM_1_1ExpansionRegion.html#a890893ffa0b0a1d708f379f444c09fab">More...</a><br /></td></tr>
+<tr class="separator:a890893ffa0b0a1d708f379f444c09fab"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><h3>template&lt;typename MPTraits&gt;<br />
-struct DynamicRegionsPRM&lt; MPTraits &gt;::ExpansionRegion</h3>
-
-<p>Representation of an expansion region. </p>
+<div class="textblock"><p>Representation of an expansion region. </p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="a5cab776139db2af3e90b7c45e3980cd9"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5cab776139db2af3e90b7c45e3980cd9">&#9670;&nbsp;</a></span>ExpansionRegion()</h2>
+<a id="ab6aef1278a1831eb46105dc2d6524672"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab6aef1278a1831eb46105dc2d6524672">&#9670;&nbsp;</a></span>ExpansionRegion()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classDynamicRegionsPRM.html">DynamicRegionsPRM</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::ExpansionRegion::ExpansionRegion </td>
+          <td class="memname">DynamicRegionsPRM::ExpansionRegion::ExpansionRegion </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="classDynamicRegionsPRM.html#a828c0703aadc5cece3eb23196711fdc6">SkeletonEdgeIterator</a> &amp;&#160;</td>
+          <td class="paramtype">const <a class="el" href="classDynamicRegionsPRM.html#ac37d7f5063f4998b2aa73a4066323489">SkeletonEdgeIterator</a> &amp;&#160;</td>
           <td class="paramname"><em>_eit</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="classDynamicRegionsPRM.html#a5852f55b03dcfe1c5675bcc9135e199e">VID</a>&#160;</td>
+          <td class="paramtype">const <a class="el" href="classDynamicRegionsPRM.html#ae5d78a3e247a4ee49c03a0f88092494c">VID</a>&#160;</td>
           <td class="paramname"><em>_representative</em>&#160;</td>
         </tr>
         <tr>
@@ -165,19 +160,17 @@ template&lt;typename MPTraits &gt; </div>
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
-<a id="add5fb929813b4d5cdd660d69fca41fd2"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#add5fb929813b4d5cdd660d69fca41fd2">&#9670;&nbsp;</a></span>Advance()</h2>
+<a id="ac0f4453a783b9174817888107b513369"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac0f4453a783b9174817888107b513369">&#9670;&nbsp;</a></span>Advance()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="classDynamicRegionsPRM.html">DynamicRegionsPRM</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::ExpansionRegion::Advance </td>
+          <td class="memname">void DynamicRegionsPRM::ExpansionRegion::Advance </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td></td>
@@ -194,19 +187,17 @@ template&lt;typename MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="ac6e0e6c6f1240d8dd0147c8c1b431e60"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac6e0e6c6f1240d8dd0147c8c1b431e60">&#9670;&nbsp;</a></span>GetCenter()</h2>
+<a id="a4ebc3804e2d4069c7ab9781891128862"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4ebc3804e2d4069c7ab9781891128862">&#9670;&nbsp;</a></span>GetCenter()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">const Vector3d&amp; <a class="el" href="classDynamicRegionsPRM.html">DynamicRegionsPRM</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::ExpansionRegion::GetCenter </td>
+          <td class="memname">const Vector3d&amp; DynamicRegionsPRM::ExpansionRegion::GetCenter </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const</td>
@@ -223,19 +214,17 @@ template&lt;typename MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="afcd179e417e8779a8c1e351e6e6e6183"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#afcd179e417e8779a8c1e351e6e6e6183">&#9670;&nbsp;</a></span>GetLocalComponentDescriptor()</h2>
+<a id="a9c090c664bab1d64e86a5e0a90c6c7b8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9c090c664bab1d64e86a5e0a90c6c7b8">&#9670;&nbsp;</a></span>GetLocalComponentDescriptor()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="structDynamicRegionsPRM_1_1LocalComponentDescriptor.html">LocalComponentDescriptor</a> <a class="el" href="classDynamicRegionsPRM.html">DynamicRegionsPRM</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::ExpansionRegion::GetLocalComponentDescriptor </td>
+          <td class="memname"><a class="el" href="structDynamicRegionsPRM_1_1LocalComponentDescriptor.html">LocalComponentDescriptor</a> DynamicRegionsPRM::ExpansionRegion::GetLocalComponentDescriptor </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const</td>
@@ -252,19 +241,17 @@ template&lt;typename MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="a276e22c7ec3851af96ce261fdfcf71be"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a276e22c7ec3851af96ce261fdfcf71be">&#9670;&nbsp;</a></span>GetWeight()</h2>
+<a id="a7483a19a9bcece63baa73731897db0a2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7483a19a9bcece63baa73731897db0a2">&#9670;&nbsp;</a></span>GetWeight()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">double <a class="el" href="classDynamicRegionsPRM.html">DynamicRegionsPRM</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::ExpansionRegion::GetWeight </td>
+          <td class="memname">double DynamicRegionsPRM::ExpansionRegion::GetWeight </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const</td>
@@ -281,19 +268,17 @@ template&lt;typename MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="ad79011e32f3fdd1739ef5dd7fd9be7b9"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad79011e32f3fdd1739ef5dd7fd9be7b9">&#9670;&nbsp;</a></span>LastPoint()</h2>
+<a id="ae26482bce2b084b6cad97a47455432a6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae26482bce2b084b6cad97a47455432a6">&#9670;&nbsp;</a></span>LastPoint()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">bool <a class="el" href="classDynamicRegionsPRM.html">DynamicRegionsPRM</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::ExpansionRegion::LastPoint </td>
+          <td class="memname">bool DynamicRegionsPRM::ExpansionRegion::LastPoint </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const</td>
@@ -310,19 +295,17 @@ template&lt;typename MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="a58380dda4ad9b0e666c1d5eb324cd1e6"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a58380dda4ad9b0e666c1d5eb324cd1e6">&#9670;&nbsp;</a></span>TrackSuccess()</h2>
+<a id="ab6705ca33988556f32cf0c9b7c3c1b30"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab6705ca33988556f32cf0c9b7c3c1b30">&#9670;&nbsp;</a></span>TrackSuccess()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="classDynamicRegionsPRM.html">DynamicRegionsPRM</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::ExpansionRegion::TrackSuccess </td>
+          <td class="memname">void DynamicRegionsPRM::ExpansionRegion::TrackSuccess </td>
           <td>(</td>
           <td class="paramtype">const size_t&#160;</td>
           <td class="paramname"><em>_success</em>, </td>
@@ -351,16 +334,14 @@ template&lt;typename MPTraits &gt; </div>
 </div>
 </div>
 <h2 class="groupheader">Field Documentation</h2>
-<a id="ab16a161b3c797c1edaf7e59b21bfa98d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab16a161b3c797c1edaf7e59b21bfa98d">&#9670;&nbsp;</a></span>attempts</h2>
+<a id="a0bf3b71ec435a4e06369fd2efe965dd6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0bf3b71ec435a4e06369fd2efe965dd6">&#9670;&nbsp;</a></span>attempts</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">double <a class="el" href="classDynamicRegionsPRM.html">DynamicRegionsPRM</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::ExpansionRegion::attempts {1}</td>
+          <td class="memname">double DynamicRegionsPRM::ExpansionRegion::attempts {1}</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -369,16 +350,14 @@ template&lt;typename MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="a5b56e809d8782138b02172f336e76e33"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5b56e809d8782138b02172f336e76e33">&#9670;&nbsp;</a></span>edgeIndex</h2>
+<a id="afb7cf6dd3726a72bd4b21cacef6060f2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afb7cf6dd3726a72bd4b21cacef6060f2">&#9670;&nbsp;</a></span>edgeIndex</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">size_t <a class="el" href="classDynamicRegionsPRM.html">DynamicRegionsPRM</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::ExpansionRegion::edgeIndex {0}</td>
+          <td class="memname">size_t DynamicRegionsPRM::ExpansionRegion::edgeIndex {0}</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -387,16 +366,14 @@ template&lt;typename MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="ae225cf452ff49b4a636480147908fea3"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae225cf452ff49b4a636480147908fea3">&#9670;&nbsp;</a></span>edgeIterator</h2>
+<a id="a512670817358e768fbf766d9e92a5db9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a512670817358e768fbf766d9e92a5db9">&#9670;&nbsp;</a></span>edgeIterator</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">const <a class="el" href="classDynamicRegionsPRM.html#a828c0703aadc5cece3eb23196711fdc6">SkeletonEdgeIterator</a> <a class="el" href="classDynamicRegionsPRM.html">DynamicRegionsPRM</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::ExpansionRegion::edgeIterator</td>
+          <td class="memname">const <a class="el" href="classDynamicRegionsPRM.html#ac37d7f5063f4998b2aa73a4066323489">SkeletonEdgeIterator</a> DynamicRegionsPRM::ExpansionRegion::edgeIterator</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -405,16 +382,14 @@ template&lt;typename MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="a88d2b04b5f2292d0b86f1769777ad1e3"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a88d2b04b5f2292d0b86f1769777ad1e3">&#9670;&nbsp;</a></span>representative</h2>
+<a id="aa807421021cb8d8da43b81bc4421e040"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa807421021cb8d8da43b81bc4421e040">&#9670;&nbsp;</a></span>representative</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classDynamicRegionsPRM.html#a5852f55b03dcfe1c5675bcc9135e199e">VID</a> <a class="el" href="classDynamicRegionsPRM.html">DynamicRegionsPRM</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::ExpansionRegion::representative {<a class="el" href="WorkspaceDecomposition_8cpp.html#a361c0cc37b8ae0df94819fd94cd82ad5">INVALID_VID</a>}</td>
+          <td class="memname"><a class="el" href="classDynamicRegionsPRM.html#ae5d78a3e247a4ee49c03a0f88092494c">VID</a> DynamicRegionsPRM::ExpansionRegion::representative {<a class="el" href="WorkspaceDecomposition_8cpp.html#a361c0cc37b8ae0df94819fd94cd82ad5">INVALID_VID</a>}</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -423,16 +398,14 @@ template&lt;typename MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="ac7b076a7fca52659f0fe45186d3d165c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac7b076a7fca52659f0fe45186d3d165c">&#9670;&nbsp;</a></span>successes</h2>
+<a id="a890893ffa0b0a1d708f379f444c09fab"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a890893ffa0b0a1d708f379f444c09fab">&#9670;&nbsp;</a></span>successes</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">double <a class="el" href="classDynamicRegionsPRM.html">DynamicRegionsPRM</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::ExpansionRegion::successes {0}</td>
+          <td class="memname">double DynamicRegionsPRM::ExpansionRegion::successes {0}</td>
         </tr>
       </table>
 </div><div class="memdoc">

@@ -74,144 +74,44 @@ $(function() {
 <div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="preprocessor">#define COLLISION_EVALUATION_H</span></div>
 <div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160; </div>
 <div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="MapEvaluatorMethod_8h.html">MapEvaluatorMethod.h</a>&quot;</span></div>
-<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="EdgeValidityCheckerMethod_8h.html">MPLibrary/EdgeValidityCheckers/EdgeValidityCheckerMethod.h</a>&quot;</span></div>
-<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160; </div>
-<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00012"></a><span class="lineno"><a class="line" href="classCollisionEvaluator.html">   12</a></span>&#160;<span class="keyword">class </span><a class="code" href="classCollisionEvaluator.html">CollisionEvaluator</a> : <span class="keyword">public</span> <a class="code" href="classMapEvaluatorMethod.html">MapEvaluatorMethod</a>&lt;MPTraits&gt; {</div>
-<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;  <span class="keyword">public</span>:</div>
-<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160; </div>
-<div class="line"><a name="l00015"></a><span class="lineno"><a class="line" href="classCollisionEvaluator.html#a88c0601a076c433042307896021eeabf">   15</a></span>&#160;    <span class="keyword">typedef</span> <span class="keyword">typename</span> <a class="code" href="classMPTraits.html#a1a5aab50ac12baaf6b22ff345c5ae138">MPTraits::CfgType</a>          <a class="code" href="classCollisionEvaluator.html#a88c0601a076c433042307896021eeabf">CfgType</a>;</div>
-<div class="line"><a name="l00016"></a><span class="lineno"><a class="line" href="classCollisionEvaluator.html#a64cb182145d67c11a49132f4df63820d">   16</a></span>&#160;    <span class="keyword">typedef</span> <span class="keyword">typename</span> <a class="code" href="classGenericStateGraph.html">MPTraits::RoadmapType</a>      <a class="code" href="classCollisionEvaluator.html#a64cb182145d67c11a49132f4df63820d">RoadmapType</a>;</div>
-<div class="line"><a name="l00017"></a><span class="lineno"><a class="line" href="classCollisionEvaluator.html#a1b606c778d9ddd1cfb8ff5d09cadd2fd">   17</a></span>&#160;    <span class="keyword">typedef</span> <span class="keyword">typename</span> <a class="code" href="classGenericStateGraph.html#a337a1247796cb9bf56fbe6eb2b9497d2">RoadmapType::VID</a>           <a class="code" href="classCollisionEvaluator.html#a1b606c778d9ddd1cfb8ff5d09cadd2fd">VID</a>;</div>
-<div class="line"><a name="l00018"></a><span class="lineno"><a class="line" href="classCollisionEvaluator.html#a7cb9e79185438f970dfb4057214df663">   18</a></span>&#160;    <span class="keyword">typedef</span> <span class="keyword">typename</span> <a class="code" href="classPathType.html">MPTraits::Path</a>             <a class="code" href="classCollisionEvaluator.html#a7cb9e79185438f970dfb4057214df663">Path</a>;</div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160; </div>
+<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160; </div>
+<div class="line"><a name="l00010"></a><span class="lineno"><a class="line" href="classCollisionEvaluator.html">   10</a></span>&#160;<span class="keyword">class </span><a class="code" href="classCollisionEvaluator.html">CollisionEvaluator</a> : <span class="keyword">public</span> <a class="code" href="classMapEvaluatorMethod.html">MapEvaluatorMethod</a> {</div>
+<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;  <span class="keyword">public</span>:</div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160; </div>
+<div class="line"><a name="l00013"></a><span class="lineno"><a class="line" href="classCollisionEvaluator.html#abdc570fb60ae64b663edf59518112c1e">   13</a></span>&#160;    <span class="keyword">typedef</span> <span class="keyword">typename</span> <a class="code" href="classGenericStateGraph.html">MPBaseObject::RoadmapType</a>  <a class="code" href="classCollisionEvaluator.html#abdc570fb60ae64b663edf59518112c1e">RoadmapType</a>;</div>
+<div class="line"><a name="l00014"></a><span class="lineno"><a class="line" href="classCollisionEvaluator.html#a25e0411beff1d09248884777e7d1c99c">   14</a></span>&#160;    <span class="keyword">typedef</span> <span class="keyword">typename</span> <a class="code" href="classGenericStateGraph.html#a337a1247796cb9bf56fbe6eb2b9497d2">RoadmapType::VID</a>           <a class="code" href="classCollisionEvaluator.html#a25e0411beff1d09248884777e7d1c99c">VID</a>;</div>
+<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160; </div>
+<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160; </div>
+<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;    <a class="code" href="classCollisionEvaluator.html#aecd6a37916784fff05379760e749adc9">CollisionEvaluator</a>();</div>
+<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;    <a class="code" href="classCollisionEvaluator.html#aecd6a37916784fff05379760e749adc9">CollisionEvaluator</a>(<a class="code" href="classXMLNode.html">XMLNode</a>&amp; _node);</div>
+<div class="line"><a name="l00019"></a><span class="lineno"><a class="line" href="classCollisionEvaluator.html#a18f35d65bcf11a182f7407d9046c1604">   19</a></span>&#160;    <span class="keyword">virtual</span> <a class="code" href="classCollisionEvaluator.html#a18f35d65bcf11a182f7407d9046c1604">~CollisionEvaluator</a>() = <span class="keywordflow">default</span>;</div>
 <div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160; </div>
-<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;    <a class="code" href="classCollisionEvaluator.html#ad9c929d128e78f48d973a6596f8f4c33">CollisionEvaluator</a>();</div>
-<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;    <a class="code" href="classCollisionEvaluator.html#ad9c929d128e78f48d973a6596f8f4c33">CollisionEvaluator</a>(<a class="code" href="classXMLNode.html">XMLNode</a>&amp; _node);</div>
-<div class="line"><a name="l00023"></a><span class="lineno"><a class="line" href="classCollisionEvaluator.html#a19ea258ea85ef949d0960f878fc6d5be">   23</a></span>&#160;    <span class="keyword">virtual</span> <a class="code" href="classCollisionEvaluator.html#a19ea258ea85ef949d0960f878fc6d5be">~CollisionEvaluator</a>() = <span class="keywordflow">default</span>;</div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;    <span class="keyword">virtual</span> <span class="keywordtype">bool</span> <a class="code" href="classCollisionEvaluator.html#aacafbfccc35bacc8ce8e4509d249ea4c">operator()</a>();</div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160; </div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;  <span class="keyword">protected</span>:</div>
 <div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160; </div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;    <span class="keyword">virtual</span> <span class="keywordtype">bool</span> <a class="code" href="classCollisionEvaluator.html#a43fbfde35da7a4c41fdf16162e7722a7">operator()</a>();</div>
+<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;  <span class="keyword">private</span>:</div>
 <div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160; </div>
-<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;  <span class="keyword">protected</span>:</div>
-<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160; </div>
-<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;  <span class="keyword">private</span>:</div>
+<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;    <span class="keywordtype">void</span> Write(<span class="keyword">const</span> std::string&amp; _filename) <span class="keyword">const</span>;</div>
 <div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160; </div>
-<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;    <span class="keywordtype">void</span> Write(<span class="keyword">const</span> std::string&amp; _filename) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;    <span class="keywordtype">string</span> m_evcLabel;               </div>
+<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160; </div>
+<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;    vector&lt;size_t&gt; m_collisions;     </div>
 <div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160; </div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;    <span class="keywordtype">string</span> m_evcLabel;               </div>
+<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;};</div>
 <div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160; </div>
-<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;    vector&lt;size_t&gt; m_collisions;     </div>
-<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160; </div>
-<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;};</div>
-<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160; </div>
-<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00042"></a><span class="lineno"><a class="line" href="classCollisionEvaluator.html#ad9c929d128e78f48d973a6596f8f4c33">   42</a></span>&#160;<a class="code" href="classCollisionEvaluator.html#ad9c929d128e78f48d973a6596f8f4c33">CollisionEvaluator&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;<a class="code" href="classCollisionEvaluator.html#ad9c929d128e78f48d973a6596f8f4c33">CollisionEvaluator</a>() : <a class="code" href="classMapEvaluatorMethod.html">MapEvaluatorMethod</a>&lt;<a class="code" href="classMPTraits.html">MPTraits</a>&gt;() {</div>
-<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;  this-&gt;<a class="code" href="classMPBaseObject.html#ab59d82cd734f77fdc17eddb8517461da">SetName</a>(<span class="stringliteral">&quot;CollisionEvaluator&quot;</span>);</div>
-<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;}</div>
-<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160; </div>
-<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00048"></a><span class="lineno"><a class="line" href="classCollisionEvaluator.html#a26522d9efc4e2568f324cd602eda1638">   48</a></span>&#160;<a class="code" href="classCollisionEvaluator.html#ad9c929d128e78f48d973a6596f8f4c33">CollisionEvaluator&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;<a class="code" href="classCollisionEvaluator.html#ad9c929d128e78f48d973a6596f8f4c33">CollisionEvaluator</a>(<a class="code" href="classXMLNode.html">XMLNode</a>&amp; _node) : <a class="code" href="classMapEvaluatorMethod.html">MapEvaluatorMethod</a>&lt;<a class="code" href="classMPTraits.html">MPTraits</a>&gt;(_node) {</div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;  this-&gt;<a class="code" href="classMPBaseObject.html#ab59d82cd734f77fdc17eddb8517461da">SetName</a>(<span class="stringliteral">&quot;CollisionEvaluator&quot;</span>);</div>
-<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160; </div>
-<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;  m_evcLabel = _node.<a class="code" href="classXMLNode.html#af0e81db89948e52fdee6bf2bf029037f">Read</a>(<span class="stringliteral">&quot;evcLabel&quot;</span>, <span class="keyword">true</span>, <span class="stringliteral">&quot;&quot;</span>, <span class="stringliteral">&quot; the edge validity checker label.&quot;</span>);</div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160; </div>
-<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;}</div>
-<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160; </div>
-<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160; </div>
-<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160; </div>
-<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;<span class="keywordtype">bool</span></div>
-<div class="line"><a name="l00060"></a><span class="lineno"><a class="line" href="classCollisionEvaluator.html#a43fbfde35da7a4c41fdf16162e7722a7">   60</a></span>&#160;<a class="code" href="classCollisionEvaluator.html#a43fbfde35da7a4c41fdf16162e7722a7">CollisionEvaluator&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;<a class="code" href="classCollisionEvaluator.html#a43fbfde35da7a4c41fdf16162e7722a7">operator()</a>() {</div>
-<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160; </div>
-<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;  <a class="code" href="classEdgeValidityCheckerMethod.html">EdgeValidityCheckerMethod&lt;MPTraits&gt;</a>* evc = this-&gt;GetMPLibrary()-&gt;<a class="code" href="classMPBaseObject.html#a6ddd6d5795d5b1aa4e2205f758796d7b">GetEdgeValidityChecker</a>(m_evcLabel);</div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160; </div>
-<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;  <a class="code" href="classGenericStateGraph.html">RoadmapType</a>* r = this-&gt;GetRoadmap();</div>
-<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160; </div>
-<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;  <span class="keyword">auto</span> env = this-&gt;GetEnvironment();</div>
-<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160; </div>
-<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;  <span class="keywordtype">size_t</span> numObst = env-&gt;NumObstacles();</div>
-<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160; </div>
-<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;  <span class="comment">// Flags for obstacles in collision</span></div>
-<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;  vector&lt;bool&gt; collisionIndicators = vector&lt;bool&gt;(numObst, <span class="keyword">false</span>);</div>
-<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160; </div>
-<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;  vector&lt;size_t&gt; collisions;</div>
-<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160; </div>
-<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;  <a class="code" href="classPathType.html">Path</a>* path= this-&gt;GetPath();</div>
-<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160; </div>
-<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;  <span class="keywordtype">bool</span> pathExists = (path and path-&gt;<a class="code" href="classPathType.html#ad587eee4c866d1bde0901b0d175e5903">Size</a>());</div>
-<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160; </div>
-<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;  <span class="keywordflow">if</span>(pathExists){</div>
-<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;    <span class="keyword">const</span> vector&lt;VID&gt;&amp; pathVIDs = path-&gt;<a class="code" href="classPathType.html#ad00881c9d6e676f6d7bb6b82156d4bcf">VIDs</a>();</div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160; </div>
-<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; pathVIDs.size() - 1; i++) {</div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160; </div>
-<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;      evc-&gt;<a class="code" href="classEdgeValidityCheckerMethod.html#ae01cb98457de0d419e09eee4df1fd4e2">ValidateEdge</a>(pathVIDs[i], pathVIDs[i+1], collisions);</div>
-<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;      </div>
-<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;      <a class="code" href="classCollisionEvaluator.html#a88c0601a076c433042307896021eeabf">CfgType</a> c1 = r-&gt;<a class="code" href="classGenericStateGraph.html#ad12a853fd73fbbd15d1975fe61657791">GetVertex</a>(pathVIDs[i]);</div>
-<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;      <a class="code" href="classCollisionEvaluator.html#a88c0601a076c433042307896021eeabf">CfgType</a> c2 = r-&gt;<a class="code" href="classGenericStateGraph.html#ad12a853fd73fbbd15d1975fe61657791">GetVertex</a>(pathVIDs[i+1]);</div>
-<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160; </div>
-<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;      <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;col: collisions) {</div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;        collisionIndicators[col] = <span class="keyword">true</span>;</div>
-<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;      }</div>
-<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;    }</div>
-<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;  }</div>
-<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160; </div>
-<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; numObst; i++){</div>
-<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;    <span class="keywordflow">if</span> (collisionIndicators[i])</div>
-<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;      m_collisions.push_back(i);</div>
-<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;  }</div>
-<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160; </div>
-<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;  <span class="keyword">const</span> std::string base = this-&gt;GetBaseFilename();</div>
-<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160; </div>
-<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;  Write(base + <span class="stringliteral">&quot;.pc&quot;</span> );</div>
-<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160; </div>
-<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160; </div>
-<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;  <span class="keywordflow">return</span> pathExists;</div>
-<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;}</div>
-<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160; </div>
-<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160; </div>
-<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;<span class="keywordtype">void</span></div>
-<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;<a class="code" href="classCollisionEvaluator.html">CollisionEvaluator&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;<a class="code" href="classCollisionEvaluator.html">Write</a>(<span class="keyword">const</span> std::string&amp; _filename)<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;  std::ofstream ofs(_filename);</div>
-<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;  </div>
-<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;  <span class="keywordflow">for</span> (<span class="keyword">const</span> <span class="keywordtype">size_t</span>&amp; obstIdx: m_collisions)</div>
-<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;    ofs &lt;&lt; obstIdx &lt;&lt; <span class="stringliteral">&quot; &quot;</span>;</div>
-<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160; </div>
-<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;  ofs.close();</div>
-<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;}</div>
-<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160; </div>
-<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160; </div>
-<div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="ttc" id="aEdgeValidityCheckerMethod_8h_html"><div class="ttname"><a href="EdgeValidityCheckerMethod_8h.html">EdgeValidityCheckerMethod.h</a></div></div>
+<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="ttc" id="aMapEvaluatorMethod_8h_html"><div class="ttname"><a href="MapEvaluatorMethod_8h.html">MapEvaluatorMethod.h</a></div></div>
-<div class="ttc" id="aclassCollisionEvaluator_html"><div class="ttname"><a href="classCollisionEvaluator.html">CollisionEvaluator</a></div><div class="ttdef"><b>Definition:</b> CollisionEvaluator.h:12</div></div>
-<div class="ttc" id="aclassCollisionEvaluator_html_a19ea258ea85ef949d0960f878fc6d5be"><div class="ttname"><a href="classCollisionEvaluator.html#a19ea258ea85ef949d0960f878fc6d5be">CollisionEvaluator::~CollisionEvaluator</a></div><div class="ttdeci">virtual ~CollisionEvaluator()=default</div></div>
-<div class="ttc" id="aclassCollisionEvaluator_html_a1b606c778d9ddd1cfb8ff5d09cadd2fd"><div class="ttname"><a href="classCollisionEvaluator.html#a1b606c778d9ddd1cfb8ff5d09cadd2fd">CollisionEvaluator::VID</a></div><div class="ttdeci">RoadmapType::VID VID</div><div class="ttdef"><b>Definition:</b> CollisionEvaluator.h:17</div></div>
-<div class="ttc" id="aclassCollisionEvaluator_html_a43fbfde35da7a4c41fdf16162e7722a7"><div class="ttname"><a href="classCollisionEvaluator.html#a43fbfde35da7a4c41fdf16162e7722a7">CollisionEvaluator::operator()</a></div><div class="ttdeci">virtual bool operator()()</div><div class="ttdef"><b>Definition:</b> CollisionEvaluator.h:61</div></div>
-<div class="ttc" id="aclassCollisionEvaluator_html_a64cb182145d67c11a49132f4df63820d"><div class="ttname"><a href="classCollisionEvaluator.html#a64cb182145d67c11a49132f4df63820d">CollisionEvaluator::RoadmapType</a></div><div class="ttdeci">MPTraits::RoadmapType RoadmapType</div><div class="ttdef"><b>Definition:</b> CollisionEvaluator.h:16</div></div>
-<div class="ttc" id="aclassCollisionEvaluator_html_a7cb9e79185438f970dfb4057214df663"><div class="ttname"><a href="classCollisionEvaluator.html#a7cb9e79185438f970dfb4057214df663">CollisionEvaluator::Path</a></div><div class="ttdeci">MPTraits::Path Path</div><div class="ttdef"><b>Definition:</b> CollisionEvaluator.h:18</div></div>
-<div class="ttc" id="aclassCollisionEvaluator_html_a88c0601a076c433042307896021eeabf"><div class="ttname"><a href="classCollisionEvaluator.html#a88c0601a076c433042307896021eeabf">CollisionEvaluator::CfgType</a></div><div class="ttdeci">MPTraits::CfgType CfgType</div><div class="ttdef"><b>Definition:</b> CollisionEvaluator.h:15</div></div>
-<div class="ttc" id="aclassCollisionEvaluator_html_ad9c929d128e78f48d973a6596f8f4c33"><div class="ttname"><a href="classCollisionEvaluator.html#ad9c929d128e78f48d973a6596f8f4c33">CollisionEvaluator::CollisionEvaluator</a></div><div class="ttdeci">CollisionEvaluator()</div><div class="ttdef"><b>Definition:</b> CollisionEvaluator.h:43</div></div>
-<div class="ttc" id="aclassEdgeValidityCheckerMethod_html"><div class="ttname"><a href="classEdgeValidityCheckerMethod.html">EdgeValidityCheckerMethod</a></div><div class="ttdef"><b>Definition:</b> EdgeValidityCheckerMethod.h:14</div></div>
-<div class="ttc" id="aclassEdgeValidityCheckerMethod_html_ae01cb98457de0d419e09eee4df1fd4e2"><div class="ttname"><a href="classEdgeValidityCheckerMethod.html#ae01cb98457de0d419e09eee4df1fd4e2">EdgeValidityCheckerMethod::ValidateEdge</a></div><div class="ttdeci">virtual bool ValidateEdge(VID _u, VID _v, vector&lt; size_t &gt; &amp;_collisions)=0</div></div>
+<div class="ttc" id="aclassCollisionEvaluator_html"><div class="ttname"><a href="classCollisionEvaluator.html">CollisionEvaluator</a></div><div class="ttdef"><b>Definition:</b> CollisionEvaluator.h:10</div></div>
+<div class="ttc" id="aclassCollisionEvaluator_html_a18f35d65bcf11a182f7407d9046c1604"><div class="ttname"><a href="classCollisionEvaluator.html#a18f35d65bcf11a182f7407d9046c1604">CollisionEvaluator::~CollisionEvaluator</a></div><div class="ttdeci">virtual ~CollisionEvaluator()=default</div></div>
+<div class="ttc" id="aclassCollisionEvaluator_html_a25e0411beff1d09248884777e7d1c99c"><div class="ttname"><a href="classCollisionEvaluator.html#a25e0411beff1d09248884777e7d1c99c">CollisionEvaluator::VID</a></div><div class="ttdeci">RoadmapType::VID VID</div><div class="ttdef"><b>Definition:</b> CollisionEvaluator.h:14</div></div>
+<div class="ttc" id="aclassCollisionEvaluator_html_aacafbfccc35bacc8ce8e4509d249ea4c"><div class="ttname"><a href="classCollisionEvaluator.html#aacafbfccc35bacc8ce8e4509d249ea4c">CollisionEvaluator::operator()</a></div><div class="ttdeci">virtual bool operator()()</div><div class="ttdef"><b>Definition:</b> CollisionEvaluator.cpp:23</div></div>
+<div class="ttc" id="aclassCollisionEvaluator_html_abdc570fb60ae64b663edf59518112c1e"><div class="ttname"><a href="classCollisionEvaluator.html#abdc570fb60ae64b663edf59518112c1e">CollisionEvaluator::RoadmapType</a></div><div class="ttdeci">MPBaseObject::RoadmapType RoadmapType</div><div class="ttdef"><b>Definition:</b> CollisionEvaluator.h:13</div></div>
+<div class="ttc" id="aclassCollisionEvaluator_html_aecd6a37916784fff05379760e749adc9"><div class="ttname"><a href="classCollisionEvaluator.html#aecd6a37916784fff05379760e749adc9">CollisionEvaluator::CollisionEvaluator</a></div><div class="ttdeci">CollisionEvaluator()</div><div class="ttdef"><b>Definition:</b> CollisionEvaluator.cpp:8</div></div>
 <div class="ttc" id="aclassGenericStateGraph_html"><div class="ttname"><a href="classGenericStateGraph.html">GenericStateGraph</a></div><div class="ttdef"><b>Definition:</b> GenericStateGraph.h:67</div></div>
 <div class="ttc" id="aclassGenericStateGraph_html_a337a1247796cb9bf56fbe6eb2b9497d2"><div class="ttname"><a href="classGenericStateGraph.html#a337a1247796cb9bf56fbe6eb2b9497d2">GenericStateGraph::VID</a></div><div class="ttdeci">STAPLGraph::vertex_descriptor VID</div><div class="ttdef"><b>Definition:</b> GenericStateGraph.h:83</div></div>
-<div class="ttc" id="aclassGenericStateGraph_html_ad12a853fd73fbbd15d1975fe61657791"><div class="ttname"><a href="classGenericStateGraph.html#ad12a853fd73fbbd15d1975fe61657791">GenericStateGraph::GetVertex</a></div><div class="ttdeci">VP &amp; GetVertex(T &amp;_t) noexcept</div><div class="ttdoc">Retrieve a reference to a vertex property by descriptor or iterator.</div><div class="ttdef"><b>Definition:</b> GenericStateGraph.h:1034</div></div>
-<div class="ttc" id="aclassMPBaseObject_html_a6ddd6d5795d5b1aa4e2205f758796d7b"><div class="ttname"><a href="classMPBaseObject.html#a6ddd6d5795d5b1aa4e2205f758796d7b">MPBaseObject::GetEdgeValidityChecker</a></div><div class="ttdeci">EdgeValidityCheckerPointer GetEdgeValidityChecker(const std::string &amp;) const noexcept</div><div class="ttdoc">Get a path modifier by label from the owning MPLibrary.</div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:404</div></div>
-<div class="ttc" id="aclassMPBaseObject_html_ab59d82cd734f77fdc17eddb8517461da"><div class="ttname"><a href="classMPBaseObject.html#ab59d82cd734f77fdc17eddb8517461da">MPBaseObject::SetName</a></div><div class="ttdeci">void SetName(const std::string &amp;_s)</div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:229</div></div>
-<div class="ttc" id="aclassMPTraits_html"><div class="ttname"><a href="classMPTraits.html">MPTraits</a></div><div class="ttdoc">Defines available methods in the Motion Planning Universe for Cfg.</div><div class="ttdef"><b>Definition:</b> ParallelCfgTraits.h:144</div></div>
-<div class="ttc" id="aclassMPTraits_html_a1a5aab50ac12baaf6b22ff345c5ae138"><div class="ttname"><a href="classMPTraits.html#a1a5aab50ac12baaf6b22ff345c5ae138">MPTraits::CfgType</a></div><div class="ttdeci">C CfgType</div><div class="ttdef"><b>Definition:</b> CfgTraits.h:117</div></div>
-<div class="ttc" id="aclassMapEvaluatorMethod_html"><div class="ttname"><a href="classMapEvaluatorMethod.html">MapEvaluatorMethod</a></div><div class="ttdef"><b>Definition:</b> MapEvaluatorMethod.h:18</div></div>
-<div class="ttc" id="aclassPathType_html"><div class="ttname"><a href="classPathType.html">PathType</a></div><div class="ttdef"><b>Definition:</b> Path.h:18</div></div>
-<div class="ttc" id="aclassPathType_html_ad00881c9d6e676f6d7bb6b82156d4bcf"><div class="ttname"><a href="classPathType.html#ad00881c9d6e676f6d7bb6b82156d4bcf">PathType::VIDs</a></div><div class="ttdeci">const std::vector&lt; VID &gt; &amp; VIDs() const noexcept</div><div class="ttdoc">Get the VIDs in the path.</div><div class="ttdef"><b>Definition:</b> Path.h:240</div></div>
-<div class="ttc" id="aclassPathType_html_ad587eee4c866d1bde0901b0d175e5903"><div class="ttname"><a href="classPathType.html#ad587eee4c866d1bde0901b0d175e5903">PathType::Size</a></div><div class="ttdeci">size_t Size() const noexcept</div><div class="ttdoc">Get the number of cfgs in the path.</div><div class="ttdef"><b>Definition:</b> Path.h:198</div></div>
+<div class="ttc" id="aclassMapEvaluatorMethod_html"><div class="ttname"><a href="classMapEvaluatorMethod.html">MapEvaluatorMethod</a></div><div class="ttdef"><b>Definition:</b> MapEvaluatorMethod.h:16</div></div>
 <div class="ttc" id="aclassXMLNode_html"><div class="ttname"><a href="classXMLNode.html">XMLNode</a></div><div class="ttdef"><b>Definition:</b> XMLNode.h:27</div></div>
-<div class="ttc" id="aclassXMLNode_html_af0e81db89948e52fdee6bf2bf029037f"><div class="ttname"><a href="classXMLNode.html#af0e81db89948e52fdee6bf2bf029037f">XMLNode::Read</a></div><div class="ttdeci">T Read(const std::string &amp;_name, const bool _req, const T &amp;_default, const T &amp;_min, const T &amp;_max, const std::string &amp;_desc)</div><div class="ttdef"><b>Definition:</b> XMLNode.h:267</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

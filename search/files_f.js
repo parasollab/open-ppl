@@ -1,23 +1,5 @@
 var searchData=
 [
-  ['radiusnf_2eh_3436',['RadiusNF.h',['../RadiusNF_8h.html',1,'']]],
-  ['range_2eh_3437',['Range.h',['../Range_8h.html',1,'']]],
-  ['rapidcollisiondetection_2ecpp_3438',['RapidCollisionDetection.cpp',['../RapidCollisionDetection_8cpp.html',1,'']]],
-  ['rapidcollisiondetection_2eh_3439',['RapidCollisionDetection.h',['../RapidCollisionDetection_8h.html',1,'']]],
-  ['reachabilityutil_2eh_3440',['ReachabilityUtil.h',['../ReachabilityUtil_8h.html',1,'']]],
-  ['reachablevolumes_2ecpp_3441',['ReachableVolumes.cpp',['../ReachableVolumes_8cpp.html',1,'']]],
-  ['reachablevolumes_2eh_3442',['ReachableVolumes.h',['../ReachableVolumes_8h.html',1,'']]],
-  ['reebgraphconstruction_2ecpp_3443',['ReebGraphConstruction.cpp',['../ReebGraphConstruction_8cpp.html',1,'']]],
-  ['reebgraphconstruction_2eh_3444',['ReebGraphConstruction.h',['../ReebGraphConstruction_8h.html',1,'']]],
-  ['rewireconnector_2eh_3445',['RewireConnector.h',['../RewireConnector_8h.html',1,'']]],
-  ['rmsddistance_2eh_3446',['RMSDDistance.h',['../RMSDDistance_8h.html',1,'']]],
-  ['robot_2ecpp_3447',['Robot.cpp',['../Robot_8cpp.html',1,'']]],
-  ['robot_2eh_3448',['Robot.h',['../Robot_8h.html',1,'']]],
-  ['robotcommandqueue_2ecpp_3449',['RobotCommandQueue.cpp',['../RobotCommandQueue_8cpp.html',1,'']]],
-  ['robotcommandqueue_2eh_3450',['RobotCommandQueue.h',['../RobotCommandQueue_8h.html',1,'']]],
-  ['robotcommandqueue_5fpmpl_2ecpp_3451',['RobotCommandQueue_pmpl.cpp',['../RobotCommandQueue__pmpl_8cpp.html',1,'']]],
-  ['robotcommandqueue_5fsim_2ecpp_3452',['RobotCommandQueue_sim.cpp',['../RobotCommandQueue__sim_8cpp.html',1,'']]],
-  ['robotgroup_2ecpp_3453',['RobotGroup.cpp',['../RobotGroup_8cpp.html',1,'']]],
-  ['robotgroup_2eh_3454',['RobotGroup.h',['../RobotGroup_8h.html',1,'']]],
-  ['runtimeutils_2eh_3455',['RuntimeUtils.h',['../RuntimeUtils_8h.html',1,'']]]
+  ['querymethod_2ecpp_3797',['QueryMethod.cpp',['../QueryMethod_8cpp.html',1,'']]],
+  ['querymethod_2eh_3798',['QueryMethod.h',['../QueryMethod_8h.html',1,'']]]
 ];

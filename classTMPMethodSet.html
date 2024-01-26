@@ -125,7 +125,7 @@ Public Member Functions</h2></td></tr>
 class TMPMethodSet&lt; TMPMethod &gt;</h3>
 
 <p>Defines basic TMPMethod container class to hold TMPMethods (for classes like DistanceMetricTMPMethod, LocalPlannerTMPMethod, etc).</p>
-<p>TMPMethodTypeList must be defined within templated class of <a class="el" href="classMPTraits.html" title="Defines available methods in the Motion Planning Universe for Cfg.">MPTraits</a> e.g., TMPMethod = NeighborhoodFinderTMPMethod TMPMethodTypeList = boost::mpl::list&lt;BruteForceNF, BandsNF, ...&gt; e.g., TMPMethod = LocalPlannerTMPMethod TMPMethodTypeList = boost::mpl::list&lt;Straightline, RotateAtS, ...&gt;</p>
+<p>TMPMethodTypeList must be defined within templated class of <a class="el" href="classMPTraits.html" title="Defines available methods in the Motion Planning Universe for Cfg under parallel compile.">MPTraits</a> e.g., TMPMethod = NeighborhoodFinderTMPMethod TMPMethodTypeList = boost::mpl::list&lt;BruteForceNF, BandsNF, ...&gt; e.g., TMPMethod = LocalPlannerTMPMethod TMPMethodTypeList = boost::mpl::list&lt;Straightline, RotateAtS, ...&gt;</p>
 <p><a class="el" href="classTMPMethodSet.html">TMPMethodSet</a> first parses the TMPMethodTypeList and adds all enumerated TMPMethods to its universe of TMPMethod types. Then, specific instantiations of those types can be added to its map of available TMPMethods by calling 'AddTMPMethod'. </p>
 </div><h2 class="groupheader">Member Typedef Documentation</h2>
 <a id="a527711ff2581032cce53c2f99058f2c7"></a>
@@ -260,7 +260,7 @@ template&lt;typename TMPMethodTypeList &gt; </div>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Construct a <a class="el" href="classTMPMethodSet.html">TMPMethodSet</a> from a TMPMethodTypeList defined in the <a class="el" href="classMPTraits.html" title="Defines available methods in the Motion Planning Universe for Cfg.">MPTraits</a> class. </p><dl class="params"><dt>Parameters</dt><dd>
+<p>Construct a <a class="el" href="classTMPMethodSet.html">TMPMethodSet</a> from a TMPMethodTypeList defined in the <a class="el" href="classMPTraits.html" title="Defines available methods in the Motion Planning Universe for Cfg under parallel compile.">MPTraits</a> class. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">_mtl</td><td>An instance of the TMPMethod type list. </td></tr>
     <tr><td class="paramname">_name</td><td>The name of this TMPMethod set. </td></tr>
@@ -484,7 +484,7 @@ template&lt;typename TMPMethod &gt; </div>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Prepare all TMPMethods in this set for execution on the owning MPLibrary's current <a class="el" href="classMPProblem.html">MPProblem</a>. </p>
+<p>Prepare all TMPMethods in this set for execution on the owning <a class="el" href="classMPLibrary.html">MPLibrary</a>'s current <a class="el" href="classMPProblem.html">MPProblem</a>. </p>
 
 </div>
 </div>

@@ -185,11 +185,11 @@ Public Member Functions</h2></td></tr>
 <div class="textblock"><p>Describes a motion task for a single robot in terms of start/goal conditions and constraints on allowable trajectories.</p>
 <p>Tasks are defined by a robot and three sets of constraints: </p><ul>
 <li>Start constraints describe the conditions required to start a task. </li>
-<li>Path constraints describe restrictions that must be observed throughout a valid solution. </li>
+<li><a class="el" href="classPath.html">Path</a> constraints describe restrictions that must be observed throughout a valid solution. </li>
 <li>Goal constraints describe the conditions that must be met to complete a task. A specific robot may be assigned to perform the task, or null may be used to indicate that any robot may perform it. A specific capability may also be required.</li>
 </ul>
-<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000085">Todo:</a></b></dt><dd>We should remove the capability here and redefine it as a constraint (since the constraints should fully define the task). The fact that a capability is or is not required should generally be discerned from the problem, while a capability constraint would more likely represent a deliberate restriction that is not strictly required (perhaps to express an operational preference). We will also eventually encounter cases where multiple capabilities are required to satsify a task.</dd></dl>
-<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000086">Todo:</a></b></dt><dd>Support the use of path constraints in the library code, which currently doesn't care about this.</dd></dl>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000088">Todo:</a></b></dt><dd>We should remove the capability here and redefine it as a constraint (since the constraints should fully define the task). The fact that a capability is or is not required should generally be discerned from the problem, while a capability constraint would more likely represent a deliberate restriction that is not strictly required (perhaps to express an operational preference). We will also eventually encounter cases where multiple capabilities are required to satsify a task.</dd></dl>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000089">Todo:</a></b></dt><dd>Support the use of path constraints in the library code, which currently doesn't care about this.</dd></dl>
 <dl class="section examples"><dt>Examples</dt><dd><a class="el" href="MPLibrary_UseCase_8cpp-example.html#_a1">MPLibrary_UseCase.cpp</a>.</dd>
 </dl>
 </div><h2 class="groupheader">Member Typedef Documentation</h2>
@@ -406,7 +406,7 @@ Public Member Functions</h2></td></tr>
 </div><div class="memdoc">
 <p>Add path constraint to task </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">_c</td><td>Path constraint to add to task </td></tr>
+    <tr><td class="paramname">_c</td><td><a class="el" href="classPath.html">Path</a> constraint to add to task </td></tr>
   </table>
   </dd>
 </dl>

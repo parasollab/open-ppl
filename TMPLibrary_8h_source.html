@@ -82,7 +82,7 @@ $(function() {
 <div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="RobotGroup_8h.html">MPProblem/RobotGroup/RobotGroup.h</a>&quot;</span></div>
 <div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160; </div>
 <div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="preprocessor">#ifndef PPL_TEST_TRAITS_H_</span></div>
-<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="preprocessor">  #include &quot;<a class="code" href="CfgTraits_8h.html">Traits/CfgTraits.h</a>&quot;</span></div>
+<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="preprocessor">  #include &quot;Traits/CfgTraits.h&quot;</span></div>
 <div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="preprocessor">#else</span></div>
 <div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="preprocessor">  #include &quot;../../tests/Traits/TestTraits.h&quot;</span></div>
 <div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;<span class="preprocessor">#endif</span></div>
@@ -179,8 +179,8 @@ $(function() {
 <div class="line"><a name="l00164"></a><span class="lineno">  164</span>&#160;    }</div>
 <div class="line"><a name="l00165"></a><span class="lineno">  165</span>&#160; </div>
 <div class="line"><a name="l00169"></a><span class="lineno">  169</span>&#160; </div>
-<div class="line"><a name="l00170"></a><span class="lineno">  170</span>&#160;    <a class="code" href="PMPL_8h.html#a4829bbb5f410cd1931429c6c46ca6b42">MPLibrary</a>* <a class="code" href="classTMPLibrary.html#a5f08e5e73073f19a030ed87ec191712a">GetMPLibrary</a>() const noexcept;</div>
-<div class="line"><a name="l00171"></a><span class="lineno">  171</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="classTMPLibrary.html#af65b2d0501ce84db6efa27dc7e5f43b0">SetMPLibrary</a>(<a class="code" href="PMPL_8h.html#a4829bbb5f410cd1931429c6c46ca6b42">MPLibrary</a>* _l) noexcept;</div>
+<div class="line"><a name="l00170"></a><span class="lineno">  170</span>&#160;    <a class="code" href="classMPLibrary.html">MPLibrary</a>* <a class="code" href="classTMPLibrary.html#a5f08e5e73073f19a030ed87ec191712a">GetMPLibrary</a>() const noexcept;</div>
+<div class="line"><a name="l00171"></a><span class="lineno">  171</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="classTMPLibrary.html#af65b2d0501ce84db6efa27dc7e5f43b0">SetMPLibrary</a>(<a class="code" href="classMPLibrary.html">MPLibrary</a>* _l) noexcept;</div>
 <div class="line"><a name="l00172"></a><span class="lineno">  172</span>&#160;    <a class="code" href="classMPProblem.html">MPProblem</a>* <a class="code" href="classTMPLibrary.html#ab80926db84a47503e55c5fb1b5c1aeb1">GetMPProblem</a>() const noexcept;</div>
 <div class="line"><a name="l00173"></a><span class="lineno">  173</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="classTMPLibrary.html#ae70b6aa8fa2a3c09bfa2628943fa01c7">SetMPProblem</a>(<a class="code" href="classMPProblem.html">MPProblem</a>* const _problem) noexcept;</div>
 <div class="line"><a name="l00174"></a><span class="lineno">  174</span>&#160; </div>
@@ -228,7 +228,7 @@ $(function() {
 <div class="line"><a name="l00237"></a><span class="lineno">  237</span>&#160;    <span class="keywordtype">bool</span> ParseChild(<a class="code" href="classXMLNode.html">XMLNode</a>&amp; _node);</div>
 <div class="line"><a name="l00238"></a><span class="lineno">  238</span>&#160; </div>
 <div class="line"><a name="l00242"></a><span class="lineno">  242</span>&#160; </div>
-<div class="line"><a name="l00243"></a><span class="lineno">  243</span>&#160;    <a class="code" href="PMPL_8h.html#a4829bbb5f410cd1931429c6c46ca6b42">MPLibrary</a>*                              m_library;    </div>
+<div class="line"><a name="l00243"></a><span class="lineno">  243</span>&#160;    <a class="code" href="classMPLibrary.html">MPLibrary</a>*                              m_library;    </div>
 <div class="line"><a name="l00244"></a><span class="lineno">  244</span>&#160;    <a class="code" href="classMPProblem.html">MPProblem</a>*                              m_problem;    </div>
 <div class="line"><a name="l00245"></a><span class="lineno">  245</span>&#160;    std::vector&lt;std::shared_ptr&lt;<a class="code" href="classMPTask.html">MPTask</a>&gt;&gt;    m_tasks;      </div>
 <div class="line"><a name="l00246"></a><span class="lineno">  246</span>&#160;    std::vector&lt;std::shared_ptr&lt;<a class="code" href="classGroupTask.html">GroupTask</a>&gt;&gt; m_groupTasks; </div>
@@ -250,22 +250,21 @@ $(function() {
 <div class="line"><a name="l00271"></a><span class="lineno">  271</span>&#160;<span class="comment">/*----------------------------------------------------------------------------*/</span></div>
 <div class="line"><a name="l00272"></a><span class="lineno">  272</span>&#160; </div>
 <div class="line"><a name="l00273"></a><span class="lineno">  273</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="ttc" id="aCfgTraits_8h_html"><div class="ttname"><a href="CfgTraits_8h.html">CfgTraits.h</a></div></div>
 <div class="ttc" id="aGroupTask_8h_html"><div class="ttname"><a href="GroupTask_8h.html">GroupTask.h</a></div></div>
 <div class="ttc" id="aMPProblem_8h_html"><div class="ttname"><a href="MPProblem_8h.html">MPProblem.h</a></div></div>
 <div class="ttc" id="aMPTask_8h_html"><div class="ttname"><a href="MPTask_8h.html">MPTask.h</a></div></div>
 <div class="ttc" id="aMPUtils_8h_html"><div class="ttname"><a href="MPUtils_8h.html">MPUtils.h</a></div></div>
 <div class="ttc" id="aMetricUtils_8h_html"><div class="ttname"><a href="MetricUtils_8h.html">MetricUtils.h</a></div></div>
 <div class="ttc" id="aPMPL_8h_html"><div class="ttname"><a href="PMPL_8h.html">PMPL.h</a></div></div>
-<div class="ttc" id="aPMPL_8h_html_a4829bbb5f410cd1931429c6c46ca6b42"><div class="ttname"><a href="PMPL_8h.html#a4829bbb5f410cd1931429c6c46ca6b42">MPLibrary</a></div><div class="ttdeci">PMPLTraits::MPLibrary MPLibrary</div><div class="ttdef"><b>Definition:</b> PMPL.h:34</div></div>
 <div class="ttc" id="aRobotGroup_8h_html"><div class="ttname"><a href="RobotGroup_8h.html">RobotGroup.h</a></div></div>
 <div class="ttc" id="aRobot_8h_html"><div class="ttname"><a href="Robot_8h.html">Robot.h</a></div></div>
 <div class="ttc" id="aTMPMethodSet_8h_html"><div class="ttname"><a href="TMPMethodSet_8h.html">TMPMethodSet.h</a></div></div>
 <div class="ttc" id="aXMLNode_8h_html"><div class="ttname"><a href="XMLNode_8h.html">XMLNode.h</a></div></div>
-<div class="ttc" id="aclassAgent_html"><div class="ttname"><a href="classAgent.html">Agent</a></div><div class="ttdef"><b>Definition:</b> Agent.h:23</div></div>
+<div class="ttc" id="aclassAgent_html"><div class="ttname"><a href="classAgent.html">Agent</a></div><div class="ttdef"><b>Definition:</b> Agent.h:24</div></div>
 <div class="ttc" id="aclassCoordinator_html"><div class="ttname"><a href="classCoordinator.html">Coordinator</a></div><div class="ttdef"><b>Definition:</b> Coordinator.h:38</div></div>
 <div class="ttc" id="aclassDecomposition_html"><div class="ttname"><a href="classDecomposition.html">Decomposition</a></div><div class="ttdef"><b>Definition:</b> Decomposition.h:9</div></div>
 <div class="ttc" id="aclassGroupTask_html"><div class="ttname"><a href="classGroupTask.html">GroupTask</a></div><div class="ttdef"><b>Definition:</b> GroupTask.h:44</div></div>
+<div class="ttc" id="aclassMPLibrary_html"><div class="ttname"><a href="classMPLibrary.html">MPLibrary</a></div><div class="ttdef"><b>Definition:</b> MPLibrary.h:47</div></div>
 <div class="ttc" id="aclassMPProblem_html"><div class="ttname"><a href="classMPProblem.html">MPProblem</a></div><div class="ttdef"><b>Definition:</b> MPProblem.h:34</div></div>
 <div class="ttc" id="aclassMPTask_html"><div class="ttname"><a href="classMPTask.html">MPTask</a></div><div class="ttdef"><b>Definition:</b> MPTask.h:46</div></div>
 <div class="ttc" id="aclassPlan_html"><div class="ttname"><a href="classPlan.html">Plan</a></div><div class="ttdef"><b>Definition:</b> Plan.h:18</div></div>

@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.9.1"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Parasol Planning Library (PPL): ClearanceUtility&lt; MPTraits &gt; Class Template Reference</title>
+<title>Parasol Planning Library (PPL): ClearanceUtility Class Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -66,380 +66,280 @@ $(function() {
 <a href="#pro-methods">Protected Member Functions</a> &#124;
 <a href="#pro-attribs">Protected Attributes</a>  </div>
   <div class="headertitle">
-<div class="title">ClearanceUtility&lt; MPTraits &gt; Class Template Reference</div>  </div>
+<div class="title">ClearanceUtility Class Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 
 <p><code>#include &lt;<a class="el" href="ClearanceUtilities_8h_source.html">ClearanceUtilities.h</a>&gt;</code></p>
 <div class="dynheader">
-Inheritance diagram for ClearanceUtility&lt; MPTraits &gt;:</div>
+Inheritance diagram for ClearanceUtility:</div>
 <div class="dyncontent">
-<div class="center"><img src="classClearanceUtility__inherit__graph.png" border="0" usemap="#aClearanceUtility_3_01MPTraits_01_4_inherit__map" alt="Inheritance graph"/></div>
-<map name="aClearanceUtility_3_01MPTraits_01_4_inherit__map" id="aClearanceUtility_3_01MPTraits_01_4_inherit__map">
-<area shape="rect" title=" " alt="" coords="5,80,217,107"/>
-<area shape="rect" href="classMedialAxisUtility.html" title=" " alt="" coords="39,155,184,196"/>
-<area shape="rect" href="classMPBaseObject.html" title=" " alt="" coords="11,5,212,32"/>
+<div class="center"><img src="classClearanceUtility__inherit__graph.png" border="0" usemap="#aClearanceUtility_inherit__map" alt="Inheritance graph"/></div>
+<map name="aClearanceUtility_inherit__map" id="aClearanceUtility_inherit__map">
+<area shape="rect" title=" " alt="" coords="9,80,136,107"/>
+<area shape="rect" href="classMedialAxisUtility.html" title=" " alt="" coords="5,155,140,181"/>
+<area shape="rect" href="classMPBaseObject.html" title=" " alt="" coords="15,5,131,32"/>
 </map>
 <center><span class="legend">[<a href="graph_legend.html">legend</a>]</span></center></div>
 <div class="dynheader">
-Collaboration diagram for ClearanceUtility&lt; MPTraits &gt;:</div>
+Collaboration diagram for ClearanceUtility:</div>
 <div class="dyncontent">
-<div class="center"><img src="classClearanceUtility__coll__graph.png" border="0" usemap="#aClearanceUtility_3_01MPTraits_01_4_coll__map" alt="Collaboration graph"/></div>
-<map name="aClearanceUtility_3_01MPTraits_01_4_coll__map" id="aClearanceUtility_3_01MPTraits_01_4_coll__map">
-<area shape="rect" title=" " alt="" coords="77,95,289,121"/>
-<area shape="rect" href="classMPBaseObject.html" title=" " alt="" coords="5,5,207,32"/>
-<area shape="rect" href="classRobot.html" title=" " alt="" coords="231,5,291,32"/>
+<div class="center"><img src="classClearanceUtility__coll__graph.png" border="0" usemap="#aClearanceUtility_coll__map" alt="Collaboration graph"/></div>
+<map name="aClearanceUtility_coll__map" id="aClearanceUtility_coll__map">
+<area shape="rect" title=" " alt="" coords="112,200,239,227"/>
+<area shape="rect" href="classMPBaseObject.html" title=" " alt="" coords="5,96,121,123"/>
+<area shape="rect" href="classRobot.html" title=" " alt="" coords="145,96,205,123"/>
+<area shape="rect" title=" " alt="" coords="229,96,316,123"/>
+<area shape="rect" title=" " alt="" coords="203,5,342,47"/>
 </map>
 <center><span class="legend">[<a href="graph_legend.html">legend</a>]</span></center></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
 Public Types</h2></td></tr>
 <tr><td colspan="2"><div class="groupHeader">Motion Planning Types</div></td></tr>
-<tr class="memitem:ac1931f426c80cd2b497539ac380096ea"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classMPTraits.html#a1a5aab50ac12baaf6b22ff345c5ae138">MPTraits::CfgType</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#ac1931f426c80cd2b497539ac380096ea">CfgType</a></td></tr>
-<tr class="separator:ac1931f426c80cd2b497539ac380096ea"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2a5b990ebf0d7cd4b8523490ae7aa3c5"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classMPTraits.html#af200e5838e4287604244d6aeaf4d4d40">MPTraits::WeightType</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#a2a5b990ebf0d7cd4b8523490ae7aa3c5">WeightType</a></td></tr>
-<tr class="separator:a2a5b990ebf0d7cd4b8523490ae7aa3c5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad36783c8ee5df98b7df588f4df2b15b8"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classMPTraits.html#a95116adcdff7d4a14ffee94dc5e51056">MPTraits::RoadmapType</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#ad36783c8ee5df98b7df588f4df2b15b8">RoadmapType</a></td></tr>
-<tr class="separator:ad36783c8ee5df98b7df588f4df2b15b8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a18a88591dcfe985570a43213aee795b2"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classGenericStateGraph.html#a337a1247796cb9bf56fbe6eb2b9497d2">RoadmapType::VID</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#a18a88591dcfe985570a43213aee795b2">VID</a></td></tr>
-<tr class="separator:a18a88591dcfe985570a43213aee795b2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="inherit_header pub_types_classMPBaseObject"><td colspan="2" onclick="javascript:toggleInherit('pub_types_classMPBaseObject')"><img src="closed.png" alt="-"/>&#160;Public Types inherited from <a class="el" href="classMPBaseObject.html">MPBaseObject&lt; MPTraits &gt;</a></td></tr>
-<tr class="memitem:afdfe49d535de506c369d53c3f35c4861 inherit pub_types_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classMPTraits.html#a95116adcdff7d4a14ffee94dc5e51056">MPTraits::RoadmapType</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#afdfe49d535de506c369d53c3f35c4861">RoadmapType</a></td></tr>
-<tr class="separator:afdfe49d535de506c369d53c3f35c4861 inherit pub_types_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad06ed006429808c548ad2c88d7362652 inherit pub_types_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classMPTraits.html#a806d8c2e8e5c191e0c985d571a489851">MPTraits::GroupRoadmapType</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#ad06ed006429808c548ad2c88d7362652">GroupRoadmapType</a></td></tr>
-<tr class="separator:ad06ed006429808c548ad2c88d7362652 inherit pub_types_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1e5ed51342d87f6e4ca22300478d1754 inherit pub_types_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classMPTraits.html#a13732f6615f1a95573d492403076969d">MPTraits::LocalObstacleMap</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a1e5ed51342d87f6e4ca22300478d1754">LocalObstacleMap</a></td></tr>
-<tr class="separator:a1e5ed51342d87f6e4ca22300478d1754 inherit pub_types_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aea9c3bca368d8ed3aaf2687b159ca561 inherit pub_types_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classMPTraits.html#afe9382068449964664ed85ecfc1194e5">MPTraits::Path</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#aea9c3bca368d8ed3aaf2687b159ca561">Path</a></td></tr>
-<tr class="separator:aea9c3bca368d8ed3aaf2687b159ca561 inherit pub_types_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a171d332ff9e7d24af57efce2db4d7c60 inherit pub_types_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classMPTraits.html#a722253fb94432ff7e88e46721a01d85e">MPTraits::GroupPathType</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a171d332ff9e7d24af57efce2db4d7c60">GroupPath</a></td></tr>
-<tr class="separator:a171d332ff9e7d24af57efce2db4d7c60 inherit pub_types_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a15b148d41701475b3b94c4a163157f89 inherit pub_types_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classMPTraits.html#af13897895127ec20221dc0644ee048cb">MPTraits::MPLibrary</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a15b148d41701475b3b94c4a163157f89">MPLibrary</a></td></tr>
-<tr class="separator:a15b148d41701475b3b94c4a163157f89 inherit pub_types_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6aa70c68a7aa522d074423ca469a4611 inherit pub_types_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classMPTraits.html#adaa1e8910962eb1f4dcc9f479e8a75f0">MPTraits::MPSolution</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a6aa70c68a7aa522d074423ca469a4611">MPSolution</a></td></tr>
-<tr class="separator:a6aa70c68a7aa522d074423ca469a4611 inherit pub_types_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a59a6f8a70e1e9d3bc80ed1709f37adb9 inherit pub_types_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classMPTraits.html#a1998e852579ac65fa2826d0afa242c63">MPTraits::GoalTracker</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a59a6f8a70e1e9d3bc80ed1709f37adb9">GoalTracker</a></td></tr>
-<tr class="separator:a59a6f8a70e1e9d3bc80ed1709f37adb9 inherit pub_types_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aaf3cea401f0b3ade1d909fc527246a08 inherit pub_types_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classMPLibraryType.html#aa6e527bc3b9b27cc291d28982af14a62">MPLibrary::SamplerPointer</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#aaf3cea401f0b3ade1d909fc527246a08">SamplerPointer</a></td></tr>
-<tr class="separator:aaf3cea401f0b3ade1d909fc527246a08 inherit pub_types_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae65bc5a79747909242133bf6d00c993d inherit pub_types_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classMPLibraryType.html#a73832f63ee7b6525ea3a65441f770644">MPLibrary::LocalPlannerPointer</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#ae65bc5a79747909242133bf6d00c993d">LocalPlannerPointer</a></td></tr>
-<tr class="separator:ae65bc5a79747909242133bf6d00c993d inherit pub_types_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5eb6e9a2ee24cc60b2280c8d7a86dcf4 inherit pub_types_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classMPLibraryType.html#a22d44ff401d1d3a8fb3040428b9ea80e">MPLibrary::ExtenderPointer</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a5eb6e9a2ee24cc60b2280c8d7a86dcf4">ExtenderPointer</a></td></tr>
-<tr class="separator:a5eb6e9a2ee24cc60b2280c8d7a86dcf4 inherit pub_types_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9d8006e11da7b3e4d5ac8eee9c6af86a inherit pub_types_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classMPLibraryType.html#a9a56c7dfe254f93974659d85a3eed328">MPLibrary::PathModifierPointer</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a9d8006e11da7b3e4d5ac8eee9c6af86a">PathModifierPointer</a></td></tr>
-<tr class="separator:a9d8006e11da7b3e4d5ac8eee9c6af86a inherit pub_types_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a52cc83324263c010e07a138ab3515f5e inherit pub_types_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classMPLibraryType.html#a630c82fb84b011ad0b6af7b3982927bc">MPLibrary::EdgeValidityCheckerPointer</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a52cc83324263c010e07a138ab3515f5e">EdgeValidityCheckerPointer</a></td></tr>
-<tr class="separator:a52cc83324263c010e07a138ab3515f5e inherit pub_types_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a97ef39036c999f2b85697d651a3709b6 inherit pub_types_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classMPLibraryType.html#ad3d8787a8698ee7ea16e36fddce39739">MPLibrary::ConnectorPointer</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a97ef39036c999f2b85697d651a3709b6">ConnectorPointer</a></td></tr>
-<tr class="separator:a97ef39036c999f2b85697d651a3709b6 inherit pub_types_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1033e6b77f138cd5b0c963b85c2102c8 inherit pub_types_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classMPLibraryType.html#a1c453d86b99596468dbd80aea82172a0">MPLibrary::MetricPointer</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a1033e6b77f138cd5b0c963b85c2102c8">MetricPointer</a></td></tr>
-<tr class="separator:a1033e6b77f138cd5b0c963b85c2102c8 inherit pub_types_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab26d90683e004e04060c66490f1abef9 inherit pub_types_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classMPLibraryType.html#adea960aa1d259e4b3675d137cfd8a796">MPLibrary::MapEvaluatorPointer</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#ab26d90683e004e04060c66490f1abef9">MapEvaluatorPointer</a></td></tr>
-<tr class="separator:ab26d90683e004e04060c66490f1abef9 inherit pub_types_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6c55c91725735d71ee1b6e07d0da9427 inherit pub_types_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classMPLibraryType.html#ab81bf0e7c1c186e6cf6380a310cf7965">MPLibrary::MPStrategyPointer</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a6c55c91725735d71ee1b6e07d0da9427">MPStrategyPointer</a></td></tr>
-<tr class="separator:a6c55c91725735d71ee1b6e07d0da9427 inherit pub_types_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae603ce0344d2bf534dd9623be0625f90 inherit pub_types_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classMPLibraryType.html#aba36f7b8363df2dcde92dd58958c2197">MPLibrary::DistanceMetricPointer</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#ae603ce0344d2bf534dd9623be0625f90">DistanceMetricPointer</a></td></tr>
-<tr class="separator:ae603ce0344d2bf534dd9623be0625f90 inherit pub_types_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a96b8dadf9f28e3513e2bd059dfc0344a inherit pub_types_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classMPLibraryType.html#a005889128c71659b542bb9cada97fa8b">MPLibrary::ValidityCheckerPointer</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a96b8dadf9f28e3513e2bd059dfc0344a">ValidityCheckerPointer</a></td></tr>
-<tr class="separator:a96b8dadf9f28e3513e2bd059dfc0344a inherit pub_types_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a931bd7b8fd743b7f7313046659866113 inherit pub_types_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classMPLibraryType.html#acd62482ea6c7a8063beaa94a300ce5f2">MPLibrary::NeighborhoodFinderPointer</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a931bd7b8fd743b7f7313046659866113">NeighborhoodFinderPointer</a></td></tr>
-<tr class="separator:a931bd7b8fd743b7f7313046659866113 inherit pub_types_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af03d977d19cb5648b289550ec55f7fb9"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classMPBaseObject.html#a63f3af4b78d458b51ddad699de1f9287">MPBaseObject::WeightType</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#af03d977d19cb5648b289550ec55f7fb9">WeightType</a></td></tr>
+<tr class="separator:af03d977d19cb5648b289550ec55f7fb9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5bd33172ff2801921b25ff4574381cde"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classMPBaseObject.html#a1cb9a08003cc7620b1534bdf69ceb1a4">MPBaseObject::RoadmapType</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#a5bd33172ff2801921b25ff4574381cde">RoadmapType</a></td></tr>
+<tr class="separator:a5bd33172ff2801921b25ff4574381cde"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa209ef3fd7610c68d8b63e8bb66d762f"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classGenericStateGraph.html#a337a1247796cb9bf56fbe6eb2b9497d2">RoadmapType::VID</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#aa209ef3fd7610c68d8b63e8bb66d762f">VID</a></td></tr>
+<tr class="separator:aa209ef3fd7610c68d8b63e8bb66d762f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="inherit_header pub_types_classMPBaseObject"><td colspan="2" onclick="javascript:toggleInherit('pub_types_classMPBaseObject')"><img src="closed.png" alt="-"/>&#160;Public Types inherited from <a class="el" href="classMPBaseObject.html">MPBaseObject</a></td></tr>
+<tr class="memitem:a63f3af4b78d458b51ddad699de1f9287 inherit pub_types_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classDefaultWeight.html">DefaultWeight</a>&lt; <a class="el" href="classCfg.html">Cfg</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a63f3af4b78d458b51ddad699de1f9287">WeightType</a></td></tr>
+<tr class="separator:a63f3af4b78d458b51ddad699de1f9287 inherit pub_types_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1cb9a08003cc7620b1534bdf69ceb1a4 inherit pub_types_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classGenericStateGraph.html">GenericStateGraph</a>&lt; <a class="el" href="classCfg.html">Cfg</a>, <a class="el" href="classMPBaseObject.html#a63f3af4b78d458b51ddad699de1f9287">WeightType</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a1cb9a08003cc7620b1534bdf69ceb1a4">RoadmapType</a></td></tr>
+<tr class="separator:a1cb9a08003cc7620b1534bdf69ceb1a4 inherit pub_types_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aad3c1d1dccb02cfd48da4438a2b2923b inherit pub_types_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classGroupCfg.html">GroupCfg</a>&lt; <a class="el" href="classMPBaseObject.html#a1cb9a08003cc7620b1534bdf69ceb1a4">RoadmapType</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#aad3c1d1dccb02cfd48da4438a2b2923b">GroupCfgType</a></td></tr>
+<tr class="separator:aad3c1d1dccb02cfd48da4438a2b2923b inherit pub_types_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a26059613b8543b300ece8b511aad7050 inherit pub_types_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classGroupLocalPlan.html">GroupLocalPlan</a>&lt; <a class="el" href="classMPBaseObject.html#a1cb9a08003cc7620b1534bdf69ceb1a4">RoadmapType</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a26059613b8543b300ece8b511aad7050">GroupWeightType</a></td></tr>
+<tr class="separator:a26059613b8543b300ece8b511aad7050 inherit pub_types_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a062f6026973104069b7e08eb23a890f7 inherit pub_types_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classGroupRoadmap.html">GroupRoadmap</a>&lt; <a class="el" href="classMPBaseObject.html#aad3c1d1dccb02cfd48da4438a2b2923b">GroupCfgType</a>, <a class="el" href="classMPBaseObject.html#a26059613b8543b300ece8b511aad7050">GroupWeightType</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a062f6026973104069b7e08eb23a890f7">GroupRoadmapType</a></td></tr>
+<tr class="separator:a062f6026973104069b7e08eb23a890f7 inherit pub_types_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
 <tr><td colspan="2"><div class="groupHeader">Construction</div></td></tr>
-<tr class="memitem:a04d01e08fb728a050fc14552940baa0d"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#a04d01e08fb728a050fc14552940baa0d">ClearanceUtility</a> (string _vcLabel=&quot;&quot;, string _dmLabel=&quot;&quot;, bool _exactClearance=false, bool _exactPenetration=false, size_t _clearanceRays=10, size_t _penetrationRays=10, double _approxStepSize=<a class="el" href="MPUtils_8h.html#a60030ce2c90c141b101048e1f92e9da9">MAX_DBL</a>, double _approxResolution=<a class="el" href="MPUtils_8h.html#a60030ce2c90c141b101048e1f92e9da9">MAX_DBL</a>, bool _useBBX=true, bool _positionalDofsOnly=true, bool _debug=false)</td></tr>
-<tr class="separator:a04d01e08fb728a050fc14552940baa0d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0d465fef1843e5b7a586343314c5296d"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#a0d465fef1843e5b7a586343314c5296d">ClearanceUtility</a> (<a class="el" href="classXMLNode.html">XMLNode</a> &amp;_node)</td></tr>
-<tr class="separator:a0d465fef1843e5b7a586343314c5296d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6aaa98fedfdf8d8ba3b6cf1e2cfb45e5"><td class="memItemLeft" align="right" valign="top">virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#a6aaa98fedfdf8d8ba3b6cf1e2cfb45e5">~ClearanceUtility</a> ()=default</td></tr>
-<tr class="separator:a6aaa98fedfdf8d8ba3b6cf1e2cfb45e5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af5869809ec07233f91fab7b17c3e4180"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#af5869809ec07233f91fab7b17c3e4180">ClearanceUtility</a> (string _vcLabel=&quot;&quot;, string _dmLabel=&quot;&quot;, bool _exactClearance=false, bool _exactPenetration=false, size_t _clearanceRays=10, size_t _penetrationRays=10, double _approxStepSize=<a class="el" href="MPUtils_8h.html#a60030ce2c90c141b101048e1f92e9da9">MAX_DBL</a>, double _approxResolution=<a class="el" href="MPUtils_8h.html#a60030ce2c90c141b101048e1f92e9da9">MAX_DBL</a>, bool _useBBX=true, bool _positionalDofsOnly=true, bool _debug=false)</td></tr>
+<tr class="separator:af5869809ec07233f91fab7b17c3e4180"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1c3edcf801772be3f82e81193807ddcb"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#a1c3edcf801772be3f82e81193807ddcb">ClearanceUtility</a> (<a class="el" href="classXMLNode.html">XMLNode</a> &amp;_node)</td></tr>
+<tr class="separator:a1c3edcf801772be3f82e81193807ddcb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad202486bf09d68e171f53b38a5cf62a2"><td class="memItemLeft" align="right" valign="top">virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#ad202486bf09d68e171f53b38a5cf62a2">~ClearanceUtility</a> ()=default</td></tr>
+<tr class="separator:ad202486bf09d68e171f53b38a5cf62a2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr><td colspan="2"><div class="groupHeader">MPBaseObject Overrides</div></td></tr>
-<tr class="memitem:a4409059b71d40772fd0e266c2fb0f9ba"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#a4409059b71d40772fd0e266c2fb0f9ba">Print</a> (ostream &amp;_os) const override</td></tr>
-<tr class="separator:a4409059b71d40772fd0e266c2fb0f9ba"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a47d479bd36819645c5e805b729135634"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#a47d479bd36819645c5e805b729135634">Initialize</a> () override</td></tr>
-<tr class="separator:a47d479bd36819645c5e805b729135634"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a75ae80de21bbde24d62bb6c6823ceea1"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#a75ae80de21bbde24d62bb6c6823ceea1">Print</a> (ostream &amp;_os) const override</td></tr>
+<tr class="separator:a75ae80de21bbde24d62bb6c6823ceea1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad89bdb97cf492e125f4a5e09be9482f9"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#ad89bdb97cf492e125f4a5e09be9482f9">Initialize</a> () override</td></tr>
+<tr class="separator:ad89bdb97cf492e125f4a5e09be9482f9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr><td colspan="2"><div class="groupHeader">Accessors</div></td></tr>
-<tr class="memitem:aa388402ed17d92f196d16acf94233116"><td class="memItemLeft" align="right" valign="top">const string &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#aa388402ed17d92f196d16acf94233116">GetDistanceMetricLabel</a> () const</td></tr>
-<tr class="separator:aa388402ed17d92f196d16acf94233116"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3a9f49f3dc743af7db74d4c3f7268d31"><td class="memItemLeft" align="right" valign="top">const string &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#a3a9f49f3dc743af7db74d4c3f7268d31">GetValidityCheckerLabel</a> () const</td></tr>
-<tr class="separator:a3a9f49f3dc743af7db74d4c3f7268d31"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a85136785737ae3e42ffb7d4689dd12cb"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#a85136785737ae3e42ffb7d4689dd12cb">SetValidityCheckerLabel</a> (const string &amp;_s)</td></tr>
-<tr class="separator:a85136785737ae3e42ffb7d4689dd12cb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a368ed73bec920e6148e2cafba312233c"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#a368ed73bec920e6148e2cafba312233c">GetExactClearance</a> () const</td></tr>
-<tr class="separator:a368ed73bec920e6148e2cafba312233c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a10c34eb27c077d2cbb4e44e8acf1a60e"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#a10c34eb27c077d2cbb4e44e8acf1a60e">GetPositionResolution</a> () const</td></tr>
-<tr class="separator:a10c34eb27c077d2cbb4e44e8acf1a60e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a11c65c249018b6fe5f65827bcd168308"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#a11c65c249018b6fe5f65827bcd168308">GetOrientationResolution</a> () const</td></tr>
-<tr class="separator:a11c65c249018b6fe5f65827bcd168308"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af29e9b67d766ab740587496a1d6800de"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#af29e9b67d766ab740587496a1d6800de">IsInitialized</a> () const</td></tr>
-<tr class="separator:af29e9b67d766ab740587496a1d6800de"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0e3d2626fb982a0de2e6433db8ad56ef"><td class="memItemLeft" align="right" valign="top">const string &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#a0e3d2626fb982a0de2e6433db8ad56ef">GetDistanceMetricLabel</a> () const</td></tr>
+<tr class="separator:a0e3d2626fb982a0de2e6433db8ad56ef"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4d22c63bf9f4f4ee51d428eb7ed543f6"><td class="memItemLeft" align="right" valign="top">const string &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#a4d22c63bf9f4f4ee51d428eb7ed543f6">GetValidityCheckerLabel</a> () const</td></tr>
+<tr class="separator:a4d22c63bf9f4f4ee51d428eb7ed543f6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a44126d8ffc0fbd20eb6fc8ee78584f5a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#a44126d8ffc0fbd20eb6fc8ee78584f5a">SetValidityCheckerLabel</a> (const string &amp;_s)</td></tr>
+<tr class="separator:a44126d8ffc0fbd20eb6fc8ee78584f5a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adcbda0f353b97712141de75e2ffe4be0"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#adcbda0f353b97712141de75e2ffe4be0">GetExactClearance</a> () const</td></tr>
+<tr class="separator:adcbda0f353b97712141de75e2ffe4be0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5fdf7c43d140fa24036fd73d983ee95a"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#a5fdf7c43d140fa24036fd73d983ee95a">GetPositionResolution</a> () const</td></tr>
+<tr class="separator:a5fdf7c43d140fa24036fd73d983ee95a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa35cdcb0a1dbd4fa73495829fae4d803"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#aa35cdcb0a1dbd4fa73495829fae4d803">GetOrientationResolution</a> () const</td></tr>
+<tr class="separator:aa35cdcb0a1dbd4fa73495829fae4d803"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2c9f709871bff9b410b5fb01ef6d68a0"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#a2c9f709871bff9b410b5fb01ef6d68a0">IsInitialized</a> () const</td></tr>
+<tr class="separator:a2c9f709871bff9b410b5fb01ef6d68a0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr><td colspan="2"><div class="groupHeader">Clearance Functions</div></td></tr>
-<tr class="memitem:a3ce0b42f21f52b9e63a7fb94145106a5"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#a3ce0b42f21f52b9e63a7fb94145106a5">CollisionInfo</a> (<a class="el" href="classClearanceUtility.html#ac1931f426c80cd2b497539ac380096ea">CfgType</a> &amp;_cfg, <a class="el" href="classClearanceUtility.html#ac1931f426c80cd2b497539ac380096ea">CfgType</a> &amp;_clrCfg, const <a class="el" href="classBoundary.html">Boundary</a> *const _b, <a class="el" href="structCDInfo.html">CDInfo</a> &amp;_cdInfo, const bool &amp;_useOppValidityWitness=true)</td></tr>
-<tr class="separator:a3ce0b42f21f52b9e63a7fb94145106a5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a173e94d04265b0302411db5af1858445"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#a173e94d04265b0302411db5af1858445">ExactCollisionInfo</a> (<a class="el" href="classClearanceUtility.html#ac1931f426c80cd2b497539ac380096ea">CfgType</a> &amp;_cfg, <a class="el" href="classClearanceUtility.html#ac1931f426c80cd2b497539ac380096ea">CfgType</a> &amp;_clrCfg, const <a class="el" href="classBoundary.html">Boundary</a> *const _b, <a class="el" href="structCDInfo.html">CDInfo</a> &amp;_cdInfo, const bool _useOppValidityWitness=true)</td></tr>
-<tr class="separator:a173e94d04265b0302411db5af1858445"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aad7758db8c64cb69077719e6d5c34dc2"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#aad7758db8c64cb69077719e6d5c34dc2">ApproxCollisionInfo</a> (<a class="el" href="classClearanceUtility.html#ac1931f426c80cd2b497539ac380096ea">CfgType</a> &amp;_cfg, <a class="el" href="classClearanceUtility.html#ac1931f426c80cd2b497539ac380096ea">CfgType</a> &amp;_clrCfg, const <a class="el" href="classBoundary.html">Boundary</a> *const _b, <a class="el" href="structCDInfo.html">CDInfo</a> &amp;_cdInfo, const bool &amp;_useOppValidityWitness=true)</td></tr>
-<tr class="separator:aad7758db8c64cb69077719e6d5c34dc2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6f349c4201ced124d62c64a0ff0a9990"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#a6f349c4201ced124d62c64a0ff0a9990">FindApproximateWitness</a> (const std::size_t &amp;_numRays, std::vector&lt; <a class="el" href="structRay.html">Ray</a>&lt; <a class="el" href="classClearanceUtility.html#ac1931f426c80cd2b497539ac380096ea">CfgType</a> &gt; &gt; &amp;_rays, const <a class="el" href="classClearanceUtility.html#ac1931f426c80cd2b497539ac380096ea">CfgType</a> &amp;_sampledCfg, const bool &amp;_initValidity, const <a class="el" href="classBoundary.html">Boundary</a> *const _b, std::pair&lt; size_t, <a class="el" href="classClearanceUtility.html#ac1931f426c80cd2b497539ac380096ea">CfgType</a> &gt; &amp;_candidate, const bool &amp;_useOppValidityWitness=true)</td></tr>
-<tr class="separator:a6f349c4201ced124d62c64a0ff0a9990"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:adec16ec104673c70c392da3ebb4031a2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#adec16ec104673c70c392da3ebb4031a2">MakeRays</a> (const <a class="el" href="classClearanceUtility.html#ac1931f426c80cd2b497539ac380096ea">CfgType</a> &amp;_sampledCfg, const std::size_t &amp;_numRays, std::vector&lt; <a class="el" href="structRay.html">Ray</a>&lt; <a class="el" href="classClearanceUtility.html#ac1931f426c80cd2b497539ac380096ea">CfgType</a> &gt; &gt; &amp;_rays)</td></tr>
-<tr class="separator:adec16ec104673c70c392da3ebb4031a2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad90ed36dfd52116932490e8c43767902"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#ad90ed36dfd52116932490e8c43767902">ValidateCandidate</a> (const std::pair&lt; size_t, <a class="el" href="classClearanceUtility.html#ac1931f426c80cd2b497539ac380096ea">CfgType</a> &gt; &amp;_cand, const std::vector&lt; <a class="el" href="structRay.html">Ray</a>&lt; <a class="el" href="classClearanceUtility.html#ac1931f426c80cd2b497539ac380096ea">CfgType</a> &gt; &gt; &amp;_rays, const <a class="el" href="classBoundary.html">Boundary</a> *const _b, const bool &amp;_useOppValidityWitness=true)</td></tr>
-<tr class="separator:ad90ed36dfd52116932490e8c43767902"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aeb166eba0d9c6e60447aefb47f80085a"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structClearanceStats.html">ClearanceStats</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#aeb166eba0d9c6e60447aefb47f80085a">RoadmapClearance</a> ()</td></tr>
-<tr class="separator:aeb166eba0d9c6e60447aefb47f80085a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a73de114358e81644635b6b891afd35f2"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structClearanceStats.html">ClearanceStats</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#a73de114358e81644635b6b891afd35f2">PathClearance</a> (vector&lt; <a class="el" href="classClearanceUtility.html#a18a88591dcfe985570a43213aee795b2">VID</a> &gt; &amp;_path)</td></tr>
-<tr class="separator:a73de114358e81644635b6b891afd35f2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8f6d9a31e1fa6f2d5637beef9feea114"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structClearanceStats.html">ClearanceStats</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#a8f6d9a31e1fa6f2d5637beef9feea114">PathClearance</a> (vector&lt; <a class="el" href="classCfg.html">Cfg</a> &gt; &amp;_path)</td></tr>
-<tr class="separator:a8f6d9a31e1fa6f2d5637beef9feea114"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afba0a7285ea11d17dbad930c4353d21a"><td class="memItemLeft" align="right" valign="top">vector&lt; double &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#afba0a7285ea11d17dbad930c4353d21a">EdgeClearance</a> (const <a class="el" href="classClearanceUtility.html#ac1931f426c80cd2b497539ac380096ea">CfgType</a> &amp;_c1, const <a class="el" href="classClearanceUtility.html#ac1931f426c80cd2b497539ac380096ea">CfgType</a> &amp;_c2, const <a class="el" href="classClearanceUtility.html#a2a5b990ebf0d7cd4b8523490ae7aa3c5">WeightType</a> &amp;_weight)</td></tr>
-<tr class="separator:afba0a7285ea11d17dbad930c4353d21a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7a0c1dc4b0aaae53ab7f0ee2d888c9bc"><td class="memItemLeft" align="right" valign="top">const bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#a7a0c1dc4b0aaae53ab7f0ee2d888c9bc">GetNearestVertexWitness</a> (<a class="el" href="classClearanceUtility.html#ac1931f426c80cd2b497539ac380096ea">CfgType</a> &amp;_cfg, <a class="el" href="structCDInfo.html">CDInfo</a> &amp;_cdInfo, const <a class="el" href="classBoundary.html">Boundary</a> *const _b)</td></tr>
-<tr class="separator:a7a0c1dc4b0aaae53ab7f0ee2d888c9bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a12ba99669d9505d21ea6a0198cf175f2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#a12ba99669d9505d21ea6a0198cf175f2">SetRobot</a> (<a class="el" href="classRobot.html">Robot</a> *_robot)</td></tr>
-<tr class="separator:a12ba99669d9505d21ea6a0198cf175f2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="inherit_header pub_methods_classMPBaseObject"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classMPBaseObject')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="classMPBaseObject.html">MPBaseObject&lt; MPTraits &gt;</a></td></tr>
-<tr class="memitem:ab41feac6877c3756dafbadb9916c792e inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#ab41feac6877c3756dafbadb9916c792e">MPBaseObject</a> (const std::string &amp;_label=&quot;&quot;, const std::string &amp;_name=&quot;&quot;, bool _debug=false)</td></tr>
-<tr class="separator:ab41feac6877c3756dafbadb9916c792e inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aea8003b827f45d6408545d97ce17a83f inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#aea8003b827f45d6408545d97ce17a83f">MPBaseObject</a> (<a class="el" href="classXMLNode.html">XMLNode</a> &amp;_node)</td></tr>
-<tr class="separator:aea8003b827f45d6408545d97ce17a83f inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aba2b23fa368330ad7263eacb83dc1743 inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#aba2b23fa368330ad7263eacb83dc1743">~MPBaseObject</a> ()=default</td></tr>
-<tr class="separator:aba2b23fa368330ad7263eacb83dc1743 inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4d111a2d7d53d243cdd4cd89ffa65212 inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a4d111a2d7d53d243cdd4cd89ffa65212">Print</a> (std::ostream &amp;_os) const</td></tr>
-<tr class="separator:a4d111a2d7d53d243cdd4cd89ffa65212 inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aca769e4192d06bd3f4926bf94b9c055a inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#aca769e4192d06bd3f4926bf94b9c055a">GetName</a> () const</td></tr>
-<tr class="memdesc:aca769e4192d06bd3f4926bf94b9c055a inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the class name for this object.  <a href="classMPBaseObject.html#aca769e4192d06bd3f4926bf94b9c055a">More...</a><br /></td></tr>
-<tr class="separator:aca769e4192d06bd3f4926bf94b9c055a inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad34623e8bcd57c846f8ffe6afe6b427e inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#ad34623e8bcd57c846f8ffe6afe6b427e">GetLabel</a> () const</td></tr>
-<tr class="memdesc:ad34623e8bcd57c846f8ffe6afe6b427e inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the unique label for this object.  <a href="classMPBaseObject.html#ad34623e8bcd57c846f8ffe6afe6b427e">More...</a><br /></td></tr>
-<tr class="separator:ad34623e8bcd57c846f8ffe6afe6b427e inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a57acdb0b1cc5dd45a2a0c08df914bfcf inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a57acdb0b1cc5dd45a2a0c08df914bfcf">GetNameAndLabel</a> () const</td></tr>
-<tr class="memdesc:a57acdb0b1cc5dd45a2a0c08df914bfcf inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the unique string identifier for this object "m_name::m_label".  <a href="classMPBaseObject.html#a57acdb0b1cc5dd45a2a0c08df914bfcf">More...</a><br /></td></tr>
-<tr class="separator:a57acdb0b1cc5dd45a2a0c08df914bfcf inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac5466caf986b06ca41f1fea274dc47c6 inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#ac5466caf986b06ca41f1fea274dc47c6">SetLabel</a> (const std::string &amp;)</td></tr>
-<tr class="memdesc:ac5466caf986b06ca41f1fea274dc47c6 inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the unique label for this object.  <a href="classMPBaseObject.html#ac5466caf986b06ca41f1fea274dc47c6">More...</a><br /></td></tr>
-<tr class="separator:ac5466caf986b06ca41f1fea274dc47c6 inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a697d226daf5f6a2745ef88d2d61a596e inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a697d226daf5f6a2745ef88d2d61a596e">SetMPLibrary</a> (<a class="el" href="classMPBaseObject.html#a15b148d41701475b3b94c4a163157f89">MPLibrary</a> *) noexcept</td></tr>
-<tr class="memdesc:a697d226daf5f6a2745ef88d2d61a596e inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the owning MPLibrary.  <a href="classMPBaseObject.html#a697d226daf5f6a2745ef88d2d61a596e">More...</a><br /></td></tr>
-<tr class="separator:a697d226daf5f6a2745ef88d2d61a596e inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a521b705712b8e7d7197493e411226bda inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classMPBaseObject.html#a15b148d41701475b3b94c4a163157f89">MPLibrary</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a521b705712b8e7d7197493e411226bda">GetMPLibrary</a> () const noexcept</td></tr>
-<tr class="memdesc:a521b705712b8e7d7197493e411226bda inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the owning MPLibrary.  <a href="classMPBaseObject.html#a521b705712b8e7d7197493e411226bda">More...</a><br /></td></tr>
-<tr class="separator:a521b705712b8e7d7197493e411226bda inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abfed57adb1cd6e9e6e75062427bc9f7e inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#abfed57adb1cd6e9e6e75062427bc9f7e">IsRunning</a> () const noexcept</td></tr>
-<tr class="memdesc:abfed57adb1cd6e9e6e75062427bc9f7e inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Check the library's running flag.  <a href="classMPBaseObject.html#abfed57adb1cd6e9e6e75062427bc9f7e">More...</a><br /></td></tr>
-<tr class="separator:abfed57adb1cd6e9e6e75062427bc9f7e inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8a20d7ea8dcfacc2900cc1862c4f8cc8 inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classMPBaseObject.html#ae603ce0344d2bf534dd9623be0625f90">DistanceMetricPointer</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a8a20d7ea8dcfacc2900cc1862c4f8cc8">GetDistanceMetric</a> (const std::string &amp;) const noexcept</td></tr>
-<tr class="memdesc:a8a20d7ea8dcfacc2900cc1862c4f8cc8 inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get a distance metric by label from the owning MPLibrary.  <a href="classMPBaseObject.html#a8a20d7ea8dcfacc2900cc1862c4f8cc8">More...</a><br /></td></tr>
-<tr class="separator:a8a20d7ea8dcfacc2900cc1862c4f8cc8 inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2342194564152d2f990223cb62844cbe inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classMPBaseObject.html#a96b8dadf9f28e3513e2bd059dfc0344a">ValidityCheckerPointer</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a2342194564152d2f990223cb62844cbe">GetValidityChecker</a> (const std::string &amp;) const noexcept</td></tr>
-<tr class="memdesc:a2342194564152d2f990223cb62844cbe inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get a validity checker by label from the owning MPLibrary.  <a href="classMPBaseObject.html#a2342194564152d2f990223cb62844cbe">More...</a><br /></td></tr>
-<tr class="separator:a2342194564152d2f990223cb62844cbe inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a66ba952d43ffc95ff56c889096e9a7d3 inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classMPBaseObject.html#a931bd7b8fd743b7f7313046659866113">NeighborhoodFinderPointer</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a66ba952d43ffc95ff56c889096e9a7d3">GetNeighborhoodFinder</a> (const std::string &amp;) const noexcept</td></tr>
-<tr class="memdesc:a66ba952d43ffc95ff56c889096e9a7d3 inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get a neighborhood finder by label from the owning MPLibrary.  <a href="classMPBaseObject.html#a66ba952d43ffc95ff56c889096e9a7d3">More...</a><br /></td></tr>
-<tr class="separator:a66ba952d43ffc95ff56c889096e9a7d3 inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9a2dff0888a2ea84bb38a556654a4701 inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classMPBaseObject.html#aaf3cea401f0b3ade1d909fc527246a08">SamplerPointer</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a9a2dff0888a2ea84bb38a556654a4701">GetSampler</a> (const std::string &amp;) const noexcept</td></tr>
-<tr class="memdesc:a9a2dff0888a2ea84bb38a556654a4701 inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get a sampler by label from the owning MPLibrary.  <a href="classMPBaseObject.html#a9a2dff0888a2ea84bb38a556654a4701">More...</a><br /></td></tr>
-<tr class="separator:a9a2dff0888a2ea84bb38a556654a4701 inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a23231ec80cf4dc6103fcbe6967611de8 inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classMPBaseObject.html#ae65bc5a79747909242133bf6d00c993d">LocalPlannerPointer</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a23231ec80cf4dc6103fcbe6967611de8">GetLocalPlanner</a> (const std::string &amp;) const noexcept</td></tr>
-<tr class="memdesc:a23231ec80cf4dc6103fcbe6967611de8 inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get a local planner by label from the owning MPLibrary.  <a href="classMPBaseObject.html#a23231ec80cf4dc6103fcbe6967611de8">More...</a><br /></td></tr>
-<tr class="separator:a23231ec80cf4dc6103fcbe6967611de8 inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae1c21a5eb19462d7fbc1d9d7ad44a337 inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classMPBaseObject.html#a5eb6e9a2ee24cc60b2280c8d7a86dcf4">ExtenderPointer</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#ae1c21a5eb19462d7fbc1d9d7ad44a337">GetExtender</a> (const std::string &amp;) const noexcept</td></tr>
-<tr class="memdesc:ae1c21a5eb19462d7fbc1d9d7ad44a337 inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get an extender by label from the owning MPLibrary.  <a href="classMPBaseObject.html#ae1c21a5eb19462d7fbc1d9d7ad44a337">More...</a><br /></td></tr>
-<tr class="separator:ae1c21a5eb19462d7fbc1d9d7ad44a337 inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2ba42a3ccbbe218c0ad5212b320647e2 inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classMPBaseObject.html#a9d8006e11da7b3e4d5ac8eee9c6af86a">PathModifierPointer</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a2ba42a3ccbbe218c0ad5212b320647e2">GetPathModifier</a> (const std::string &amp;) const noexcept</td></tr>
-<tr class="memdesc:a2ba42a3ccbbe218c0ad5212b320647e2 inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get a path modifier by label from the owning MPLibrary.  <a href="classMPBaseObject.html#a2ba42a3ccbbe218c0ad5212b320647e2">More...</a><br /></td></tr>
-<tr class="separator:a2ba42a3ccbbe218c0ad5212b320647e2 inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6ddd6d5795d5b1aa4e2205f758796d7b inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classMPBaseObject.html#a52cc83324263c010e07a138ab3515f5e">EdgeValidityCheckerPointer</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a6ddd6d5795d5b1aa4e2205f758796d7b">GetEdgeValidityChecker</a> (const std::string &amp;) const noexcept</td></tr>
-<tr class="memdesc:a6ddd6d5795d5b1aa4e2205f758796d7b inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get a path modifier by label from the owning MPLibrary.  <a href="classMPBaseObject.html#a6ddd6d5795d5b1aa4e2205f758796d7b">More...</a><br /></td></tr>
-<tr class="separator:a6ddd6d5795d5b1aa4e2205f758796d7b inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a03a0372144b35900bd3783787d8ece23 inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classMPBaseObject.html#a97ef39036c999f2b85697d651a3709b6">ConnectorPointer</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a03a0372144b35900bd3783787d8ece23">GetConnector</a> (const std::string &amp;) const noexcept</td></tr>
-<tr class="memdesc:a03a0372144b35900bd3783787d8ece23 inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get a connector by label from the owning MPLibrary.  <a href="classMPBaseObject.html#a03a0372144b35900bd3783787d8ece23">More...</a><br /></td></tr>
-<tr class="separator:a03a0372144b35900bd3783787d8ece23 inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6ae69fab32bc22d9a40183c2ddcad070 inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classMPBaseObject.html#a1033e6b77f138cd5b0c963b85c2102c8">MetricPointer</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a6ae69fab32bc22d9a40183c2ddcad070">GetMetric</a> (const std::string &amp;) const noexcept</td></tr>
-<tr class="memdesc:a6ae69fab32bc22d9a40183c2ddcad070 inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get a metric by label from the owning MPLibrary.  <a href="classMPBaseObject.html#a6ae69fab32bc22d9a40183c2ddcad070">More...</a><br /></td></tr>
-<tr class="separator:a6ae69fab32bc22d9a40183c2ddcad070 inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af952ecbef2818c807056dd1ee562dfa2 inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classMPBaseObject.html#ab26d90683e004e04060c66490f1abef9">MapEvaluatorPointer</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#af952ecbef2818c807056dd1ee562dfa2">GetMapEvaluator</a> (const std::string &amp;) const noexcept</td></tr>
-<tr class="memdesc:af952ecbef2818c807056dd1ee562dfa2 inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get a map evaluator by label from the owning MPLibrary.  <a href="classMPBaseObject.html#af952ecbef2818c807056dd1ee562dfa2">More...</a><br /></td></tr>
-<tr class="separator:af952ecbef2818c807056dd1ee562dfa2 inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab5db3fdc249613226e1bfb9748d7e419 inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classMPBaseObject.html#a6c55c91725735d71ee1b6e07d0da9427">MPStrategyPointer</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#ab5db3fdc249613226e1bfb9748d7e419">GetMPStrategy</a> (const std::string &amp;) const noexcept</td></tr>
-<tr class="memdesc:ab5db3fdc249613226e1bfb9748d7e419 inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get a strategy by label from the owning MPLibrary.  <a href="classMPBaseObject.html#ab5db3fdc249613226e1bfb9748d7e419">More...</a><br /></td></tr>
-<tr class="separator:ab5db3fdc249613226e1bfb9748d7e419 inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3cec62eec53411129380a74d357189c7 inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classMPTraits.html#a84f80ad50e0574d4255ed210b92b4070">MPTraits::MPTools</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a3cec62eec53411129380a74d357189c7">GetMPTools</a> () const noexcept</td></tr>
-<tr class="memdesc:a3cec62eec53411129380a74d357189c7 inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the MPTools container from the owning MPLibrary.  <a href="classMPBaseObject.html#a3cec62eec53411129380a74d357189c7">More...</a><br /></td></tr>
-<tr class="separator:a3cec62eec53411129380a74d357189c7 inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2a18befe086f47ce26c93f08c4364397 inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classMPProblem.html">MPProblem</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a2a18befe086f47ce26c93f08c4364397">GetMPProblem</a> () const noexcept</td></tr>
-<tr class="memdesc:a2a18befe086f47ce26c93f08c4364397 inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the library's current <a class="el" href="classMPProblem.html">MPProblem</a>.  <a href="classMPBaseObject.html#a2a18befe086f47ce26c93f08c4364397">More...</a><br /></td></tr>
-<tr class="separator:a2a18befe086f47ce26c93f08c4364397 inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a84dfed53d5b39787d1a9fa44f9a833e1 inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classEnvironment.html">Environment</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a84dfed53d5b39787d1a9fa44f9a833e1">GetEnvironment</a> () const noexcept</td></tr>
-<tr class="memdesc:a84dfed53d5b39787d1a9fa44f9a833e1 inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the current environment.  <a href="classMPBaseObject.html#a84dfed53d5b39787d1a9fa44f9a833e1">More...</a><br /></td></tr>
-<tr class="separator:a84dfed53d5b39787d1a9fa44f9a833e1 inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa73f5579b26a2391c5ef414cc3132602 inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classMPTask.html">MPTask</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#aa73f5579b26a2391c5ef414cc3132602">GetTask</a> () const noexcept</td></tr>
-<tr class="memdesc:aa73f5579b26a2391c5ef414cc3132602 inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the current task.  <a href="classMPBaseObject.html#aa73f5579b26a2391c5ef414cc3132602">More...</a><br /></td></tr>
-<tr class="separator:aa73f5579b26a2391c5ef414cc3132602 inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3eee19a7be268bff7c7497be8d0239a7 inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classGroupTask.html">GroupTask</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a3eee19a7be268bff7c7497be8d0239a7">GetGroupTask</a> () const noexcept</td></tr>
-<tr class="memdesc:a3eee19a7be268bff7c7497be8d0239a7 inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the current group task.  <a href="classMPBaseObject.html#a3eee19a7be268bff7c7497be8d0239a7">More...</a><br /></td></tr>
-<tr class="separator:a3eee19a7be268bff7c7497be8d0239a7 inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5c683b92e92fdc2c410b73ddecaf0ca5 inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classMPBaseObject.html#a6aa70c68a7aa522d074423ca469a4611">MPSolution</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a5c683b92e92fdc2c410b73ddecaf0ca5">GetMPSolution</a> () const noexcept</td></tr>
-<tr class="separator:a5c683b92e92fdc2c410b73ddecaf0ca5 inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab12b31f78fe0ead35bd1696477d6252b inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classMPBaseObject.html#afdfe49d535de506c369d53c3f35c4861">RoadmapType</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#ab12b31f78fe0ead35bd1696477d6252b">GetRoadmap</a> (<a class="el" href="classRobot.html">Robot</a> *const _r=nullptr) const noexcept</td></tr>
-<tr class="memdesc:ab12b31f78fe0ead35bd1696477d6252b inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the current free-space roadmap.  <a href="classMPBaseObject.html#ab12b31f78fe0ead35bd1696477d6252b">More...</a><br /></td></tr>
-<tr class="separator:ab12b31f78fe0ead35bd1696477d6252b inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4a2e6b0792de5ad4fea367b800c9104c inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classMPBaseObject.html#ad06ed006429808c548ad2c88d7362652">GroupRoadmapType</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a4a2e6b0792de5ad4fea367b800c9104c">GetGroupRoadmap</a> (<a class="el" href="classRobotGroup.html">RobotGroup</a> *const _g=nullptr) const noexcept</td></tr>
-<tr class="memdesc:a4a2e6b0792de5ad4fea367b800c9104c inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the current free-space group roadmap.  <a href="classMPBaseObject.html#a4a2e6b0792de5ad4fea367b800c9104c">More...</a><br /></td></tr>
-<tr class="separator:a4a2e6b0792de5ad4fea367b800c9104c inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa3b66c53b09bfd09ea85985e9594d612 inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classMPBaseObject.html#afdfe49d535de506c369d53c3f35c4861">RoadmapType</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#aa3b66c53b09bfd09ea85985e9594d612">GetBlockRoadmap</a> (<a class="el" href="classRobot.html">Robot</a> *const _r=nullptr) const noexcept</td></tr>
-<tr class="memdesc:aa3b66c53b09bfd09ea85985e9594d612 inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the current obstacle-space roadmap.  <a href="classMPBaseObject.html#aa3b66c53b09bfd09ea85985e9594d612">More...</a><br /></td></tr>
-<tr class="separator:aa3b66c53b09bfd09ea85985e9594d612 inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5eed9cee8bec2a10ccb807252dd48b48 inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classMPBaseObject.html#aea9c3bca368d8ed3aaf2687b159ca561">Path</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a5eed9cee8bec2a10ccb807252dd48b48">GetPath</a> (<a class="el" href="classRobot.html">Robot</a> *const _r=nullptr) const noexcept</td></tr>
-<tr class="memdesc:a5eed9cee8bec2a10ccb807252dd48b48 inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the current best path.  <a href="classMPBaseObject.html#a5eed9cee8bec2a10ccb807252dd48b48">More...</a><br /></td></tr>
-<tr class="separator:a5eed9cee8bec2a10ccb807252dd48b48 inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5876ac36ce7e8c97564a464ee25ca45e inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classMPBaseObject.html#a171d332ff9e7d24af57efce2db4d7c60">GroupPath</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a5876ac36ce7e8c97564a464ee25ca45e">GetGroupPath</a> (<a class="el" href="classRobotGroup.html">RobotGroup</a> *const _g=nullptr) const noexcept</td></tr>
-<tr class="memdesc:a5876ac36ce7e8c97564a464ee25ca45e inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the current best group path.  <a href="classMPBaseObject.html#a5876ac36ce7e8c97564a464ee25ca45e">More...</a><br /></td></tr>
-<tr class="separator:a5876ac36ce7e8c97564a464ee25ca45e inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a375e4d95326ba7b0d9751aafd0e5e38f inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classStatClass.html">StatClass</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a375e4d95326ba7b0d9751aafd0e5e38f">GetStatClass</a> () const noexcept</td></tr>
-<tr class="memdesc:a375e4d95326ba7b0d9751aafd0e5e38f inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the current <a class="el" href="classStatClass.html">StatClass</a>.  <a href="classMPBaseObject.html#a375e4d95326ba7b0d9751aafd0e5e38f">More...</a><br /></td></tr>
-<tr class="separator:a375e4d95326ba7b0d9751aafd0e5e38f inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a62a7924385a0268299e26f77e0a10f3d inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classMPBaseObject.html#a1e5ed51342d87f6e4ca22300478d1754">LocalObstacleMap</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a62a7924385a0268299e26f77e0a10f3d">GetLocalObstacleMap</a> () const noexcept</td></tr>
-<tr class="memdesc:a62a7924385a0268299e26f77e0a10f3d inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the local obstacle map.  <a href="classMPBaseObject.html#a62a7924385a0268299e26f77e0a10f3d">More...</a><br /></td></tr>
-<tr class="separator:a62a7924385a0268299e26f77e0a10f3d inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acb4f647ec2b50698e0c4bb676f1d103e inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classMPBaseObject.html#a59a6f8a70e1e9d3bc80ed1709f37adb9">GoalTracker</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#acb4f647ec2b50698e0c4bb676f1d103e">GetGoalTracker</a> () const noexcept</td></tr>
-<tr class="memdesc:acb4f647ec2b50698e0c4bb676f1d103e inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the goal tracker.  <a href="classMPBaseObject.html#acb4f647ec2b50698e0c4bb676f1d103e">More...</a><br /></td></tr>
-<tr class="separator:acb4f647ec2b50698e0c4bb676f1d103e inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a495b76540765b45ed8ff0c278c18d0ec"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#a495b76540765b45ed8ff0c278c18d0ec">CollisionInfo</a> (<a class="el" href="classCfg.html">Cfg</a> &amp;_cfg, <a class="el" href="classCfg.html">Cfg</a> &amp;_clrCfg, const <a class="el" href="classBoundary.html">Boundary</a> *const _b, <a class="el" href="structCDInfo.html">CDInfo</a> &amp;_cdInfo, const bool &amp;_useOppValidityWitness=true)</td></tr>
+<tr class="separator:a495b76540765b45ed8ff0c278c18d0ec"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a32cbf3a38d7e0bd688b1d66e51fd9aa2"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#a32cbf3a38d7e0bd688b1d66e51fd9aa2">ExactCollisionInfo</a> (<a class="el" href="classCfg.html">Cfg</a> &amp;_cfg, <a class="el" href="classCfg.html">Cfg</a> &amp;_clrCfg, const <a class="el" href="classBoundary.html">Boundary</a> *const _b, <a class="el" href="structCDInfo.html">CDInfo</a> &amp;_cdInfo, const bool _useOppValidityWitness=true)</td></tr>
+<tr class="separator:a32cbf3a38d7e0bd688b1d66e51fd9aa2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a060da25b958d1398f60d90374850bb84"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#a060da25b958d1398f60d90374850bb84">ApproxCollisionInfo</a> (<a class="el" href="classCfg.html">Cfg</a> &amp;_cfg, <a class="el" href="classCfg.html">Cfg</a> &amp;_clrCfg, const <a class="el" href="classBoundary.html">Boundary</a> *const _b, <a class="el" href="structCDInfo.html">CDInfo</a> &amp;_cdInfo, const bool &amp;_useOppValidityWitness=true)</td></tr>
+<tr class="separator:a060da25b958d1398f60d90374850bb84"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a377120d0cb3fc322ace5fcca1248fa7d"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#a377120d0cb3fc322ace5fcca1248fa7d">FindApproximateWitness</a> (const std::size_t &amp;_numRays, std::vector&lt; <a class="el" href="structRay.html">Ray</a>&lt; <a class="el" href="classCfg.html">Cfg</a> &gt; &gt; &amp;_rays, const <a class="el" href="classCfg.html">Cfg</a> &amp;_sampledCfg, const bool &amp;_initValidity, const <a class="el" href="classBoundary.html">Boundary</a> *const _b, std::pair&lt; size_t, <a class="el" href="classCfg.html">Cfg</a> &gt; &amp;_candidate, const bool &amp;_useOppValidityWitness=true)</td></tr>
+<tr class="separator:a377120d0cb3fc322ace5fcca1248fa7d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5d5c7a5ea5c67ae3dbcc0733a417c2fa"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#a5d5c7a5ea5c67ae3dbcc0733a417c2fa">MakeRays</a> (const <a class="el" href="classCfg.html">Cfg</a> &amp;_sampledCfg, const std::size_t &amp;_numRays, std::vector&lt; <a class="el" href="structRay.html">Ray</a>&lt; <a class="el" href="classCfg.html">Cfg</a> &gt; &gt; &amp;_rays)</td></tr>
+<tr class="separator:a5d5c7a5ea5c67ae3dbcc0733a417c2fa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a275d42d9fe924773c5cc3937afd32f81"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#a275d42d9fe924773c5cc3937afd32f81">ValidateCandidate</a> (const std::pair&lt; size_t, <a class="el" href="classCfg.html">Cfg</a> &gt; &amp;_cand, const std::vector&lt; <a class="el" href="structRay.html">Ray</a>&lt; <a class="el" href="classCfg.html">Cfg</a> &gt; &gt; &amp;_rays, const <a class="el" href="classBoundary.html">Boundary</a> *const _b, const bool &amp;_useOppValidityWitness=true)</td></tr>
+<tr class="separator:a275d42d9fe924773c5cc3937afd32f81"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac2f8ec47c464d251e4ea7cdce691f9eb"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structClearanceStats.html">ClearanceStats</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#ac2f8ec47c464d251e4ea7cdce691f9eb">RoadmapClearance</a> ()</td></tr>
+<tr class="separator:ac2f8ec47c464d251e4ea7cdce691f9eb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a769176e530b77aff78b5b10e62ffcf11"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structClearanceStats.html">ClearanceStats</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#a769176e530b77aff78b5b10e62ffcf11">PathClearance</a> (vector&lt; <a class="el" href="classClearanceUtility.html#aa209ef3fd7610c68d8b63e8bb66d762f">VID</a> &gt; &amp;_path)</td></tr>
+<tr class="separator:a769176e530b77aff78b5b10e62ffcf11"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a94137c8cd19d19f105e4ea190760297c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structClearanceStats.html">ClearanceStats</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#a94137c8cd19d19f105e4ea190760297c">PathClearance</a> (vector&lt; <a class="el" href="classCfg.html">Cfg</a> &gt; &amp;_path)</td></tr>
+<tr class="separator:a94137c8cd19d19f105e4ea190760297c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a67b9e713a8b651569a6376798f772162"><td class="memItemLeft" align="right" valign="top">vector&lt; double &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#a67b9e713a8b651569a6376798f772162">EdgeClearance</a> (const <a class="el" href="classCfg.html">Cfg</a> &amp;_c1, const <a class="el" href="classCfg.html">Cfg</a> &amp;_c2, const <a class="el" href="classMPBaseObject.html#a63f3af4b78d458b51ddad699de1f9287">WeightType</a> &amp;_weight)</td></tr>
+<tr class="separator:a67b9e713a8b651569a6376798f772162"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1604906b53a6876182a49c74ebcb59ec"><td class="memItemLeft" align="right" valign="top">const bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#a1604906b53a6876182a49c74ebcb59ec">GetNearestVertexWitness</a> (<a class="el" href="classCfg.html">Cfg</a> &amp;_cfg, <a class="el" href="structCDInfo.html">CDInfo</a> &amp;_cdInfo, const <a class="el" href="classBoundary.html">Boundary</a> *const _b)</td></tr>
+<tr class="separator:a1604906b53a6876182a49c74ebcb59ec"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af28a4d4a828172057addc41b5f1cb01d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#af28a4d4a828172057addc41b5f1cb01d">SetRobot</a> (<a class="el" href="classRobot.html">Robot</a> *_robot)</td></tr>
+<tr class="separator:af28a4d4a828172057addc41b5f1cb01d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="inherit_header pub_methods_classMPBaseObject"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classMPBaseObject')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="classMPBaseObject.html">MPBaseObject</a></td></tr>
+<tr class="memitem:aa2708cce0ac2268d85f267e3b5ef6f75 inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#aa2708cce0ac2268d85f267e3b5ef6f75">MPBaseObject</a> (const std::string &amp;_label=&quot;&quot;, const std::string &amp;_name=&quot;&quot;, bool _debug=false)</td></tr>
+<tr class="separator:aa2708cce0ac2268d85f267e3b5ef6f75 inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adc4763406edae04123c8bbf88552262c inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#adc4763406edae04123c8bbf88552262c">MPBaseObject</a> (<a class="el" href="classXMLNode.html">XMLNode</a> &amp;_node)</td></tr>
+<tr class="separator:adc4763406edae04123c8bbf88552262c inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a934cee21460217e9ee749be04daa43ca inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a934cee21460217e9ee749be04daa43ca">~MPBaseObject</a> ()</td></tr>
+<tr class="separator:a934cee21460217e9ee749be04daa43ca inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a558b2ecf6fa413c62cfe962f86931bb0 inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a558b2ecf6fa413c62cfe962f86931bb0">GetName</a> () const</td></tr>
+<tr class="memdesc:a558b2ecf6fa413c62cfe962f86931bb0 inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the class name for this object.  <a href="classMPBaseObject.html#a558b2ecf6fa413c62cfe962f86931bb0">More...</a><br /></td></tr>
+<tr class="separator:a558b2ecf6fa413c62cfe962f86931bb0 inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a09d9d52b0645e52f2b2c4c60ca35da23 inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a09d9d52b0645e52f2b2c4c60ca35da23">GetLabel</a> () const</td></tr>
+<tr class="memdesc:a09d9d52b0645e52f2b2c4c60ca35da23 inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the unique label for this object.  <a href="classMPBaseObject.html#a09d9d52b0645e52f2b2c4c60ca35da23">More...</a><br /></td></tr>
+<tr class="separator:a09d9d52b0645e52f2b2c4c60ca35da23 inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2b157f30833aa474087e148589bf5e22 inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a2b157f30833aa474087e148589bf5e22">GetNameAndLabel</a> () const</td></tr>
+<tr class="memdesc:a2b157f30833aa474087e148589bf5e22 inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the unique string identifier for this object "m_name::m_label".  <a href="classMPBaseObject.html#a2b157f30833aa474087e148589bf5e22">More...</a><br /></td></tr>
+<tr class="separator:a2b157f30833aa474087e148589bf5e22 inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a77356657dd763bee634d8a0471481f2d inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a77356657dd763bee634d8a0471481f2d">SetLabel</a> (const std::string &amp;)</td></tr>
+<tr class="memdesc:a77356657dd763bee634d8a0471481f2d inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the unique label for this object.  <a href="classMPBaseObject.html#a77356657dd763bee634d8a0471481f2d">More...</a><br /></td></tr>
+<tr class="separator:a77356657dd763bee634d8a0471481f2d inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a592f29cfa73851e9a58e38f57a4b8320 inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a592f29cfa73851e9a58e38f57a4b8320">SetMPLibrary</a> (<a class="el" href="classMPLibrary.html">MPLibrary</a> *) noexcept</td></tr>
+<tr class="memdesc:a592f29cfa73851e9a58e38f57a4b8320 inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the owning <a class="el" href="classMPLibrary.html">MPLibrary</a>.  <a href="classMPBaseObject.html#a592f29cfa73851e9a58e38f57a4b8320">More...</a><br /></td></tr>
+<tr class="separator:a592f29cfa73851e9a58e38f57a4b8320 inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5acf803bf6c3b104dd6e6e786d91717a inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classMPLibrary.html">MPLibrary</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a5acf803bf6c3b104dd6e6e786d91717a">GetMPLibrary</a> () const noexcept</td></tr>
+<tr class="memdesc:a5acf803bf6c3b104dd6e6e786d91717a inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the owning <a class="el" href="classMPLibrary.html">MPLibrary</a>.  <a href="classMPBaseObject.html#a5acf803bf6c3b104dd6e6e786d91717a">More...</a><br /></td></tr>
+<tr class="separator:a5acf803bf6c3b104dd6e6e786d91717a inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a52d98c486c75d70ad376235e79cb44f5 inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a52d98c486c75d70ad376235e79cb44f5">IsRunning</a> () const noexcept</td></tr>
+<tr class="memdesc:a52d98c486c75d70ad376235e79cb44f5 inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Check the library's running flag.  <a href="classMPBaseObject.html#a52d98c486c75d70ad376235e79cb44f5">More...</a><br /></td></tr>
+<tr class="separator:a52d98c486c75d70ad376235e79cb44f5 inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a932da44c88897bfd523666d0399380d8 inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classMPProblem.html">MPProblem</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a932da44c88897bfd523666d0399380d8">GetMPProblem</a> () const noexcept</td></tr>
+<tr class="memdesc:a932da44c88897bfd523666d0399380d8 inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the library's current <a class="el" href="classMPProblem.html">MPProblem</a>.  <a href="classMPBaseObject.html#a932da44c88897bfd523666d0399380d8">More...</a><br /></td></tr>
+<tr class="separator:a932da44c88897bfd523666d0399380d8 inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad5dcc061d806577d532ba3af66200a2d inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classEnvironment.html">Environment</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#ad5dcc061d806577d532ba3af66200a2d">GetEnvironment</a> () const noexcept</td></tr>
+<tr class="memdesc:ad5dcc061d806577d532ba3af66200a2d inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the current environment.  <a href="classMPBaseObject.html#ad5dcc061d806577d532ba3af66200a2d">More...</a><br /></td></tr>
+<tr class="separator:ad5dcc061d806577d532ba3af66200a2d inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab307334bc71d1dcf11342269f078eac1 inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classMPTask.html">MPTask</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#ab307334bc71d1dcf11342269f078eac1">GetTask</a> () const noexcept</td></tr>
+<tr class="memdesc:ab307334bc71d1dcf11342269f078eac1 inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the current task.  <a href="classMPBaseObject.html#ab307334bc71d1dcf11342269f078eac1">More...</a><br /></td></tr>
+<tr class="separator:ab307334bc71d1dcf11342269f078eac1 inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa63ee9f0d8ff9e328fcdea583d77c8cf inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classGroupTask.html">GroupTask</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#aa63ee9f0d8ff9e328fcdea583d77c8cf">GetGroupTask</a> () const noexcept</td></tr>
+<tr class="memdesc:aa63ee9f0d8ff9e328fcdea583d77c8cf inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the current group task.  <a href="classMPBaseObject.html#aa63ee9f0d8ff9e328fcdea583d77c8cf">More...</a><br /></td></tr>
+<tr class="separator:aa63ee9f0d8ff9e328fcdea583d77c8cf inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a326ab667c0b568c9439b270c968ae8aa inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classMPSolutionType.html">MPSolutionType</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a326ab667c0b568c9439b270c968ae8aa">GetMPSolution</a> () const noexcept</td></tr>
+<tr class="separator:a326ab667c0b568c9439b270c968ae8aa inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8fbcaf43d2a3cdf47256d66d49b8e605 inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classMPBaseObject.html#a1cb9a08003cc7620b1534bdf69ceb1a4">RoadmapType</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a8fbcaf43d2a3cdf47256d66d49b8e605">GetRoadmap</a> (<a class="el" href="classRobot.html">Robot</a> *const _r=nullptr) const noexcept</td></tr>
+<tr class="memdesc:a8fbcaf43d2a3cdf47256d66d49b8e605 inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the current free-space roadmap.  <a href="classMPBaseObject.html#a8fbcaf43d2a3cdf47256d66d49b8e605">More...</a><br /></td></tr>
+<tr class="separator:a8fbcaf43d2a3cdf47256d66d49b8e605 inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2afa7f1c1885544859f84f5ca3148fdd inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classMPBaseObject.html#a062f6026973104069b7e08eb23a890f7">GroupRoadmapType</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a2afa7f1c1885544859f84f5ca3148fdd">GetGroupRoadmap</a> (<a class="el" href="classRobotGroup.html">RobotGroup</a> *const _g=nullptr) const noexcept</td></tr>
+<tr class="memdesc:a2afa7f1c1885544859f84f5ca3148fdd inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the current free-space group roadmap.  <a href="classMPBaseObject.html#a2afa7f1c1885544859f84f5ca3148fdd">More...</a><br /></td></tr>
+<tr class="separator:a2afa7f1c1885544859f84f5ca3148fdd inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aada7dc60e619e7b9b43f15af99d498b5 inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classMPBaseObject.html#a1cb9a08003cc7620b1534bdf69ceb1a4">RoadmapType</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#aada7dc60e619e7b9b43f15af99d498b5">GetBlockRoadmap</a> (<a class="el" href="classRobot.html">Robot</a> *const _r=nullptr) const noexcept</td></tr>
+<tr class="memdesc:aada7dc60e619e7b9b43f15af99d498b5 inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the current obstacle-space roadmap.  <a href="classMPBaseObject.html#aada7dc60e619e7b9b43f15af99d498b5">More...</a><br /></td></tr>
+<tr class="separator:aada7dc60e619e7b9b43f15af99d498b5 inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a62dc6d67728f7047afd1ec70f8e675f1 inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classPath.html">Path</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a62dc6d67728f7047afd1ec70f8e675f1">GetPath</a> (<a class="el" href="classRobot.html">Robot</a> *const _r=nullptr) const noexcept</td></tr>
+<tr class="separator:a62dc6d67728f7047afd1ec70f8e675f1 inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a283e10c17ea82cf54ad2baf3c1785d6b inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classGroupPath.html">GroupPath</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a283e10c17ea82cf54ad2baf3c1785d6b">GetGroupPath</a> (<a class="el" href="classRobotGroup.html">RobotGroup</a> *const _g=nullptr) const noexcept</td></tr>
+<tr class="memdesc:a283e10c17ea82cf54ad2baf3c1785d6b inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the current best group path.  <a href="classMPBaseObject.html#a283e10c17ea82cf54ad2baf3c1785d6b">More...</a><br /></td></tr>
+<tr class="separator:a283e10c17ea82cf54ad2baf3c1785d6b inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4c845feb2a9a84b8b1d1a8fddd945365 inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classStatClass.html">StatClass</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a4c845feb2a9a84b8b1d1a8fddd945365">GetStatClass</a> () const noexcept</td></tr>
+<tr class="memdesc:a4c845feb2a9a84b8b1d1a8fddd945365 inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the current <a class="el" href="classStatClass.html">StatClass</a>.  <a href="classMPBaseObject.html#a4c845feb2a9a84b8b1d1a8fddd945365">More...</a><br /></td></tr>
+<tr class="separator:a4c845feb2a9a84b8b1d1a8fddd945365 inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a302e33446886aa07a7b7b3277672ce2d inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classLocalObstacleMap.html">LocalObstacleMap</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a302e33446886aa07a7b7b3277672ce2d">GetLocalObstacleMap</a> () const noexcept</td></tr>
+<tr class="memdesc:a302e33446886aa07a7b7b3277672ce2d inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the local obstacle map.  <a href="classMPBaseObject.html#a302e33446886aa07a7b7b3277672ce2d">More...</a><br /></td></tr>
+<tr class="separator:a302e33446886aa07a7b7b3277672ce2d inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-methods"></a>
 Protected Member Functions</h2></td></tr>
-<tr class="memitem:a58068ea109022d749329f482b804283c"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#a58068ea109022d749329f482b804283c">AdjustWitnessToEnsureValidity</a> (const <a class="el" href="classClearanceUtility.html#ac1931f426c80cd2b497539ac380096ea">CfgType</a> &amp;_cfg, const bool _initValidity, <a class="el" href="classClearanceUtility.html#ac1931f426c80cd2b497539ac380096ea">CfgType</a> &amp;_witnessCfg, const <a class="el" href="classBoundary.html">Boundary</a> *const _b, const bool _useOppValidityWitness=true)</td></tr>
-<tr class="separator:a58068ea109022d749329f482b804283c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="inherit_header pro_methods_classMPBaseObject"><td colspan="2" onclick="javascript:toggleInherit('pro_methods_classMPBaseObject')"><img src="closed.png" alt="-"/>&#160;Protected Member Functions inherited from <a class="el" href="classMPBaseObject.html">MPBaseObject&lt; MPTraits &gt;</a></td></tr>
-<tr class="memitem:ab59d82cd734f77fdc17eddb8517461da inherit pro_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#ab59d82cd734f77fdc17eddb8517461da">SetName</a> (const std::string &amp;_s)</td></tr>
-<tr class="separator:ab59d82cd734f77fdc17eddb8517461da inherit pro_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acf158aa0efa6679a73995f429d768a0b inherit pro_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#acf158aa0efa6679a73995f429d768a0b">GetBaseFilename</a> () const</td></tr>
-<tr class="separator:acf158aa0efa6679a73995f429d768a0b inherit pro_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae31dbe2bfb478902680ff210d2b9e454"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#ae31dbe2bfb478902680ff210d2b9e454">AdjustWitnessToEnsureValidity</a> (const <a class="el" href="classCfg.html">Cfg</a> &amp;_cfg, const bool _initValidity, <a class="el" href="classCfg.html">Cfg</a> &amp;_witnessCfg, const <a class="el" href="classBoundary.html">Boundary</a> *const _b, const bool _useOppValidityWitness=true)</td></tr>
+<tr class="separator:ae31dbe2bfb478902680ff210d2b9e454"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="inherit_header pro_methods_classMPBaseObject"><td colspan="2" onclick="javascript:toggleInherit('pro_methods_classMPBaseObject')"><img src="closed.png" alt="-"/>&#160;Protected Member Functions inherited from <a class="el" href="classMPBaseObject.html">MPBaseObject</a></td></tr>
+<tr class="memitem:af6aea751544b43f86b371ce432a05724 inherit pro_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#af6aea751544b43f86b371ce432a05724">SetName</a> (const std::string &amp;_s)</td></tr>
+<tr class="separator:af6aea751544b43f86b371ce432a05724 inherit pro_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5c656603839bf545bd53e7567c1fc59e inherit pro_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a5c656603839bf545bd53e7567c1fc59e">GetBaseFilename</a> () const</td></tr>
+<tr class="separator:a5c656603839bf545bd53e7567c1fc59e inherit pro_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-attribs"></a>
 Protected Attributes</h2></td></tr>
-<tr class="memitem:af5769f06b004d734b54dcf34196f59f7"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#af5769f06b004d734b54dcf34196f59f7">abcd</a> = 0</td></tr>
-<tr class="separator:af5769f06b004d734b54dcf34196f59f7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a23094c6f3f5129d21e0db3059b26d5af"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#a23094c6f3f5129d21e0db3059b26d5af">abcd</a> = 0</td></tr>
+<tr class="separator:a23094c6f3f5129d21e0db3059b26d5af"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr><td colspan="2"><div class="groupHeader">Internal State</div></td></tr>
-<tr class="memitem:a28520443c83af3353cb06df6dcfe4f47"><td class="memItemLeft" align="right" valign="top">string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#a28520443c83af3353cb06df6dcfe4f47">m_vcLabel</a> {&quot;cd4&quot;}</td></tr>
-<tr class="memdesc:a28520443c83af3353cb06df6dcfe4f47"><td class="mdescLeft">&#160;</td><td class="mdescRight">Validity checker method label.  <a href="classClearanceUtility.html#a28520443c83af3353cb06df6dcfe4f47">More...</a><br /></td></tr>
-<tr class="separator:a28520443c83af3353cb06df6dcfe4f47"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af08119f2d6c0fec43b36b977682047a8"><td class="memItemLeft" align="right" valign="top">string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#af08119f2d6c0fec43b36b977682047a8">m_dmLabel</a> {&quot;euclidean&quot;}</td></tr>
-<tr class="memdesc:af08119f2d6c0fec43b36b977682047a8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Distance metric method label.  <a href="classClearanceUtility.html#af08119f2d6c0fec43b36b977682047a8">More...</a><br /></td></tr>
-<tr class="separator:af08119f2d6c0fec43b36b977682047a8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aaa9a11c183fb5e68b49519340a1b58f3"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#aaa9a11c183fb5e68b49519340a1b58f3">m_useBBX</a> {true}</td></tr>
-<tr class="memdesc:aaa9a11c183fb5e68b49519340a1b58f3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Use bounding box as obstacle?  <a href="classClearanceUtility.html#aaa9a11c183fb5e68b49519340a1b58f3">More...</a><br /></td></tr>
-<tr class="separator:aaa9a11c183fb5e68b49519340a1b58f3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5d90bc0e53c200c73127a93d8a272cad"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#a5d90bc0e53c200c73127a93d8a272cad">m_positionalDofsOnly</a> {true}</td></tr>
-<tr class="memdesc:a5d90bc0e53c200c73127a93d8a272cad"><td class="mdescLeft">&#160;</td><td class="mdescRight">Use only positional dofs?  <a href="classClearanceUtility.html#a5d90bc0e53c200c73127a93d8a272cad">More...</a><br /></td></tr>
-<tr class="separator:a5d90bc0e53c200c73127a93d8a272cad"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1ab406faed7b1266a05d69c02f9a39bc"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#a1ab406faed7b1266a05d69c02f9a39bc">m_exactClearance</a> {false}</td></tr>
-<tr class="memdesc:a1ab406faed7b1266a05d69c02f9a39bc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Use exact clearance calculations?  <a href="classClearanceUtility.html#a1ab406faed7b1266a05d69c02f9a39bc">More...</a><br /></td></tr>
-<tr class="separator:a1ab406faed7b1266a05d69c02f9a39bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abd8b349f33e4233cc3181e712b82c371"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#abd8b349f33e4233cc3181e712b82c371">m_exactPenetration</a> {false}</td></tr>
-<tr class="memdesc:abd8b349f33e4233cc3181e712b82c371"><td class="mdescLeft">&#160;</td><td class="mdescRight">Use exact penetration calculations?  <a href="classClearanceUtility.html#abd8b349f33e4233cc3181e712b82c371">More...</a><br /></td></tr>
-<tr class="separator:abd8b349f33e4233cc3181e712b82c371"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afca7e897016f3cb059906a032e50fbd0"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#afca7e897016f3cb059906a032e50fbd0">m_clearanceRays</a> {10}</td></tr>
-<tr class="memdesc:afca7e897016f3cb059906a032e50fbd0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Number of rays for approximate clearance.  <a href="classClearanceUtility.html#afca7e897016f3cb059906a032e50fbd0">More...</a><br /></td></tr>
-<tr class="separator:afca7e897016f3cb059906a032e50fbd0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afeec9cafe8eec465ca3328f4d4c8650b"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#afeec9cafe8eec465ca3328f4d4c8650b">m_penetrationRays</a> {10}</td></tr>
-<tr class="memdesc:afeec9cafe8eec465ca3328f4d4c8650b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Number of rays for approximate penetration.  <a href="classClearanceUtility.html#afeec9cafe8eec465ca3328f4d4c8650b">More...</a><br /></td></tr>
-<tr class="separator:afeec9cafe8eec465ca3328f4d4c8650b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a13cfcd5cae9e94103de7fe930e83b5d3"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#a13cfcd5cae9e94103de7fe930e83b5d3">m_rayTickResolution</a></td></tr>
-<tr class="memdesc:a13cfcd5cae9e94103de7fe930e83b5d3"><td class="mdescLeft">&#160;</td><td class="mdescRight">The resolution for rayTicks.  <a href="classClearanceUtility.html#a13cfcd5cae9e94103de7fe930e83b5d3">More...</a><br /></td></tr>
-<tr class="separator:a13cfcd5cae9e94103de7fe930e83b5d3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a08eda0fdb74627dcbf383951a7438e14"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#a08eda0fdb74627dcbf383951a7438e14">m_orientationResolution</a></td></tr>
-<tr class="memdesc:a08eda0fdb74627dcbf383951a7438e14"><td class="mdescLeft">&#160;</td><td class="mdescRight">The orientation resolution.  <a href="classClearanceUtility.html#a08eda0fdb74627dcbf383951a7438e14">More...</a><br /></td></tr>
-<tr class="separator:a08eda0fdb74627dcbf383951a7438e14"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab9f96120f2916782c72278c034772d06"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#ab9f96120f2916782c72278c034772d06">m_maxRayMagnitude</a></td></tr>
-<tr class="memdesc:ab9f96120f2916782c72278c034772d06"><td class="mdescLeft">&#160;</td><td class="mdescRight">How far out a ray will be attempted.  <a href="classClearanceUtility.html#ab9f96120f2916782c72278c034772d06">More...</a><br /></td></tr>
-<tr class="separator:ab9f96120f2916782c72278c034772d06"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3fa9288cc8d23984305c4956cf16afd3"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#a3fa9288cc8d23984305c4956cf16afd3">m_maxRayIterations</a></td></tr>
-<tr class="memdesc:a3fa9288cc8d23984305c4956cf16afd3"><td class="mdescLeft">&#160;</td><td class="mdescRight">The maximum number of ray iterations.  <a href="classClearanceUtility.html#a3fa9288cc8d23984305c4956cf16afd3">More...</a><br /></td></tr>
-<tr class="separator:a3fa9288cc8d23984305c4956cf16afd3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4217b0494ea8d3ca251614afe49370e6"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#a4217b0494ea8d3ca251614afe49370e6">m_orientationResFactor</a> {1.}</td></tr>
-<tr class="memdesc:a4217b0494ea8d3ca251614afe49370e6"><td class="mdescLeft">&#160;</td><td class="mdescRight">The orientation resolution factor.  <a href="classClearanceUtility.html#a4217b0494ea8d3ca251614afe49370e6">More...</a><br /></td></tr>
-<tr class="separator:a4217b0494ea8d3ca251614afe49370e6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1eeea7d6ef8540eead041f5b6ad58ba6"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#a1eeea7d6ef8540eead041f5b6ad58ba6">m_positionalResFactor</a> {1.}</td></tr>
-<tr class="memdesc:a1eeea7d6ef8540eead041f5b6ad58ba6"><td class="mdescLeft">&#160;</td><td class="mdescRight">The position resoluiton factor.  <a href="classClearanceUtility.html#a1eeea7d6ef8540eead041f5b6ad58ba6">More...</a><br /></td></tr>
-<tr class="separator:a1eeea7d6ef8540eead041f5b6ad58ba6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa7c275aade12fe2ee42c12ef9825fa32"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#aa7c275aade12fe2ee42c12ef9825fa32">m_maSearchResolutionFactor</a> {1}</td></tr>
-<tr class="memdesc:aa7c275aade12fe2ee42c12ef9825fa32"><td class="mdescLeft">&#160;</td><td class="mdescRight">The search resolution factor.  <a href="classClearanceUtility.html#aa7c275aade12fe2ee42c12ef9825fa32">More...</a><br /></td></tr>
-<tr class="separator:aa7c275aade12fe2ee42c12ef9825fa32"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa9aaa9a59f85e26a3d69dc0ebc87d376"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#aa9aaa9a59f85e26a3d69dc0ebc87d376">m_initialized</a> {false}</td></tr>
-<tr class="separator:aa9aaa9a59f85e26a3d69dc0ebc87d376"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aadb3fb07345a468fa81604e886e3cc7f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classRobot.html">Robot</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#aadb3fb07345a468fa81604e886e3cc7f">m_robot</a></td></tr>
-<tr class="separator:aadb3fb07345a468fa81604e886e3cc7f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="inherit_header pro_attribs_classMPBaseObject"><td colspan="2" onclick="javascript:toggleInherit('pro_attribs_classMPBaseObject')"><img src="closed.png" alt="-"/>&#160;Protected Attributes inherited from <a class="el" href="classMPBaseObject.html">MPBaseObject&lt; MPTraits &gt;</a></td></tr>
-<tr class="memitem:a4dce0c7792a2e35db03e46fbdc0038d3 inherit pro_attribs_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a4dce0c7792a2e35db03e46fbdc0038d3">m_debug</a></td></tr>
-<tr class="memdesc:a4dce0c7792a2e35db03e46fbdc0038d3 inherit pro_attribs_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Print debug info?  <a href="classMPBaseObject.html#a4dce0c7792a2e35db03e46fbdc0038d3">More...</a><br /></td></tr>
-<tr class="separator:a4dce0c7792a2e35db03e46fbdc0038d3 inherit pro_attribs_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acfc7492d9a20efd828409b60910097b9"><td class="memItemLeft" align="right" valign="top">string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#acfc7492d9a20efd828409b60910097b9">m_vcLabel</a> {&quot;cd4&quot;}</td></tr>
+<tr class="memdesc:acfc7492d9a20efd828409b60910097b9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Validity checker method label.  <a href="classClearanceUtility.html#acfc7492d9a20efd828409b60910097b9">More...</a><br /></td></tr>
+<tr class="separator:acfc7492d9a20efd828409b60910097b9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a496bc79ad7c50391ca81e316d905e8a4"><td class="memItemLeft" align="right" valign="top">string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#a496bc79ad7c50391ca81e316d905e8a4">m_dmLabel</a> {&quot;euclidean&quot;}</td></tr>
+<tr class="memdesc:a496bc79ad7c50391ca81e316d905e8a4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Distance metric method label.  <a href="classClearanceUtility.html#a496bc79ad7c50391ca81e316d905e8a4">More...</a><br /></td></tr>
+<tr class="separator:a496bc79ad7c50391ca81e316d905e8a4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae90aa11cc3b2c805106fc60c02e0afa0"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#ae90aa11cc3b2c805106fc60c02e0afa0">m_useBBX</a> {true}</td></tr>
+<tr class="memdesc:ae90aa11cc3b2c805106fc60c02e0afa0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Use bounding box as obstacle?  <a href="classClearanceUtility.html#ae90aa11cc3b2c805106fc60c02e0afa0">More...</a><br /></td></tr>
+<tr class="separator:ae90aa11cc3b2c805106fc60c02e0afa0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acd59f0003ed9531d84201e1ed27144a7"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#acd59f0003ed9531d84201e1ed27144a7">m_positionalDofsOnly</a> {true}</td></tr>
+<tr class="memdesc:acd59f0003ed9531d84201e1ed27144a7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Use only positional dofs?  <a href="classClearanceUtility.html#acd59f0003ed9531d84201e1ed27144a7">More...</a><br /></td></tr>
+<tr class="separator:acd59f0003ed9531d84201e1ed27144a7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a702f47f133a6da19dcce51ff04866584"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#a702f47f133a6da19dcce51ff04866584">m_exactClearance</a> {false}</td></tr>
+<tr class="memdesc:a702f47f133a6da19dcce51ff04866584"><td class="mdescLeft">&#160;</td><td class="mdescRight">Use exact clearance calculations?  <a href="classClearanceUtility.html#a702f47f133a6da19dcce51ff04866584">More...</a><br /></td></tr>
+<tr class="separator:a702f47f133a6da19dcce51ff04866584"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aeea14c6ffad55767fca9b1b79c692e82"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#aeea14c6ffad55767fca9b1b79c692e82">m_exactPenetration</a> {false}</td></tr>
+<tr class="memdesc:aeea14c6ffad55767fca9b1b79c692e82"><td class="mdescLeft">&#160;</td><td class="mdescRight">Use exact penetration calculations?  <a href="classClearanceUtility.html#aeea14c6ffad55767fca9b1b79c692e82">More...</a><br /></td></tr>
+<tr class="separator:aeea14c6ffad55767fca9b1b79c692e82"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ace959b026a605d20f360eb35aedd9b97"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#ace959b026a605d20f360eb35aedd9b97">m_clearanceRays</a> {10}</td></tr>
+<tr class="memdesc:ace959b026a605d20f360eb35aedd9b97"><td class="mdescLeft">&#160;</td><td class="mdescRight">Number of rays for approximate clearance.  <a href="classClearanceUtility.html#ace959b026a605d20f360eb35aedd9b97">More...</a><br /></td></tr>
+<tr class="separator:ace959b026a605d20f360eb35aedd9b97"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa930c24fd8c6a753d4d94fc9a6d1f02c"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#aa930c24fd8c6a753d4d94fc9a6d1f02c">m_penetrationRays</a> {10}</td></tr>
+<tr class="memdesc:aa930c24fd8c6a753d4d94fc9a6d1f02c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Number of rays for approximate penetration.  <a href="classClearanceUtility.html#aa930c24fd8c6a753d4d94fc9a6d1f02c">More...</a><br /></td></tr>
+<tr class="separator:aa930c24fd8c6a753d4d94fc9a6d1f02c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad4b9669d4c9cf87bec913b88f6b5f358"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#ad4b9669d4c9cf87bec913b88f6b5f358">m_rayTickResolution</a></td></tr>
+<tr class="memdesc:ad4b9669d4c9cf87bec913b88f6b5f358"><td class="mdescLeft">&#160;</td><td class="mdescRight">The resolution for rayTicks.  <a href="classClearanceUtility.html#ad4b9669d4c9cf87bec913b88f6b5f358">More...</a><br /></td></tr>
+<tr class="separator:ad4b9669d4c9cf87bec913b88f6b5f358"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aca5c0723b918604d510c0896478c22d4"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#aca5c0723b918604d510c0896478c22d4">m_orientationResolution</a></td></tr>
+<tr class="memdesc:aca5c0723b918604d510c0896478c22d4"><td class="mdescLeft">&#160;</td><td class="mdescRight">The orientation resolution.  <a href="classClearanceUtility.html#aca5c0723b918604d510c0896478c22d4">More...</a><br /></td></tr>
+<tr class="separator:aca5c0723b918604d510c0896478c22d4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a970627c904f5a9cc8fdfd14cb397747a"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#a970627c904f5a9cc8fdfd14cb397747a">m_maxRayMagnitude</a></td></tr>
+<tr class="memdesc:a970627c904f5a9cc8fdfd14cb397747a"><td class="mdescLeft">&#160;</td><td class="mdescRight">How far out a ray will be attempted.  <a href="classClearanceUtility.html#a970627c904f5a9cc8fdfd14cb397747a">More...</a><br /></td></tr>
+<tr class="separator:a970627c904f5a9cc8fdfd14cb397747a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a86649c1ea8346e5b8ebc0a81744f5c64"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#a86649c1ea8346e5b8ebc0a81744f5c64">m_maxRayIterations</a></td></tr>
+<tr class="memdesc:a86649c1ea8346e5b8ebc0a81744f5c64"><td class="mdescLeft">&#160;</td><td class="mdescRight">The maximum number of ray iterations.  <a href="classClearanceUtility.html#a86649c1ea8346e5b8ebc0a81744f5c64">More...</a><br /></td></tr>
+<tr class="separator:a86649c1ea8346e5b8ebc0a81744f5c64"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a60f1eab66785416eba34ed11e99c2851"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#a60f1eab66785416eba34ed11e99c2851">m_orientationResFactor</a> {1.}</td></tr>
+<tr class="memdesc:a60f1eab66785416eba34ed11e99c2851"><td class="mdescLeft">&#160;</td><td class="mdescRight">The orientation resolution factor.  <a href="classClearanceUtility.html#a60f1eab66785416eba34ed11e99c2851">More...</a><br /></td></tr>
+<tr class="separator:a60f1eab66785416eba34ed11e99c2851"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abd5ea1fbad0ef75c74bcb4aef0e81032"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#abd5ea1fbad0ef75c74bcb4aef0e81032">m_positionalResFactor</a> {1.}</td></tr>
+<tr class="memdesc:abd5ea1fbad0ef75c74bcb4aef0e81032"><td class="mdescLeft">&#160;</td><td class="mdescRight">The position resoluiton factor.  <a href="classClearanceUtility.html#abd5ea1fbad0ef75c74bcb4aef0e81032">More...</a><br /></td></tr>
+<tr class="separator:abd5ea1fbad0ef75c74bcb4aef0e81032"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a52d6c8559aa4dae7210e36db913a59e9"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#a52d6c8559aa4dae7210e36db913a59e9">m_maSearchResolutionFactor</a> {1}</td></tr>
+<tr class="memdesc:a52d6c8559aa4dae7210e36db913a59e9"><td class="mdescLeft">&#160;</td><td class="mdescRight">The search resolution factor.  <a href="classClearanceUtility.html#a52d6c8559aa4dae7210e36db913a59e9">More...</a><br /></td></tr>
+<tr class="separator:a52d6c8559aa4dae7210e36db913a59e9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a30b3e1330e5fdb19163d8757f0ca203c"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#a30b3e1330e5fdb19163d8757f0ca203c">m_initialized</a> {false}</td></tr>
+<tr class="separator:a30b3e1330e5fdb19163d8757f0ca203c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4a8583404d3ef63b9b0f7fb553b140a1"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classRobot.html">Robot</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classClearanceUtility.html#a4a8583404d3ef63b9b0f7fb553b140a1">m_robot</a></td></tr>
+<tr class="separator:a4a8583404d3ef63b9b0f7fb553b140a1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="inherit_header pro_attribs_classMPBaseObject"><td colspan="2" onclick="javascript:toggleInherit('pro_attribs_classMPBaseObject')"><img src="closed.png" alt="-"/>&#160;Protected Attributes inherited from <a class="el" href="classMPBaseObject.html">MPBaseObject</a></td></tr>
+<tr class="memitem:a69f05ccf2fb3c91a2747dfd0afb385a2 inherit pro_attribs_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a69f05ccf2fb3c91a2747dfd0afb385a2">m_debug</a></td></tr>
+<tr class="memdesc:a69f05ccf2fb3c91a2747dfd0afb385a2 inherit pro_attribs_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Print debug info?  <a href="classMPBaseObject.html#a69f05ccf2fb3c91a2747dfd0afb385a2">More...</a><br /></td></tr>
+<tr class="separator:a69f05ccf2fb3c91a2747dfd0afb385a2 inherit pro_attribs_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><h3>template&lt;class MPTraits&gt;<br />
-class ClearanceUtility&lt; MPTraits &gt;</h3>
-
-<p>Computes clearance and penetration of configurations with respect to obstacles. </p>
+<div class="textblock"><p>Computes clearance and penetration of configurations with respect to obstacles. </p>
 </div><h2 class="groupheader">Member Typedef Documentation</h2>
-<a id="ac1931f426c80cd2b497539ac380096ea"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac1931f426c80cd2b497539ac380096ea">&#9670;&nbsp;</a></span>CfgType</h2>
+<a id="a5bd33172ff2801921b25ff4574381cde"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5bd33172ff2801921b25ff4574381cde">&#9670;&nbsp;</a></span>RoadmapType</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;class MPTraits &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">typedef <a class="el" href="classMPTraits.html#a1a5aab50ac12baaf6b22ff345c5ae138">MPTraits::CfgType</a> <a class="el" href="classClearanceUtility.html">ClearanceUtility</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::<a class="el" href="classClearanceUtility.html#ac1931f426c80cd2b497539ac380096ea">CfgType</a></td>
+          <td class="memname">typedef <a class="el" href="classMPBaseObject.html#a1cb9a08003cc7620b1534bdf69ceb1a4">MPBaseObject::RoadmapType</a> <a class="el" href="classClearanceUtility.html#a5bd33172ff2801921b25ff4574381cde">ClearanceUtility::RoadmapType</a></td>
         </tr>
       </table>
 </div><div class="memdoc">
 
 </div>
 </div>
-<a id="ad36783c8ee5df98b7df588f4df2b15b8"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad36783c8ee5df98b7df588f4df2b15b8">&#9670;&nbsp;</a></span>RoadmapType</h2>
+<a id="aa209ef3fd7610c68d8b63e8bb66d762f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa209ef3fd7610c68d8b63e8bb66d762f">&#9670;&nbsp;</a></span>VID</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;class MPTraits &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">typedef <a class="el" href="classMPTraits.html#a95116adcdff7d4a14ffee94dc5e51056">MPTraits::RoadmapType</a> <a class="el" href="classClearanceUtility.html">ClearanceUtility</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::<a class="el" href="classMPBaseObject.html#afdfe49d535de506c369d53c3f35c4861">RoadmapType</a></td>
+          <td class="memname">typedef <a class="el" href="classGenericStateGraph.html#a337a1247796cb9bf56fbe6eb2b9497d2">RoadmapType::VID</a> <a class="el" href="classClearanceUtility.html#aa209ef3fd7610c68d8b63e8bb66d762f">ClearanceUtility::VID</a></td>
         </tr>
       </table>
 </div><div class="memdoc">
 
 </div>
 </div>
-<a id="a18a88591dcfe985570a43213aee795b2"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a18a88591dcfe985570a43213aee795b2">&#9670;&nbsp;</a></span>VID</h2>
+<a id="af03d977d19cb5648b289550ec55f7fb9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af03d977d19cb5648b289550ec55f7fb9">&#9670;&nbsp;</a></span>WeightType</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;class MPTraits &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">typedef <a class="el" href="classGenericStateGraph.html#a337a1247796cb9bf56fbe6eb2b9497d2">RoadmapType::VID</a> <a class="el" href="classClearanceUtility.html">ClearanceUtility</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::<a class="el" href="classClearanceUtility.html#a18a88591dcfe985570a43213aee795b2">VID</a></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a2a5b990ebf0d7cd4b8523490ae7aa3c5"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a2a5b990ebf0d7cd4b8523490ae7aa3c5">&#9670;&nbsp;</a></span>WeightType</h2>
-
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;class MPTraits &gt; </div>
-      <table class="memname">
-        <tr>
-          <td class="memname">typedef <a class="el" href="classMPTraits.html#af200e5838e4287604244d6aeaf4d4d40">MPTraits::WeightType</a> <a class="el" href="classClearanceUtility.html">ClearanceUtility</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::<a class="el" href="classClearanceUtility.html#a2a5b990ebf0d7cd4b8523490ae7aa3c5">WeightType</a></td>
+          <td class="memname">typedef <a class="el" href="classMPBaseObject.html#a63f3af4b78d458b51ddad699de1f9287">MPBaseObject::WeightType</a> <a class="el" href="classClearanceUtility.html#af03d977d19cb5648b289550ec55f7fb9">ClearanceUtility::WeightType</a></td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -447,16 +347,14 @@ template&lt;class MPTraits &gt; </div>
 </div>
 </div>
 <h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="a04d01e08fb728a050fc14552940baa0d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a04d01e08fb728a050fc14552940baa0d">&#9670;&nbsp;</a></span>ClearanceUtility() <span class="overload">[1/2]</span></h2>
+<a id="af5869809ec07233f91fab7b17c3e4180"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af5869809ec07233f91fab7b17c3e4180">&#9670;&nbsp;</a></span>ClearanceUtility() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;class MPTraits &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classClearanceUtility.html">ClearanceUtility</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::<a class="el" href="classClearanceUtility.html">ClearanceUtility</a> </td>
+          <td class="memname">ClearanceUtility::ClearanceUtility </td>
           <td>(</td>
           <td class="paramtype">string&#160;</td>
           <td class="paramname"><em>_vcLabel</em> = <code>&quot;&quot;</code>, </td>
@@ -547,16 +445,14 @@ template&lt;class MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="a0d465fef1843e5b7a586343314c5296d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a0d465fef1843e5b7a586343314c5296d">&#9670;&nbsp;</a></span>ClearanceUtility() <span class="overload">[2/2]</span></h2>
+<a id="a1c3edcf801772be3f82e81193807ddcb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1c3edcf801772be3f82e81193807ddcb">&#9670;&nbsp;</a></span>ClearanceUtility() <span class="overload">[2/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;class MPTraits &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classClearanceUtility.html">ClearanceUtility</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::<a class="el" href="classClearanceUtility.html">ClearanceUtility</a> </td>
+          <td class="memname">ClearanceUtility::ClearanceUtility </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="classXMLNode.html">XMLNode</a> &amp;&#160;</td>
           <td class="paramname"><em>_node</em></td><td>)</td>
@@ -573,19 +469,17 @@ template&lt;class MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="a6aaa98fedfdf8d8ba3b6cf1e2cfb45e5"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6aaa98fedfdf8d8ba3b6cf1e2cfb45e5">&#9670;&nbsp;</a></span>~ClearanceUtility()</h2>
+<a id="ad202486bf09d68e171f53b38a5cf62a2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad202486bf09d68e171f53b38a5cf62a2">&#9670;&nbsp;</a></span>~ClearanceUtility()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;class MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">virtual <a class="el" href="classClearanceUtility.html">ClearanceUtility</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::~<a class="el" href="classClearanceUtility.html">ClearanceUtility</a> </td>
+          <td class="memname">virtual ClearanceUtility::~ClearanceUtility </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td></td>
@@ -601,21 +495,19 @@ template&lt;class MPTraits &gt; </div>
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
-<a id="a58068ea109022d749329f482b804283c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a58068ea109022d749329f482b804283c">&#9670;&nbsp;</a></span>AdjustWitnessToEnsureValidity()</h2>
+<a id="ae31dbe2bfb478902680ff210d2b9e454"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae31dbe2bfb478902680ff210d2b9e454">&#9670;&nbsp;</a></span>AdjustWitnessToEnsureValidity()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;class MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">bool <a class="el" href="classClearanceUtility.html">ClearanceUtility</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::AdjustWitnessToEnsureValidity </td>
+          <td class="memname">bool ClearanceUtility::AdjustWitnessToEnsureValidity </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="classClearanceUtility.html#ac1931f426c80cd2b497539ac380096ea">CfgType</a> &amp;&#160;</td>
+          <td class="paramtype">const <a class="el" href="classCfg.html">Cfg</a> &amp;&#160;</td>
           <td class="paramname"><em>_cfg</em>, </td>
         </tr>
         <tr>
@@ -627,7 +519,7 @@ template&lt;class MPTraits &gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="classClearanceUtility.html#ac1931f426c80cd2b497539ac380096ea">CfgType</a> &amp;&#160;</td>
+          <td class="paramtype"><a class="el" href="classCfg.html">Cfg</a> &amp;&#160;</td>
           <td class="paramname"><em>_witnessCfg</em>, </td>
         </tr>
         <tr>
@@ -668,24 +560,22 @@ template&lt;class MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="aad7758db8c64cb69077719e6d5c34dc2"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aad7758db8c64cb69077719e6d5c34dc2">&#9670;&nbsp;</a></span>ApproxCollisionInfo()</h2>
+<a id="a060da25b958d1398f60d90374850bb84"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a060da25b958d1398f60d90374850bb84">&#9670;&nbsp;</a></span>ApproxCollisionInfo()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;class MPTraits &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">bool <a class="el" href="classClearanceUtility.html">ClearanceUtility</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::ApproxCollisionInfo </td>
+          <td class="memname">bool ClearanceUtility::ApproxCollisionInfo </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="classClearanceUtility.html#ac1931f426c80cd2b497539ac380096ea">CfgType</a> &amp;&#160;</td>
+          <td class="paramtype"><a class="el" href="classCfg.html">Cfg</a> &amp;&#160;</td>
           <td class="paramname"><em>_cfg</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="classClearanceUtility.html#ac1931f426c80cd2b497539ac380096ea">CfgType</a> &amp;&#160;</td>
+          <td class="paramtype"><a class="el" href="classCfg.html">Cfg</a> &amp;&#160;</td>
           <td class="paramname"><em>_clrCfg</em>, </td>
         </tr>
         <tr>
@@ -727,24 +617,22 @@ template&lt;class MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="a3ce0b42f21f52b9e63a7fb94145106a5"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a3ce0b42f21f52b9e63a7fb94145106a5">&#9670;&nbsp;</a></span>CollisionInfo()</h2>
+<a id="a495b76540765b45ed8ff0c278c18d0ec"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a495b76540765b45ed8ff0c278c18d0ec">&#9670;&nbsp;</a></span>CollisionInfo()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;class MPTraits &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">bool <a class="el" href="classClearanceUtility.html">ClearanceUtility</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::CollisionInfo </td>
+          <td class="memname">bool ClearanceUtility::CollisionInfo </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="classClearanceUtility.html#ac1931f426c80cd2b497539ac380096ea">CfgType</a> &amp;&#160;</td>
+          <td class="paramtype"><a class="el" href="classCfg.html">Cfg</a> &amp;&#160;</td>
           <td class="paramname"><em>_cfg</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="classClearanceUtility.html#ac1931f426c80cd2b497539ac380096ea">CfgType</a> &amp;&#160;</td>
+          <td class="paramtype"><a class="el" href="classCfg.html">Cfg</a> &amp;&#160;</td>
           <td class="paramname"><em>_clrCfg</em>, </td>
         </tr>
         <tr>
@@ -786,30 +674,28 @@ template&lt;class MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="afba0a7285ea11d17dbad930c4353d21a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#afba0a7285ea11d17dbad930c4353d21a">&#9670;&nbsp;</a></span>EdgeClearance()</h2>
+<a id="a67b9e713a8b651569a6376798f772162"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a67b9e713a8b651569a6376798f772162">&#9670;&nbsp;</a></span>EdgeClearance()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;class MPTraits &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">vector&lt; double &gt; <a class="el" href="classClearanceUtility.html">ClearanceUtility</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::EdgeClearance </td>
+          <td class="memname">std::vector&lt; double &gt; ClearanceUtility::EdgeClearance </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="classClearanceUtility.html#ac1931f426c80cd2b497539ac380096ea">CfgType</a> &amp;&#160;</td>
+          <td class="paramtype">const <a class="el" href="classCfg.html">Cfg</a> &amp;&#160;</td>
           <td class="paramname"><em>_c1</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="classClearanceUtility.html#ac1931f426c80cd2b497539ac380096ea">CfgType</a> &amp;&#160;</td>
+          <td class="paramtype">const <a class="el" href="classCfg.html">Cfg</a> &amp;&#160;</td>
           <td class="paramname"><em>_c2</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="classClearanceUtility.html#a2a5b990ebf0d7cd4b8523490ae7aa3c5">WeightType</a> &amp;&#160;</td>
+          <td class="paramtype">const <a class="el" href="classMPBaseObject.html#a63f3af4b78d458b51ddad699de1f9287">WeightType</a> &amp;&#160;</td>
           <td class="paramname"><em>_weight</em>&#160;</td>
         </tr>
         <tr>
@@ -830,24 +716,22 @@ template&lt;class MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="a173e94d04265b0302411db5af1858445"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a173e94d04265b0302411db5af1858445">&#9670;&nbsp;</a></span>ExactCollisionInfo()</h2>
+<a id="a32cbf3a38d7e0bd688b1d66e51fd9aa2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a32cbf3a38d7e0bd688b1d66e51fd9aa2">&#9670;&nbsp;</a></span>ExactCollisionInfo()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;class MPTraits &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">bool <a class="el" href="classClearanceUtility.html">ClearanceUtility</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::ExactCollisionInfo </td>
+          <td class="memname">bool ClearanceUtility::ExactCollisionInfo </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="classClearanceUtility.html#ac1931f426c80cd2b497539ac380096ea">CfgType</a> &amp;&#160;</td>
+          <td class="paramtype"><a class="el" href="classCfg.html">Cfg</a> &amp;&#160;</td>
           <td class="paramname"><em>_cfg</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="classClearanceUtility.html#ac1931f426c80cd2b497539ac380096ea">CfgType</a> &amp;&#160;</td>
+          <td class="paramtype"><a class="el" href="classCfg.html">Cfg</a> &amp;&#160;</td>
           <td class="paramname"><em>_clrCfg</em>, </td>
         </tr>
         <tr>
@@ -889,16 +773,14 @@ template&lt;class MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="a6f349c4201ced124d62c64a0ff0a9990"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6f349c4201ced124d62c64a0ff0a9990">&#9670;&nbsp;</a></span>FindApproximateWitness()</h2>
+<a id="a377120d0cb3fc322ace5fcca1248fa7d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a377120d0cb3fc322ace5fcca1248fa7d">&#9670;&nbsp;</a></span>FindApproximateWitness()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;class MPTraits &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">bool <a class="el" href="classClearanceUtility.html">ClearanceUtility</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::FindApproximateWitness </td>
+          <td class="memname">bool ClearanceUtility::FindApproximateWitness </td>
           <td>(</td>
           <td class="paramtype">const std::size_t &amp;&#160;</td>
           <td class="paramname"><em>_numRays</em>, </td>
@@ -906,13 +788,13 @@ template&lt;class MPTraits &gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">std::vector&lt; <a class="el" href="structRay.html">Ray</a>&lt; <a class="el" href="classClearanceUtility.html#ac1931f426c80cd2b497539ac380096ea">CfgType</a> &gt; &gt; &amp;&#160;</td>
+          <td class="paramtype">std::vector&lt; <a class="el" href="structRay.html">Ray</a>&lt; <a class="el" href="classCfg.html">Cfg</a> &gt; &gt; &amp;&#160;</td>
           <td class="paramname"><em>_rays</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="classClearanceUtility.html#ac1931f426c80cd2b497539ac380096ea">CfgType</a> &amp;&#160;</td>
+          <td class="paramtype">const <a class="el" href="classCfg.html">Cfg</a> &amp;&#160;</td>
           <td class="paramname"><em>_sampledCfg</em>, </td>
         </tr>
         <tr>
@@ -930,7 +812,7 @@ template&lt;class MPTraits &gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">std::pair&lt; size_t, <a class="el" href="classClearanceUtility.html#ac1931f426c80cd2b497539ac380096ea">CfgType</a> &gt; &amp;&#160;</td>
+          <td class="paramtype">std::pair&lt; size_t, <a class="el" href="classCfg.html">Cfg</a> &gt; &amp;&#160;</td>
           <td class="paramname"><em>_candidate</em>, </td>
         </tr>
         <tr>
@@ -962,19 +844,17 @@ template&lt;class MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="aa388402ed17d92f196d16acf94233116"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa388402ed17d92f196d16acf94233116">&#9670;&nbsp;</a></span>GetDistanceMetricLabel()</h2>
+<a id="a0e3d2626fb982a0de2e6433db8ad56ef"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0e3d2626fb982a0de2e6433db8ad56ef">&#9670;&nbsp;</a></span>GetDistanceMetricLabel()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;class MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">const string&amp; <a class="el" href="classClearanceUtility.html">ClearanceUtility</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::GetDistanceMetricLabel </td>
+          <td class="memname">const string&amp; ClearanceUtility::GetDistanceMetricLabel </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const</td>
@@ -990,19 +870,17 @@ template&lt;class MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="a368ed73bec920e6148e2cafba312233c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a368ed73bec920e6148e2cafba312233c">&#9670;&nbsp;</a></span>GetExactClearance()</h2>
+<a id="adcbda0f353b97712141de75e2ffe4be0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#adcbda0f353b97712141de75e2ffe4be0">&#9670;&nbsp;</a></span>GetExactClearance()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;class MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">bool <a class="el" href="classClearanceUtility.html">ClearanceUtility</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::GetExactClearance </td>
+          <td class="memname">bool ClearanceUtility::GetExactClearance </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const</td>
@@ -1018,18 +896,16 @@ template&lt;class MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="a7a0c1dc4b0aaae53ab7f0ee2d888c9bc"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a7a0c1dc4b0aaae53ab7f0ee2d888c9bc">&#9670;&nbsp;</a></span>GetNearestVertexWitness()</h2>
+<a id="a1604906b53a6876182a49c74ebcb59ec"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1604906b53a6876182a49c74ebcb59ec">&#9670;&nbsp;</a></span>GetNearestVertexWitness()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;class MPTraits &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">const bool <a class="el" href="classClearanceUtility.html">ClearanceUtility</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::GetNearestVertexWitness </td>
+          <td class="memname">const bool ClearanceUtility::GetNearestVertexWitness </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="classClearanceUtility.html#ac1931f426c80cd2b497539ac380096ea">CfgType</a> &amp;&#160;</td>
+          <td class="paramtype"><a class="el" href="classCfg.html">Cfg</a> &amp;&#160;</td>
           <td class="paramname"><em>_cfg</em>, </td>
         </tr>
         <tr>
@@ -1063,19 +939,17 @@ template&lt;class MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="a11c65c249018b6fe5f65827bcd168308"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a11c65c249018b6fe5f65827bcd168308">&#9670;&nbsp;</a></span>GetOrientationResolution()</h2>
+<a id="aa35cdcb0a1dbd4fa73495829fae4d803"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa35cdcb0a1dbd4fa73495829fae4d803">&#9670;&nbsp;</a></span>GetOrientationResolution()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;class MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">double <a class="el" href="classClearanceUtility.html">ClearanceUtility</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::GetOrientationResolution </td>
+          <td class="memname">double ClearanceUtility::GetOrientationResolution </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const</td>
@@ -1091,19 +965,17 @@ template&lt;class MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="a10c34eb27c077d2cbb4e44e8acf1a60e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a10c34eb27c077d2cbb4e44e8acf1a60e">&#9670;&nbsp;</a></span>GetPositionResolution()</h2>
+<a id="a5fdf7c43d140fa24036fd73d983ee95a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5fdf7c43d140fa24036fd73d983ee95a">&#9670;&nbsp;</a></span>GetPositionResolution()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;class MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">double <a class="el" href="classClearanceUtility.html">ClearanceUtility</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::GetPositionResolution </td>
+          <td class="memname">double ClearanceUtility::GetPositionResolution </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const</td>
@@ -1119,19 +991,17 @@ template&lt;class MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="a3a9f49f3dc743af7db74d4c3f7268d31"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a3a9f49f3dc743af7db74d4c3f7268d31">&#9670;&nbsp;</a></span>GetValidityCheckerLabel()</h2>
+<a id="a4d22c63bf9f4f4ee51d428eb7ed543f6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4d22c63bf9f4f4ee51d428eb7ed543f6">&#9670;&nbsp;</a></span>GetValidityCheckerLabel()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;class MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">const string&amp; <a class="el" href="classClearanceUtility.html">ClearanceUtility</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::GetValidityCheckerLabel </td>
+          <td class="memname">const string&amp; ClearanceUtility::GetValidityCheckerLabel </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const</td>
@@ -1147,19 +1017,20 @@ template&lt;class MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="a47d479bd36819645c5e805b729135634"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a47d479bd36819645c5e805b729135634">&#9670;&nbsp;</a></span>Initialize()</h2>
+<a id="ad89bdb97cf492e125f4a5e09be9482f9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad89bdb97cf492e125f4a5e09be9482f9">&#9670;&nbsp;</a></span>Initialize()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;class MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="classClearanceUtility.html">ClearanceUtility</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::Initialize</td>
+          <td class="memname">void ClearanceUtility::Initialize </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
         </tr>
       </table>
   </td>
@@ -1170,23 +1041,21 @@ template&lt;class MPTraits &gt; </div>
 </div><div class="memdoc">
 <p>Initialize this object for the current <a class="el" href="classMPProblem.html">MPProblem</a>. This should reset any internal state of the algorithms so that they are ready for execution. It is also the place to initialize any state that depends on the current problem. </p><dl class="section warning"><dt>Warning</dt><dd>This member will be called for every compiled algorithm in the planning library - even those that will not be used. If an algorithm needs to do expenisve setup, then this method should only set a flag that tells it to do so on first use. The only exceptions are the MPStrategies, which will only have their initialize called on first use. </dd></dl>
 
-<p>Reimplemented from <a class="el" href="classMPBaseObject.html#a09f350ffaec14a28dd2ced1b86ef9d9e">MPBaseObject&lt; MPTraits &gt;</a>.</p>
+<p>Reimplemented from <a class="el" href="classMPBaseObject.html#a5d4ca9ff414d5e534de09475cd101154">MPBaseObject</a>.</p>
 
 </div>
 </div>
-<a id="af29e9b67d766ab740587496a1d6800de"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af29e9b67d766ab740587496a1d6800de">&#9670;&nbsp;</a></span>IsInitialized()</h2>
+<a id="a2c9f709871bff9b410b5fb01ef6d68a0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2c9f709871bff9b410b5fb01ef6d68a0">&#9670;&nbsp;</a></span>IsInitialized()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;class MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">bool <a class="el" href="classClearanceUtility.html">ClearanceUtility</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::IsInitialized </td>
+          <td class="memname">bool ClearanceUtility::IsInitialized </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const</td>
@@ -1202,18 +1071,16 @@ template&lt;class MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="adec16ec104673c70c392da3ebb4031a2"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#adec16ec104673c70c392da3ebb4031a2">&#9670;&nbsp;</a></span>MakeRays()</h2>
+<a id="a5d5c7a5ea5c67ae3dbcc0733a417c2fa"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5d5c7a5ea5c67ae3dbcc0733a417c2fa">&#9670;&nbsp;</a></span>MakeRays()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;class MPTraits &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="classClearanceUtility.html">ClearanceUtility</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::MakeRays </td>
+          <td class="memname">void ClearanceUtility::MakeRays </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="classClearanceUtility.html#ac1931f426c80cd2b497539ac380096ea">CfgType</a> &amp;&#160;</td>
+          <td class="paramtype">const <a class="el" href="classCfg.html">Cfg</a> &amp;&#160;</td>
           <td class="paramname"><em>_sampledCfg</em>, </td>
         </tr>
         <tr>
@@ -1225,7 +1092,7 @@ template&lt;class MPTraits &gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">std::vector&lt; <a class="el" href="structRay.html">Ray</a>&lt; <a class="el" href="classClearanceUtility.html#ac1931f426c80cd2b497539ac380096ea">CfgType</a> &gt; &gt; &amp;&#160;</td>
+          <td class="paramtype">std::vector&lt; <a class="el" href="structRay.html">Ray</a>&lt; <a class="el" href="classCfg.html">Cfg</a> &gt; &gt; &amp;&#160;</td>
           <td class="paramname"><em>_rays</em>&#160;</td>
         </tr>
         <tr>
@@ -1248,16 +1115,14 @@ template&lt;class MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="a8f6d9a31e1fa6f2d5637beef9feea114"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8f6d9a31e1fa6f2d5637beef9feea114">&#9670;&nbsp;</a></span>PathClearance() <span class="overload">[1/2]</span></h2>
+<a id="a94137c8cd19d19f105e4ea190760297c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a94137c8cd19d19f105e4ea190760297c">&#9670;&nbsp;</a></span>PathClearance() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;class MPTraits &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="structClearanceStats.html">ClearanceStats</a> <a class="el" href="classClearanceUtility.html">ClearanceUtility</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::PathClearance </td>
+          <td class="memname"><a class="el" href="structClearanceStats.html">ClearanceStats</a> ClearanceUtility::PathClearance </td>
           <td>(</td>
           <td class="paramtype">vector&lt; <a class="el" href="classCfg.html">Cfg</a> &gt; &amp;&#160;</td>
           <td class="paramname"><em>_path</em></td><td>)</td>
@@ -1274,18 +1139,16 @@ template&lt;class MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="a73de114358e81644635b6b891afd35f2"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a73de114358e81644635b6b891afd35f2">&#9670;&nbsp;</a></span>PathClearance() <span class="overload">[2/2]</span></h2>
+<a id="a769176e530b77aff78b5b10e62ffcf11"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a769176e530b77aff78b5b10e62ffcf11">&#9670;&nbsp;</a></span>PathClearance() <span class="overload">[2/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;class MPTraits &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="structClearanceStats.html">ClearanceStats</a> <a class="el" href="classClearanceUtility.html">ClearanceUtility</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::PathClearance </td>
+          <td class="memname"><a class="el" href="structClearanceStats.html">ClearanceStats</a> ClearanceUtility::PathClearance </td>
           <td>(</td>
-          <td class="paramtype">vector&lt; <a class="el" href="classClearanceUtility.html#a18a88591dcfe985570a43213aee795b2">VID</a> &gt; &amp;&#160;</td>
+          <td class="paramtype">vector&lt; <a class="el" href="classClearanceUtility.html#aa209ef3fd7610c68d8b63e8bb66d762f">VID</a> &gt; &amp;&#160;</td>
           <td class="paramname"><em>_path</em></td><td>)</td>
           <td></td>
         </tr>
@@ -1300,19 +1163,17 @@ template&lt;class MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="a4409059b71d40772fd0e266c2fb0f9ba"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a4409059b71d40772fd0e266c2fb0f9ba">&#9670;&nbsp;</a></span>Print()</h2>
+<a id="a75ae80de21bbde24d62bb6c6823ceea1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a75ae80de21bbde24d62bb6c6823ceea1">&#9670;&nbsp;</a></span>Print()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;class MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="classClearanceUtility.html">ClearanceUtility</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::Print </td>
+          <td class="memname">void ClearanceUtility::Print </td>
           <td>(</td>
           <td class="paramtype">ostream &amp;&#160;</td>
           <td class="paramname"><em>_os</em></td><td>)</td>
@@ -1332,20 +1193,23 @@ template&lt;class MPTraits &gt; </div>
   </dd>
 </dl>
 
-<p>Reimplemented in <a class="el" href="classMedialAxisUtility.html#a8a5b2452a75a0f329ef236c465e2752b">MedialAxisUtility&lt; MPTraits &gt;</a>.</p>
+<p>Reimplemented from <a class="el" href="classMPBaseObject.html#a2c77bcfd6bee0270a1fa769325be7c20">MPBaseObject</a>.</p>
+
+<p>Reimplemented in <a class="el" href="classMedialAxisUtility.html#af0b114751177b4eb5db006bac90b4aa3">MedialAxisUtility</a>.</p>
 
 </div>
 </div>
-<a id="aeb166eba0d9c6e60447aefb47f80085a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aeb166eba0d9c6e60447aefb47f80085a">&#9670;&nbsp;</a></span>RoadmapClearance()</h2>
+<a id="ac2f8ec47c464d251e4ea7cdce691f9eb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac2f8ec47c464d251e4ea7cdce691f9eb">&#9670;&nbsp;</a></span>RoadmapClearance()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;class MPTraits &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="structClearanceStats.html">ClearanceStats</a> <a class="el" href="classClearanceUtility.html">ClearanceUtility</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::RoadmapClearance</td>
+          <td class="memname"><a class="el" href="structClearanceStats.html">ClearanceStats</a> ClearanceUtility::RoadmapClearance </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -1353,16 +1217,14 @@ template&lt;class MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="a12ba99669d9505d21ea6a0198cf175f2"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a12ba99669d9505d21ea6a0198cf175f2">&#9670;&nbsp;</a></span>SetRobot()</h2>
+<a id="af28a4d4a828172057addc41b5f1cb01d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af28a4d4a828172057addc41b5f1cb01d">&#9670;&nbsp;</a></span>SetRobot()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;class MPTraits &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="classClearanceUtility.html">ClearanceUtility</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::SetRobot </td>
+          <td class="memname">void ClearanceUtility::SetRobot </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="classRobot.html">Robot</a> *&#160;</td>
           <td class="paramname"><em>_robot</em></td><td>)</td>
@@ -1373,19 +1235,17 @@ template&lt;class MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="a85136785737ae3e42ffb7d4689dd12cb"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a85136785737ae3e42ffb7d4689dd12cb">&#9670;&nbsp;</a></span>SetValidityCheckerLabel()</h2>
+<a id="a44126d8ffc0fbd20eb6fc8ee78584f5a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a44126d8ffc0fbd20eb6fc8ee78584f5a">&#9670;&nbsp;</a></span>SetValidityCheckerLabel()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;class MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="classClearanceUtility.html">ClearanceUtility</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::SetValidityCheckerLabel </td>
+          <td class="memname">void ClearanceUtility::SetValidityCheckerLabel </td>
           <td>(</td>
           <td class="paramtype">const string &amp;&#160;</td>
           <td class="paramname"><em>_s</em></td><td>)</td>
@@ -1407,24 +1267,22 @@ template&lt;class MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="ad90ed36dfd52116932490e8c43767902"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad90ed36dfd52116932490e8c43767902">&#9670;&nbsp;</a></span>ValidateCandidate()</h2>
+<a id="a275d42d9fe924773c5cc3937afd32f81"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a275d42d9fe924773c5cc3937afd32f81">&#9670;&nbsp;</a></span>ValidateCandidate()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;class MPTraits &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">bool <a class="el" href="classClearanceUtility.html">ClearanceUtility</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::ValidateCandidate </td>
+          <td class="memname">bool ClearanceUtility::ValidateCandidate </td>
           <td>(</td>
-          <td class="paramtype">const std::pair&lt; size_t, <a class="el" href="classClearanceUtility.html#ac1931f426c80cd2b497539ac380096ea">CfgType</a> &gt; &amp;&#160;</td>
+          <td class="paramtype">const std::pair&lt; size_t, <a class="el" href="classCfg.html">Cfg</a> &gt; &amp;&#160;</td>
           <td class="paramname"><em>_cand</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const std::vector&lt; <a class="el" href="structRay.html">Ray</a>&lt; <a class="el" href="classClearanceUtility.html#ac1931f426c80cd2b497539ac380096ea">CfgType</a> &gt; &gt; &amp;&#160;</td>
+          <td class="paramtype">const std::vector&lt; <a class="el" href="structRay.html">Ray</a>&lt; <a class="el" href="classCfg.html">Cfg</a> &gt; &gt; &amp;&#160;</td>
           <td class="paramname"><em>_rays</em>, </td>
         </tr>
         <tr>
@@ -1459,19 +1317,17 @@ template&lt;class MPTraits &gt; </div>
 </div>
 </div>
 <h2 class="groupheader">Field Documentation</h2>
-<a id="af5769f06b004d734b54dcf34196f59f7"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af5769f06b004d734b54dcf34196f59f7">&#9670;&nbsp;</a></span>abcd</h2>
+<a id="a23094c6f3f5129d21e0db3059b26d5af"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a23094c6f3f5129d21e0db3059b26d5af">&#9670;&nbsp;</a></span>abcd</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;class MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">int <a class="el" href="classClearanceUtility.html">ClearanceUtility</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::abcd = 0</td>
+          <td class="memname">int ClearanceUtility::abcd = 0</td>
         </tr>
       </table>
   </td>
@@ -1483,19 +1339,17 @@ template&lt;class MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="afca7e897016f3cb059906a032e50fbd0"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#afca7e897016f3cb059906a032e50fbd0">&#9670;&nbsp;</a></span>m_clearanceRays</h2>
+<a id="ace959b026a605d20f360eb35aedd9b97"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ace959b026a605d20f360eb35aedd9b97">&#9670;&nbsp;</a></span>m_clearanceRays</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;class MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">size_t <a class="el" href="classClearanceUtility.html">ClearanceUtility</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::m_clearanceRays {10}</td>
+          <td class="memname">size_t ClearanceUtility::m_clearanceRays {10}</td>
         </tr>
       </table>
   </td>
@@ -1509,19 +1363,17 @@ template&lt;class MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="af08119f2d6c0fec43b36b977682047a8"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af08119f2d6c0fec43b36b977682047a8">&#9670;&nbsp;</a></span>m_dmLabel</h2>
+<a id="a496bc79ad7c50391ca81e316d905e8a4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a496bc79ad7c50391ca81e316d905e8a4">&#9670;&nbsp;</a></span>m_dmLabel</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;class MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">string <a class="el" href="classClearanceUtility.html">ClearanceUtility</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::m_dmLabel {&quot;euclidean&quot;}</td>
+          <td class="memname">string ClearanceUtility::m_dmLabel {&quot;euclidean&quot;}</td>
         </tr>
       </table>
   </td>
@@ -1535,19 +1387,17 @@ template&lt;class MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="a1ab406faed7b1266a05d69c02f9a39bc"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a1ab406faed7b1266a05d69c02f9a39bc">&#9670;&nbsp;</a></span>m_exactClearance</h2>
+<a id="a702f47f133a6da19dcce51ff04866584"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a702f47f133a6da19dcce51ff04866584">&#9670;&nbsp;</a></span>m_exactClearance</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;class MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">bool <a class="el" href="classClearanceUtility.html">ClearanceUtility</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::m_exactClearance {false}</td>
+          <td class="memname">bool ClearanceUtility::m_exactClearance {false}</td>
         </tr>
       </table>
   </td>
@@ -1561,19 +1411,17 @@ template&lt;class MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="abd8b349f33e4233cc3181e712b82c371"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#abd8b349f33e4233cc3181e712b82c371">&#9670;&nbsp;</a></span>m_exactPenetration</h2>
+<a id="aeea14c6ffad55767fca9b1b79c692e82"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aeea14c6ffad55767fca9b1b79c692e82">&#9670;&nbsp;</a></span>m_exactPenetration</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;class MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">bool <a class="el" href="classClearanceUtility.html">ClearanceUtility</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::m_exactPenetration {false}</td>
+          <td class="memname">bool ClearanceUtility::m_exactPenetration {false}</td>
         </tr>
       </table>
   </td>
@@ -1587,19 +1435,17 @@ template&lt;class MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="aa9aaa9a59f85e26a3d69dc0ebc87d376"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa9aaa9a59f85e26a3d69dc0ebc87d376">&#9670;&nbsp;</a></span>m_initialized</h2>
+<a id="a30b3e1330e5fdb19163d8757f0ca203c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a30b3e1330e5fdb19163d8757f0ca203c">&#9670;&nbsp;</a></span>m_initialized</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;class MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">bool <a class="el" href="classClearanceUtility.html">ClearanceUtility</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::m_initialized {false}</td>
+          <td class="memname">bool ClearanceUtility::m_initialized {false}</td>
         </tr>
       </table>
   </td>
@@ -1608,23 +1454,21 @@ template&lt;class MPTraits &gt; </div>
   </tr>
 </table>
 </div><div class="memdoc">
-<p>A boolean to determine whether initialize has been called on the utility or not yet. This is important, as there are MPLibrary things we need that are not available at construction time: </p>
+<p>A boolean to determine whether initialize has been called on the utility or not yet. This is important, as there are <a class="el" href="classMPLibrary.html">MPLibrary</a> things we need that are not available at construction time: </p>
 
 </div>
 </div>
-<a id="aa7c275aade12fe2ee42c12ef9825fa32"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa7c275aade12fe2ee42c12ef9825fa32">&#9670;&nbsp;</a></span>m_maSearchResolutionFactor</h2>
+<a id="a52d6c8559aa4dae7210e36db913a59e9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a52d6c8559aa4dae7210e36db913a59e9">&#9670;&nbsp;</a></span>m_maSearchResolutionFactor</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;class MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">double <a class="el" href="classClearanceUtility.html">ClearanceUtility</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::m_maSearchResolutionFactor {1}</td>
+          <td class="memname">double ClearanceUtility::m_maSearchResolutionFactor {1}</td>
         </tr>
       </table>
   </td>
@@ -1638,19 +1482,17 @@ template&lt;class MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="a3fa9288cc8d23984305c4956cf16afd3"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a3fa9288cc8d23984305c4956cf16afd3">&#9670;&nbsp;</a></span>m_maxRayIterations</h2>
+<a id="a86649c1ea8346e5b8ebc0a81744f5c64"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a86649c1ea8346e5b8ebc0a81744f5c64">&#9670;&nbsp;</a></span>m_maxRayIterations</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;class MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">size_t <a class="el" href="classClearanceUtility.html">ClearanceUtility</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::m_maxRayIterations</td>
+          <td class="memname">size_t ClearanceUtility::m_maxRayIterations</td>
         </tr>
       </table>
   </td>
@@ -1664,19 +1506,17 @@ template&lt;class MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="ab9f96120f2916782c72278c034772d06"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab9f96120f2916782c72278c034772d06">&#9670;&nbsp;</a></span>m_maxRayMagnitude</h2>
+<a id="a970627c904f5a9cc8fdfd14cb397747a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a970627c904f5a9cc8fdfd14cb397747a">&#9670;&nbsp;</a></span>m_maxRayMagnitude</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;class MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">double <a class="el" href="classClearanceUtility.html">ClearanceUtility</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::m_maxRayMagnitude</td>
+          <td class="memname">double ClearanceUtility::m_maxRayMagnitude</td>
         </tr>
       </table>
   </td>
@@ -1690,19 +1530,17 @@ template&lt;class MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="a4217b0494ea8d3ca251614afe49370e6"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a4217b0494ea8d3ca251614afe49370e6">&#9670;&nbsp;</a></span>m_orientationResFactor</h2>
+<a id="a60f1eab66785416eba34ed11e99c2851"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a60f1eab66785416eba34ed11e99c2851">&#9670;&nbsp;</a></span>m_orientationResFactor</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;class MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">double <a class="el" href="classClearanceUtility.html">ClearanceUtility</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::m_orientationResFactor {1.}</td>
+          <td class="memname">double ClearanceUtility::m_orientationResFactor {1.}</td>
         </tr>
       </table>
   </td>
@@ -1716,19 +1554,17 @@ template&lt;class MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="a08eda0fdb74627dcbf383951a7438e14"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a08eda0fdb74627dcbf383951a7438e14">&#9670;&nbsp;</a></span>m_orientationResolution</h2>
+<a id="aca5c0723b918604d510c0896478c22d4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aca5c0723b918604d510c0896478c22d4">&#9670;&nbsp;</a></span>m_orientationResolution</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;class MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">double <a class="el" href="classClearanceUtility.html">ClearanceUtility</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::m_orientationResolution</td>
+          <td class="memname">double ClearanceUtility::m_orientationResolution</td>
         </tr>
       </table>
   </td>
@@ -1742,19 +1578,17 @@ template&lt;class MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="afeec9cafe8eec465ca3328f4d4c8650b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#afeec9cafe8eec465ca3328f4d4c8650b">&#9670;&nbsp;</a></span>m_penetrationRays</h2>
+<a id="aa930c24fd8c6a753d4d94fc9a6d1f02c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa930c24fd8c6a753d4d94fc9a6d1f02c">&#9670;&nbsp;</a></span>m_penetrationRays</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;class MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">size_t <a class="el" href="classClearanceUtility.html">ClearanceUtility</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::m_penetrationRays {10}</td>
+          <td class="memname">size_t ClearanceUtility::m_penetrationRays {10}</td>
         </tr>
       </table>
   </td>
@@ -1768,19 +1602,17 @@ template&lt;class MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="a5d90bc0e53c200c73127a93d8a272cad"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5d90bc0e53c200c73127a93d8a272cad">&#9670;&nbsp;</a></span>m_positionalDofsOnly</h2>
+<a id="acd59f0003ed9531d84201e1ed27144a7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acd59f0003ed9531d84201e1ed27144a7">&#9670;&nbsp;</a></span>m_positionalDofsOnly</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;class MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">bool <a class="el" href="classClearanceUtility.html">ClearanceUtility</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::m_positionalDofsOnly {true}</td>
+          <td class="memname">bool ClearanceUtility::m_positionalDofsOnly {true}</td>
         </tr>
       </table>
   </td>
@@ -1794,19 +1626,17 @@ template&lt;class MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="a1eeea7d6ef8540eead041f5b6ad58ba6"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a1eeea7d6ef8540eead041f5b6ad58ba6">&#9670;&nbsp;</a></span>m_positionalResFactor</h2>
+<a id="abd5ea1fbad0ef75c74bcb4aef0e81032"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abd5ea1fbad0ef75c74bcb4aef0e81032">&#9670;&nbsp;</a></span>m_positionalResFactor</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;class MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">double <a class="el" href="classClearanceUtility.html">ClearanceUtility</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::m_positionalResFactor {1.}</td>
+          <td class="memname">double ClearanceUtility::m_positionalResFactor {1.}</td>
         </tr>
       </table>
   </td>
@@ -1820,19 +1650,17 @@ template&lt;class MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="a13cfcd5cae9e94103de7fe930e83b5d3"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a13cfcd5cae9e94103de7fe930e83b5d3">&#9670;&nbsp;</a></span>m_rayTickResolution</h2>
+<a id="ad4b9669d4c9cf87bec913b88f6b5f358"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad4b9669d4c9cf87bec913b88f6b5f358">&#9670;&nbsp;</a></span>m_rayTickResolution</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;class MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">double <a class="el" href="classClearanceUtility.html">ClearanceUtility</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::m_rayTickResolution</td>
+          <td class="memname">double ClearanceUtility::m_rayTickResolution</td>
         </tr>
       </table>
   </td>
@@ -1846,19 +1674,17 @@ template&lt;class MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="aadb3fb07345a468fa81604e886e3cc7f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aadb3fb07345a468fa81604e886e3cc7f">&#9670;&nbsp;</a></span>m_robot</h2>
+<a id="a4a8583404d3ef63b9b0f7fb553b140a1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4a8583404d3ef63b9b0f7fb553b140a1">&#9670;&nbsp;</a></span>m_robot</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;class MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classRobot.html">Robot</a>* <a class="el" href="classClearanceUtility.html">ClearanceUtility</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::m_robot</td>
+          <td class="memname"><a class="el" href="classRobot.html">Robot</a>* ClearanceUtility::m_robot</td>
         </tr>
       </table>
   </td>
@@ -1870,19 +1696,17 @@ template&lt;class MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="aaa9a11c183fb5e68b49519340a1b58f3"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aaa9a11c183fb5e68b49519340a1b58f3">&#9670;&nbsp;</a></span>m_useBBX</h2>
+<a id="ae90aa11cc3b2c805106fc60c02e0afa0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae90aa11cc3b2c805106fc60c02e0afa0">&#9670;&nbsp;</a></span>m_useBBX</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;class MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">bool <a class="el" href="classClearanceUtility.html">ClearanceUtility</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::m_useBBX {true}</td>
+          <td class="memname">bool ClearanceUtility::m_useBBX {true}</td>
         </tr>
       </table>
   </td>
@@ -1896,19 +1720,17 @@ template&lt;class MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="a28520443c83af3353cb06df6dcfe4f47"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a28520443c83af3353cb06df6dcfe4f47">&#9670;&nbsp;</a></span>m_vcLabel</h2>
+<a id="acfc7492d9a20efd828409b60910097b9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acfc7492d9a20efd828409b60910097b9">&#9670;&nbsp;</a></span>m_vcLabel</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;class MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">string <a class="el" href="classClearanceUtility.html">ClearanceUtility</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::m_vcLabel {&quot;cd4&quot;}</td>
+          <td class="memname">string ClearanceUtility::m_vcLabel {&quot;cd4&quot;}</td>
         </tr>
       </table>
   </td>
@@ -1922,8 +1744,9 @@ template&lt;class MPTraits &gt; </div>
 
 </div>
 </div>
-<hr/>The documentation for this class was generated from the following file:<ul>
+<hr/>The documentation for this class was generated from the following files:<ul>
 <li>/opt/actions-runner/_work/open-ppl/open-ppl/src/MPLibrary/MPTools/<a class="el" href="ClearanceUtilities_8h_source.html">ClearanceUtilities.h</a></li>
+<li>/opt/actions-runner/_work/open-ppl/open-ppl/src/MPLibrary/MPTools/<a class="el" href="ClearanceUtilities_8cpp.html">ClearanceUtilities.cpp</a></li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->

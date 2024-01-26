@@ -1,5 +1,5 @@
-<map id="GroupPRM&lt; MPTraits &gt;::SamplerSetting" name="GroupPRM&lt; MPTraits &gt;::SamplerSetting">
-<area shape="rect" id="node1" title="Settings for a specific sampler." alt="" coords="5,185,165,227"/>
-<area shape="rect" id="node2" title=" " alt="" coords="42,96,129,123"/>
-<area shape="rect" id="node3" title=" " alt="" coords="16,5,155,47"/>
+<map id="GroupPRM::SamplerSetting" name="GroupPRM::SamplerSetting">
+<area shape="rect" id="node1" title="Settings for a specific sampler." alt="" coords="5,185,204,212"/>
+<area shape="rect" id="node2" title=" " alt="" coords="61,96,148,123"/>
+<area shape="rect" id="node3" title=" " alt="" coords="35,5,174,47"/>
 </map>

@@ -1,16 +1,18 @@
-<map id="MapEvaluatorMethod&lt; MPTraits &gt;" name="MapEvaluatorMethod&lt; MPTraits &gt;">
-<area shape="rect" id="node1" title=" " alt="" coords="255,233,416,274"/>
-<area shape="rect" id="node3" href="$classCBSQuery.html" title=" " alt="" coords="493,5,665,32"/>
-<area shape="rect" id="node4" href="$classCollisionEvaluator.html" title=" " alt="" coords="509,57,649,98"/>
-<area shape="rect" id="node5" href="$classComposeEvaluator.html" title=" " alt="" coords="464,123,695,149"/>
-<area shape="rect" id="node6" href="$classConditionalEvaluator.html" title=" " alt="" coords="500,174,659,215"/>
-<area shape="rect" id="node7" href="$classGroupQuery.html" title=" " alt="" coords="487,240,672,267"/>
-<area shape="rect" id="node8" href="$classPathEvaluator.html" title=" " alt="" coords="481,291,678,317"/>
-<area shape="rect" id="node9" href="$classPrintMapEvaluation.html" title=" " alt="" coords="505,342,654,383"/>
-<area shape="rect" id="node10" href="$classQueryMethod.html" title=" " alt="" coords="482,408,677,435"/>
-<area shape="rect" id="node13" href="$classSIPPMethod.html" title=" " alt="" coords="487,459,671,485"/>
-<area shape="rect" id="node14" href="$classTimeEvaluator.html" title=" " alt="" coords="478,509,681,536"/>
-<area shape="rect" id="node2" href="$classMPBaseObject.html" title=" " alt="" coords="5,240,207,267"/>
-<area shape="rect" id="node11" href="$classClearanceQuery.html" title=" " alt="" coords="743,383,953,409"/>
-<area shape="rect" id="node12" href="$classLazyQuery.html" title=" " alt="" coords="760,433,936,460"/>
+<map id="MapEvaluatorMethod" name="MapEvaluatorMethod">
+<area shape="rect" id="node1" title=" " alt="" coords="169,284,331,311"/>
+<area shape="rect" id="node3" href="$classCBSQuery.html" title=" " alt="" coords="437,5,523,32"/>
+<area shape="rect" id="node4" href="$classCollisionEvaluator.html" title=" " alt="" coords="410,56,550,83"/>
+<area shape="rect" id="node5" href="$classComposeEvaluator.html" title=" " alt="" coords="407,107,553,133"/>
+<area shape="rect" id="node6" href="$classConditionalEvaluator.html" title=" " alt="" coords="401,157,559,184"/>
+<area shape="rect" id="node7" href="$classGroupQuery.html" title=" " alt="" coords="430,208,530,235"/>
+<area shape="rect" id="node8" href="$classMinimumDistanceEvaluator.html" title=" " alt="" coords="379,259,581,285"/>
+<area shape="rect" id="node9" href="$classNegateEvaluator.html" title=" " alt="" coords="415,309,545,336"/>
+<area shape="rect" id="node10" href="$classPathEvaluator.html" title=" " alt="" coords="424,360,536,387"/>
+<area shape="rect" id="node11" href="$classPrintMapEvaluation.html" title=" " alt="" coords="405,411,555,437"/>
+<area shape="rect" id="node12" href="$classQueryMethod.html" title=" " alt="" coords="425,461,535,488"/>
+<area shape="rect" id="node15" href="$classSIPPMethod.html" title=" " alt="" coords="431,512,529,539"/>
+<area shape="rect" id="node16" href="$classTimeEvaluator.html" title=" " alt="" coords="421,563,539,589"/>
+<area shape="rect" id="node2" href="$classMPBaseObject.html" title=" " alt="" coords="5,284,121,311"/>
+<area shape="rect" id="node13" href="$classClearanceQuery.html" title=" " alt="" coords="629,436,756,463"/>
+<area shape="rect" id="node14" href="$classLazyQuery.html" title=" " alt="" coords="647,487,738,513"/>
 </map>

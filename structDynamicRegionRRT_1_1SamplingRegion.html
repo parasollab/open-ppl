@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.9.1"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Parasol Planning Library (PPL): DynamicRegionRRT&lt; MPTraits &gt;::SamplingRegion Struct Reference</title>
+<title>Parasol Planning Library (PPL): DynamicRegionRRT::SamplingRegion Struct Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -69,7 +69,7 @@ $(function() {
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a>  </div>
   <div class="headertitle">
-<div class="title">DynamicRegionRRT&lt; MPTraits &gt;::SamplingRegion Struct Reference</div>  </div>
+<div class="title">DynamicRegionRRT::SamplingRegion Struct Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 
@@ -80,67 +80,62 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:adc3a008069179152690636b763d8ec8f"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDynamicRegionRRT_1_1SamplingRegion.html#adc3a008069179152690636b763d8ec8f">SamplingRegion</a> (const <a class="el" href="classDynamicRegionRRT.html#ad8ce008d0fac8152d2ff8efad419c2e7">SkeletonEdgeIterator</a> &amp;_eit)</td></tr>
-<tr class="separator:adc3a008069179152690636b763d8ec8f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a061b40a89405b4f5860043c8b0f82d57"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDynamicRegionRRT_1_1SamplingRegion.html#a061b40a89405b4f5860043c8b0f82d57">TrackSuccess</a> (const size_t _success, const size_t _attempts)</td></tr>
-<tr class="memdesc:a061b40a89405b4f5860043c8b0f82d57"><td class="mdescLeft">&#160;</td><td class="mdescRight">Track the success rate of extending into this region.  <a href="structDynamicRegionRRT_1_1SamplingRegion.html#a061b40a89405b4f5860043c8b0f82d57">More...</a><br /></td></tr>
-<tr class="separator:a061b40a89405b4f5860043c8b0f82d57"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a829e030045a7082d5f58dfad476ef79c"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDynamicRegionRRT_1_1SamplingRegion.html#a829e030045a7082d5f58dfad476ef79c">GetWeight</a> () const noexcept</td></tr>
-<tr class="memdesc:a829e030045a7082d5f58dfad476ef79c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute the weight for this region (i.e. success rate).  <a href="structDynamicRegionRRT_1_1SamplingRegion.html#a829e030045a7082d5f58dfad476ef79c">More...</a><br /></td></tr>
-<tr class="separator:a829e030045a7082d5f58dfad476ef79c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad26fa446b9c9a415c1fc7075589c4318"><td class="memItemLeft" align="right" valign="top">const Vector3d &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDynamicRegionRRT_1_1SamplingRegion.html#ad26fa446b9c9a415c1fc7075589c4318">GetCenter</a> () const noexcept</td></tr>
-<tr class="memdesc:ad26fa446b9c9a415c1fc7075589c4318"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the center of this region.  <a href="structDynamicRegionRRT_1_1SamplingRegion.html#ad26fa446b9c9a415c1fc7075589c4318">More...</a><br /></td></tr>
-<tr class="separator:ad26fa446b9c9a415c1fc7075589c4318"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a908cca712161a39f233b98d49344e083"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDynamicRegionRRT_1_1SamplingRegion.html#a908cca712161a39f233b98d49344e083">LastPoint</a> () const noexcept</td></tr>
-<tr class="memdesc:a908cca712161a39f233b98d49344e083"><td class="mdescLeft">&#160;</td><td class="mdescRight">Check if this region is at the last point on its skeleton edge.  <a href="structDynamicRegionRRT_1_1SamplingRegion.html#a908cca712161a39f233b98d49344e083">More...</a><br /></td></tr>
-<tr class="separator:a908cca712161a39f233b98d49344e083"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae223c045276ee8bcd76882e42387ac0e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDynamicRegionRRT_1_1SamplingRegion.html#ae223c045276ee8bcd76882e42387ac0e">Advance</a> () noexcept</td></tr>
-<tr class="memdesc:ae223c045276ee8bcd76882e42387ac0e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Advance this region to the next skeleton edge point.  <a href="structDynamicRegionRRT_1_1SamplingRegion.html#ae223c045276ee8bcd76882e42387ac0e">More...</a><br /></td></tr>
-<tr class="separator:ae223c045276ee8bcd76882e42387ac0e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af2674f1675bdcf9111d513e56098ea83"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structDynamicRegionRRT_1_1SamplingRegion.html">SamplingRegion</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDynamicRegionRRT_1_1SamplingRegion.html#af2674f1675bdcf9111d513e56098ea83">operator=</a> (const <a class="el" href="structDynamicRegionRRT_1_1SamplingRegion.html">SamplingRegion</a> &amp;_region)</td></tr>
-<tr class="memdesc:af2674f1675bdcf9111d513e56098ea83"><td class="mdescLeft">&#160;</td><td class="mdescRight">Assignment operator.  <a href="structDynamicRegionRRT_1_1SamplingRegion.html#af2674f1675bdcf9111d513e56098ea83">More...</a><br /></td></tr>
-<tr class="separator:af2674f1675bdcf9111d513e56098ea83"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a52803f511d1e977b6e24d693faf9f1f5"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDynamicRegionRRT_1_1SamplingRegion.html#a52803f511d1e977b6e24d693faf9f1f5">operator==</a> (const <a class="el" href="structDynamicRegionRRT_1_1SamplingRegion.html">SamplingRegion</a> &amp;_region) const</td></tr>
-<tr class="memdesc:a52803f511d1e977b6e24d693faf9f1f5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Equality operator.  <a href="structDynamicRegionRRT_1_1SamplingRegion.html#a52803f511d1e977b6e24d693faf9f1f5">More...</a><br /></td></tr>
-<tr class="separator:a52803f511d1e977b6e24d693faf9f1f5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa6dbba5c272f537ce3eee86ab528dc11"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDynamicRegionRRT_1_1SamplingRegion.html#aa6dbba5c272f537ce3eee86ab528dc11">SamplingRegion</a> (const <a class="el" href="classDynamicRegionRRT.html#a4392c3c174673fdd78bab959f135202c">SkeletonEdgeIterator</a> &amp;_eit)</td></tr>
+<tr class="separator:aa6dbba5c272f537ce3eee86ab528dc11"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9878406f944237c7602660850944f4d4"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDynamicRegionRRT_1_1SamplingRegion.html#a9878406f944237c7602660850944f4d4">TrackSuccess</a> (const size_t _success, const size_t _attempts)</td></tr>
+<tr class="memdesc:a9878406f944237c7602660850944f4d4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Track the success rate of extending into this region.  <a href="structDynamicRegionRRT_1_1SamplingRegion.html#a9878406f944237c7602660850944f4d4">More...</a><br /></td></tr>
+<tr class="separator:a9878406f944237c7602660850944f4d4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2d8c6ee3eb58f9596a0cb03777214976"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDynamicRegionRRT_1_1SamplingRegion.html#a2d8c6ee3eb58f9596a0cb03777214976">GetWeight</a> () const noexcept</td></tr>
+<tr class="memdesc:a2d8c6ee3eb58f9596a0cb03777214976"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute the weight for this region (i.e. success rate).  <a href="structDynamicRegionRRT_1_1SamplingRegion.html#a2d8c6ee3eb58f9596a0cb03777214976">More...</a><br /></td></tr>
+<tr class="separator:a2d8c6ee3eb58f9596a0cb03777214976"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a33a1338675156649ea3cf1c12631c55e"><td class="memItemLeft" align="right" valign="top">const Vector3d &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDynamicRegionRRT_1_1SamplingRegion.html#a33a1338675156649ea3cf1c12631c55e">GetCenter</a> () const noexcept</td></tr>
+<tr class="memdesc:a33a1338675156649ea3cf1c12631c55e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the center of this region.  <a href="structDynamicRegionRRT_1_1SamplingRegion.html#a33a1338675156649ea3cf1c12631c55e">More...</a><br /></td></tr>
+<tr class="separator:a33a1338675156649ea3cf1c12631c55e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a251372c6c5c68ce9d1ed0184ec6268bd"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDynamicRegionRRT_1_1SamplingRegion.html#a251372c6c5c68ce9d1ed0184ec6268bd">LastPoint</a> () const noexcept</td></tr>
+<tr class="memdesc:a251372c6c5c68ce9d1ed0184ec6268bd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Check if this region is at the last point on its skeleton edge.  <a href="structDynamicRegionRRT_1_1SamplingRegion.html#a251372c6c5c68ce9d1ed0184ec6268bd">More...</a><br /></td></tr>
+<tr class="separator:a251372c6c5c68ce9d1ed0184ec6268bd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abd9a1f6c29d79daa1bb9a53a8c59dbae"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDynamicRegionRRT_1_1SamplingRegion.html#abd9a1f6c29d79daa1bb9a53a8c59dbae">Advance</a> () noexcept</td></tr>
+<tr class="memdesc:abd9a1f6c29d79daa1bb9a53a8c59dbae"><td class="mdescLeft">&#160;</td><td class="mdescRight">Advance this region to the next skeleton edge point.  <a href="structDynamicRegionRRT_1_1SamplingRegion.html#abd9a1f6c29d79daa1bb9a53a8c59dbae">More...</a><br /></td></tr>
+<tr class="separator:abd9a1f6c29d79daa1bb9a53a8c59dbae"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7fbbfbcfc21f3d6c044c4e8f657c44fd"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structDynamicRegionRRT_1_1SamplingRegion.html">SamplingRegion</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDynamicRegionRRT_1_1SamplingRegion.html#a7fbbfbcfc21f3d6c044c4e8f657c44fd">operator=</a> (const <a class="el" href="structDynamicRegionRRT_1_1SamplingRegion.html">SamplingRegion</a> &amp;_region)</td></tr>
+<tr class="memdesc:a7fbbfbcfc21f3d6c044c4e8f657c44fd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Assignment operator.  <a href="structDynamicRegionRRT_1_1SamplingRegion.html#a7fbbfbcfc21f3d6c044c4e8f657c44fd">More...</a><br /></td></tr>
+<tr class="separator:a7fbbfbcfc21f3d6c044c4e8f657c44fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aacc63cb39132c31633aec80fb84aa8f0"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDynamicRegionRRT_1_1SamplingRegion.html#aacc63cb39132c31633aec80fb84aa8f0">operator==</a> (const <a class="el" href="structDynamicRegionRRT_1_1SamplingRegion.html">SamplingRegion</a> &amp;_region) const</td></tr>
+<tr class="memdesc:aacc63cb39132c31633aec80fb84aa8f0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Equality operator.  <a href="structDynamicRegionRRT_1_1SamplingRegion.html#aacc63cb39132c31633aec80fb84aa8f0">More...</a><br /></td></tr>
+<tr class="separator:aacc63cb39132c31633aec80fb84aa8f0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Data Fields</h2></td></tr>
 <tr><td colspan="2"><div class="groupHeader">Internal State</div></td></tr>
-<tr class="memitem:ac3d5d553391053ceb46ce55a1a08652c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classDynamicRegionRRT.html#ad8ce008d0fac8152d2ff8efad419c2e7">SkeletonEdgeIterator</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDynamicRegionRRT_1_1SamplingRegion.html#ac3d5d553391053ceb46ce55a1a08652c">edgeIterator</a></td></tr>
-<tr class="memdesc:ac3d5d553391053ceb46ce55a1a08652c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Iterator to region's edge.  <a href="structDynamicRegionRRT_1_1SamplingRegion.html#ac3d5d553391053ceb46ce55a1a08652c">More...</a><br /></td></tr>
-<tr class="separator:ac3d5d553391053ceb46ce55a1a08652c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a01a5bef0f62eeaf874c96e6f2e58c40c"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDynamicRegionRRT_1_1SamplingRegion.html#a01a5bef0f62eeaf874c96e6f2e58c40c">edgeIndex</a> {0}</td></tr>
-<tr class="memdesc:a01a5bef0f62eeaf874c96e6f2e58c40c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Which edge point are we at?  <a href="structDynamicRegionRRT_1_1SamplingRegion.html#a01a5bef0f62eeaf874c96e6f2e58c40c">More...</a><br /></td></tr>
-<tr class="separator:a01a5bef0f62eeaf874c96e6f2e58c40c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a76a96c59e5480975ceaee333d28b82d7"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDynamicRegionRRT_1_1SamplingRegion.html#a76a96c59e5480975ceaee333d28b82d7">attempts</a> {1}</td></tr>
-<tr class="memdesc:a76a96c59e5480975ceaee333d28b82d7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Number of attempts to extend into this region.  <a href="structDynamicRegionRRT_1_1SamplingRegion.html#a76a96c59e5480975ceaee333d28b82d7">More...</a><br /></td></tr>
-<tr class="separator:a76a96c59e5480975ceaee333d28b82d7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aed095def08afc7e6f7938b39239ff587"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDynamicRegionRRT_1_1SamplingRegion.html#aed095def08afc7e6f7938b39239ff587">successes</a> {1}</td></tr>
-<tr class="memdesc:aed095def08afc7e6f7938b39239ff587"><td class="mdescLeft">&#160;</td><td class="mdescRight">Number of successful attempts.  <a href="structDynamicRegionRRT_1_1SamplingRegion.html#aed095def08afc7e6f7938b39239ff587">More...</a><br /></td></tr>
-<tr class="separator:aed095def08afc7e6f7938b39239ff587"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae01296a0ea975c5a98f33af3c39bbd90"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classDynamicRegionRRT.html#a4392c3c174673fdd78bab959f135202c">SkeletonEdgeIterator</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDynamicRegionRRT_1_1SamplingRegion.html#ae01296a0ea975c5a98f33af3c39bbd90">edgeIterator</a></td></tr>
+<tr class="memdesc:ae01296a0ea975c5a98f33af3c39bbd90"><td class="mdescLeft">&#160;</td><td class="mdescRight">Iterator to region's edge.  <a href="structDynamicRegionRRT_1_1SamplingRegion.html#ae01296a0ea975c5a98f33af3c39bbd90">More...</a><br /></td></tr>
+<tr class="separator:ae01296a0ea975c5a98f33af3c39bbd90"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a91dfad96e147d694555aae732a1e7c8f"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDynamicRegionRRT_1_1SamplingRegion.html#a91dfad96e147d694555aae732a1e7c8f">edgeIndex</a> {0}</td></tr>
+<tr class="memdesc:a91dfad96e147d694555aae732a1e7c8f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Which edge point are we at?  <a href="structDynamicRegionRRT_1_1SamplingRegion.html#a91dfad96e147d694555aae732a1e7c8f">More...</a><br /></td></tr>
+<tr class="separator:a91dfad96e147d694555aae732a1e7c8f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a87a78e4abb1286d4467b50445af5d5a4"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDynamicRegionRRT_1_1SamplingRegion.html#a87a78e4abb1286d4467b50445af5d5a4">attempts</a> {1}</td></tr>
+<tr class="memdesc:a87a78e4abb1286d4467b50445af5d5a4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Number of attempts to extend into this region.  <a href="structDynamicRegionRRT_1_1SamplingRegion.html#a87a78e4abb1286d4467b50445af5d5a4">More...</a><br /></td></tr>
+<tr class="separator:a87a78e4abb1286d4467b50445af5d5a4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a587ab669e931c5f1fa5fb2f92f23829a"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structDynamicRegionRRT_1_1SamplingRegion.html#a587ab669e931c5f1fa5fb2f92f23829a">successes</a> {1}</td></tr>
+<tr class="memdesc:a587ab669e931c5f1fa5fb2f92f23829a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Number of successful attempts.  <a href="structDynamicRegionRRT_1_1SamplingRegion.html#a587ab669e931c5f1fa5fb2f92f23829a">More...</a><br /></td></tr>
+<tr class="separator:a587ab669e931c5f1fa5fb2f92f23829a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><h3>template&lt;typename MPTraits&gt;<br />
-struct DynamicRegionRRT&lt; MPTraits &gt;::SamplingRegion</h3>
-
-<p>Representation of a sampling region. </p>
+<div class="textblock"><p>Representation of a sampling region. </p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="adc3a008069179152690636b763d8ec8f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#adc3a008069179152690636b763d8ec8f">&#9670;&nbsp;</a></span>SamplingRegion()</h2>
+<a id="aa6dbba5c272f537ce3eee86ab528dc11"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa6dbba5c272f537ce3eee86ab528dc11">&#9670;&nbsp;</a></span>SamplingRegion()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classDynamicRegionRRT.html">DynamicRegionRRT</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::SamplingRegion::SamplingRegion </td>
+          <td class="memname">DynamicRegionRRT::SamplingRegion::SamplingRegion </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="classDynamicRegionRRT.html#ad8ce008d0fac8152d2ff8efad419c2e7">SkeletonEdgeIterator</a> &amp;&#160;</td>
+          <td class="paramtype">const <a class="el" href="classDynamicRegionRRT.html#a4392c3c174673fdd78bab959f135202c">SkeletonEdgeIterator</a> &amp;&#160;</td>
           <td class="paramname"><em>_eit</em></td><td>)</td>
           <td></td>
         </tr>
@@ -155,19 +150,17 @@ template&lt;typename MPTraits &gt; </div>
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
-<a id="ae223c045276ee8bcd76882e42387ac0e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae223c045276ee8bcd76882e42387ac0e">&#9670;&nbsp;</a></span>Advance()</h2>
+<a id="abd9a1f6c29d79daa1bb9a53a8c59dbae"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abd9a1f6c29d79daa1bb9a53a8c59dbae">&#9670;&nbsp;</a></span>Advance()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="classDynamicRegionRRT.html">DynamicRegionRRT</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::SamplingRegion::Advance </td>
+          <td class="memname">void DynamicRegionRRT::SamplingRegion::Advance </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td></td>
@@ -184,19 +177,17 @@ template&lt;typename MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="ad26fa446b9c9a415c1fc7075589c4318"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad26fa446b9c9a415c1fc7075589c4318">&#9670;&nbsp;</a></span>GetCenter()</h2>
+<a id="a33a1338675156649ea3cf1c12631c55e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a33a1338675156649ea3cf1c12631c55e">&#9670;&nbsp;</a></span>GetCenter()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">const Vector3d&amp; <a class="el" href="classDynamicRegionRRT.html">DynamicRegionRRT</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::SamplingRegion::GetCenter </td>
+          <td class="memname">const Vector3d&amp; DynamicRegionRRT::SamplingRegion::GetCenter </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const</td>
@@ -213,19 +204,17 @@ template&lt;typename MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="a829e030045a7082d5f58dfad476ef79c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a829e030045a7082d5f58dfad476ef79c">&#9670;&nbsp;</a></span>GetWeight()</h2>
+<a id="a2d8c6ee3eb58f9596a0cb03777214976"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2d8c6ee3eb58f9596a0cb03777214976">&#9670;&nbsp;</a></span>GetWeight()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">double <a class="el" href="classDynamicRegionRRT.html">DynamicRegionRRT</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::SamplingRegion::GetWeight </td>
+          <td class="memname">double DynamicRegionRRT::SamplingRegion::GetWeight </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const</td>
@@ -242,19 +231,17 @@ template&lt;typename MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="a908cca712161a39f233b98d49344e083"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a908cca712161a39f233b98d49344e083">&#9670;&nbsp;</a></span>LastPoint()</h2>
+<a id="a251372c6c5c68ce9d1ed0184ec6268bd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a251372c6c5c68ce9d1ed0184ec6268bd">&#9670;&nbsp;</a></span>LastPoint()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">bool <a class="el" href="classDynamicRegionRRT.html">DynamicRegionRRT</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::SamplingRegion::LastPoint </td>
+          <td class="memname">bool DynamicRegionRRT::SamplingRegion::LastPoint </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const</td>
@@ -271,19 +258,17 @@ template&lt;typename MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="af2674f1675bdcf9111d513e56098ea83"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af2674f1675bdcf9111d513e56098ea83">&#9670;&nbsp;</a></span>operator=()</h2>
+<a id="a7fbbfbcfc21f3d6c044c4e8f657c44fd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7fbbfbcfc21f3d6c044c4e8f657c44fd">&#9670;&nbsp;</a></span>operator=()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="structDynamicRegionRRT_1_1SamplingRegion.html">SamplingRegion</a>&amp; <a class="el" href="classDynamicRegionRRT.html">DynamicRegionRRT</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::SamplingRegion::operator= </td>
+          <td class="memname"><a class="el" href="structDynamicRegionRRT_1_1SamplingRegion.html">SamplingRegion</a>&amp; DynamicRegionRRT::SamplingRegion::operator= </td>
           <td>(</td>
           <td class="paramtype">const <a class="el" href="structDynamicRegionRRT_1_1SamplingRegion.html">SamplingRegion</a> &amp;&#160;</td>
           <td class="paramname"><em>_region</em></td><td>)</td>
@@ -301,19 +286,17 @@ template&lt;typename MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="a52803f511d1e977b6e24d693faf9f1f5"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a52803f511d1e977b6e24d693faf9f1f5">&#9670;&nbsp;</a></span>operator==()</h2>
+<a id="aacc63cb39132c31633aec80fb84aa8f0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aacc63cb39132c31633aec80fb84aa8f0">&#9670;&nbsp;</a></span>operator==()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">bool <a class="el" href="classDynamicRegionRRT.html">DynamicRegionRRT</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::SamplingRegion::operator== </td>
+          <td class="memname">bool DynamicRegionRRT::SamplingRegion::operator== </td>
           <td>(</td>
           <td class="paramtype">const <a class="el" href="structDynamicRegionRRT_1_1SamplingRegion.html">SamplingRegion</a> &amp;&#160;</td>
           <td class="paramname"><em>_region</em></td><td>)</td>
@@ -331,19 +314,17 @@ template&lt;typename MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="a061b40a89405b4f5860043c8b0f82d57"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a061b40a89405b4f5860043c8b0f82d57">&#9670;&nbsp;</a></span>TrackSuccess()</h2>
+<a id="a9878406f944237c7602660850944f4d4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9878406f944237c7602660850944f4d4">&#9670;&nbsp;</a></span>TrackSuccess()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="classDynamicRegionRRT.html">DynamicRegionRRT</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::SamplingRegion::TrackSuccess </td>
+          <td class="memname">void DynamicRegionRRT::SamplingRegion::TrackSuccess </td>
           <td>(</td>
           <td class="paramtype">const size_t&#160;</td>
           <td class="paramname"><em>_success</em>, </td>
@@ -372,16 +353,14 @@ template&lt;typename MPTraits &gt; </div>
 </div>
 </div>
 <h2 class="groupheader">Field Documentation</h2>
-<a id="a76a96c59e5480975ceaee333d28b82d7"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a76a96c59e5480975ceaee333d28b82d7">&#9670;&nbsp;</a></span>attempts</h2>
+<a id="a87a78e4abb1286d4467b50445af5d5a4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a87a78e4abb1286d4467b50445af5d5a4">&#9670;&nbsp;</a></span>attempts</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">double <a class="el" href="classDynamicRegionRRT.html">DynamicRegionRRT</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::SamplingRegion::attempts {1}</td>
+          <td class="memname">double DynamicRegionRRT::SamplingRegion::attempts {1}</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -390,16 +369,14 @@ template&lt;typename MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="a01a5bef0f62eeaf874c96e6f2e58c40c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a01a5bef0f62eeaf874c96e6f2e58c40c">&#9670;&nbsp;</a></span>edgeIndex</h2>
+<a id="a91dfad96e147d694555aae732a1e7c8f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a91dfad96e147d694555aae732a1e7c8f">&#9670;&nbsp;</a></span>edgeIndex</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">size_t <a class="el" href="classDynamicRegionRRT.html">DynamicRegionRRT</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::SamplingRegion::edgeIndex {0}</td>
+          <td class="memname">size_t DynamicRegionRRT::SamplingRegion::edgeIndex {0}</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -408,16 +385,14 @@ template&lt;typename MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="ac3d5d553391053ceb46ce55a1a08652c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac3d5d553391053ceb46ce55a1a08652c">&#9670;&nbsp;</a></span>edgeIterator</h2>
+<a id="ae01296a0ea975c5a98f33af3c39bbd90"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae01296a0ea975c5a98f33af3c39bbd90">&#9670;&nbsp;</a></span>edgeIterator</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classDynamicRegionRRT.html#ad8ce008d0fac8152d2ff8efad419c2e7">SkeletonEdgeIterator</a> <a class="el" href="classDynamicRegionRRT.html">DynamicRegionRRT</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::SamplingRegion::edgeIterator</td>
+          <td class="memname"><a class="el" href="classDynamicRegionRRT.html#a4392c3c174673fdd78bab959f135202c">SkeletonEdgeIterator</a> DynamicRegionRRT::SamplingRegion::edgeIterator</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -426,16 +401,14 @@ template&lt;typename MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="aed095def08afc7e6f7938b39239ff587"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aed095def08afc7e6f7938b39239ff587">&#9670;&nbsp;</a></span>successes</h2>
+<a id="a587ab669e931c5f1fa5fb2f92f23829a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a587ab669e931c5f1fa5fb2f92f23829a">&#9670;&nbsp;</a></span>successes</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">double <a class="el" href="classDynamicRegionRRT.html">DynamicRegionRRT</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::SamplingRegion::successes {1}</td>
+          <td class="memname">double DynamicRegionRRT::SamplingRegion::successes {1}</td>
         </tr>
       </table>
 </div><div class="memdoc">

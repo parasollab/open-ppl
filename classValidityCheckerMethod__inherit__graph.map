@@ -1,10 +1,13 @@
-<map id="ValidityCheckerMethod&lt; MPTraits &gt;" name="ValidityCheckerMethod&lt; MPTraits &gt;">
-<area shape="rect" id="node1" title=" " alt="" coords="255,100,427,141"/>
-<area shape="rect" id="node3" href="$classAlwaysTrueValidity.html" title=" " alt="" coords="511,5,656,47"/>
-<area shape="rect" id="node4" href="$classCollisionDetectionValidityMethod.html" title=" " alt="" coords="488,71,679,112"/>
-<area shape="rect" id="node7" href="$classComposeValidity.html" title=" " alt="" coords="475,137,692,163"/>
-<area shape="rect" id="node8" href="$classTerrainValidityChecker.html" title=" " alt="" coords="500,188,667,229"/>
-<area shape="rect" id="node2" href="$classMPBaseObject.html" title=" " alt="" coords="5,107,207,134"/>
-<area shape="rect" id="node5" href="$classCollisionDetectionValidity.html" title=" " alt="" coords="757,41,947,83"/>
-<area shape="rect" id="node6" href="$classComposeCollision.html" title=" " alt="" coords="740,107,964,134"/>
+<map id="ValidityCheckerMethod" name="ValidityCheckerMethod">
+<area shape="rect" id="node1" title=" " alt="" coords="169,173,341,200"/>
+<area shape="rect" id="node3" href="$classAlwaysTrueValidity.html" title=" " alt="" coords="413,5,559,32"/>
+<area shape="rect" id="node4" href="$classCollisionDetectionValidityMethod.html" title=" " alt="" coords="391,57,581,98"/>
+<area shape="rect" id="node7" href="$classComposeValidity.html" title=" " alt="" coords="420,123,552,149"/>
+<area shape="rect" id="node8" href="$classNodeClearanceValidity.html" title=" " alt="" coords="401,173,571,200"/>
+<area shape="rect" id="node9" href="$classObstacleClearanceValidity.html" title=" " alt="" coords="389,224,583,251"/>
+<area shape="rect" id="node10" href="$classTerrainValidityChecker.html" title=" " alt="" coords="403,275,569,301"/>
+<area shape="rect" id="node11" href="$classTopologicalMapValidity.html" title=" " alt="" coords="400,325,572,352"/>
+<area shape="rect" id="node2" href="$classMPBaseObject.html" title=" " alt="" coords="5,173,121,200"/>
+<area shape="rect" id="node5" href="$classCollisionDetectionValidity.html" title=" " alt="" coords="631,39,821,65"/>
+<area shape="rect" id="node6" href="$classComposeCollision.html" title=" " alt="" coords="657,89,795,116"/>
 </map>

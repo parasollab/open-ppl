@@ -1,6 +1,6 @@
-<map id="DynamicRegionRRT&lt; MPTraits &gt;" name="DynamicRegionRRT&lt; MPTraits &gt;">
-<area shape="rect" id="node1" title=" " alt="" coords="5,229,240,256"/>
-<area shape="rect" id="node2" href="$classBasicRRTStrategy.html" title=" " alt="" coords="11,155,234,181"/>
-<area shape="rect" id="node3" href="$classMPStrategyMethod.html" title=" " alt="" coords="7,80,238,107"/>
-<area shape="rect" id="node4" href="$classMPBaseObject.html" title=" " alt="" coords="22,5,223,32"/>
+<map id="DynamicRegionRRT" name="DynamicRegionRRT">
+<area shape="rect" id="node1" title=" " alt="" coords="5,229,156,256"/>
+<area shape="rect" id="node2" href="$classBasicRRTStrategy.html" title=" " alt="" coords="12,155,149,181"/>
+<area shape="rect" id="node3" href="$classMPStrategyMethod.html" title=" " alt="" coords="7,80,154,107"/>
+<area shape="rect" id="node4" href="$classMPBaseObject.html" title=" " alt="" coords="23,5,139,32"/>
 </map>

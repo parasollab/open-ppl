@@ -73,104 +73,55 @@ $(function() {
 <a href="LPOutput_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="preprocessor">#ifndef PMPL_LP_OUTPUT_H_</span></div>
 <div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="preprocessor">#define PMPL_LP_OUTPUT_H_</span></div>
 <div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160; </div>
-<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#include &lt;string&gt;</span></div>
-<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="preprocessor">#include &lt;utility&gt;</span></div>
-<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="preprocessor">#include &lt;vector&gt;</span></div>
-<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160; </div>
-<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00022"></a><span class="lineno"><a class="line" href="structLPOutput.html">   22</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structLPOutput.html">LPOutput</a> {</div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160; </div>
-<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160; </div>
-<div class="line"><a name="l00027"></a><span class="lineno"><a class="line" href="structLPOutput.html#afd5f3ae6ea638edff0e84c55c089dee7">   27</a></span>&#160;  <span class="keyword">typedef</span> <span class="keyword">typename</span> <a class="code" href="classMPTraits.html#a1a5aab50ac12baaf6b22ff345c5ae138">MPTraits::CfgType</a>    <a class="code" href="structLPOutput.html#afd5f3ae6ea638edff0e84c55c089dee7">CfgType</a>;</div>
-<div class="line"><a name="l00028"></a><span class="lineno"><a class="line" href="structLPOutput.html#afff137041385a36e362105ec9d295630">   28</a></span>&#160;  <span class="keyword">typedef</span> <span class="keyword">typename</span> <a class="code" href="classMPTraits.html#af200e5838e4287604244d6aeaf4d4d40">MPTraits::WeightType</a> <a class="code" href="structLPOutput.html#afff137041385a36e362105ec9d295630">WeightType</a>;</div>
-<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160; </div>
-<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160; </div>
-<div class="line"><a name="l00034"></a><span class="lineno"><a class="line" href="structLPOutput.html#ad8ff1b6168b1699c9b9f8a965f144b10">   34</a></span>&#160;  <span class="keyword">typedef</span> std::pair&lt;WeightType, WeightType&gt; <a class="code" href="structLPOutput.html#ad8ff1b6168b1699c9b9f8a965f144b10">LPEdge</a>;</div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160; </div>
-<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160; </div>
-<div class="line"><a name="l00042"></a><span class="lineno"><a class="line" href="structLPOutput.html#a1440400d4fe40f5e2a803b6b033f5dab">   42</a></span>&#160;  std::vector&lt;CfgType&gt; <a class="code" href="structLPOutput.html#a1440400d4fe40f5e2a803b6b033f5dab">m_path</a>;</div>
-<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160; </div>
-<div class="line"><a name="l00047"></a><span class="lineno"><a class="line" href="structLPOutput.html#a75d0efaf6b95524ca676b42eeeb9e147">   47</a></span>&#160;  std::vector&lt;CfgType&gt; <a class="code" href="structLPOutput.html#a75d0efaf6b95524ca676b42eeeb9e147">m_intermediates</a>;</div>
-<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160; </div>
-<div class="line"><a name="l00051"></a><span class="lineno"><a class="line" href="structLPOutput.html#a2723550ee1b99bb30d8c5759216025e6">   51</a></span>&#160;  <a class="code" href="structLPOutput.html#ad8ff1b6168b1699c9b9f8a965f144b10">LPEdge</a> <a class="code" href="structLPOutput.html#a2723550ee1b99bb30d8c5759216025e6">m_edge</a>;</div>
-<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160; </div>
-<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160; </div>
-<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;  <a class="code" href="structLPOutput.html#a0fed0d2f7991330b260a68b1a3edfa9a">LPOutput</a>();</div>
-<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160; </div>
-<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160; </div>
-<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="structLPOutput.html#a3e59042e596381024b540bdc0054891f">Clear</a>();</div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160; </div>
-<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="structLPOutput.html#ae614d177e9d67fd613d947584932aaea">SetLPLabel</a>(<span class="keyword">const</span> std::string&amp; _label);</div>
-<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160; </div>
-<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="structLPOutput.html#a512f9966a8306f28814a3b800da3ba16">AddIntermediatesToWeights</a>(<span class="keyword">const</span> <span class="keywordtype">bool</span> _saveIntermediates);</div>
-<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160; </div>
-<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160; </div>
-<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;};</div>
-<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160; </div>
-<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;<span class="comment">/*----------------------------------------------------------------------------*/</span></div>
-<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160; </div>
-<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00076"></a><span class="lineno"><a class="line" href="structLPOutput.html#a0fed0d2f7991330b260a68b1a3edfa9a">   76</a></span>&#160;<a class="code" href="structLPOutput.html#a0fed0d2f7991330b260a68b1a3edfa9a">LPOutput&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;<a class="code" href="structLPOutput.html#a0fed0d2f7991330b260a68b1a3edfa9a">LPOutput</a>() {</div>
-<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;  Clear();</div>
-<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;}</div>
-<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160; </div>
-<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160; </div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;<span class="keywordtype">void</span></div>
-<div class="line"><a name="l00084"></a><span class="lineno"><a class="line" href="structLPOutput.html#a3e59042e596381024b540bdc0054891f">   84</a></span>&#160;<a class="code" href="structLPOutput.html#a3e59042e596381024b540bdc0054891f">LPOutput&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;<a class="code" href="structLPOutput.html#a3e59042e596381024b540bdc0054891f">Clear</a>() {</div>
-<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;  m_path.clear();</div>
-<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;  m_intermediates.clear();</div>
-<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;  m_edge.first.Clear();</div>
-<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;  m_edge.second.Clear();</div>
-<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;}</div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160; </div>
-<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160; </div>
-<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;<span class="keywordtype">void</span></div>
-<div class="line"><a name="l00095"></a><span class="lineno"><a class="line" href="structLPOutput.html#ae614d177e9d67fd613d947584932aaea">   95</a></span>&#160;<a class="code" href="structLPOutput.html#ae614d177e9d67fd613d947584932aaea">LPOutput&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;<a class="code" href="structLPOutput.html#ae614d177e9d67fd613d947584932aaea">SetLPLabel</a>(<span class="keyword">const</span> std::string&amp; _label) {</div>
-<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;  m_edge.first.SetLPLabel(_label);</div>
-<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;  m_edge.second.SetLPLabel(_label);</div>
-<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;}</div>
-<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160; </div>
-<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160; </div>
-<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;<span class="keywordtype">void</span></div>
-<div class="line"><a name="l00104"></a><span class="lineno"><a class="line" href="structLPOutput.html#a512f9966a8306f28814a3b800da3ba16">  104</a></span>&#160;<a class="code" href="structLPOutput.html#a512f9966a8306f28814a3b800da3ba16">LPOutput&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;<a class="code" href="structLPOutput.html#a512f9966a8306f28814a3b800da3ba16">AddIntermediatesToWeights</a>(<span class="keyword">const</span> <span class="keywordtype">bool</span> _saveIntermediates) {</div>
-<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;  <span class="keywordflow">if</span>(!_saveIntermediates)</div>
-<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;    <span class="keywordflow">return</span>;</div>
-<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160; </div>
-<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;  <span class="comment">// Make a copy of the intermediates in reverse order for the backward edge.</span></div>
-<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;  std::vector&lt;CfgType&gt; tmp;</div>
-<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;  tmp.reserve(m_intermediates.size());</div>
-<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;  std::copy(m_intermediates.rbegin(), m_intermediates.rend(),</div>
-<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;            std::back_inserter(tmp));</div>
-<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160; </div>
-<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;  <span class="comment">// Set both edges.</span></div>
-<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;  m_edge.first.SetIntermediates(m_intermediates);</div>
-<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;  m_edge.second.SetIntermediates(tmp);</div>
-<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;}</div>
-<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160; </div>
-<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160; </div>
-<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;<span class="comment">/*----------------------------------------------------------------------------*/</span></div>
-<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160; </div>
-<div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="ttc" id="aclassMPTraits_html_a1a5aab50ac12baaf6b22ff345c5ae138"><div class="ttname"><a href="classMPTraits.html#a1a5aab50ac12baaf6b22ff345c5ae138">MPTraits::CfgType</a></div><div class="ttdeci">C CfgType</div><div class="ttdef"><b>Definition:</b> CfgTraits.h:117</div></div>
-<div class="ttc" id="aclassMPTraits_html_af200e5838e4287604244d6aeaf4d4d40"><div class="ttname"><a href="classMPTraits.html#af200e5838e4287604244d6aeaf4d4d40">MPTraits::WeightType</a></div><div class="ttdeci">W WeightType</div><div class="ttdef"><b>Definition:</b> CfgTraits.h:118</div></div>
-<div class="ttc" id="astructLPOutput_html"><div class="ttname"><a href="structLPOutput.html">LPOutput</a></div><div class="ttdef"><b>Definition:</b> LPOutput.h:22</div></div>
-<div class="ttc" id="astructLPOutput_html_a0fed0d2f7991330b260a68b1a3edfa9a"><div class="ttname"><a href="structLPOutput.html#a0fed0d2f7991330b260a68b1a3edfa9a">LPOutput::LPOutput</a></div><div class="ttdeci">LPOutput()</div><div class="ttdef"><b>Definition:</b> LPOutput.h:77</div></div>
-<div class="ttc" id="astructLPOutput_html_a1440400d4fe40f5e2a803b6b033f5dab"><div class="ttname"><a href="structLPOutput.html#a1440400d4fe40f5e2a803b6b033f5dab">LPOutput::m_path</a></div><div class="ttdeci">std::vector&lt; CfgType &gt; m_path</div><div class="ttdef"><b>Definition:</b> LPOutput.h:42</div></div>
-<div class="ttc" id="astructLPOutput_html_a2723550ee1b99bb30d8c5759216025e6"><div class="ttname"><a href="structLPOutput.html#a2723550ee1b99bb30d8c5759216025e6">LPOutput::m_edge</a></div><div class="ttdeci">LPEdge m_edge</div><div class="ttdef"><b>Definition:</b> LPOutput.h:51</div></div>
-<div class="ttc" id="astructLPOutput_html_a3e59042e596381024b540bdc0054891f"><div class="ttname"><a href="structLPOutput.html#a3e59042e596381024b540bdc0054891f">LPOutput::Clear</a></div><div class="ttdeci">void Clear()</div><div class="ttdef"><b>Definition:</b> LPOutput.h:85</div></div>
-<div class="ttc" id="astructLPOutput_html_a512f9966a8306f28814a3b800da3ba16"><div class="ttname"><a href="structLPOutput.html#a512f9966a8306f28814a3b800da3ba16">LPOutput::AddIntermediatesToWeights</a></div><div class="ttdeci">void AddIntermediatesToWeights(const bool _saveIntermediates)</div><div class="ttdef"><b>Definition:</b> LPOutput.h:105</div></div>
-<div class="ttc" id="astructLPOutput_html_a75d0efaf6b95524ca676b42eeeb9e147"><div class="ttname"><a href="structLPOutput.html#a75d0efaf6b95524ca676b42eeeb9e147">LPOutput::m_intermediates</a></div><div class="ttdeci">std::vector&lt; CfgType &gt; m_intermediates</div><div class="ttdef"><b>Definition:</b> LPOutput.h:47</div></div>
-<div class="ttc" id="astructLPOutput_html_ad8ff1b6168b1699c9b9f8a965f144b10"><div class="ttname"><a href="structLPOutput.html#ad8ff1b6168b1699c9b9f8a965f144b10">LPOutput::LPEdge</a></div><div class="ttdeci">std::pair&lt; WeightType, WeightType &gt; LPEdge</div><div class="ttdef"><b>Definition:</b> LPOutput.h:34</div></div>
-<div class="ttc" id="astructLPOutput_html_ae614d177e9d67fd613d947584932aaea"><div class="ttname"><a href="structLPOutput.html#ae614d177e9d67fd613d947584932aaea">LPOutput::SetLPLabel</a></div><div class="ttdeci">void SetLPLabel(const std::string &amp;_label)</div><div class="ttdef"><b>Definition:</b> LPOutput.h:96</div></div>
-<div class="ttc" id="astructLPOutput_html_afd5f3ae6ea638edff0e84c55c089dee7"><div class="ttname"><a href="structLPOutput.html#afd5f3ae6ea638edff0e84c55c089dee7">LPOutput::CfgType</a></div><div class="ttdeci">MPTraits::CfgType CfgType</div><div class="ttdef"><b>Definition:</b> LPOutput.h:27</div></div>
-<div class="ttc" id="astructLPOutput_html_afff137041385a36e362105ec9d295630"><div class="ttname"><a href="structLPOutput.html#afff137041385a36e362105ec9d295630">LPOutput::WeightType</a></div><div class="ttdeci">MPTraits::WeightType WeightType</div><div class="ttdef"><b>Definition:</b> LPOutput.h:28</div></div>
+<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="Cfg_8h.html">ConfigurationSpace/Cfg.h</a>&quot;</span></div>
+<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="Weight_8h.html">ConfigurationSpace/Weight.h</a>&quot;</span></div>
+<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160; </div>
+<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="preprocessor">#include &lt;string&gt;</span></div>
+<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="preprocessor">#include &lt;utility&gt;</span></div>
+<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="preprocessor">#include &lt;vector&gt;</span></div>
+<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160; </div>
+<div class="line"><a name="l00024"></a><span class="lineno"><a class="line" href="structLPOutput.html">   24</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structLPOutput.html">LPOutput</a> {</div>
+<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160; </div>
+<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160; </div>
+<div class="line"><a name="l00029"></a><span class="lineno"><a class="line" href="structLPOutput.html#afb9c363aaba6b0ac7d06dd9c43eeda99">   29</a></span>&#160;  <span class="keyword">typedef</span> <a class="code" href="classDefaultWeight.html">DefaultWeight&lt;Cfg&gt;</a> <a class="code" href="structLPOutput.html#afb9c363aaba6b0ac7d06dd9c43eeda99">WeightType</a>;</div>
+<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160; </div>
+<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160; </div>
+<div class="line"><a name="l00035"></a><span class="lineno"><a class="line" href="structLPOutput.html#af4725dda6f4ee6618bf3d862549d3925">   35</a></span>&#160;  <span class="keyword">typedef</span> std::pair&lt;WeightType, WeightType&gt; <a class="code" href="structLPOutput.html#af4725dda6f4ee6618bf3d862549d3925">LPEdge</a>;</div>
+<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160; </div>
+<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160; </div>
+<div class="line"><a name="l00043"></a><span class="lineno"><a class="line" href="structLPOutput.html#a61f2da9d50c0986cff5b47a0ea557033">   43</a></span>&#160;  std::vector&lt;Cfg&gt; <a class="code" href="structLPOutput.html#a61f2da9d50c0986cff5b47a0ea557033">m_path</a>;</div>
+<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160; </div>
+<div class="line"><a name="l00048"></a><span class="lineno"><a class="line" href="structLPOutput.html#a6bd027b07c42f84c04a70de03037c80e">   48</a></span>&#160;  std::vector&lt;Cfg&gt; <a class="code" href="structLPOutput.html#a6bd027b07c42f84c04a70de03037c80e">m_intermediates</a>;</div>
+<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160; </div>
+<div class="line"><a name="l00052"></a><span class="lineno"><a class="line" href="structLPOutput.html#a7bd7ec3bb4ad89a253c1c57d7596f9d3">   52</a></span>&#160;  <a class="code" href="structLPOutput.html#af4725dda6f4ee6618bf3d862549d3925">LPEdge</a> <a class="code" href="structLPOutput.html#a7bd7ec3bb4ad89a253c1c57d7596f9d3">m_edge</a>;</div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160; </div>
+<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160; </div>
+<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;  <a class="code" href="structLPOutput.html#a65ecd12ba180f6aee34fb015650c89e2">LPOutput</a>();</div>
+<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160; </div>
+<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160; </div>
+<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="structLPOutput.html#a2aac7f3c6d70263fe61f03b7e969f84e">Clear</a>();</div>
+<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160; </div>
+<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="structLPOutput.html#a99b69abe39e9c19df287dc858f527e7d">SetLPLabel</a>(<span class="keyword">const</span> std::string&amp; _label);</div>
+<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160; </div>
+<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;  <span class="keywordtype">void</span> <a class="code" href="structLPOutput.html#a003046130ac989d5b321748a4ce55348">AddIntermediatesToWeights</a>(<span class="keyword">const</span> <span class="keywordtype">bool</span> _saveIntermediates);</div>
+<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160; </div>
+<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160; </div>
+<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;};</div>
+<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160; </div>
+<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="ttc" id="aCfg_8h_html"><div class="ttname"><a href="Cfg_8h.html">Cfg.h</a></div></div>
+<div class="ttc" id="aWeight_8h_html"><div class="ttname"><a href="Weight_8h.html">Weight.h</a></div></div>
+<div class="ttc" id="aclassDefaultWeight_html"><div class="ttname"><a href="classDefaultWeight.html">DefaultWeight</a></div><div class="ttdef"><b>Definition:</b> Weight.h:36</div></div>
+<div class="ttc" id="astructLPOutput_html"><div class="ttname"><a href="structLPOutput.html">LPOutput</a></div><div class="ttdef"><b>Definition:</b> LPOutput.h:24</div></div>
+<div class="ttc" id="astructLPOutput_html_a003046130ac989d5b321748a4ce55348"><div class="ttname"><a href="structLPOutput.html#a003046130ac989d5b321748a4ce55348">LPOutput::AddIntermediatesToWeights</a></div><div class="ttdeci">void AddIntermediatesToWeights(const bool _saveIntermediates)</div><div class="ttdef"><b>Definition:</b> LPOutput.cpp:35</div></div>
+<div class="ttc" id="astructLPOutput_html_a2aac7f3c6d70263fe61f03b7e969f84e"><div class="ttname"><a href="structLPOutput.html#a2aac7f3c6d70263fe61f03b7e969f84e">LPOutput::Clear</a></div><div class="ttdeci">void Clear()</div><div class="ttdef"><b>Definition:</b> LPOutput.cpp:17</div></div>
+<div class="ttc" id="astructLPOutput_html_a61f2da9d50c0986cff5b47a0ea557033"><div class="ttname"><a href="structLPOutput.html#a61f2da9d50c0986cff5b47a0ea557033">LPOutput::m_path</a></div><div class="ttdeci">std::vector&lt; Cfg &gt; m_path</div><div class="ttdef"><b>Definition:</b> LPOutput.h:43</div></div>
+<div class="ttc" id="astructLPOutput_html_a65ecd12ba180f6aee34fb015650c89e2"><div class="ttname"><a href="structLPOutput.html#a65ecd12ba180f6aee34fb015650c89e2">LPOutput::LPOutput</a></div><div class="ttdeci">LPOutput()</div><div class="ttdef"><b>Definition:</b> LPOutput.cpp:10</div></div>
+<div class="ttc" id="astructLPOutput_html_a6bd027b07c42f84c04a70de03037c80e"><div class="ttname"><a href="structLPOutput.html#a6bd027b07c42f84c04a70de03037c80e">LPOutput::m_intermediates</a></div><div class="ttdeci">std::vector&lt; Cfg &gt; m_intermediates</div><div class="ttdef"><b>Definition:</b> LPOutput.h:48</div></div>
+<div class="ttc" id="astructLPOutput_html_a7bd7ec3bb4ad89a253c1c57d7596f9d3"><div class="ttname"><a href="structLPOutput.html#a7bd7ec3bb4ad89a253c1c57d7596f9d3">LPOutput::m_edge</a></div><div class="ttdeci">LPEdge m_edge</div><div class="ttdef"><b>Definition:</b> LPOutput.h:52</div></div>
+<div class="ttc" id="astructLPOutput_html_a99b69abe39e9c19df287dc858f527e7d"><div class="ttname"><a href="structLPOutput.html#a99b69abe39e9c19df287dc858f527e7d">LPOutput::SetLPLabel</a></div><div class="ttdeci">void SetLPLabel(const std::string &amp;_label)</div><div class="ttdef"><b>Definition:</b> LPOutput.cpp:27</div></div>
+<div class="ttc" id="astructLPOutput_html_af4725dda6f4ee6618bf3d862549d3925"><div class="ttname"><a href="structLPOutput.html#af4725dda6f4ee6618bf3d862549d3925">LPOutput::LPEdge</a></div><div class="ttdeci">std::pair&lt; WeightType, WeightType &gt; LPEdge</div><div class="ttdef"><b>Definition:</b> LPOutput.h:35</div></div>
+<div class="ttc" id="astructLPOutput_html_afb9c363aaba6b0ac7d06dd9c43eeda99"><div class="ttname"><a href="structLPOutput.html#afb9c363aaba6b0ac7d06dd9c43eeda99">LPOutput::WeightType</a></div><div class="ttdeci">DefaultWeight&lt; Cfg &gt; WeightType</div><div class="ttdef"><b>Definition:</b> LPOutput.h:29</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

@@ -81,7 +81,7 @@ $(function() {
 <div class="line">  <span class="comment">// c1 and c2 are the configurations that will be queried for a connecting path</span></div>
 <div class="line">  <span class="comment">// in both main functions. col is the witness configuration if a path cannot</span></div>
 <div class="line">  <span class="comment">// be determined by the function IsConnected(failure).</span></div>
-<div class="line">  <a class="code" href="PMPL_8h.html#a2f5559e03ade254588022c64273eda9a">CfgType</a> c1, c2, col;</div>
+<div class="line">  CfgType c1, c2, col;</div>
 <div class="line"> </div>
 <div class="line">  <span class="comment">// lpOut is an abstraction that will be populated with various information</span></div>
 <div class="line">  <span class="comment">// regarding the attempted path upon being called by IsConnected.</span></div>
@@ -92,7 +92,7 @@ $(function() {
 <div class="line">  <span class="comment">// above information in attempting to solve for a path between the two</span></div>
 <div class="line">  <span class="comment">// provided configurations. Returns true if a path is found, false otherwise;</span></div>
 <div class="line">  <span class="comment">// additional information is stored within the provided LPOutput..</span></div>
-<div class="line">  localPlanner-&gt;<a name="a3"></a><a class="code" href="classLocalPlannerMethod.html#ad3af92f393e9b3e20127c08233f603a3">IsConnected</a>(c1, c2, col, &amp;lpOut, env-&gt;<a name="a4"></a><a class="code" href="classEnvironment.html#af299471962e62e39e44fbfdc013720d0">GetPositionRes</a>(),</div>
+<div class="line">  localPlanner-&gt;<a name="a3"></a><a class="code" href="classLocalPlannerMethod.html#ad34ae7fc55b9867c524ebc2b3f4691ae">IsConnected</a>(c1, c2, col, &amp;lpOut, env-&gt;<a name="a4"></a><a class="code" href="classEnvironment.html#af299471962e62e39e44fbfdc013720d0">GetPositionRes</a>(),</div>
 <div class="line">      env-&gt;<a name="a5"></a><a class="code" href="classEnvironment.html#a9df230a41e857461cb67b2949b5facc1">GetOrientationRes</a>());</div>
 <div class="line"> </div>
 <div class="line"> </div>
@@ -102,17 +102,16 @@ $(function() {
 <div class="line">  <span class="comment">// recomputing and working with pre-validated paths and path waypoints.</span></div>
 <div class="line">  <span class="comment">// Returns a vector of intermediate configurations connecting the given</span></div>
 <div class="line">  <span class="comment">// endpoints (excluding endpoints).</span></div>
-<div class="line">  localPlanner-&gt;<a name="a6"></a><a class="code" href="classLocalPlannerMethod.html#a480f9e5b9399bc0cb961d88077817a61">BlindPath</a>({c1, c2}, env-&gt;<a class="code" href="classEnvironment.html#af299471962e62e39e44fbfdc013720d0">GetPositionRes</a>(),</div>
+<div class="line">  localPlanner-&gt;<a name="a6"></a><a class="code" href="classLocalPlannerMethod.html#af7c06a07b3d32e0dbf94c5a117325d12">BlindPath</a>({c1, c2}, env-&gt;<a class="code" href="classEnvironment.html#af299471962e62e39e44fbfdc013720d0">GetPositionRes</a>(),</div>
 <div class="line">      env-&gt;<a class="code" href="classEnvironment.html#a9df230a41e857461cb67b2949b5facc1">GetOrientationRes</a>());</div>
 <div class="line">}</div>
-<div class="ttc" id="aPMPL_8h_html_a2f5559e03ade254588022c64273eda9a"><div class="ttname"><a href="PMPL_8h.html#a2f5559e03ade254588022c64273eda9a">CfgType</a></div><div class="ttdeci">PMPLTraits::CfgType CfgType</div><div class="ttdef"><b>Definition:</b> PMPL.h:30</div></div>
-<div class="ttc" id="aclassEnvironment_html"><div class="ttname"><a href="classEnvironment.html">Environment</a></div><div class="ttdef"><b>Definition:</b> Environment.h:133</div></div>
-<div class="ttc" id="aclassEnvironment_html_a9df230a41e857461cb67b2949b5facc1"><div class="ttname"><a href="classEnvironment.html#a9df230a41e857461cb67b2949b5facc1">Environment::GetOrientationRes</a></div><div class="ttdeci">double GetOrientationRes() const noexcept</div><div class="ttdoc">Get the orientation resolution.</div><div class="ttdef"><b>Definition:</b> Environment.cpp:585</div></div>
-<div class="ttc" id="aclassEnvironment_html_af299471962e62e39e44fbfdc013720d0"><div class="ttname"><a href="classEnvironment.html#af299471962e62e39e44fbfdc013720d0">Environment::GetPositionRes</a></div><div class="ttdeci">double GetPositionRes() const noexcept</div><div class="ttdoc">Get the position resolution.</div><div class="ttdef"><b>Definition:</b> Environment.cpp:571</div></div>
-<div class="ttc" id="aclassLocalPlannerMethod_html"><div class="ttname"><a href="classLocalPlannerMethod.html">LocalPlannerMethod</a></div><div class="ttdef"><b>Definition:</b> LocalPlannerMethod.h:37</div></div>
-<div class="ttc" id="aclassLocalPlannerMethod_html_a480f9e5b9399bc0cb961d88077817a61"><div class="ttname"><a href="classLocalPlannerMethod.html#a480f9e5b9399bc0cb961d88077817a61">LocalPlannerMethod::BlindPath</a></div><div class="ttdeci">std::vector&lt; CfgType &gt; BlindPath(const std::vector&lt; CfgType &gt; &amp;_waypoints, const double _posRes, const double _oriRes)</div><div class="ttdef"><b>Definition:</b> LocalPlannerMethod.h:231</div></div>
-<div class="ttc" id="aclassLocalPlannerMethod_html_ad3af92f393e9b3e20127c08233f603a3"><div class="ttname"><a href="classLocalPlannerMethod.html#ad3af92f393e9b3e20127c08233f603a3">LocalPlannerMethod::IsConnected</a></div><div class="ttdeci">virtual bool IsConnected(const CfgType &amp;_start, const CfgType &amp;_end, CfgType &amp;_col, LPOutput&lt; MPTraits &gt; *_lpOutput, double _posRes, double _oriRes, bool _checkCollision=true, bool _savePath=false)=0</div></div>
-<div class="ttc" id="astructLPOutput_html"><div class="ttname"><a href="structLPOutput.html">LPOutput</a></div><div class="ttdef"><b>Definition:</b> LPOutput.h:22</div></div>
+<div class="ttc" id="aclassEnvironment_html"><div class="ttname"><a href="classEnvironment.html">Environment</a></div><div class="ttdef"><b>Definition:</b> Environment.h:137</div></div>
+<div class="ttc" id="aclassEnvironment_html_a9df230a41e857461cb67b2949b5facc1"><div class="ttname"><a href="classEnvironment.html#a9df230a41e857461cb67b2949b5facc1">Environment::GetOrientationRes</a></div><div class="ttdeci">double GetOrientationRes() const noexcept</div><div class="ttdoc">Get the orientation resolution.</div><div class="ttdef"><b>Definition:</b> Environment.cpp:600</div></div>
+<div class="ttc" id="aclassEnvironment_html_af299471962e62e39e44fbfdc013720d0"><div class="ttname"><a href="classEnvironment.html#af299471962e62e39e44fbfdc013720d0">Environment::GetPositionRes</a></div><div class="ttdeci">double GetPositionRes() const noexcept</div><div class="ttdoc">Get the position resolution.</div><div class="ttdef"><b>Definition:</b> Environment.cpp:586</div></div>
+<div class="ttc" id="aclassLocalPlannerMethod_html"><div class="ttname"><a href="classLocalPlannerMethod.html">LocalPlannerMethod</a></div><div class="ttdef"><b>Definition:</b> LocalPlannerMethod.h:32</div></div>
+<div class="ttc" id="aclassLocalPlannerMethod_html_ad34ae7fc55b9867c524ebc2b3f4691ae"><div class="ttname"><a href="classLocalPlannerMethod.html#ad34ae7fc55b9867c524ebc2b3f4691ae">LocalPlannerMethod::IsConnected</a></div><div class="ttdeci">virtual bool IsConnected(const Cfg &amp;_start, const Cfg &amp;_end, Cfg &amp;_col, LPOutput *_lpOutput, double _posRes, double _oriRes, bool _checkCollision=true, bool _savePath=false)=0</div></div>
+<div class="ttc" id="aclassLocalPlannerMethod_html_af7c06a07b3d32e0dbf94c5a117325d12"><div class="ttname"><a href="classLocalPlannerMethod.html#af7c06a07b3d32e0dbf94c5a117325d12">LocalPlannerMethod::BlindPath</a></div><div class="ttdeci">std::vector&lt; Cfg &gt; BlindPath(const std::vector&lt; Cfg &gt; &amp;_waypoints, const double _posRes, const double _oriRes)</div><div class="ttdef"><b>Definition:</b> LocalPlannerMethod.cpp:69</div></div>
+<div class="ttc" id="astructLPOutput_html"><div class="ttname"><a href="structLPOutput.html">LPOutput</a></div><div class="ttdef"><b>Definition:</b> LPOutput.h:24</div></div>
 </div><!-- fragment --> </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

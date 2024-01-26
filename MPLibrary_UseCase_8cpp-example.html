@@ -66,7 +66,7 @@ $(function() {
 <div class="title">MPLibrary_UseCase.cpp</div>  </div>
 </div><!--header-->
 <div class="contents">
-<p>This is an example of how to use the MPLibrary methods.</p>
+<p>This is an example of how to use the <a class="el" href="classMPLibrary.html">MPLibrary</a> methods.</p>
 <div class="fragment"><div class="line"><span class="keywordtype">void</span> MPLibraryUseCase() {</div>
 <div class="line">  <span class="comment">// The MPProblem holds the representation of the motion planning problem. It</span></div>
 <div class="line">  <span class="comment">// includes things such as the environment, the tasks, and the robots. It is</span></div>
@@ -83,7 +83,7 @@ $(function() {
 <div class="line">  <span class="comment">// MPSolution stores the motion plan solved by the planning algorithm. It</span></div>
 <div class="line">  <span class="comment">// contains information such as the roadmap and path for each robot. It can be</span></div>
 <div class="line">  <span class="comment">// created by passing in the robot to which the motion plan applies to.</span></div>
-<div class="line">  <a class="code" href="PMPL_8h.html#a0e826882dd5f3e0bd4ae975ce04abd04">MPSolution</a>* solution = <span class="keyword">new</span> <a name="a3"></a><a class="code" href="PMPL_8h.html#a0e826882dd5f3e0bd4ae975ce04abd04">MPSolution</a>(&lt;Specified <a class="code" href="classRobot.html">Robot</a>*&gt;);</div>
+<div class="line">  MPSolution* solution = <span class="keyword">new</span> MPSolution(&lt;Specified <a class="code" href="classRobot.html">Robot</a>*&gt;);</div>
 <div class="line"> </div>
 <div class="line">  <span class="comment">// The solver label is a string that corresponds to the XML node label for the</span></div>
 <div class="line">  <span class="comment">// motion planning algorithm you would like to use to solve the motion</span></div>
@@ -104,7 +104,6 @@ $(function() {
 <div class="line">  this-&gt;GetMPLibrary()-&gt;Solve(mpProblem, task, solution, solverLabel, seed,</div>
 <div class="line">      baseFilename);</div>
 <div class="line">}</div>
-<div class="ttc" id="aPMPL_8h_html_a0e826882dd5f3e0bd4ae975ce04abd04"><div class="ttname"><a href="PMPL_8h.html#a0e826882dd5f3e0bd4ae975ce04abd04">MPSolution</a></div><div class="ttdeci">PMPLTraits::MPSolution MPSolution</div><div class="ttdef"><b>Definition:</b> PMPL.h:35</div></div>
 <div class="ttc" id="aclassMPProblem_html"><div class="ttname"><a href="classMPProblem.html">MPProblem</a></div><div class="ttdef"><b>Definition:</b> MPProblem.h:34</div></div>
 <div class="ttc" id="aclassMPTask_html"><div class="ttname"><a href="classMPTask.html">MPTask</a></div><div class="ttdef"><b>Definition:</b> MPTask.h:46</div></div>
 <div class="ttc" id="aclassRobot_html"><div class="ttname"><a href="classRobot.html">Robot</a></div><div class="ttdef"><b>Definition:</b> Robot.h:52</div></div>

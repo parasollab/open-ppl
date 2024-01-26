@@ -76,692 +76,150 @@ $(function() {
 <div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="MapEvaluatorMethod_8h.html">MapEvaluatorMethod.h</a>&quot;</span></div>
 <div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160; </div>
 <div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="Path_8h.html">ConfigurationSpace/Path.h</a>&quot;</span></div>
-<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="LPOutput_8h.html">MPLibrary/LocalPlanners/LPOutput.h</a>&quot;</span></div>
-<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="StraightLine_8h.html">MPLibrary/LocalPlanners/StraightLine.h</a>&quot;</span></div>
-<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="MPProblem_8h.html">MPProblem/MPProblem.h</a>&quot;</span></div>
-<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="MPTask_8h.html">MPProblem/MPTask.h</a>&quot;</span></div>
-<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="Robot_8h.html">MPProblem/Robot/Robot.h</a>&quot;</span></div>
-<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="MetricUtils_8h.html">Utilities/MetricUtils.h</a>&quot;</span></div>
-<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="SSSP_8h.html">Utilities/SSSP.h</a>&quot;</span></div>
-<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160; </div>
-<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="preprocessor">#include &quot;nonstd/io.h&quot;</span></div>
-<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160; </div>
-<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160; </div>
-<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00037"></a><span class="lineno"><a class="line" href="classQueryMethod.html">   37</a></span>&#160;<span class="keyword">class </span><a class="code" href="classQueryMethod.html">QueryMethod</a> : <span class="keyword">virtual</span> <span class="keyword">public</span> <a class="code" href="classMapEvaluatorMethod.html">MapEvaluatorMethod</a>&lt;MPTraits&gt; {</div>
-<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160; </div>
-<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;  <span class="keyword">public</span>:</div>
-<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160; </div>
-<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160; </div>
-<div class="line"><a name="l00044"></a><span class="lineno"><a class="line" href="classQueryMethod.html#a7548a841494d04f7de50f1e16042cb76">   44</a></span>&#160;    <span class="keyword">typedef</span> <span class="keyword">typename</span> <a class="code" href="classMPTraits.html#a1a5aab50ac12baaf6b22ff345c5ae138">MPTraits::CfgType</a>              <a class="code" href="classQueryMethod.html#a7548a841494d04f7de50f1e16042cb76">CfgType</a>;</div>
-<div class="line"><a name="l00045"></a><span class="lineno"><a class="line" href="classQueryMethod.html#aa247bc7db2cdd826dfe7092e456abe84">   45</a></span>&#160;    <span class="keyword">typedef</span> <span class="keyword">typename</span> <a class="code" href="classGenericStateGraph.html">MPTraits::RoadmapType</a>          <a class="code" href="classQueryMethod.html#aa247bc7db2cdd826dfe7092e456abe84">RoadmapType</a>;</div>
-<div class="line"><a name="l00046"></a><span class="lineno"><a class="line" href="classQueryMethod.html#ac4b305062d8758a76d44f14fa43a0bbd">   46</a></span>&#160;    <span class="keyword">typedef</span> <span class="keyword">typename</span> <a class="code" href="classGenericStateGraph.html#a337a1247796cb9bf56fbe6eb2b9497d2">RoadmapType::VID</a>               <a class="code" href="classQueryMethod.html#ac4b305062d8758a76d44f14fa43a0bbd">VID</a>;</div>
-<div class="line"><a name="l00047"></a><span class="lineno"><a class="line" href="classQueryMethod.html#a44d4baa9585fd651d1d93bc308d423e4">   47</a></span>&#160;    <span class="keyword">typedef</span> <span class="keyword">typename</span> <a class="code" href="classGenericStateGraph.html#add7366ead725fe92aa09d12b401f257b">RoadmapType::VertexSet</a>         <a class="code" href="classQueryMethod.html#a44d4baa9585fd651d1d93bc308d423e4">VertexSet</a>;</div>
-<div class="line"><a name="l00048"></a><span class="lineno"><a class="line" href="classQueryMethod.html#a3d7cdd207d0aaece4aabdc434212389c">   48</a></span>&#160;    <span class="keyword">typedef</span> <span class="keyword">typename</span> <a class="code" href="classGoalTrackerType.html">MPTraits::GoalTracker</a>          <a class="code" href="classQueryMethod.html#a3d7cdd207d0aaece4aabdc434212389c">GoalTracker</a>;</div>
-<div class="line"><a name="l00049"></a><span class="lineno"><a class="line" href="classQueryMethod.html#a51acb085f2734ead8cd4fcfa205c25f9">   49</a></span>&#160;    <span class="keyword">typedef</span> <span class="keyword">typename</span> <a class="code" href="classGoalTrackerType.html#a61055c3935ceb71c43c3f2206ea60a8d">GoalTracker::VIDSet</a>            <a class="code" href="classQueryMethod.html#a51acb085f2734ead8cd4fcfa205c25f9">VIDSet</a>;</div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160; </div>
+<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="MPProblem_8h.html">MPProblem/MPProblem.h</a>&quot;</span></div>
+<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="MPTask_8h.html">MPProblem/MPTask.h</a>&quot;</span></div>
+<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="Robot_8h.html">MPProblem/Robot/Robot.h</a>&quot;</span></div>
+<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="SSSP_8h.html">Utilities/SSSP.h</a>&quot;</span></div>
+<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160; </div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160; </div>
+<div class="line"><a name="l00031"></a><span class="lineno"><a class="line" href="classQueryMethod.html">   31</a></span>&#160;<span class="keyword">class </span><a class="code" href="classQueryMethod.html">QueryMethod</a> : <span class="keyword">virtual</span> <span class="keyword">public</span> <a class="code" href="classMapEvaluatorMethod.html">MapEvaluatorMethod</a> {</div>
+<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160; </div>
+<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;  <span class="keyword">public</span>:</div>
+<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160; </div>
+<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160; </div>
+<div class="line"><a name="l00038"></a><span class="lineno"><a class="line" href="classQueryMethod.html#a2ebb04b8781abb12cbaa36dd80be6bae">   38</a></span>&#160;    <span class="keyword">typedef</span> <span class="keyword">typename</span> <a class="code" href="classGenericStateGraph.html">MPBaseObject::RoadmapType</a>      <a class="code" href="classQueryMethod.html#a2ebb04b8781abb12cbaa36dd80be6bae">RoadmapType</a>;</div>
+<div class="line"><a name="l00039"></a><span class="lineno"><a class="line" href="classQueryMethod.html#ab6ef0f889c07fba7026387d76bffea55">   39</a></span>&#160;    <span class="keyword">typedef</span> <span class="keyword">typename</span> <a class="code" href="classGenericStateGraph.html#a337a1247796cb9bf56fbe6eb2b9497d2">RoadmapType::VID</a>               <a class="code" href="classQueryMethod.html#ab6ef0f889c07fba7026387d76bffea55">VID</a>;</div>
+<div class="line"><a name="l00040"></a><span class="lineno"><a class="line" href="classQueryMethod.html#a53d356a24a8557ddc64b017234ab9670">   40</a></span>&#160;    <span class="keyword">typedef</span> <span class="keyword">typename</span> <a class="code" href="classGenericStateGraph.html#add7366ead725fe92aa09d12b401f257b">RoadmapType::VertexSet</a>         <a class="code" href="classQueryMethod.html#a53d356a24a8557ddc64b017234ab9670">VertexSet</a>;</div>
+<div class="line"><a name="l00041"></a><span class="lineno"><a class="line" href="classQueryMethod.html#aad59d4d6fdda1d1aae808b64ba7cea44">   41</a></span>&#160;    <span class="keyword">typedef</span> std::unordered_set&lt;size_t&gt;              <a class="code" href="classQueryMethod.html#aad59d4d6fdda1d1aae808b64ba7cea44">VIDSet</a>;</div>
+<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160; </div>
+<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160; </div>
+<div class="line"><a name="l00047"></a><span class="lineno"><a class="line" href="classQueryMethod.html#aea52ac8e219a7b3997663129e0c91017a278de98a1f58f65863a0176c20302471">   47</a></span>&#160;    <span class="keyword">enum</span> <a class="code" href="classQueryMethod.html#aea52ac8e219a7b3997663129e0c91017">GraphSearchAlg</a> {<a class="code" href="classQueryMethod.html#aea52ac8e219a7b3997663129e0c91017aa90d3015e4e2eb70dafdec3d90b775ba">DIJKSTRAS</a>, <a class="code" href="classQueryMethod.html#aea52ac8e219a7b3997663129e0c91017a278de98a1f58f65863a0176c20302471">ASTAR</a>}; </div>
+<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160; </div>
+<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160; </div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;    <a class="code" href="classQueryMethod.html#abe132ca7800b48044a892fa009234195">QueryMethod</a>();</div>
 <div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160; </div>
-<div class="line"><a name="l00055"></a><span class="lineno"><a class="line" href="classQueryMethod.html#aea52ac8e219a7b3997663129e0c91017a03977bc77a0a35e515f94daa63b275d2">   55</a></span>&#160;    <span class="keyword">enum</span> <a class="code" href="classQueryMethod.html#aea52ac8e219a7b3997663129e0c91017">GraphSearchAlg</a> {<a class="code" href="classQueryMethod.html#aea52ac8e219a7b3997663129e0c91017a899bfffb7079025a09224cffbf008e55">DIJKSTRAS</a>, <a class="code" href="classQueryMethod.html#aea52ac8e219a7b3997663129e0c91017a03977bc77a0a35e515f94daa63b275d2">ASTAR</a>}; </div>
+<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;    <a class="code" href="classQueryMethod.html#abe132ca7800b48044a892fa009234195">QueryMethod</a>(<a class="code" href="classXMLNode.html">XMLNode</a>&amp; _node);</div>
 <div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160; </div>
-<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160; </div>
-<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;    <a class="code" href="classQueryMethod.html#ad519916904d43963382dd62d429747d2">QueryMethod</a>();</div>
+<div class="line"><a name="l00057"></a><span class="lineno"><a class="line" href="classQueryMethod.html#a18c019b31bc302a8c6996f5519457a71">   57</a></span>&#160;    <span class="keyword">virtual</span> <a class="code" href="classQueryMethod.html#a18c019b31bc302a8c6996f5519457a71">~QueryMethod</a>() = <span class="keywordflow">default</span>;</div>
+<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160; </div>
 <div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160; </div>
-<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;    <a class="code" href="classQueryMethod.html#ad519916904d43963382dd62d429747d2">QueryMethod</a>(<a class="code" href="classXMLNode.html">XMLNode</a>&amp; _node);</div>
+<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;    <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="classQueryMethod.html#a6c4129ce23047a3812ead1499ecc3291">Print</a>(std::ostream&amp; _os) <span class="keyword">const override</span>;</div>
 <div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160; </div>
-<div class="line"><a name="l00065"></a><span class="lineno"><a class="line" href="classQueryMethod.html#a549e8e0175a52fa7099df47edc3bba10">   65</a></span>&#160;    <span class="keyword">virtual</span> <a class="code" href="classQueryMethod.html#a549e8e0175a52fa7099df47edc3bba10">~QueryMethod</a>() = <span class="keywordflow">default</span>;</div>
+<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;    <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="classQueryMethod.html#a9ee5c5a226d868cc87d86467b269f070">Initialize</a>() <span class="keyword">override</span>;</div>
 <div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160; </div>
 <div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160; </div>
-<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;    <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="classQueryMethod.html#a67f814dc07996e419876cec8f4640228">Print</a>(std::ostream&amp; _os) <span class="keyword">const override</span>;</div>
+<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;    <span class="keyword">virtual</span> <span class="keywordtype">bool</span> <a class="code" href="classQueryMethod.html#a3f3d12c4fa670a6e7a402e36dc5659ec">operator()</a>() <span class="keyword">override</span>;</div>
 <div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160; </div>
-<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;    <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="classQueryMethod.html#a7a5d51cb4afaf9d71a736f43cd3ef075">Initialize</a>() <span class="keyword">override</span>;</div>
-<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160; </div>
-<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160; </div>
-<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;    <span class="keyword">virtual</span> <span class="keywordtype">bool</span> <a class="code" href="classQueryMethod.html#a876955ca806c4ac6c80dc65645ba5d38">operator()</a>() <span class="keyword">override</span>;</div>
-<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160; </div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160; </div>
-<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;    std::vector&lt;VID&gt; <a class="code" href="classQueryMethod.html#ac42d1cfca52a4d24e03b759de74392f4">GeneratePath</a>(<span class="keyword">const</span> <a class="code" href="classQueryMethod.html#ac4b305062d8758a76d44f14fa43a0bbd">VID</a> _start, <span class="keyword">const</span> <a class="code" href="classQueryMethod.html#a51acb085f2734ead8cd4fcfa205c25f9">VIDSet</a>&amp; _end);</div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160; </div>
-<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="classQueryMethod.html#a42f08cfbc180a659705ffae720ba3b90">SetDMLabel</a>(<span class="keyword">const</span> std::string&amp; _dmLabel);</div>
+<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160; </div>
+<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;    std::vector&lt;VID&gt; <a class="code" href="classQueryMethod.html#a590c9a15a09fb5042ed0049de301dacf">GeneratePath</a>(<span class="keyword">const</span> <a class="code" href="classQueryMethod.html#ab6ef0f889c07fba7026387d76bffea55">VID</a> _start, <span class="keyword">const</span> <a class="code" href="classQueryMethod.html#aad59d4d6fdda1d1aae808b64ba7cea44">VIDSet</a>&amp; _end);</div>
+<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160; </div>
+<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="classQueryMethod.html#a4ba48d5e7eae809c9cd5bee76ddf79d5">SetDMLabel</a>(<span class="keyword">const</span> std::string&amp; _dmLabel);</div>
+<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160; </div>
+<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;    <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="classQueryMethod.html#a9fddce7e5acc8860aa360c0fa00e07af">SetPathWeightFunction</a>(<a class="code" href="SSSP_8h.html#af457e5f22e252ed8020c16e306eb849d">SSSPPathWeightFunction&lt;RoadmapType&gt;</a> _f);</div>
+<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160; </div>
+<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;        <span class="keywordtype">void</span> <a class="code" href="classQueryMethod.html#a3839f1a09c774ba29f9f015b6365a22b">SetLastConstraintTime</a>(<span class="keywordtype">double</span> _last);</div>
 <div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160; </div>
-<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;    <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="classQueryMethod.html#a9fb40e0f277a8e9f7505d85055a48965">SetPathWeightFunction</a>(<a class="code" href="SSSP_8h.html#af457e5f22e252ed8020c16e306eb849d">SSSPPathWeightFunction&lt;RoadmapType&gt;</a> _f);</div>
+<div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;        <span class="keywordtype">void</span> <a class="code" href="classQueryMethod.html#a8269031cb0877608767178788e1f520b">SetLastGoalConstraintTime</a>(<span class="keywordtype">double</span> _time);</div>
 <div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160; </div>
-<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;        <span class="keywordtype">void</span> <a class="code" href="classQueryMethod.html#a0d0a52b7873376e8c91e4ce30267bf44">SetLastConstraintTime</a>(<span class="keywordtype">double</span> _last);</div>
+<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;        <span class="keywordtype">void</span> <a class="code" href="classQueryMethod.html#afa976af72749dfc1ee93b5ba8ea1d55f">SetStartTime</a>(<span class="keywordtype">double</span> _start);</div>
 <div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160; </div>
-<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;        <span class="keywordtype">void</span> <a class="code" href="classQueryMethod.html#ac1ce9e915a0ae3bd49fb0d1ef8429c1d">SetLastGoalConstraintTime</a>(<span class="keywordtype">double</span> _time);</div>
+<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;        <span class="keywordtype">void</span> <a class="code" href="classQueryMethod.html#a9562a51648f38f79d8cc7e06c3be1e13">SetEndTime</a>(<span class="keywordtype">double</span> _end);</div>
 <div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160; </div>
-<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;        <span class="keywordtype">void</span> <a class="code" href="classQueryMethod.html#a5cbc9d5e7071bd5c76354b6d8674b2b0">SetStartTime</a>(<span class="keywordtype">double</span> _start);</div>
+<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160; </div>
+<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;  <span class="keyword">protected</span>:</div>
 <div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160; </div>
-<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;        <span class="keywordtype">void</span> <a class="code" href="classQueryMethod.html#a0756ab815e2c8a2a466131207585ec06">SetEndTime</a>(<span class="keywordtype">double</span> _end);</div>
-<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160; </div>
-<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160; </div>
-<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;  <span class="keyword">protected</span>:</div>
-<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160; </div>
-<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160; </div>
-<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;    <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="classQueryMethod.html#a3c1aabf6e33aff382a64e23ee70ba62c">Reset</a>(<a class="code" href="classGenericStateGraph.html">RoadmapType</a>* <span class="keyword">const</span> _r);</div>
-<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160; </div>
-<div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="classQueryMethod.html#a4c4f0324606bc92760b2bf0cdd3cb274">SetSearchAlgViaString</a>(std::string _alg, <span class="keyword">const</span> std::string&amp; _where);</div>
-<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160; </div>
-<div class="line"><a name="l00139"></a><span class="lineno">  139</span>&#160;    <span class="keyword">virtual</span> <span class="keywordtype">bool</span> <a class="code" href="classQueryMethod.html#a2b289524f5a239e82b849bc307c589e2">PerformSubQuery</a>(<span class="keyword">const</span> <a class="code" href="classQueryMethod.html#ac4b305062d8758a76d44f14fa43a0bbd">VID</a> _start, <span class="keyword">const</span> <a class="code" href="classQueryMethod.html#a51acb085f2734ead8cd4fcfa205c25f9">VIDSet</a>&amp; _goal);</div>
-<div class="line"><a name="l00140"></a><span class="lineno">  140</span>&#160; </div>
-<div class="line"><a name="l00148"></a><span class="lineno">  148</span>&#160;    <span class="keyword">virtual</span> <span class="keywordtype">double</span> <a class="code" href="classQueryMethod.html#a70c608f210df4930e4d967a83fd38895">StaticPathWeight</a>(</div>
-<div class="line"><a name="l00149"></a><span class="lineno">  149</span>&#160;        <span class="keyword">typename</span> RoadmapType::adj_edge_iterator&amp; _ei,</div>
-<div class="line"><a name="l00150"></a><span class="lineno">  150</span>&#160;        <span class="keyword">const</span> <span class="keywordtype">double</span> _sourceDistance, <span class="keyword">const</span> <span class="keywordtype">double</span> _targetDistance) <span class="keyword">const</span>;</div>
-<div class="line"><a name="l00151"></a><span class="lineno">  151</span>&#160; </div>
-<div class="line"><a name="l00160"></a><span class="lineno">  160</span>&#160;    <span class="keyword">virtual</span> <span class="keywordtype">double</span> <a class="code" href="classQueryMethod.html#a5469fd2be43c1592830afa49b9a7bfdf">DynamicPathWeight</a>(</div>
-<div class="line"><a name="l00161"></a><span class="lineno">  161</span>&#160;        <span class="keyword">typename</span> RoadmapType::adj_edge_iterator&amp; _ei,</div>
-<div class="line"><a name="l00162"></a><span class="lineno">  162</span>&#160;        <span class="keyword">const</span> <span class="keywordtype">double</span> _sourceDistance, <span class="keyword">const</span> <span class="keywordtype">double</span> _targetDistance) <span class="keyword">const</span>;</div>
-<div class="line"><a name="l00163"></a><span class="lineno">  163</span>&#160; </div>
-<div class="line"><a name="l00167"></a><span class="lineno">  167</span>&#160;    std::vector&lt;typename QueryMethod&lt;MPTraits&gt;::VID&gt;</div>
-<div class="line"><a name="l00168"></a><span class="lineno">  168</span>&#160;        <a class="code" href="classQueryMethod.html#a81fa5f5f53881188320051e391d3cfc8">TwoVariableQuery</a>(<span class="keyword">const</span> <a class="code" href="classQueryMethod.html#ac4b305062d8758a76d44f14fa43a0bbd">VID</a> _start, <span class="keyword">const</span> <a class="code" href="classQueryMethod.html#a51acb085f2734ead8cd4fcfa205c25f9">VIDSet</a>&amp; _goals);</div>
-<div class="line"><a name="l00169"></a><span class="lineno">  169</span>&#160; </div>
-<div class="line"><a name="l00173"></a><span class="lineno">  173</span>&#160; </div>
-<div class="line"><a name="l00174"></a><span class="lineno"><a class="line" href="classQueryMethod.html#a1d8e5d4e4ea89c3fb3abcfa2bd1dadbe">  174</a></span>&#160;    <a class="code" href="classGenericStateGraph.html">RoadmapType</a>* <a class="code" href="classQueryMethod.html#a1d8e5d4e4ea89c3fb3abcfa2bd1dadbe">m_roadmap</a>{<span class="keyword">nullptr</span>};   </div>
-<div class="line"><a name="l00175"></a><span class="lineno"><a class="line" href="classQueryMethod.html#ad3314c6cd5a153bc23546686fcdff5f4">  175</a></span>&#160;    <a class="code" href="classMPTask.html">MPTask</a>* <a class="code" href="classQueryMethod.html#ad3314c6cd5a153bc23546686fcdff5f4">m_task</a>{<span class="keyword">nullptr</span>};           </div>
+<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160; </div>
+<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;    <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="classQueryMethod.html#a66d3940f2b4ed080e8d3e820499fbd2d">Reset</a>(<a class="code" href="classGenericStateGraph.html">RoadmapType</a>* <span class="keyword">const</span> _r);</div>
+<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160; </div>
+<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="classQueryMethod.html#a8eb1af1b96196a9c035b6f6f1cd475ec">SetSearchAlgViaString</a>(std::string _alg, <span class="keyword">const</span> std::string&amp; _where);</div>
+<div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160; </div>
+<div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;    <span class="keyword">virtual</span> <span class="keywordtype">bool</span> <a class="code" href="classQueryMethod.html#a08e468b4f08cba5f133a90babf0bc312">PerformSubQuery</a>(<span class="keyword">const</span> <a class="code" href="classQueryMethod.html#ab6ef0f889c07fba7026387d76bffea55">VID</a> _start, <span class="keyword">const</span> <a class="code" href="classQueryMethod.html#aad59d4d6fdda1d1aae808b64ba7cea44">VIDSet</a>&amp; _goal);</div>
+<div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160; </div>
+<div class="line"><a name="l00140"></a><span class="lineno">  140</span>&#160;    <span class="keyword">virtual</span> <span class="keywordtype">double</span> <a class="code" href="classQueryMethod.html#ae97c7cd5ff55b9cd30a0e4a789ebccfa">StaticPathWeight</a>(</div>
+<div class="line"><a name="l00141"></a><span class="lineno">  141</span>&#160;        <span class="keyword">typename</span> RoadmapType::adj_edge_iterator&amp; _ei,</div>
+<div class="line"><a name="l00142"></a><span class="lineno">  142</span>&#160;        <span class="keyword">const</span> <span class="keywordtype">double</span> _sourceDistance, <span class="keyword">const</span> <span class="keywordtype">double</span> _targetDistance) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l00143"></a><span class="lineno">  143</span>&#160; </div>
+<div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160;    <span class="keyword">virtual</span> <span class="keywordtype">double</span> <a class="code" href="classQueryMethod.html#af0af427c5cda3c73fdcc58e5706cbd68">DynamicPathWeight</a>(</div>
+<div class="line"><a name="l00153"></a><span class="lineno">  153</span>&#160;        <span class="keyword">typename</span> RoadmapType::adj_edge_iterator&amp; _ei,</div>
+<div class="line"><a name="l00154"></a><span class="lineno">  154</span>&#160;        <span class="keyword">const</span> <span class="keywordtype">double</span> _sourceDistance, <span class="keyword">const</span> <span class="keywordtype">double</span> _targetDistance) <span class="keyword">const</span>;</div>
+<div class="line"><a name="l00155"></a><span class="lineno">  155</span>&#160; </div>
+<div class="line"><a name="l00159"></a><span class="lineno">  159</span>&#160;    std::vector&lt;typename QueryMethod::VID&gt;</div>
+<div class="line"><a name="l00160"></a><span class="lineno">  160</span>&#160;        <a class="code" href="classQueryMethod.html#a293370e34650c209c7b0863b86c1b824">TwoVariableQuery</a>(<span class="keyword">const</span> <a class="code" href="classQueryMethod.html#ab6ef0f889c07fba7026387d76bffea55">VID</a> _start, <span class="keyword">const</span> <a class="code" href="classQueryMethod.html#aad59d4d6fdda1d1aae808b64ba7cea44">VIDSet</a>&amp; _goals);</div>
+<div class="line"><a name="l00161"></a><span class="lineno">  161</span>&#160; </div>
+<div class="line"><a name="l00165"></a><span class="lineno">  165</span>&#160; </div>
+<div class="line"><a name="l00166"></a><span class="lineno"><a class="line" href="classQueryMethod.html#a8d2d24c2d7ada48e662361322a3ff306">  166</a></span>&#160;    <a class="code" href="classGenericStateGraph.html">RoadmapType</a>* <a class="code" href="classQueryMethod.html#a8d2d24c2d7ada48e662361322a3ff306">m_roadmap</a>{<span class="keyword">nullptr</span>};   </div>
+<div class="line"><a name="l00167"></a><span class="lineno"><a class="line" href="classQueryMethod.html#a5487110b650753ded8503801a560086b">  167</a></span>&#160;    <a class="code" href="classMPTask.html">MPTask</a>* <a class="code" href="classQueryMethod.html#a5487110b650753ded8503801a560086b">m_task</a>{<span class="keyword">nullptr</span>};           </div>
+<div class="line"><a name="l00168"></a><span class="lineno">  168</span>&#160; </div>
+<div class="line"><a name="l00169"></a><span class="lineno"><a class="line" href="classQueryMethod.html#a4b78024d458da5b702eb9d9f507efdd0">  169</a></span>&#160;    <span class="keywordtype">size_t</span> <a class="code" href="classQueryMethod.html#a4b78024d458da5b702eb9d9f507efdd0">m_goalIndex</a>{0};             </div>
+<div class="line"><a name="l00170"></a><span class="lineno">  170</span>&#160; </div>
+<div class="line"><a name="l00171"></a><span class="lineno"><a class="line" href="classQueryMethod.html#ad37dad79af7b71da571ea504037a4095">  171</a></span>&#160;    <a class="code" href="classQueryMethod.html#aea52ac8e219a7b3997663129e0c91017">GraphSearchAlg</a> <a class="code" href="classQueryMethod.html#ad37dad79af7b71da571ea504037a4095">m_searchAlg</a>{<a class="code" href="classQueryMethod.html#aea52ac8e219a7b3997663129e0c91017aa90d3015e4e2eb70dafdec3d90b775ba">DIJKSTRAS</a>};  </div>
+<div class="line"><a name="l00172"></a><span class="lineno">  172</span>&#160; </div>
+<div class="line"><a name="l00173"></a><span class="lineno"><a class="line" href="classQueryMethod.html#a46a5da363472f158903cfbff339c9b19">  173</a></span>&#160;    std::string <a class="code" href="classQueryMethod.html#a46a5da363472f158903cfbff339c9b19">m_safeIntervalLabel</a>; </div>
+<div class="line"><a name="l00174"></a><span class="lineno"><a class="line" href="classQueryMethod.html#a3f90559027a3439fa594f99fee554f08">  174</a></span>&#160;    std::string <a class="code" href="classQueryMethod.html#a3f90559027a3439fa594f99fee554f08">m_dmLabel</a>;           </div>
+<div class="line"><a name="l00175"></a><span class="lineno"><a class="line" href="classQueryMethod.html#a019b7f9cdc44797c398e30d5ef795a23">  175</a></span>&#160;        <span class="keywordtype">bool</span> <a class="code" href="classQueryMethod.html#a019b7f9cdc44797c398e30d5ef795a23">m_twoVariable</a>{<span class="keyword">false</span>};       </div>
 <div class="line"><a name="l00176"></a><span class="lineno">  176</span>&#160; </div>
-<div class="line"><a name="l00177"></a><span class="lineno"><a class="line" href="classQueryMethod.html#a6752479f575f47351dbb3b145f10adfa">  177</a></span>&#160;    <span class="keywordtype">size_t</span> <a class="code" href="classQueryMethod.html#a6752479f575f47351dbb3b145f10adfa">m_goalIndex</a>{0};             </div>
-<div class="line"><a name="l00178"></a><span class="lineno">  178</span>&#160; </div>
-<div class="line"><a name="l00179"></a><span class="lineno"><a class="line" href="classQueryMethod.html#a6e684db36ae17eaba1887e8e017a1b8e">  179</a></span>&#160;    <a class="code" href="classQueryMethod.html#aea52ac8e219a7b3997663129e0c91017">GraphSearchAlg</a> <a class="code" href="classQueryMethod.html#a6e684db36ae17eaba1887e8e017a1b8e">m_searchAlg</a>{<a class="code" href="classQueryMethod.html#aea52ac8e219a7b3997663129e0c91017a899bfffb7079025a09224cffbf008e55">DIJKSTRAS</a>};  </div>
-<div class="line"><a name="l00180"></a><span class="lineno">  180</span>&#160; </div>
-<div class="line"><a name="l00181"></a><span class="lineno"><a class="line" href="classQueryMethod.html#a349b6fe7a971d875f23051e432132f37">  181</a></span>&#160;    std::string <a class="code" href="classQueryMethod.html#a349b6fe7a971d875f23051e432132f37">m_safeIntervalLabel</a>; </div>
-<div class="line"><a name="l00182"></a><span class="lineno"><a class="line" href="classQueryMethod.html#ae7e8167930847c91a41e0caa101a0f32">  182</a></span>&#160;    std::string <a class="code" href="classQueryMethod.html#ae7e8167930847c91a41e0caa101a0f32">m_dmLabel</a>;           </div>
-<div class="line"><a name="l00183"></a><span class="lineno"><a class="line" href="classQueryMethod.html#a95b4fc8c350a1f6c9d145e3bb80b14b2">  183</a></span>&#160;        <span class="keywordtype">bool</span> <a class="code" href="classQueryMethod.html#a95b4fc8c350a1f6c9d145e3bb80b14b2">m_twoVariable</a>{<span class="keyword">false</span>};       </div>
+<div class="line"><a name="l00178"></a><span class="lineno"><a class="line" href="classQueryMethod.html#ac776864bf3dcb9e7b4d36b8e5e6d23cd">  178</a></span>&#160;    <a class="code" href="SSSP_8h.html#af457e5f22e252ed8020c16e306eb849d">SSSPPathWeightFunction&lt;RoadmapType&gt;</a> <a class="code" href="classQueryMethod.html#ac776864bf3dcb9e7b4d36b8e5e6d23cd">m_weightFunction</a>;</div>
+<div class="line"><a name="l00179"></a><span class="lineno">  179</span>&#160; </div>
+<div class="line"><a name="l00180"></a><span class="lineno"><a class="line" href="classQueryMethod.html#ac240ebc57e25035209e2741f3f4aab4a">  180</a></span>&#160;        <span class="keywordtype">double</span> <a class="code" href="classQueryMethod.html#ac240ebc57e25035209e2741f3f4aab4a">m_lastConstraint</a>{0};     </div>
+<div class="line"><a name="l00181"></a><span class="lineno"><a class="line" href="classQueryMethod.html#a7cf37a08f8ac515a22f5b7e05d0c4dc0">  181</a></span>&#160;        <span class="keywordtype">double</span> <a class="code" href="classQueryMethod.html#a7cf37a08f8ac515a22f5b7e05d0c4dc0">m_lastGoalConstraint</a>{0}; </div>
+<div class="line"><a name="l00182"></a><span class="lineno"><a class="line" href="classQueryMethod.html#a00446e79583033c27296cccc024d306c">  182</a></span>&#160;        <span class="keywordtype">double</span> <a class="code" href="classQueryMethod.html#a00446e79583033c27296cccc024d306c">m_startTime</a>{0};          </div>
+<div class="line"><a name="l00183"></a><span class="lineno"><a class="line" href="classQueryMethod.html#ae91563bf98341ca7651583a2ebcce957">  183</a></span>&#160;        <span class="keywordtype">double</span> <a class="code" href="classQueryMethod.html#ae91563bf98341ca7651583a2ebcce957">m_endTime</a>{0};            </div>
 <div class="line"><a name="l00184"></a><span class="lineno">  184</span>&#160; </div>
-<div class="line"><a name="l00186"></a><span class="lineno"><a class="line" href="classQueryMethod.html#a63513c2aa3c3f8d6deb1f4723035a67b">  186</a></span>&#160;    <a class="code" href="SSSP_8h.html#af457e5f22e252ed8020c16e306eb849d">SSSPPathWeightFunction&lt;RoadmapType&gt;</a> <a class="code" href="classQueryMethod.html#a63513c2aa3c3f8d6deb1f4723035a67b">m_weightFunction</a>;</div>
-<div class="line"><a name="l00187"></a><span class="lineno">  187</span>&#160; </div>
-<div class="line"><a name="l00188"></a><span class="lineno"><a class="line" href="classQueryMethod.html#a29d506d0ca303a41f3976532823c7083">  188</a></span>&#160;        <span class="keywordtype">double</span> <a class="code" href="classQueryMethod.html#a29d506d0ca303a41f3976532823c7083">m_lastConstraint</a>{0};     </div>
-<div class="line"><a name="l00189"></a><span class="lineno"><a class="line" href="classQueryMethod.html#a58fba8db648e4fbfce158a2969248710">  189</a></span>&#160;        <span class="keywordtype">double</span> <a class="code" href="classQueryMethod.html#a58fba8db648e4fbfce158a2969248710">m_lastGoalConstraint</a>{0}; </div>
-<div class="line"><a name="l00190"></a><span class="lineno"><a class="line" href="classQueryMethod.html#a4c56269c0a0da3bb8beffad4da5fa6ac">  190</a></span>&#160;        <span class="keywordtype">double</span> <a class="code" href="classQueryMethod.html#a4c56269c0a0da3bb8beffad4da5fa6ac">m_startTime</a>{0};          </div>
-<div class="line"><a name="l00191"></a><span class="lineno"><a class="line" href="classQueryMethod.html#a6de469da51b880c6b1d4f602e0072843">  191</a></span>&#160;        <span class="keywordtype">double</span> <a class="code" href="classQueryMethod.html#a6de469da51b880c6b1d4f602e0072843">m_endTime</a>{0};            </div>
-<div class="line"><a name="l00192"></a><span class="lineno">  192</span>&#160; </div>
-<div class="line"><a name="l00194"></a><span class="lineno">  194</span>&#160; </div>
-<div class="line"><a name="l00195"></a><span class="lineno">  195</span>&#160;};</div>
-<div class="line"><a name="l00196"></a><span class="lineno">  196</span>&#160; </div>
-<div class="line"><a name="l00197"></a><span class="lineno">  197</span>&#160;<span class="comment">/*----------------------------- Construction ---------------------------------*/</span></div>
-<div class="line"><a name="l00198"></a><span class="lineno">  198</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00199"></a><span class="lineno"><a class="line" href="classQueryMethod.html#ad519916904d43963382dd62d429747d2">  199</a></span>&#160;<a class="code" href="classQueryMethod.html#ad519916904d43963382dd62d429747d2">QueryMethod&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00200"></a><span class="lineno">  200</span>&#160;<a class="code" href="classQueryMethod.html#ad519916904d43963382dd62d429747d2">QueryMethod</a>() : <a class="code" href="classMapEvaluatorMethod.html">MapEvaluatorMethod</a>&lt;<a class="code" href="classMPTraits.html">MPTraits</a>&gt;() {</div>
-<div class="line"><a name="l00201"></a><span class="lineno">  201</span>&#160;  this-&gt;<a class="code" href="classMPBaseObject.html#ab59d82cd734f77fdc17eddb8517461da">SetName</a>(<span class="stringliteral">&quot;QueryMethod&quot;</span>);</div>
-<div class="line"><a name="l00202"></a><span class="lineno">  202</span>&#160;}</div>
-<div class="line"><a name="l00203"></a><span class="lineno">  203</span>&#160; </div>
-<div class="line"><a name="l00204"></a><span class="lineno">  204</span>&#160; </div>
-<div class="line"><a name="l00205"></a><span class="lineno">  205</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00206"></a><span class="lineno"><a class="line" href="classQueryMethod.html#a3ee8dcbdde9133e431bed31a686b986d">  206</a></span>&#160;<a class="code" href="classQueryMethod.html#ad519916904d43963382dd62d429747d2">QueryMethod&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00207"></a><span class="lineno">  207</span>&#160;<a class="code" href="classQueryMethod.html#ad519916904d43963382dd62d429747d2">QueryMethod</a>(<a class="code" href="classXMLNode.html">XMLNode</a>&amp; _node) : <a class="code" href="classMapEvaluatorMethod.html">MapEvaluatorMethod</a>&lt;<a class="code" href="classMPTraits.html">MPTraits</a>&gt;(_node) {</div>
-<div class="line"><a name="l00208"></a><span class="lineno">  208</span>&#160;  this-&gt;<a class="code" href="classMPBaseObject.html#ab59d82cd734f77fdc17eddb8517461da">SetName</a>(<span class="stringliteral">&quot;QueryMethod&quot;</span>);</div>
-<div class="line"><a name="l00209"></a><span class="lineno">  209</span>&#160; </div>
-<div class="line"><a name="l00210"></a><span class="lineno">  210</span>&#160;  <span class="comment">// Parse the search algorithm type.</span></div>
-<div class="line"><a name="l00211"></a><span class="lineno">  211</span>&#160;  <span class="keyword">const</span> std::string searchAlg = _node.<a class="code" href="classXMLNode.html#af0e81db89948e52fdee6bf2bf029037f">Read</a>(<span class="stringliteral">&quot;graphSearchAlg&quot;</span>, <span class="keyword">false</span>, <span class="stringliteral">&quot;dijkstras&quot;</span>,</div>
-<div class="line"><a name="l00212"></a><span class="lineno">  212</span>&#160;      <span class="stringliteral">&quot;Graph search algorithm.&quot;</span>);</div>
-<div class="line"><a name="l00213"></a><span class="lineno">  213</span>&#160;  <a class="code" href="classQueryMethod.html#a4c4f0324606bc92760b2bf0cdd3cb274">SetSearchAlgViaString</a>(searchAlg, _node.<a class="code" href="classXMLNode.html#ad8152f1ab4f8720572c66397f74e282c">Where</a>());</div>
-<div class="line"><a name="l00214"></a><span class="lineno">  214</span>&#160; </div>
-<div class="line"><a name="l00215"></a><span class="lineno">  215</span>&#160;  <span class="comment">// Parse the other options.</span></div>
-<div class="line"><a name="l00216"></a><span class="lineno">  216</span>&#160;  <a class="code" href="classQueryMethod.html#a349b6fe7a971d875f23051e432132f37">m_safeIntervalLabel</a> = _node.<a class="code" href="classXMLNode.html#af0e81db89948e52fdee6bf2bf029037f">Read</a>(<span class="stringliteral">&quot;safeIntervalToolLabel&quot;</span>, <span class="keyword">false</span>, <span class="stringliteral">&quot;&quot;</span>,</div>
-<div class="line"><a name="l00217"></a><span class="lineno">  217</span>&#160;      <span class="stringliteral">&quot;Label of the SafeIntervalTool&quot;</span>);</div>
-<div class="line"><a name="l00218"></a><span class="lineno">  218</span>&#160;  <a class="code" href="classQueryMethod.html#ae7e8167930847c91a41e0caa101a0f32">m_dmLabel</a> = _node.<a class="code" href="classXMLNode.html#af0e81db89948e52fdee6bf2bf029037f">Read</a>(<span class="stringliteral">&quot;dmLabel&quot;</span>, <span class="keyword">false</span>, <span class="stringliteral">&quot;&quot;</span>,</div>
-<div class="line"><a name="l00219"></a><span class="lineno">  219</span>&#160;      <span class="stringliteral">&quot;Alternate distance metric to replace edge weight during search.&quot;</span>);</div>
-<div class="line"><a name="l00220"></a><span class="lineno">  220</span>&#160;    <a class="code" href="classQueryMethod.html#a95b4fc8c350a1f6c9d145e3bb80b14b2">m_twoVariable</a> = _node.<a class="code" href="classXMLNode.html#af0e81db89948e52fdee6bf2bf029037f">Read</a>(<span class="stringliteral">&quot;twoVariableSS&quot;</span>,<span class="keyword">false</span>,<a class="code" href="classQueryMethod.html#a95b4fc8c350a1f6c9d145e3bb80b14b2">m_twoVariable</a>,</div>
-<div class="line"><a name="l00221"></a><span class="lineno">  221</span>&#160;                                    <span class="stringliteral">&quot;Flag to use two variable state search.&quot;</span>);</div>
-<div class="line"><a name="l00222"></a><span class="lineno">  222</span>&#160;}</div>
-<div class="line"><a name="l00223"></a><span class="lineno">  223</span>&#160; </div>
-<div class="line"><a name="l00224"></a><span class="lineno">  224</span>&#160;<span class="comment">/*--------------------------- MPBaseObject Overrides -------------------------*/</span></div>
-<div class="line"><a name="l00225"></a><span class="lineno">  225</span>&#160; </div>
-<div class="line"><a name="l00226"></a><span class="lineno">  226</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00227"></a><span class="lineno">  227</span>&#160;<span class="keywordtype">void</span></div>
-<div class="line"><a name="l00228"></a><span class="lineno"><a class="line" href="classQueryMethod.html#a67f814dc07996e419876cec8f4640228">  228</a></span>&#160;<a class="code" href="classQueryMethod.html#a67f814dc07996e419876cec8f4640228">QueryMethod&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00229"></a><span class="lineno">  229</span>&#160;<a class="code" href="classQueryMethod.html#a67f814dc07996e419876cec8f4640228">Print</a>(std::ostream&amp; _os)<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l00230"></a><span class="lineno">  230</span>&#160;  _os &lt;&lt; this-&gt;GetNameAndLabel() &lt;&lt; <span class="stringliteral">&quot;::&quot;</span></div>
-<div class="line"><a name="l00231"></a><span class="lineno">  231</span>&#160;      &lt;&lt; <span class="stringliteral">&quot;\n\tSearch Alg: &quot;</span> &lt;&lt; m_searchAlg</div>
-<div class="line"><a name="l00232"></a><span class="lineno">  232</span>&#160;      &lt;&lt; <span class="stringliteral">&quot;\n\tSI Tool Label: &quot;</span> &lt;&lt; m_safeIntervalLabel</div>
-<div class="line"><a name="l00233"></a><span class="lineno">  233</span>&#160;      &lt;&lt; <span class="stringliteral">&quot;\n\tAlternate DM: &quot;</span> &lt;&lt; m_dmLabel</div>
-<div class="line"><a name="l00234"></a><span class="lineno">  234</span>&#160;      &lt;&lt; std::endl;</div>
-<div class="line"><a name="l00235"></a><span class="lineno">  235</span>&#160;}</div>
-<div class="line"><a name="l00236"></a><span class="lineno">  236</span>&#160; </div>
-<div class="line"><a name="l00237"></a><span class="lineno">  237</span>&#160; </div>
-<div class="line"><a name="l00238"></a><span class="lineno">  238</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00239"></a><span class="lineno">  239</span>&#160;<span class="keywordtype">void</span></div>
-<div class="line"><a name="l00240"></a><span class="lineno"><a class="line" href="classQueryMethod.html#a7a5d51cb4afaf9d71a736f43cd3ef075">  240</a></span>&#160;<a class="code" href="classQueryMethod.html#a7a5d51cb4afaf9d71a736f43cd3ef075">QueryMethod&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00241"></a><span class="lineno">  241</span>&#160;<a class="code" href="classQueryMethod.html#a7a5d51cb4afaf9d71a736f43cd3ef075">Initialize</a>() {</div>
-<div class="line"><a name="l00242"></a><span class="lineno">  242</span>&#160;  <span class="comment">// Clear previous state.</span></div>
-<div class="line"><a name="l00243"></a><span class="lineno">  243</span>&#160;  Reset(<span class="keyword">nullptr</span>);</div>
-<div class="line"><a name="l00244"></a><span class="lineno">  244</span>&#160; </div>
-<div class="line"><a name="l00245"></a><span class="lineno">  245</span>&#160;  this-&gt;GetStatClass()-&gt;SetStat(this-&gt;GetNameAndLabel() + <span class="stringliteral">&quot;::FoundPath&quot;</span>, 0);</div>
-<div class="line"><a name="l00246"></a><span class="lineno">  246</span>&#160;}</div>
-<div class="line"><a name="l00247"></a><span class="lineno">  247</span>&#160; </div>
-<div class="line"><a name="l00248"></a><span class="lineno">  248</span>&#160;<span class="comment">/*-------------------------- MapEvaluator Interface --------------------------*/</span></div>
-<div class="line"><a name="l00249"></a><span class="lineno">  249</span>&#160; </div>
-<div class="line"><a name="l00250"></a><span class="lineno">  250</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00251"></a><span class="lineno">  251</span>&#160;<span class="keywordtype">bool</span></div>
-<div class="line"><a name="l00252"></a><span class="lineno"><a class="line" href="classQueryMethod.html#a876955ca806c4ac6c80dc65645ba5d38">  252</a></span>&#160;<a class="code" href="classQueryMethod.html#a876955ca806c4ac6c80dc65645ba5d38">QueryMethod&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00253"></a><span class="lineno">  253</span>&#160;<a class="code" href="classQueryMethod.html#a876955ca806c4ac6c80dc65645ba5d38">operator()</a>() {</div>
-<div class="line"><a name="l00254"></a><span class="lineno">  254</span>&#160;  <span class="keyword">auto</span> goalTracker = this-&gt;GetGoalTracker();</div>
-<div class="line"><a name="l00255"></a><span class="lineno">  255</span>&#160;  <span class="keyword">const</span> std::vector&lt;size_t&gt; unreachedGoals = goalTracker-&gt;UnreachedGoalIndexes();</div>
-<div class="line"><a name="l00256"></a><span class="lineno">  256</span>&#160;  <span class="keyword">auto</span> task = this-&gt;GetTask();</div>
-<div class="line"><a name="l00257"></a><span class="lineno">  257</span>&#160;  <span class="keyword">const</span> <span class="keywordtype">size_t</span> numGoals = task-&gt;GetNumGoals();</div>
-<div class="line"><a name="l00258"></a><span class="lineno">  258</span>&#160; </div>
-<div class="line"><a name="l00259"></a><span class="lineno">  259</span>&#160;  <span class="comment">// Record the path length history when this function exits.</span></div>
-<div class="line"><a name="l00260"></a><span class="lineno">  260</span>&#160;  nonstd::call_on_destruct trackHistory([<span class="keyword">this</span>](){</div>
-<div class="line"><a name="l00261"></a><span class="lineno">  261</span>&#160;      this-&gt;GetStatClass()-&gt;AddToHistory(<span class="stringliteral">&quot;pathlength&quot;</span>, this-&gt;GetPath()-&gt;Length());</div>
-<div class="line"><a name="l00262"></a><span class="lineno">  262</span>&#160;  });</div>
-<div class="line"><a name="l00263"></a><span class="lineno">  263</span>&#160; </div>
-<div class="line"><a name="l00264"></a><span class="lineno">  264</span>&#160;  <span class="keywordflow">if</span>(goalTracker-&gt;GetStartVIDs().empty()) {</div>
-<div class="line"><a name="l00265"></a><span class="lineno">  265</span>&#160;    <span class="keywordflow">if</span>(this-&gt;m_debug)</div>
-<div class="line"><a name="l00266"></a><span class="lineno">  266</span>&#160;      std::cout &lt;&lt; <span class="stringliteral">&quot;No start VIDs, query cannot succeed.&quot;</span></div>
-<div class="line"><a name="l00267"></a><span class="lineno">  267</span>&#160;                &lt;&lt; std::endl;</div>
-<div class="line"><a name="l00268"></a><span class="lineno">  268</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00269"></a><span class="lineno">  269</span>&#160;  }</div>
-<div class="line"><a name="l00270"></a><span class="lineno">  270</span>&#160; </div>
-<div class="line"><a name="l00271"></a><span class="lineno">  271</span>&#160;  <span class="comment">// If no goals remain, then this must be a refinement step (as in optimal</span></div>
-<div class="line"><a name="l00272"></a><span class="lineno">  272</span>&#160;  <span class="comment">// planning). In this case or the roadmap has changed, reinitialize and</span></div>
-<div class="line"><a name="l00273"></a><span class="lineno">  273</span>&#160;  <span class="comment">// rebuild the whole path.</span></div>
-<div class="line"><a name="l00274"></a><span class="lineno">  274</span>&#160;  <span class="keyword">auto</span> r = this-&gt;GetRoadmap();</div>
-<div class="line"><a name="l00275"></a><span class="lineno">  275</span>&#160;  <span class="keywordflow">if</span>(unreachedGoals.empty() or r != m_roadmap or task != m_task)</div>
-<div class="line"><a name="l00276"></a><span class="lineno">  276</span>&#160;    Reset(r);</div>
-<div class="line"><a name="l00277"></a><span class="lineno">  277</span>&#160; </div>
-<div class="line"><a name="l00278"></a><span class="lineno">  278</span>&#160;  <span class="keywordflow">if</span>(this-&gt;m_debug)</div>
-<div class="line"><a name="l00279"></a><span class="lineno">  279</span>&#160;    std::cout &lt;&lt; <span class="stringliteral">&quot;Querying roadmap for a path satisfying task &#39;&quot;</span></div>
-<div class="line"><a name="l00280"></a><span class="lineno">  280</span>&#160;              &lt;&lt; task-&gt;GetLabel()</div>
-<div class="line"><a name="l00281"></a><span class="lineno">  281</span>&#160;              &lt;&lt; <span class="stringliteral">&quot;&#39;, &quot;</span> &lt;&lt; unreachedGoals.size() &lt;&lt; <span class="stringliteral">&quot; / &quot;</span> &lt;&lt; numGoals</div>
-<div class="line"><a name="l00282"></a><span class="lineno">  282</span>&#160;              &lt;&lt; <span class="stringliteral">&quot; goals not reached.&quot;</span></div>
-<div class="line"><a name="l00283"></a><span class="lineno">  283</span>&#160;              &lt;&lt; <span class="stringliteral">&quot;\n\tTrying to connect goal: &quot;</span> &lt;&lt; m_goalIndex</div>
-<div class="line"><a name="l00284"></a><span class="lineno">  284</span>&#160;              &lt;&lt; <span class="stringliteral">&quot;\n\tUnreached goals: &quot;</span> &lt;&lt; unreachedGoals</div>
-<div class="line"><a name="l00285"></a><span class="lineno">  285</span>&#160;              &lt;&lt; std::endl;</div>
-<div class="line"><a name="l00286"></a><span class="lineno">  286</span>&#160; </div>
-<div class="line"><a name="l00287"></a><span class="lineno">  287</span>&#160;  <span class="comment">// Search for a sequential path through each task constraint in order.</span></div>
-<div class="line"><a name="l00288"></a><span class="lineno">  288</span>&#160;  <span class="keyword">auto</span> path = this-&gt;GetPath();</div>
-<div class="line"><a name="l00289"></a><span class="lineno">  289</span>&#160;  <span class="keywordflow">for</span>(; m_goalIndex &lt; numGoals; ++m_goalIndex) {</div>
-<div class="line"><a name="l00290"></a><span class="lineno">  290</span>&#160;    <span class="comment">// If this goal constraint is unreached, the query cannot succeed.</span></div>
-<div class="line"><a name="l00291"></a><span class="lineno">  291</span>&#160;    <span class="keyword">auto</span> iter = std::find(unreachedGoals.begin(), unreachedGoals.end(),</div>
-<div class="line"><a name="l00292"></a><span class="lineno">  292</span>&#160;        m_goalIndex);</div>
-<div class="line"><a name="l00293"></a><span class="lineno">  293</span>&#160;    <span class="keyword">const</span> <span class="keywordtype">bool</span> unreached = iter != unreachedGoals.end();</div>
-<div class="line"><a name="l00294"></a><span class="lineno">  294</span>&#160;    <span class="keywordflow">if</span>(unreached) {</div>
-<div class="line"><a name="l00295"></a><span class="lineno">  295</span>&#160;      <span class="keywordflow">if</span>(this-&gt;m_debug)</div>
-<div class="line"><a name="l00296"></a><span class="lineno">  296</span>&#160;        std::cout &lt;&lt; <span class="stringliteral">&quot;\tGoal &quot;</span> &lt;&lt; m_goalIndex &lt;&lt; <span class="stringliteral">&quot; has no satisfying VIDs.&quot;</span></div>
-<div class="line"><a name="l00297"></a><span class="lineno">  297</span>&#160;                  &lt;&lt; std::endl;</div>
-<div class="line"><a name="l00298"></a><span class="lineno">  298</span>&#160;      <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00299"></a><span class="lineno">  299</span>&#160;    }</div>
-<div class="line"><a name="l00300"></a><span class="lineno">  300</span>&#160; </div>
-<div class="line"><a name="l00301"></a><span class="lineno">  301</span>&#160;    <span class="comment">// Get the start VID for this subquery.</span></div>
-<div class="line"><a name="l00302"></a><span class="lineno">  302</span>&#160;    <span class="keyword">const</span> <a class="code" href="classQueryMethod.html#ac4b305062d8758a76d44f14fa43a0bbd">VID</a> start = path-&gt;Empty() ? *goalTracker-&gt;GetStartVIDs().begin()</div>
-<div class="line"><a name="l00303"></a><span class="lineno">  303</span>&#160;                                    : path-&gt;VIDs().back();</div>
-<div class="line"><a name="l00304"></a><span class="lineno">  304</span>&#160; </div>
-<div class="line"><a name="l00305"></a><span class="lineno">  305</span>&#160;    <span class="comment">// Get the goal VIDs for this subquery.</span></div>
-<div class="line"><a name="l00306"></a><span class="lineno">  306</span>&#160;    <span class="keyword">const</span> <a class="code" href="classQueryMethod.html#a51acb085f2734ead8cd4fcfa205c25f9">VIDSet</a>&amp; goals = goalTracker-&gt;GetGoalVIDs(m_goalIndex);</div>
-<div class="line"><a name="l00307"></a><span class="lineno">  307</span>&#160;    <span class="keywordflow">if</span>(goals.empty())</div>
-<div class="line"><a name="l00308"></a><span class="lineno">  308</span>&#160;      <span class="keywordflow">throw</span> <a class="code" href="structRunTimeException.html">RunTimeException</a>(<a class="code" href="RuntimeUtils_8h.html#acd4a2dee55f5359c0389baab37c2f468">WHERE</a>) &lt;&lt; <span class="stringliteral">&quot;No VIDs located for reached goal &quot;</span></div>
-<div class="line"><a name="l00309"></a><span class="lineno">  309</span>&#160;                                    &lt;&lt; m_goalIndex &lt;&lt; <span class="stringliteral">&quot;.&quot;</span>;</div>
-<div class="line"><a name="l00310"></a><span class="lineno">  310</span>&#160; </div>
-<div class="line"><a name="l00311"></a><span class="lineno">  311</span>&#160;    <span class="keywordflow">if</span>(this-&gt;m_debug)</div>
-<div class="line"><a name="l00312"></a><span class="lineno">  312</span>&#160;      std::cout &lt;&lt; <span class="stringliteral">&quot;\tEvaluating sub-query from &quot;</span> &lt;&lt; start &lt;&lt; <span class="stringliteral">&quot; to &quot;</span> &lt;&lt; goals</div>
-<div class="line"><a name="l00313"></a><span class="lineno">  313</span>&#160;                &lt;&lt; <span class="stringliteral">&quot;.&quot;</span> &lt;&lt; std::endl;</div>
-<div class="line"><a name="l00314"></a><span class="lineno">  314</span>&#160; </div>
-<div class="line"><a name="l00315"></a><span class="lineno">  315</span>&#160;    <span class="comment">// Warn users if multiple goals are found.</span></div>
-<div class="line"><a name="l00316"></a><span class="lineno">  316</span>&#160;    <span class="keywordflow">if</span>(goals.size() &gt; 1 and numGoals &gt; 1)</div>
-<div class="line"><a name="l00317"></a><span class="lineno">  317</span>&#160;      std::cerr &lt;&lt; <span class="stringliteral">&quot;\tWarning: subquery has &quot;</span> &lt;&lt; goals.size() &lt;&lt; <span class="stringliteral">&quot; possible VIDs &quot;</span></div>
-<div class="line"><a name="l00318"></a><span class="lineno">  318</span>&#160;                &lt;&lt; <span class="stringliteral">&quot;for goal &quot;</span> &lt;&lt; m_goalIndex &lt;&lt; <span class="stringliteral">&quot;/&quot;</span> &lt;&lt; numGoals</div>
-<div class="line"><a name="l00319"></a><span class="lineno">  319</span>&#160;                &lt;&lt; <span class="stringliteral">&quot;. The algorithm will try its best but isn&#39;t complete for &quot;</span></div>
-<div class="line"><a name="l00320"></a><span class="lineno">  320</span>&#160;                &lt;&lt; <span class="stringliteral">&quot;this case.&quot;</span> &lt;&lt; std::endl;</div>
-<div class="line"><a name="l00321"></a><span class="lineno">  321</span>&#160; </div>
-<div class="line"><a name="l00322"></a><span class="lineno">  322</span>&#160;    <span class="comment">// Perform this subquery. If it fails, there is no path.</span></div>
-<div class="line"><a name="l00323"></a><span class="lineno">  323</span>&#160;    <span class="keyword">const</span> <span class="keywordtype">bool</span> success = PerformSubQuery(start, goals);</div>
-<div class="line"><a name="l00324"></a><span class="lineno">  324</span>&#160;    <span class="keywordflow">if</span>(!success)</div>
-<div class="line"><a name="l00325"></a><span class="lineno">  325</span>&#160;      <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00326"></a><span class="lineno">  326</span>&#160;  }</div>
-<div class="line"><a name="l00327"></a><span class="lineno">  327</span>&#160; </div>
-<div class="line"><a name="l00328"></a><span class="lineno">  328</span>&#160;  this-&gt;GetStatClass()-&gt;SetStat(this-&gt;GetNameAndLabel() + <span class="stringliteral">&quot;::FoundPath&quot;</span>, 1);</div>
-<div class="line"><a name="l00329"></a><span class="lineno">  329</span>&#160; </div>
-<div class="line"><a name="l00330"></a><span class="lineno">  330</span>&#160;  <span class="keywordflow">if</span>(this-&gt;m_debug)</div>
-<div class="line"><a name="l00331"></a><span class="lineno">  331</span>&#160;    std::cout &lt;&lt; <span class="stringliteral">&quot;\tConnected all goals!&quot;</span> &lt;&lt; std::endl;</div>
-<div class="line"><a name="l00332"></a><span class="lineno">  332</span>&#160; </div>
-<div class="line"><a name="l00333"></a><span class="lineno">  333</span>&#160;  <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
-<div class="line"><a name="l00334"></a><span class="lineno">  334</span>&#160;}</div>
-<div class="line"><a name="l00335"></a><span class="lineno">  335</span>&#160; </div>
-<div class="line"><a name="l00336"></a><span class="lineno">  336</span>&#160;<span class="comment">/*--------------------------- Query Interface --------------------------------*/</span></div>
-<div class="line"><a name="l00337"></a><span class="lineno">  337</span>&#160; </div>
-<div class="line"><a name="l00338"></a><span class="lineno">  338</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00339"></a><span class="lineno">  339</span>&#160;std::vector&lt;typename QueryMethod&lt;MPTraits&gt;::VID&gt;</div>
-<div class="line"><a name="l00340"></a><span class="lineno"><a class="line" href="classQueryMethod.html#ac42d1cfca52a4d24e03b759de74392f4">  340</a></span>&#160;<a class="code" href="classQueryMethod.html#ac42d1cfca52a4d24e03b759de74392f4">QueryMethod&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00341"></a><span class="lineno">  341</span>&#160;<a class="code" href="classQueryMethod.html#ac42d1cfca52a4d24e03b759de74392f4">GeneratePath</a>(<span class="keyword">const</span> <a class="code" href="classQueryMethod.html#ac4b305062d8758a76d44f14fa43a0bbd">VID</a> _start, <span class="keyword">const</span> <a class="code" href="classQueryMethod.html#a51acb085f2734ead8cd4fcfa205c25f9">VIDSet</a>&amp; _goals) {</div>
-<div class="line"><a name="l00342"></a><span class="lineno">  342</span>&#160;  <span class="keyword">auto</span> stats = this-&gt;GetStatClass();</div>
-<div class="line"><a name="l00343"></a><span class="lineno">  343</span>&#160;  <a class="code" href="classMethodTimer.html">MethodTimer</a> mt(stats, <span class="stringliteral">&quot;QueryMethod::GeneratePath&quot;</span>);</div>
-<div class="line"><a name="l00344"></a><span class="lineno">  344</span>&#160; </div>
-<div class="line"><a name="l00345"></a><span class="lineno">  345</span>&#160;  <span class="keywordflow">if</span>(this-&gt;m_debug)</div>
-<div class="line"><a name="l00346"></a><span class="lineno">  346</span>&#160;    std::cout &lt;&lt; <span class="stringliteral">&quot;Generating path from &quot;</span> &lt;&lt; _start &lt;&lt; <span class="stringliteral">&quot; to &quot;</span> &lt;&lt; _goals &lt;&lt; <span class="stringliteral">&quot;.&quot;</span></div>
-<div class="line"><a name="l00347"></a><span class="lineno">  347</span>&#160;              &lt;&lt; std::endl;</div>
-<div class="line"><a name="l00348"></a><span class="lineno">  348</span>&#160; </div>
-<div class="line"><a name="l00349"></a><span class="lineno">  349</span>&#160;  <span class="comment">// Check for trivial path.</span></div>
-<div class="line"><a name="l00350"></a><span class="lineno">  350</span>&#160;  <span class="keywordflow">if</span>(_goals.count(_start) and m_startTime &gt;= m_endTime)</div>
-<div class="line"><a name="l00351"></a><span class="lineno">  351</span>&#160;    <span class="keywordflow">return</span> {_start};</div>
-<div class="line"><a name="l00352"></a><span class="lineno">  352</span>&#160; </div>
-<div class="line"><a name="l00353"></a><span class="lineno">  353</span>&#160;  <span class="comment">// Check for impossibility with CC information (if available).</span></div>
-<div class="line"><a name="l00354"></a><span class="lineno">  354</span>&#160;  <span class="keyword">auto</span> ccTracker = m_roadmap-&gt;GetCCTracker();</div>
-<div class="line"><a name="l00355"></a><span class="lineno">  355</span>&#160;  <span class="keywordflow">if</span>(ccTracker) {</div>
-<div class="line"><a name="l00356"></a><span class="lineno">  356</span>&#160;    <span class="keyword">const</span> <span class="keywordtype">bool</span> impossible = std::none_of(_goals.begin(), _goals.end(),</div>
-<div class="line"><a name="l00357"></a><span class="lineno">  357</span>&#160;        [ccTracker, _start](<span class="keyword">const</span> <a class="code" href="classQueryMethod.html#ac4b305062d8758a76d44f14fa43a0bbd">VID</a> _vid) {</div>
-<div class="line"><a name="l00358"></a><span class="lineno">  358</span>&#160;          return ccTracker-&gt;InSameCC(_start, _vid);</div>
-<div class="line"><a name="l00359"></a><span class="lineno">  359</span>&#160;        }</div>
-<div class="line"><a name="l00360"></a><span class="lineno">  360</span>&#160;    );</div>
-<div class="line"><a name="l00361"></a><span class="lineno">  361</span>&#160; </div>
-<div class="line"><a name="l00362"></a><span class="lineno">  362</span>&#160;    <span class="keywordflow">if</span>(impossible) {</div>
-<div class="line"><a name="l00363"></a><span class="lineno">  363</span>&#160;      <span class="keywordflow">if</span>(this-&gt;m_debug)</div>
-<div class="line"><a name="l00364"></a><span class="lineno">  364</span>&#160;        std::cout &lt;&lt; <span class="stringliteral">&quot;\tStart and goal in different CCs, no path exists&quot;</span></div>
-<div class="line"><a name="l00365"></a><span class="lineno">  365</span>&#160;                  &lt;&lt; std::endl;</div>
-<div class="line"><a name="l00366"></a><span class="lineno">  366</span>&#160;      <span class="keywordflow">return</span> {};</div>
-<div class="line"><a name="l00367"></a><span class="lineno">  367</span>&#160;    }</div>
-<div class="line"><a name="l00368"></a><span class="lineno">  368</span>&#160;  }</div>
-<div class="line"><a name="l00369"></a><span class="lineno">  369</span>&#160; </div>
-<div class="line"><a name="l00370"></a><span class="lineno">  370</span>&#160;  stats-&gt;IncStat(<span class="stringliteral">&quot;Graph Search&quot;</span>);</div>
-<div class="line"><a name="l00371"></a><span class="lineno">  371</span>&#160; </div>
-<div class="line"><a name="l00372"></a><span class="lineno">  372</span>&#160;  <span class="keywordflow">if</span>(m_twoVariable)</div>
-<div class="line"><a name="l00373"></a><span class="lineno">  373</span>&#160;    <span class="keywordflow">return</span> TwoVariableQuery(_start,_goals);</div>
-<div class="line"><a name="l00374"></a><span class="lineno">  374</span>&#160; </div>
-<div class="line"><a name="l00375"></a><span class="lineno">  375</span>&#160;  <span class="comment">// Set up the termination criterion to quit early if we find a goal node.</span></div>
-<div class="line"><a name="l00376"></a><span class="lineno">  376</span>&#160;  <a class="code" href="SSSP_8h.html#a1e42ecffe84542a716afc30d17138523">SSSPTerminationCriterion&lt;RoadmapType&gt;</a> termination(</div>
-<div class="line"><a name="l00377"></a><span class="lineno">  377</span>&#160;      [_goals](<span class="keyword">typename</span> RoadmapType::vertex_iterator&amp; _vi,</div>
-<div class="line"><a name="l00378"></a><span class="lineno">  378</span>&#160;             <span class="keyword">const</span> <a class="code" href="structSSSPOutput.html">SSSPOutput&lt;RoadmapType&gt;</a>&amp; _sssp) {</div>
-<div class="line"><a name="l00379"></a><span class="lineno">  379</span>&#160;        <span class="keywordflow">return</span> _goals.count(_vi-&gt;descriptor()) ? <a class="code" href="SSSP_8h.html#a55f4f318dbb93b95895c31d42bc3ffe5a435d5def1df24c5e90040eb60fd048e4">SSSPTermination::EndSearch</a></div>
-<div class="line"><a name="l00380"></a><span class="lineno">  380</span>&#160;                                               : <a class="code" href="SSSP_8h.html#a55f4f318dbb93b95895c31d42bc3ffe5aa0bfb8e59e6c13fc8d990781f77694fe">SSSPTermination::Continue</a>;</div>
-<div class="line"><a name="l00381"></a><span class="lineno">  381</span>&#160;      }</div>
-<div class="line"><a name="l00382"></a><span class="lineno">  382</span>&#160;  );</div>
-<div class="line"><a name="l00383"></a><span class="lineno">  383</span>&#160; </div>
-<div class="line"><a name="l00384"></a><span class="lineno">  384</span>&#160;  <span class="comment">// Set up the path weight function depending on whether we have any dynamic</span></div>
-<div class="line"><a name="l00385"></a><span class="lineno">  385</span>&#160;  <span class="comment">// obstacles.</span></div>
-<div class="line"><a name="l00386"></a><span class="lineno">  386</span>&#160;  <a class="code" href="SSSP_8h.html#af457e5f22e252ed8020c16e306eb849d">SSSPPathWeightFunction&lt;RoadmapType&gt;</a> weight;</div>
-<div class="line"><a name="l00387"></a><span class="lineno">  387</span>&#160;  <span class="keywordflow">if</span>(m_weightFunction) {</div>
-<div class="line"><a name="l00388"></a><span class="lineno">  388</span>&#160;    weight = m_weightFunction;</div>
-<div class="line"><a name="l00389"></a><span class="lineno">  389</span>&#160;  }</div>
-<div class="line"><a name="l00390"></a><span class="lineno">  390</span>&#160;  <span class="keywordflow">else</span> <span class="keywordflow">if</span>(!this-&gt;GetMPProblem()-&gt;GetDynamicObstacles().empty()) {</div>
-<div class="line"><a name="l00391"></a><span class="lineno">  391</span>&#160;    weight = [<span class="keyword">this</span>](<span class="keyword">typename</span> RoadmapType::adj_edge_iterator&amp; _ei,</div>
-<div class="line"><a name="l00392"></a><span class="lineno">  392</span>&#160;                    <span class="keyword">const</span> <span class="keywordtype">double</span> _sourceDistance,</div>
-<div class="line"><a name="l00393"></a><span class="lineno">  393</span>&#160;                    <span class="keyword">const</span> <span class="keywordtype">double</span> _targetDistance) {</div>
-<div class="line"><a name="l00394"></a><span class="lineno">  394</span>&#160;      <span class="keywordflow">return</span> this-&gt;DynamicPathWeight(_ei, _sourceDistance, _targetDistance);</div>
-<div class="line"><a name="l00395"></a><span class="lineno">  395</span>&#160;    };</div>
-<div class="line"><a name="l00396"></a><span class="lineno">  396</span>&#160;  }</div>
-<div class="line"><a name="l00397"></a><span class="lineno">  397</span>&#160;  <span class="keywordflow">else</span> {</div>
-<div class="line"><a name="l00398"></a><span class="lineno">  398</span>&#160;    weight = [<span class="keyword">this</span>](<span class="keyword">typename</span> RoadmapType::adj_edge_iterator&amp; _ei,</div>
-<div class="line"><a name="l00399"></a><span class="lineno">  399</span>&#160;                    <span class="keyword">const</span> <span class="keywordtype">double</span> _sourceDistance,</div>
-<div class="line"><a name="l00400"></a><span class="lineno">  400</span>&#160;                    <span class="keyword">const</span> <span class="keywordtype">double</span> _targetDistance) {</div>
-<div class="line"><a name="l00401"></a><span class="lineno">  401</span>&#160;      <span class="keywordflow">return</span> this-&gt;StaticPathWeight(_ei, _sourceDistance, _targetDistance);</div>
-<div class="line"><a name="l00402"></a><span class="lineno">  402</span>&#160;    };</div>
-<div class="line"><a name="l00403"></a><span class="lineno">  403</span>&#160;  }</div>
-<div class="line"><a name="l00404"></a><span class="lineno">  404</span>&#160; </div>
-<div class="line"><a name="l00405"></a><span class="lineno">  405</span>&#160;  <span class="comment">// Run dijkstra&#39;s algorithm to find the path, if it exists.</span></div>
-<div class="line"><a name="l00406"></a><span class="lineno">  406</span>&#160;  <span class="keyword">const</span> <a class="code" href="structSSSPOutput.html">SSSPOutput&lt;RoadmapType&gt;</a> sssp = <a class="code" href="SSSP_8h.html#a66dca385e158cf0fa6cc75beba447917">DijkstraSSSP</a>(m_roadmap, {_start}, weight,</div>
-<div class="line"><a name="l00407"></a><span class="lineno">  407</span>&#160;      termination);</div>
-<div class="line"><a name="l00408"></a><span class="lineno">  408</span>&#160; </div>
-<div class="line"><a name="l00409"></a><span class="lineno">  409</span>&#160;  <span class="comment">// Find the last discovered node, which should be a goal if there is a valid</span></div>
-<div class="line"><a name="l00410"></a><span class="lineno">  410</span>&#160;  <span class="comment">// path.</span></div>
-<div class="line"><a name="l00411"></a><span class="lineno">  411</span>&#160;  <span class="keyword">const</span> <a class="code" href="classQueryMethod.html#ac4b305062d8758a76d44f14fa43a0bbd">VID</a> last = sssp.<a class="code" href="structSSSPOutput.html#abe6b97d3c40234ae98bb43d8e0af8b9c">ordering</a>.back();</div>
-<div class="line"><a name="l00412"></a><span class="lineno">  412</span>&#160;  <span class="keywordflow">if</span>(!_goals.count(last)) {</div>
-<div class="line"><a name="l00413"></a><span class="lineno">  413</span>&#160;    <span class="keywordflow">if</span>(this-&gt;m_debug)</div>
-<div class="line"><a name="l00414"></a><span class="lineno">  414</span>&#160;      std::cout &lt;&lt; <span class="stringliteral">&quot;\tFailed: could not find a path.&quot;</span> &lt;&lt; std::endl;</div>
-<div class="line"><a name="l00415"></a><span class="lineno">  415</span>&#160;    <span class="keywordflow">return</span> {};</div>
-<div class="line"><a name="l00416"></a><span class="lineno">  416</span>&#160;  }</div>
-<div class="line"><a name="l00417"></a><span class="lineno">  417</span>&#160; </div>
-<div class="line"><a name="l00418"></a><span class="lineno">  418</span>&#160;  <span class="comment">// Extract the path.</span></div>
-<div class="line"><a name="l00419"></a><span class="lineno">  419</span>&#160;  std::vector&lt;VID&gt; path;</div>
-<div class="line"><a name="l00420"></a><span class="lineno">  420</span>&#160;  path.push_back(last);</div>
-<div class="line"><a name="l00421"></a><span class="lineno">  421</span>&#160; </div>
-<div class="line"><a name="l00422"></a><span class="lineno">  422</span>&#160;  <a class="code" href="classQueryMethod.html#ac4b305062d8758a76d44f14fa43a0bbd">VID</a> current = last;</div>
-<div class="line"><a name="l00423"></a><span class="lineno">  423</span>&#160;  <span class="keywordflow">do</span> {</div>
-<div class="line"><a name="l00424"></a><span class="lineno">  424</span>&#160;    current = sssp.<a class="code" href="structSSSPOutput.html#ae89857e15a7f379d7b9932df8472d46c">parent</a>.at(current);</div>
-<div class="line"><a name="l00425"></a><span class="lineno">  425</span>&#160;    path.push_back(current);</div>
-<div class="line"><a name="l00426"></a><span class="lineno">  426</span>&#160;  } <span class="keywordflow">while</span>(current != _start);</div>
-<div class="line"><a name="l00427"></a><span class="lineno">  427</span>&#160;  std::reverse(path.begin(), path.end());</div>
-<div class="line"><a name="l00428"></a><span class="lineno">  428</span>&#160; </div>
-<div class="line"><a name="l00429"></a><span class="lineno">  429</span>&#160;  <span class="keywordflow">if</span>(this-&gt;m_debug)</div>
-<div class="line"><a name="l00430"></a><span class="lineno">  430</span>&#160;    std::cout &lt;&lt; <span class="stringliteral">&quot;\tSuccess: reached goal node &quot;</span> &lt;&lt; last &lt;&lt; <span class="stringliteral">&quot; with path cost &quot;</span></div>
-<div class="line"><a name="l00431"></a><span class="lineno">  431</span>&#160;              &lt;&lt; sssp.<a class="code" href="structSSSPOutput.html#a03e77b7fc0c3a7ce46c8db3a9fd9638b">distance</a>.at(last) &lt;&lt; <span class="stringliteral">&quot;.&quot;</span></div>
-<div class="line"><a name="l00432"></a><span class="lineno">  432</span>&#160;              &lt;&lt; std::endl;</div>
-<div class="line"><a name="l00433"></a><span class="lineno">  433</span>&#160; </div>
-<div class="line"><a name="l00434"></a><span class="lineno">  434</span>&#160;  <span class="keywordflow">return</span> path;</div>
-<div class="line"><a name="l00435"></a><span class="lineno">  435</span>&#160;}</div>
-<div class="line"><a name="l00436"></a><span class="lineno">  436</span>&#160; </div>
-<div class="line"><a name="l00437"></a><span class="lineno">  437</span>&#160; </div>
-<div class="line"><a name="l00438"></a><span class="lineno">  438</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00439"></a><span class="lineno">  439</span>&#160;<span class="keywordtype">void</span></div>
-<div class="line"><a name="l00440"></a><span class="lineno"><a class="line" href="classQueryMethod.html#a42f08cfbc180a659705ffae720ba3b90">  440</a></span>&#160;<a class="code" href="classQueryMethod.html#a42f08cfbc180a659705ffae720ba3b90">QueryMethod&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00441"></a><span class="lineno">  441</span>&#160;<a class="code" href="classQueryMethod.html#a42f08cfbc180a659705ffae720ba3b90">SetDMLabel</a>(<span class="keyword">const</span> std::string&amp; _dmLabel) {</div>
-<div class="line"><a name="l00442"></a><span class="lineno">  442</span>&#160;  m_dmLabel = _dmLabel;</div>
-<div class="line"><a name="l00443"></a><span class="lineno">  443</span>&#160;}</div>
-<div class="line"><a name="l00444"></a><span class="lineno">  444</span>&#160; </div>
-<div class="line"><a name="l00445"></a><span class="lineno">  445</span>&#160; </div>
-<div class="line"><a name="l00446"></a><span class="lineno">  446</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00447"></a><span class="lineno">  447</span>&#160;<span class="keywordtype">void</span></div>
-<div class="line"><a name="l00448"></a><span class="lineno"><a class="line" href="classQueryMethod.html#a9fb40e0f277a8e9f7505d85055a48965">  448</a></span>&#160;<a class="code" href="classQueryMethod.html#a9fb40e0f277a8e9f7505d85055a48965">QueryMethod&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00449"></a><span class="lineno">  449</span>&#160;<a class="code" href="classQueryMethod.html#a9fb40e0f277a8e9f7505d85055a48965">SetPathWeightFunction</a>(<a class="code" href="SSSP_8h.html#af457e5f22e252ed8020c16e306eb849d">SSSPPathWeightFunction&lt;RoadmapType&gt;</a> _f) {</div>
-<div class="line"><a name="l00450"></a><span class="lineno">  450</span>&#160;  m_weightFunction = _f;</div>
-<div class="line"><a name="l00451"></a><span class="lineno">  451</span>&#160;}</div>
-<div class="line"><a name="l00452"></a><span class="lineno">  452</span>&#160; </div>
-<div class="line"><a name="l00453"></a><span class="lineno">  453</span>&#160;<span class="comment">/*------------------------------- Helpers ------------------------------------*/</span></div>
-<div class="line"><a name="l00454"></a><span class="lineno">  454</span>&#160; </div>
-<div class="line"><a name="l00455"></a><span class="lineno">  455</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00456"></a><span class="lineno">  456</span>&#160;<span class="keywordtype">void</span></div>
-<div class="line"><a name="l00457"></a><span class="lineno"><a class="line" href="classQueryMethod.html#a3c1aabf6e33aff382a64e23ee70ba62c">  457</a></span>&#160;<a class="code" href="classQueryMethod.html#a3c1aabf6e33aff382a64e23ee70ba62c">QueryMethod&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00458"></a><span class="lineno">  458</span>&#160;<a class="code" href="classQueryMethod.html#a3c1aabf6e33aff382a64e23ee70ba62c">Reset</a>(<a class="code" href="classGenericStateGraph.html">RoadmapType</a>* <span class="keyword">const</span> _r) {</div>
-<div class="line"><a name="l00459"></a><span class="lineno">  459</span>&#160;  <span class="comment">// Set the roadmap.</span></div>
-<div class="line"><a name="l00460"></a><span class="lineno">  460</span>&#160;  m_roadmap = _r;</div>
-<div class="line"><a name="l00461"></a><span class="lineno">  461</span>&#160;  m_task = this-&gt;GetTask();</div>
-<div class="line"><a name="l00462"></a><span class="lineno">  462</span>&#160; </div>
-<div class="line"><a name="l00463"></a><span class="lineno">  463</span>&#160;  <span class="comment">// Reset the goal index.</span></div>
-<div class="line"><a name="l00464"></a><span class="lineno">  464</span>&#160;  m_goalIndex = 0;</div>
-<div class="line"><a name="l00465"></a><span class="lineno">  465</span>&#160; </div>
-<div class="line"><a name="l00466"></a><span class="lineno">  466</span>&#160;  <span class="comment">// Reset the path.</span></div>
-<div class="line"><a name="l00467"></a><span class="lineno">  467</span>&#160;  <span class="keywordflow">if</span>(this-&gt;GetPath())</div>
-<div class="line"><a name="l00468"></a><span class="lineno">  468</span>&#160;    this-&gt;GetPath()-&gt;Clear();</div>
-<div class="line"><a name="l00469"></a><span class="lineno">  469</span>&#160;}</div>
-<div class="line"><a name="l00470"></a><span class="lineno">  470</span>&#160; </div>
-<div class="line"><a name="l00471"></a><span class="lineno">  471</span>&#160; </div>
-<div class="line"><a name="l00472"></a><span class="lineno">  472</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00473"></a><span class="lineno">  473</span>&#160;<span class="keywordtype">void</span></div>
-<div class="line"><a name="l00474"></a><span class="lineno"><a class="line" href="classQueryMethod.html#a4c4f0324606bc92760b2bf0cdd3cb274">  474</a></span>&#160;<a class="code" href="classQueryMethod.html#a4c4f0324606bc92760b2bf0cdd3cb274">QueryMethod&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00475"></a><span class="lineno">  475</span>&#160;<a class="code" href="classQueryMethod.html#a4c4f0324606bc92760b2bf0cdd3cb274">SetSearchAlgViaString</a>(std::string _alg, <span class="keyword">const</span> std::string&amp; _where) {</div>
-<div class="line"><a name="l00476"></a><span class="lineno">  476</span>&#160;  std::transform(_alg.begin(), _alg.end(), _alg.begin(), ::tolower);</div>
-<div class="line"><a name="l00477"></a><span class="lineno">  477</span>&#160; </div>
-<div class="line"><a name="l00478"></a><span class="lineno">  478</span>&#160;  <span class="keywordflow">if</span>(_alg == <span class="stringliteral">&quot;dijkstras&quot;</span>)</div>
-<div class="line"><a name="l00479"></a><span class="lineno">  479</span>&#160;    m_searchAlg = DIJKSTRAS;</div>
-<div class="line"><a name="l00480"></a><span class="lineno">  480</span>&#160;  <span class="keywordflow">else</span> <span class="keywordflow">if</span>(_alg == <span class="stringliteral">&quot;astar&quot;</span>)</div>
-<div class="line"><a name="l00481"></a><span class="lineno">  481</span>&#160;  {</div>
-<div class="line"><a name="l00482"></a><span class="lineno">  482</span>&#160;    <span class="keywordflow">throw</span> <a class="code" href="structNotImplementedException.html">NotImplementedException</a>(_where) &lt;&lt; <span class="stringliteral">&quot;We do not actually have A* &quot;</span></div>
-<div class="line"><a name="l00483"></a><span class="lineno">  483</span>&#160;                                          &lt;&lt; <span class="stringliteral">&quot;implemented since the STAPL &quot;</span></div>
-<div class="line"><a name="l00484"></a><span class="lineno">  484</span>&#160;                                          &lt;&lt; <span class="stringliteral">&quot;version does not use the &quot;</span></div>
-<div class="line"><a name="l00485"></a><span class="lineno">  485</span>&#160;                                          &lt;&lt; <span class="stringliteral">&quot;heuristic, and the new impl only &quot;</span></div>
-<div class="line"><a name="l00486"></a><span class="lineno">  486</span>&#160;                                          &lt;&lt; <span class="stringliteral">&quot;supports dijkstras right now.&quot;</span>;</div>
-<div class="line"><a name="l00487"></a><span class="lineno">  487</span>&#160;    m_searchAlg = ASTAR;</div>
-<div class="line"><a name="l00488"></a><span class="lineno">  488</span>&#160;  }</div>
-<div class="line"><a name="l00489"></a><span class="lineno">  489</span>&#160;  <span class="keywordflow">else</span></div>
-<div class="line"><a name="l00490"></a><span class="lineno">  490</span>&#160;    <span class="keywordflow">throw</span> <a class="code" href="structParseException.html">ParseException</a>(_where) &lt;&lt; <span class="stringliteral">&quot;Invalid graph search algorithm &#39;&quot;</span> &lt;&lt; _alg</div>
-<div class="line"><a name="l00491"></a><span class="lineno">  491</span>&#160;                                 &lt;&lt; <span class="stringliteral">&quot;&#39;. Choices are &#39;dijkstras&#39;.&quot;</span>;<span class="comment">// or &#39;astar&#39;.&quot;;</span></div>
-<div class="line"><a name="l00492"></a><span class="lineno">  492</span>&#160;}</div>
-<div class="line"><a name="l00493"></a><span class="lineno">  493</span>&#160; </div>
-<div class="line"><a name="l00494"></a><span class="lineno">  494</span>&#160; </div>
-<div class="line"><a name="l00495"></a><span class="lineno">  495</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00496"></a><span class="lineno">  496</span>&#160;<span class="keywordtype">bool</span></div>
-<div class="line"><a name="l00497"></a><span class="lineno"><a class="line" href="classQueryMethod.html#a2b289524f5a239e82b849bc307c589e2">  497</a></span>&#160;<a class="code" href="classQueryMethod.html#a2b289524f5a239e82b849bc307c589e2">QueryMethod&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00498"></a><span class="lineno">  498</span>&#160;<a class="code" href="classQueryMethod.html#a2b289524f5a239e82b849bc307c589e2">PerformSubQuery</a>(<span class="keyword">const</span> <a class="code" href="classQueryMethod.html#ac4b305062d8758a76d44f14fa43a0bbd">VID</a> _start, <span class="keyword">const</span> <a class="code" href="classQueryMethod.html#a51acb085f2734ead8cd4fcfa205c25f9">VIDSet</a>&amp; _goals) {</div>
-<div class="line"><a name="l00499"></a><span class="lineno">  499</span>&#160;  <span class="comment">// Try to generate a path from _start to _goal.</span></div>
-<div class="line"><a name="l00500"></a><span class="lineno">  500</span>&#160;  <span class="keyword">auto</span> path = this-&gt;GeneratePath(_start, _goals);</div>
-<div class="line"><a name="l00501"></a><span class="lineno">  501</span>&#160; </div>
-<div class="line"><a name="l00502"></a><span class="lineno">  502</span>&#160;  <span class="comment">// If the path is empty, we failed.</span></div>
-<div class="line"><a name="l00503"></a><span class="lineno">  503</span>&#160;  <span class="keywordflow">if</span>(path.empty())</div>
-<div class="line"><a name="l00504"></a><span class="lineno">  504</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00505"></a><span class="lineno">  505</span>&#160; </div>
-<div class="line"><a name="l00506"></a><span class="lineno">  506</span>&#160;  <span class="comment">// Otherwise, add this segment to the full solution path.</span></div>
-<div class="line"><a name="l00507"></a><span class="lineno">  507</span>&#160;  *this-&gt;GetPath() += path;</div>
-<div class="line"><a name="l00508"></a><span class="lineno">  508</span>&#160;  <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
-<div class="line"><a name="l00509"></a><span class="lineno">  509</span>&#160;}</div>
-<div class="line"><a name="l00510"></a><span class="lineno">  510</span>&#160; </div>
-<div class="line"><a name="l00511"></a><span class="lineno">  511</span>&#160; </div>
-<div class="line"><a name="l00512"></a><span class="lineno">  512</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00513"></a><span class="lineno">  513</span>&#160;<span class="keywordtype">double</span></div>
-<div class="line"><a name="l00514"></a><span class="lineno"><a class="line" href="classQueryMethod.html#a70c608f210df4930e4d967a83fd38895">  514</a></span>&#160;<a class="code" href="classQueryMethod.html#a70c608f210df4930e4d967a83fd38895">QueryMethod&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00515"></a><span class="lineno">  515</span>&#160;<a class="code" href="classQueryMethod.html#a70c608f210df4930e4d967a83fd38895">StaticPathWeight</a>(<span class="keyword">typename</span> RoadmapType::adj_edge_iterator&amp; _ei,</div>
-<div class="line"><a name="l00516"></a><span class="lineno">  516</span>&#160;    <span class="keyword">const</span> <span class="keywordtype">double</span> _sourceDistance, <span class="keyword">const</span> <span class="keywordtype">double</span> _targetDistance)<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l00517"></a><span class="lineno">  517</span>&#160;  <span class="comment">// Check if Distance Metric has been defined. If so use the Distance Metric&#39;s</span></div>
-<div class="line"><a name="l00518"></a><span class="lineno">  518</span>&#160;  <span class="comment">// EdgeWeight function to compute the target distance.</span></div>
-<div class="line"><a name="l00519"></a><span class="lineno">  519</span>&#160;  <span class="keywordflow">if</span>(!m_dmLabel.empty()) {</div>
-<div class="line"><a name="l00520"></a><span class="lineno">  520</span>&#160;    <span class="keyword">auto</span> dm = this-&gt;GetDistanceMetric(m_dmLabel);</div>
-<div class="line"><a name="l00521"></a><span class="lineno">  521</span>&#160;    <span class="keywordflow">return</span> _sourceDistance + dm-&gt;EdgeWeight(m_roadmap, _ei);</div>
-<div class="line"><a name="l00522"></a><span class="lineno">  522</span>&#160;  }</div>
-<div class="line"><a name="l00523"></a><span class="lineno">  523</span>&#160; </div>
-<div class="line"><a name="l00524"></a><span class="lineno">  524</span>&#160;  <span class="comment">// Otherwise use the existing edge weight to compute the distance.</span></div>
-<div class="line"><a name="l00525"></a><span class="lineno">  525</span>&#160;  <span class="keyword">const</span> <span class="keywordtype">double</span> edgeWeight  = _ei-&gt;property().GetWeight(),</div>
-<div class="line"><a name="l00526"></a><span class="lineno">  526</span>&#160;               newDistance = _sourceDistance + edgeWeight;</div>
-<div class="line"><a name="l00527"></a><span class="lineno">  527</span>&#160;  <span class="keywordflow">return</span> newDistance;</div>
-<div class="line"><a name="l00528"></a><span class="lineno">  528</span>&#160;}</div>
-<div class="line"><a name="l00529"></a><span class="lineno">  529</span>&#160; </div>
-<div class="line"><a name="l00530"></a><span class="lineno">  530</span>&#160; </div>
-<div class="line"><a name="l00531"></a><span class="lineno">  531</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00532"></a><span class="lineno">  532</span>&#160;<span class="keywordtype">double</span></div>
-<div class="line"><a name="l00533"></a><span class="lineno"><a class="line" href="classQueryMethod.html#a5469fd2be43c1592830afa49b9a7bfdf">  533</a></span>&#160;<a class="code" href="classQueryMethod.html#a5469fd2be43c1592830afa49b9a7bfdf">QueryMethod&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00534"></a><span class="lineno">  534</span>&#160;<a class="code" href="classQueryMethod.html#a5469fd2be43c1592830afa49b9a7bfdf">DynamicPathWeight</a>(<span class="keyword">typename</span> RoadmapType::adj_edge_iterator&amp; _ei,</div>
-<div class="line"><a name="l00535"></a><span class="lineno">  535</span>&#160;    <span class="keyword">const</span> <span class="keywordtype">double</span> _sourceDistance, <span class="keyword">const</span> <span class="keywordtype">double</span> _targetDistance)<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l00536"></a><span class="lineno">  536</span>&#160;  <span class="comment">// Compute the new &#39;distance&#39;, which is the number of timesteps at which</span></div>
-<div class="line"><a name="l00537"></a><span class="lineno">  537</span>&#160;  <span class="comment">// the robot would reach the target node.</span></div>
-<div class="line"><a name="l00538"></a><span class="lineno">  538</span>&#160;  <span class="keyword">const</span> <span class="keywordtype">double</span> edgeWeight  = _ei-&gt;property().GetTimeSteps(),</div>
-<div class="line"><a name="l00539"></a><span class="lineno">  539</span>&#160;               newDistance = _sourceDistance + edgeWeight;</div>
-<div class="line"><a name="l00540"></a><span class="lineno">  540</span>&#160; </div>
-<div class="line"><a name="l00541"></a><span class="lineno">  541</span>&#160;  <span class="comment">// If this edge isn&#39;t better than the previous, we won&#39;t use it regardless</span></div>
-<div class="line"><a name="l00542"></a><span class="lineno">  542</span>&#160;  <span class="comment">// and can return without checking the dynamic obstacles.</span></div>
-<div class="line"><a name="l00543"></a><span class="lineno">  543</span>&#160;  <span class="keywordflow">if</span>(newDistance &gt;= _targetDistance) {</div>
-<div class="line"><a name="l00544"></a><span class="lineno">  544</span>&#160;    <span class="keywordflow">if</span>(this-&gt;m_debug)</div>
-<div class="line"><a name="l00545"></a><span class="lineno">  545</span>&#160;      std::cout &lt;&lt; <span class="stringliteral">&quot;Breaking because the path is not optimal.&quot;</span></div>
-<div class="line"><a name="l00546"></a><span class="lineno">  546</span>&#160;                &lt;&lt; std::endl;</div>
-<div class="line"><a name="l00547"></a><span class="lineno">  547</span>&#160;    <span class="keywordflow">return</span> newDistance;</div>
-<div class="line"><a name="l00548"></a><span class="lineno">  548</span>&#160;  }</div>
-<div class="line"><a name="l00549"></a><span class="lineno">  549</span>&#160; </div>
-<div class="line"><a name="l00550"></a><span class="lineno">  550</span>&#160;  <span class="keyword">auto</span> siTool = this-&gt;GetMPTools()-&gt;GetSafeIntervalTool(m_safeIntervalLabel);</div>
-<div class="line"><a name="l00551"></a><span class="lineno">  551</span>&#160; </div>
-<div class="line"><a name="l00552"></a><span class="lineno">  552</span>&#160;  <span class="comment">// Ensure that the target vertex is contained within a SafeInterval when</span></div>
-<div class="line"><a name="l00553"></a><span class="lineno">  553</span>&#160;  <span class="comment">// arriving.</span></div>
-<div class="line"><a name="l00554"></a><span class="lineno">  554</span>&#160;  <span class="keyword">const</span> <span class="keyword">auto</span>&amp; target = m_roadmap-&gt;GetVertex(_ei-&gt;target());</div>
-<div class="line"><a name="l00555"></a><span class="lineno">  555</span>&#160;  <span class="keyword">auto</span> vertexIntervals = siTool-&gt;ComputeIntervals(target);</div>
-<div class="line"><a name="l00556"></a><span class="lineno">  556</span>&#160;  <span class="keywordflow">if</span>(!(siTool-&gt;ContainsTimestep(vertexIntervals, newDistance))) {</div>
-<div class="line"><a name="l00557"></a><span class="lineno">  557</span>&#160;    <span class="keywordflow">if</span>(this-&gt;m_debug)</div>
-<div class="line"><a name="l00558"></a><span class="lineno">  558</span>&#160;      std::cout &lt;&lt; <span class="stringliteral">&quot;Breaking because the target vertex is dynamically invalid.&quot;</span></div>
-<div class="line"><a name="l00559"></a><span class="lineno">  559</span>&#160;                &lt;&lt; <span class="stringliteral">&quot;\n\tvertexIntervals: &quot;</span> &lt;&lt; vertexIntervals</div>
-<div class="line"><a name="l00560"></a><span class="lineno">  560</span>&#160;                &lt;&lt; std::endl;</div>
-<div class="line"><a name="l00561"></a><span class="lineno">  561</span>&#160;    <span class="keywordflow">return</span> std::numeric_limits&lt;double&gt;::infinity();</div>
-<div class="line"><a name="l00562"></a><span class="lineno">  562</span>&#160;  }</div>
-<div class="line"><a name="l00563"></a><span class="lineno">  563</span>&#160; </div>
-<div class="line"><a name="l00564"></a><span class="lineno">  564</span>&#160;  <span class="comment">// Ensure that the edge is contained within a SafeInterval if leaving now.</span></div>
-<div class="line"><a name="l00565"></a><span class="lineno">  565</span>&#160;  <span class="keyword">auto</span> edgeIntervals = siTool-&gt;ComputeIntervals(_ei-&gt;property(), _ei-&gt;source(),</div>
-<div class="line"><a name="l00566"></a><span class="lineno">  566</span>&#160;      _ei-&gt;target(), m_roadmap);</div>
-<div class="line"><a name="l00567"></a><span class="lineno">  567</span>&#160;  <span class="keywordflow">if</span>(!(siTool-&gt;ContainsTimestep(edgeIntervals, _sourceDistance))){</div>
-<div class="line"><a name="l00568"></a><span class="lineno">  568</span>&#160;    <span class="keywordflow">if</span>(this-&gt;m_debug)</div>
-<div class="line"><a name="l00569"></a><span class="lineno">  569</span>&#160;      std::cout &lt;&lt; <span class="stringliteral">&quot;Breaking because the edge is dynamically invalid.&quot;</span></div>
-<div class="line"><a name="l00570"></a><span class="lineno">  570</span>&#160;                &lt;&lt; std::endl;</div>
-<div class="line"><a name="l00571"></a><span class="lineno">  571</span>&#160;    <span class="keywordflow">return</span> std::numeric_limits&lt;double&gt;::infinity();</div>
-<div class="line"><a name="l00572"></a><span class="lineno">  572</span>&#160;  }</div>
-<div class="line"><a name="l00573"></a><span class="lineno">  573</span>&#160; </div>
-<div class="line"><a name="l00574"></a><span class="lineno">  574</span>&#160;  <span class="comment">// If we&#39;re still here, the edge is OK.</span></div>
-<div class="line"><a name="l00575"></a><span class="lineno">  575</span>&#160;  <span class="keywordflow">return</span> newDistance;</div>
-<div class="line"><a name="l00576"></a><span class="lineno">  576</span>&#160;}</div>
-<div class="line"><a name="l00577"></a><span class="lineno">  577</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00578"></a><span class="lineno">  578</span>&#160;std::vector&lt;typename QueryMethod&lt;MPTraits&gt;::VID&gt;</div>
-<div class="line"><a name="l00579"></a><span class="lineno"><a class="line" href="classQueryMethod.html#a81fa5f5f53881188320051e391d3cfc8">  579</a></span>&#160;<a class="code" href="classQueryMethod.html#a81fa5f5f53881188320051e391d3cfc8">QueryMethod&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00580"></a><span class="lineno">  580</span>&#160;<a class="code" href="classQueryMethod.html#a81fa5f5f53881188320051e391d3cfc8">TwoVariableQuery</a>(<span class="keyword">const</span> <a class="code" href="classQueryMethod.html#ac4b305062d8758a76d44f14fa43a0bbd">VID</a> _start, <span class="keyword">const</span> <a class="code" href="classQueryMethod.html#a51acb085f2734ead8cd4fcfa205c25f9">VIDSet</a>&amp; _goals) {</div>
-<div class="line"><a name="l00581"></a><span class="lineno">  581</span>&#160;<span class="comment">/*</span></div>
-<div class="line"><a name="l00582"></a><span class="lineno">  582</span>&#160;<span class="comment">    double minEnd = m_endTime;</span></div>
-<div class="line"><a name="l00583"></a><span class="lineno">  583</span>&#160;<span class="comment"></span> </div>
-<div class="line"><a name="l00584"></a><span class="lineno">  584</span>&#160;<span class="comment">  SSSPTerminationCriterion&lt;RoadmapType&gt; termination(</span></div>
-<div class="line"><a name="l00585"></a><span class="lineno">  585</span>&#160;<span class="comment">      [minEnd,_goals](typename RoadmapType::vertex_iterator&amp; _vi,</span></div>
-<div class="line"><a name="l00586"></a><span class="lineno">  586</span>&#160;<span class="comment">             const SSSPOutput&lt;RoadmapType&gt;&amp; _sssp) {</span></div>
-<div class="line"><a name="l00587"></a><span class="lineno">  587</span>&#160;<span class="comment">        return (_goals.count(_vi-&gt;descriptor()) or _sssp.distance.at(_vi-&gt;descriptor()) &gt; minEnd)</span></div>
-<div class="line"><a name="l00588"></a><span class="lineno">  588</span>&#160;<span class="comment">                                                                                            ? SSSPTermination::EndSearch</span></div>
-<div class="line"><a name="l00589"></a><span class="lineno">  589</span>&#160;<span class="comment">                                              : SSSPTermination::Continue;</span></div>
-<div class="line"><a name="l00590"></a><span class="lineno">  590</span>&#160;<span class="comment">      }</span></div>
-<div class="line"><a name="l00591"></a><span class="lineno">  591</span>&#160;<span class="comment">  );</span></div>
-<div class="line"><a name="l00592"></a><span class="lineno">  592</span>&#160;<span class="comment">*/</span></div>
-<div class="line"><a name="l00593"></a><span class="lineno">  593</span>&#160;  <a class="code" href="SSSP_8h.html#af457e5f22e252ed8020c16e306eb849d">SSSPPathWeightFunction&lt;RoadmapType&gt;</a> weight;</div>
-<div class="line"><a name="l00594"></a><span class="lineno">  594</span>&#160;  <span class="keywordflow">if</span>(m_weightFunction) {</div>
-<div class="line"><a name="l00595"></a><span class="lineno">  595</span>&#160;    weight = m_weightFunction;</div>
-<div class="line"><a name="l00596"></a><span class="lineno">  596</span>&#160;  }</div>
-<div class="line"><a name="l00597"></a><span class="lineno">  597</span>&#160;  <span class="keywordflow">else</span> <span class="keywordflow">if</span>(!this-&gt;GetMPProblem()-&gt;GetDynamicObstacles().empty()) {</div>
-<div class="line"><a name="l00598"></a><span class="lineno">  598</span>&#160;    weight = [<span class="keyword">this</span>](<span class="keyword">typename</span> RoadmapType::adj_edge_iterator&amp; _ei,</div>
-<div class="line"><a name="l00599"></a><span class="lineno">  599</span>&#160;                    <span class="keyword">const</span> <span class="keywordtype">double</span> _sourceDistance,</div>
-<div class="line"><a name="l00600"></a><span class="lineno">  600</span>&#160;                    <span class="keyword">const</span> <span class="keywordtype">double</span> _targetDistance) {</div>
-<div class="line"><a name="l00601"></a><span class="lineno">  601</span>&#160;      <span class="keywordflow">return</span> this-&gt;DynamicPathWeight(_ei, _sourceDistance, _targetDistance);</div>
-<div class="line"><a name="l00602"></a><span class="lineno">  602</span>&#160;    };</div>
-<div class="line"><a name="l00603"></a><span class="lineno">  603</span>&#160;  }</div>
-<div class="line"><a name="l00604"></a><span class="lineno">  604</span>&#160;  <span class="keywordflow">else</span> {</div>
-<div class="line"><a name="l00605"></a><span class="lineno">  605</span>&#160;    weight = [<span class="keyword">this</span>](<span class="keyword">typename</span> RoadmapType::adj_edge_iterator&amp; _ei,</div>
-<div class="line"><a name="l00606"></a><span class="lineno">  606</span>&#160;                    <span class="keyword">const</span> <span class="keywordtype">double</span> _sourceDistance,</div>
-<div class="line"><a name="l00607"></a><span class="lineno">  607</span>&#160;                    <span class="keyword">const</span> <span class="keywordtype">double</span> _targetDistance) {</div>
-<div class="line"><a name="l00608"></a><span class="lineno">  608</span>&#160;      <span class="keywordflow">return</span> this-&gt;StaticPathWeight(_ei, _sourceDistance, _targetDistance);</div>
-<div class="line"><a name="l00609"></a><span class="lineno">  609</span>&#160;    };</div>
-<div class="line"><a name="l00610"></a><span class="lineno">  610</span>&#160;  }</div>
-<div class="line"><a name="l00611"></a><span class="lineno">  611</span>&#160; </div>
-<div class="line"><a name="l00612"></a><span class="lineno">  612</span>&#160; </div>
-<div class="line"><a name="l00613"></a><span class="lineno">  613</span>&#160;  <span class="keyword">auto</span> g = this-&gt;GetRoadmap();</div>
-<div class="line"><a name="l00614"></a><span class="lineno">  614</span>&#160;<span class="comment">/*</span></div>
-<div class="line"><a name="l00615"></a><span class="lineno">  615</span>&#160;<span class="comment">  // Run dijkstra&#39;s algorithm to find the path, if it exists.</span></div>
-<div class="line"><a name="l00616"></a><span class="lineno">  616</span>&#160;<span class="comment">  const SSSPOutput&lt;RoadmapType&gt; sssp = DijkstraSSSP(g, {_start}, weight,</span></div>
-<div class="line"><a name="l00617"></a><span class="lineno">  617</span>&#160;<span class="comment">      termination);</span></div>
-<div class="line"><a name="l00618"></a><span class="lineno">  618</span>&#160;<span class="comment"></span> </div>
-<div class="line"><a name="l00619"></a><span class="lineno">  619</span>&#160;<span class="comment">  // Find the last discovered node, which should be a goal if there is a valid</span></div>
-<div class="line"><a name="l00620"></a><span class="lineno">  620</span>&#160;<span class="comment">  // path.</span></div>
-<div class="line"><a name="l00621"></a><span class="lineno">  621</span>&#160;<span class="comment">  const VID last = sssp.ordering.back();</span></div>
-<div class="line"><a name="l00622"></a><span class="lineno">  622</span>&#160;<span class="comment">  if(_goals.count(last)) {</span></div>
-<div class="line"><a name="l00623"></a><span class="lineno">  623</span>&#160;<span class="comment">    // Extract the path.</span></div>
-<div class="line"><a name="l00624"></a><span class="lineno">  624</span>&#160;<span class="comment">    std::vector&lt;VID&gt; path;</span></div>
-<div class="line"><a name="l00625"></a><span class="lineno">  625</span>&#160;<span class="comment">    path.push_back(last);</span></div>
-<div class="line"><a name="l00626"></a><span class="lineno">  626</span>&#160;<span class="comment"></span> </div>
-<div class="line"><a name="l00627"></a><span class="lineno">  627</span>&#160;<span class="comment">    VID current = last;</span></div>
-<div class="line"><a name="l00628"></a><span class="lineno">  628</span>&#160;<span class="comment">    do {</span></div>
-<div class="line"><a name="l00629"></a><span class="lineno">  629</span>&#160;<span class="comment">        current = sssp.parent.at(current);</span></div>
-<div class="line"><a name="l00630"></a><span class="lineno">  630</span>&#160;<span class="comment">        path.push_back(current);</span></div>
-<div class="line"><a name="l00631"></a><span class="lineno">  631</span>&#160;<span class="comment">    }   while(current != _start);</span></div>
-<div class="line"><a name="l00632"></a><span class="lineno">  632</span>&#160;<span class="comment">    std::reverse(path.begin(), path.end());</span></div>
-<div class="line"><a name="l00633"></a><span class="lineno">  633</span>&#160;<span class="comment"></span> </div>
-<div class="line"><a name="l00634"></a><span class="lineno">  634</span>&#160;<span class="comment">    if(this-&gt;m_debug)</span></div>
-<div class="line"><a name="l00635"></a><span class="lineno">  635</span>&#160;<span class="comment">        std::cout &lt;&lt; &quot;\tSuccess: reached goal node &quot; &lt;&lt; last &lt;&lt; &quot; with path cost &quot;</span></div>
-<div class="line"><a name="l00636"></a><span class="lineno">  636</span>&#160;<span class="comment">                &lt;&lt; sssp.distance.at(last) &lt;&lt; &quot;.&quot;</span></div>
-<div class="line"><a name="l00637"></a><span class="lineno">  637</span>&#160;<span class="comment">                &lt;&lt; std::endl;</span></div>
-<div class="line"><a name="l00638"></a><span class="lineno">  638</span>&#160;<span class="comment"></span> </div>
-<div class="line"><a name="l00639"></a><span class="lineno">  639</span>&#160;<span class="comment">    return path;</span></div>
-<div class="line"><a name="l00640"></a><span class="lineno">  640</span>&#160;<span class="comment">  }</span></div>
-<div class="line"><a name="l00641"></a><span class="lineno">  641</span>&#160;<span class="comment">*/</span></div>
-<div class="line"><a name="l00642"></a><span class="lineno">  642</span>&#160;    <span class="comment">//If there is not a valid path satisfying both the end time and the goal vid use two variable search</span></div>
-<div class="line"><a name="l00643"></a><span class="lineno">  643</span>&#160; </div>
-<div class="line"><a name="l00644"></a><span class="lineno">  644</span>&#160;    <span class="comment">/*double lastConflict = 0;</span></div>
-<div class="line"><a name="l00645"></a><span class="lineno">  645</span>&#160;<span class="comment">    for(auto conflict : g-&gt;GetAllConflictsCfgAt()) {</span></div>
-<div class="line"><a name="l00646"></a><span class="lineno">  646</span>&#160;<span class="comment">        if(conflict.second &gt; lastConflict) {</span></div>
-<div class="line"><a name="l00647"></a><span class="lineno">  647</span>&#160;<span class="comment">            lastConflict = conflict.second;</span></div>
-<div class="line"><a name="l00648"></a><span class="lineno">  648</span>&#160;<span class="comment">        }</span></div>
-<div class="line"><a name="l00649"></a><span class="lineno">  649</span>&#160;<span class="comment">    }*/</span></div>
-<div class="line"><a name="l00650"></a><span class="lineno">  650</span>&#160; </div>
-<div class="line"><a name="l00651"></a><span class="lineno">  651</span>&#160;    <span class="comment">//double minStep = this-&gt;GetMPProblem()-&gt;GetEnvironment()-&gt;GetTimeRes();</span></div>
-<div class="line"><a name="l00652"></a><span class="lineno">  652</span>&#160;  <span class="comment">//double minStep = g-&gt;GetEdge(*(_goals.begin()), *(_goals.begin())).GetTimeSteps();</span></div>
-<div class="line"><a name="l00653"></a><span class="lineno">  653</span>&#160; </div>
-<div class="line"><a name="l00654"></a><span class="lineno">  654</span>&#160;  <span class="keyword">auto</span> node = <a class="code" href="SSSP_8h.html#aabf6880e3d339fd68b493c212846299b">TwoVariableDijkstraSSSP</a>(g, {_start}, _goals, m_startTime,</div>
-<div class="line"><a name="l00655"></a><span class="lineno">  655</span>&#160;      m_endTime, m_lastConstraint, m_lastGoalConstraint, weight);</div>
-<div class="line"><a name="l00656"></a><span class="lineno">  656</span>&#160; </div>
-<div class="line"><a name="l00657"></a><span class="lineno">  657</span>&#160;  <span class="keywordflow">if</span>(!node)</div>
-<div class="line"><a name="l00658"></a><span class="lineno">  658</span>&#160;    <span class="keywordflow">return</span> {};</div>
-<div class="line"><a name="l00659"></a><span class="lineno">  659</span>&#160; </div>
-<div class="line"><a name="l00660"></a><span class="lineno">  660</span>&#160;  this-&gt;GetPath()-&gt;SetFinalWaitTimeSteps(node-&gt;m_waitTimeSteps);</div>
-<div class="line"><a name="l00661"></a><span class="lineno">  661</span>&#160; </div>
-<div class="line"><a name="l00662"></a><span class="lineno">  662</span>&#160;  std::vector&lt;typename QueryMethod&lt;MPTraits&gt;::VID&gt; path;</div>
-<div class="line"><a name="l00663"></a><span class="lineno">  663</span>&#160;  <span class="keywordflow">while</span>(node-&gt;m_parent) {</div>
-<div class="line"><a name="l00664"></a><span class="lineno">  664</span>&#160;    path.push_back(node-&gt;m_vid);</div>
-<div class="line"><a name="l00665"></a><span class="lineno">  665</span>&#160;    node = node-&gt;m_parent;</div>
-<div class="line"><a name="l00666"></a><span class="lineno">  666</span>&#160;    <span class="keywordflow">if</span>(!node)</div>
-<div class="line"><a name="l00667"></a><span class="lineno">  667</span>&#160;      <span class="keywordflow">return</span> {};</div>
-<div class="line"><a name="l00668"></a><span class="lineno">  668</span>&#160;  }</div>
-<div class="line"><a name="l00669"></a><span class="lineno">  669</span>&#160; </div>
-<div class="line"><a name="l00670"></a><span class="lineno">  670</span>&#160;  path.push_back(node-&gt;m_vid);</div>
-<div class="line"><a name="l00671"></a><span class="lineno">  671</span>&#160;  std::reverse(path.begin(),path.end());</div>
-<div class="line"><a name="l00672"></a><span class="lineno">  672</span>&#160; </div>
-<div class="line"><a name="l00673"></a><span class="lineno">  673</span>&#160;  <span class="keywordflow">return</span> path;</div>
-<div class="line"><a name="l00674"></a><span class="lineno">  674</span>&#160;}</div>
-<div class="line"><a name="l00675"></a><span class="lineno">  675</span>&#160; </div>
-<div class="line"><a name="l00676"></a><span class="lineno">  676</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00677"></a><span class="lineno">  677</span>&#160;<span class="keywordtype">void</span></div>
-<div class="line"><a name="l00678"></a><span class="lineno"><a class="line" href="classQueryMethod.html#a0d0a52b7873376e8c91e4ce30267bf44">  678</a></span>&#160;<a class="code" href="classQueryMethod.html#a0d0a52b7873376e8c91e4ce30267bf44">QueryMethod&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00679"></a><span class="lineno">  679</span>&#160;<a class="code" href="classQueryMethod.html#a0d0a52b7873376e8c91e4ce30267bf44">SetLastConstraintTime</a>(<span class="keywordtype">double</span> _last) {</div>
-<div class="line"><a name="l00680"></a><span class="lineno">  680</span>&#160;    m_lastConstraint = _last;</div>
-<div class="line"><a name="l00681"></a><span class="lineno">  681</span>&#160;}</div>
-<div class="line"><a name="l00682"></a><span class="lineno">  682</span>&#160; </div>
-<div class="line"><a name="l00683"></a><span class="lineno">  683</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00684"></a><span class="lineno">  684</span>&#160;<span class="keywordtype">void</span></div>
-<div class="line"><a name="l00685"></a><span class="lineno"><a class="line" href="classQueryMethod.html#ac1ce9e915a0ae3bd49fb0d1ef8429c1d">  685</a></span>&#160;<a class="code" href="classQueryMethod.html#ac1ce9e915a0ae3bd49fb0d1ef8429c1d">QueryMethod&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00686"></a><span class="lineno">  686</span>&#160;<a class="code" href="classQueryMethod.html#ac1ce9e915a0ae3bd49fb0d1ef8429c1d">SetLastGoalConstraintTime</a>(<span class="keywordtype">double</span> _time) {</div>
-<div class="line"><a name="l00687"></a><span class="lineno">  687</span>&#160;    m_lastGoalConstraint = _time;</div>
-<div class="line"><a name="l00688"></a><span class="lineno">  688</span>&#160;}</div>
-<div class="line"><a name="l00689"></a><span class="lineno">  689</span>&#160; </div>
-<div class="line"><a name="l00690"></a><span class="lineno">  690</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00691"></a><span class="lineno">  691</span>&#160;<span class="keywordtype">void</span></div>
-<div class="line"><a name="l00692"></a><span class="lineno"><a class="line" href="classQueryMethod.html#a5cbc9d5e7071bd5c76354b6d8674b2b0">  692</a></span>&#160;<a class="code" href="classQueryMethod.html#a5cbc9d5e7071bd5c76354b6d8674b2b0">QueryMethod&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00693"></a><span class="lineno">  693</span>&#160;<a class="code" href="classQueryMethod.html#a5cbc9d5e7071bd5c76354b6d8674b2b0">SetStartTime</a>(<span class="keywordtype">double</span> _start) {</div>
-<div class="line"><a name="l00694"></a><span class="lineno">  694</span>&#160;    m_startTime = _start;</div>
-<div class="line"><a name="l00695"></a><span class="lineno">  695</span>&#160;}</div>
-<div class="line"><a name="l00696"></a><span class="lineno">  696</span>&#160; </div>
-<div class="line"><a name="l00697"></a><span class="lineno">  697</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00698"></a><span class="lineno">  698</span>&#160;<span class="keywordtype">void</span></div>
-<div class="line"><a name="l00699"></a><span class="lineno"><a class="line" href="classQueryMethod.html#a0756ab815e2c8a2a466131207585ec06">  699</a></span>&#160;<a class="code" href="classQueryMethod.html#a0756ab815e2c8a2a466131207585ec06">QueryMethod&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00700"></a><span class="lineno">  700</span>&#160;<a class="code" href="classQueryMethod.html#a0756ab815e2c8a2a466131207585ec06">SetEndTime</a>(<span class="keywordtype">double</span> _end) {</div>
-<div class="line"><a name="l00701"></a><span class="lineno">  701</span>&#160;    m_endTime = _end;</div>
-<div class="line"><a name="l00702"></a><span class="lineno">  702</span>&#160;}</div>
-<div class="line"><a name="l00703"></a><span class="lineno">  703</span>&#160;<span class="comment">/*----------------------------------------------------------------------------*/</span></div>
-<div class="line"><a name="l00704"></a><span class="lineno">  704</span>&#160; </div>
-<div class="line"><a name="l00705"></a><span class="lineno">  705</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="ttc" id="aLPOutput_8h_html"><div class="ttname"><a href="LPOutput_8h.html">LPOutput.h</a></div></div>
+<div class="line"><a name="l00186"></a><span class="lineno">  186</span>&#160; </div>
+<div class="line"><a name="l00187"></a><span class="lineno">  187</span>&#160;};</div>
+<div class="line"><a name="l00188"></a><span class="lineno">  188</span>&#160; </div>
+<div class="line"><a name="l00189"></a><span class="lineno">  189</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="ttc" id="aMPProblem_8h_html"><div class="ttname"><a href="MPProblem_8h.html">MPProblem.h</a></div></div>
 <div class="ttc" id="aMPTask_8h_html"><div class="ttname"><a href="MPTask_8h.html">MPTask.h</a></div></div>
 <div class="ttc" id="aMapEvaluatorMethod_8h_html"><div class="ttname"><a href="MapEvaluatorMethod_8h.html">MapEvaluatorMethod.h</a></div></div>
-<div class="ttc" id="aMetricUtils_8h_html"><div class="ttname"><a href="MetricUtils_8h.html">MetricUtils.h</a></div></div>
 <div class="ttc" id="aPath_8h_html"><div class="ttname"><a href="Path_8h.html">Path.h</a></div></div>
 <div class="ttc" id="aRobot_8h_html"><div class="ttname"><a href="Robot_8h.html">Robot.h</a></div></div>
-<div class="ttc" id="aRuntimeUtils_8h_html_acd4a2dee55f5359c0389baab37c2f468"><div class="ttname"><a href="RuntimeUtils_8h.html#acd4a2dee55f5359c0389baab37c2f468">WHERE</a></div><div class="ttdeci">#define WHERE</div><div class="ttdoc">Macro for retrieving info about file, function, and line number.</div><div class="ttdef"><b>Definition:</b> RuntimeUtils.h:32</div></div>
 <div class="ttc" id="aSSSP_8h_html"><div class="ttname"><a href="SSSP_8h.html">SSSP.h</a></div></div>
-<div class="ttc" id="aSSSP_8h_html_a1e42ecffe84542a716afc30d17138523"><div class="ttname"><a href="SSSP_8h.html#a1e42ecffe84542a716afc30d17138523">SSSPTerminationCriterion</a></div><div class="ttdeci">std::function&lt; SSSPTermination(typename GraphType::vertex_iterator &amp;, const SSSPOutput&lt; GraphType &gt; &amp;_sssp)&gt; SSSPTerminationCriterion</div><div class="ttdef"><b>Definition:</b> SSSP.h:68</div></div>
-<div class="ttc" id="aSSSP_8h_html_a55f4f318dbb93b95895c31d42bc3ffe5a435d5def1df24c5e90040eb60fd048e4"><div class="ttname"><a href="SSSP_8h.html#a55f4f318dbb93b95895c31d42bc3ffe5a435d5def1df24c5e90040eb60fd048e4">SSSPTermination::EndSearch</a></div><div class="ttdeci">@ EndSearch</div><div class="ttdoc">End the entire search process.</div></div>
-<div class="ttc" id="aSSSP_8h_html_a55f4f318dbb93b95895c31d42bc3ffe5aa0bfb8e59e6c13fc8d990781f77694fe"><div class="ttname"><a href="SSSP_8h.html#a55f4f318dbb93b95895c31d42bc3ffe5aa0bfb8e59e6c13fc8d990781f77694fe">SSSPTermination::Continue</a></div><div class="ttdeci">@ Continue</div><div class="ttdoc">Proceed as usual.</div></div>
-<div class="ttc" id="aSSSP_8h_html_a66dca385e158cf0fa6cc75beba447917"><div class="ttname"><a href="SSSP_8h.html#a66dca385e158cf0fa6cc75beba447917">DijkstraSSSP</a></div><div class="ttdeci">SSSPOutput&lt; GraphType &gt; DijkstraSSSP(GraphType *const _g, const std::vector&lt; typename GraphType::vertex_descriptor &gt; &amp;_starts, SSSPPathWeightFunction&lt; GraphType &gt; &amp;_weight, SSSPTerminationCriterion&lt; GraphType &gt; &amp;_earlyStop, const SSSPAdjacencyMap&lt; GraphType &gt; &amp;_adjacencyMap={}, const double _startDistance=0)</div><div class="ttdef"><b>Definition:</b> SSSP.h:330</div></div>
-<div class="ttc" id="aSSSP_8h_html_aabf6880e3d339fd68b493c212846299b"><div class="ttname"><a href="SSSP_8h.html#aabf6880e3d339fd68b493c212846299b">TwoVariableDijkstraSSSP</a></div><div class="ttdeci">std::shared_ptr&lt; TwoVariableSSSPNode &gt; TwoVariableDijkstraSSSP(GraphType *const _g, const std::vector&lt; typename GraphType::vertex_descriptor &gt; &amp;_starts, std::unordered_set&lt; size_t &gt; _goals, const double _startTime, const double _minEndTime, const double _lastConstraint, const double _lastGoalConstraint, SSSPPathWeightFunction&lt; GraphType &gt; &amp;_weight)</div><div class="ttdef"><b>Definition:</b> SSSP.h:553</div></div>
 <div class="ttc" id="aSSSP_8h_html_af457e5f22e252ed8020c16e306eb849d"><div class="ttname"><a href="SSSP_8h.html#af457e5f22e252ed8020c16e306eb849d">SSSPPathWeightFunction</a></div><div class="ttdeci">std::function&lt; double(typename GraphType::adj_edge_iterator &amp;, const double, const double)&gt; SSSPPathWeightFunction</div><div class="ttdef"><b>Definition:</b> SSSP.h:94</div></div>
-<div class="ttc" id="aStraightLine_8h_html"><div class="ttname"><a href="StraightLine_8h.html">StraightLine.h</a></div></div>
 <div class="ttc" id="aclassGenericStateGraph_html"><div class="ttname"><a href="classGenericStateGraph.html">GenericStateGraph</a></div><div class="ttdef"><b>Definition:</b> GenericStateGraph.h:67</div></div>
 <div class="ttc" id="aclassGenericStateGraph_html_a337a1247796cb9bf56fbe6eb2b9497d2"><div class="ttname"><a href="classGenericStateGraph.html#a337a1247796cb9bf56fbe6eb2b9497d2">GenericStateGraph::VID</a></div><div class="ttdeci">STAPLGraph::vertex_descriptor VID</div><div class="ttdef"><b>Definition:</b> GenericStateGraph.h:83</div></div>
 <div class="ttc" id="aclassGenericStateGraph_html_add7366ead725fe92aa09d12b401f257b"><div class="ttname"><a href="classGenericStateGraph.html#add7366ead725fe92aa09d12b401f257b">GenericStateGraph::VertexSet</a></div><div class="ttdeci">std::unordered_set&lt; VID &gt; VertexSet</div><div class="ttdef"><b>Definition:</b> GenericStateGraph.h:86</div></div>
-<div class="ttc" id="aclassGoalTrackerType_html"><div class="ttname"><a href="classGoalTrackerType.html">GoalTrackerType</a></div><div class="ttdoc">Maintains a set of GoalMap for multiple roadmap/task pairs.</div><div class="ttdef"><b>Definition:</b> GoalTracker.h:299</div></div>
-<div class="ttc" id="aclassGoalTrackerType_html_a61055c3935ceb71c43c3f2206ea60a8d"><div class="ttname"><a href="classGoalTrackerType.html#a61055c3935ceb71c43c3f2206ea60a8d">GoalTrackerType::VIDSet</a></div><div class="ttdeci">std::unordered_set&lt; VID &gt; VIDSet</div><div class="ttdef"><b>Definition:</b> GoalTracker.h:315</div></div>
-<div class="ttc" id="aclassMPBaseObject_html_ab59d82cd734f77fdc17eddb8517461da"><div class="ttname"><a href="classMPBaseObject.html#ab59d82cd734f77fdc17eddb8517461da">MPBaseObject::SetName</a></div><div class="ttdeci">void SetName(const std::string &amp;_s)</div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:229</div></div>
 <div class="ttc" id="aclassMPTask_html"><div class="ttname"><a href="classMPTask.html">MPTask</a></div><div class="ttdef"><b>Definition:</b> MPTask.h:46</div></div>
-<div class="ttc" id="aclassMPTraits_html"><div class="ttname"><a href="classMPTraits.html">MPTraits</a></div><div class="ttdoc">Defines available methods in the Motion Planning Universe for Cfg.</div><div class="ttdef"><b>Definition:</b> ParallelCfgTraits.h:144</div></div>
-<div class="ttc" id="aclassMPTraits_html_a1a5aab50ac12baaf6b22ff345c5ae138"><div class="ttname"><a href="classMPTraits.html#a1a5aab50ac12baaf6b22ff345c5ae138">MPTraits::CfgType</a></div><div class="ttdeci">C CfgType</div><div class="ttdef"><b>Definition:</b> CfgTraits.h:117</div></div>
-<div class="ttc" id="aclassMapEvaluatorMethod_html"><div class="ttname"><a href="classMapEvaluatorMethod.html">MapEvaluatorMethod</a></div><div class="ttdef"><b>Definition:</b> MapEvaluatorMethod.h:18</div></div>
-<div class="ttc" id="aclassMethodTimer_html"><div class="ttname"><a href="classMethodTimer.html">MethodTimer</a></div><div class="ttdef"><b>Definition:</b> MetricUtils.h:124</div></div>
-<div class="ttc" id="aclassQueryMethod_html"><div class="ttname"><a href="classQueryMethod.html">QueryMethod</a></div><div class="ttdef"><b>Definition:</b> QueryMethod.h:37</div></div>
-<div class="ttc" id="aclassQueryMethod_html_a0756ab815e2c8a2a466131207585ec06"><div class="ttname"><a href="classQueryMethod.html#a0756ab815e2c8a2a466131207585ec06">QueryMethod::SetEndTime</a></div><div class="ttdeci">void SetEndTime(double _end)</div><div class="ttdef"><b>Definition:</b> QueryMethod.h:700</div></div>
-<div class="ttc" id="aclassQueryMethod_html_a0d0a52b7873376e8c91e4ce30267bf44"><div class="ttname"><a href="classQueryMethod.html#a0d0a52b7873376e8c91e4ce30267bf44">QueryMethod::SetLastConstraintTime</a></div><div class="ttdeci">void SetLastConstraintTime(double _last)</div><div class="ttdef"><b>Definition:</b> QueryMethod.h:679</div></div>
-<div class="ttc" id="aclassQueryMethod_html_a1d8e5d4e4ea89c3fb3abcfa2bd1dadbe"><div class="ttname"><a href="classQueryMethod.html#a1d8e5d4e4ea89c3fb3abcfa2bd1dadbe">QueryMethod::m_roadmap</a></div><div class="ttdeci">RoadmapType * m_roadmap</div><div class="ttdoc">Last roadmap queried.</div><div class="ttdef"><b>Definition:</b> QueryMethod.h:174</div></div>
-<div class="ttc" id="aclassQueryMethod_html_a29d506d0ca303a41f3976532823c7083"><div class="ttname"><a href="classQueryMethod.html#a29d506d0ca303a41f3976532823c7083">QueryMethod::m_lastConstraint</a></div><div class="ttdeci">double m_lastConstraint</div><div class="ttdoc">The time of the last constraint.</div><div class="ttdef"><b>Definition:</b> QueryMethod.h:188</div></div>
-<div class="ttc" id="aclassQueryMethod_html_a2b289524f5a239e82b849bc307c589e2"><div class="ttname"><a href="classQueryMethod.html#a2b289524f5a239e82b849bc307c589e2">QueryMethod::PerformSubQuery</a></div><div class="ttdeci">virtual bool PerformSubQuery(const VID _start, const VIDSet &amp;_goal)</div><div class="ttdef"><b>Definition:</b> QueryMethod.h:498</div></div>
-<div class="ttc" id="aclassQueryMethod_html_a349b6fe7a971d875f23051e432132f37"><div class="ttname"><a href="classQueryMethod.html#a349b6fe7a971d875f23051e432132f37">QueryMethod::m_safeIntervalLabel</a></div><div class="ttdeci">std::string m_safeIntervalLabel</div><div class="ttdoc">The SafeIntervalTool label.</div><div class="ttdef"><b>Definition:</b> QueryMethod.h:181</div></div>
-<div class="ttc" id="aclassQueryMethod_html_a3c1aabf6e33aff382a64e23ee70ba62c"><div class="ttname"><a href="classQueryMethod.html#a3c1aabf6e33aff382a64e23ee70ba62c">QueryMethod::Reset</a></div><div class="ttdeci">virtual void Reset(RoadmapType *const _r)</div><div class="ttdef"><b>Definition:</b> QueryMethod.h:458</div></div>
-<div class="ttc" id="aclassQueryMethod_html_a3d7cdd207d0aaece4aabdc434212389c"><div class="ttname"><a href="classQueryMethod.html#a3d7cdd207d0aaece4aabdc434212389c">QueryMethod::GoalTracker</a></div><div class="ttdeci">MPTraits::GoalTracker GoalTracker</div><div class="ttdef"><b>Definition:</b> QueryMethod.h:48</div></div>
-<div class="ttc" id="aclassQueryMethod_html_a42f08cfbc180a659705ffae720ba3b90"><div class="ttname"><a href="classQueryMethod.html#a42f08cfbc180a659705ffae720ba3b90">QueryMethod::SetDMLabel</a></div><div class="ttdeci">void SetDMLabel(const std::string &amp;_dmLabel)</div><div class="ttdef"><b>Definition:</b> QueryMethod.h:441</div></div>
-<div class="ttc" id="aclassQueryMethod_html_a44d4baa9585fd651d1d93bc308d423e4"><div class="ttname"><a href="classQueryMethod.html#a44d4baa9585fd651d1d93bc308d423e4">QueryMethod::VertexSet</a></div><div class="ttdeci">RoadmapType::VertexSet VertexSet</div><div class="ttdef"><b>Definition:</b> QueryMethod.h:47</div></div>
-<div class="ttc" id="aclassQueryMethod_html_a4c4f0324606bc92760b2bf0cdd3cb274"><div class="ttname"><a href="classQueryMethod.html#a4c4f0324606bc92760b2bf0cdd3cb274">QueryMethod::SetSearchAlgViaString</a></div><div class="ttdeci">void SetSearchAlgViaString(std::string _alg, const std::string &amp;_where)</div><div class="ttdef"><b>Definition:</b> QueryMethod.h:475</div></div>
-<div class="ttc" id="aclassQueryMethod_html_a4c56269c0a0da3bb8beffad4da5fa6ac"><div class="ttname"><a href="classQueryMethod.html#a4c56269c0a0da3bb8beffad4da5fa6ac">QueryMethod::m_startTime</a></div><div class="ttdeci">double m_startTime</div><div class="ttdoc">The start time of the query.</div><div class="ttdef"><b>Definition:</b> QueryMethod.h:190</div></div>
-<div class="ttc" id="aclassQueryMethod_html_a51acb085f2734ead8cd4fcfa205c25f9"><div class="ttname"><a href="classQueryMethod.html#a51acb085f2734ead8cd4fcfa205c25f9">QueryMethod::VIDSet</a></div><div class="ttdeci">GoalTracker::VIDSet VIDSet</div><div class="ttdef"><b>Definition:</b> QueryMethod.h:49</div></div>
-<div class="ttc" id="aclassQueryMethod_html_a5469fd2be43c1592830afa49b9a7bfdf"><div class="ttname"><a href="classQueryMethod.html#a5469fd2be43c1592830afa49b9a7bfdf">QueryMethod::DynamicPathWeight</a></div><div class="ttdeci">virtual double DynamicPathWeight(typename RoadmapType::adj_edge_iterator &amp;_ei, const double _sourceDistance, const double _targetDistance) const</div><div class="ttdef"><b>Definition:</b> QueryMethod.h:534</div></div>
-<div class="ttc" id="aclassQueryMethod_html_a549e8e0175a52fa7099df47edc3bba10"><div class="ttname"><a href="classQueryMethod.html#a549e8e0175a52fa7099df47edc3bba10">QueryMethod::~QueryMethod</a></div><div class="ttdeci">virtual ~QueryMethod()=default</div></div>
-<div class="ttc" id="aclassQueryMethod_html_a58fba8db648e4fbfce158a2969248710"><div class="ttname"><a href="classQueryMethod.html#a58fba8db648e4fbfce158a2969248710">QueryMethod::m_lastGoalConstraint</a></div><div class="ttdeci">double m_lastGoalConstraint</div><div class="ttdoc">The time of the last goal constraint.</div><div class="ttdef"><b>Definition:</b> QueryMethod.h:189</div></div>
-<div class="ttc" id="aclassQueryMethod_html_a5cbc9d5e7071bd5c76354b6d8674b2b0"><div class="ttname"><a href="classQueryMethod.html#a5cbc9d5e7071bd5c76354b6d8674b2b0">QueryMethod::SetStartTime</a></div><div class="ttdeci">void SetStartTime(double _start)</div><div class="ttdef"><b>Definition:</b> QueryMethod.h:693</div></div>
-<div class="ttc" id="aclassQueryMethod_html_a63513c2aa3c3f8d6deb1f4723035a67b"><div class="ttname"><a href="classQueryMethod.html#a63513c2aa3c3f8d6deb1f4723035a67b">QueryMethod::m_weightFunction</a></div><div class="ttdeci">SSSPPathWeightFunction&lt; RoadmapType &gt; m_weightFunction</div><div class="ttdoc">The function for computing total path weight.</div><div class="ttdef"><b>Definition:</b> QueryMethod.h:186</div></div>
-<div class="ttc" id="aclassQueryMethod_html_a6752479f575f47351dbb3b145f10adfa"><div class="ttname"><a href="classQueryMethod.html#a6752479f575f47351dbb3b145f10adfa">QueryMethod::m_goalIndex</a></div><div class="ttdeci">size_t m_goalIndex</div><div class="ttdoc">Index of next unreached goal.</div><div class="ttdef"><b>Definition:</b> QueryMethod.h:177</div></div>
-<div class="ttc" id="aclassQueryMethod_html_a67f814dc07996e419876cec8f4640228"><div class="ttname"><a href="classQueryMethod.html#a67f814dc07996e419876cec8f4640228">QueryMethod::Print</a></div><div class="ttdeci">virtual void Print(std::ostream &amp;_os) const override</div><div class="ttdef"><b>Definition:</b> QueryMethod.h:229</div></div>
-<div class="ttc" id="aclassQueryMethod_html_a6de469da51b880c6b1d4f602e0072843"><div class="ttname"><a href="classQueryMethod.html#a6de469da51b880c6b1d4f602e0072843">QueryMethod::m_endTime</a></div><div class="ttdeci">double m_endTime</div><div class="ttdoc">The end time of the query.</div><div class="ttdef"><b>Definition:</b> QueryMethod.h:191</div></div>
-<div class="ttc" id="aclassQueryMethod_html_a6e684db36ae17eaba1887e8e017a1b8e"><div class="ttname"><a href="classQueryMethod.html#a6e684db36ae17eaba1887e8e017a1b8e">QueryMethod::m_searchAlg</a></div><div class="ttdeci">GraphSearchAlg m_searchAlg</div><div class="ttdoc">The sssp algorithm to use.</div><div class="ttdef"><b>Definition:</b> QueryMethod.h:179</div></div>
-<div class="ttc" id="aclassQueryMethod_html_a70c608f210df4930e4d967a83fd38895"><div class="ttname"><a href="classQueryMethod.html#a70c608f210df4930e4d967a83fd38895">QueryMethod::StaticPathWeight</a></div><div class="ttdeci">virtual double StaticPathWeight(typename RoadmapType::adj_edge_iterator &amp;_ei, const double _sourceDistance, const double _targetDistance) const</div><div class="ttdef"><b>Definition:</b> QueryMethod.h:515</div></div>
-<div class="ttc" id="aclassQueryMethod_html_a7548a841494d04f7de50f1e16042cb76"><div class="ttname"><a href="classQueryMethod.html#a7548a841494d04f7de50f1e16042cb76">QueryMethod::CfgType</a></div><div class="ttdeci">MPTraits::CfgType CfgType</div><div class="ttdef"><b>Definition:</b> QueryMethod.h:44</div></div>
-<div class="ttc" id="aclassQueryMethod_html_a7a5d51cb4afaf9d71a736f43cd3ef075"><div class="ttname"><a href="classQueryMethod.html#a7a5d51cb4afaf9d71a736f43cd3ef075">QueryMethod::Initialize</a></div><div class="ttdeci">virtual void Initialize() override</div><div class="ttdef"><b>Definition:</b> QueryMethod.h:241</div></div>
-<div class="ttc" id="aclassQueryMethod_html_a81fa5f5f53881188320051e391d3cfc8"><div class="ttname"><a href="classQueryMethod.html#a81fa5f5f53881188320051e391d3cfc8">QueryMethod::TwoVariableQuery</a></div><div class="ttdeci">std::vector&lt; typename QueryMethod&lt; MPTraits &gt;::VID &gt; TwoVariableQuery(const VID _start, const VIDSet &amp;_goals)</div><div class="ttdef"><b>Definition:</b> QueryMethod.h:580</div></div>
-<div class="ttc" id="aclassQueryMethod_html_a876955ca806c4ac6c80dc65645ba5d38"><div class="ttname"><a href="classQueryMethod.html#a876955ca806c4ac6c80dc65645ba5d38">QueryMethod::operator()</a></div><div class="ttdeci">virtual bool operator()() override</div><div class="ttdef"><b>Definition:</b> QueryMethod.h:253</div></div>
-<div class="ttc" id="aclassQueryMethod_html_a95b4fc8c350a1f6c9d145e3bb80b14b2"><div class="ttname"><a href="classQueryMethod.html#a95b4fc8c350a1f6c9d145e3bb80b14b2">QueryMethod::m_twoVariable</a></div><div class="ttdeci">bool m_twoVariable</div><div class="ttdoc">Temporary flag to use two varibale state search.</div><div class="ttdef"><b>Definition:</b> QueryMethod.h:183</div></div>
-<div class="ttc" id="aclassQueryMethod_html_a9fb40e0f277a8e9f7505d85055a48965"><div class="ttname"><a href="classQueryMethod.html#a9fb40e0f277a8e9f7505d85055a48965">QueryMethod::SetPathWeightFunction</a></div><div class="ttdeci">virtual void SetPathWeightFunction(SSSPPathWeightFunction&lt; RoadmapType &gt; _f)</div><div class="ttdef"><b>Definition:</b> QueryMethod.h:449</div></div>
-<div class="ttc" id="aclassQueryMethod_html_aa247bc7db2cdd826dfe7092e456abe84"><div class="ttname"><a href="classQueryMethod.html#aa247bc7db2cdd826dfe7092e456abe84">QueryMethod::RoadmapType</a></div><div class="ttdeci">MPTraits::RoadmapType RoadmapType</div><div class="ttdef"><b>Definition:</b> QueryMethod.h:45</div></div>
-<div class="ttc" id="aclassQueryMethod_html_ac1ce9e915a0ae3bd49fb0d1ef8429c1d"><div class="ttname"><a href="classQueryMethod.html#ac1ce9e915a0ae3bd49fb0d1ef8429c1d">QueryMethod::SetLastGoalConstraintTime</a></div><div class="ttdeci">void SetLastGoalConstraintTime(double _time)</div><div class="ttdef"><b>Definition:</b> QueryMethod.h:686</div></div>
-<div class="ttc" id="aclassQueryMethod_html_ac42d1cfca52a4d24e03b759de74392f4"><div class="ttname"><a href="classQueryMethod.html#ac42d1cfca52a4d24e03b759de74392f4">QueryMethod::GeneratePath</a></div><div class="ttdeci">std::vector&lt; VID &gt; GeneratePath(const VID _start, const VIDSet &amp;_end)</div><div class="ttdef"><b>Definition:</b> QueryMethod.h:341</div></div>
-<div class="ttc" id="aclassQueryMethod_html_ac4b305062d8758a76d44f14fa43a0bbd"><div class="ttname"><a href="classQueryMethod.html#ac4b305062d8758a76d44f14fa43a0bbd">QueryMethod::VID</a></div><div class="ttdeci">RoadmapType::VID VID</div><div class="ttdef"><b>Definition:</b> QueryMethod.h:46</div></div>
-<div class="ttc" id="aclassQueryMethod_html_ad3314c6cd5a153bc23546686fcdff5f4"><div class="ttname"><a href="classQueryMethod.html#ad3314c6cd5a153bc23546686fcdff5f4">QueryMethod::m_task</a></div><div class="ttdeci">MPTask * m_task</div><div class="ttdoc">Last task we looked at.</div><div class="ttdef"><b>Definition:</b> QueryMethod.h:175</div></div>
-<div class="ttc" id="aclassQueryMethod_html_ad519916904d43963382dd62d429747d2"><div class="ttname"><a href="classQueryMethod.html#ad519916904d43963382dd62d429747d2">QueryMethod::QueryMethod</a></div><div class="ttdeci">QueryMethod()</div><div class="ttdef"><b>Definition:</b> QueryMethod.h:200</div></div>
-<div class="ttc" id="aclassQueryMethod_html_ae7e8167930847c91a41e0caa101a0f32"><div class="ttname"><a href="classQueryMethod.html#ae7e8167930847c91a41e0caa101a0f32">QueryMethod::m_dmLabel</a></div><div class="ttdeci">std::string m_dmLabel</div><div class="ttdoc">The DistanceMetric label.</div><div class="ttdef"><b>Definition:</b> QueryMethod.h:182</div></div>
-<div class="ttc" id="aclassQueryMethod_html_aea52ac8e219a7b3997663129e0c91017"><div class="ttname"><a href="classQueryMethod.html#aea52ac8e219a7b3997663129e0c91017">QueryMethod::GraphSearchAlg</a></div><div class="ttdeci">GraphSearchAlg</div><div class="ttdef"><b>Definition:</b> QueryMethod.h:55</div></div>
-<div class="ttc" id="aclassQueryMethod_html_aea52ac8e219a7b3997663129e0c91017a03977bc77a0a35e515f94daa63b275d2"><div class="ttname"><a href="classQueryMethod.html#aea52ac8e219a7b3997663129e0c91017a03977bc77a0a35e515f94daa63b275d2">QueryMethod::ASTAR</a></div><div class="ttdeci">@ ASTAR</div><div class="ttdef"><b>Definition:</b> QueryMethod.h:55</div></div>
-<div class="ttc" id="aclassQueryMethod_html_aea52ac8e219a7b3997663129e0c91017a899bfffb7079025a09224cffbf008e55"><div class="ttname"><a href="classQueryMethod.html#aea52ac8e219a7b3997663129e0c91017a899bfffb7079025a09224cffbf008e55">QueryMethod::DIJKSTRAS</a></div><div class="ttdeci">@ DIJKSTRAS</div><div class="ttdef"><b>Definition:</b> QueryMethod.h:55</div></div>
+<div class="ttc" id="aclassMapEvaluatorMethod_html"><div class="ttname"><a href="classMapEvaluatorMethod.html">MapEvaluatorMethod</a></div><div class="ttdef"><b>Definition:</b> MapEvaluatorMethod.h:16</div></div>
+<div class="ttc" id="aclassQueryMethod_html"><div class="ttname"><a href="classQueryMethod.html">QueryMethod</a></div><div class="ttdef"><b>Definition:</b> QueryMethod.h:31</div></div>
+<div class="ttc" id="aclassQueryMethod_html_a00446e79583033c27296cccc024d306c"><div class="ttname"><a href="classQueryMethod.html#a00446e79583033c27296cccc024d306c">QueryMethod::m_startTime</a></div><div class="ttdeci">double m_startTime</div><div class="ttdoc">The start time of the query.</div><div class="ttdef"><b>Definition:</b> QueryMethod.h:182</div></div>
+<div class="ttc" id="aclassQueryMethod_html_a019b7f9cdc44797c398e30d5ef795a23"><div class="ttname"><a href="classQueryMethod.html#a019b7f9cdc44797c398e30d5ef795a23">QueryMethod::m_twoVariable</a></div><div class="ttdeci">bool m_twoVariable</div><div class="ttdoc">Temporary flag to use two varibale state search.</div><div class="ttdef"><b>Definition:</b> QueryMethod.h:175</div></div>
+<div class="ttc" id="aclassQueryMethod_html_a08e468b4f08cba5f133a90babf0bc312"><div class="ttname"><a href="classQueryMethod.html#a08e468b4f08cba5f133a90babf0bc312">QueryMethod::PerformSubQuery</a></div><div class="ttdeci">virtual bool PerformSubQuery(const VID _start, const VIDSet &amp;_goal)</div><div class="ttdef"><b>Definition:</b> QueryMethod.cpp:301</div></div>
+<div class="ttc" id="aclassQueryMethod_html_a18c019b31bc302a8c6996f5519457a71"><div class="ttname"><a href="classQueryMethod.html#a18c019b31bc302a8c6996f5519457a71">QueryMethod::~QueryMethod</a></div><div class="ttdeci">virtual ~QueryMethod()=default</div></div>
+<div class="ttc" id="aclassQueryMethod_html_a293370e34650c209c7b0863b86c1b824"><div class="ttname"><a href="classQueryMethod.html#a293370e34650c209c7b0863b86c1b824">QueryMethod::TwoVariableQuery</a></div><div class="ttdeci">std::vector&lt; typename QueryMethod::VID &gt; TwoVariableQuery(const VID _start, const VIDSet &amp;_goals)</div><div class="ttdef"><b>Definition:</b> QueryMethod.cpp:382</div></div>
+<div class="ttc" id="aclassQueryMethod_html_a2ebb04b8781abb12cbaa36dd80be6bae"><div class="ttname"><a href="classQueryMethod.html#a2ebb04b8781abb12cbaa36dd80be6bae">QueryMethod::RoadmapType</a></div><div class="ttdeci">MPBaseObject::RoadmapType RoadmapType</div><div class="ttdef"><b>Definition:</b> QueryMethod.h:38</div></div>
+<div class="ttc" id="aclassQueryMethod_html_a3839f1a09c774ba29f9f015b6365a22b"><div class="ttname"><a href="classQueryMethod.html#a3839f1a09c774ba29f9f015b6365a22b">QueryMethod::SetLastConstraintTime</a></div><div class="ttdeci">void SetLastConstraintTime(double _last)</div><div class="ttdef"><b>Definition:</b> QueryMethod.cpp:481</div></div>
+<div class="ttc" id="aclassQueryMethod_html_a3f3d12c4fa670a6e7a402e36dc5659ec"><div class="ttname"><a href="classQueryMethod.html#a3f3d12c4fa670a6e7a402e36dc5659ec">QueryMethod::operator()</a></div><div class="ttdeci">virtual bool operator()() override</div><div class="ttdef"><b>Definition:</b> QueryMethod.cpp:62</div></div>
+<div class="ttc" id="aclassQueryMethod_html_a3f90559027a3439fa594f99fee554f08"><div class="ttname"><a href="classQueryMethod.html#a3f90559027a3439fa594f99fee554f08">QueryMethod::m_dmLabel</a></div><div class="ttdeci">std::string m_dmLabel</div><div class="ttdoc">The DistanceMetric label.</div><div class="ttdef"><b>Definition:</b> QueryMethod.h:174</div></div>
+<div class="ttc" id="aclassQueryMethod_html_a46a5da363472f158903cfbff339c9b19"><div class="ttname"><a href="classQueryMethod.html#a46a5da363472f158903cfbff339c9b19">QueryMethod::m_safeIntervalLabel</a></div><div class="ttdeci">std::string m_safeIntervalLabel</div><div class="ttdoc">The SafeIntervalTool label.</div><div class="ttdef"><b>Definition:</b> QueryMethod.h:173</div></div>
+<div class="ttc" id="aclassQueryMethod_html_a4b78024d458da5b702eb9d9f507efdd0"><div class="ttname"><a href="classQueryMethod.html#a4b78024d458da5b702eb9d9f507efdd0">QueryMethod::m_goalIndex</a></div><div class="ttdeci">size_t m_goalIndex</div><div class="ttdoc">Index of next unreached goal.</div><div class="ttdef"><b>Definition:</b> QueryMethod.h:169</div></div>
+<div class="ttc" id="aclassQueryMethod_html_a4ba48d5e7eae809c9cd5bee76ddf79d5"><div class="ttname"><a href="classQueryMethod.html#a4ba48d5e7eae809c9cd5bee76ddf79d5">QueryMethod::SetDMLabel</a></div><div class="ttdeci">void SetDMLabel(const std::string &amp;_dmLabel)</div><div class="ttdef"><b>Definition:</b> QueryMethod.cpp:248</div></div>
+<div class="ttc" id="aclassQueryMethod_html_a53d356a24a8557ddc64b017234ab9670"><div class="ttname"><a href="classQueryMethod.html#a53d356a24a8557ddc64b017234ab9670">QueryMethod::VertexSet</a></div><div class="ttdeci">RoadmapType::VertexSet VertexSet</div><div class="ttdef"><b>Definition:</b> QueryMethod.h:40</div></div>
+<div class="ttc" id="aclassQueryMethod_html_a5487110b650753ded8503801a560086b"><div class="ttname"><a href="classQueryMethod.html#a5487110b650753ded8503801a560086b">QueryMethod::m_task</a></div><div class="ttdeci">MPTask * m_task</div><div class="ttdoc">Last task we looked at.</div><div class="ttdef"><b>Definition:</b> QueryMethod.h:167</div></div>
+<div class="ttc" id="aclassQueryMethod_html_a590c9a15a09fb5042ed0049de301dacf"><div class="ttname"><a href="classQueryMethod.html#a590c9a15a09fb5042ed0049de301dacf">QueryMethod::GeneratePath</a></div><div class="ttdeci">std::vector&lt; VID &gt; GeneratePath(const VID _start, const VIDSet &amp;_end)</div><div class="ttdef"><b>Definition:</b> QueryMethod.cpp:149</div></div>
+<div class="ttc" id="aclassQueryMethod_html_a66d3940f2b4ed080e8d3e820499fbd2d"><div class="ttname"><a href="classQueryMethod.html#a66d3940f2b4ed080e8d3e820499fbd2d">QueryMethod::Reset</a></div><div class="ttdeci">virtual void Reset(RoadmapType *const _r)</div><div class="ttdef"><b>Definition:</b> QueryMethod.cpp:263</div></div>
+<div class="ttc" id="aclassQueryMethod_html_a6c4129ce23047a3812ead1499ecc3291"><div class="ttname"><a href="classQueryMethod.html#a6c4129ce23047a3812ead1499ecc3291">QueryMethod::Print</a></div><div class="ttdeci">virtual void Print(std::ostream &amp;_os) const override</div><div class="ttdef"><b>Definition:</b> QueryMethod.cpp:40</div></div>
+<div class="ttc" id="aclassQueryMethod_html_a7cf37a08f8ac515a22f5b7e05d0c4dc0"><div class="ttname"><a href="classQueryMethod.html#a7cf37a08f8ac515a22f5b7e05d0c4dc0">QueryMethod::m_lastGoalConstraint</a></div><div class="ttdeci">double m_lastGoalConstraint</div><div class="ttdoc">The time of the last goal constraint.</div><div class="ttdef"><b>Definition:</b> QueryMethod.h:181</div></div>
+<div class="ttc" id="aclassQueryMethod_html_a8269031cb0877608767178788e1f520b"><div class="ttname"><a href="classQueryMethod.html#a8269031cb0877608767178788e1f520b">QueryMethod::SetLastGoalConstraintTime</a></div><div class="ttdeci">void SetLastGoalConstraintTime(double _time)</div><div class="ttdef"><b>Definition:</b> QueryMethod.cpp:488</div></div>
+<div class="ttc" id="aclassQueryMethod_html_a8d2d24c2d7ada48e662361322a3ff306"><div class="ttname"><a href="classQueryMethod.html#a8d2d24c2d7ada48e662361322a3ff306">QueryMethod::m_roadmap</a></div><div class="ttdeci">RoadmapType * m_roadmap</div><div class="ttdoc">Last roadmap queried.</div><div class="ttdef"><b>Definition:</b> QueryMethod.h:166</div></div>
+<div class="ttc" id="aclassQueryMethod_html_a8eb1af1b96196a9c035b6f6f1cd475ec"><div class="ttname"><a href="classQueryMethod.html#a8eb1af1b96196a9c035b6f6f1cd475ec">QueryMethod::SetSearchAlgViaString</a></div><div class="ttdeci">void SetSearchAlgViaString(std::string _alg, const std::string &amp;_where)</div><div class="ttdef"><b>Definition:</b> QueryMethod.cpp:279</div></div>
+<div class="ttc" id="aclassQueryMethod_html_a9562a51648f38f79d8cc7e06c3be1e13"><div class="ttname"><a href="classQueryMethod.html#a9562a51648f38f79d8cc7e06c3be1e13">QueryMethod::SetEndTime</a></div><div class="ttdeci">void SetEndTime(double _end)</div><div class="ttdef"><b>Definition:</b> QueryMethod.cpp:502</div></div>
+<div class="ttc" id="aclassQueryMethod_html_a9ee5c5a226d868cc87d86467b269f070"><div class="ttname"><a href="classQueryMethod.html#a9ee5c5a226d868cc87d86467b269f070">QueryMethod::Initialize</a></div><div class="ttdeci">virtual void Initialize() override</div><div class="ttdef"><b>Definition:</b> QueryMethod.cpp:51</div></div>
+<div class="ttc" id="aclassQueryMethod_html_a9fddce7e5acc8860aa360c0fa00e07af"><div class="ttname"><a href="classQueryMethod.html#a9fddce7e5acc8860aa360c0fa00e07af">QueryMethod::SetPathWeightFunction</a></div><div class="ttdeci">virtual void SetPathWeightFunction(SSSPPathWeightFunction&lt; RoadmapType &gt; _f)</div><div class="ttdef"><b>Definition:</b> QueryMethod.cpp:255</div></div>
+<div class="ttc" id="aclassQueryMethod_html_aad59d4d6fdda1d1aae808b64ba7cea44"><div class="ttname"><a href="classQueryMethod.html#aad59d4d6fdda1d1aae808b64ba7cea44">QueryMethod::VIDSet</a></div><div class="ttdeci">std::unordered_set&lt; size_t &gt; VIDSet</div><div class="ttdef"><b>Definition:</b> QueryMethod.h:41</div></div>
+<div class="ttc" id="aclassQueryMethod_html_ab6ef0f889c07fba7026387d76bffea55"><div class="ttname"><a href="classQueryMethod.html#ab6ef0f889c07fba7026387d76bffea55">QueryMethod::VID</a></div><div class="ttdeci">RoadmapType::VID VID</div><div class="ttdef"><b>Definition:</b> QueryMethod.h:39</div></div>
+<div class="ttc" id="aclassQueryMethod_html_abe132ca7800b48044a892fa009234195"><div class="ttname"><a href="classQueryMethod.html#abe132ca7800b48044a892fa009234195">QueryMethod::QueryMethod</a></div><div class="ttdeci">QueryMethod()</div><div class="ttdef"><b>Definition:</b> QueryMethod.cpp:13</div></div>
+<div class="ttc" id="aclassQueryMethod_html_ac240ebc57e25035209e2741f3f4aab4a"><div class="ttname"><a href="classQueryMethod.html#ac240ebc57e25035209e2741f3f4aab4a">QueryMethod::m_lastConstraint</a></div><div class="ttdeci">double m_lastConstraint</div><div class="ttdoc">The time of the last constraint.</div><div class="ttdef"><b>Definition:</b> QueryMethod.h:180</div></div>
+<div class="ttc" id="aclassQueryMethod_html_ac776864bf3dcb9e7b4d36b8e5e6d23cd"><div class="ttname"><a href="classQueryMethod.html#ac776864bf3dcb9e7b4d36b8e5e6d23cd">QueryMethod::m_weightFunction</a></div><div class="ttdeci">SSSPPathWeightFunction&lt; RoadmapType &gt; m_weightFunction</div><div class="ttdoc">The function for computing total path weight.</div><div class="ttdef"><b>Definition:</b> QueryMethod.h:178</div></div>
+<div class="ttc" id="aclassQueryMethod_html_ad37dad79af7b71da571ea504037a4095"><div class="ttname"><a href="classQueryMethod.html#ad37dad79af7b71da571ea504037a4095">QueryMethod::m_searchAlg</a></div><div class="ttdeci">GraphSearchAlg m_searchAlg</div><div class="ttdoc">The sssp algorithm to use.</div><div class="ttdef"><b>Definition:</b> QueryMethod.h:171</div></div>
+<div class="ttc" id="aclassQueryMethod_html_ae91563bf98341ca7651583a2ebcce957"><div class="ttname"><a href="classQueryMethod.html#ae91563bf98341ca7651583a2ebcce957">QueryMethod::m_endTime</a></div><div class="ttdeci">double m_endTime</div><div class="ttdoc">The end time of the query.</div><div class="ttdef"><b>Definition:</b> QueryMethod.h:183</div></div>
+<div class="ttc" id="aclassQueryMethod_html_ae97c7cd5ff55b9cd30a0e4a789ebccfa"><div class="ttname"><a href="classQueryMethod.html#ae97c7cd5ff55b9cd30a0e4a789ebccfa">QueryMethod::StaticPathWeight</a></div><div class="ttdeci">virtual double StaticPathWeight(typename RoadmapType::adj_edge_iterator &amp;_ei, const double _sourceDistance, const double _targetDistance) const</div><div class="ttdef"><b>Definition:</b> QueryMethod.cpp:317</div></div>
+<div class="ttc" id="aclassQueryMethod_html_aea52ac8e219a7b3997663129e0c91017"><div class="ttname"><a href="classQueryMethod.html#aea52ac8e219a7b3997663129e0c91017">QueryMethod::GraphSearchAlg</a></div><div class="ttdeci">GraphSearchAlg</div><div class="ttdef"><b>Definition:</b> QueryMethod.h:47</div></div>
+<div class="ttc" id="aclassQueryMethod_html_aea52ac8e219a7b3997663129e0c91017a278de98a1f58f65863a0176c20302471"><div class="ttname"><a href="classQueryMethod.html#aea52ac8e219a7b3997663129e0c91017a278de98a1f58f65863a0176c20302471">QueryMethod::ASTAR</a></div><div class="ttdeci">@ ASTAR</div><div class="ttdef"><b>Definition:</b> QueryMethod.h:47</div></div>
+<div class="ttc" id="aclassQueryMethod_html_aea52ac8e219a7b3997663129e0c91017aa90d3015e4e2eb70dafdec3d90b775ba"><div class="ttname"><a href="classQueryMethod.html#aea52ac8e219a7b3997663129e0c91017aa90d3015e4e2eb70dafdec3d90b775ba">QueryMethod::DIJKSTRAS</a></div><div class="ttdeci">@ DIJKSTRAS</div><div class="ttdef"><b>Definition:</b> QueryMethod.h:47</div></div>
+<div class="ttc" id="aclassQueryMethod_html_af0af427c5cda3c73fdcc58e5706cbd68"><div class="ttname"><a href="classQueryMethod.html#af0af427c5cda3c73fdcc58e5706cbd68">QueryMethod::DynamicPathWeight</a></div><div class="ttdeci">virtual double DynamicPathWeight(typename RoadmapType::adj_edge_iterator &amp;_ei, const double _sourceDistance, const double _targetDistance) const</div><div class="ttdef"><b>Definition:</b> QueryMethod.cpp:335</div></div>
+<div class="ttc" id="aclassQueryMethod_html_afa976af72749dfc1ee93b5ba8ea1d55f"><div class="ttname"><a href="classQueryMethod.html#afa976af72749dfc1ee93b5ba8ea1d55f">QueryMethod::SetStartTime</a></div><div class="ttdeci">void SetStartTime(double _start)</div><div class="ttdef"><b>Definition:</b> QueryMethod.cpp:495</div></div>
 <div class="ttc" id="aclassXMLNode_html"><div class="ttname"><a href="classXMLNode.html">XMLNode</a></div><div class="ttdef"><b>Definition:</b> XMLNode.h:27</div></div>
-<div class="ttc" id="aclassXMLNode_html_ad8152f1ab4f8720572c66397f74e282c"><div class="ttname"><a href="classXMLNode.html#ad8152f1ab4f8720572c66397f74e282c">XMLNode::Where</a></div><div class="ttdeci">std::string Where() const</div><div class="ttdef"><b>Definition:</b> XMLNode.cpp:205</div></div>
-<div class="ttc" id="aclassXMLNode_html_af0e81db89948e52fdee6bf2bf029037f"><div class="ttname"><a href="classXMLNode.html#af0e81db89948e52fdee6bf2bf029037f">XMLNode::Read</a></div><div class="ttdeci">T Read(const std::string &amp;_name, const bool _req, const T &amp;_default, const T &amp;_min, const T &amp;_max, const std::string &amp;_desc)</div><div class="ttdef"><b>Definition:</b> XMLNode.h:267</div></div>
-<div class="ttc" id="astructNotImplementedException_html"><div class="ttname"><a href="structNotImplementedException.html">NotImplementedException</a></div><div class="ttdef"><b>Definition:</b> PMPLExceptions.h:74</div></div>
-<div class="ttc" id="astructParseException_html"><div class="ttname"><a href="structParseException.html">ParseException</a></div><div class="ttdef"><b>Definition:</b> PMPLExceptions.h:38</div></div>
-<div class="ttc" id="astructRunTimeException_html"><div class="ttname"><a href="structRunTimeException.html">RunTimeException</a></div><div class="ttdef"><b>Definition:</b> PMPLExceptions.h:62</div></div>
-<div class="ttc" id="astructSSSPOutput_html"><div class="ttname"><a href="structSSSPOutput.html">SSSPOutput</a></div><div class="ttdoc">The output of an SSSP run.</div><div class="ttdef"><b>Definition:</b> SSSP.h:31</div></div>
-<div class="ttc" id="astructSSSPOutput_html_a03e77b7fc0c3a7ce46c8db3a9fd9638b"><div class="ttname"><a href="structSSSPOutput.html#a03e77b7fc0c3a7ce46c8db3a9fd9638b">SSSPOutput::distance</a></div><div class="ttdeci">DistanceMap distance</div><div class="ttdoc">Distance to each cell from start.</div><div class="ttdef"><b>Definition:</b> SSSP.h:39</div></div>
-<div class="ttc" id="astructSSSPOutput_html_abe6b97d3c40234ae98bb43d8e0af8b9c"><div class="ttname"><a href="structSSSPOutput.html#abe6b97d3c40234ae98bb43d8e0af8b9c">SSSPOutput::ordering</a></div><div class="ttdeci">Ordering ordering</div><div class="ttdoc">Cell discovery ordering.</div><div class="ttdef"><b>Definition:</b> SSSP.h:40</div></div>
-<div class="ttc" id="astructSSSPOutput_html_ae89857e15a7f379d7b9932df8472d46c"><div class="ttname"><a href="structSSSPOutput.html#ae89857e15a7f379d7b9932df8472d46c">SSSPOutput::parent</a></div><div class="ttdeci">ParentMap parent</div><div class="ttdoc">Maps successor -&gt; parent.</div><div class="ttdef"><b>Definition:</b> SSSP.h:42</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

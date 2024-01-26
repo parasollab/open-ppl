@@ -73,28 +73,27 @@ $(function() {
 <div class="line">  <a name="_a0"></a><a class="code" href="classDistanceMetricMethod.html">DistanceMetricMethod</a>* distanceMetric = this-&gt;GetDistanceMetric(dmLabel);</div>
 <div class="line"> </div>
 <div class="line">  <span class="comment">// The two configurations to calculate the distance from.</span></div>
-<div class="line">  <a class="code" href="PMPL_8h.html#a2f5559e03ade254588022c64273eda9a">CfgType</a> c1, c2;</div>
+<div class="line">  CfgType c1, c2;</div>
 <div class="line"> </div>
 <div class="line">  <span class="comment">// The distance function takes as input two configurations, c1 and c2, and</span></div>
 <div class="line">  <span class="comment">// returns the computed transition distance between them.</span></div>
-<div class="line">  <span class="keywordtype">double</span> dist = distanceMetric-&gt;<a name="a1"></a><a class="code" href="classDistanceMetricMethod.html#a31274ea89aed66f718a02a9ef28b35db">Distance</a>(c1, c2);</div>
+<div class="line">  <span class="keywordtype">double</span> dist = distanceMetric-&gt;<a name="a1"></a><a class="code" href="classDistanceMetricMethod.html#abce0e2886ae2179a3eca711e5a7571f7">Distance</a>(c1, c2);</div>
 <div class="line"> </div>
 <div class="line"> </div>
 <div class="line">  <span class="comment">// Desired magnitude by which the directional configuration is scaled.</span></div>
 <div class="line">  <span class="keywordtype">double</span> length = 0.3;</div>
 <div class="line"> </div>
 <div class="line">  <span class="comment">// Configuration to be scaled.</span></div>
-<div class="line">  <a class="code" href="PMPL_8h.html#a2f5559e03ade254588022c64273eda9a">CfgType</a> c3;</div>
+<div class="line">  CfgType c3;</div>
 <div class="line"> </div>
 <div class="line">  <span class="comment">// The ScaleCfg function rescales a configuration vector based on the</span></div>
 <div class="line">  <span class="comment">// determined distance metric. It scales a directional configuration to a</span></div>
 <div class="line">  <span class="comment">// certain magnitude using the default origin.</span></div>
-<div class="line">  distanceMetric-&gt;<a name="a2"></a><a class="code" href="classDistanceMetricMethod.html#a3178fa2e54d5a70d06aef142ee834947">ScaleCfg</a>(length, c3);</div>
+<div class="line">  distanceMetric-&gt;<a name="a2"></a><a class="code" href="classDistanceMetricMethod.html#a43c4f57f3928cc72e9bbc3705e48a444">ScaleCfg</a>(length, c3);</div>
 <div class="line">}</div>
-<div class="ttc" id="aPMPL_8h_html_a2f5559e03ade254588022c64273eda9a"><div class="ttname"><a href="PMPL_8h.html#a2f5559e03ade254588022c64273eda9a">CfgType</a></div><div class="ttdeci">PMPLTraits::CfgType CfgType</div><div class="ttdef"><b>Definition:</b> PMPL.h:30</div></div>
-<div class="ttc" id="aclassDistanceMetricMethod_html"><div class="ttname"><a href="classDistanceMetricMethod.html">DistanceMetricMethod</a></div><div class="ttdef"><b>Definition:</b> DistanceMetricMethod.h:34</div></div>
-<div class="ttc" id="aclassDistanceMetricMethod_html_a31274ea89aed66f718a02a9ef28b35db"><div class="ttname"><a href="classDistanceMetricMethod.html#a31274ea89aed66f718a02a9ef28b35db">DistanceMetricMethod::Distance</a></div><div class="ttdeci">virtual double Distance(const CfgType &amp;_c1, const CfgType &amp;_c2)=0</div></div>
-<div class="ttc" id="aclassDistanceMetricMethod_html_a3178fa2e54d5a70d06aef142ee834947"><div class="ttname"><a href="classDistanceMetricMethod.html#a3178fa2e54d5a70d06aef142ee834947">DistanceMetricMethod::ScaleCfg</a></div><div class="ttdeci">virtual void ScaleCfg(double _length, CfgType &amp;_c, const CfgType &amp;_o)</div><div class="ttdef"><b>Definition:</b> DistanceMetricMethod.h:189</div></div>
+<div class="ttc" id="aclassDistanceMetricMethod_html"><div class="ttname"><a href="classDistanceMetricMethod.html">DistanceMetricMethod</a></div><div class="ttdef"><b>Definition:</b> DistanceMetricMethod.h:33</div></div>
+<div class="ttc" id="aclassDistanceMetricMethod_html_a43c4f57f3928cc72e9bbc3705e48a444"><div class="ttname"><a href="classDistanceMetricMethod.html#a43c4f57f3928cc72e9bbc3705e48a444">DistanceMetricMethod::ScaleCfg</a></div><div class="ttdeci">virtual void ScaleCfg(double _length, Cfg &amp;_c, const Cfg &amp;_o)</div><div class="ttdef"><b>Definition:</b> DistanceMetricMethod.cpp:66</div></div>
+<div class="ttc" id="aclassDistanceMetricMethod_html_abce0e2886ae2179a3eca711e5a7571f7"><div class="ttname"><a href="classDistanceMetricMethod.html#abce0e2886ae2179a3eca711e5a7571f7">DistanceMetricMethod::Distance</a></div><div class="ttdeci">virtual double Distance(const Cfg &amp;_c1, const Cfg &amp;_c2)=0</div></div>
 </div><!-- fragment --> </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

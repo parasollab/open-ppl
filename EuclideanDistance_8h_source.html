@@ -76,59 +76,25 @@ $(function() {
 <div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="MinkowskiDistance_8h.html">MinkowskiDistance.h</a>&quot;</span></div>
 <div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160; </div>
 <div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160; </div>
-<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00015"></a><span class="lineno"><a class="line" href="classEuclideanDistance.html">   15</a></span>&#160;<span class="keyword">class </span><a class="code" href="classEuclideanDistance.html">EuclideanDistance</a> : <span class="keyword">virtual</span> <span class="keyword">public</span> <a class="code" href="classMinkowskiDistance.html">MinkowskiDistance</a>&lt;MPTraits&gt; {</div>
-<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160; </div>
-<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;  <span class="keyword">public</span>:</div>
-<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160; </div>
-<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160; </div>
-<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;    <a class="code" href="classEuclideanDistance.html#a095e84fcffc321f686633723c32dba3c">EuclideanDistance</a>(<span class="keywordtype">bool</span> _normalize = <span class="keyword">false</span>);</div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;    <a class="code" href="classEuclideanDistance.html#a095e84fcffc321f686633723c32dba3c">EuclideanDistance</a>(<a class="code" href="classXMLNode.html">XMLNode</a>&amp; _node);</div>
-<div class="line"><a name="l00024"></a><span class="lineno"><a class="line" href="classEuclideanDistance.html#a01a71dd3d3dd00afa7b4f1bd2ad16831">   24</a></span>&#160;    <span class="keyword">virtual</span> <a class="code" href="classEuclideanDistance.html#a01a71dd3d3dd00afa7b4f1bd2ad16831">~EuclideanDistance</a>() = <span class="keywordflow">default</span>;</div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160; </div>
-<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160; </div>
-<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;};</div>
-<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160; </div>
-<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;<span class="comment">/*------------------------------- Construction -------------------------------*/</span></div>
-<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160; </div>
-<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00033"></a><span class="lineno"><a class="line" href="classEuclideanDistance.html#a095e84fcffc321f686633723c32dba3c">   33</a></span>&#160;<a class="code" href="classEuclideanDistance.html#a095e84fcffc321f686633723c32dba3c">EuclideanDistance&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;<a class="code" href="classEuclideanDistance.html#a095e84fcffc321f686633723c32dba3c">EuclideanDistance</a>(<span class="keywordtype">bool</span> _normalize) :</div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;    <a class="code" href="classMinkowskiDistance.html">MinkowskiDistance</a>&lt;<a class="code" href="classMPTraits.html">MPTraits</a>&gt;(2, 2, 1. / 2, _normalize) {</div>
-<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;  this-&gt;<a class="code" href="classMPBaseObject.html#ab59d82cd734f77fdc17eddb8517461da">SetName</a>(<span class="stringliteral">&quot;Euclidean&quot;</span>);</div>
-<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;}</div>
-<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160; </div>
-<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160; </div>
-<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00041"></a><span class="lineno"><a class="line" href="classEuclideanDistance.html#ad7d99135162505be4abc6dd950d8785d">   41</a></span>&#160;<a class="code" href="classEuclideanDistance.html#a095e84fcffc321f686633723c32dba3c">EuclideanDistance&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;<a class="code" href="classEuclideanDistance.html#a095e84fcffc321f686633723c32dba3c">EuclideanDistance</a>(<a class="code" href="classXMLNode.html">XMLNode</a>&amp; _node) : <a class="code" href="classDistanceMetricMethod.html">DistanceMetricMethod</a>&lt;<a class="code" href="classMPTraits.html">MPTraits</a>&gt;(_node), </div>
-<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;                                    <a class="code" href="classMinkowskiDistance.html">MinkowskiDistance</a>&lt;<a class="code" href="classMPTraits.html">MPTraits</a>&gt;(_node) {</div>
-<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;  this-&gt;<a class="code" href="classMPBaseObject.html#ab59d82cd734f77fdc17eddb8517461da">SetName</a>(<span class="stringliteral">&quot;Euclidean&quot;</span>);</div>
-<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160; </div>
-<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;  this-&gt;<a class="code" href="classMinkowskiDistance.html#a5f7f6c12f4c198149268cc2a33bf6fd2">m_r1</a> = 2;</div>
-<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;  this-&gt;<a class="code" href="classMinkowskiDistance.html#ace4fcace2282225d6821c6644a97e34e">m_r2</a> = 2;</div>
-<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;  this-&gt;<a class="code" href="classMinkowskiDistance.html#a4d43bfab6e61d4bbcdb778ae4dae78d0">m_r3</a> = 1.0/2;</div>
-<div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160;  this-&gt;<a class="code" href="classMinkowskiDistance.html#a9d1e21c0be380ecb90ef7ae29267c62d">m_normalize</a> = _node.<a class="code" href="classXMLNode.html#af0e81db89948e52fdee6bf2bf029037f">Read</a>(<span class="stringliteral">&quot;normalize&quot;</span>, <span class="keyword">false</span>, <span class="keyword">false</span>,</div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;      <span class="stringliteral">&quot;flag if position dof should be normalized by environment diagonal&quot;</span>);</div>
-<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;}</div>
-<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160; </div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;<span class="comment">/*----------------------------------------------------------------------------*/</span></div>
-<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160; </div>
-<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00014"></a><span class="lineno"><a class="line" href="classEuclideanDistance.html">   14</a></span>&#160;<span class="keyword">class </span><a class="code" href="classEuclideanDistance.html">EuclideanDistance</a> : <span class="keyword">virtual</span> <span class="keyword">public</span> <a class="code" href="classMinkowskiDistance.html">MinkowskiDistance</a> {</div>
+<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160; </div>
+<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;  <span class="keyword">public</span>:</div>
+<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160; </div>
+<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160; </div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;    <a class="code" href="classEuclideanDistance.html#ac183d2bb3a6a2188ae7d1629fcc12919">EuclideanDistance</a>(<span class="keywordtype">bool</span> _normalize = <span class="keyword">false</span>);</div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;    <a class="code" href="classEuclideanDistance.html#ac183d2bb3a6a2188ae7d1629fcc12919">EuclideanDistance</a>(<a class="code" href="classXMLNode.html">XMLNode</a>&amp; _node);</div>
+<div class="line"><a name="l00023"></a><span class="lineno"><a class="line" href="classEuclideanDistance.html#a20d3809b5c364bec61c3030bfc6ab4d2">   23</a></span>&#160;    <span class="keyword">virtual</span> <a class="code" href="classEuclideanDistance.html#a20d3809b5c364bec61c3030bfc6ab4d2">~EuclideanDistance</a>() = <span class="keywordflow">default</span>;</div>
+<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160; </div>
+<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160; </div>
+<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;};</div>
+<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160; </div>
+<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="ttc" id="aMinkowskiDistance_8h_html"><div class="ttname"><a href="MinkowskiDistance_8h.html">MinkowskiDistance.h</a></div></div>
-<div class="ttc" id="aclassDistanceMetricMethod_html"><div class="ttname"><a href="classDistanceMetricMethod.html">DistanceMetricMethod</a></div><div class="ttdef"><b>Definition:</b> DistanceMetricMethod.h:34</div></div>
-<div class="ttc" id="aclassEuclideanDistance_html"><div class="ttname"><a href="classEuclideanDistance.html">EuclideanDistance</a></div><div class="ttdef"><b>Definition:</b> EuclideanDistance.h:15</div></div>
-<div class="ttc" id="aclassEuclideanDistance_html_a01a71dd3d3dd00afa7b4f1bd2ad16831"><div class="ttname"><a href="classEuclideanDistance.html#a01a71dd3d3dd00afa7b4f1bd2ad16831">EuclideanDistance::~EuclideanDistance</a></div><div class="ttdeci">virtual ~EuclideanDistance()=default</div></div>
-<div class="ttc" id="aclassEuclideanDistance_html_a095e84fcffc321f686633723c32dba3c"><div class="ttname"><a href="classEuclideanDistance.html#a095e84fcffc321f686633723c32dba3c">EuclideanDistance::EuclideanDistance</a></div><div class="ttdeci">EuclideanDistance(bool _normalize=false)</div><div class="ttdef"><b>Definition:</b> EuclideanDistance.h:34</div></div>
-<div class="ttc" id="aclassMPBaseObject_html_ab59d82cd734f77fdc17eddb8517461da"><div class="ttname"><a href="classMPBaseObject.html#ab59d82cd734f77fdc17eddb8517461da">MPBaseObject::SetName</a></div><div class="ttdeci">void SetName(const std::string &amp;_s)</div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:229</div></div>
-<div class="ttc" id="aclassMPTraits_html"><div class="ttname"><a href="classMPTraits.html">MPTraits</a></div><div class="ttdoc">Defines available methods in the Motion Planning Universe for Cfg.</div><div class="ttdef"><b>Definition:</b> ParallelCfgTraits.h:144</div></div>
-<div class="ttc" id="aclassMinkowskiDistance_html"><div class="ttname"><a href="classMinkowskiDistance.html">MinkowskiDistance</a></div><div class="ttdef"><b>Definition:</b> MinkowskiDistance.h:23</div></div>
-<div class="ttc" id="aclassMinkowskiDistance_html_a4d43bfab6e61d4bbcdb778ae4dae78d0"><div class="ttname"><a href="classMinkowskiDistance.html#a4d43bfab6e61d4bbcdb778ae4dae78d0">MinkowskiDistance::m_r3</a></div><div class="ttdeci">double m_r3</div><div class="ttdoc">For calculating root.</div><div class="ttdef"><b>Definition:</b> MinkowskiDistance.h:75</div></div>
-<div class="ttc" id="aclassMinkowskiDistance_html_a5f7f6c12f4c198149268cc2a33bf6fd2"><div class="ttname"><a href="classMinkowskiDistance.html#a5f7f6c12f4c198149268cc2a33bf6fd2">MinkowskiDistance::m_r1</a></div><div class="ttdeci">double m_r1</div><div class="ttdoc">For position part.</div><div class="ttdef"><b>Definition:</b> MinkowskiDistance.h:73</div></div>
-<div class="ttc" id="aclassMinkowskiDistance_html_a9d1e21c0be380ecb90ef7ae29267c62d"><div class="ttname"><a href="classMinkowskiDistance.html#a9d1e21c0be380ecb90ef7ae29267c62d">MinkowskiDistance::m_normalize</a></div><div class="ttdeci">bool m_normalize</div><div class="ttdoc">Normalize distance w.r.t. environment?</div><div class="ttdef"><b>Definition:</b> MinkowskiDistance.h:76</div></div>
-<div class="ttc" id="aclassMinkowskiDistance_html_ace4fcace2282225d6821c6644a97e34e"><div class="ttname"><a href="classMinkowskiDistance.html#ace4fcace2282225d6821c6644a97e34e">MinkowskiDistance::m_r2</a></div><div class="ttdeci">double m_r2</div><div class="ttdoc">For rotation part.</div><div class="ttdef"><b>Definition:</b> MinkowskiDistance.h:74</div></div>
+<div class="ttc" id="aclassEuclideanDistance_html"><div class="ttname"><a href="classEuclideanDistance.html">EuclideanDistance</a></div><div class="ttdef"><b>Definition:</b> EuclideanDistance.h:14</div></div>
+<div class="ttc" id="aclassEuclideanDistance_html_a20d3809b5c364bec61c3030bfc6ab4d2"><div class="ttname"><a href="classEuclideanDistance.html#a20d3809b5c364bec61c3030bfc6ab4d2">EuclideanDistance::~EuclideanDistance</a></div><div class="ttdeci">virtual ~EuclideanDistance()=default</div></div>
+<div class="ttc" id="aclassEuclideanDistance_html_ac183d2bb3a6a2188ae7d1629fcc12919"><div class="ttname"><a href="classEuclideanDistance.html#ac183d2bb3a6a2188ae7d1629fcc12919">EuclideanDistance::EuclideanDistance</a></div><div class="ttdeci">EuclideanDistance(bool _normalize=false)</div><div class="ttdef"><b>Definition:</b> EuclideanDistance.cpp:6</div></div>
+<div class="ttc" id="aclassMinkowskiDistance_html"><div class="ttname"><a href="classMinkowskiDistance.html">MinkowskiDistance</a></div><div class="ttdef"><b>Definition:</b> MinkowskiDistance.h:22</div></div>
 <div class="ttc" id="aclassXMLNode_html"><div class="ttname"><a href="classXMLNode.html">XMLNode</a></div><div class="ttdef"><b>Definition:</b> XMLNode.h:27</div></div>
-<div class="ttc" id="aclassXMLNode_html_af0e81db89948e52fdee6bf2bf029037f"><div class="ttname"><a href="classXMLNode.html#af0e81db89948e52fdee6bf2bf029037f">XMLNode::Read</a></div><div class="ttdeci">T Read(const std::string &amp;_name, const bool _req, const T &amp;_default, const T &amp;_min, const T &amp;_max, const std::string &amp;_desc)</div><div class="ttdef"><b>Definition:</b> XMLNode.h:267</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

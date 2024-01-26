@@ -74,52 +74,37 @@ $(function() {
 <div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="preprocessor">#define PMPL_H_</span></div>
 <div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160; </div>
 <div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="comment">// Define the configuration-space model (traits) based on the compile options.</span></div>
-<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="preprocessor">#ifdef PMPCfg</span></div>
+<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="comment">// #ifdef PMPCfg</span></div>
 <div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160; </div>
-<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="Cfg_8h.html">ConfigurationSpace/Cfg.h</a>&quot;</span></div>
-<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="preprocessor">#ifndef PPL_TEST_TRAITS_H_</span></div>
-<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="preprocessor">  #include &quot;<a class="code" href="CfgTraits_8h.html">Traits/CfgTraits.h</a>&quot;</span></div>
-<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="preprocessor">#else</span></div>
-<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="preprocessor">  #include &quot;../../tests/Traits/TestTraits.h&quot;</span></div>
-<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="comment">// #include &quot;ConfigurationSpace/Cfg.h&quot;</span></div>
+<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="comment">// #ifndef PPL_TEST_TRAITS_H_</span></div>
+<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="comment">//   #include &quot;Traits/Methods.h&quot;</span></div>
+<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="comment">// #else</span></div>
+<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="comment">//   #include &quot;../../tests/Traits/TestTraits.h&quot;</span></div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="comment">// #endif</span></div>
 <div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160; </div>
-<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="keyword">typedef</span> <a class="code" href="classMPTraits.html">MPTraits&lt;Cfg&gt;</a> PMPLTraits;</div>
-<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160; </div>
-<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;<span class="preprocessor">#else</span></div>
-<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;<span class="preprocessor">#error &quot;Error, must define a RobotType for PMPL application&quot;</span></div>
-<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160; </div>
-<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160; </div>
-<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;<span class="comment">// Mark the corresponding templates as extern to avoid recompiling them</span></div>
-<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;<span class="comment">// constantly.</span></div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;<span class="keyword">extern</span> <span class="keyword">template</span> <span class="keyword">class </span><a class="code" href="classMPLibraryType.html">MPLibraryType&lt;PMPLTraits&gt;</a>;</div>
-<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;<span class="keyword">extern</span> <span class="keyword">template</span> <span class="keyword">class </span><a class="code" href="classMPSolutionType.html">MPSolutionType&lt;PMPLTraits&gt;</a>;</div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;<span class="keyword">extern</span> <span class="keyword">template</span> <span class="keyword">class </span><a class="code" href="classGenericStateGraph.html">GenericStateGraph&lt;PMPLTraits::CfgType, PMPLTraits::WeightType&gt;</a>;</div>
-<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;<span class="keyword">extern</span> <span class="keyword">template</span> <span class="keyword">class </span><a class="code" href="classPathType.html">PathType&lt;PMPLTraits&gt;</a>;</div>
-<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160; </div>
-<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160; </div>
-<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;<span class="comment">// Set the templated types using the chosen traits.</span></div>
-<div class="line"><a name="l00030"></a><span class="lineno"><a class="line" href="PMPL_8h.html#a2f5559e03ade254588022c64273eda9a">   30</a></span>&#160;<span class="keyword">typedef</span> <a class="code" href="PMPL_8h.html#a2f5559e03ade254588022c64273eda9a">PMPLTraits::CfgType</a>     <a class="code" href="PMPL_8h.html#a2f5559e03ade254588022c64273eda9a">CfgType</a>;</div>
-<div class="line"><a name="l00031"></a><span class="lineno"><a class="line" href="PMPL_8h.html#a26d5ee032a6f446e521a036e525e31fe">   31</a></span>&#160;<span class="keyword">typedef</span> PMPLTraits::WeightType  <a class="code" href="PMPL_8h.html#a26d5ee032a6f446e521a036e525e31fe">PMPLWeightType</a>; <span class="comment">// TODO revise as WeightType conflicts with LHK.h</span></div>
-<div class="line"><a name="l00032"></a><span class="lineno"><a class="line" href="PMPL_8h.html#abf8ccf2b5a281c9ca6725c3364cb8f9b">   32</a></span>&#160;<span class="keyword">typedef</span> <a class="code" href="PMPL_8h.html#abf8ccf2b5a281c9ca6725c3364cb8f9b">PMPLTraits::RoadmapType</a> <a class="code" href="PMPL_8h.html#abf8ccf2b5a281c9ca6725c3364cb8f9b">RoadmapType</a>;</div>
-<div class="line"><a name="l00033"></a><span class="lineno"><a class="line" href="PMPL_8h.html#ace97caaaddd799beb0c9f3ed793fc4c5">   33</a></span>&#160;<span class="keyword">typedef</span> <a class="code" href="PMPL_8h.html#ace97caaaddd799beb0c9f3ed793fc4c5">PMPLTraits::Path</a>        <a class="code" href="PMPL_8h.html#ace97caaaddd799beb0c9f3ed793fc4c5">Path</a>;</div>
-<div class="line"><a name="l00034"></a><span class="lineno"><a class="line" href="PMPL_8h.html#a4829bbb5f410cd1931429c6c46ca6b42">   34</a></span>&#160;<span class="keyword">typedef</span> <a class="code" href="PMPL_8h.html#a4829bbb5f410cd1931429c6c46ca6b42">PMPLTraits::MPLibrary</a>   <a class="code" href="PMPL_8h.html#a4829bbb5f410cd1931429c6c46ca6b42">MPLibrary</a>;</div>
-<div class="line"><a name="l00035"></a><span class="lineno"><a class="line" href="PMPL_8h.html#a0e826882dd5f3e0bd4ae975ce04abd04">   35</a></span>&#160;<span class="keyword">typedef</span> <a class="code" href="PMPL_8h.html#a0e826882dd5f3e0bd4ae975ce04abd04">PMPLTraits::MPSolution</a>  <a class="code" href="PMPL_8h.html#a0e826882dd5f3e0bd4ae975ce04abd04">MPSolution</a>;</div>
-<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160; </div>
-<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="ttc" id="aCfgTraits_8h_html"><div class="ttname"><a href="CfgTraits_8h.html">CfgTraits.h</a></div></div>
-<div class="ttc" id="aCfg_8h_html"><div class="ttname"><a href="Cfg_8h.html">Cfg.h</a></div></div>
-<div class="ttc" id="aPMPL_8h_html_a0e826882dd5f3e0bd4ae975ce04abd04"><div class="ttname"><a href="PMPL_8h.html#a0e826882dd5f3e0bd4ae975ce04abd04">MPSolution</a></div><div class="ttdeci">PMPLTraits::MPSolution MPSolution</div><div class="ttdef"><b>Definition:</b> PMPL.h:35</div></div>
-<div class="ttc" id="aPMPL_8h_html_a26d5ee032a6f446e521a036e525e31fe"><div class="ttname"><a href="PMPL_8h.html#a26d5ee032a6f446e521a036e525e31fe">PMPLWeightType</a></div><div class="ttdeci">PMPLTraits::WeightType PMPLWeightType</div><div class="ttdef"><b>Definition:</b> PMPL.h:31</div></div>
-<div class="ttc" id="aPMPL_8h_html_a2f5559e03ade254588022c64273eda9a"><div class="ttname"><a href="PMPL_8h.html#a2f5559e03ade254588022c64273eda9a">CfgType</a></div><div class="ttdeci">PMPLTraits::CfgType CfgType</div><div class="ttdef"><b>Definition:</b> PMPL.h:30</div></div>
-<div class="ttc" id="aPMPL_8h_html_a4829bbb5f410cd1931429c6c46ca6b42"><div class="ttname"><a href="PMPL_8h.html#a4829bbb5f410cd1931429c6c46ca6b42">MPLibrary</a></div><div class="ttdeci">PMPLTraits::MPLibrary MPLibrary</div><div class="ttdef"><b>Definition:</b> PMPL.h:34</div></div>
-<div class="ttc" id="aPMPL_8h_html_abf8ccf2b5a281c9ca6725c3364cb8f9b"><div class="ttname"><a href="PMPL_8h.html#abf8ccf2b5a281c9ca6725c3364cb8f9b">RoadmapType</a></div><div class="ttdeci">PMPLTraits::RoadmapType RoadmapType</div><div class="ttdef"><b>Definition:</b> PMPL.h:32</div></div>
-<div class="ttc" id="aPMPL_8h_html_ace97caaaddd799beb0c9f3ed793fc4c5"><div class="ttname"><a href="PMPL_8h.html#ace97caaaddd799beb0c9f3ed793fc4c5">Path</a></div><div class="ttdeci">PMPLTraits::Path Path</div><div class="ttdef"><b>Definition:</b> PMPL.h:33</div></div>
-<div class="ttc" id="aclassGenericStateGraph_html"><div class="ttname"><a href="classGenericStateGraph.html">GenericStateGraph</a></div><div class="ttdef"><b>Definition:</b> GenericStateGraph.h:67</div></div>
-<div class="ttc" id="aclassMPLibraryType_html"><div class="ttname"><a href="classMPLibraryType.html">MPLibraryType</a></div><div class="ttdef"><b>Definition:</b> MPLibrary.h:44</div></div>
-<div class="ttc" id="aclassMPSolutionType_html"><div class="ttname"><a href="classMPSolutionType.html">MPSolutionType</a></div><div class="ttdef"><b>Definition:</b> MPSolution.h:30</div></div>
-<div class="ttc" id="aclassMPTraits_html"><div class="ttname"><a href="classMPTraits.html">MPTraits</a></div><div class="ttdoc">Defines available methods in the Motion Planning Universe for Cfg.</div><div class="ttdef"><b>Definition:</b> ParallelCfgTraits.h:144</div></div>
-<div class="ttc" id="aclassPathType_html"><div class="ttname"><a href="classPathType.html">PathType</a></div><div class="ttdef"><b>Definition:</b> Path.h:18</div></div>
+<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="comment">// #else</span></div>
+<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;<span class="comment">// #error &quot;Error, must define a RobotType for PMPL application&quot;</span></div>
+<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;<span class="comment">// #endif</span></div>
+<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160; </div>
+<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160; </div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;<span class="comment">// Mark the corresponding templates as extern to avoid recompiling them</span></div>
+<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;<span class="comment">// constantly.</span></div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;<span class="comment">// extern template class MPLibraryType&lt;PMPLTraits&gt;;</span></div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;<span class="comment">// extern template class MPSolutionType&lt;PMPLTraits&gt;;</span></div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;<span class="comment">// extern template class GenericStateGraph&lt;PMPLTraits::CfgType, PMPLTraits::WeightType&gt;;</span></div>
+<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;<span class="comment">// extern template class PathType&lt;PMPLTraits&gt;;</span></div>
+<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160; </div>
+<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160; </div>
+<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;<span class="comment">// // Set the templated types using the chosen traits.</span></div>
+<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;<span class="comment">// typedef PMPLTraits::CfgType     CfgType;</span></div>
+<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;<span class="comment">// typedef PMPLTraits::WeightType  PMPLWeightType; // TODO revise as WeightType conflicts with LHK.h</span></div>
+<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;<span class="comment">// typedef PMPLTraits::RoadmapType RoadmapType;</span></div>
+<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;<span class="comment">// typedef PMPLTraits::Path        Path;</span></div>
+<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;<span class="comment">// typedef PMPLTraits::MPLibrary   MPLibrary;</span></div>
+<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;<span class="comment">// typedef PMPLTraits::MPSolution  MPSolution;</span></div>
+<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160; </div>
+<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;<span class="preprocessor">#endif</span></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

@@ -1,5 +1,5 @@
-<map id="ObstacleBasedSampler&lt; MPTraits &gt;" name="ObstacleBasedSampler&lt; MPTraits &gt;">
-<area shape="rect" id="node1" title="Obstacle&#45;based sampling." alt="" coords="24,155,197,196"/>
-<area shape="rect" id="node2" href="$classSamplerMethod.html" title=" " alt="" coords="5,80,216,107"/>
-<area shape="rect" id="node3" href="$classMPBaseObject.html" title=" " alt="" coords="10,5,211,32"/>
+<map id="ObstacleBasedSampler" name="ObstacleBasedSampler">
+<area shape="rect" id="node1" title="Obstacle&#45;based sampling." alt="" coords="5,155,179,181"/>
+<area shape="rect" id="node2" href="$classSamplerMethod.html" title=" " alt="" coords="29,80,155,107"/>
+<area shape="rect" id="node3" href="$classMPBaseObject.html" title=" " alt="" coords="34,5,150,32"/>
 </map>

@@ -1,51 +1,51 @@
-<map id="MPBaseObject&lt; MPTraits &gt;" name="MPBaseObject&lt; MPTraits &gt;">
-<area shape="rect" id="node1" title=" " alt="" coords="5,1049,207,1075"/>
-<area shape="rect" id="node2" href="$classClearanceMap.html" title=" " alt="" coords="270,87,470,114"/>
-<area shape="rect" id="node3" href="$classClearanceUtility.html" title=" " alt="" coords="264,138,476,165"/>
-<area shape="rect" id="node5" href="$classConnectorMethod.html" title=" " alt="" coords="259,189,481,215"/>
-<area shape="rect" id="node9" href="$classDistanceMetricMethod.html" title=" " alt="" coords="285,408,455,449"/>
-<area shape="rect" id="node16" href="$classEdgeValidityCheckerMethod.html" title=" " alt="" coords="268,604,472,645"/>
-<area shape="rect" id="node18" href="$classExtenderMethod.html" title=" " alt="" coords="263,698,477,725"/>
-<area shape="rect" id="node20" href="$classGoalTrackerType.html" title="Maintains a set of GoalMap for multiple roadmap/task pairs." alt="" coords="263,763,477,790"/>
-<area shape="rect" id="node21" href="$classLKHSearch.html" title=" " alt="" coords="281,814,459,841"/>
-<area shape="rect" id="node22" href="$classLocalPlannerMethod.html" title=" " alt="" coords="293,865,447,907"/>
-<area shape="rect" id="node24" href="$classMPStrategyMethod.html" title=" " alt="" coords="255,931,485,958"/>
-<area shape="rect" id="node32" href="$classMapEvaluatorMethod.html" title=" " alt="" coords="289,983,451,1024"/>
-<area shape="rect" id="node38" href="$classMetricMethod.html" title=" " alt="" coords="271,1049,469,1075"/>
-<area shape="rect" id="node39" href="$classNeighborhoodFinderMethod.html" title=" " alt="" coords="269,1100,471,1141"/>
-<area shape="rect" id="node40" href="$classPathModifierMethod.html" title="Base algorithm abstraction for PathModifiers." alt="" coords="294,1165,446,1207"/>
-<area shape="rect" id="node41" href="$classPointConstruction.html" title=" " alt="" coords="296,1231,444,1272"/>
-<area shape="rect" id="node42" href="$classReachabilityUtil.html" title=" " alt="" coords="265,1297,475,1323"/>
-<area shape="rect" id="node43" href="$classSafeIntervalTool.html" title=" " alt="" coords="264,1347,476,1374"/>
-<area shape="rect" id="node44" href="$classSamplerMethod.html" title=" " alt="" coords="265,1398,475,1425"/>
-<area shape="rect" id="node45" href="$classSkeletonClearanceUtility.html" title=" " alt="" coords="279,1449,461,1491"/>
-<area shape="rect" id="node46" href="$classTRPTool.html" title=" " alt="" coords="291,1515,449,1542"/>
-<area shape="rect" id="node47" href="$classTopologicalMap.html" title=" " alt="" coords="266,1566,474,1593"/>
-<area shape="rect" id="node48" href="$classValidityCheckerMethod.html" title=" " alt="" coords="284,1617,456,1659"/>
-<area shape="rect" id="node49" href="$classWrenchAccessibilityTool.html" title=" " alt="" coords="281,1683,459,1724"/>
-<area shape="rect" id="node4" href="$classMedialAxisUtility.html" title=" " alt="" coords="576,5,721,47"/>
-<area shape="rect" id="node6" href="$classCCsConnector.html" title=" " alt="" coords="549,71,748,98"/>
-<area shape="rect" id="node7" href="$classNeighborhoodConnector.html" title=" " alt="" coords="559,123,738,164"/>
-<area shape="rect" id="node8" href="$classRewireConnector.html" title=" " alt="" coords="539,189,758,215"/>
-<area shape="rect" id="node10" href="$classLPSweptDistance.html" title=" " alt="" coords="539,239,758,266"/>
-<area shape="rect" id="node11" href="$classMinkowskiDistance.html" title=" " alt="" coords="569,291,728,332"/>
-<area shape="rect" id="node12" href="$classRMSDDistance.html" title=" " alt="" coords="547,357,750,383"/>
-<area shape="rect" id="node13" href="$classTopologicalDistance.html" title=" " alt="" coords="573,408,725,449"/>
-<area shape="rect" id="node14" href="$classWeightedEuclideanDistance.html" title=" " alt="" coords="547,473,750,515"/>
-<area shape="rect" id="node15" href="$classWorkspaceTranslationDistance.html" title=" " alt="" coords="538,539,759,580"/>
-<area shape="rect" id="node17" href="$classIntermediatesEdgeValidityChecker.html" title="Validates an edge by calling a local planner and collision checking all intermediates created by that..." alt="" coords="551,604,746,645"/>
-<area shape="rect" id="node19" href="$classBasicExtender.html" title=" " alt="" coords="549,670,749,697"/>
-<area shape="rect" id="node23" href="$classStraightLine.html" title=" " alt="" coords="556,721,741,747"/>
-<area shape="rect" id="node25" href="$classBasicPRM.html" title=" " alt="" coords="563,771,734,798"/>
-<area shape="rect" id="node26" href="$classBasicRRTStrategy.html" title=" " alt="" coords="537,822,760,849"/>
-<area shape="rect" id="node27" href="$classDynamicRegionsPRM.html" title=" " alt="" coords="563,873,735,915"/>
-<area shape="rect" id="node28" href="$classGroupStrategyMethod.html" title=" " alt="" coords="566,939,731,980"/>
-<area shape="rect" id="node29" href="$classModifyPath.html" title=" " alt="" coords="559,1005,738,1031"/>
-<area shape="rect" id="node30" href="$classValidationStrategy.html" title=" " alt="" coords="577,1056,720,1097"/>
-<area shape="rect" id="node31" href="$classWrenchAccessibilityStrategy.html" title=" " alt="" coords="545,1121,753,1163"/>
-<area shape="rect" id="node33" href="$classCBSQuery.html" title=" " alt="" coords="563,1187,735,1214"/>
-<area shape="rect" id="node34" href="$classCollisionEvaluator.html" title=" " alt="" coords="579,1239,719,1280"/>
-<area shape="rect" id="node35" href="$classComposeEvaluator.html" title=" " alt="" coords="533,1305,764,1331"/>
-<area shape="rect" id="node36" href="$classConditionalEvaluator.html" title=" " alt="" coords="569,1356,728,1397"/>
-<area shape="rect" id="node37" href="$classGroupQuery.html" title=" " alt="" coords="556,1422,741,1449"/>
+<map id="MPBaseObject" name="MPBaseObject">
+<area shape="rect" id="node1" title=" " alt="" coords="5,1009,121,1036"/>
+<area shape="rect" id="node2" href="$classClearanceUtility.html" title=" " alt="" coords="208,31,335,57"/>
+<area shape="rect" id="node4" href="$classConnectorMethod.html" title=" " alt="" coords="203,132,340,159"/>
+<area shape="rect" id="node8" href="$classDistanceMetricMethod.html" title=" " alt="" coords="187,360,356,387"/>
+<area shape="rect" id="node15" href="$classEdgeValidityCheckerMethod.html" title=" " alt="" coords="169,561,373,588"/>
+<area shape="rect" id="node17" href="$classExtenderMethod.html" title=" " alt="" coords="207,655,336,681"/>
+<area shape="rect" id="node19" href="$classGoalTrackerType.html" title="Maintains a set of GoalMap for multiple roadmap/task pairs." alt="" coords="207,743,335,769"/>
+<area shape="rect" id="node20" href="$classLocalPlannerMethod.html" title=" " alt="" coords="194,793,349,820"/>
+<area shape="rect" id="node23" href="$classMPStrategyMethod.html" title=" " alt="" coords="198,883,345,909"/>
+<area shape="rect" id="node31" href="$classMapEvaluatorMethod.html" title=" " alt="" coords="191,933,352,960"/>
+<area shape="rect" id="node39" href="$classMetricMethod.html" title=" " alt="" coords="215,984,327,1011"/>
+<area shape="rect" id="node40" href="$classNeighborhoodFinderMethod.html" title=" " alt="" coords="170,1035,373,1061"/>
+<area shape="rect" id="node41" href="$classPathModifierMethod.html" title="Base algorithm abstraction for PathModifiers." alt="" coords="195,1085,347,1112"/>
+<area shape="rect" id="node42" href="$classPointConstruction.html" title=" " alt="" coords="203,1136,340,1163"/>
+<area shape="rect" id="node43" href="$classReachabilityUtil.html" title=" " alt="" coords="208,1187,335,1213"/>
+<area shape="rect" id="node44" href="$classSafeIntervalTool.html" title=" " alt="" coords="208,1237,335,1264"/>
+<area shape="rect" id="node45" href="$classSamplerMethod.html" title=" " alt="" coords="209,1288,334,1315"/>
+<area shape="rect" id="node46" href="$classSkeletonClearanceUtility.html" title=" " alt="" coords="180,1339,363,1365"/>
+<area shape="rect" id="node47" href="$classTopologicalMap.html" title=" " alt="" coords="210,1389,333,1416"/>
+<area shape="rect" id="node48" href="$classValidityCheckerMethod.html" title=" " alt="" coords="185,1440,357,1467"/>
+<area shape="rect" id="node49" href="$classWrenchAccessibilityTool.html" title=" " alt="" coords="182,1491,361,1517"/>
+<area shape="rect" id="node3" href="$classMedialAxisUtility.html" title=" " alt="" coords="465,5,599,32"/>
+<area shape="rect" id="node5" href="$classCCsConnector.html" title=" " alt="" coords="475,56,589,83"/>
+<area shape="rect" id="node6" href="$classNeighborhoodConnector.html" title=" " alt="" coords="443,107,621,133"/>
+<area shape="rect" id="node7" href="$classRewireConnector.html" title=" " alt="" coords="465,157,599,184"/>
+<area shape="rect" id="node9" href="$classLPSweptDistance.html" title=" " alt="" coords="465,208,599,235"/>
+<area shape="rect" id="node10" href="$classMinkowskiDistance.html" title=" " alt="" coords="458,259,606,285"/>
+<area shape="rect" id="node11" href="$classRMSDDistance.html" title=" " alt="" coords="473,309,591,336"/>
+<area shape="rect" id="node12" href="$classTopologicalDistance.html" title=" " alt="" coords="456,360,608,387"/>
+<area shape="rect" id="node13" href="$classWeightedEuclideanDistance.html" title=" " alt="" coords="431,411,633,437"/>
+<area shape="rect" id="node14" href="$classWorkspaceTranslationDistance.html" title=" " alt="" coords="421,461,643,488"/>
+<area shape="rect" id="node16" href="$classIntermediatesEdgeValidityChecker.html" title="Validates an edge by calling a local planner and collision checking all intermediates created by that..." alt="" coords="435,513,629,554"/>
+<area shape="rect" id="node18" href="$classBasicExtender.html" title=" " alt="" coords="475,579,589,605"/>
+<area shape="rect" id="node21" href="$classHierarchicalLP.html" title="Apply a sequence of local planners until one succeeds, or all fail." alt="" coords="475,629,589,656"/>
+<area shape="rect" id="node22" href="$classStraightLine.html" title=" " alt="" coords="482,680,582,707"/>
+<area shape="rect" id="node24" href="$classBasicPRM.html" title=" " alt="" coords="489,731,575,757"/>
+<area shape="rect" id="node25" href="$classBasicRRTStrategy.html" title=" " alt="" coords="463,781,601,808"/>
+<area shape="rect" id="node26" href="$classDynamicRegionsPRM.html" title=" " alt="" coords="451,832,613,859"/>
+<area shape="rect" id="node27" href="$classGroupStrategyMethod.html" title=" " alt="" coords="449,883,615,909"/>
+<area shape="rect" id="node28" href="$classModifyPath.html" title=" " alt="" coords="485,933,579,960"/>
+<area shape="rect" id="node29" href="$classPathStrategy.html" title="PathStrategy generates configurations along user&#45;generated paths." alt="" coords="479,984,585,1011"/>
+<area shape="rect" id="node30" href="$classWrenchAccessibilityStrategy.html" title=" " alt="" coords="428,1035,636,1061"/>
+<area shape="rect" id="node32" href="$classCBSQuery.html" title=" " alt="" coords="489,1085,575,1112"/>
+<area shape="rect" id="node33" href="$classCollisionEvaluator.html" title=" " alt="" coords="462,1136,602,1163"/>
+<area shape="rect" id="node34" href="$classComposeEvaluator.html" title=" " alt="" coords="459,1187,605,1213"/>
+<area shape="rect" id="node35" href="$classConditionalEvaluator.html" title=" " alt="" coords="453,1237,611,1264"/>
+<area shape="rect" id="node36" href="$classGroupQuery.html" title=" " alt="" coords="482,1288,582,1315"/>
+<area shape="rect" id="node37" href="$classMinimumDistanceEvaluator.html" title=" " alt="" coords="431,1339,633,1365"/>
+<area shape="rect" id="node38" href="$classNegateEvaluator.html" title=" " alt="" coords="467,1389,597,1416"/>
 </map>

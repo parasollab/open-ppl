@@ -1,6 +1,8 @@
-<map id="MedialAxisUtility&lt; MPTraits &gt;" name="MedialAxisUtility&lt; MPTraits &gt;">
-<area shape="rect" id="node1" title=" " alt="" coords="111,171,256,212"/>
-<area shape="rect" id="node2" href="$classClearanceUtility.html" title=" " alt="" coords="77,95,289,121"/>
-<area shape="rect" id="node3" href="$classMPBaseObject.html" title=" " alt="" coords="5,5,207,32"/>
-<area shape="rect" id="node4" href="$classRobot.html" title=" " alt="" coords="231,5,291,32"/>
+<map id="MedialAxisUtility" name="MedialAxisUtility">
+<area shape="rect" id="node1" title=" " alt="" coords="108,276,243,303"/>
+<area shape="rect" id="node2" href="$classClearanceUtility.html" title=" " alt="" coords="112,200,239,227"/>
+<area shape="rect" id="node3" href="$classMPBaseObject.html" title=" " alt="" coords="5,96,121,123"/>
+<area shape="rect" id="node4" href="$classRobot.html" title=" " alt="" coords="145,96,205,123"/>
+<area shape="rect" id="node5" title=" " alt="" coords="229,96,316,123"/>
+<area shape="rect" id="node6" title=" " alt="" coords="203,5,342,47"/>
 </map>

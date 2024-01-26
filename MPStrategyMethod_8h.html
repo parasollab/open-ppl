@@ -72,73 +72,65 @@ $(function() {
 <div class="title">MPStrategyMethod.h File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><code>#include &quot;<a class="el" href="GenericStateGraph_8h_source.html">ConfigurationSpace/GenericStateGraph.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="Constraint_8h_source.html">MPProblem/Constraints/Constraint.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="MPTask_8h_source.html">MPProblem/MPTask.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="SamplerMethod_8h_source.html">MPLibrary/Samplers/SamplerMethod.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="MPUtils_8h_source.html">Utilities/MPUtils.h</a>&quot;</code><br />
+<div class="textblock"><code>#include &quot;<a class="el" href="MPBaseObject_8h_source.html">MPLibrary/MPBaseObject.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="MetricUtils_8h_source.html">Utilities/MetricUtils.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="PMPLExceptions_8h_source.html">Utilities/PMPLExceptions.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="XMLNode_8h_source.html">Utilities/XMLNode.h</a>&quot;</code><br />
-<code>#include &lt;cstddef&gt;</code><br />
-<code>#include &lt;iostream&gt;</code><br />
-<code>#include &lt;string&gt;</code><br />
-<code>#include &lt;vector&gt;</code><br />
 </div><div class="textblock"><div class="dynheader">
 Include dependency graph for MPStrategyMethod.h:</div>
 <div class="dyncontent">
 <div class="center"><img src="MPStrategyMethod_8h__incl.png" border="0" usemap="#a_2opt_2actions-runner_2__work_2open-ppl_2open-ppl_2src_2MPLibrary_2MPStrategies_2MPStrategyMethod_8h" alt=""/></div>
 <map name="a_2opt_2actions-runner_2__work_2open-ppl_2open-ppl_2src_2MPLibrary_2MPStrategies_2MPStrategyMethod_8h" id="a_2opt_2actions-runner_2__work_2open-ppl_2open-ppl_2src_2MPLibrary_2MPStrategies_2MPStrategyMethod_8h">
-<area shape="rect" title=" " alt="" coords="1771,5,2000,76"/>
-<area shape="rect" href="GenericStateGraph_8h.html" title=" " alt="" coords="2426,124,2587,165"/>
-<area shape="rect" title=" " alt="" coords="1245,689,1315,716"/>
-<area shape="rect" title=" " alt="" coords="396,839,476,865"/>
-<area shape="rect" title=" " alt="" coords="3659,689,3722,716"/>
-<area shape="rect" href="MPUtils_8h.html" title=" " alt="" coords="1980,503,2119,530"/>
-<area shape="rect" title=" " alt="" coords="2949,839,3008,865"/>
-<area shape="rect" href="PMPLExceptions_8h.html" title=" " alt="" coords="2349,689,2489,716"/>
-<area shape="rect" href="XMLNode_8h.html" title=" " alt="" coords="2761,503,2857,530"/>
-<area shape="rect" href="MetricUtils_8h.html" title=" " alt="" coords="737,503,897,530"/>
-<area shape="rect" href="Constraint_8h.html" title=" " alt="" coords="3887,496,4062,537"/>
-<area shape="rect" href="MPTask_8h.html" title=" " alt="" coords="3599,414,3761,441"/>
-<area shape="rect" href="SamplerMethod_8h.html" title=" " alt="" coords="703,124,855,165"/>
-<area shape="rect" href="Environment_8h.html" title=" " alt="" coords="2969,317,3151,359"/>
-<area shape="rect" title=" " alt="" coords="1483,600,1570,627"/>
-<area shape="rect" title=" " alt="" coords="1200,585,1408,641"/>
-<area shape="rect" title=" " alt="" coords="731,689,805,716"/>
-<area shape="rect" href="RuntimeUtils_8h.html" title=" " alt="" coords="2513,764,2687,791"/>
-<area shape="rect" title=" " alt="" coords="3237,503,3361,530"/>
-<area shape="rect" title=" " alt="" coords="3537,221,3700,262"/>
-<area shape="rect" title=" " alt="" coords="3724,221,3887,262"/>
-<area shape="rect" title=" " alt="" coords="2327,213,2491,269"/>
-<area shape="rect" title=" " alt="" coords="2516,213,2695,269"/>
-<area shape="rect" href="MPBaseObject_8h.html" title=" " alt="" coords="2004,228,2201,255"/>
-<area shape="rect" title=" " alt="" coords="3539,600,3653,627"/>
-<area shape="rect" href="CCTracker_8h.html" title=" " alt="" coords="2615,414,2767,441"/>
-<area shape="rect" href="Cfg_8h.html" title=" " alt="" coords="2290,407,2438,448"/>
-<area shape="rect" title=" " alt="" coords="2421,600,2472,627"/>
-<area shape="rect" title=" " alt="" coords="3437,600,3515,627"/>
-<area shape="rect" href="Boundary_8h.html" title=" " alt="" coords="2573,496,2737,537"/>
-<area shape="rect" title=" " alt="" coords="3095,414,3227,441"/>
-<area shape="rect" title=" " alt="" coords="3252,414,3361,441"/>
-<area shape="rect" title=" " alt="" coords="2765,600,2840,627"/>
-<area shape="rect" title=" " alt="" coords="2496,600,2555,627"/>
-<area shape="rect" title=" " alt="" coords="1851,600,1936,627"/>
-<area shape="rect" href="IOUtils_8h.html" title=" " alt="" coords="1747,600,1826,627"/>
-<area shape="rect" title=" " alt="" coords="1960,593,2139,634"/>
-<area shape="rect" title=" " alt="" coords="2163,593,2346,634"/>
-<area shape="rect" title=" " alt="" coords="2437,839,2512,865"/>
-<area shape="rect" title=" " alt="" coords="2291,764,2437,791"/>
-<area shape="rect" title=" " alt="" coords="2567,839,2633,865"/>
-<area shape="rect" title=" " alt="" coords="2630,600,2690,627"/>
-<area shape="rect" href="MPProblem_8h.html" title=" " alt="" coords="2757,325,2944,351"/>
-<area shape="rect" href="MethodSet_8h.html" title=" " alt="" coords="2055,414,2214,441"/>
-<area shape="rect" title=" " alt="" coords="3067,600,3159,627"/>
-<area shape="rect" href="Average_8h.html" title=" " alt="" coords="931,600,1074,627"/>
-<area shape="rect" href="ClockClass_8h.html" title=" " alt="" coords="1629,764,1789,791"/>
-<area shape="rect" title=" " alt="" coords="600,600,675,627"/>
-<area shape="rect" title=" " alt="" coords="699,600,754,627"/>
-<area shape="rect" title=" " alt="" coords="3537,503,3660,530"/>
+<area shape="rect" title=" " alt="" coords="3753,5,3983,76"/>
+<area shape="rect" href="MPBaseObject_8h.html" title=" " alt="" coords="2609,124,2807,151"/>
+<area shape="rect" href="PMPLExceptions_8h.html" title=" " alt="" coords="3547,921,3687,947"/>
+<area shape="rect" href="MetricUtils_8h.html" title=" " alt="" coords="2812,921,2972,947"/>
+<area shape="rect" href="XMLNode_8h.html" title=" " alt="" coords="3645,824,3741,851"/>
+<area shape="rect" href="GenericStateGraph_8h.html" title=" " alt="" coords="2395,720,2557,761"/>
+<area shape="rect" title=" " alt="" coords="1449,1107,1529,1133"/>
+<area shape="rect" title=" " alt="" coords="3216,1107,3275,1133"/>
+<area shape="rect" href="GroupCfg_8h.html" title=" " alt="" coords="642,363,790,404"/>
+<area shape="rect" href="GroupRoadmap_8h.html" title=" " alt="" coords="1217,541,1365,583"/>
+<area shape="rect" href="Path_8h.html" title=" " alt="" coords="2395,631,2543,672"/>
+<area shape="rect" href="GroupPath_8h.html" title=" " alt="" coords="1462,273,1610,315"/>
+<area shape="rect" href="MPProblem_8h.html" title=" " alt="" coords="803,824,989,851"/>
+<area shape="rect" href="MPTask_8h.html" title=" " alt="" coords="1942,921,2103,947"/>
+<area shape="rect" href="IOUtils_8h.html" title=" " alt="" coords="3390,824,3469,851"/>
+<area shape="rect" href="MethodSet_8h.html" title=" " alt="" coords="3225,727,3383,754"/>
+<area shape="rect" href="MPSolution_8h.html" title=" " alt="" coords="2381,199,2557,225"/>
+<area shape="rect" href="Environment_8h.html" title=" " alt="" coords="1115,817,1298,858"/>
+<area shape="rect" title=" " alt="" coords="1317,1017,1379,1044"/>
+<area shape="rect" title=" " alt="" coords="1337,921,1461,947"/>
+<area shape="rect" href="RuntimeUtils_8h.html" title=" " alt="" coords="3358,1017,3533,1044"/>
+<area shape="rect" title=" " alt="" coords="2395,817,2557,858"/>
+<area shape="rect" title=" " alt="" coords="1627,817,1789,858"/>
+<area shape="rect" title=" " alt="" coords="2582,809,2746,865"/>
+<area shape="rect" title=" " alt="" coords="2007,1003,2215,1059"/>
+<area shape="rect" title=" " alt="" coords="1373,809,1552,865"/>
+<area shape="rect" href="CCTracker_8h.html" title=" " alt="" coords="2067,824,2219,851"/>
+<area shape="rect" title=" " alt="" coords="3209,1017,3282,1044"/>
+<area shape="rect" title=" " alt="" coords="2319,921,2433,947"/>
+<area shape="rect" title=" " alt="" coords="3075,824,3162,851"/>
+<area shape="rect" href="Cfg_8h.html" title=" " alt="" coords="601,913,749,955"/>
+<area shape="rect" title=" " alt="" coords="1881,1017,1932,1044"/>
+<area shape="rect" title=" " alt="" coords="1577,1017,1655,1044"/>
+<area shape="rect" title=" " alt="" coords="875,921,1007,947"/>
+<area shape="rect" title=" " alt="" coords="1002,1107,1073,1133"/>
+<area shape="rect" title=" " alt="" coords="216,1017,291,1044"/>
+<area shape="rect" title=" " alt="" coords="3805,1107,3880,1133"/>
+<area shape="rect" title=" " alt="" coords="3608,1017,3755,1044"/>
+<area shape="rect" href="Average_8h.html" title=" " alt="" coords="2391,1017,2534,1044"/>
+<area shape="rect" href="ClockClass_8h.html" title=" " alt="" coords="2609,1017,2769,1044"/>
+<area shape="rect" title=" " alt="" coords="2793,1017,2868,1044"/>
+<area shape="rect" title=" " alt="" coords="2893,1017,2947,1044"/>
+<area shape="rect" title=" " alt="" coords="2971,1017,3031,1044"/>
+<area shape="rect" href="CompositeState_8h.html" title=" " alt="" coords="338,541,486,583"/>
+<area shape="rect" href="RobotGroup_8h.html" title=" " alt="" coords="1065,720,1242,761"/>
+<area shape="rect" title=" " alt="" coords="195,638,274,665"/>
+<area shape="rect" href="GroupLocalPlan_8h.html" title=" " alt="" coords="967,452,1115,493"/>
+<area shape="rect" href="CompositeGraph_8h.html" title=" " alt="" coords="1318,631,1466,672"/>
+<area shape="rect" href="Weight_8h.html" title=" " alt="" coords="1823,720,1971,761"/>
+<area shape="rect" title=" " alt="" coords="3763,921,3855,947"/>
 </map>
 </div>
 </div><div class="textblock"><div class="dynheader">
@@ -146,56 +138,56 @@ This graph shows which files directly or indirectly include this file:</div>
 <div class="dyncontent">
 <div class="center"><img src="MPStrategyMethod_8h__dep__incl.png" border="0" usemap="#a_2opt_2actions-runner_2__work_2open-ppl_2open-ppl_2src_2MPLibrary_2MPStrategies_2MPStrategyMethod_8hdep" alt=""/></div>
 <map name="a_2opt_2actions-runner_2__work_2open-ppl_2open-ppl_2src_2MPLibrary_2MPStrategies_2MPStrategyMethod_8hdep" id="a_2opt_2actions-runner_2__work_2open-ppl_2open-ppl_2src_2MPLibrary_2MPStrategies_2MPStrategyMethod_8hdep">
-<area shape="rect" title=" " alt="" coords="2581,5,2811,76"/>
-<area shape="rect" href="MPLibrary_8h.html" title=" " alt="" coords="1327,131,1545,187"/>
-<area shape="rect" href="WrenchAccessibilityStrategy_8h.html" title=" " alt="" coords="1839,361,2068,432"/>
-<area shape="rect" href="BasicPRM_8h.html" title=" " alt="" coords="2260,243,2489,313"/>
-<area shape="rect" href="BasicRRTStrategy_8h.html" title=" " alt="" coords="2429,480,2659,551"/>
-<area shape="rect" href="DynamicRegionsPRM_8h.html" title=" " alt="" coords="2581,361,2811,432"/>
-<area shape="rect" href="GroupStrategyMethod_8h.html" title=" " alt="" coords="2911,480,3140,551"/>
-<area shape="rect" href="ModifyPath_8h.html" title=" " alt="" coords="2885,124,3115,195"/>
-<area shape="rect" href="TogglePRMStrategy_8h.html" title=" " alt="" coords="3139,124,3368,195"/>
-<area shape="rect" href="ValidationStrategy_8h.html" title=" " alt="" coords="3392,124,3621,195"/>
-<area shape="rect" href="GroupPath_8h.html" title=" " alt="" coords="1884,243,2084,313"/>
-<area shape="rect" href="CfgTraits_8h.html" title=" " alt="" coords="1997,725,2179,781"/>
-<area shape="rect" href="Path_8h.html" title=" " alt="" coords="1336,243,1536,313"/>
-<area shape="rect" href="TRPTool_8h.html" title=" " alt="" coords="325,480,521,551"/>
-<area shape="rect" href="WrenchAccessibilityTool_8h.html" title=" " alt="" coords="1115,243,1311,313"/>
-<area shape="rect" href="Coordinator_8cpp.html" title=" " alt="" coords="1833,1066,2021,1137"/>
-<area shape="rect" href="tmp__main_8cpp.html" title=" " alt="" coords="3267,1073,3434,1129"/>
-<area shape="rect" href="TaskSolution_8h.html" title=" " alt="" coords="1526,940,1730,1011"/>
-<area shape="rect" href="TMPLibrary_8h.html" title=" " alt="" coords="2291,836,2525,892"/>
-<area shape="rect" href="DefaultCoordinatorStepFunction_8cpp.html" title=" " alt="" coords="1881,1192,2127,1277"/>
-<area shape="rect" href="Plan_8cpp.html" title=" " alt="" coords="1605,1066,1809,1137"/>
-<area shape="rect" href="TaskSolution_8cpp.html" title=" " alt="" coords="1053,1066,1257,1137"/>
-<area shape="rect" href="SimpleMotionEvaluator_8cpp.html" title=" " alt="" coords="1281,1066,1530,1137"/>
-<area shape="rect" href="TMPLibrary_8cpp.html" title=" " alt="" coords="2045,1073,2294,1129"/>
-<area shape="rect" href="Coordinator_8h.html" title=" " alt="" coords="2822,940,3010,1011"/>
-<area shape="rect" href="DefaultCoordinatorStepFunction_8h.html" title=" " alt="" coords="2319,1059,2564,1144"/>
-<area shape="rect" href="TMPBaseObject_8cpp.html" title=" " alt="" coords="2069,940,2280,1011"/>
-<area shape="rect" href="TMPTools_8h.html" title=" " alt="" coords="2535,940,2747,1011"/>
-<area shape="rect" href="TMPTraits_8h.html" title=" " alt="" coords="1806,947,1994,1003"/>
-<area shape="rect" href="TMPMethodSet_8h.html" title=" " alt="" coords="2305,940,2511,1011"/>
-<area shape="rect" href="AgentFactory__sim_8cpp.html" title=" " alt="" coords="3055,1066,3243,1137"/>
-<area shape="rect" href="ChildAgent_8cpp.html" title=" " alt="" coords="2589,1066,2777,1137"/>
-<area shape="rect" href="StateGraph_8cpp.html" title=" " alt="" coords="2801,1066,3031,1137"/>
-<area shape="rect" href="PathEvaluator_8h.html" title=" " alt="" coords="1524,361,1764,432"/>
-<area shape="rect" href="QueryMethod_8h.html" title=" " alt="" coords="765,480,1005,551"/>
-<area shape="rect" href="SIPPMethod_8h.html" title=" " alt="" coords="1339,480,1579,551"/>
-<area shape="rect" href="TRPGoalMap_8h.html" title=" " alt="" coords="519,369,766,425"/>
-<area shape="rect" href="ConfigurationSpace_2GroupQuery_8h.html" title=" " alt="" coords="541,599,741,669"/>
-<area shape="rect" href="ClearanceQuery_8h.html" title=" " alt="" coords="277,599,517,669"/>
-<area shape="rect" href="MPLibrary_2MapEvaluators_2GroupQuery_8h.html" title=" " alt="" coords="765,599,1005,669"/>
-<area shape="rect" href="LazyQuery_8h.html" title=" " alt="" coords="1029,599,1269,669"/>
-<area shape="rect" href="CBSQuery_8h.html" title=" " alt="" coords="1344,599,1584,669"/>
-<area shape="rect" href="SIPPMethod_8cpp.html" title=" " alt="" coords="1608,599,1848,669"/>
-<area shape="rect" href="MPTools_8h.html" title=" " alt="" coords="6,599,202,669"/>
-<area shape="rect" href="SkeletonClearanceUtility_8h.html" title=" " alt="" coords="5,717,203,788"/>
-<area shape="rect" href="LKHSearch_8h.html" title=" " alt="" coords="545,480,741,551"/>
-<area shape="rect" href="AdaptiveRRT_8h.html" title=" " alt="" coords="2176,599,2405,669"/>
-<area shape="rect" href="DynamicRegionRRT_8h.html" title=" " alt="" coords="2429,599,2659,669"/>
-<area shape="rect" href="GroupDecoupledStrategy_8h.html" title=" " alt="" coords="2784,599,3013,669"/>
-<area shape="rect" href="GroupPRM_8h.html" title=" " alt="" coords="3037,599,3267,669"/>
+<area shape="rect" title=" " alt="" coords="9351,5,9580,76"/>
+<area shape="rect" href="MPLibrary_8h.html" title=" " alt="" coords="5039,131,5257,187"/>
+<area shape="rect" href="MPStrategyMethod_8cpp.html" title=" " alt="" coords="9731,243,9960,313"/>
+<area shape="rect" href="BasicPRM_8h.html" title=" " alt="" coords="8464,124,8693,195"/>
+<area shape="rect" href="BasicRRTStrategy_8h.html" title=" " alt="" coords="8717,124,8947,195"/>
+<area shape="rect" href="DynamicRegionsPRM_8h.html" title=" " alt="" coords="8971,124,9200,195"/>
+<area shape="rect" href="GroupStrategyMethod_8h.html" title=" " alt="" coords="9224,124,9453,195"/>
+<area shape="rect" href="ModifyPath_8h.html" title=" " alt="" coords="9477,124,9707,195"/>
+<area shape="rect" href="PathStrategy_8h.html" title=" " alt="" coords="9781,124,10011,195"/>
+<area shape="rect" href="ValidationStrategy_8h.html" title=" " alt="" coords="10035,124,10264,195"/>
+<area shape="rect" href="WrenchAccessibilityStrategy_8h.html" title=" " alt="" coords="10288,124,10517,195"/>
+<area shape="rect" href="Path_8cpp.html" title=" " alt="" coords="3117,243,3317,313"/>
+<area shape="rect" href="main_8cpp.html" title=" " alt="" coords="3341,250,3504,306"/>
+<area shape="rect" href="CCsConnector_8cpp.html" title=" " alt="" coords="3528,243,3744,313"/>
+<area shape="rect" href="ConnectorMethod_8cpp.html" title=" " alt="" coords="3768,243,3984,313"/>
+<area shape="rect" href="NeighborhoodConnector_8cpp.html" title=" " alt="" coords="4008,243,4224,313"/>
+<area shape="rect" href="RewireConnector_8cpp.html" title=" " alt="" coords="4248,243,4464,313"/>
+<area shape="rect" href="LPSweptDistance_8cpp.html" title=" " alt="" coords="4488,243,4701,313"/>
+<area shape="rect" href="TopologicalDistance_8cpp.html" title=" " alt="" coords="4726,243,4957,313"/>
+<area shape="rect" href="IntermediatesEdgeValidityChecker_8cpp.html" title=" " alt="" coords="4981,243,5315,313"/>
+<area shape="rect" href="BasicExtender_8cpp.html" title=" " alt="" coords="5340,243,5548,313"/>
+<area shape="rect" href="HierarchicalLP_8cpp.html" title=" " alt="" coords="5573,243,5806,313"/>
+<area shape="rect" href="StraightLine_8cpp.html" title=" " alt="" coords="5830,243,6063,313"/>
+<area shape="rect" href="CBSQuery_8cpp.html" title=" " alt="" coords="6088,243,6328,313"/>
+<area shape="rect" href="ClearanceQuery_8cpp.html" title=" " alt="" coords="6352,243,6592,313"/>
+<area shape="rect" href="CollisionEvaluator_8cpp.html" title=" " alt="" coords="6616,243,6856,313"/>
+<area shape="rect" href="ComposeEvaluator_8cpp.html" title=" " alt="" coords="6880,243,7120,313"/>
+<area shape="rect" href="ConditionalEvaluator_8cpp.html" title=" " alt="" coords="7144,243,7384,313"/>
+<area shape="rect" href="GroupQuery_8cpp.html" title=" " alt="" coords="7408,243,7648,313"/>
+<area shape="rect" href="LazyQuery_8cpp.html" title=" " alt="" coords="7672,243,7912,313"/>
+<area shape="rect" href="MinimumDistanceEvaluator_8cpp.html" title=" " alt="" coords="7936,243,8176,313"/>
+<area shape="rect" href="NegateEvaluator_8cpp.html" title=" " alt="" coords="8200,243,8440,313"/>
+<area shape="rect" href="PathEvaluator_8cpp.html" title=" " alt="" coords="5,243,245,313"/>
+<area shape="rect" href="QueryMethod_8cpp.html" title=" " alt="" coords="269,243,509,313"/>
+<area shape="rect" href="SIPPMethod_8cpp.html" title=" " alt="" coords="533,243,773,313"/>
+<area shape="rect" href="MPBaseObject_8cpp.html" title=" " alt="" coords="797,250,1061,306"/>
+<area shape="rect" href="MPLibrary_8cpp.html" title=" " alt="" coords="1086,250,1319,306"/>
+<area shape="rect" href="AdaptiveRRT_8cpp.html" title=" " alt="" coords="1344,243,1573,313"/>
+<area shape="rect" href="BasicPRM_8cpp.html" title=" " alt="" coords="8464,243,8693,313"/>
+<area shape="rect" href="BasicRRTStrategy_8cpp.html" title=" " alt="" coords="8717,243,8947,313"/>
+<area shape="rect" href="DynamicDomainRRT_8cpp.html" title=" " alt="" coords="1597,243,1827,313"/>
+<area shape="rect" href="DynamicRegionRRT_8cpp.html" title=" " alt="" coords="1851,243,2080,313"/>
+<area shape="rect" href="DynamicRegionsPRM_8cpp.html" title=" " alt="" coords="8971,243,9200,313"/>
+<area shape="rect" href="EET_8cpp.html" title=" " alt="" coords="2104,243,2333,313"/>
+<area shape="rect" href="GroupDecoupledStrategy_8cpp.html" title=" " alt="" coords="2357,243,2587,313"/>
+<area shape="rect" href="GroupPRM_8cpp.html" title=" " alt="" coords="2611,243,2840,313"/>
+<area shape="rect" href="GroupStrategyMethod_8cpp.html" title=" " alt="" coords="9224,243,9453,313"/>
+<area shape="rect" href="ModifyPath_8cpp.html" title=" " alt="" coords="9477,243,9707,313"/>
+<area shape="rect" href="PathStrategy_8cpp.html" title=" " alt="" coords="9984,243,10213,313"/>
+<area shape="rect" href="Syclop_8cpp.html" title=" " alt="" coords="2864,243,3093,313"/>
 </map>
 </div>
 </div>
@@ -203,7 +195,7 @@ This graph shows which files directly or indirectly include this file:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
 Data Structures</h2></td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPStrategyMethod.html">MPStrategyMethod&lt; MPTraits &gt;</a></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPStrategyMethod.html">MPStrategyMethod</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 </div><!-- contents -->

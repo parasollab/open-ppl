@@ -75,146 +75,50 @@ $(function() {
 <div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160; </div>
 <div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="ValidityCheckerMethod_8h.html">MPLibrary/ValidityCheckers/ValidityCheckerMethod.h</a>&quot;</span></div>
 <div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160; </div>
-<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="preprocessor">#include &lt;algorithm&gt;</span></div>
-<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160; </div>
-<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160; </div>
-<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00015"></a><span class="lineno"><a class="line" href="classComposeValidity.html">   15</a></span>&#160;<span class="keyword">class </span><a class="code" href="classComposeValidity.html">ComposeValidity</a> : <span class="keyword">public</span> <a class="code" href="classValidityCheckerMethod.html">ValidityCheckerMethod</a>&lt;MPTraits&gt; {</div>
-<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160; </div>
-<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;  <span class="keyword">public</span>:</div>
+<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160; </div>
+<div class="line"><a name="l00012"></a><span class="lineno"><a class="line" href="classComposeValidity.html">   12</a></span>&#160;<span class="keyword">class </span><a class="code" href="classComposeValidity.html">ComposeValidity</a> : <span class="keyword">public</span> <a class="code" href="classValidityCheckerMethod.html">ValidityCheckerMethod</a> {</div>
+<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160; </div>
+<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;  <span class="keyword">public</span>:</div>
+<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160; </div>
 <div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160; </div>
-<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160; </div>
-<div class="line"><a name="l00022"></a><span class="lineno"><a class="line" href="classComposeValidity.html#ae447971ebb8d1c50b8d9ecec65b26a56">   22</a></span>&#160;    <span class="keyword">typedef</span> <span class="keyword">typename</span> <a class="code" href="classMPTraits.html#a1a5aab50ac12baaf6b22ff345c5ae138">MPTraits::CfgType</a> <a class="code" href="classComposeValidity.html#ae447971ebb8d1c50b8d9ecec65b26a56">CfgType</a>;</div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160; </div>
-<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160; </div>
-<div class="line"><a name="l00028"></a><span class="lineno"><a class="line" href="classComposeValidity.html#adb481db107cdb561f7c4849b3af5a580ab54fd1bdd51cfd18f0196d43c1d4bdde">   28</a></span>&#160;    <span class="keyword">enum</span> <a class="code" href="classComposeValidity.html#adb481db107cdb561f7c4849b3af5a580">LogicalOperator</a> {<a class="code" href="classComposeValidity.html#adb481db107cdb561f7c4849b3af5a580ab54fd1bdd51cfd18f0196d43c1d4bdde">AND</a>, <a class="code" href="classComposeValidity.html#adb481db107cdb561f7c4849b3af5a580a17dc63a8dd07120af491e4a6fc9f85d7">OR</a>}; </div>
-<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160; </div>
-<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160; </div>
-<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;    <a class="code" href="classComposeValidity.html#a444efbf751e59af84cd2a580def18511">ComposeValidity</a>();</div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160; </div>
-<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;    <a class="code" href="classComposeValidity.html#a444efbf751e59af84cd2a580def18511">ComposeValidity</a>(<a class="code" href="classXMLNode.html">XMLNode</a>&amp; _node);</div>
+<div class="line"><a name="l00019"></a><span class="lineno"><a class="line" href="classComposeValidity.html#adb481db107cdb561f7c4849b3af5a580af882a389301a755bdbb6dbc64313aa43">   19</a></span>&#160;    <span class="keyword">enum</span> <a class="code" href="classComposeValidity.html#adb481db107cdb561f7c4849b3af5a580">LogicalOperator</a> {<a class="code" href="classComposeValidity.html#adb481db107cdb561f7c4849b3af5a580af882a389301a755bdbb6dbc64313aa43">AND</a>, <a class="code" href="classComposeValidity.html#adb481db107cdb561f7c4849b3af5a580ac19ba3947418c5593a3e2ffb0f837c1e">OR</a>}; </div>
+<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160; </div>
+<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160; </div>
+<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;    <a class="code" href="classComposeValidity.html#a2fa0745f0bff038583d1e174c73612f0">ComposeValidity</a>();</div>
+<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160; </div>
+<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;    <a class="code" href="classComposeValidity.html#a2fa0745f0bff038583d1e174c73612f0">ComposeValidity</a>(<a class="code" href="classXMLNode.html">XMLNode</a>&amp; _node);</div>
+<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160; </div>
+<div class="line"><a name="l00029"></a><span class="lineno"><a class="line" href="classComposeValidity.html#aafef1bd6fc776e9e34fdc4ce7d9fb699">   29</a></span>&#160;    <span class="keyword">virtual</span> <a class="code" href="classComposeValidity.html#aafef1bd6fc776e9e34fdc4ce7d9fb699">~ComposeValidity</a>() = <span class="keywordflow">default</span>;</div>
+<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160; </div>
+<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160; </div>
+<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;  <span class="keyword">protected</span>:</div>
+<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160; </div>
 <div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160; </div>
-<div class="line"><a name="l00038"></a><span class="lineno"><a class="line" href="classComposeValidity.html#a25f214668185d8852534fad4332806a2">   38</a></span>&#160;    <span class="keyword">virtual</span> <a class="code" href="classComposeValidity.html#a25f214668185d8852534fad4332806a2">~ComposeValidity</a>() = <span class="keywordflow">default</span>;</div>
-<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160; </div>
-<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160; </div>
-<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;  <span class="keyword">protected</span>:</div>
-<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160; </div>
-<div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160; </div>
-<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;    <span class="keyword">virtual</span> <span class="keywordtype">bool</span> <a class="code" href="classComposeValidity.html#abd7fa4d69c77cdb17716b213b1cb9f46">IsValidImpl</a>(<a class="code" href="classComposeValidity.html#ae447971ebb8d1c50b8d9ecec65b26a56">CfgType</a>&amp; _cfg, <a class="code" href="structCDInfo.html">CDInfo</a>&amp; _cdInfo,</div>
-<div class="line"><a name="l00048"></a><span class="lineno">   48</span>&#160;        <span class="keyword">const</span> std::string&amp; _callName) <span class="keyword">override</span>;</div>
+<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;    <span class="keyword">virtual</span> <span class="keywordtype">bool</span> <a class="code" href="classComposeValidity.html#a78ee4213b0c3f01d7faaeb0196110c4c">IsValidImpl</a>(<a class="code" href="classCfg.html">Cfg</a>&amp; _cfg, <a class="code" href="structCDInfo.html">CDInfo</a>&amp; _cdInfo,</div>
+<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;        <span class="keyword">const</span> std::string&amp; _callName) <span class="keyword">override</span>;</div>
+<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160; </div>
+<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160; </div>
+<div class="line"><a name="l00045"></a><span class="lineno"><a class="line" href="classComposeValidity.html#ab371a468aa5d91bf538b682e034fa016">   45</a></span>&#160;    <a class="code" href="classComposeValidity.html#adb481db107cdb561f7c4849b3af5a580">LogicalOperator</a> <a class="code" href="classComposeValidity.html#ab371a468aa5d91bf538b682e034fa016">m_operator</a>; </div>
+<div class="line"><a name="l00046"></a><span class="lineno"><a class="line" href="classComposeValidity.html#a9440b386bb3ed80a518155329a50ac49">   46</a></span>&#160;    std::vector&lt;std::string&gt; <a class="code" href="classComposeValidity.html#a9440b386bb3ed80a518155329a50ac49">m_vcLabels</a>; </div>
+<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160; </div>
 <div class="line"><a name="l00049"></a><span class="lineno">   49</span>&#160; </div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160; </div>
-<div class="line"><a name="l00054"></a><span class="lineno"><a class="line" href="classComposeValidity.html#ac9df4361e7ea85f00e27bc19f56ef7c2">   54</a></span>&#160;    <a class="code" href="classComposeValidity.html#adb481db107cdb561f7c4849b3af5a580">LogicalOperator</a> <a class="code" href="classComposeValidity.html#ac9df4361e7ea85f00e27bc19f56ef7c2">m_operator</a>; </div>
-<div class="line"><a name="l00055"></a><span class="lineno"><a class="line" href="classComposeValidity.html#a74e1ff94f0e9a6842afe6bd9c085c240">   55</a></span>&#160;    std::vector&lt;std::string&gt; <a class="code" href="classComposeValidity.html#a74e1ff94f0e9a6842afe6bd9c085c240">m_vcLabels</a>; </div>
-<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160; </div>
-<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160; </div>
-<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;};</div>
-<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160; </div>
-<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;<span class="comment">/*------------------------------- Construction -------------------------------*/</span></div>
-<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160; </div>
-<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00064"></a><span class="lineno"><a class="line" href="classComposeValidity.html#a444efbf751e59af84cd2a580def18511">   64</a></span>&#160;<a class="code" href="classComposeValidity.html#a444efbf751e59af84cd2a580def18511">ComposeValidity&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;<a class="code" href="classComposeValidity.html#a444efbf751e59af84cd2a580def18511">ComposeValidity</a>() {</div>
-<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;  this-&gt;SetName(<span class="stringliteral">&quot;ComposeValidity&quot;</span>);</div>
-<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;}</div>
-<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160; </div>
-<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160; </div>
-<div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00071"></a><span class="lineno"><a class="line" href="classComposeValidity.html#a9886d5e0c5aad60e2bf78fcc39197d8e">   71</a></span>&#160;<a class="code" href="classComposeValidity.html#a444efbf751e59af84cd2a580def18511">ComposeValidity&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;<a class="code" href="classComposeValidity.html#a444efbf751e59af84cd2a580def18511">ComposeValidity</a>(<a class="code" href="classXMLNode.html">XMLNode</a>&amp; _node) : <a class="code" href="classValidityCheckerMethod.html">ValidityCheckerMethod</a>&lt;<a class="code" href="classMPTraits.html">MPTraits</a>&gt;(_node) {</div>
-<div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;  this-&gt;<a class="code" href="classMPBaseObject.html#ab59d82cd734f77fdc17eddb8517461da">SetName</a>(<span class="stringliteral">&quot;ComposeValidity&quot;</span>);</div>
-<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160; </div>
-<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;  std::string logicalOperator = _node.<a class="code" href="classXMLNode.html#af0e81db89948e52fdee6bf2bf029037f">Read</a>(<span class="stringliteral">&quot;operator&quot;</span>, <span class="keyword">true</span>, <span class="stringliteral">&quot;&quot;</span>, <span class="stringliteral">&quot;operator&quot;</span>);</div>
-<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;  std::transform(logicalOperator.begin(), logicalOperator.end(),</div>
-<div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;                 logicalOperator.begin(), ::tolower);</div>
-<div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160; </div>
-<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;  <span class="keywordflow">if</span>(logicalOperator == <span class="stringliteral">&quot;and&quot;</span>)</div>
-<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;    <a class="code" href="classComposeValidity.html#ac9df4361e7ea85f00e27bc19f56ef7c2">m_operator</a> = <a class="code" href="classComposeValidity.html#adb481db107cdb561f7c4849b3af5a580ab54fd1bdd51cfd18f0196d43c1d4bdde">AND</a>;</div>
-<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;  <span class="keywordflow">else</span> <span class="keywordflow">if</span>(logicalOperator == <span class="stringliteral">&quot;or&quot;</span>)</div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;    <a class="code" href="classComposeValidity.html#ac9df4361e7ea85f00e27bc19f56ef7c2">m_operator</a> = <a class="code" href="classComposeValidity.html#adb481db107cdb561f7c4849b3af5a580a17dc63a8dd07120af491e4a6fc9f85d7">OR</a>;</div>
-<div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;  <span class="keywordflow">else</span></div>
-<div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;    <span class="keywordflow">throw</span> <a class="code" href="structParseException.html">ParseException</a>(_node.<a class="code" href="classXMLNode.html#ad8152f1ab4f8720572c66397f74e282c">Where</a>()) &lt;&lt; <span class="stringliteral">&quot;Operator &#39;&quot;</span> &lt;&lt; logicalOperator</div>
-<div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;                                        &lt;&lt; <span class="stringliteral">&quot;&#39; is unknown.&quot;</span>;</div>
-<div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160; </div>
-<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;  <span class="keywordflow">for</span>(<span class="keyword">auto</span>&amp; child : _node)</div>
-<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;    <span class="keywordflow">if</span>(child.Name() == <span class="stringliteral">&quot;ValidityChecker&quot;</span>)</div>
-<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;      <a class="code" href="classComposeValidity.html#a74e1ff94f0e9a6842afe6bd9c085c240">m_vcLabels</a>.push_back(child.Read(<span class="stringliteral">&quot;label&quot;</span>, <span class="keyword">true</span>, <span class="stringliteral">&quot;&quot;</span>,</div>
-<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;          <span class="stringliteral">&quot;ValidityChecker method to include in this set.&quot;</span>));</div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160; </div>
-<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;  <span class="keywordflow">if</span>(<a class="code" href="classComposeValidity.html#a74e1ff94f0e9a6842afe6bd9c085c240">m_vcLabels</a>.size() &lt; 2)</div>
-<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;    <span class="keywordflow">throw</span> <a class="code" href="structParseException.html">ParseException</a>(_node.<a class="code" href="classXMLNode.html#ad8152f1ab4f8720572c66397f74e282c">Where</a>()) &lt;&lt; <span class="stringliteral">&quot;Must specify at least two methods.&quot;</span>;</div>
-<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;}</div>
-<div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160; </div>
-<div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;<span class="comment">/*---------------------- ValidityCheckerMethod Overrides ---------------------*/</span></div>
-<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160; </div>
-<div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;<span class="keyword">template</span> &lt;<span class="keyword">typename</span> MPTraits&gt;</div>
-<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;<span class="keywordtype">bool</span></div>
-<div class="line"><a name="l00100"></a><span class="lineno"><a class="line" href="classComposeValidity.html#abd7fa4d69c77cdb17716b213b1cb9f46">  100</a></span>&#160;<a class="code" href="classComposeValidity.html#abd7fa4d69c77cdb17716b213b1cb9f46">ComposeValidity&lt;MPTraits&gt;::</a></div>
-<div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;<a class="code" href="classComposeValidity.html#abd7fa4d69c77cdb17716b213b1cb9f46">IsValidImpl</a>(<a class="code" href="classComposeValidity.html#ae447971ebb8d1c50b8d9ecec65b26a56">CfgType</a>&amp; _cfg, <a class="code" href="structCDInfo.html">CDInfo</a>&amp; _cdInfo, <span class="keyword">const</span> std::string&amp; _callName) {</div>
-<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;  <span class="keywordflow">if</span>(this-&gt;m_debug)</div>
-<div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;    std::cout &lt;&lt; <span class="stringliteral">&quot;ComposeValidity:: checking validity...&quot;</span></div>
-<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;              &lt;&lt; std::endl;</div>
-<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160; </div>
-<div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;  <span class="keywordflow">switch</span>(m_operator) {</div>
-<div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;    <span class="keywordflow">case</span> AND:</div>
-<div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;      <span class="keywordflow">for</span>(<span class="keyword">auto</span> label : m_vcLabels) {</div>
-<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;        <span class="keyword">auto</span> vc = this-&gt;GetValidityChecker(label);</div>
-<div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;        <span class="keyword">const</span> <span class="keywordtype">bool</span> passed = vc-&gt;IsValid(_cfg, _cdInfo, _callName);</div>
-<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160; </div>
-<div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;        <span class="keywordflow">if</span>(this-&gt;m_debug)</div>
-<div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;          std::cout &lt;&lt; <span class="stringliteral">&quot;\t&quot;</span> &lt;&lt; vc-&gt;GetNameAndLabel() &lt;&lt; <span class="stringliteral">&quot;: &quot;</span></div>
-<div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;                    &lt;&lt; (passed ? <span class="stringliteral">&quot;passed&quot;</span> : <span class="stringliteral">&quot;failed&quot;</span>)</div>
-<div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;                    &lt;&lt; std::endl;</div>
-<div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160; </div>
-<div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;        <span class="keywordflow">if</span>(!passed)</div>
-<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;          <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;      }</div>
-<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;      <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
-<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;    <span class="keywordflow">case</span> OR:</div>
-<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;      <span class="keywordflow">for</span>(<span class="keyword">auto</span> label : m_vcLabels) {</div>
-<div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;        <span class="keyword">auto</span> vc = this-&gt;GetValidityChecker(label);</div>
-<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;        <span class="keyword">const</span> <span class="keywordtype">bool</span> passed = vc-&gt;IsValid(_cfg, _cdInfo, _callName);</div>
-<div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160; </div>
-<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;        <span class="keywordflow">if</span>(this-&gt;m_debug)</div>
-<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;          std::cout &lt;&lt; <span class="stringliteral">&quot;\t&quot;</span> &lt;&lt; vc-&gt;GetNameAndLabel() &lt;&lt; <span class="stringliteral">&quot;: &quot;</span></div>
-<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;                    &lt;&lt; (passed ? <span class="stringliteral">&quot;passed&quot;</span> : <span class="stringliteral">&quot;failed&quot;</span>)</div>
-<div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;                    &lt;&lt; std::endl;</div>
-<div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160; </div>
-<div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;        <span class="keywordflow">if</span>(passed)</div>
-<div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;          <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
-<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;      }</div>
-<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;      <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;    <span class="keywordflow">default</span>:</div>
-<div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;      <span class="keywordflow">throw</span> <a class="code" href="structRunTimeException.html">RunTimeException</a>(<a class="code" href="RuntimeUtils_8h.html#acd4a2dee55f5359c0389baab37c2f468">WHERE</a>, <span class="stringliteral">&quot;Unknown operator is stated.&quot;</span>);</div>
-<div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160;  }</div>
-<div class="line"><a name="l00138"></a><span class="lineno">  138</span>&#160;  <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00139"></a><span class="lineno">  139</span>&#160;}</div>
-<div class="line"><a name="l00140"></a><span class="lineno">  140</span>&#160; </div>
-<div class="line"><a name="l00141"></a><span class="lineno">  141</span>&#160;<span class="comment">/*----------------------------------------------------------------------------*/</span></div>
-<div class="line"><a name="l00142"></a><span class="lineno">  142</span>&#160; </div>
-<div class="line"><a name="l00143"></a><span class="lineno">  143</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="ttc" id="aRuntimeUtils_8h_html_acd4a2dee55f5359c0389baab37c2f468"><div class="ttname"><a href="RuntimeUtils_8h.html#acd4a2dee55f5359c0389baab37c2f468">WHERE</a></div><div class="ttdeci">#define WHERE</div><div class="ttdoc">Macro for retrieving info about file, function, and line number.</div><div class="ttdef"><b>Definition:</b> RuntimeUtils.h:32</div></div>
+<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;};</div>
+<div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160; </div>
+<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="ttc" id="aValidityCheckerMethod_8h_html"><div class="ttname"><a href="ValidityCheckerMethod_8h.html">ValidityCheckerMethod.h</a></div></div>
-<div class="ttc" id="aclassComposeValidity_html"><div class="ttname"><a href="classComposeValidity.html">ComposeValidity</a></div><div class="ttdef"><b>Definition:</b> ComposeValidity.h:15</div></div>
-<div class="ttc" id="aclassComposeValidity_html_a25f214668185d8852534fad4332806a2"><div class="ttname"><a href="classComposeValidity.html#a25f214668185d8852534fad4332806a2">ComposeValidity::~ComposeValidity</a></div><div class="ttdeci">virtual ~ComposeValidity()=default</div></div>
-<div class="ttc" id="aclassComposeValidity_html_a444efbf751e59af84cd2a580def18511"><div class="ttname"><a href="classComposeValidity.html#a444efbf751e59af84cd2a580def18511">ComposeValidity::ComposeValidity</a></div><div class="ttdeci">ComposeValidity()</div><div class="ttdef"><b>Definition:</b> ComposeValidity.h:65</div></div>
-<div class="ttc" id="aclassComposeValidity_html_a74e1ff94f0e9a6842afe6bd9c085c240"><div class="ttname"><a href="classComposeValidity.html#a74e1ff94f0e9a6842afe6bd9c085c240">ComposeValidity::m_vcLabels</a></div><div class="ttdeci">std::vector&lt; std::string &gt; m_vcLabels</div><div class="ttdoc">The VC labels to combine.</div><div class="ttdef"><b>Definition:</b> ComposeValidity.h:55</div></div>
-<div class="ttc" id="aclassComposeValidity_html_abd7fa4d69c77cdb17716b213b1cb9f46"><div class="ttname"><a href="classComposeValidity.html#abd7fa4d69c77cdb17716b213b1cb9f46">ComposeValidity::IsValidImpl</a></div><div class="ttdeci">virtual bool IsValidImpl(CfgType &amp;_cfg, CDInfo &amp;_cdInfo, const std::string &amp;_callName) override</div><div class="ttdef"><b>Definition:</b> ComposeValidity.h:101</div></div>
-<div class="ttc" id="aclassComposeValidity_html_ac9df4361e7ea85f00e27bc19f56ef7c2"><div class="ttname"><a href="classComposeValidity.html#ac9df4361e7ea85f00e27bc19f56ef7c2">ComposeValidity::m_operator</a></div><div class="ttdeci">LogicalOperator m_operator</div><div class="ttdoc">The logical operator joining VC's.</div><div class="ttdef"><b>Definition:</b> ComposeValidity.h:54</div></div>
-<div class="ttc" id="aclassComposeValidity_html_adb481db107cdb561f7c4849b3af5a580"><div class="ttname"><a href="classComposeValidity.html#adb481db107cdb561f7c4849b3af5a580">ComposeValidity::LogicalOperator</a></div><div class="ttdeci">LogicalOperator</div><div class="ttdef"><b>Definition:</b> ComposeValidity.h:28</div></div>
-<div class="ttc" id="aclassComposeValidity_html_adb481db107cdb561f7c4849b3af5a580a17dc63a8dd07120af491e4a6fc9f85d7"><div class="ttname"><a href="classComposeValidity.html#adb481db107cdb561f7c4849b3af5a580a17dc63a8dd07120af491e4a6fc9f85d7">ComposeValidity::OR</a></div><div class="ttdeci">@ OR</div><div class="ttdef"><b>Definition:</b> ComposeValidity.h:28</div></div>
-<div class="ttc" id="aclassComposeValidity_html_adb481db107cdb561f7c4849b3af5a580ab54fd1bdd51cfd18f0196d43c1d4bdde"><div class="ttname"><a href="classComposeValidity.html#adb481db107cdb561f7c4849b3af5a580ab54fd1bdd51cfd18f0196d43c1d4bdde">ComposeValidity::AND</a></div><div class="ttdeci">@ AND</div><div class="ttdef"><b>Definition:</b> ComposeValidity.h:28</div></div>
-<div class="ttc" id="aclassComposeValidity_html_ae447971ebb8d1c50b8d9ecec65b26a56"><div class="ttname"><a href="classComposeValidity.html#ae447971ebb8d1c50b8d9ecec65b26a56">ComposeValidity::CfgType</a></div><div class="ttdeci">MPTraits::CfgType CfgType</div><div class="ttdef"><b>Definition:</b> ComposeValidity.h:22</div></div>
-<div class="ttc" id="aclassMPBaseObject_html_ab59d82cd734f77fdc17eddb8517461da"><div class="ttname"><a href="classMPBaseObject.html#ab59d82cd734f77fdc17eddb8517461da">MPBaseObject::SetName</a></div><div class="ttdeci">void SetName(const std::string &amp;_s)</div><div class="ttdef"><b>Definition:</b> MPBaseObject.h:229</div></div>
-<div class="ttc" id="aclassMPTraits_html"><div class="ttname"><a href="classMPTraits.html">MPTraits</a></div><div class="ttdoc">Defines available methods in the Motion Planning Universe for Cfg.</div><div class="ttdef"><b>Definition:</b> ParallelCfgTraits.h:144</div></div>
-<div class="ttc" id="aclassMPTraits_html_a1a5aab50ac12baaf6b22ff345c5ae138"><div class="ttname"><a href="classMPTraits.html#a1a5aab50ac12baaf6b22ff345c5ae138">MPTraits::CfgType</a></div><div class="ttdeci">C CfgType</div><div class="ttdef"><b>Definition:</b> CfgTraits.h:117</div></div>
-<div class="ttc" id="aclassValidityCheckerMethod_html"><div class="ttname"><a href="classValidityCheckerMethod.html">ValidityCheckerMethod</a></div><div class="ttdef"><b>Definition:</b> ValidityCheckerMethod.h:33</div></div>
+<div class="ttc" id="aclassCfg_html"><div class="ttname"><a href="classCfg.html">Cfg</a></div><div class="ttdef"><b>Definition:</b> Cfg.h:38</div></div>
+<div class="ttc" id="aclassComposeValidity_html"><div class="ttname"><a href="classComposeValidity.html">ComposeValidity</a></div><div class="ttdef"><b>Definition:</b> ComposeValidity.h:12</div></div>
+<div class="ttc" id="aclassComposeValidity_html_a2fa0745f0bff038583d1e174c73612f0"><div class="ttname"><a href="classComposeValidity.html#a2fa0745f0bff038583d1e174c73612f0">ComposeValidity::ComposeValidity</a></div><div class="ttdeci">ComposeValidity()</div><div class="ttdef"><b>Definition:</b> ComposeValidity.cpp:10</div></div>
+<div class="ttc" id="aclassComposeValidity_html_a78ee4213b0c3f01d7faaeb0196110c4c"><div class="ttname"><a href="classComposeValidity.html#a78ee4213b0c3f01d7faaeb0196110c4c">ComposeValidity::IsValidImpl</a></div><div class="ttdeci">virtual bool IsValidImpl(Cfg &amp;_cfg, CDInfo &amp;_cdInfo, const std::string &amp;_callName) override</div><div class="ttdef"><b>Definition:</b> ComposeValidity.cpp:44</div></div>
+<div class="ttc" id="aclassComposeValidity_html_a9440b386bb3ed80a518155329a50ac49"><div class="ttname"><a href="classComposeValidity.html#a9440b386bb3ed80a518155329a50ac49">ComposeValidity::m_vcLabels</a></div><div class="ttdeci">std::vector&lt; std::string &gt; m_vcLabels</div><div class="ttdoc">The VC labels to combine.</div><div class="ttdef"><b>Definition:</b> ComposeValidity.h:46</div></div>
+<div class="ttc" id="aclassComposeValidity_html_aafef1bd6fc776e9e34fdc4ce7d9fb699"><div class="ttname"><a href="classComposeValidity.html#aafef1bd6fc776e9e34fdc4ce7d9fb699">ComposeValidity::~ComposeValidity</a></div><div class="ttdeci">virtual ~ComposeValidity()=default</div></div>
+<div class="ttc" id="aclassComposeValidity_html_ab371a468aa5d91bf538b682e034fa016"><div class="ttname"><a href="classComposeValidity.html#ab371a468aa5d91bf538b682e034fa016">ComposeValidity::m_operator</a></div><div class="ttdeci">LogicalOperator m_operator</div><div class="ttdoc">The logical operator joining VC's.</div><div class="ttdef"><b>Definition:</b> ComposeValidity.h:45</div></div>
+<div class="ttc" id="aclassComposeValidity_html_adb481db107cdb561f7c4849b3af5a580"><div class="ttname"><a href="classComposeValidity.html#adb481db107cdb561f7c4849b3af5a580">ComposeValidity::LogicalOperator</a></div><div class="ttdeci">LogicalOperator</div><div class="ttdef"><b>Definition:</b> ComposeValidity.h:19</div></div>
+<div class="ttc" id="aclassComposeValidity_html_adb481db107cdb561f7c4849b3af5a580ac19ba3947418c5593a3e2ffb0f837c1e"><div class="ttname"><a href="classComposeValidity.html#adb481db107cdb561f7c4849b3af5a580ac19ba3947418c5593a3e2ffb0f837c1e">ComposeValidity::OR</a></div><div class="ttdeci">@ OR</div><div class="ttdef"><b>Definition:</b> ComposeValidity.h:19</div></div>
+<div class="ttc" id="aclassComposeValidity_html_adb481db107cdb561f7c4849b3af5a580af882a389301a755bdbb6dbc64313aa43"><div class="ttname"><a href="classComposeValidity.html#adb481db107cdb561f7c4849b3af5a580af882a389301a755bdbb6dbc64313aa43">ComposeValidity::AND</a></div><div class="ttdeci">@ AND</div><div class="ttdef"><b>Definition:</b> ComposeValidity.h:19</div></div>
+<div class="ttc" id="aclassValidityCheckerMethod_html"><div class="ttname"><a href="classValidityCheckerMethod.html">ValidityCheckerMethod</a></div><div class="ttdef"><b>Definition:</b> ValidityCheckerMethod.h:32</div></div>
 <div class="ttc" id="aclassXMLNode_html"><div class="ttname"><a href="classXMLNode.html">XMLNode</a></div><div class="ttdef"><b>Definition:</b> XMLNode.h:27</div></div>
-<div class="ttc" id="aclassXMLNode_html_ad8152f1ab4f8720572c66397f74e282c"><div class="ttname"><a href="classXMLNode.html#ad8152f1ab4f8720572c66397f74e282c">XMLNode::Where</a></div><div class="ttdeci">std::string Where() const</div><div class="ttdef"><b>Definition:</b> XMLNode.cpp:205</div></div>
-<div class="ttc" id="aclassXMLNode_html_af0e81db89948e52fdee6bf2bf029037f"><div class="ttname"><a href="classXMLNode.html#af0e81db89948e52fdee6bf2bf029037f">XMLNode::Read</a></div><div class="ttdeci">T Read(const std::string &amp;_name, const bool _req, const T &amp;_default, const T &amp;_min, const T &amp;_max, const std::string &amp;_desc)</div><div class="ttdef"><b>Definition:</b> XMLNode.h:267</div></div>
 <div class="ttc" id="astructCDInfo_html"><div class="ttname"><a href="structCDInfo.html">CDInfo</a></div><div class="ttdef"><b>Definition:</b> CDInfo.h:139</div></div>
-<div class="ttc" id="astructParseException_html"><div class="ttname"><a href="structParseException.html">ParseException</a></div><div class="ttdef"><b>Definition:</b> PMPLExceptions.h:38</div></div>
-<div class="ttc" id="astructRunTimeException_html"><div class="ttname"><a href="structRunTimeException.html">RunTimeException</a></div><div class="ttdef"><b>Definition:</b> PMPLExceptions.h:62</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

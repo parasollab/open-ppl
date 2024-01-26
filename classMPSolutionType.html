@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.9.1"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Parasol Planning Library (PPL): MPSolutionType&lt; MPTraits &gt; Class Template Reference</title>
+<title>Parasol Planning Library (PPL): MPSolutionType Class Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -65,7 +65,7 @@ $(function() {
   <div class="summary">
 <a href="#nested-classes">Data Structures</a>  </div>
   <div class="headertitle">
-<div class="title">MPSolutionType&lt; MPTraits &gt; Class Template Reference<span class="mlabels"><span class="mlabel">final</span></span></div>  </div>
+<div class="title">MPSolutionType Class Reference<span class="mlabels"><span class="mlabel">final</span></span></div>  </div>
 </div><!--header-->
 <div class="contents">
 
@@ -83,141 +83,96 @@ Data Structures</h2></td></tr>
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
 Public Types</h2></td></tr>
 <tr><td colspan="2"><div class="groupHeader">Solution Object Types</div></td></tr>
-<tr class="memitem:a0ff94fc78011798dc9ce0476924fc215"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classMPTraits.html#afe9382068449964664ed85ecfc1194e5">MPTraits::Path</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPSolutionType.html#a0ff94fc78011798dc9ce0476924fc215">Path</a></td></tr>
-<tr class="separator:a0ff94fc78011798dc9ce0476924fc215"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a455939d9c0555e7020d46af708674cfe"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classMPTraits.html#a95116adcdff7d4a14ffee94dc5e51056">MPTraits::RoadmapType</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPSolutionType.html#a455939d9c0555e7020d46af708674cfe">RoadmapType</a></td></tr>
-<tr class="separator:a455939d9c0555e7020d46af708674cfe"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acf7330457ddae97240ad89bd3ed05940"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classMPTraits.html#a13732f6615f1a95573d492403076969d">MPTraits::LocalObstacleMap</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPSolutionType.html#acf7330457ddae97240ad89bd3ed05940">LocalObstacleMap</a></td></tr>
-<tr class="separator:acf7330457ddae97240ad89bd3ed05940"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7a4f68b1fd403f691418bea2c19072df"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classMPTraits.html#a806d8c2e8e5c191e0c985d571a489851">MPTraits::GroupRoadmapType</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPSolutionType.html#a7a4f68b1fd403f691418bea2c19072df">GroupRoadmapType</a></td></tr>
-<tr class="separator:a7a4f68b1fd403f691418bea2c19072df"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:adf32c72181f98196a5022b583b568f4f"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classMPTraits.html#a722253fb94432ff7e88e46721a01d85e">MPTraits::GroupPathType</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPSolutionType.html#adf32c72181f98196a5022b583b568f4f">GroupPathType</a></td></tr>
-<tr class="separator:adf32c72181f98196a5022b583b568f4f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab0b8ee75a154cdf581177b4d6789870f"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classGenericStateGraph.html">GenericStateGraph</a>&lt; <a class="el" href="classCfg.html">Cfg</a>, <a class="el" href="classDefaultWeight.html">DefaultWeight</a>&lt; <a class="el" href="classCfg.html">Cfg</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPSolutionType.html#ab0b8ee75a154cdf581177b4d6789870f">RoadmapType</a></td></tr>
+<tr class="separator:ab0b8ee75a154cdf581177b4d6789870f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a632e887b2b4b0b7adb4bec29e4d54cad"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classGroupCfg.html">GroupCfg</a>&lt; <a class="el" href="classMPSolutionType.html#ab0b8ee75a154cdf581177b4d6789870f">RoadmapType</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPSolutionType.html#a632e887b2b4b0b7adb4bec29e4d54cad">GroupCfgType</a></td></tr>
+<tr class="separator:a632e887b2b4b0b7adb4bec29e4d54cad"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a140d0975754ded3d062b57d63ef8f572"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classGroupRoadmap.html">GroupRoadmap</a>&lt; <a class="el" href="classMPSolutionType.html#a632e887b2b4b0b7adb4bec29e4d54cad">GroupCfgType</a>, <a class="el" href="classGroupLocalPlan.html">GroupLocalPlan</a>&lt; <a class="el" href="classMPSolutionType.html#ab0b8ee75a154cdf581177b4d6789870f">RoadmapType</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPSolutionType.html#a140d0975754ded3d062b57d63ef8f572">GroupRoadmapType</a></td></tr>
+<tr class="separator:a140d0975754ded3d062b57d63ef8f572"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
 <tr><td colspan="2"><div class="groupHeader">Construction</div></td></tr>
-<tr class="memitem:a9c6ed63df1b6d25fc7e337d5e07c402f"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPSolutionType.html#a9c6ed63df1b6d25fc7e337d5e07c402f">MPSolutionType</a> (<a class="el" href="classRobot.html">Robot</a> *const _r)</td></tr>
-<tr class="separator:a9c6ed63df1b6d25fc7e337d5e07c402f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a68dd7e8c46e7058e8fa9e0195fd04024"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPSolutionType.html#a68dd7e8c46e7058e8fa9e0195fd04024">MPSolutionType</a> (<a class="el" href="classRobotGroup.html">RobotGroup</a> *const _g)</td></tr>
-<tr class="separator:a68dd7e8c46e7058e8fa9e0195fd04024"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab5e191a14fbefb1a3c354b7dc41f370e"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPSolutionType.html#ab5e191a14fbefb1a3c354b7dc41f370e">MPSolutionType</a> (<a class="el" href="classRobot.html">Robot</a> *const _r)</td></tr>
+<tr class="separator:ab5e191a14fbefb1a3c354b7dc41f370e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a271c7fe5ec6012c5fa497d5d3dfbe682"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPSolutionType.html#a271c7fe5ec6012c5fa497d5d3dfbe682">MPSolutionType</a> (<a class="el" href="classRobotGroup.html">RobotGroup</a> *const _g)</td></tr>
+<tr class="separator:a271c7fe5ec6012c5fa497d5d3dfbe682"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr><td colspan="2"><div class="groupHeader">Modifiers</div></td></tr>
-<tr class="memitem:afcf3983f1a8ff4e82ef4f2e92af4ed87"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPSolutionType.html#afcf3983f1a8ff4e82ef4f2e92af4ed87">AddRobot</a> (<a class="el" href="classRobot.html">Robot</a> *const _r) noexcept</td></tr>
-<tr class="separator:afcf3983f1a8ff4e82ef4f2e92af4ed87"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac062482f3972bf4d1dd8c34d9bf739d7"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPSolutionType.html#ac062482f3972bf4d1dd8c34d9bf739d7">SetRobot</a> (<a class="el" href="classRobot.html">Robot</a> *const _r) noexcept</td></tr>
-<tr class="separator:ac062482f3972bf4d1dd8c34d9bf739d7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8e549d6de8e8508fe0b4e88d33decac1"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPSolutionType.html#a8e549d6de8e8508fe0b4e88d33decac1">SetRoadmap</a> (<a class="el" href="classRobot.html">Robot</a> *const _r, <a class="el" href="classMPSolutionType.html#a455939d9c0555e7020d46af708674cfe">RoadmapType</a> *_roadmap) noexcept</td></tr>
-<tr class="separator:a8e549d6de8e8508fe0b4e88d33decac1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad3df27c0258a4ff5bc8907e1f0c2a22d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPSolutionType.html#ad3df27c0258a4ff5bc8907e1f0c2a22d">SetPath</a> (<a class="el" href="classRobot.html">Robot</a> *const _r, <a class="el" href="classMPSolutionType.html#a0ff94fc78011798dc9ce0476924fc215">Path</a> *_path) noexcept</td></tr>
-<tr class="separator:ad3df27c0258a4ff5bc8907e1f0c2a22d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a31fd64fc28b2425a154773ea4a2e96ef"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPSolutionType.html#a31fd64fc28b2425a154773ea4a2e96ef">AddRobotGroup</a> (<a class="el" href="classRobotGroup.html">RobotGroup</a> *const _g) noexcept</td></tr>
-<tr class="separator:a31fd64fc28b2425a154773ea4a2e96ef"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad972389a6cbe7533a9b05c560031f918"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPSolutionType.html#ad972389a6cbe7533a9b05c560031f918">SetGroupRoadmap</a> (<a class="el" href="classRobotGroup.html">RobotGroup</a> *const _g, <a class="el" href="classMPSolutionType.html#a7a4f68b1fd403f691418bea2c19072df">GroupRoadmapType</a> *_roadmap) noexcept</td></tr>
-<tr class="separator:ad972389a6cbe7533a9b05c560031f918"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a541953a5540e910ec2f87d624c8f6204"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPSolutionType.html#a541953a5540e910ec2f87d624c8f6204">SetGroupPath</a> (<a class="el" href="classRobotGroup.html">RobotGroup</a> *const _r, <a class="el" href="classMPSolutionType.html#adf32c72181f98196a5022b583b568f4f">GroupPathType</a> *_path) noexcept</td></tr>
-<tr class="separator:a541953a5540e910ec2f87d624c8f6204"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac508cdbb817829924fe990b503195e35"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPSolutionType.html#ac508cdbb817829924fe990b503195e35">AddRobot</a> (<a class="el" href="classRobot.html">Robot</a> *const _r) noexcept</td></tr>
+<tr class="separator:ac508cdbb817829924fe990b503195e35"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5e68344d95ed41739a614760ed5d9e1a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPSolutionType.html#a5e68344d95ed41739a614760ed5d9e1a">SetRobot</a> (<a class="el" href="classRobot.html">Robot</a> *const _r) noexcept</td></tr>
+<tr class="separator:a5e68344d95ed41739a614760ed5d9e1a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa9f4c6c3dc35636021d4cf6c1fc7a1d3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPSolutionType.html#aa9f4c6c3dc35636021d4cf6c1fc7a1d3">SetRoadmap</a> (<a class="el" href="classRobot.html">Robot</a> *const _r, <a class="el" href="classMPSolutionType.html#ab0b8ee75a154cdf581177b4d6789870f">RoadmapType</a> *_roadmap) noexcept</td></tr>
+<tr class="separator:aa9f4c6c3dc35636021d4cf6c1fc7a1d3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a21287e3d5f3d7d36074679f0d270f877"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPSolutionType.html#a21287e3d5f3d7d36074679f0d270f877">SetPath</a> (<a class="el" href="classRobot.html">Robot</a> *const _r, <a class="el" href="classPath.html">Path</a> *_path) noexcept</td></tr>
+<tr class="separator:a21287e3d5f3d7d36074679f0d270f877"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa2538eeb35717cf7f9a09e1eba50079f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPSolutionType.html#aa2538eeb35717cf7f9a09e1eba50079f">AddRobotGroup</a> (<a class="el" href="classRobotGroup.html">RobotGroup</a> *const _g) noexcept</td></tr>
+<tr class="separator:aa2538eeb35717cf7f9a09e1eba50079f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adb7ff790099b6e62acb1361ef066f7d0"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPSolutionType.html#adb7ff790099b6e62acb1361ef066f7d0">SetGroupRoadmap</a> (<a class="el" href="classRobotGroup.html">RobotGroup</a> *const _g, <a class="el" href="classMPSolutionType.html#a140d0975754ded3d062b57d63ef8f572">GroupRoadmapType</a> *_roadmap) noexcept</td></tr>
+<tr class="separator:adb7ff790099b6e62acb1361ef066f7d0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a85a56759064aaf3923f7a267ea3945f4"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPSolutionType.html#a85a56759064aaf3923f7a267ea3945f4">SetGroupPath</a> (<a class="el" href="classRobotGroup.html">RobotGroup</a> *const _r, <a class="el" href="classGroupPath.html">GroupPath</a> *_path) noexcept</td></tr>
+<tr class="separator:a85a56759064aaf3923f7a267ea3945f4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr><td colspan="2"><div class="groupHeader">Accessors</div></td></tr>
-<tr class="memitem:ad5323e585ec342434dbe0d9810452e7f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classMPSolutionType.html#a455939d9c0555e7020d46af708674cfe">RoadmapType</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPSolutionType.html#ad5323e585ec342434dbe0d9810452e7f">GetRoadmap</a> (<a class="el" href="classRobot.html">Robot</a> *const _r=nullptr) const noexcept</td></tr>
-<tr class="separator:ad5323e585ec342434dbe0d9810452e7f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a48dfeec24b56990eb419a700194ce3b5"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classMPSolutionType.html#a455939d9c0555e7020d46af708674cfe">RoadmapType</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPSolutionType.html#a48dfeec24b56990eb419a700194ce3b5">GetBlockRoadmap</a> (<a class="el" href="classRobot.html">Robot</a> *const _r=nullptr) const noexcept</td></tr>
-<tr class="separator:a48dfeec24b56990eb419a700194ce3b5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a092befd90dc2ab5ddd1ff357056e7458"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classMPSolutionType.html#a0ff94fc78011798dc9ce0476924fc215">Path</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPSolutionType.html#a092befd90dc2ab5ddd1ff357056e7458">GetPath</a> (<a class="el" href="classRobot.html">Robot</a> *const _r=nullptr) const noexcept</td></tr>
-<tr class="separator:a092befd90dc2ab5ddd1ff357056e7458"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac4fe848dacb00e9f4ef68201ea4b5d9b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classMPSolutionType.html#acf7330457ddae97240ad89bd3ed05940">LocalObstacleMap</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPSolutionType.html#ac4fe848dacb00e9f4ef68201ea4b5d9b">GetLocalObstacleMap</a> (<a class="el" href="classRobot.html">Robot</a> *const _r=nullptr) const noexcept</td></tr>
-<tr class="separator:ac4fe848dacb00e9f4ef68201ea4b5d9b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac8b9d793bc547731a51fc950a5e24076"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classMPSolutionType.html#a7a4f68b1fd403f691418bea2c19072df">GroupRoadmapType</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPSolutionType.html#ac8b9d793bc547731a51fc950a5e24076">GetGroupRoadmap</a> (<a class="el" href="classRobotGroup.html">RobotGroup</a> *const _g=nullptr) const noexcept</td></tr>
-<tr class="separator:ac8b9d793bc547731a51fc950a5e24076"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6a15ec328dab2bbf8420f2f3b9d01ac1"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classMPSolutionType.html#adf32c72181f98196a5022b583b568f4f">GroupPathType</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPSolutionType.html#a6a15ec328dab2bbf8420f2f3b9d01ac1">GetGroupPath</a> (<a class="el" href="classRobotGroup.html">RobotGroup</a> *const _g=nullptr) const noexcept</td></tr>
-<tr class="separator:a6a15ec328dab2bbf8420f2f3b9d01ac1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4d5ef5675fea9769e1f3322d3202de32"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classStatClass.html">StatClass</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPSolutionType.html#a4d5ef5675fea9769e1f3322d3202de32">GetStatClass</a> () const noexcept</td></tr>
-<tr class="separator:a4d5ef5675fea9769e1f3322d3202de32"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af8cb0d5e7dbdc590bfdbd956fdd3de30"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classRobot.html">Robot</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPSolutionType.html#af8cb0d5e7dbdc590bfdbd956fdd3de30">GetRobot</a> () const noexcept</td></tr>
-<tr class="separator:af8cb0d5e7dbdc590bfdbd956fdd3de30"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9838a1e3d450812cc2dc1e76527101f9"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classRobotGroup.html">RobotGroup</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPSolutionType.html#a9838a1e3d450812cc2dc1e76527101f9">GetRobotGroup</a> () const noexcept</td></tr>
-<tr class="separator:a9838a1e3d450812cc2dc1e76527101f9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abb88a4d165d579d5244f89aa7b78e632"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classMPSolutionType.html#ab0b8ee75a154cdf581177b4d6789870f">RoadmapType</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPSolutionType.html#abb88a4d165d579d5244f89aa7b78e632">GetRoadmap</a> (<a class="el" href="classRobot.html">Robot</a> *const _r=nullptr) const noexcept</td></tr>
+<tr class="separator:abb88a4d165d579d5244f89aa7b78e632"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a97728d4a21f878e9a63a7b5630dfc293"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classMPSolutionType.html#ab0b8ee75a154cdf581177b4d6789870f">RoadmapType</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPSolutionType.html#a97728d4a21f878e9a63a7b5630dfc293">GetBlockRoadmap</a> (<a class="el" href="classRobot.html">Robot</a> *const _r=nullptr) const noexcept</td></tr>
+<tr class="separator:a97728d4a21f878e9a63a7b5630dfc293"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3e2fb234be8db95642cef7c909fb3689"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classPath.html">Path</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPSolutionType.html#a3e2fb234be8db95642cef7c909fb3689">GetPath</a> (<a class="el" href="classRobot.html">Robot</a> *const _r=nullptr) const noexcept</td></tr>
+<tr class="separator:a3e2fb234be8db95642cef7c909fb3689"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac1b03cf439e63fdb0fc4d931c3ccad2f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classLocalObstacleMap.html">LocalObstacleMap</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPSolutionType.html#ac1b03cf439e63fdb0fc4d931c3ccad2f">GetLocalObstacleMap</a> (<a class="el" href="classRobot.html">Robot</a> *const _r=nullptr) const noexcept</td></tr>
+<tr class="separator:ac1b03cf439e63fdb0fc4d931c3ccad2f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4b7b1e65dc920378968f420faa605922"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classMPSolutionType.html#a140d0975754ded3d062b57d63ef8f572">GroupRoadmapType</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPSolutionType.html#a4b7b1e65dc920378968f420faa605922">GetGroupRoadmap</a> (<a class="el" href="classRobotGroup.html">RobotGroup</a> *const _g=nullptr) const noexcept</td></tr>
+<tr class="separator:a4b7b1e65dc920378968f420faa605922"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4bbc2a6142ac7dccc36b5a7fce7d4ada"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classGroupPath.html">GroupPath</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPSolutionType.html#a4bbc2a6142ac7dccc36b5a7fce7d4ada">GetGroupPath</a> (<a class="el" href="classRobotGroup.html">RobotGroup</a> *const _g=nullptr) const noexcept</td></tr>
+<tr class="separator:a4bbc2a6142ac7dccc36b5a7fce7d4ada"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6986d2f89c7caf8fc394c73f0165087a"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classStatClass.html">StatClass</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPSolutionType.html#a6986d2f89c7caf8fc394c73f0165087a">GetStatClass</a> () const noexcept</td></tr>
+<tr class="separator:a6986d2f89c7caf8fc394c73f0165087a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3e137ebc398094c90efa7f331190effc"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classRobot.html">Robot</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPSolutionType.html#a3e137ebc398094c90efa7f331190effc">GetRobot</a> () const noexcept</td></tr>
+<tr class="separator:a3e137ebc398094c90efa7f331190effc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1f7fd934fc2f33d37997ab2b17376903"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classRobotGroup.html">RobotGroup</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPSolutionType.html#a1f7fd934fc2f33d37997ab2b17376903">GetRobotGroup</a> () const noexcept</td></tr>
+<tr class="separator:a1f7fd934fc2f33d37997ab2b17376903"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><h3>template&lt;typename MPTraits&gt;<br />
-class MPSolutionType&lt; MPTraits &gt;</h3>
-
-<p>Container for the output of a planning algorithm. Includes free and blocked roadmaps, a path, and a local obstacle map for each robot. Also includes a stat class for performance tracking.</p>
+<div class="textblock"><p>Container for the output of a planning algorithm. Includes free and blocked roadmaps, a path, and a local obstacle map for each robot. Also includes a stat class for performance tracking.</p>
 <dl class="todo"><dt><b><a class="el" href="todo.html#_todo000040">Todo:</a></b></dt><dd>Currently this object can represent a solution for each single robot and several robot group. It can almost support multiple of each - it just needs an interface for adding more robots/groups to the container.</dd></dl>
 <dl class="section note"><dt>Note</dt><dd>This object makes only one stat class, which is shared across all uses. </dd></dl>
 </div><h2 class="groupheader">Member Typedef Documentation</h2>
-<a id="adf32c72181f98196a5022b583b568f4f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#adf32c72181f98196a5022b583b568f4f">&#9670;&nbsp;</a></span>GroupPathType</h2>
+<a id="a632e887b2b4b0b7adb4bec29e4d54cad"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a632e887b2b4b0b7adb4bec29e4d54cad">&#9670;&nbsp;</a></span>GroupCfgType</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">typedef <a class="el" href="classMPTraits.html#a722253fb94432ff7e88e46721a01d85e">MPTraits::GroupPathType</a> <a class="el" href="classMPSolutionType.html">MPSolutionType</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::<a class="el" href="classMPSolutionType.html#adf32c72181f98196a5022b583b568f4f">GroupPathType</a></td>
+          <td class="memname">typedef <a class="el" href="classGroupCfg.html">GroupCfg</a>&lt;<a class="el" href="classMPSolutionType.html#ab0b8ee75a154cdf581177b4d6789870f">RoadmapType</a>&gt; <a class="el" href="classMPSolutionType.html#a632e887b2b4b0b7adb4bec29e4d54cad">MPSolutionType::GroupCfgType</a></td>
         </tr>
       </table>
 </div><div class="memdoc">
 
 </div>
 </div>
-<a id="a7a4f68b1fd403f691418bea2c19072df"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a7a4f68b1fd403f691418bea2c19072df">&#9670;&nbsp;</a></span>GroupRoadmapType</h2>
+<a id="a140d0975754ded3d062b57d63ef8f572"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a140d0975754ded3d062b57d63ef8f572">&#9670;&nbsp;</a></span>GroupRoadmapType</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">typedef <a class="el" href="classMPTraits.html#a806d8c2e8e5c191e0c985d571a489851">MPTraits::GroupRoadmapType</a> <a class="el" href="classMPSolutionType.html">MPSolutionType</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::<a class="el" href="classMPSolutionType.html#a7a4f68b1fd403f691418bea2c19072df">GroupRoadmapType</a></td>
+          <td class="memname">typedef <a class="el" href="classGroupRoadmap.html">GroupRoadmap</a>&lt;<a class="el" href="classMPSolutionType.html#a632e887b2b4b0b7adb4bec29e4d54cad">GroupCfgType</a>, <a class="el" href="classGroupLocalPlan.html">GroupLocalPlan</a>&lt;<a class="el" href="classMPSolutionType.html#ab0b8ee75a154cdf581177b4d6789870f">RoadmapType</a>&gt; &gt; <a class="el" href="classMPSolutionType.html#a140d0975754ded3d062b57d63ef8f572">MPSolutionType::GroupRoadmapType</a></td>
         </tr>
       </table>
 </div><div class="memdoc">
 
 </div>
 </div>
-<a id="acf7330457ddae97240ad89bd3ed05940"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#acf7330457ddae97240ad89bd3ed05940">&#9670;&nbsp;</a></span>LocalObstacleMap</h2>
+<a id="ab0b8ee75a154cdf581177b4d6789870f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab0b8ee75a154cdf581177b4d6789870f">&#9670;&nbsp;</a></span>RoadmapType</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">typedef <a class="el" href="classMPTraits.html#a13732f6615f1a95573d492403076969d">MPTraits::LocalObstacleMap</a> <a class="el" href="classMPSolutionType.html">MPSolutionType</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::<a class="el" href="classMPSolutionType.html#acf7330457ddae97240ad89bd3ed05940">LocalObstacleMap</a></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a0ff94fc78011798dc9ce0476924fc215"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a0ff94fc78011798dc9ce0476924fc215">&#9670;&nbsp;</a></span>Path</h2>
-
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
-      <table class="memname">
-        <tr>
-          <td class="memname">typedef <a class="el" href="classMPTraits.html#afe9382068449964664ed85ecfc1194e5">MPTraits::Path</a> <a class="el" href="classMPSolutionType.html">MPSolutionType</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::<a class="el" href="classMPSolutionType.html#a0ff94fc78011798dc9ce0476924fc215">Path</a></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a455939d9c0555e7020d46af708674cfe"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a455939d9c0555e7020d46af708674cfe">&#9670;&nbsp;</a></span>RoadmapType</h2>
-
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
-      <table class="memname">
-        <tr>
-          <td class="memname">typedef <a class="el" href="classMPTraits.html#a95116adcdff7d4a14ffee94dc5e51056">MPTraits::RoadmapType</a> <a class="el" href="classMPSolutionType.html">MPSolutionType</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::<a class="el" href="classMPSolutionType.html#a455939d9c0555e7020d46af708674cfe">RoadmapType</a></td>
+          <td class="memname">typedef <a class="el" href="classGenericStateGraph.html">GenericStateGraph</a>&lt;<a class="el" href="classCfg.html">Cfg</a>, <a class="el" href="classDefaultWeight.html">DefaultWeight</a>&lt;<a class="el" href="classCfg.html">Cfg</a>&gt; &gt; <a class="el" href="classMPSolutionType.html#ab0b8ee75a154cdf581177b4d6789870f">MPSolutionType::RoadmapType</a></td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -225,16 +180,14 @@ template&lt;typename MPTraits &gt; </div>
 </div>
 </div>
 <h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="a9c6ed63df1b6d25fc7e337d5e07c402f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a9c6ed63df1b6d25fc7e337d5e07c402f">&#9670;&nbsp;</a></span>MPSolutionType() <span class="overload">[1/2]</span></h2>
+<a id="ab5e191a14fbefb1a3c354b7dc41f370e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab5e191a14fbefb1a3c354b7dc41f370e">&#9670;&nbsp;</a></span>MPSolutionType() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classMPSolutionType.html">MPSolutionType</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::<a class="el" href="classMPSolutionType.html">MPSolutionType</a> </td>
+          <td class="memname">MPSolutionType::MPSolutionType </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="classRobot.html">Robot</a> *const&#160;</td>
           <td class="paramname"><em>_r</em></td><td>)</td>
@@ -245,16 +198,14 @@ template&lt;typename MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="a68dd7e8c46e7058e8fa9e0195fd04024"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a68dd7e8c46e7058e8fa9e0195fd04024">&#9670;&nbsp;</a></span>MPSolutionType() <span class="overload">[2/2]</span></h2>
+<a id="a271c7fe5ec6012c5fa497d5d3dfbe682"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a271c7fe5ec6012c5fa497d5d3dfbe682">&#9670;&nbsp;</a></span>MPSolutionType() <span class="overload">[2/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classMPSolutionType.html">MPSolutionType</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::<a class="el" href="classMPSolutionType.html">MPSolutionType</a> </td>
+          <td class="memname">MPSolutionType::MPSolutionType </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="classRobotGroup.html">RobotGroup</a> *const&#160;</td>
           <td class="paramname"><em>_g</em></td><td>)</td>
@@ -266,19 +217,17 @@ template&lt;typename MPTraits &gt; </div>
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
-<a id="afcf3983f1a8ff4e82ef4f2e92af4ed87"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#afcf3983f1a8ff4e82ef4f2e92af4ed87">&#9670;&nbsp;</a></span>AddRobot()</h2>
+<a id="ac508cdbb817829924fe990b503195e35"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac508cdbb817829924fe990b503195e35">&#9670;&nbsp;</a></span>AddRobot()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="classMPSolutionType.html">MPSolutionType</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::AddRobot </td>
+          <td class="memname">void MPSolutionType::AddRobot </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="classRobot.html">Robot</a> *const&#160;</td>
           <td class="paramname"><em>_r</em></td><td>)</td>
@@ -294,19 +243,17 @@ template&lt;typename MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="a31fd64fc28b2425a154773ea4a2e96ef"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a31fd64fc28b2425a154773ea4a2e96ef">&#9670;&nbsp;</a></span>AddRobotGroup()</h2>
+<a id="aa2538eeb35717cf7f9a09e1eba50079f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa2538eeb35717cf7f9a09e1eba50079f">&#9670;&nbsp;</a></span>AddRobotGroup()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="classMPSolutionType.html">MPSolutionType</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::AddRobotGroup </td>
+          <td class="memname">void MPSolutionType::AddRobotGroup </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="classRobotGroup.html">RobotGroup</a> *const&#160;</td>
           <td class="paramname"><em>_g</em></td><td>)</td>
@@ -322,19 +269,17 @@ template&lt;typename MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="a48dfeec24b56990eb419a700194ce3b5"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a48dfeec24b56990eb419a700194ce3b5">&#9670;&nbsp;</a></span>GetBlockRoadmap()</h2>
+<a id="a97728d4a21f878e9a63a7b5630dfc293"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a97728d4a21f878e9a63a7b5630dfc293">&#9670;&nbsp;</a></span>GetBlockRoadmap()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classMPTraits.html#a95116adcdff7d4a14ffee94dc5e51056">MPTraits::RoadmapType</a> * <a class="el" href="classMPSolutionType.html">MPSolutionType</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::GetBlockRoadmap </td>
+          <td class="memname"><a class="el" href="classMPSolutionType.html#ab0b8ee75a154cdf581177b4d6789870f">MPSolutionType::RoadmapType</a> * MPSolutionType::GetBlockRoadmap </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="classRobot.html">Robot</a> *const&#160;</td>
           <td class="paramname"><em>_r</em> = <code>nullptr</code></td><td>)</td>
@@ -343,26 +288,24 @@ template&lt;typename MPTraits &gt; </div>
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">noexcept</span></span>  </td>
+<span class="mlabels"><span class="mlabel">noexcept</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
 
 </div>
 </div>
-<a id="a6a15ec328dab2bbf8420f2f3b9d01ac1"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6a15ec328dab2bbf8420f2f3b9d01ac1">&#9670;&nbsp;</a></span>GetGroupPath()</h2>
+<a id="a4bbc2a6142ac7dccc36b5a7fce7d4ada"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4bbc2a6142ac7dccc36b5a7fce7d4ada">&#9670;&nbsp;</a></span>GetGroupPath()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classMPSolutionType.html">MPSolutionType</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::<a class="el" href="classMPSolutionType.html#adf32c72181f98196a5022b583b568f4f">GroupPathType</a> * <a class="el" href="classMPSolutionType.html">MPSolutionType</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::GetGroupPath </td>
+          <td class="memname"><a class="el" href="classGroupPath.html">GroupPath</a> * MPSolutionType::GetGroupPath </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="classRobotGroup.html">RobotGroup</a> *const&#160;</td>
           <td class="paramname"><em>_g</em> = <code>nullptr</code></td><td>)</td>
@@ -378,19 +321,17 @@ template&lt;typename MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="ac8b9d793bc547731a51fc950a5e24076"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac8b9d793bc547731a51fc950a5e24076">&#9670;&nbsp;</a></span>GetGroupRoadmap()</h2>
+<a id="a4b7b1e65dc920378968f420faa605922"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4b7b1e65dc920378968f420faa605922">&#9670;&nbsp;</a></span>GetGroupRoadmap()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classMPTraits.html#a806d8c2e8e5c191e0c985d571a489851">MPTraits::GroupRoadmapType</a> * <a class="el" href="classMPSolutionType.html">MPSolutionType</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::GetGroupRoadmap </td>
+          <td class="memname"><a class="el" href="classMPSolutionType.html#a140d0975754ded3d062b57d63ef8f572">MPSolutionType::GroupRoadmapType</a> * MPSolutionType::GetGroupRoadmap </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="classRobotGroup.html">RobotGroup</a> *const&#160;</td>
           <td class="paramname"><em>_g</em> = <code>nullptr</code></td><td>)</td>
@@ -399,110 +340,28 @@ template&lt;typename MPTraits &gt; </div>
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">noexcept</span></span>  </td>
+<span class="mlabels"><span class="mlabel">noexcept</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
 
 </div>
 </div>
-<a id="ac4fe848dacb00e9f4ef68201ea4b5d9b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac4fe848dacb00e9f4ef68201ea4b5d9b">&#9670;&nbsp;</a></span>GetLocalObstacleMap()</h2>
+<a id="ac1b03cf439e63fdb0fc4d931c3ccad2f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac1b03cf439e63fdb0fc4d931c3ccad2f">&#9670;&nbsp;</a></span>GetLocalObstacleMap()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classMPTraits.html#a13732f6615f1a95573d492403076969d">MPTraits::LocalObstacleMap</a> * <a class="el" href="classMPSolutionType.html">MPSolutionType</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::GetLocalObstacleMap </td>
+          <td class="memname"><a class="el" href="classLocalObstacleMap.html">LocalObstacleMap</a> * MPSolutionType::GetLocalObstacleMap </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="classRobot.html">Robot</a> *const&#160;</td>
           <td class="paramname"><em>_r</em> = <code>nullptr</code></td><td>)</td>
           <td> const</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">noexcept</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a092befd90dc2ab5ddd1ff357056e7458"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a092befd90dc2ab5ddd1ff357056e7458">&#9670;&nbsp;</a></span>GetPath()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="classMPTraits.html#afe9382068449964664ed85ecfc1194e5">MPTraits::Path</a> * <a class="el" href="classMPSolutionType.html">MPSolutionType</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::GetPath </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="classRobot.html">Robot</a> *const&#160;</td>
-          <td class="paramname"><em>_r</em> = <code>nullptr</code></td><td>)</td>
-          <td> const</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">noexcept</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="ad5323e585ec342434dbe0d9810452e7f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad5323e585ec342434dbe0d9810452e7f">&#9670;&nbsp;</a></span>GetRoadmap()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="classMPTraits.html#a95116adcdff7d4a14ffee94dc5e51056">MPTraits::RoadmapType</a> * <a class="el" href="classMPSolutionType.html">MPSolutionType</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::GetRoadmap </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="classRobot.html">Robot</a> *const&#160;</td>
-          <td class="paramname"><em>_r</em> = <code>nullptr</code></td><td>)</td>
-          <td> const</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">noexcept</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="af8cb0d5e7dbdc590bfdbd956fdd3de30"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af8cb0d5e7dbdc590bfdbd956fdd3de30">&#9670;&nbsp;</a></span>GetRobot()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="classRobot.html">Robot</a> * <a class="el" href="classMPSolutionType.html">MPSolutionType</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::GetRobot</td>
         </tr>
       </table>
   </td>
@@ -514,19 +373,21 @@ template&lt;typename MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="a9838a1e3d450812cc2dc1e76527101f9"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a9838a1e3d450812cc2dc1e76527101f9">&#9670;&nbsp;</a></span>GetRobotGroup()</h2>
+<a id="a3e2fb234be8db95642cef7c909fb3689"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3e2fb234be8db95642cef7c909fb3689">&#9670;&nbsp;</a></span>GetPath()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classRobotGroup.html">RobotGroup</a> * <a class="el" href="classMPSolutionType.html">MPSolutionType</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::GetRobotGroup</td>
+          <td class="memname"><a class="el" href="classPath.html">Path</a> * MPSolutionType::GetPath </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classRobot.html">Robot</a> *const&#160;</td>
+          <td class="paramname"><em>_r</em> = <code>nullptr</code></td><td>)</td>
+          <td> const</td>
         </tr>
       </table>
   </td>
@@ -538,43 +399,118 @@ template&lt;typename MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="a4d5ef5675fea9769e1f3322d3202de32"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a4d5ef5675fea9769e1f3322d3202de32">&#9670;&nbsp;</a></span>GetStatClass()</h2>
+<a id="abb88a4d165d579d5244f89aa7b78e632"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abb88a4d165d579d5244f89aa7b78e632">&#9670;&nbsp;</a></span>GetRoadmap()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classStatClass.html">StatClass</a> * <a class="el" href="classMPSolutionType.html">MPSolutionType</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::GetStatClass</td>
+          <td class="memname"><a class="el" href="classMPSolutionType.html#ab0b8ee75a154cdf581177b4d6789870f">MPSolutionType::RoadmapType</a> * MPSolutionType::GetRoadmap </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classRobot.html">Robot</a> *const&#160;</td>
+          <td class="paramname"><em>_r</em> = <code>nullptr</code></td><td>)</td>
+          <td> const</td>
         </tr>
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">noexcept</span></span>  </td>
+<span class="mlabels"><span class="mlabel">noexcept</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
 
 </div>
 </div>
-<a id="a541953a5540e910ec2f87d624c8f6204"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a541953a5540e910ec2f87d624c8f6204">&#9670;&nbsp;</a></span>SetGroupPath()</h2>
+<a id="a3e137ebc398094c90efa7f331190effc"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3e137ebc398094c90efa7f331190effc">&#9670;&nbsp;</a></span>GetRobot()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="classMPSolutionType.html">MPSolutionType</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::SetGroupPath </td>
+          <td class="memname"><a class="el" href="classRobot.html">Robot</a> * MPSolutionType::GetRobot </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">noexcept</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a1f7fd934fc2f33d37997ab2b17376903"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1f7fd934fc2f33d37997ab2b17376903">&#9670;&nbsp;</a></span>GetRobotGroup()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classRobotGroup.html">RobotGroup</a> * MPSolutionType::GetRobotGroup </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">noexcept</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a6986d2f89c7caf8fc394c73f0165087a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6986d2f89c7caf8fc394c73f0165087a">&#9670;&nbsp;</a></span>GetStatClass()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classStatClass.html">StatClass</a> * MPSolutionType::GetStatClass </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">noexcept</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a85a56759064aaf3923f7a267ea3945f4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a85a56759064aaf3923f7a267ea3945f4">&#9670;&nbsp;</a></span>SetGroupPath()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void MPSolutionType::SetGroupPath </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="classRobotGroup.html">RobotGroup</a> *const&#160;</td>
           <td class="paramname"><em>_r</em>, </td>
@@ -582,7 +518,7 @@ template&lt;typename MPTraits &gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="classMPSolutionType.html#adf32c72181f98196a5022b583b568f4f">GroupPathType</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="classGroupPath.html">GroupPath</a> *&#160;</td>
           <td class="paramname"><em>_path</em>&#160;</td>
         </tr>
         <tr>
@@ -600,19 +536,17 @@ template&lt;typename MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="ad972389a6cbe7533a9b05c560031f918"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad972389a6cbe7533a9b05c560031f918">&#9670;&nbsp;</a></span>SetGroupRoadmap()</h2>
+<a id="adb7ff790099b6e62acb1361ef066f7d0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#adb7ff790099b6e62acb1361ef066f7d0">&#9670;&nbsp;</a></span>SetGroupRoadmap()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="classMPSolutionType.html">MPSolutionType</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::SetGroupRoadmap </td>
+          <td class="memname">void MPSolutionType::SetGroupRoadmap </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="classRobotGroup.html">RobotGroup</a> *const&#160;</td>
           <td class="paramname"><em>_g</em>, </td>
@@ -620,7 +554,7 @@ template&lt;typename MPTraits &gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="classMPSolutionType.html#a7a4f68b1fd403f691418bea2c19072df">GroupRoadmapType</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="classMPSolutionType.html#a140d0975754ded3d062b57d63ef8f572">GroupRoadmapType</a> *&#160;</td>
           <td class="paramname"><em>_roadmap</em>&#160;</td>
         </tr>
         <tr>
@@ -638,19 +572,17 @@ template&lt;typename MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="ad3df27c0258a4ff5bc8907e1f0c2a22d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad3df27c0258a4ff5bc8907e1f0c2a22d">&#9670;&nbsp;</a></span>SetPath()</h2>
+<a id="a21287e3d5f3d7d36074679f0d270f877"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a21287e3d5f3d7d36074679f0d270f877">&#9670;&nbsp;</a></span>SetPath()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="classMPSolutionType.html">MPSolutionType</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::SetPath </td>
+          <td class="memname">void MPSolutionType::SetPath </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="classRobot.html">Robot</a> *const&#160;</td>
           <td class="paramname"><em>_r</em>, </td>
@@ -658,7 +590,7 @@ template&lt;typename MPTraits &gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="classMPSolutionType.html#a0ff94fc78011798dc9ce0476924fc215">Path</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="classPath.html">Path</a> *&#160;</td>
           <td class="paramname"><em>_path</em>&#160;</td>
         </tr>
         <tr>
@@ -676,19 +608,17 @@ template&lt;typename MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="a8e549d6de8e8508fe0b4e88d33decac1"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8e549d6de8e8508fe0b4e88d33decac1">&#9670;&nbsp;</a></span>SetRoadmap()</h2>
+<a id="aa9f4c6c3dc35636021d4cf6c1fc7a1d3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa9f4c6c3dc35636021d4cf6c1fc7a1d3">&#9670;&nbsp;</a></span>SetRoadmap()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="classMPSolutionType.html">MPSolutionType</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::SetRoadmap </td>
+          <td class="memname">void MPSolutionType::SetRoadmap </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="classRobot.html">Robot</a> *const&#160;</td>
           <td class="paramname"><em>_r</em>, </td>
@@ -696,7 +626,7 @@ template&lt;typename MPTraits &gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="classMPSolutionType.html#a455939d9c0555e7020d46af708674cfe">RoadmapType</a> *&#160;</td>
+          <td class="paramtype"><a class="el" href="classMPSolutionType.html#ab0b8ee75a154cdf581177b4d6789870f">RoadmapType</a> *&#160;</td>
           <td class="paramname"><em>_roadmap</em>&#160;</td>
         </tr>
         <tr>
@@ -714,19 +644,17 @@ template&lt;typename MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="ac062482f3972bf4d1dd8c34d9bf739d7"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac062482f3972bf4d1dd8c34d9bf739d7">&#9670;&nbsp;</a></span>SetRobot()</h2>
+<a id="a5e68344d95ed41739a614760ed5d9e1a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5e68344d95ed41739a614760ed5d9e1a">&#9670;&nbsp;</a></span>SetRobot()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="classMPSolutionType.html">MPSolutionType</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::SetRobot </td>
+          <td class="memname">void MPSolutionType::SetRobot </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="classRobot.html">Robot</a> *const&#160;</td>
           <td class="paramname"><em>_r</em></td><td>)</td>
@@ -742,8 +670,9 @@ template&lt;typename MPTraits &gt; </div>
 
 </div>
 </div>
-<hr/>The documentation for this class was generated from the following file:<ul>
+<hr/>The documentation for this class was generated from the following files:<ul>
 <li>/opt/actions-runner/_work/open-ppl/open-ppl/src/MPLibrary/<a class="el" href="MPSolution_8h_source.html">MPSolution.h</a></li>
+<li>/opt/actions-runner/_work/open-ppl/open-ppl/src/MPLibrary/<a class="el" href="MPSolution_8cpp.html">MPSolution.cpp</a></li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->

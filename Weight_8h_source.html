@@ -117,11 +117,11 @@ $(function() {
 <div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;    <span class="keyword">const</span> std::string&amp; <a class="code" href="classDefaultWeight.html#a6dd76c1979827240d73855d35398ce29">GetLPLabel</a>() const noexcept;</div>
 <div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="classDefaultWeight.html#a00eed5f25d3df82f21e7c4e765e5c5ac">SetLPLabel</a>(const std::<span class="keywordtype">string</span>&amp; _lpLabel) noexcept;</div>
 <div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160; </div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;    std::vector&lt;<a class="code" href="PMPL_8h.html#a2f5559e03ade254588022c64273eda9a">CfgType</a>&gt;&amp; <a class="code" href="classDefaultWeight.html#a377fe98923b144348b8463c309c48546">GetIntermediates</a>() noexcept;</div>
-<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;    const std::vector&lt;<a class="code" href="PMPL_8h.html#a2f5559e03ade254588022c64273eda9a">CfgType</a>&gt;&amp; <a class="code" href="classDefaultWeight.html#a377fe98923b144348b8463c309c48546">GetIntermediates</a>() const noexcept;</div>
+<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;    std::vector&lt;CfgType&gt;&amp; <a class="code" href="classDefaultWeight.html#a377fe98923b144348b8463c309c48546">GetIntermediates</a>() noexcept;</div>
+<div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;    const std::vector&lt;CfgType&gt;&amp; <a class="code" href="classDefaultWeight.html#a377fe98923b144348b8463c309c48546">GetIntermediates</a>() const noexcept;</div>
 <div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160; </div>
-<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="classDefaultWeight.html#a747de448845affaa6d84f7a05daf1e7f">SetIntermediates</a>(const std::vector&lt;<a class="code" href="PMPL_8h.html#a2f5559e03ade254588022c64273eda9a">CfgType</a>&gt;&amp; _intermediates) noexcept;</div>
-<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="classDefaultWeight.html#a747de448845affaa6d84f7a05daf1e7f">SetIntermediates</a>(std::vector&lt;<a class="code" href="PMPL_8h.html#a2f5559e03ade254588022c64273eda9a">CfgType</a>&gt;&amp;&amp; _intermediates) noexcept;</div>
+<div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="classDefaultWeight.html#a747de448845affaa6d84f7a05daf1e7f">SetIntermediates</a>(const std::vector&lt;CfgType&gt;&amp; _intermediates) noexcept;</div>
+<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="classDefaultWeight.html#a747de448845affaa6d84f7a05daf1e7f">SetIntermediates</a>(std::vector&lt;CfgType&gt;&amp;&amp; _intermediates) noexcept;</div>
 <div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160; </div>
 <div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;    <span class="keywordtype">double</span> <a class="code" href="classDefaultWeight.html#a9ee233b1156ea54f3c81a1049bbe4929">GetWeight</a>() const noexcept;</div>
 <div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;    <span class="keywordtype">void</span> <a class="code" href="classDefaultWeight.html#a585d65b9b3c9cd89576cad6eb233c472">SetWeight</a>(const <span class="keywordtype">double</span> _w) noexcept;</div>
@@ -433,7 +433,7 @@ $(function() {
 <div class="line"><a name="l00447"></a><span class="lineno">  447</span>&#160;  _is &gt;&gt; numIntermediates;</div>
 <div class="line"><a name="l00448"></a><span class="lineno">  448</span>&#160;  m_intermediates.clear();</div>
 <div class="line"><a name="l00449"></a><span class="lineno">  449</span>&#160; </div>
-<div class="line"><a name="l00450"></a><span class="lineno">  450</span>&#160;  <a class="code" href="PMPL_8h.html#a2f5559e03ade254588022c64273eda9a">CfgType</a> tmp(inputRobot);</div>
+<div class="line"><a name="l00450"></a><span class="lineno">  450</span>&#160;  CfgType tmp(inputRobot);</div>
 <div class="line"><a name="l00451"></a><span class="lineno">  451</span>&#160;  <span class="keywordflow">for</span>(<span class="keywordtype">size_t</span> i = 0; i &lt; numIntermediates; ++i) {</div>
 <div class="line"><a name="l00452"></a><span class="lineno">  452</span>&#160;    _is &gt;&gt; tmp;</div>
 <div class="line"><a name="l00453"></a><span class="lineno">  453</span>&#160;    m_intermediates.push_back(tmp);</div>
@@ -575,7 +575,6 @@ $(function() {
 <div class="ttc" id="aControl_8h_html_af0a65a08c5d85f0bfc93fc07119e5919"><div class="ttname"><a href="Control_8h.html#af0a65a08c5d85f0bfc93fc07119e5919">ControlSet</a></div><div class="ttdeci">std::vector&lt; Control &gt; ControlSet</div><div class="ttdoc">A discrete set of controls can be defined by a sequence of allowed controls.</div><div class="ttdef"><b>Definition:</b> Control.h:91</div></div>
 <div class="ttc" id="aMPUtils_8h_html"><div class="ttname"><a href="MPUtils_8h.html">MPUtils.h</a></div></div>
 <div class="ttc" id="aMultiBody_8h_html"><div class="ttname"><a href="MultiBody_8h.html">MultiBody.h</a></div></div>
-<div class="ttc" id="aPMPL_8h_html_a2f5559e03ade254588022c64273eda9a"><div class="ttname"><a href="PMPL_8h.html#a2f5559e03ade254588022c64273eda9a">CfgType</a></div><div class="ttdeci">PMPLTraits::CfgType CfgType</div><div class="ttdef"><b>Definition:</b> PMPL.h:30</div></div>
 <div class="ttc" id="aRange_8h_html"><div class="ttname"><a href="Range_8h.html">Range.h</a></div></div>
 <div class="ttc" id="aRobot_8h_html"><div class="ttname"><a href="Robot_8h.html">Robot.h</a></div></div>
 <div class="ttc" id="aRuntimeUtils_8h_html_acd4a2dee55f5359c0389baab37c2f468"><div class="ttname"><a href="RuntimeUtils_8h.html#acd4a2dee55f5359c0389baab37c2f468">WHERE</a></div><div class="ttdeci">#define WHERE</div><div class="ttdoc">Macro for retrieving info about file, function, and line number.</div><div class="ttdef"><b>Definition:</b> RuntimeUtils.h:32</div></div>

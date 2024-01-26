@@ -1,14 +1,14 @@
-<map id="DistanceMetricMethod&lt; MPTraits &gt;" name="DistanceMetricMethod&lt; MPTraits &gt;">
-<area shape="rect" id="node1" title=" " alt="" coords="255,159,424,200"/>
-<area shape="rect" id="node3" href="$classLPSweptDistance.html" title=" " alt="" coords="473,17,692,43"/>
-<area shape="rect" id="node5" href="$classMinkowskiDistance.html" title=" " alt="" coords="503,71,662,112"/>
-<area shape="rect" id="node9" href="$classRMSDDistance.html" title=" " alt="" coords="481,137,684,163"/>
-<area shape="rect" id="node10" href="$classTopologicalDistance.html" title=" " alt="" coords="507,188,659,229"/>
-<area shape="rect" id="node11" href="$classWeightedEuclideanDistance.html" title=" " alt="" coords="481,253,684,295"/>
-<area shape="rect" id="node12" href="$classWorkspaceTranslationDistance.html" title=" " alt="" coords="472,319,693,360"/>
-<area shape="rect" id="node2" href="$classMPBaseObject.html" title=" " alt="" coords="5,166,207,193"/>
-<area shape="rect" id="node4" href="$classBinaryLPSweptDistance.html" title=" " alt="" coords="741,5,917,47"/>
-<area shape="rect" id="node6" href="$classEuclideanDistance.html" title=" " alt="" coords="753,71,906,112"/>
-<area shape="rect" id="node8" href="$classManhattanDistance.html" title=" " alt="" coords="749,136,909,177"/>
-<area shape="rect" id="node7" href="$classScaledEuclideanDistance.html" title=" " alt="" coords="965,71,1151,112"/>
+<map id="DistanceMetricMethod" name="DistanceMetricMethod">
+<area shape="rect" id="node1" title=" " alt="" coords="169,132,339,159"/>
+<area shape="rect" id="node3" href="$classLPSweptDistance.html" title=" " alt="" coords="430,5,565,32"/>
+<area shape="rect" id="node5" href="$classMinkowskiDistance.html" title=" " alt="" coords="423,56,571,83"/>
+<area shape="rect" id="node9" href="$classRMSDDistance.html" title=" " alt="" coords="438,107,557,133"/>
+<area shape="rect" id="node10" href="$classTopologicalDistance.html" title=" " alt="" coords="421,157,573,184"/>
+<area shape="rect" id="node11" href="$classWeightedEuclideanDistance.html" title=" " alt="" coords="396,208,599,235"/>
+<area shape="rect" id="node12" href="$classWorkspaceTranslationDistance.html" title=" " alt="" coords="387,259,608,285"/>
+<area shape="rect" id="node2" href="$classMPBaseObject.html" title=" " alt="" coords="5,132,121,159"/>
+<area shape="rect" id="node4" href="$classBinaryLPSweptDistance.html" title=" " alt="" coords="656,5,832,32"/>
+<area shape="rect" id="node6" href="$classEuclideanDistance.html" title=" " alt="" coords="673,56,815,83"/>
+<area shape="rect" id="node8" href="$classManhattanDistance.html" title=" " alt="" coords="669,107,819,133"/>
+<area shape="rect" id="node7" href="$classScaledEuclideanDistance.html" title=" " alt="" coords="880,56,1065,83"/>
 </map>

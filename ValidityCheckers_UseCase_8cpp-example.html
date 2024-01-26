@@ -78,7 +78,7 @@ $(function() {
 <div class="line">  <a name="_a0"></a><a class="code" href="classValidityCheckerMethod.html">ValidityCheckerMethod</a>* vc = this-&gt;GetValidityChecker(vcLabel);</div>
 <div class="line"> </div>
 <div class="line">  <span class="comment">// The C-space configuration cfg will be tested for validity.</span></div>
-<div class="line">  <a class="code" href="PMPL_8h.html#a2f5559e03ade254588022c64273eda9a">CfgType</a> cfg;</div>
+<div class="line">  CfgType cfg;</div>
 <div class="line"> </div>
 <div class="line">  <span class="comment">// The collision detection info object will be used by the VC to output</span></div>
 <div class="line">  <span class="comment">// additional information such as the clearance (distance from obstacles) of</span></div>
@@ -93,11 +93,10 @@ $(function() {
 <div class="line">  <span class="comment">// respectively. Additional information will be stored in the CDInfo</span></div>
 <div class="line">  <span class="comment">// object cdInfo, and if it is run in debugging mode or an exception is</span></div>
 <div class="line">  <span class="comment">// thrown, the caller string will be used to indicate the calling function.</span></div>
-<div class="line">  <span class="keywordtype">bool</span> valid = vc-&gt;<a name="a2"></a><a class="code" href="classValidityCheckerMethod.html#a06404ca86cce75fa36958507929c6f7b">IsValid</a>(cfg, cdInfo, caller);</div>
+<div class="line">  <span class="keywordtype">bool</span> valid = vc-&gt;<a name="a2"></a><a class="code" href="classValidityCheckerMethod.html#a8e16ead3c54201410cdeefeb41bd309b">IsValid</a>(cfg, cdInfo, caller);</div>
 <div class="line">}</div>
-<div class="ttc" id="aPMPL_8h_html_a2f5559e03ade254588022c64273eda9a"><div class="ttname"><a href="PMPL_8h.html#a2f5559e03ade254588022c64273eda9a">CfgType</a></div><div class="ttdeci">PMPLTraits::CfgType CfgType</div><div class="ttdef"><b>Definition:</b> PMPL.h:30</div></div>
-<div class="ttc" id="aclassValidityCheckerMethod_html"><div class="ttname"><a href="classValidityCheckerMethod.html">ValidityCheckerMethod</a></div><div class="ttdef"><b>Definition:</b> ValidityCheckerMethod.h:33</div></div>
-<div class="ttc" id="aclassValidityCheckerMethod_html_a06404ca86cce75fa36958507929c6f7b"><div class="ttname"><a href="classValidityCheckerMethod.html#a06404ca86cce75fa36958507929c6f7b">ValidityCheckerMethod::IsValid</a></div><div class="ttdeci">bool IsValid(CfgType &amp;_cfg, CDInfo &amp;_cdInfo, const std::string &amp;_caller)</div><div class="ttdef"><b>Definition:</b> ValidityCheckerMethod.h:154</div></div>
+<div class="ttc" id="aclassValidityCheckerMethod_html"><div class="ttname"><a href="classValidityCheckerMethod.html">ValidityCheckerMethod</a></div><div class="ttdef"><b>Definition:</b> ValidityCheckerMethod.h:32</div></div>
+<div class="ttc" id="aclassValidityCheckerMethod_html_a8e16ead3c54201410cdeefeb41bd309b"><div class="ttname"><a href="classValidityCheckerMethod.html#a8e16ead3c54201410cdeefeb41bd309b">ValidityCheckerMethod::IsValid</a></div><div class="ttdeci">bool IsValid(Cfg &amp;_cfg, CDInfo &amp;_cdInfo, const std::string &amp;_caller)</div><div class="ttdef"><b>Definition:</b> ValidityCheckerMethod.cpp:23</div></div>
 <div class="ttc" id="astructCDInfo_html"><div class="ttname"><a href="structCDInfo.html">CDInfo</a></div><div class="ttdef"><b>Definition:</b> CDInfo.h:139</div></div>
 </div><!-- fragment --> </div><!-- contents -->
 <!-- start footer part -->

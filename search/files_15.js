@@ -1,6 +1,26 @@
 var searchData=
 [
-  ['xml_5fmain_2ecpp_3551',['xml_main.cpp',['../xml__main_8cpp.html',1,'']]],
-  ['xmlnode_2ecpp_3552',['XMLNode.cpp',['../XMLNode_8cpp.html',1,'']]],
-  ['xmlnode_2eh_3553',['XMLNode.h',['../XMLNode_8h.html',1,'']]]
+  ['weight_2eh_3920',['Weight.h',['../Weight_8h.html',1,'']]],
+  ['weightedeuclideandistance_2ecpp_3921',['WeightedEuclideanDistance.cpp',['../WeightedEuclideanDistance_8cpp.html',1,'']]],
+  ['weightedeuclideandistance_2eh_3922',['WeightedEuclideanDistance.h',['../WeightedEuclideanDistance_8h.html',1,'']]],
+  ['workspaceboundingbox_2ecpp_3923',['WorkspaceBoundingBox.cpp',['../WorkspaceBoundingBox_8cpp.html',1,'']]],
+  ['workspaceboundingbox_2eh_3924',['WorkspaceBoundingBox.h',['../WorkspaceBoundingBox_8h.html',1,'']]],
+  ['workspaceboundingsphere_2ecpp_3925',['WorkspaceBoundingSphere.cpp',['../WorkspaceBoundingSphere_8cpp.html',1,'']]],
+  ['workspaceboundingsphere_2eh_3926',['WorkspaceBoundingSphere.h',['../WorkspaceBoundingSphere_8h.html',1,'']]],
+  ['workspaceboundingsphericalshell_2ecpp_3927',['WorkspaceBoundingSphericalShell.cpp',['../WorkspaceBoundingSphericalShell_8cpp.html',1,'']]],
+  ['workspaceboundingsphericalshell_2eh_3928',['WorkspaceBoundingSphericalShell.h',['../WorkspaceBoundingSphericalShell_8h.html',1,'']]],
+  ['workspacedecomposition_2ecpp_3929',['WorkspaceDecomposition.cpp',['../WorkspaceDecomposition_8cpp.html',1,'']]],
+  ['workspacedecomposition_2eh_3930',['WorkspaceDecomposition.h',['../WorkspaceDecomposition_8h.html',1,'']]],
+  ['workspaceportal_2ecpp_3931',['WorkspacePortal.cpp',['../WorkspacePortal_8cpp.html',1,'']]],
+  ['workspaceportal_2eh_3932',['WorkspacePortal.h',['../WorkspacePortal_8h.html',1,'']]],
+  ['workspaceregion_2ecpp_3933',['WorkspaceRegion.cpp',['../WorkspaceRegion_8cpp.html',1,'']]],
+  ['workspaceregion_2eh_3934',['WorkspaceRegion.h',['../WorkspaceRegion_8h.html',1,'']]],
+  ['workspaceskeleton_2ecpp_3935',['WorkspaceSkeleton.cpp',['../WorkspaceSkeleton_8cpp.html',1,'']]],
+  ['workspaceskeleton_2eh_3936',['WorkspaceSkeleton.h',['../WorkspaceSkeleton_8h.html',1,'']]],
+  ['workspacetranslationdistance_2ecpp_3937',['WorkspaceTranslationDistance.cpp',['../WorkspaceTranslationDistance_8cpp.html',1,'']]],
+  ['workspacetranslationdistance_2eh_3938',['WorkspaceTranslationDistance.h',['../WorkspaceTranslationDistance_8h.html',1,'']]],
+  ['wrenchaccessibilitystrategy_2ecpp_3939',['WrenchAccessibilityStrategy.cpp',['../WrenchAccessibilityStrategy_8cpp.html',1,'']]],
+  ['wrenchaccessibilitystrategy_2eh_3940',['WrenchAccessibilityStrategy.h',['../WrenchAccessibilityStrategy_8h.html',1,'']]],
+  ['wrenchaccessibilitytool_2ecpp_3941',['WrenchAccessibilityTool.cpp',['../WrenchAccessibilityTool_8cpp.html',1,'']]],
+  ['wrenchaccessibilitytool_2eh_3942',['WrenchAccessibilityTool.h',['../WrenchAccessibilityTool_8h.html',1,'']]]
 ];

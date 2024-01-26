@@ -81,7 +81,7 @@ Public Types</h2></td></tr>
 <tr class="memitem:ab72102d186f205c6792f22dbdd542aa6"><td class="memItemLeft" align="right" valign="top">typedef RoadmapType::VertexSet&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classCCTracker.html#ab72102d186f205c6792f22dbdd542aa6">VertexSet</a></td></tr>
 <tr class="separator:ab72102d186f205c6792f22dbdd542aa6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr><td colspan="2"><div class="groupHeader">Local Types</div></td></tr>
-<tr class="memitem:ac5f391c6143be8752fbcc683ec15e28a"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classCCTracker.html">CCTracker</a>&lt; <a class="el" href="PMPL_8h.html#abf8ccf2b5a281c9ca6725c3364cb8f9b">RoadmapType</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classCCTracker.html#ac5f391c6143be8752fbcc683ec15e28a">CCTrackerType</a></td></tr>
+<tr class="memitem:ac5f391c6143be8752fbcc683ec15e28a"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classCCTracker.html">CCTracker</a>&lt; RoadmapType &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classCCTracker.html#ac5f391c6143be8752fbcc683ec15e28a">CCTrackerType</a></td></tr>
 <tr class="separator:ac5f391c6143be8752fbcc683ec15e28a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afa09eeefaa9bee8f89846a9ad30a669b"><td class="memItemLeft" align="right" valign="top">typedef std::unordered_set&lt; <a class="el" href="classCCTracker.html#ab72102d186f205c6792f22dbdd542aa6">VertexSet</a> * &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classCCTracker.html#afa09eeefaa9bee8f89846a9ad30a669b">ComponentSet</a></td></tr>
 <tr class="separator:afa09eeefaa9bee8f89846a9ad30a669b"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -97,7 +97,7 @@ Public Types</h2></td></tr>
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
 <tr><td colspan="2"><div class="groupHeader">Construction</div></td></tr>
-<tr class="memitem:aea3a517e3ed47d5e6cb5bc045f13f179"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classCCTracker.html#aea3a517e3ed47d5e6cb5bc045f13f179">CCTracker</a> (<a class="el" href="PMPL_8h.html#abf8ccf2b5a281c9ca6725c3364cb8f9b">RoadmapType</a> *const _r)</td></tr>
+<tr class="memitem:aea3a517e3ed47d5e6cb5bc045f13f179"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classCCTracker.html#aea3a517e3ed47d5e6cb5bc045f13f179">CCTracker</a> (RoadmapType *const _r)</td></tr>
 <tr class="separator:aea3a517e3ed47d5e6cb5bc045f13f179"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4c248d61e4a7b6aa2993f48ed815747e"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classCCTracker.html#a4c248d61e4a7b6aa2993f48ed815747e">~CCTracker</a> ()</td></tr>
 <tr class="separator:a4c248d61e4a7b6aa2993f48ed815747e"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -115,7 +115,7 @@ Move will retain stat class tracking but copying does not. This is because movin
 <tr class="memitem:a8993ccdb968986932e887b263a6b12db"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classCCTracker.html">CCTracker</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classCCTracker.html#a8993ccdb968986932e887b263a6b12db">operator=</a> (<a class="el" href="classCCTracker.html">CCTracker</a> &amp;&amp;)</td></tr>
 <tr class="separator:a8993ccdb968986932e887b263a6b12db"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr><td colspan="2"><div class="groupHeader">Modifiers</div></td></tr>
-<tr class="memitem:a26dde1c7ffba370832cb3ef3d42ea6bb"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classCCTracker.html#a26dde1c7ffba370832cb3ef3d42ea6bb">SetRoadmap</a> (<a class="el" href="PMPL_8h.html#abf8ccf2b5a281c9ca6725c3364cb8f9b">RoadmapType</a> *const _r) noexcept</td></tr>
+<tr class="memitem:a26dde1c7ffba370832cb3ef3d42ea6bb"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classCCTracker.html#a26dde1c7ffba370832cb3ef3d42ea6bb">SetRoadmap</a> (RoadmapType *const _r) noexcept</td></tr>
 <tr class="memdesc:a26dde1c7ffba370832cb3ef3d42ea6bb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the roadmap object.  <a href="classCCTracker.html#a26dde1c7ffba370832cb3ef3d42ea6bb">More...</a><br /></td></tr>
 <tr class="separator:a26dde1c7ffba370832cb3ef3d42ea6bb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a503ffe40efe553d10fd19d34aa236c34"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classCCTracker.html#a503ffe40efe553d10fd19d34aa236c34">SetStatClass</a> (<a class="el" href="classStatClass.html">StatClass</a> *const _stats) const noexcept</td></tr>
@@ -181,7 +181,7 @@ class CCTracker&lt; RoadmapType &gt;</h3>
 <p>For directed graphs, we will compute weak connectivity because it describes the typical usage for RRT and nonholonomic robots. One should recall, however, that in such cases shared CC membership does not imply connectivity.</p>
 <p>For this to work correctly with directed trees, one must ensure that the graph always remains a tree. For instance, if you rewire the tree by switching a vertex's parent, you must delete the old edge before adding the new one.</p>
 <dl class="section warning"><dt>Warning</dt><dd>This class assumes that either all edges are bidirectional, or the roadmap is a single tree. It will not work correctly (silent errors) on a non-tree directed graph! </dd></dl>
-<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000104">Todo:</a></b></dt><dd><p class="startdd">Add support for non-tree directed graphs. We need to use predecessor information to do this, which we now have in the roadmap graph. </p>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000106">Todo:</a></b></dt><dd><p class="startdd">Add support for non-tree directed graphs. We need to use predecessor information to do this, which we now have in the roadmap graph. </p>
 <p class="enddd">The stat class tracking adds a lot of complication. Remove it once we're sure the performance is fast enough to forgo tracking.</p>
 </dd></dl>
 </div><h2 class="groupheader">Member Typedef Documentation</h2>
@@ -194,7 +194,7 @@ class CCTracker&lt; RoadmapType &gt;</h3>
 template&lt;typename RoadmapType &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">typedef std::function&lt;void(const <a class="el" href="classCCTracker.html#ac5f391c6143be8752fbcc683ec15e28a">CCTrackerType</a>* const, const <a class="el" href="classCCTracker.html#ab72102d186f205c6792f22dbdd542aa6">VertexSet</a>* const, const <a class="el" href="classCCTracker.html#ab72102d186f205c6792f22dbdd542aa6">VertexSet</a>* const)&gt; <a class="el" href="classCCTracker.html">CCTracker</a>&lt; <a class="el" href="PMPL_8h.html#abf8ccf2b5a281c9ca6725c3364cb8f9b">RoadmapType</a> &gt;::<a class="el" href="classCCTracker.html#a97d9c5672785bcf8a3f598574267184b">BrokenHook</a></td>
+          <td class="memname">typedef std::function&lt;void(const <a class="el" href="classCCTracker.html#ac5f391c6143be8752fbcc683ec15e28a">CCTrackerType</a>* const, const <a class="el" href="classCCTracker.html#ab72102d186f205c6792f22dbdd542aa6">VertexSet</a>* const, const <a class="el" href="classCCTracker.html#ab72102d186f205c6792f22dbdd542aa6">VertexSet</a>* const)&gt; <a class="el" href="classCCTracker.html">CCTracker</a>&lt; RoadmapType &gt;::<a class="el" href="classCCTracker.html#a97d9c5672785bcf8a3f598574267184b">BrokenHook</a></td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -218,7 +218,7 @@ template&lt;typename RoadmapType &gt; </div>
 template&lt;typename RoadmapType &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">typedef <a class="el" href="classCCTracker.html">CCTracker</a>&lt;<a class="el" href="PMPL_8h.html#abf8ccf2b5a281c9ca6725c3364cb8f9b">RoadmapType</a>&gt; <a class="el" href="classCCTracker.html">CCTracker</a>&lt; <a class="el" href="PMPL_8h.html#abf8ccf2b5a281c9ca6725c3364cb8f9b">RoadmapType</a> &gt;::<a class="el" href="classCCTracker.html#ac5f391c6143be8752fbcc683ec15e28a">CCTrackerType</a></td>
+          <td class="memname">typedef <a class="el" href="classCCTracker.html">CCTracker</a>&lt;RoadmapType&gt; <a class="el" href="classCCTracker.html">CCTracker</a>&lt; RoadmapType &gt;::<a class="el" href="classCCTracker.html#ac5f391c6143be8752fbcc683ec15e28a">CCTrackerType</a></td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -234,7 +234,7 @@ template&lt;typename RoadmapType &gt; </div>
 template&lt;typename RoadmapType &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">typedef std::unordered_set&lt;<a class="el" href="classCCTracker.html#ab72102d186f205c6792f22dbdd542aa6">VertexSet</a>*&gt; <a class="el" href="classCCTracker.html">CCTracker</a>&lt; <a class="el" href="PMPL_8h.html#abf8ccf2b5a281c9ca6725c3364cb8f9b">RoadmapType</a> &gt;::<a class="el" href="classCCTracker.html#afa09eeefaa9bee8f89846a9ad30a669b">ComponentSet</a></td>
+          <td class="memname">typedef std::unordered_set&lt;<a class="el" href="classCCTracker.html#ab72102d186f205c6792f22dbdd542aa6">VertexSet</a>*&gt; <a class="el" href="classCCTracker.html">CCTracker</a>&lt; RoadmapType &gt;::<a class="el" href="classCCTracker.html#afa09eeefaa9bee8f89846a9ad30a669b">ComponentSet</a></td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -250,7 +250,7 @@ template&lt;typename RoadmapType &gt; </div>
 template&lt;typename RoadmapType &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">typedef std::function&lt;void(const <a class="el" href="classCCTracker.html#ac5f391c6143be8752fbcc683ec15e28a">CCTrackerType</a>* const, const <a class="el" href="classCCTracker.html#ab72102d186f205c6792f22dbdd542aa6">VertexSet</a>* const)&gt; <a class="el" href="classCCTracker.html">CCTracker</a>&lt; <a class="el" href="PMPL_8h.html#abf8ccf2b5a281c9ca6725c3364cb8f9b">RoadmapType</a> &gt;::<a class="el" href="classCCTracker.html#a7dc729fedb529a46e73c0bd3a4f97ac1">CreatedHook</a></td>
+          <td class="memname">typedef std::function&lt;void(const <a class="el" href="classCCTracker.html#ac5f391c6143be8752fbcc683ec15e28a">CCTrackerType</a>* const, const <a class="el" href="classCCTracker.html#ab72102d186f205c6792f22dbdd542aa6">VertexSet</a>* const)&gt; <a class="el" href="classCCTracker.html">CCTracker</a>&lt; RoadmapType &gt;::<a class="el" href="classCCTracker.html#a7dc729fedb529a46e73c0bd3a4f97ac1">CreatedHook</a></td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -273,7 +273,7 @@ template&lt;typename RoadmapType &gt; </div>
 template&lt;typename RoadmapType &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">typedef std::function&lt;void(const <a class="el" href="classCCTracker.html#ac5f391c6143be8752fbcc683ec15e28a">CCTrackerType</a>* const, const <a class="el" href="classCCTracker.html#ab72102d186f205c6792f22dbdd542aa6">VertexSet</a>* const)&gt; <a class="el" href="classCCTracker.html">CCTracker</a>&lt; <a class="el" href="PMPL_8h.html#abf8ccf2b5a281c9ca6725c3364cb8f9b">RoadmapType</a> &gt;::<a class="el" href="classCCTracker.html#a8e3a021257042f3a5442fdf6c998d545">DeletedHook</a></td>
+          <td class="memname">typedef std::function&lt;void(const <a class="el" href="classCCTracker.html#ac5f391c6143be8752fbcc683ec15e28a">CCTrackerType</a>* const, const <a class="el" href="classCCTracker.html#ab72102d186f205c6792f22dbdd542aa6">VertexSet</a>* const)&gt; <a class="el" href="classCCTracker.html">CCTracker</a>&lt; RoadmapType &gt;::<a class="el" href="classCCTracker.html#a8e3a021257042f3a5442fdf6c998d545">DeletedHook</a></td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -296,7 +296,7 @@ template&lt;typename RoadmapType &gt; </div>
 template&lt;typename RoadmapType &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">typedef RoadmapType::adj_edge_iterator <a class="el" href="classCCTracker.html">CCTracker</a>&lt; <a class="el" href="PMPL_8h.html#abf8ccf2b5a281c9ca6725c3364cb8f9b">RoadmapType</a> &gt;::<a class="el" href="classCCTracker.html#a7726272172575ca59d3fff1594faed59">edge_iterator</a></td>
+          <td class="memname">typedef RoadmapType::adj_edge_iterator <a class="el" href="classCCTracker.html">CCTracker</a>&lt; RoadmapType &gt;::<a class="el" href="classCCTracker.html#a7726272172575ca59d3fff1594faed59">edge_iterator</a></td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -312,7 +312,7 @@ template&lt;typename RoadmapType &gt; </div>
 template&lt;typename RoadmapType &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">typedef std::function&lt;void(const <a class="el" href="classCCTracker.html#ac5f391c6143be8752fbcc683ec15e28a">CCTrackerType</a>* const, const <a class="el" href="classCCTracker.html#ab72102d186f205c6792f22dbdd542aa6">VertexSet</a>* const, const <a class="el" href="classCCTracker.html#ab72102d186f205c6792f22dbdd542aa6">VertexSet</a>* const)&gt; <a class="el" href="classCCTracker.html">CCTracker</a>&lt; <a class="el" href="PMPL_8h.html#abf8ccf2b5a281c9ca6725c3364cb8f9b">RoadmapType</a> &gt;::<a class="el" href="classCCTracker.html#a5378f4490e81857fe47e281caaf8bf1c">MergedHook</a></td>
+          <td class="memname">typedef std::function&lt;void(const <a class="el" href="classCCTracker.html#ac5f391c6143be8752fbcc683ec15e28a">CCTrackerType</a>* const, const <a class="el" href="classCCTracker.html#ab72102d186f205c6792f22dbdd542aa6">VertexSet</a>* const, const <a class="el" href="classCCTracker.html#ab72102d186f205c6792f22dbdd542aa6">VertexSet</a>* const)&gt; <a class="el" href="classCCTracker.html">CCTracker</a>&lt; RoadmapType &gt;::<a class="el" href="classCCTracker.html#a5378f4490e81857fe47e281caaf8bf1c">MergedHook</a></td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -336,7 +336,7 @@ template&lt;typename RoadmapType &gt; </div>
 template&lt;typename RoadmapType &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">typedef RoadmapType::vertex_iterator <a class="el" href="classCCTracker.html">CCTracker</a>&lt; <a class="el" href="PMPL_8h.html#abf8ccf2b5a281c9ca6725c3364cb8f9b">RoadmapType</a> &gt;::<a class="el" href="classCCTracker.html#abeb99b514ef9c5bac5e67fb471536764">vertex_iterator</a></td>
+          <td class="memname">typedef RoadmapType::vertex_iterator <a class="el" href="classCCTracker.html">CCTracker</a>&lt; RoadmapType &gt;::<a class="el" href="classCCTracker.html#abeb99b514ef9c5bac5e67fb471536764">vertex_iterator</a></td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -352,7 +352,7 @@ template&lt;typename RoadmapType &gt; </div>
 template&lt;typename RoadmapType &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">typedef RoadmapType::VertexSet <a class="el" href="classCCTracker.html">CCTracker</a>&lt; <a class="el" href="PMPL_8h.html#abf8ccf2b5a281c9ca6725c3364cb8f9b">RoadmapType</a> &gt;::<a class="el" href="classCCTracker.html#ab72102d186f205c6792f22dbdd542aa6">VertexSet</a></td>
+          <td class="memname">typedef RoadmapType::VertexSet <a class="el" href="classCCTracker.html">CCTracker</a>&lt; RoadmapType &gt;::<a class="el" href="classCCTracker.html#ab72102d186f205c6792f22dbdd542aa6">VertexSet</a></td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -368,7 +368,7 @@ template&lt;typename RoadmapType &gt; </div>
 template&lt;typename RoadmapType &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">typedef RoadmapType::VID <a class="el" href="classCCTracker.html">CCTracker</a>&lt; <a class="el" href="PMPL_8h.html#abf8ccf2b5a281c9ca6725c3364cb8f9b">RoadmapType</a> &gt;::<a class="el" href="classCCTracker.html#a57dbe07b68ddc17dde2ca785fbe99adf">VID</a></td>
+          <td class="memname">typedef RoadmapType::VID <a class="el" href="classCCTracker.html">CCTracker</a>&lt; RoadmapType &gt;::<a class="el" href="classCCTracker.html#a57dbe07b68ddc17dde2ca785fbe99adf">VID</a></td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -385,9 +385,9 @@ template&lt;typename RoadmapType &gt; </div>
 template&lt;typename RoadmapType &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classCCTracker.html">CCTracker</a>&lt; <a class="el" href="PMPL_8h.html#abf8ccf2b5a281c9ca6725c3364cb8f9b">RoadmapType</a> &gt;::<a class="el" href="classCCTracker.html">CCTracker</a> </td>
+          <td class="memname"><a class="el" href="classCCTracker.html">CCTracker</a>&lt; RoadmapType &gt;::<a class="el" href="classCCTracker.html">CCTracker</a> </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="PMPL_8h.html#abf8ccf2b5a281c9ca6725c3364cb8f9b">RoadmapType</a> *const&#160;</td>
+          <td class="paramtype">RoadmapType *const&#160;</td>
           <td class="paramname"><em>_r</em></td><td>)</td>
           <td></td>
         </tr>
@@ -411,7 +411,7 @@ template&lt;typename RoadmapType &gt; </div>
 template&lt;typename RoadmapType &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classCCTracker.html">CCTracker</a>&lt; <a class="el" href="PMPL_8h.html#abf8ccf2b5a281c9ca6725c3364cb8f9b">RoadmapType</a> &gt;::~<a class="el" href="classCCTracker.html">CCTracker</a></td>
+          <td class="memname"><a class="el" href="classCCTracker.html">CCTracker</a>&lt; RoadmapType &gt;::~<a class="el" href="classCCTracker.html">CCTracker</a></td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -427,9 +427,9 @@ template&lt;typename RoadmapType &gt; </div>
 template&lt;typename RoadmapType &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classCCTracker.html">CCTracker</a>&lt; <a class="el" href="PMPL_8h.html#abf8ccf2b5a281c9ca6725c3364cb8f9b">RoadmapType</a> &gt;::<a class="el" href="classCCTracker.html">CCTracker</a> </td>
+          <td class="memname"><a class="el" href="classCCTracker.html">CCTracker</a>&lt; RoadmapType &gt;::<a class="el" href="classCCTracker.html">CCTracker</a> </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="classCCTracker.html">CCTracker</a>&lt; <a class="el" href="PMPL_8h.html#abf8ccf2b5a281c9ca6725c3364cb8f9b">RoadmapType</a> &gt; &amp;&#160;</td>
+          <td class="paramtype">const <a class="el" href="classCCTracker.html">CCTracker</a>&lt; RoadmapType &gt; &amp;&#160;</td>
           <td class="paramname"><em>_other</em></td><td>)</td>
           <td></td>
         </tr>
@@ -447,9 +447,9 @@ template&lt;typename RoadmapType &gt; </div>
 template&lt;typename RoadmapType &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classCCTracker.html">CCTracker</a>&lt; <a class="el" href="PMPL_8h.html#abf8ccf2b5a281c9ca6725c3364cb8f9b">RoadmapType</a> &gt;::<a class="el" href="classCCTracker.html">CCTracker</a> </td>
+          <td class="memname"><a class="el" href="classCCTracker.html">CCTracker</a>&lt; RoadmapType &gt;::<a class="el" href="classCCTracker.html">CCTracker</a> </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="classCCTracker.html">CCTracker</a>&lt; <a class="el" href="PMPL_8h.html#abf8ccf2b5a281c9ca6725c3364cb8f9b">RoadmapType</a> &gt; &amp;&amp;&#160;</td>
+          <td class="paramtype"><a class="el" href="classCCTracker.html">CCTracker</a>&lt; RoadmapType &gt; &amp;&amp;&#160;</td>
           <td class="paramname"><em>_other</em></td><td>)</td>
           <td></td>
         </tr>
@@ -471,7 +471,7 @@ template&lt;typename RoadmapType &gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="classCCTracker.html">CCTracker</a>&lt; <a class="el" href="PMPL_8h.html#abf8ccf2b5a281c9ca6725c3364cb8f9b">RoadmapType</a> &gt;::AddEdge </td>
+          <td class="memname">void <a class="el" href="classCCTracker.html">CCTracker</a>&lt; RoadmapType &gt;::AddEdge </td>
           <td>(</td>
           <td class="paramtype">const <a class="el" href="classCCTracker.html#a7726272172575ca59d3fff1594faed59">edge_iterator</a>&#160;</td>
           <td class="paramname"><em>_ei</em></td><td>)</td>
@@ -506,7 +506,7 @@ template&lt;typename RoadmapType &gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="classCCTracker.html">CCTracker</a>&lt; <a class="el" href="PMPL_8h.html#abf8ccf2b5a281c9ca6725c3364cb8f9b">RoadmapType</a> &gt;::AddVertex </td>
+          <td class="memname">void <a class="el" href="classCCTracker.html">CCTracker</a>&lt; RoadmapType &gt;::AddVertex </td>
           <td>(</td>
           <td class="paramtype">const <a class="el" href="classCCTracker.html#abeb99b514ef9c5bac5e67fb471536764">vertex_iterator</a>&#160;</td>
           <td class="paramname"><em>_vi</em></td><td>)</td>
@@ -540,7 +540,7 @@ template&lt;typename RoadmapType &gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classCCTracker.html">CCTracker</a>&lt; <a class="el" href="PMPL_8h.html#abf8ccf2b5a281c9ca6725c3364cb8f9b">RoadmapType</a> &gt;::ComponentSet::const_iterator <a class="el" href="classCCTracker.html">CCTracker</a>&lt; <a class="el" href="PMPL_8h.html#abf8ccf2b5a281c9ca6725c3364cb8f9b">RoadmapType</a> &gt;::begin</td>
+          <td class="memname"><a class="el" href="classCCTracker.html">CCTracker</a>&lt; RoadmapType &gt;::ComponentSet::const_iterator <a class="el" href="classCCTracker.html">CCTracker</a>&lt; RoadmapType &gt;::begin</td>
         </tr>
       </table>
   </td>
@@ -564,7 +564,7 @@ template&lt;typename RoadmapType &gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="classCCTracker.html">CCTracker</a>&lt; <a class="el" href="PMPL_8h.html#abf8ccf2b5a281c9ca6725c3364cb8f9b">RoadmapType</a> &gt;::DeleteEdge </td>
+          <td class="memname">void <a class="el" href="classCCTracker.html">CCTracker</a>&lt; RoadmapType &gt;::DeleteEdge </td>
           <td>(</td>
           <td class="paramtype">const <a class="el" href="classCCTracker.html#a7726272172575ca59d3fff1594faed59">edge_iterator</a>&#160;</td>
           <td class="paramname"><em>_ei</em></td><td>)</td>
@@ -598,7 +598,7 @@ template&lt;typename RoadmapType &gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="classCCTracker.html">CCTracker</a>&lt; <a class="el" href="PMPL_8h.html#abf8ccf2b5a281c9ca6725c3364cb8f9b">RoadmapType</a> &gt;::DeleteVertex </td>
+          <td class="memname">void <a class="el" href="classCCTracker.html">CCTracker</a>&lt; RoadmapType &gt;::DeleteVertex </td>
           <td>(</td>
           <td class="paramtype">const <a class="el" href="classCCTracker.html#abeb99b514ef9c5bac5e67fb471536764">vertex_iterator</a>&#160;</td>
           <td class="paramname"><em>_vi</em></td><td>)</td>
@@ -629,7 +629,7 @@ template&lt;typename RoadmapType &gt; </div>
 template&lt;typename RoadmapType &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="classCCTracker.html">CCTracker</a>&lt; <a class="el" href="PMPL_8h.html#abf8ccf2b5a281c9ca6725c3364cb8f9b">RoadmapType</a> &gt;::Disable</td>
+          <td class="memname">void <a class="el" href="classCCTracker.html">CCTracker</a>&lt; RoadmapType &gt;::Disable</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -645,7 +645,7 @@ template&lt;typename RoadmapType &gt; </div>
 template&lt;typename RoadmapType &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="classCCTracker.html">CCTracker</a>&lt; <a class="el" href="PMPL_8h.html#abf8ccf2b5a281c9ca6725c3364cb8f9b">RoadmapType</a> &gt;::Enable</td>
+          <td class="memname">void <a class="el" href="classCCTracker.html">CCTracker</a>&lt; RoadmapType &gt;::Enable</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -664,7 +664,7 @@ template&lt;typename RoadmapType &gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classCCTracker.html">CCTracker</a>&lt; <a class="el" href="PMPL_8h.html#abf8ccf2b5a281c9ca6725c3364cb8f9b">RoadmapType</a> &gt;::ComponentSet::const_iterator <a class="el" href="classCCTracker.html">CCTracker</a>&lt; <a class="el" href="PMPL_8h.html#abf8ccf2b5a281c9ca6725c3364cb8f9b">RoadmapType</a> &gt;::end</td>
+          <td class="memname"><a class="el" href="classCCTracker.html">CCTracker</a>&lt; RoadmapType &gt;::ComponentSet::const_iterator <a class="el" href="classCCTracker.html">CCTracker</a>&lt; RoadmapType &gt;::end</td>
         </tr>
       </table>
   </td>
@@ -688,7 +688,7 @@ template&lt;typename RoadmapType &gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">const <a class="el" href="classCCTracker.html">CCTracker</a>&lt; <a class="el" href="PMPL_8h.html#abf8ccf2b5a281c9ca6725c3364cb8f9b">RoadmapType</a> &gt;::<a class="el" href="classCCTracker.html#ab72102d186f205c6792f22dbdd542aa6">VertexSet</a> * <a class="el" href="classCCTracker.html">CCTracker</a>&lt; <a class="el" href="PMPL_8h.html#abf8ccf2b5a281c9ca6725c3364cb8f9b">RoadmapType</a> &gt;::GetCC </td>
+          <td class="memname">const <a class="el" href="classCCTracker.html">CCTracker</a>&lt; RoadmapType &gt;::<a class="el" href="classCCTracker.html#ab72102d186f205c6792f22dbdd542aa6">VertexSet</a> * <a class="el" href="classCCTracker.html">CCTracker</a>&lt; RoadmapType &gt;::GetCC </td>
           <td>(</td>
           <td class="paramtype">const <a class="el" href="classCCTracker.html#a57dbe07b68ddc17dde2ca785fbe99adf">VID</a>&#160;</td>
           <td class="paramname"><em>_vid</em></td><td>)</td>
@@ -723,7 +723,7 @@ template&lt;typename RoadmapType &gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">size_t <a class="el" href="classCCTracker.html">CCTracker</a>&lt; <a class="el" href="PMPL_8h.html#abf8ccf2b5a281c9ca6725c3364cb8f9b">RoadmapType</a> &gt;::GetNumCCs</td>
+          <td class="memname">size_t <a class="el" href="classCCTracker.html">CCTracker</a>&lt; RoadmapType &gt;::GetNumCCs</td>
         </tr>
       </table>
   </td>
@@ -749,7 +749,7 @@ template&lt;typename RoadmapType &gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classCCTracker.html">CCTracker</a>&lt; <a class="el" href="PMPL_8h.html#abf8ccf2b5a281c9ca6725c3364cb8f9b">RoadmapType</a> &gt;::<a class="el" href="classCCTracker.html#ab72102d186f205c6792f22dbdd542aa6">VertexSet</a> <a class="el" href="classCCTracker.html">CCTracker</a>&lt; <a class="el" href="PMPL_8h.html#abf8ccf2b5a281c9ca6725c3364cb8f9b">RoadmapType</a> &gt;::GetRepresentatives</td>
+          <td class="memname"><a class="el" href="classCCTracker.html">CCTracker</a>&lt; RoadmapType &gt;::<a class="el" href="classCCTracker.html#ab72102d186f205c6792f22dbdd542aa6">VertexSet</a> <a class="el" href="classCCTracker.html">CCTracker</a>&lt; RoadmapType &gt;::GetRepresentatives</td>
         </tr>
       </table>
   </td>
@@ -774,7 +774,7 @@ template&lt;typename RoadmapType &gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">bool <a class="el" href="classCCTracker.html">CCTracker</a>&lt; <a class="el" href="PMPL_8h.html#abf8ccf2b5a281c9ca6725c3364cb8f9b">RoadmapType</a> &gt;::InSameCC </td>
+          <td class="memname">bool <a class="el" href="classCCTracker.html">CCTracker</a>&lt; RoadmapType &gt;::InSameCC </td>
           <td>(</td>
           <td class="paramtype">const <a class="el" href="classCCTracker.html#a57dbe07b68ddc17dde2ca785fbe99adf">VID</a>&#160;</td>
           <td class="paramname"><em>_vid1</em>, </td>
@@ -817,7 +817,7 @@ template&lt;typename RoadmapType &gt; </div>
 template&lt;typename RoadmapType &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="classCCTracker.html">CCTracker</a>&lt; <a class="el" href="PMPL_8h.html#abf8ccf2b5a281c9ca6725c3364cb8f9b">RoadmapType</a> &gt;::InstallBrokenHook </td>
+          <td class="memname">void <a class="el" href="classCCTracker.html">CCTracker</a>&lt; RoadmapType &gt;::InstallBrokenHook </td>
           <td>(</td>
           <td class="paramtype">const std::string &amp;&#160;</td>
           <td class="paramname"><em>_label</em>, </td>
@@ -847,7 +847,7 @@ template&lt;typename RoadmapType &gt; </div>
 template&lt;typename RoadmapType &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="classCCTracker.html">CCTracker</a>&lt; <a class="el" href="PMPL_8h.html#abf8ccf2b5a281c9ca6725c3364cb8f9b">RoadmapType</a> &gt;::InstallCreatedHook </td>
+          <td class="memname">void <a class="el" href="classCCTracker.html">CCTracker</a>&lt; RoadmapType &gt;::InstallCreatedHook </td>
           <td>(</td>
           <td class="paramtype">const std::string &amp;&#160;</td>
           <td class="paramname"><em>_label</em>, </td>
@@ -877,7 +877,7 @@ template&lt;typename RoadmapType &gt; </div>
 template&lt;typename RoadmapType &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="classCCTracker.html">CCTracker</a>&lt; <a class="el" href="PMPL_8h.html#abf8ccf2b5a281c9ca6725c3364cb8f9b">RoadmapType</a> &gt;::InstallDeletedHook </td>
+          <td class="memname">void <a class="el" href="classCCTracker.html">CCTracker</a>&lt; RoadmapType &gt;::InstallDeletedHook </td>
           <td>(</td>
           <td class="paramtype">const std::string &amp;&#160;</td>
           <td class="paramname"><em>_label</em>, </td>
@@ -907,7 +907,7 @@ template&lt;typename RoadmapType &gt; </div>
 template&lt;typename RoadmapType &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="classCCTracker.html">CCTracker</a>&lt; <a class="el" href="PMPL_8h.html#abf8ccf2b5a281c9ca6725c3364cb8f9b">RoadmapType</a> &gt;::InstallMergedHook </td>
+          <td class="memname">void <a class="el" href="classCCTracker.html">CCTracker</a>&lt; RoadmapType &gt;::InstallMergedHook </td>
           <td>(</td>
           <td class="paramtype">const std::string &amp;&#160;</td>
           <td class="paramname"><em>_label</em>, </td>
@@ -937,9 +937,9 @@ template&lt;typename RoadmapType &gt; </div>
 template&lt;typename RoadmapType &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classCCTracker.html">CCTracker</a>&lt; <a class="el" href="PMPL_8h.html#abf8ccf2b5a281c9ca6725c3364cb8f9b">RoadmapType</a> &gt; &amp; <a class="el" href="classCCTracker.html">CCTracker</a>&lt; <a class="el" href="PMPL_8h.html#abf8ccf2b5a281c9ca6725c3364cb8f9b">RoadmapType</a> &gt;::operator= </td>
+          <td class="memname"><a class="el" href="classCCTracker.html">CCTracker</a>&lt; RoadmapType &gt; &amp; <a class="el" href="classCCTracker.html">CCTracker</a>&lt; RoadmapType &gt;::operator= </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="classCCTracker.html">CCTracker</a>&lt; <a class="el" href="PMPL_8h.html#abf8ccf2b5a281c9ca6725c3364cb8f9b">RoadmapType</a> &gt; &amp;&amp;&#160;</td>
+          <td class="paramtype"><a class="el" href="classCCTracker.html">CCTracker</a>&lt; RoadmapType &gt; &amp;&amp;&#160;</td>
           <td class="paramname"><em>_other</em></td><td>)</td>
           <td></td>
         </tr>
@@ -957,9 +957,9 @@ template&lt;typename RoadmapType &gt; </div>
 template&lt;typename RoadmapType &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classCCTracker.html">CCTracker</a>&lt; <a class="el" href="PMPL_8h.html#abf8ccf2b5a281c9ca6725c3364cb8f9b">RoadmapType</a> &gt; &amp; <a class="el" href="classCCTracker.html">CCTracker</a>&lt; <a class="el" href="PMPL_8h.html#abf8ccf2b5a281c9ca6725c3364cb8f9b">RoadmapType</a> &gt;::operator= </td>
+          <td class="memname"><a class="el" href="classCCTracker.html">CCTracker</a>&lt; RoadmapType &gt; &amp; <a class="el" href="classCCTracker.html">CCTracker</a>&lt; RoadmapType &gt;::operator= </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="classCCTracker.html">CCTracker</a>&lt; <a class="el" href="PMPL_8h.html#abf8ccf2b5a281c9ca6725c3364cb8f9b">RoadmapType</a> &gt; &amp;&#160;</td>
+          <td class="paramtype">const <a class="el" href="classCCTracker.html">CCTracker</a>&lt; RoadmapType &gt; &amp;&#160;</td>
           <td class="paramname"><em>_other</em></td><td>)</td>
           <td></td>
         </tr>
@@ -977,7 +977,7 @@ template&lt;typename RoadmapType &gt; </div>
 template&lt;typename RoadmapType &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="classCCTracker.html">CCTracker</a>&lt; <a class="el" href="PMPL_8h.html#abf8ccf2b5a281c9ca6725c3364cb8f9b">RoadmapType</a> &gt;::Print </td>
+          <td class="memname">void <a class="el" href="classCCTracker.html">CCTracker</a>&lt; RoadmapType &gt;::Print </td>
           <td>(</td>
           <td class="paramtype">std::ostream &amp;&#160;</td>
           <td class="paramname"><em>_os</em>, </td>
@@ -1017,9 +1017,9 @@ template&lt;typename RoadmapType &gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="classCCTracker.html">CCTracker</a>&lt; <a class="el" href="PMPL_8h.html#abf8ccf2b5a281c9ca6725c3364cb8f9b">RoadmapType</a> &gt;::SetRoadmap </td>
+          <td class="memname">void <a class="el" href="classCCTracker.html">CCTracker</a>&lt; RoadmapType &gt;::SetRoadmap </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="PMPL_8h.html#abf8ccf2b5a281c9ca6725c3364cb8f9b">RoadmapType</a> *const&#160;</td>
+          <td class="paramtype">RoadmapType *const&#160;</td>
           <td class="paramname"><em>_r</em></td><td>)</td>
           <td></td>
         </tr>
@@ -1047,7 +1047,7 @@ template&lt;typename RoadmapType &gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="classCCTracker.html">CCTracker</a>&lt; <a class="el" href="PMPL_8h.html#abf8ccf2b5a281c9ca6725c3364cb8f9b">RoadmapType</a> &gt;::SetStatClass </td>
+          <td class="memname">void <a class="el" href="classCCTracker.html">CCTracker</a>&lt; RoadmapType &gt;::SetStatClass </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="classStatClass.html">StatClass</a> *const&#160;</td>
           <td class="paramname"><em>_stats</em></td><td>)</td>

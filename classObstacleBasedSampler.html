@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.9.1"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Parasol Planning Library (PPL): ObstacleBasedSampler&lt; MPTraits &gt; Class Template Reference</title>
+<title>Parasol Planning Library (PPL): ObstacleBasedSampler Class Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -63,7 +63,7 @@ $(function() {
 </div><!-- top -->
 <div class="header">
   <div class="headertitle">
-<div class="title">ObstacleBasedSampler&lt; MPTraits &gt; Class Template Reference</div>  </div>
+<div class="title">ObstacleBasedSampler Class Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 
@@ -72,351 +72,251 @@ $(function() {
 
 <p><code>#include &lt;<a class="el" href="ObstacleBasedSampler_8h_source.html">ObstacleBasedSampler.h</a>&gt;</code></p>
 <div class="dynheader">
-Inheritance diagram for ObstacleBasedSampler&lt; MPTraits &gt;:</div>
+Inheritance diagram for ObstacleBasedSampler:</div>
 <div class="dyncontent">
-<div class="center"><img src="classObstacleBasedSampler__inherit__graph.png" border="0" usemap="#aObstacleBasedSampler_3_01MPTraits_01_4_inherit__map" alt="Inheritance graph"/></div>
-<map name="aObstacleBasedSampler_3_01MPTraits_01_4_inherit__map" id="aObstacleBasedSampler_3_01MPTraits_01_4_inherit__map">
-<area shape="rect" title="Obstacle&#45;based sampling." alt="" coords="24,155,197,196"/>
-<area shape="rect" href="classSamplerMethod.html" title=" " alt="" coords="5,80,216,107"/>
-<area shape="rect" href="classMPBaseObject.html" title=" " alt="" coords="10,5,211,32"/>
+<div class="center"><img src="classObstacleBasedSampler__inherit__graph.png" border="0" usemap="#aObstacleBasedSampler_inherit__map" alt="Inheritance graph"/></div>
+<map name="aObstacleBasedSampler_inherit__map" id="aObstacleBasedSampler_inherit__map">
+<area shape="rect" title="Obstacle&#45;based sampling." alt="" coords="5,155,179,181"/>
+<area shape="rect" href="classSamplerMethod.html" title=" " alt="" coords="29,80,155,107"/>
+<area shape="rect" href="classMPBaseObject.html" title=" " alt="" coords="34,5,150,32"/>
 </map>
 <center><span class="legend">[<a href="graph_legend.html">legend</a>]</span></center></div>
 <div class="dynheader">
-Collaboration diagram for ObstacleBasedSampler&lt; MPTraits &gt;:</div>
+Collaboration diagram for ObstacleBasedSampler:</div>
 <div class="dyncontent">
-<div class="center"><img src="classObstacleBasedSampler__coll__graph.png" border="0" usemap="#aObstacleBasedSampler_3_01MPTraits_01_4_coll__map" alt="Collaboration graph"/></div>
-<map name="aObstacleBasedSampler_3_01MPTraits_01_4_coll__map" id="aObstacleBasedSampler_3_01MPTraits_01_4_coll__map">
-<area shape="rect" title="Obstacle&#45;based sampling." alt="" coords="24,155,197,196"/>
-<area shape="rect" href="classSamplerMethod.html" title=" " alt="" coords="5,80,216,107"/>
-<area shape="rect" href="classMPBaseObject.html" title=" " alt="" coords="10,5,211,32"/>
+<div class="center"><img src="classObstacleBasedSampler__coll__graph.png" border="0" usemap="#aObstacleBasedSampler_coll__map" alt="Collaboration graph"/></div>
+<map name="aObstacleBasedSampler_coll__map" id="aObstacleBasedSampler_coll__map">
+<area shape="rect" title="Obstacle&#45;based sampling." alt="" coords="5,155,179,181"/>
+<area shape="rect" href="classSamplerMethod.html" title=" " alt="" coords="29,80,155,107"/>
+<area shape="rect" href="classMPBaseObject.html" title=" " alt="" coords="34,5,150,32"/>
 </map>
 <center><span class="legend">[<a href="graph_legend.html">legend</a>]</span></center></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
 Public Types</h2></td></tr>
 <tr><td colspan="2"><div class="groupHeader">Motion Planning Types</div></td></tr>
-<tr class="memitem:ae29183b307268cb54f4758177089b1e2"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classMPTraits.html#a1a5aab50ac12baaf6b22ff345c5ae138">MPTraits::CfgType</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classObstacleBasedSampler.html#ae29183b307268cb54f4758177089b1e2">CfgType</a></td></tr>
-<tr class="separator:ae29183b307268cb54f4758177089b1e2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acc9180d551cb314c543e4e5534862cf5"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classMPTraits.html#a42d63ac6993b02dda2ca15d6c2d5c69e">MPTraits::GroupCfgType</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classObstacleBasedSampler.html#acc9180d551cb314c543e4e5534862cf5">GroupCfgType</a></td></tr>
-<tr class="separator:acc9180d551cb314c543e4e5534862cf5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aba589fdb421ec8578751dc8b95b3dd30"><td class="memItemLeft" align="right" valign="top">typedef std::map&lt; <a class="el" href="classRobot.html">Robot</a> *, const <a class="el" href="classBoundary.html">Boundary</a> * &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classObstacleBasedSampler.html#aba589fdb421ec8578751dc8b95b3dd30">BoundaryMap</a></td></tr>
-<tr class="separator:aba589fdb421ec8578751dc8b95b3dd30"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="inherit_header pub_types_classSamplerMethod"><td colspan="2" onclick="javascript:toggleInherit('pub_types_classSamplerMethod')"><img src="closed.png" alt="-"/>&#160;Public Types inherited from <a class="el" href="classSamplerMethod.html">SamplerMethod&lt; MPTraits &gt;</a></td></tr>
-<tr class="memitem:a57fa988ca5258a4898fa3aade3333bf3 inherit pub_types_classSamplerMethod"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classMPTraits.html#a1a5aab50ac12baaf6b22ff345c5ae138">MPTraits::CfgType</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classSamplerMethod.html#a57fa988ca5258a4898fa3aade3333bf3">CfgType</a></td></tr>
-<tr class="separator:a57fa988ca5258a4898fa3aade3333bf3 inherit pub_types_classSamplerMethod"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a747e67beeb59c0f4349ea8118e69d631 inherit pub_types_classSamplerMethod"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classMPTraits.html#a42d63ac6993b02dda2ca15d6c2d5c69e">MPTraits::GroupCfgType</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classSamplerMethod.html#a747e67beeb59c0f4349ea8118e69d631">GroupCfgType</a></td></tr>
-<tr class="separator:a747e67beeb59c0f4349ea8118e69d631 inherit pub_types_classSamplerMethod"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab80209ec071b82f6481e4499bbc5a809 inherit pub_types_classSamplerMethod"><td class="memItemLeft" align="right" valign="top">typedef std::vector&lt; <a class="el" href="classSamplerMethod.html#a57fa988ca5258a4898fa3aade3333bf3">CfgType</a> &gt;::iterator&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classSamplerMethod.html#ab80209ec071b82f6481e4499bbc5a809">InputIterator</a></td></tr>
-<tr class="separator:ab80209ec071b82f6481e4499bbc5a809 inherit pub_types_classSamplerMethod"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6807e745714d459c1614dae289f9b52a inherit pub_types_classSamplerMethod"><td class="memItemLeft" align="right" valign="top">typedef std::back_insert_iterator&lt; std::vector&lt; <a class="el" href="classSamplerMethod.html#a57fa988ca5258a4898fa3aade3333bf3">CfgType</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classSamplerMethod.html#a6807e745714d459c1614dae289f9b52a">OutputIterator</a></td></tr>
-<tr class="separator:a6807e745714d459c1614dae289f9b52a inherit pub_types_classSamplerMethod"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acf81379597982ad148e944f6328446f1 inherit pub_types_classSamplerMethod"><td class="memItemLeft" align="right" valign="top">typedef std::vector&lt; <a class="el" href="classSamplerMethod.html#a747e67beeb59c0f4349ea8118e69d631">GroupCfgType</a> &gt;::iterator&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classSamplerMethod.html#acf81379597982ad148e944f6328446f1">GroupInputIterator</a></td></tr>
-<tr class="separator:acf81379597982ad148e944f6328446f1 inherit pub_types_classSamplerMethod"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aafbce92d8b2a139923d48f3decfd6e20 inherit pub_types_classSamplerMethod"><td class="memItemLeft" align="right" valign="top">typedef std::back_insert_iterator&lt; std::vector&lt; <a class="el" href="classSamplerMethod.html#a747e67beeb59c0f4349ea8118e69d631">GroupCfgType</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classSamplerMethod.html#aafbce92d8b2a139923d48f3decfd6e20">GroupOutputIterator</a></td></tr>
-<tr class="separator:aafbce92d8b2a139923d48f3decfd6e20 inherit pub_types_classSamplerMethod"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4540a2cc61ca8994b9beb6814a9ec4d3 inherit pub_types_classSamplerMethod"><td class="memItemLeft" align="right" valign="top">typedef std::map&lt; <a class="el" href="classRobot.html">Robot</a> *, const <a class="el" href="classBoundary.html">Boundary</a> * &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classSamplerMethod.html#a4540a2cc61ca8994b9beb6814a9ec4d3">BoundaryMap</a></td></tr>
-<tr class="memdesc:a4540a2cc61ca8994b9beb6814a9ec4d3 inherit pub_types_classSamplerMethod"><td class="mdescLeft">&#160;</td><td class="mdescRight">A map from robots to sampling boundaries.  <a href="classSamplerMethod.html#a4540a2cc61ca8994b9beb6814a9ec4d3">More...</a><br /></td></tr>
-<tr class="separator:a4540a2cc61ca8994b9beb6814a9ec4d3 inherit pub_types_classSamplerMethod"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="inherit_header pub_types_classMPBaseObject"><td colspan="2" onclick="javascript:toggleInherit('pub_types_classMPBaseObject')"><img src="closed.png" alt="-"/>&#160;Public Types inherited from <a class="el" href="classMPBaseObject.html">MPBaseObject&lt; MPTraits &gt;</a></td></tr>
-<tr class="memitem:afdfe49d535de506c369d53c3f35c4861 inherit pub_types_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classMPTraits.html#a95116adcdff7d4a14ffee94dc5e51056">MPTraits::RoadmapType</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#afdfe49d535de506c369d53c3f35c4861">RoadmapType</a></td></tr>
-<tr class="separator:afdfe49d535de506c369d53c3f35c4861 inherit pub_types_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad06ed006429808c548ad2c88d7362652 inherit pub_types_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classMPTraits.html#a806d8c2e8e5c191e0c985d571a489851">MPTraits::GroupRoadmapType</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#ad06ed006429808c548ad2c88d7362652">GroupRoadmapType</a></td></tr>
-<tr class="separator:ad06ed006429808c548ad2c88d7362652 inherit pub_types_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1e5ed51342d87f6e4ca22300478d1754 inherit pub_types_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classMPTraits.html#a13732f6615f1a95573d492403076969d">MPTraits::LocalObstacleMap</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a1e5ed51342d87f6e4ca22300478d1754">LocalObstacleMap</a></td></tr>
-<tr class="separator:a1e5ed51342d87f6e4ca22300478d1754 inherit pub_types_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aea9c3bca368d8ed3aaf2687b159ca561 inherit pub_types_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classMPTraits.html#afe9382068449964664ed85ecfc1194e5">MPTraits::Path</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#aea9c3bca368d8ed3aaf2687b159ca561">Path</a></td></tr>
-<tr class="separator:aea9c3bca368d8ed3aaf2687b159ca561 inherit pub_types_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a171d332ff9e7d24af57efce2db4d7c60 inherit pub_types_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classMPTraits.html#a722253fb94432ff7e88e46721a01d85e">MPTraits::GroupPathType</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a171d332ff9e7d24af57efce2db4d7c60">GroupPath</a></td></tr>
-<tr class="separator:a171d332ff9e7d24af57efce2db4d7c60 inherit pub_types_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a15b148d41701475b3b94c4a163157f89 inherit pub_types_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classMPTraits.html#af13897895127ec20221dc0644ee048cb">MPTraits::MPLibrary</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a15b148d41701475b3b94c4a163157f89">MPLibrary</a></td></tr>
-<tr class="separator:a15b148d41701475b3b94c4a163157f89 inherit pub_types_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6aa70c68a7aa522d074423ca469a4611 inherit pub_types_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classMPTraits.html#adaa1e8910962eb1f4dcc9f479e8a75f0">MPTraits::MPSolution</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a6aa70c68a7aa522d074423ca469a4611">MPSolution</a></td></tr>
-<tr class="separator:a6aa70c68a7aa522d074423ca469a4611 inherit pub_types_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a59a6f8a70e1e9d3bc80ed1709f37adb9 inherit pub_types_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classMPTraits.html#a1998e852579ac65fa2826d0afa242c63">MPTraits::GoalTracker</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a59a6f8a70e1e9d3bc80ed1709f37adb9">GoalTracker</a></td></tr>
-<tr class="separator:a59a6f8a70e1e9d3bc80ed1709f37adb9 inherit pub_types_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aaf3cea401f0b3ade1d909fc527246a08 inherit pub_types_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classMPLibraryType.html#aa6e527bc3b9b27cc291d28982af14a62">MPLibrary::SamplerPointer</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#aaf3cea401f0b3ade1d909fc527246a08">SamplerPointer</a></td></tr>
-<tr class="separator:aaf3cea401f0b3ade1d909fc527246a08 inherit pub_types_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae65bc5a79747909242133bf6d00c993d inherit pub_types_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classMPLibraryType.html#a73832f63ee7b6525ea3a65441f770644">MPLibrary::LocalPlannerPointer</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#ae65bc5a79747909242133bf6d00c993d">LocalPlannerPointer</a></td></tr>
-<tr class="separator:ae65bc5a79747909242133bf6d00c993d inherit pub_types_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5eb6e9a2ee24cc60b2280c8d7a86dcf4 inherit pub_types_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classMPLibraryType.html#a22d44ff401d1d3a8fb3040428b9ea80e">MPLibrary::ExtenderPointer</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a5eb6e9a2ee24cc60b2280c8d7a86dcf4">ExtenderPointer</a></td></tr>
-<tr class="separator:a5eb6e9a2ee24cc60b2280c8d7a86dcf4 inherit pub_types_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9d8006e11da7b3e4d5ac8eee9c6af86a inherit pub_types_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classMPLibraryType.html#a9a56c7dfe254f93974659d85a3eed328">MPLibrary::PathModifierPointer</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a9d8006e11da7b3e4d5ac8eee9c6af86a">PathModifierPointer</a></td></tr>
-<tr class="separator:a9d8006e11da7b3e4d5ac8eee9c6af86a inherit pub_types_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a52cc83324263c010e07a138ab3515f5e inherit pub_types_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classMPLibraryType.html#a630c82fb84b011ad0b6af7b3982927bc">MPLibrary::EdgeValidityCheckerPointer</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a52cc83324263c010e07a138ab3515f5e">EdgeValidityCheckerPointer</a></td></tr>
-<tr class="separator:a52cc83324263c010e07a138ab3515f5e inherit pub_types_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a97ef39036c999f2b85697d651a3709b6 inherit pub_types_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classMPLibraryType.html#ad3d8787a8698ee7ea16e36fddce39739">MPLibrary::ConnectorPointer</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a97ef39036c999f2b85697d651a3709b6">ConnectorPointer</a></td></tr>
-<tr class="separator:a97ef39036c999f2b85697d651a3709b6 inherit pub_types_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1033e6b77f138cd5b0c963b85c2102c8 inherit pub_types_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classMPLibraryType.html#a1c453d86b99596468dbd80aea82172a0">MPLibrary::MetricPointer</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a1033e6b77f138cd5b0c963b85c2102c8">MetricPointer</a></td></tr>
-<tr class="separator:a1033e6b77f138cd5b0c963b85c2102c8 inherit pub_types_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab26d90683e004e04060c66490f1abef9 inherit pub_types_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classMPLibraryType.html#adea960aa1d259e4b3675d137cfd8a796">MPLibrary::MapEvaluatorPointer</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#ab26d90683e004e04060c66490f1abef9">MapEvaluatorPointer</a></td></tr>
-<tr class="separator:ab26d90683e004e04060c66490f1abef9 inherit pub_types_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6c55c91725735d71ee1b6e07d0da9427 inherit pub_types_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classMPLibraryType.html#ab81bf0e7c1c186e6cf6380a310cf7965">MPLibrary::MPStrategyPointer</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a6c55c91725735d71ee1b6e07d0da9427">MPStrategyPointer</a></td></tr>
-<tr class="separator:a6c55c91725735d71ee1b6e07d0da9427 inherit pub_types_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae603ce0344d2bf534dd9623be0625f90 inherit pub_types_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classMPLibraryType.html#aba36f7b8363df2dcde92dd58958c2197">MPLibrary::DistanceMetricPointer</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#ae603ce0344d2bf534dd9623be0625f90">DistanceMetricPointer</a></td></tr>
-<tr class="separator:ae603ce0344d2bf534dd9623be0625f90 inherit pub_types_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a96b8dadf9f28e3513e2bd059dfc0344a inherit pub_types_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classMPLibraryType.html#a005889128c71659b542bb9cada97fa8b">MPLibrary::ValidityCheckerPointer</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a96b8dadf9f28e3513e2bd059dfc0344a">ValidityCheckerPointer</a></td></tr>
-<tr class="separator:a96b8dadf9f28e3513e2bd059dfc0344a inherit pub_types_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a931bd7b8fd743b7f7313046659866113 inherit pub_types_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classMPLibraryType.html#acd62482ea6c7a8063beaa94a300ce5f2">MPLibrary::NeighborhoodFinderPointer</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a931bd7b8fd743b7f7313046659866113">NeighborhoodFinderPointer</a></td></tr>
-<tr class="separator:a931bd7b8fd743b7f7313046659866113 inherit pub_types_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae57e73e0cb30f2765384db8ba3f74715"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classMPBaseObject.html#aad3c1d1dccb02cfd48da4438a2b2923b">MPBaseObject::GroupCfgType</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classObstacleBasedSampler.html#ae57e73e0cb30f2765384db8ba3f74715">GroupCfgType</a></td></tr>
+<tr class="separator:ae57e73e0cb30f2765384db8ba3f74715"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a03f8d39dcf9c90ff3db2250e31a088c4"><td class="memItemLeft" align="right" valign="top">typedef std::map&lt; <a class="el" href="classRobot.html">Robot</a> *, const <a class="el" href="classBoundary.html">Boundary</a> * &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classObstacleBasedSampler.html#a03f8d39dcf9c90ff3db2250e31a088c4">BoundaryMap</a></td></tr>
+<tr class="separator:a03f8d39dcf9c90ff3db2250e31a088c4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="inherit_header pub_types_classSamplerMethod"><td colspan="2" onclick="javascript:toggleInherit('pub_types_classSamplerMethod')"><img src="closed.png" alt="-"/>&#160;Public Types inherited from <a class="el" href="classSamplerMethod.html">SamplerMethod</a></td></tr>
+<tr class="memitem:a4d2315534d97771e3f262573054a64be inherit pub_types_classSamplerMethod"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classMPBaseObject.html#aad3c1d1dccb02cfd48da4438a2b2923b">MPBaseObject::GroupCfgType</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classSamplerMethod.html#a4d2315534d97771e3f262573054a64be">GroupCfgType</a></td></tr>
+<tr class="separator:a4d2315534d97771e3f262573054a64be inherit pub_types_classSamplerMethod"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a914d9dc5ae04bf467c3116c058da0757 inherit pub_types_classSamplerMethod"><td class="memItemLeft" align="right" valign="top">typedef std::vector&lt; <a class="el" href="classCfg.html">Cfg</a> &gt;::iterator&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classSamplerMethod.html#a914d9dc5ae04bf467c3116c058da0757">InputIterator</a></td></tr>
+<tr class="separator:a914d9dc5ae04bf467c3116c058da0757 inherit pub_types_classSamplerMethod"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a87095150c507a033d88a8f3de99b70ce inherit pub_types_classSamplerMethod"><td class="memItemLeft" align="right" valign="top">typedef std::back_insert_iterator&lt; std::vector&lt; <a class="el" href="classCfg.html">Cfg</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classSamplerMethod.html#a87095150c507a033d88a8f3de99b70ce">OutputIterator</a></td></tr>
+<tr class="separator:a87095150c507a033d88a8f3de99b70ce inherit pub_types_classSamplerMethod"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5d655628d748e2ea08d813a3d73bd4c0 inherit pub_types_classSamplerMethod"><td class="memItemLeft" align="right" valign="top">typedef std::vector&lt; <a class="el" href="classMPBaseObject.html#aad3c1d1dccb02cfd48da4438a2b2923b">GroupCfgType</a> &gt;::iterator&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classSamplerMethod.html#a5d655628d748e2ea08d813a3d73bd4c0">GroupInputIterator</a></td></tr>
+<tr class="separator:a5d655628d748e2ea08d813a3d73bd4c0 inherit pub_types_classSamplerMethod"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad47218ae4716273df3d40038e0396db9 inherit pub_types_classSamplerMethod"><td class="memItemLeft" align="right" valign="top">typedef std::back_insert_iterator&lt; std::vector&lt; <a class="el" href="classMPBaseObject.html#aad3c1d1dccb02cfd48da4438a2b2923b">GroupCfgType</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classSamplerMethod.html#ad47218ae4716273df3d40038e0396db9">GroupOutputIterator</a></td></tr>
+<tr class="separator:ad47218ae4716273df3d40038e0396db9 inherit pub_types_classSamplerMethod"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a84f6944c978c28770334f8d519c18d9f inherit pub_types_classSamplerMethod"><td class="memItemLeft" align="right" valign="top">typedef std::map&lt; <a class="el" href="classRobot.html">Robot</a> *, const <a class="el" href="classBoundary.html">Boundary</a> * &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classSamplerMethod.html#a84f6944c978c28770334f8d519c18d9f">BoundaryMap</a></td></tr>
+<tr class="memdesc:a84f6944c978c28770334f8d519c18d9f inherit pub_types_classSamplerMethod"><td class="mdescLeft">&#160;</td><td class="mdescRight">A map from robots to sampling boundaries.  <a href="classSamplerMethod.html#a84f6944c978c28770334f8d519c18d9f">More...</a><br /></td></tr>
+<tr class="separator:a84f6944c978c28770334f8d519c18d9f inherit pub_types_classSamplerMethod"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="inherit_header pub_types_classMPBaseObject"><td colspan="2" onclick="javascript:toggleInherit('pub_types_classMPBaseObject')"><img src="closed.png" alt="-"/>&#160;Public Types inherited from <a class="el" href="classMPBaseObject.html">MPBaseObject</a></td></tr>
+<tr class="memitem:a63f3af4b78d458b51ddad699de1f9287 inherit pub_types_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classDefaultWeight.html">DefaultWeight</a>&lt; <a class="el" href="classCfg.html">Cfg</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a63f3af4b78d458b51ddad699de1f9287">WeightType</a></td></tr>
+<tr class="separator:a63f3af4b78d458b51ddad699de1f9287 inherit pub_types_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1cb9a08003cc7620b1534bdf69ceb1a4 inherit pub_types_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classGenericStateGraph.html">GenericStateGraph</a>&lt; <a class="el" href="classCfg.html">Cfg</a>, <a class="el" href="classMPBaseObject.html#a63f3af4b78d458b51ddad699de1f9287">WeightType</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a1cb9a08003cc7620b1534bdf69ceb1a4">RoadmapType</a></td></tr>
+<tr class="separator:a1cb9a08003cc7620b1534bdf69ceb1a4 inherit pub_types_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aad3c1d1dccb02cfd48da4438a2b2923b inherit pub_types_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classGroupCfg.html">GroupCfg</a>&lt; <a class="el" href="classMPBaseObject.html#a1cb9a08003cc7620b1534bdf69ceb1a4">RoadmapType</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#aad3c1d1dccb02cfd48da4438a2b2923b">GroupCfgType</a></td></tr>
+<tr class="separator:aad3c1d1dccb02cfd48da4438a2b2923b inherit pub_types_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a26059613b8543b300ece8b511aad7050 inherit pub_types_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classGroupLocalPlan.html">GroupLocalPlan</a>&lt; <a class="el" href="classMPBaseObject.html#a1cb9a08003cc7620b1534bdf69ceb1a4">RoadmapType</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a26059613b8543b300ece8b511aad7050">GroupWeightType</a></td></tr>
+<tr class="separator:a26059613b8543b300ece8b511aad7050 inherit pub_types_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a062f6026973104069b7e08eb23a890f7 inherit pub_types_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">typedef <a class="el" href="classGroupRoadmap.html">GroupRoadmap</a>&lt; <a class="el" href="classMPBaseObject.html#aad3c1d1dccb02cfd48da4438a2b2923b">GroupCfgType</a>, <a class="el" href="classMPBaseObject.html#a26059613b8543b300ece8b511aad7050">GroupWeightType</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a062f6026973104069b7e08eb23a890f7">GroupRoadmapType</a></td></tr>
+<tr class="separator:a062f6026973104069b7e08eb23a890f7 inherit pub_types_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
 <tr><td colspan="2"><div class="groupHeader">Construction</div></td></tr>
-<tr class="memitem:a51c8b50a2c5f1dc62c4f2aa293cc39b0"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classObstacleBasedSampler.html#a51c8b50a2c5f1dc62c4f2aa293cc39b0">ObstacleBasedSampler</a> (string _vcLabel=&quot;&quot;, string _dmLabel=&quot;&quot;, int _free=1, int _coll=0, double _step=0, bool _useBBX=true, string _pointSelection=&quot;cspace&quot;)</td></tr>
-<tr class="separator:a51c8b50a2c5f1dc62c4f2aa293cc39b0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aef417266683af31192faa863091ab4bc"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classObstacleBasedSampler.html#aef417266683af31192faa863091ab4bc">ObstacleBasedSampler</a> (<a class="el" href="classXMLNode.html">XMLNode</a> &amp;_node)</td></tr>
-<tr class="separator:aef417266683af31192faa863091ab4bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a75aa1c7d4521178f3ad587ba5eeba3e8"><td class="memItemLeft" align="right" valign="top">virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classObstacleBasedSampler.html#a75aa1c7d4521178f3ad587ba5eeba3e8">~ObstacleBasedSampler</a> ()=default</td></tr>
-<tr class="separator:a75aa1c7d4521178f3ad587ba5eeba3e8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab9a5be98c25b4f7d5b521e0e4a0c3295"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classObstacleBasedSampler.html#ab9a5be98c25b4f7d5b521e0e4a0c3295">ObstacleBasedSampler</a> (string _vcLabel=&quot;&quot;, string _dmLabel=&quot;&quot;, int _free=1, int _coll=0, double _step=0, bool _useBBX=true, string _pointSelection=&quot;cspace&quot;)</td></tr>
+<tr class="separator:ab9a5be98c25b4f7d5b521e0e4a0c3295"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae666d3097f3da80295fd49a30b13517f"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classObstacleBasedSampler.html#ae666d3097f3da80295fd49a30b13517f">ObstacleBasedSampler</a> (<a class="el" href="classXMLNode.html">XMLNode</a> &amp;_node)</td></tr>
+<tr class="separator:ae666d3097f3da80295fd49a30b13517f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad0a180639ccc2e9622e94600021e20e8"><td class="memItemLeft" align="right" valign="top">virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classObstacleBasedSampler.html#ad0a180639ccc2e9622e94600021e20e8">~ObstacleBasedSampler</a> ()=default</td></tr>
+<tr class="separator:ad0a180639ccc2e9622e94600021e20e8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr><td colspan="2"><div class="groupHeader">MPBaseObject Overrides</div></td></tr>
-<tr class="memitem:a5622a13e0e3a4950d4e7dc990a98fec1"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classObstacleBasedSampler.html#a5622a13e0e3a4950d4e7dc990a98fec1">Print</a> (ostream &amp;_os) const override</td></tr>
-<tr class="separator:a5622a13e0e3a4950d4e7dc990a98fec1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="inherit_header pub_methods_classSamplerMethod"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classSamplerMethod')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="classSamplerMethod.html">SamplerMethod&lt; MPTraits &gt;</a></td></tr>
-<tr class="memitem:ab9c4442b87f7344ffad5d74bc3cfcda2 inherit pub_methods_classSamplerMethod"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classSamplerMethod.html#ab9c4442b87f7344ffad5d74bc3cfcda2">SamplerMethod</a> ()=default</td></tr>
-<tr class="separator:ab9c4442b87f7344ffad5d74bc3cfcda2 inherit pub_methods_classSamplerMethod"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a64ebd1fd1e4a1370f561dff3c3e32d5d inherit pub_methods_classSamplerMethod"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classSamplerMethod.html#a64ebd1fd1e4a1370f561dff3c3e32d5d">SamplerMethod</a> (<a class="el" href="classXMLNode.html">XMLNode</a> &amp;_node)</td></tr>
-<tr class="separator:a64ebd1fd1e4a1370f561dff3c3e32d5d inherit pub_methods_classSamplerMethod"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aad31025ca4884b55956c59bf157f51a6 inherit pub_methods_classSamplerMethod"><td class="memItemLeft" align="right" valign="top">virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classSamplerMethod.html#aad31025ca4884b55956c59bf157f51a6">~SamplerMethod</a> ()=0</td></tr>
-<tr class="separator:aad31025ca4884b55956c59bf157f51a6 inherit pub_methods_classSamplerMethod"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af3e00ddf21d407d950d3bd577ef9bf5e inherit pub_methods_classSamplerMethod"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classSamplerMethod.html#af3e00ddf21d407d950d3bd577ef9bf5e">Sample</a> (size_t _numNodes, size_t _maxAttempts, const <a class="el" href="classBoundary.html">Boundary</a> *const _boundary, <a class="el" href="classSamplerMethod.html#a6807e745714d459c1614dae289f9b52a">OutputIterator</a> _valid, <a class="el" href="classSamplerMethod.html#a6807e745714d459c1614dae289f9b52a">OutputIterator</a> _invalid)</td></tr>
-<tr class="separator:af3e00ddf21d407d950d3bd577ef9bf5e inherit pub_methods_classSamplerMethod"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa70a536c4082295c4aeb62f64e6e41e2 inherit pub_methods_classSamplerMethod"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classSamplerMethod.html#aa70a536c4082295c4aeb62f64e6e41e2">Sample</a> (size_t _numNodes, size_t _maxAttempts, const <a class="el" href="classBoundary.html">Boundary</a> *const _boundary, <a class="el" href="classSamplerMethod.html#a6807e745714d459c1614dae289f9b52a">OutputIterator</a> _valid)</td></tr>
-<tr class="memdesc:aa70a536c4082295c4aeb62f64e6e41e2 inherit pub_methods_classSamplerMethod"><td class="mdescLeft">&#160;</td><td class="mdescRight">This is an overloaded member function, provided for convenience. It differs from the above function only in what argument(s) it accepts.  <a href="classSamplerMethod.html#aa70a536c4082295c4aeb62f64e6e41e2">More...</a><br /></td></tr>
-<tr class="separator:aa70a536c4082295c4aeb62f64e6e41e2 inherit pub_methods_classSamplerMethod"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afd151326aecad9a60f58f7302252fc0b inherit pub_methods_classSamplerMethod"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classSamplerMethod.html#afd151326aecad9a60f58f7302252fc0b">Sample</a> (size_t _numNodes, size_t _maxAttempts, const <a class="el" href="classBoundary.html">Boundary</a> *const _robotBoundary, const <a class="el" href="classBoundary.html">Boundary</a> *const _eeBoundary, <a class="el" href="classSamplerMethod.html#a6807e745714d459c1614dae289f9b52a">OutputIterator</a> _valid, <a class="el" href="classSamplerMethod.html#a6807e745714d459c1614dae289f9b52a">OutputIterator</a> _invalid)</td></tr>
-<tr class="separator:afd151326aecad9a60f58f7302252fc0b inherit pub_methods_classSamplerMethod"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a910e13fb75a521042b4d81adda1897ba inherit pub_methods_classSamplerMethod"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classSamplerMethod.html#a910e13fb75a521042b4d81adda1897ba">Sample</a> (size_t _numNodes, size_t _maxAttempts, const <a class="el" href="classBoundary.html">Boundary</a> *const _robotBoundary, const <a class="el" href="classBoundary.html">Boundary</a> *const _eeBoundary, <a class="el" href="classSamplerMethod.html#a6807e745714d459c1614dae289f9b52a">OutputIterator</a> _valid)</td></tr>
-<tr class="separator:a910e13fb75a521042b4d81adda1897ba inherit pub_methods_classSamplerMethod"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad96d5ca883ae4f3926556c356b9e8aea inherit pub_methods_classSamplerMethod"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classSamplerMethod.html#ad96d5ca883ae4f3926556c356b9e8aea">Filter</a> (<a class="el" href="classSamplerMethod.html#ab80209ec071b82f6481e4499bbc5a809">InputIterator</a> _first, <a class="el" href="classSamplerMethod.html#ab80209ec071b82f6481e4499bbc5a809">InputIterator</a> _last, size_t _maxAttempts, const <a class="el" href="classBoundary.html">Boundary</a> *const _boundary, <a class="el" href="classSamplerMethod.html#a6807e745714d459c1614dae289f9b52a">OutputIterator</a> _valid, <a class="el" href="classSamplerMethod.html#a6807e745714d459c1614dae289f9b52a">OutputIterator</a> _invalid)</td></tr>
-<tr class="separator:ad96d5ca883ae4f3926556c356b9e8aea inherit pub_methods_classSamplerMethod"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abe709354d7aba5a4af4abd10dafc16a9 inherit pub_methods_classSamplerMethod"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classSamplerMethod.html#abe709354d7aba5a4af4abd10dafc16a9">Filter</a> (<a class="el" href="classSamplerMethod.html#ab80209ec071b82f6481e4499bbc5a809">InputIterator</a> _first, <a class="el" href="classSamplerMethod.html#ab80209ec071b82f6481e4499bbc5a809">InputIterator</a> _last, size_t _maxAttempts, const <a class="el" href="classBoundary.html">Boundary</a> *const _boundary, <a class="el" href="classSamplerMethod.html#a6807e745714d459c1614dae289f9b52a">OutputIterator</a> _valid)</td></tr>
-<tr class="separator:abe709354d7aba5a4af4abd10dafc16a9 inherit pub_methods_classSamplerMethod"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6cee62e80eaee88be4db2eb00fc08af5 inherit pub_methods_classSamplerMethod"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classSamplerMethod.html#a6cee62e80eaee88be4db2eb00fc08af5">Sample</a> (size_t _numNodes, size_t _maxAttempts, const <a class="el" href="classBoundary.html">Boundary</a> *const _boundary, <a class="el" href="classSamplerMethod.html#aafbce92d8b2a139923d48f3decfd6e20">GroupOutputIterator</a> _valid, <a class="el" href="classSamplerMethod.html#aafbce92d8b2a139923d48f3decfd6e20">GroupOutputIterator</a> _invalid)</td></tr>
-<tr class="separator:a6cee62e80eaee88be4db2eb00fc08af5 inherit pub_methods_classSamplerMethod"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af69f938e5fe535511c1f2711e50b197c inherit pub_methods_classSamplerMethod"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classSamplerMethod.html#af69f938e5fe535511c1f2711e50b197c">Sample</a> (size_t _numNodes, size_t _maxAttempts, const <a class="el" href="classBoundary.html">Boundary</a> *const _boundary, <a class="el" href="classSamplerMethod.html#aafbce92d8b2a139923d48f3decfd6e20">GroupOutputIterator</a> _valid)</td></tr>
-<tr class="separator:af69f938e5fe535511c1f2711e50b197c inherit pub_methods_classSamplerMethod"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a08debb83ce96bf435c410eb1a5fb28df inherit pub_methods_classSamplerMethod"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classSamplerMethod.html#a08debb83ce96bf435c410eb1a5fb28df">Sample</a> (size_t _numNodes, size_t _maxAttempts, const <a class="el" href="classSamplerMethod.html#a4540a2cc61ca8994b9beb6814a9ec4d3">BoundaryMap</a> &amp;_boundary, <a class="el" href="classSamplerMethod.html#aafbce92d8b2a139923d48f3decfd6e20">GroupOutputIterator</a> _valid, <a class="el" href="classSamplerMethod.html#aafbce92d8b2a139923d48f3decfd6e20">GroupOutputIterator</a> _invalid)</td></tr>
-<tr class="separator:a08debb83ce96bf435c410eb1a5fb28df inherit pub_methods_classSamplerMethod"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a45b69b0c7d464393e0f7f17297a3c9da inherit pub_methods_classSamplerMethod"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classSamplerMethod.html#a45b69b0c7d464393e0f7f17297a3c9da">Sample</a> (size_t _numNodes, size_t _maxAttempts, const <a class="el" href="classSamplerMethod.html#a4540a2cc61ca8994b9beb6814a9ec4d3">BoundaryMap</a> &amp;_boundary, <a class="el" href="classSamplerMethod.html#aafbce92d8b2a139923d48f3decfd6e20">GroupOutputIterator</a> _valid)</td></tr>
-<tr class="separator:a45b69b0c7d464393e0f7f17297a3c9da inherit pub_methods_classSamplerMethod"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a871ccd29e379eb45afa651339770fe43 inherit pub_methods_classSamplerMethod"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classSamplerMethod.html#a871ccd29e379eb45afa651339770fe43">Filter</a> (<a class="el" href="classSamplerMethod.html#acf81379597982ad148e944f6328446f1">GroupInputIterator</a> _first, <a class="el" href="classSamplerMethod.html#acf81379597982ad148e944f6328446f1">GroupInputIterator</a> _last, size_t _maxAttempts, const <a class="el" href="classBoundary.html">Boundary</a> *const _boundary, <a class="el" href="classSamplerMethod.html#aafbce92d8b2a139923d48f3decfd6e20">GroupOutputIterator</a> _valid, <a class="el" href="classSamplerMethod.html#aafbce92d8b2a139923d48f3decfd6e20">GroupOutputIterator</a> _invalid)</td></tr>
-<tr class="separator:a871ccd29e379eb45afa651339770fe43 inherit pub_methods_classSamplerMethod"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7361d04bf4e87dad173f5017f4fdd486 inherit pub_methods_classSamplerMethod"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classSamplerMethod.html#a7361d04bf4e87dad173f5017f4fdd486">Filter</a> (<a class="el" href="classSamplerMethod.html#acf81379597982ad148e944f6328446f1">GroupInputIterator</a> _first, <a class="el" href="classSamplerMethod.html#acf81379597982ad148e944f6328446f1">GroupInputIterator</a> _last, size_t _maxAttempts, const <a class="el" href="classBoundary.html">Boundary</a> *const _boundary, <a class="el" href="classSamplerMethod.html#aafbce92d8b2a139923d48f3decfd6e20">GroupOutputIterator</a> _valid)</td></tr>
-<tr class="memdesc:a7361d04bf4e87dad173f5017f4fdd486 inherit pub_methods_classSamplerMethod"><td class="mdescLeft">&#160;</td><td class="mdescRight">This is an overloaded member function, provided for convenience. It differs from the above function only in what argument(s) it accepts.  <a href="classSamplerMethod.html#a7361d04bf4e87dad173f5017f4fdd486">More...</a><br /></td></tr>
-<tr class="separator:a7361d04bf4e87dad173f5017f4fdd486 inherit pub_methods_classSamplerMethod"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="inherit_header pub_methods_classMPBaseObject"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classMPBaseObject')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="classMPBaseObject.html">MPBaseObject&lt; MPTraits &gt;</a></td></tr>
-<tr class="memitem:ab41feac6877c3756dafbadb9916c792e inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#ab41feac6877c3756dafbadb9916c792e">MPBaseObject</a> (const std::string &amp;_label=&quot;&quot;, const std::string &amp;_name=&quot;&quot;, bool _debug=false)</td></tr>
-<tr class="separator:ab41feac6877c3756dafbadb9916c792e inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aea8003b827f45d6408545d97ce17a83f inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#aea8003b827f45d6408545d97ce17a83f">MPBaseObject</a> (<a class="el" href="classXMLNode.html">XMLNode</a> &amp;_node)</td></tr>
-<tr class="separator:aea8003b827f45d6408545d97ce17a83f inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aba2b23fa368330ad7263eacb83dc1743 inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#aba2b23fa368330ad7263eacb83dc1743">~MPBaseObject</a> ()=default</td></tr>
-<tr class="separator:aba2b23fa368330ad7263eacb83dc1743 inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a09f350ffaec14a28dd2ced1b86ef9d9e inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a09f350ffaec14a28dd2ced1b86ef9d9e">Initialize</a> ()</td></tr>
-<tr class="separator:a09f350ffaec14a28dd2ced1b86ef9d9e inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aca769e4192d06bd3f4926bf94b9c055a inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#aca769e4192d06bd3f4926bf94b9c055a">GetName</a> () const</td></tr>
-<tr class="memdesc:aca769e4192d06bd3f4926bf94b9c055a inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the class name for this object.  <a href="classMPBaseObject.html#aca769e4192d06bd3f4926bf94b9c055a">More...</a><br /></td></tr>
-<tr class="separator:aca769e4192d06bd3f4926bf94b9c055a inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad34623e8bcd57c846f8ffe6afe6b427e inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#ad34623e8bcd57c846f8ffe6afe6b427e">GetLabel</a> () const</td></tr>
-<tr class="memdesc:ad34623e8bcd57c846f8ffe6afe6b427e inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the unique label for this object.  <a href="classMPBaseObject.html#ad34623e8bcd57c846f8ffe6afe6b427e">More...</a><br /></td></tr>
-<tr class="separator:ad34623e8bcd57c846f8ffe6afe6b427e inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a57acdb0b1cc5dd45a2a0c08df914bfcf inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a57acdb0b1cc5dd45a2a0c08df914bfcf">GetNameAndLabel</a> () const</td></tr>
-<tr class="memdesc:a57acdb0b1cc5dd45a2a0c08df914bfcf inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the unique string identifier for this object "m_name::m_label".  <a href="classMPBaseObject.html#a57acdb0b1cc5dd45a2a0c08df914bfcf">More...</a><br /></td></tr>
-<tr class="separator:a57acdb0b1cc5dd45a2a0c08df914bfcf inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac5466caf986b06ca41f1fea274dc47c6 inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#ac5466caf986b06ca41f1fea274dc47c6">SetLabel</a> (const std::string &amp;)</td></tr>
-<tr class="memdesc:ac5466caf986b06ca41f1fea274dc47c6 inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the unique label for this object.  <a href="classMPBaseObject.html#ac5466caf986b06ca41f1fea274dc47c6">More...</a><br /></td></tr>
-<tr class="separator:ac5466caf986b06ca41f1fea274dc47c6 inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a697d226daf5f6a2745ef88d2d61a596e inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a697d226daf5f6a2745ef88d2d61a596e">SetMPLibrary</a> (<a class="el" href="classMPBaseObject.html#a15b148d41701475b3b94c4a163157f89">MPLibrary</a> *) noexcept</td></tr>
-<tr class="memdesc:a697d226daf5f6a2745ef88d2d61a596e inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the owning MPLibrary.  <a href="classMPBaseObject.html#a697d226daf5f6a2745ef88d2d61a596e">More...</a><br /></td></tr>
-<tr class="separator:a697d226daf5f6a2745ef88d2d61a596e inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a521b705712b8e7d7197493e411226bda inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classMPBaseObject.html#a15b148d41701475b3b94c4a163157f89">MPLibrary</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a521b705712b8e7d7197493e411226bda">GetMPLibrary</a> () const noexcept</td></tr>
-<tr class="memdesc:a521b705712b8e7d7197493e411226bda inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the owning MPLibrary.  <a href="classMPBaseObject.html#a521b705712b8e7d7197493e411226bda">More...</a><br /></td></tr>
-<tr class="separator:a521b705712b8e7d7197493e411226bda inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abfed57adb1cd6e9e6e75062427bc9f7e inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#abfed57adb1cd6e9e6e75062427bc9f7e">IsRunning</a> () const noexcept</td></tr>
-<tr class="memdesc:abfed57adb1cd6e9e6e75062427bc9f7e inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Check the library's running flag.  <a href="classMPBaseObject.html#abfed57adb1cd6e9e6e75062427bc9f7e">More...</a><br /></td></tr>
-<tr class="separator:abfed57adb1cd6e9e6e75062427bc9f7e inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8a20d7ea8dcfacc2900cc1862c4f8cc8 inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classMPBaseObject.html#ae603ce0344d2bf534dd9623be0625f90">DistanceMetricPointer</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a8a20d7ea8dcfacc2900cc1862c4f8cc8">GetDistanceMetric</a> (const std::string &amp;) const noexcept</td></tr>
-<tr class="memdesc:a8a20d7ea8dcfacc2900cc1862c4f8cc8 inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get a distance metric by label from the owning MPLibrary.  <a href="classMPBaseObject.html#a8a20d7ea8dcfacc2900cc1862c4f8cc8">More...</a><br /></td></tr>
-<tr class="separator:a8a20d7ea8dcfacc2900cc1862c4f8cc8 inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2342194564152d2f990223cb62844cbe inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classMPBaseObject.html#a96b8dadf9f28e3513e2bd059dfc0344a">ValidityCheckerPointer</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a2342194564152d2f990223cb62844cbe">GetValidityChecker</a> (const std::string &amp;) const noexcept</td></tr>
-<tr class="memdesc:a2342194564152d2f990223cb62844cbe inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get a validity checker by label from the owning MPLibrary.  <a href="classMPBaseObject.html#a2342194564152d2f990223cb62844cbe">More...</a><br /></td></tr>
-<tr class="separator:a2342194564152d2f990223cb62844cbe inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a66ba952d43ffc95ff56c889096e9a7d3 inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classMPBaseObject.html#a931bd7b8fd743b7f7313046659866113">NeighborhoodFinderPointer</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a66ba952d43ffc95ff56c889096e9a7d3">GetNeighborhoodFinder</a> (const std::string &amp;) const noexcept</td></tr>
-<tr class="memdesc:a66ba952d43ffc95ff56c889096e9a7d3 inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get a neighborhood finder by label from the owning MPLibrary.  <a href="classMPBaseObject.html#a66ba952d43ffc95ff56c889096e9a7d3">More...</a><br /></td></tr>
-<tr class="separator:a66ba952d43ffc95ff56c889096e9a7d3 inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9a2dff0888a2ea84bb38a556654a4701 inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classMPBaseObject.html#aaf3cea401f0b3ade1d909fc527246a08">SamplerPointer</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a9a2dff0888a2ea84bb38a556654a4701">GetSampler</a> (const std::string &amp;) const noexcept</td></tr>
-<tr class="memdesc:a9a2dff0888a2ea84bb38a556654a4701 inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get a sampler by label from the owning MPLibrary.  <a href="classMPBaseObject.html#a9a2dff0888a2ea84bb38a556654a4701">More...</a><br /></td></tr>
-<tr class="separator:a9a2dff0888a2ea84bb38a556654a4701 inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a23231ec80cf4dc6103fcbe6967611de8 inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classMPBaseObject.html#ae65bc5a79747909242133bf6d00c993d">LocalPlannerPointer</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a23231ec80cf4dc6103fcbe6967611de8">GetLocalPlanner</a> (const std::string &amp;) const noexcept</td></tr>
-<tr class="memdesc:a23231ec80cf4dc6103fcbe6967611de8 inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get a local planner by label from the owning MPLibrary.  <a href="classMPBaseObject.html#a23231ec80cf4dc6103fcbe6967611de8">More...</a><br /></td></tr>
-<tr class="separator:a23231ec80cf4dc6103fcbe6967611de8 inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae1c21a5eb19462d7fbc1d9d7ad44a337 inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classMPBaseObject.html#a5eb6e9a2ee24cc60b2280c8d7a86dcf4">ExtenderPointer</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#ae1c21a5eb19462d7fbc1d9d7ad44a337">GetExtender</a> (const std::string &amp;) const noexcept</td></tr>
-<tr class="memdesc:ae1c21a5eb19462d7fbc1d9d7ad44a337 inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get an extender by label from the owning MPLibrary.  <a href="classMPBaseObject.html#ae1c21a5eb19462d7fbc1d9d7ad44a337">More...</a><br /></td></tr>
-<tr class="separator:ae1c21a5eb19462d7fbc1d9d7ad44a337 inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2ba42a3ccbbe218c0ad5212b320647e2 inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classMPBaseObject.html#a9d8006e11da7b3e4d5ac8eee9c6af86a">PathModifierPointer</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a2ba42a3ccbbe218c0ad5212b320647e2">GetPathModifier</a> (const std::string &amp;) const noexcept</td></tr>
-<tr class="memdesc:a2ba42a3ccbbe218c0ad5212b320647e2 inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get a path modifier by label from the owning MPLibrary.  <a href="classMPBaseObject.html#a2ba42a3ccbbe218c0ad5212b320647e2">More...</a><br /></td></tr>
-<tr class="separator:a2ba42a3ccbbe218c0ad5212b320647e2 inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6ddd6d5795d5b1aa4e2205f758796d7b inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classMPBaseObject.html#a52cc83324263c010e07a138ab3515f5e">EdgeValidityCheckerPointer</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a6ddd6d5795d5b1aa4e2205f758796d7b">GetEdgeValidityChecker</a> (const std::string &amp;) const noexcept</td></tr>
-<tr class="memdesc:a6ddd6d5795d5b1aa4e2205f758796d7b inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get a path modifier by label from the owning MPLibrary.  <a href="classMPBaseObject.html#a6ddd6d5795d5b1aa4e2205f758796d7b">More...</a><br /></td></tr>
-<tr class="separator:a6ddd6d5795d5b1aa4e2205f758796d7b inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a03a0372144b35900bd3783787d8ece23 inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classMPBaseObject.html#a97ef39036c999f2b85697d651a3709b6">ConnectorPointer</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a03a0372144b35900bd3783787d8ece23">GetConnector</a> (const std::string &amp;) const noexcept</td></tr>
-<tr class="memdesc:a03a0372144b35900bd3783787d8ece23 inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get a connector by label from the owning MPLibrary.  <a href="classMPBaseObject.html#a03a0372144b35900bd3783787d8ece23">More...</a><br /></td></tr>
-<tr class="separator:a03a0372144b35900bd3783787d8ece23 inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6ae69fab32bc22d9a40183c2ddcad070 inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classMPBaseObject.html#a1033e6b77f138cd5b0c963b85c2102c8">MetricPointer</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a6ae69fab32bc22d9a40183c2ddcad070">GetMetric</a> (const std::string &amp;) const noexcept</td></tr>
-<tr class="memdesc:a6ae69fab32bc22d9a40183c2ddcad070 inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get a metric by label from the owning MPLibrary.  <a href="classMPBaseObject.html#a6ae69fab32bc22d9a40183c2ddcad070">More...</a><br /></td></tr>
-<tr class="separator:a6ae69fab32bc22d9a40183c2ddcad070 inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af952ecbef2818c807056dd1ee562dfa2 inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classMPBaseObject.html#ab26d90683e004e04060c66490f1abef9">MapEvaluatorPointer</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#af952ecbef2818c807056dd1ee562dfa2">GetMapEvaluator</a> (const std::string &amp;) const noexcept</td></tr>
-<tr class="memdesc:af952ecbef2818c807056dd1ee562dfa2 inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get a map evaluator by label from the owning MPLibrary.  <a href="classMPBaseObject.html#af952ecbef2818c807056dd1ee562dfa2">More...</a><br /></td></tr>
-<tr class="separator:af952ecbef2818c807056dd1ee562dfa2 inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab5db3fdc249613226e1bfb9748d7e419 inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classMPBaseObject.html#a6c55c91725735d71ee1b6e07d0da9427">MPStrategyPointer</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#ab5db3fdc249613226e1bfb9748d7e419">GetMPStrategy</a> (const std::string &amp;) const noexcept</td></tr>
-<tr class="memdesc:ab5db3fdc249613226e1bfb9748d7e419 inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get a strategy by label from the owning MPLibrary.  <a href="classMPBaseObject.html#ab5db3fdc249613226e1bfb9748d7e419">More...</a><br /></td></tr>
-<tr class="separator:ab5db3fdc249613226e1bfb9748d7e419 inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3cec62eec53411129380a74d357189c7 inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classMPTraits.html#a84f80ad50e0574d4255ed210b92b4070">MPTraits::MPTools</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a3cec62eec53411129380a74d357189c7">GetMPTools</a> () const noexcept</td></tr>
-<tr class="memdesc:a3cec62eec53411129380a74d357189c7 inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the MPTools container from the owning MPLibrary.  <a href="classMPBaseObject.html#a3cec62eec53411129380a74d357189c7">More...</a><br /></td></tr>
-<tr class="separator:a3cec62eec53411129380a74d357189c7 inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2a18befe086f47ce26c93f08c4364397 inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classMPProblem.html">MPProblem</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a2a18befe086f47ce26c93f08c4364397">GetMPProblem</a> () const noexcept</td></tr>
-<tr class="memdesc:a2a18befe086f47ce26c93f08c4364397 inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the library's current <a class="el" href="classMPProblem.html">MPProblem</a>.  <a href="classMPBaseObject.html#a2a18befe086f47ce26c93f08c4364397">More...</a><br /></td></tr>
-<tr class="separator:a2a18befe086f47ce26c93f08c4364397 inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a84dfed53d5b39787d1a9fa44f9a833e1 inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classEnvironment.html">Environment</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a84dfed53d5b39787d1a9fa44f9a833e1">GetEnvironment</a> () const noexcept</td></tr>
-<tr class="memdesc:a84dfed53d5b39787d1a9fa44f9a833e1 inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the current environment.  <a href="classMPBaseObject.html#a84dfed53d5b39787d1a9fa44f9a833e1">More...</a><br /></td></tr>
-<tr class="separator:a84dfed53d5b39787d1a9fa44f9a833e1 inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa73f5579b26a2391c5ef414cc3132602 inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classMPTask.html">MPTask</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#aa73f5579b26a2391c5ef414cc3132602">GetTask</a> () const noexcept</td></tr>
-<tr class="memdesc:aa73f5579b26a2391c5ef414cc3132602 inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the current task.  <a href="classMPBaseObject.html#aa73f5579b26a2391c5ef414cc3132602">More...</a><br /></td></tr>
-<tr class="separator:aa73f5579b26a2391c5ef414cc3132602 inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3eee19a7be268bff7c7497be8d0239a7 inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classGroupTask.html">GroupTask</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a3eee19a7be268bff7c7497be8d0239a7">GetGroupTask</a> () const noexcept</td></tr>
-<tr class="memdesc:a3eee19a7be268bff7c7497be8d0239a7 inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the current group task.  <a href="classMPBaseObject.html#a3eee19a7be268bff7c7497be8d0239a7">More...</a><br /></td></tr>
-<tr class="separator:a3eee19a7be268bff7c7497be8d0239a7 inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5c683b92e92fdc2c410b73ddecaf0ca5 inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classMPBaseObject.html#a6aa70c68a7aa522d074423ca469a4611">MPSolution</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a5c683b92e92fdc2c410b73ddecaf0ca5">GetMPSolution</a> () const noexcept</td></tr>
-<tr class="separator:a5c683b92e92fdc2c410b73ddecaf0ca5 inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab12b31f78fe0ead35bd1696477d6252b inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classMPBaseObject.html#afdfe49d535de506c369d53c3f35c4861">RoadmapType</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#ab12b31f78fe0ead35bd1696477d6252b">GetRoadmap</a> (<a class="el" href="classRobot.html">Robot</a> *const _r=nullptr) const noexcept</td></tr>
-<tr class="memdesc:ab12b31f78fe0ead35bd1696477d6252b inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the current free-space roadmap.  <a href="classMPBaseObject.html#ab12b31f78fe0ead35bd1696477d6252b">More...</a><br /></td></tr>
-<tr class="separator:ab12b31f78fe0ead35bd1696477d6252b inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4a2e6b0792de5ad4fea367b800c9104c inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classMPBaseObject.html#ad06ed006429808c548ad2c88d7362652">GroupRoadmapType</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a4a2e6b0792de5ad4fea367b800c9104c">GetGroupRoadmap</a> (<a class="el" href="classRobotGroup.html">RobotGroup</a> *const _g=nullptr) const noexcept</td></tr>
-<tr class="memdesc:a4a2e6b0792de5ad4fea367b800c9104c inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the current free-space group roadmap.  <a href="classMPBaseObject.html#a4a2e6b0792de5ad4fea367b800c9104c">More...</a><br /></td></tr>
-<tr class="separator:a4a2e6b0792de5ad4fea367b800c9104c inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa3b66c53b09bfd09ea85985e9594d612 inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classMPBaseObject.html#afdfe49d535de506c369d53c3f35c4861">RoadmapType</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#aa3b66c53b09bfd09ea85985e9594d612">GetBlockRoadmap</a> (<a class="el" href="classRobot.html">Robot</a> *const _r=nullptr) const noexcept</td></tr>
-<tr class="memdesc:aa3b66c53b09bfd09ea85985e9594d612 inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the current obstacle-space roadmap.  <a href="classMPBaseObject.html#aa3b66c53b09bfd09ea85985e9594d612">More...</a><br /></td></tr>
-<tr class="separator:aa3b66c53b09bfd09ea85985e9594d612 inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5eed9cee8bec2a10ccb807252dd48b48 inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classMPBaseObject.html#aea9c3bca368d8ed3aaf2687b159ca561">Path</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a5eed9cee8bec2a10ccb807252dd48b48">GetPath</a> (<a class="el" href="classRobot.html">Robot</a> *const _r=nullptr) const noexcept</td></tr>
-<tr class="memdesc:a5eed9cee8bec2a10ccb807252dd48b48 inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the current best path.  <a href="classMPBaseObject.html#a5eed9cee8bec2a10ccb807252dd48b48">More...</a><br /></td></tr>
-<tr class="separator:a5eed9cee8bec2a10ccb807252dd48b48 inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5876ac36ce7e8c97564a464ee25ca45e inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classMPBaseObject.html#a171d332ff9e7d24af57efce2db4d7c60">GroupPath</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a5876ac36ce7e8c97564a464ee25ca45e">GetGroupPath</a> (<a class="el" href="classRobotGroup.html">RobotGroup</a> *const _g=nullptr) const noexcept</td></tr>
-<tr class="memdesc:a5876ac36ce7e8c97564a464ee25ca45e inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the current best group path.  <a href="classMPBaseObject.html#a5876ac36ce7e8c97564a464ee25ca45e">More...</a><br /></td></tr>
-<tr class="separator:a5876ac36ce7e8c97564a464ee25ca45e inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a375e4d95326ba7b0d9751aafd0e5e38f inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classStatClass.html">StatClass</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a375e4d95326ba7b0d9751aafd0e5e38f">GetStatClass</a> () const noexcept</td></tr>
-<tr class="memdesc:a375e4d95326ba7b0d9751aafd0e5e38f inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the current <a class="el" href="classStatClass.html">StatClass</a>.  <a href="classMPBaseObject.html#a375e4d95326ba7b0d9751aafd0e5e38f">More...</a><br /></td></tr>
-<tr class="separator:a375e4d95326ba7b0d9751aafd0e5e38f inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a62a7924385a0268299e26f77e0a10f3d inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classMPBaseObject.html#a1e5ed51342d87f6e4ca22300478d1754">LocalObstacleMap</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a62a7924385a0268299e26f77e0a10f3d">GetLocalObstacleMap</a> () const noexcept</td></tr>
-<tr class="memdesc:a62a7924385a0268299e26f77e0a10f3d inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the local obstacle map.  <a href="classMPBaseObject.html#a62a7924385a0268299e26f77e0a10f3d">More...</a><br /></td></tr>
-<tr class="separator:a62a7924385a0268299e26f77e0a10f3d inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acb4f647ec2b50698e0c4bb676f1d103e inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classMPBaseObject.html#a59a6f8a70e1e9d3bc80ed1709f37adb9">GoalTracker</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#acb4f647ec2b50698e0c4bb676f1d103e">GetGoalTracker</a> () const noexcept</td></tr>
-<tr class="memdesc:acb4f647ec2b50698e0c4bb676f1d103e inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the goal tracker.  <a href="classMPBaseObject.html#acb4f647ec2b50698e0c4bb676f1d103e">More...</a><br /></td></tr>
-<tr class="separator:acb4f647ec2b50698e0c4bb676f1d103e inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8e1c72416040ffaa4f2473b0bff17d9e"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classObstacleBasedSampler.html#a8e1c72416040ffaa4f2473b0bff17d9e">Print</a> (ostream &amp;_os) const override</td></tr>
+<tr class="separator:a8e1c72416040ffaa4f2473b0bff17d9e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="inherit_header pub_methods_classSamplerMethod"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classSamplerMethod')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="classSamplerMethod.html">SamplerMethod</a></td></tr>
+<tr class="memitem:a36bbf5f98d952b0feec38e4961eacb60 inherit pub_methods_classSamplerMethod"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classSamplerMethod.html#a36bbf5f98d952b0feec38e4961eacb60">SamplerMethod</a> ()=default</td></tr>
+<tr class="separator:a36bbf5f98d952b0feec38e4961eacb60 inherit pub_methods_classSamplerMethod"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2048574fd46691a2fbadff23b5ac12c2 inherit pub_methods_classSamplerMethod"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classSamplerMethod.html#a2048574fd46691a2fbadff23b5ac12c2">SamplerMethod</a> (<a class="el" href="classXMLNode.html">XMLNode</a> &amp;_node)</td></tr>
+<tr class="separator:a2048574fd46691a2fbadff23b5ac12c2 inherit pub_methods_classSamplerMethod"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7425beb78efe71a47f7086713ae9e681 inherit pub_methods_classSamplerMethod"><td class="memItemLeft" align="right" valign="top">virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classSamplerMethod.html#a7425beb78efe71a47f7086713ae9e681">~SamplerMethod</a> ()=0</td></tr>
+<tr class="separator:a7425beb78efe71a47f7086713ae9e681 inherit pub_methods_classSamplerMethod"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a93f731d73ed5f838737e450b07031e2c inherit pub_methods_classSamplerMethod"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classSamplerMethod.html#a93f731d73ed5f838737e450b07031e2c">Sample</a> (size_t _numNodes, size_t _maxAttempts, const <a class="el" href="classBoundary.html">Boundary</a> *const _boundary, <a class="el" href="classSamplerMethod.html#a87095150c507a033d88a8f3de99b70ce">OutputIterator</a> _valid, <a class="el" href="classSamplerMethod.html#a87095150c507a033d88a8f3de99b70ce">OutputIterator</a> _invalid)</td></tr>
+<tr class="separator:a93f731d73ed5f838737e450b07031e2c inherit pub_methods_classSamplerMethod"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad83a1674031e57439b6a01f2c80cbdf6 inherit pub_methods_classSamplerMethod"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classSamplerMethod.html#ad83a1674031e57439b6a01f2c80cbdf6">Sample</a> (size_t _numNodes, size_t _maxAttempts, const <a class="el" href="classBoundary.html">Boundary</a> *const _boundary, <a class="el" href="classSamplerMethod.html#a87095150c507a033d88a8f3de99b70ce">OutputIterator</a> _valid)</td></tr>
+<tr class="memdesc:ad83a1674031e57439b6a01f2c80cbdf6 inherit pub_methods_classSamplerMethod"><td class="mdescLeft">&#160;</td><td class="mdescRight">This is an overloaded member function, provided for convenience. It differs from the above function only in what argument(s) it accepts.  <a href="classSamplerMethod.html#ad83a1674031e57439b6a01f2c80cbdf6">More...</a><br /></td></tr>
+<tr class="separator:ad83a1674031e57439b6a01f2c80cbdf6 inherit pub_methods_classSamplerMethod"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8345e3a12f62693cc8e72f5a63528117 inherit pub_methods_classSamplerMethod"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classSamplerMethod.html#a8345e3a12f62693cc8e72f5a63528117">Sample</a> (size_t _numNodes, size_t _maxAttempts, const <a class="el" href="classBoundary.html">Boundary</a> *const _robotBoundary, const <a class="el" href="classBoundary.html">Boundary</a> *const _eeBoundary, <a class="el" href="classSamplerMethod.html#a87095150c507a033d88a8f3de99b70ce">OutputIterator</a> _valid, <a class="el" href="classSamplerMethod.html#a87095150c507a033d88a8f3de99b70ce">OutputIterator</a> _invalid)</td></tr>
+<tr class="separator:a8345e3a12f62693cc8e72f5a63528117 inherit pub_methods_classSamplerMethod"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8d1999e4f3b7ec4b70cf68e4581ca480 inherit pub_methods_classSamplerMethod"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classSamplerMethod.html#a8d1999e4f3b7ec4b70cf68e4581ca480">Sample</a> (size_t _numNodes, size_t _maxAttempts, const <a class="el" href="classBoundary.html">Boundary</a> *const _robotBoundary, const <a class="el" href="classBoundary.html">Boundary</a> *const _eeBoundary, <a class="el" href="classSamplerMethod.html#a87095150c507a033d88a8f3de99b70ce">OutputIterator</a> _valid)</td></tr>
+<tr class="separator:a8d1999e4f3b7ec4b70cf68e4581ca480 inherit pub_methods_classSamplerMethod"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8a2494b15fd4815d8d0aed9c2f1e21e0 inherit pub_methods_classSamplerMethod"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classSamplerMethod.html#a8a2494b15fd4815d8d0aed9c2f1e21e0">Filter</a> (<a class="el" href="classSamplerMethod.html#a914d9dc5ae04bf467c3116c058da0757">InputIterator</a> _first, <a class="el" href="classSamplerMethod.html#a914d9dc5ae04bf467c3116c058da0757">InputIterator</a> _last, size_t _maxAttempts, const <a class="el" href="classBoundary.html">Boundary</a> *const _boundary, <a class="el" href="classSamplerMethod.html#a87095150c507a033d88a8f3de99b70ce">OutputIterator</a> _valid, <a class="el" href="classSamplerMethod.html#a87095150c507a033d88a8f3de99b70ce">OutputIterator</a> _invalid)</td></tr>
+<tr class="separator:a8a2494b15fd4815d8d0aed9c2f1e21e0 inherit pub_methods_classSamplerMethod"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4c939aa5b5f15b052ae10ee693c0d832 inherit pub_methods_classSamplerMethod"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classSamplerMethod.html#a4c939aa5b5f15b052ae10ee693c0d832">Filter</a> (<a class="el" href="classSamplerMethod.html#a914d9dc5ae04bf467c3116c058da0757">InputIterator</a> _first, <a class="el" href="classSamplerMethod.html#a914d9dc5ae04bf467c3116c058da0757">InputIterator</a> _last, size_t _maxAttempts, const <a class="el" href="classBoundary.html">Boundary</a> *const _boundary, <a class="el" href="classSamplerMethod.html#a87095150c507a033d88a8f3de99b70ce">OutputIterator</a> _valid)</td></tr>
+<tr class="separator:a4c939aa5b5f15b052ae10ee693c0d832 inherit pub_methods_classSamplerMethod"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad0a233df53eadb9e0b3dfdda54022cc6 inherit pub_methods_classSamplerMethod"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classSamplerMethod.html#ad0a233df53eadb9e0b3dfdda54022cc6">Sample</a> (size_t _numNodes, size_t _maxAttempts, const <a class="el" href="classBoundary.html">Boundary</a> *const _boundary, <a class="el" href="classSamplerMethod.html#ad47218ae4716273df3d40038e0396db9">GroupOutputIterator</a> _valid, <a class="el" href="classSamplerMethod.html#ad47218ae4716273df3d40038e0396db9">GroupOutputIterator</a> _invalid)</td></tr>
+<tr class="separator:ad0a233df53eadb9e0b3dfdda54022cc6 inherit pub_methods_classSamplerMethod"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a15a385b1549cfec52bd5d4dfa141ac92 inherit pub_methods_classSamplerMethod"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classSamplerMethod.html#a15a385b1549cfec52bd5d4dfa141ac92">Sample</a> (size_t _numNodes, size_t _maxAttempts, const <a class="el" href="classBoundary.html">Boundary</a> *const _boundary, <a class="el" href="classSamplerMethod.html#ad47218ae4716273df3d40038e0396db9">GroupOutputIterator</a> _valid)</td></tr>
+<tr class="separator:a15a385b1549cfec52bd5d4dfa141ac92 inherit pub_methods_classSamplerMethod"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a55caf338ff53cd621cd822b654fc78a3 inherit pub_methods_classSamplerMethod"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classSamplerMethod.html#a55caf338ff53cd621cd822b654fc78a3">Sample</a> (size_t _numNodes, size_t _maxAttempts, const <a class="el" href="classSamplerMethod.html#a84f6944c978c28770334f8d519c18d9f">BoundaryMap</a> &amp;_boundary, <a class="el" href="classSamplerMethod.html#ad47218ae4716273df3d40038e0396db9">GroupOutputIterator</a> _valid, <a class="el" href="classSamplerMethod.html#ad47218ae4716273df3d40038e0396db9">GroupOutputIterator</a> _invalid)</td></tr>
+<tr class="separator:a55caf338ff53cd621cd822b654fc78a3 inherit pub_methods_classSamplerMethod"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a55fad6b023615cd5bc5fcb79b427c6c4 inherit pub_methods_classSamplerMethod"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classSamplerMethod.html#a55fad6b023615cd5bc5fcb79b427c6c4">Sample</a> (size_t _numNodes, size_t _maxAttempts, const <a class="el" href="classSamplerMethod.html#a84f6944c978c28770334f8d519c18d9f">BoundaryMap</a> &amp;_boundary, <a class="el" href="classSamplerMethod.html#ad47218ae4716273df3d40038e0396db9">GroupOutputIterator</a> _valid)</td></tr>
+<tr class="separator:a55fad6b023615cd5bc5fcb79b427c6c4 inherit pub_methods_classSamplerMethod"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa96765b4b33ba1f2cf164a8ae1d3a352 inherit pub_methods_classSamplerMethod"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classSamplerMethod.html#aa96765b4b33ba1f2cf164a8ae1d3a352">Filter</a> (<a class="el" href="classSamplerMethod.html#a5d655628d748e2ea08d813a3d73bd4c0">GroupInputIterator</a> _first, <a class="el" href="classSamplerMethod.html#a5d655628d748e2ea08d813a3d73bd4c0">GroupInputIterator</a> _last, size_t _maxAttempts, const <a class="el" href="classBoundary.html">Boundary</a> *const _boundary, <a class="el" href="classSamplerMethod.html#ad47218ae4716273df3d40038e0396db9">GroupOutputIterator</a> _valid, <a class="el" href="classSamplerMethod.html#ad47218ae4716273df3d40038e0396db9">GroupOutputIterator</a> _invalid)</td></tr>
+<tr class="separator:aa96765b4b33ba1f2cf164a8ae1d3a352 inherit pub_methods_classSamplerMethod"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adc111c9b7a0ba55fb0408c743be04665 inherit pub_methods_classSamplerMethod"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classSamplerMethod.html#adc111c9b7a0ba55fb0408c743be04665">Filter</a> (<a class="el" href="classSamplerMethod.html#a5d655628d748e2ea08d813a3d73bd4c0">GroupInputIterator</a> _first, <a class="el" href="classSamplerMethod.html#a5d655628d748e2ea08d813a3d73bd4c0">GroupInputIterator</a> _last, size_t _maxAttempts, const <a class="el" href="classBoundary.html">Boundary</a> *const _boundary, <a class="el" href="classSamplerMethod.html#ad47218ae4716273df3d40038e0396db9">GroupOutputIterator</a> _valid)</td></tr>
+<tr class="memdesc:adc111c9b7a0ba55fb0408c743be04665 inherit pub_methods_classSamplerMethod"><td class="mdescLeft">&#160;</td><td class="mdescRight">This is an overloaded member function, provided for convenience. It differs from the above function only in what argument(s) it accepts.  <a href="classSamplerMethod.html#adc111c9b7a0ba55fb0408c743be04665">More...</a><br /></td></tr>
+<tr class="separator:adc111c9b7a0ba55fb0408c743be04665 inherit pub_methods_classSamplerMethod"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="inherit_header pub_methods_classMPBaseObject"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classMPBaseObject')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="classMPBaseObject.html">MPBaseObject</a></td></tr>
+<tr class="memitem:aa2708cce0ac2268d85f267e3b5ef6f75 inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#aa2708cce0ac2268d85f267e3b5ef6f75">MPBaseObject</a> (const std::string &amp;_label=&quot;&quot;, const std::string &amp;_name=&quot;&quot;, bool _debug=false)</td></tr>
+<tr class="separator:aa2708cce0ac2268d85f267e3b5ef6f75 inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adc4763406edae04123c8bbf88552262c inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#adc4763406edae04123c8bbf88552262c">MPBaseObject</a> (<a class="el" href="classXMLNode.html">XMLNode</a> &amp;_node)</td></tr>
+<tr class="separator:adc4763406edae04123c8bbf88552262c inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a934cee21460217e9ee749be04daa43ca inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a934cee21460217e9ee749be04daa43ca">~MPBaseObject</a> ()</td></tr>
+<tr class="separator:a934cee21460217e9ee749be04daa43ca inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5d4ca9ff414d5e534de09475cd101154 inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a5d4ca9ff414d5e534de09475cd101154">Initialize</a> ()</td></tr>
+<tr class="separator:a5d4ca9ff414d5e534de09475cd101154 inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a558b2ecf6fa413c62cfe962f86931bb0 inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a558b2ecf6fa413c62cfe962f86931bb0">GetName</a> () const</td></tr>
+<tr class="memdesc:a558b2ecf6fa413c62cfe962f86931bb0 inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the class name for this object.  <a href="classMPBaseObject.html#a558b2ecf6fa413c62cfe962f86931bb0">More...</a><br /></td></tr>
+<tr class="separator:a558b2ecf6fa413c62cfe962f86931bb0 inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a09d9d52b0645e52f2b2c4c60ca35da23 inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a09d9d52b0645e52f2b2c4c60ca35da23">GetLabel</a> () const</td></tr>
+<tr class="memdesc:a09d9d52b0645e52f2b2c4c60ca35da23 inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the unique label for this object.  <a href="classMPBaseObject.html#a09d9d52b0645e52f2b2c4c60ca35da23">More...</a><br /></td></tr>
+<tr class="separator:a09d9d52b0645e52f2b2c4c60ca35da23 inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2b157f30833aa474087e148589bf5e22 inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a2b157f30833aa474087e148589bf5e22">GetNameAndLabel</a> () const</td></tr>
+<tr class="memdesc:a2b157f30833aa474087e148589bf5e22 inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the unique string identifier for this object "m_name::m_label".  <a href="classMPBaseObject.html#a2b157f30833aa474087e148589bf5e22">More...</a><br /></td></tr>
+<tr class="separator:a2b157f30833aa474087e148589bf5e22 inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a77356657dd763bee634d8a0471481f2d inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a77356657dd763bee634d8a0471481f2d">SetLabel</a> (const std::string &amp;)</td></tr>
+<tr class="memdesc:a77356657dd763bee634d8a0471481f2d inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the unique label for this object.  <a href="classMPBaseObject.html#a77356657dd763bee634d8a0471481f2d">More...</a><br /></td></tr>
+<tr class="separator:a77356657dd763bee634d8a0471481f2d inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a592f29cfa73851e9a58e38f57a4b8320 inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a592f29cfa73851e9a58e38f57a4b8320">SetMPLibrary</a> (<a class="el" href="classMPLibrary.html">MPLibrary</a> *) noexcept</td></tr>
+<tr class="memdesc:a592f29cfa73851e9a58e38f57a4b8320 inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the owning <a class="el" href="classMPLibrary.html">MPLibrary</a>.  <a href="classMPBaseObject.html#a592f29cfa73851e9a58e38f57a4b8320">More...</a><br /></td></tr>
+<tr class="separator:a592f29cfa73851e9a58e38f57a4b8320 inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5acf803bf6c3b104dd6e6e786d91717a inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classMPLibrary.html">MPLibrary</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a5acf803bf6c3b104dd6e6e786d91717a">GetMPLibrary</a> () const noexcept</td></tr>
+<tr class="memdesc:a5acf803bf6c3b104dd6e6e786d91717a inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the owning <a class="el" href="classMPLibrary.html">MPLibrary</a>.  <a href="classMPBaseObject.html#a5acf803bf6c3b104dd6e6e786d91717a">More...</a><br /></td></tr>
+<tr class="separator:a5acf803bf6c3b104dd6e6e786d91717a inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a52d98c486c75d70ad376235e79cb44f5 inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a52d98c486c75d70ad376235e79cb44f5">IsRunning</a> () const noexcept</td></tr>
+<tr class="memdesc:a52d98c486c75d70ad376235e79cb44f5 inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Check the library's running flag.  <a href="classMPBaseObject.html#a52d98c486c75d70ad376235e79cb44f5">More...</a><br /></td></tr>
+<tr class="separator:a52d98c486c75d70ad376235e79cb44f5 inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a932da44c88897bfd523666d0399380d8 inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classMPProblem.html">MPProblem</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a932da44c88897bfd523666d0399380d8">GetMPProblem</a> () const noexcept</td></tr>
+<tr class="memdesc:a932da44c88897bfd523666d0399380d8 inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the library's current <a class="el" href="classMPProblem.html">MPProblem</a>.  <a href="classMPBaseObject.html#a932da44c88897bfd523666d0399380d8">More...</a><br /></td></tr>
+<tr class="separator:a932da44c88897bfd523666d0399380d8 inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad5dcc061d806577d532ba3af66200a2d inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classEnvironment.html">Environment</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#ad5dcc061d806577d532ba3af66200a2d">GetEnvironment</a> () const noexcept</td></tr>
+<tr class="memdesc:ad5dcc061d806577d532ba3af66200a2d inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the current environment.  <a href="classMPBaseObject.html#ad5dcc061d806577d532ba3af66200a2d">More...</a><br /></td></tr>
+<tr class="separator:ad5dcc061d806577d532ba3af66200a2d inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab307334bc71d1dcf11342269f078eac1 inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classMPTask.html">MPTask</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#ab307334bc71d1dcf11342269f078eac1">GetTask</a> () const noexcept</td></tr>
+<tr class="memdesc:ab307334bc71d1dcf11342269f078eac1 inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the current task.  <a href="classMPBaseObject.html#ab307334bc71d1dcf11342269f078eac1">More...</a><br /></td></tr>
+<tr class="separator:ab307334bc71d1dcf11342269f078eac1 inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa63ee9f0d8ff9e328fcdea583d77c8cf inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classGroupTask.html">GroupTask</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#aa63ee9f0d8ff9e328fcdea583d77c8cf">GetGroupTask</a> () const noexcept</td></tr>
+<tr class="memdesc:aa63ee9f0d8ff9e328fcdea583d77c8cf inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the current group task.  <a href="classMPBaseObject.html#aa63ee9f0d8ff9e328fcdea583d77c8cf">More...</a><br /></td></tr>
+<tr class="separator:aa63ee9f0d8ff9e328fcdea583d77c8cf inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a326ab667c0b568c9439b270c968ae8aa inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classMPSolutionType.html">MPSolutionType</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a326ab667c0b568c9439b270c968ae8aa">GetMPSolution</a> () const noexcept</td></tr>
+<tr class="separator:a326ab667c0b568c9439b270c968ae8aa inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8fbcaf43d2a3cdf47256d66d49b8e605 inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classMPBaseObject.html#a1cb9a08003cc7620b1534bdf69ceb1a4">RoadmapType</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a8fbcaf43d2a3cdf47256d66d49b8e605">GetRoadmap</a> (<a class="el" href="classRobot.html">Robot</a> *const _r=nullptr) const noexcept</td></tr>
+<tr class="memdesc:a8fbcaf43d2a3cdf47256d66d49b8e605 inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the current free-space roadmap.  <a href="classMPBaseObject.html#a8fbcaf43d2a3cdf47256d66d49b8e605">More...</a><br /></td></tr>
+<tr class="separator:a8fbcaf43d2a3cdf47256d66d49b8e605 inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2afa7f1c1885544859f84f5ca3148fdd inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classMPBaseObject.html#a062f6026973104069b7e08eb23a890f7">GroupRoadmapType</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a2afa7f1c1885544859f84f5ca3148fdd">GetGroupRoadmap</a> (<a class="el" href="classRobotGroup.html">RobotGroup</a> *const _g=nullptr) const noexcept</td></tr>
+<tr class="memdesc:a2afa7f1c1885544859f84f5ca3148fdd inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the current free-space group roadmap.  <a href="classMPBaseObject.html#a2afa7f1c1885544859f84f5ca3148fdd">More...</a><br /></td></tr>
+<tr class="separator:a2afa7f1c1885544859f84f5ca3148fdd inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aada7dc60e619e7b9b43f15af99d498b5 inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classMPBaseObject.html#a1cb9a08003cc7620b1534bdf69ceb1a4">RoadmapType</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#aada7dc60e619e7b9b43f15af99d498b5">GetBlockRoadmap</a> (<a class="el" href="classRobot.html">Robot</a> *const _r=nullptr) const noexcept</td></tr>
+<tr class="memdesc:aada7dc60e619e7b9b43f15af99d498b5 inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the current obstacle-space roadmap.  <a href="classMPBaseObject.html#aada7dc60e619e7b9b43f15af99d498b5">More...</a><br /></td></tr>
+<tr class="separator:aada7dc60e619e7b9b43f15af99d498b5 inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a62dc6d67728f7047afd1ec70f8e675f1 inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classPath.html">Path</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a62dc6d67728f7047afd1ec70f8e675f1">GetPath</a> (<a class="el" href="classRobot.html">Robot</a> *const _r=nullptr) const noexcept</td></tr>
+<tr class="separator:a62dc6d67728f7047afd1ec70f8e675f1 inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a283e10c17ea82cf54ad2baf3c1785d6b inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classGroupPath.html">GroupPath</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a283e10c17ea82cf54ad2baf3c1785d6b">GetGroupPath</a> (<a class="el" href="classRobotGroup.html">RobotGroup</a> *const _g=nullptr) const noexcept</td></tr>
+<tr class="memdesc:a283e10c17ea82cf54ad2baf3c1785d6b inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the current best group path.  <a href="classMPBaseObject.html#a283e10c17ea82cf54ad2baf3c1785d6b">More...</a><br /></td></tr>
+<tr class="separator:a283e10c17ea82cf54ad2baf3c1785d6b inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4c845feb2a9a84b8b1d1a8fddd945365 inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classStatClass.html">StatClass</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a4c845feb2a9a84b8b1d1a8fddd945365">GetStatClass</a> () const noexcept</td></tr>
+<tr class="memdesc:a4c845feb2a9a84b8b1d1a8fddd945365 inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the current <a class="el" href="classStatClass.html">StatClass</a>.  <a href="classMPBaseObject.html#a4c845feb2a9a84b8b1d1a8fddd945365">More...</a><br /></td></tr>
+<tr class="separator:a4c845feb2a9a84b8b1d1a8fddd945365 inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a302e33446886aa07a7b7b3277672ce2d inherit pub_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classLocalObstacleMap.html">LocalObstacleMap</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a302e33446886aa07a7b7b3277672ce2d">GetLocalObstacleMap</a> () const noexcept</td></tr>
+<tr class="memdesc:a302e33446886aa07a7b7b3277672ce2d inherit pub_methods_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the local obstacle map.  <a href="classMPBaseObject.html#a302e33446886aa07a7b7b3277672ce2d">More...</a><br /></td></tr>
+<tr class="separator:a302e33446886aa07a7b7b3277672ce2d inherit pub_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-methods"></a>
 Protected Member Functions</h2></td></tr>
 <tr><td colspan="2"><div class="groupHeader">Helpers</div></td></tr>
-<tr class="memitem:a3d3e69603680d9e98a6c503dab8af1f8"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classObstacleBasedSampler.html#a3d3e69603680d9e98a6c503dab8af1f8">Sampler</a> (<a class="el" href="classObstacleBasedSampler.html#ae29183b307268cb54f4758177089b1e2">CfgType</a> &amp;_cfg, const <a class="el" href="classBoundary.html">Boundary</a> *const _boundary, vector&lt; <a class="el" href="classObstacleBasedSampler.html#ae29183b307268cb54f4758177089b1e2">CfgType</a> &gt; &amp;_result, vector&lt; <a class="el" href="classObstacleBasedSampler.html#ae29183b307268cb54f4758177089b1e2">CfgType</a> &gt; &amp;_collision)</td></tr>
-<tr class="separator:a3d3e69603680d9e98a6c503dab8af1f8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a41a524265b43ad0ed6e9392d488e4196"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classObstacleBasedSampler.html#a41a524265b43ad0ed6e9392d488e4196">Sampler</a> (<a class="el" href="classObstacleBasedSampler.html#acc9180d551cb314c543e4e5534862cf5">GroupCfgType</a> &amp;_cfg, const <a class="el" href="classBoundary.html">Boundary</a> *const _boundary, vector&lt; <a class="el" href="classObstacleBasedSampler.html#acc9180d551cb314c543e4e5534862cf5">GroupCfgType</a> &gt; &amp;_result, vector&lt; <a class="el" href="classObstacleBasedSampler.html#acc9180d551cb314c543e4e5534862cf5">GroupCfgType</a> &gt; &amp;_invalid)</td></tr>
-<tr class="separator:a41a524265b43ad0ed6e9392d488e4196"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac989f5b7c76e435bc77a90397babf76e"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classObstacleBasedSampler.html#ac989f5b7c76e435bc77a90397babf76e">Sampler</a> (<a class="el" href="classObstacleBasedSampler.html#acc9180d551cb314c543e4e5534862cf5">GroupCfgType</a> &amp;_cfg, const <a class="el" href="classObstacleBasedSampler.html#aba589fdb421ec8578751dc8b95b3dd30">BoundaryMap</a> &amp;_boundaryMap, vector&lt; <a class="el" href="classObstacleBasedSampler.html#acc9180d551cb314c543e4e5534862cf5">GroupCfgType</a> &gt; &amp;_result, vector&lt; <a class="el" href="classObstacleBasedSampler.html#acc9180d551cb314c543e4e5534862cf5">GroupCfgType</a> &gt; &amp;_collision)</td></tr>
-<tr class="separator:ac989f5b7c76e435bc77a90397babf76e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3a172dfad91d35c8a4d39f67a9f4f965"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classObstacleBasedSampler.html#a3a172dfad91d35c8a4d39f67a9f4f965">GenerateShells</a> (const <a class="el" href="classBoundary.html">Boundary</a> *const _boundary, <a class="el" href="classObstacleBasedSampler.html#ae29183b307268cb54f4758177089b1e2">CfgType</a> &amp;_cFree, <a class="el" href="classObstacleBasedSampler.html#ae29183b307268cb54f4758177089b1e2">CfgType</a> &amp;_cColl, <a class="el" href="classObstacleBasedSampler.html#ae29183b307268cb54f4758177089b1e2">CfgType</a> &amp;_incr, vector&lt; <a class="el" href="classObstacleBasedSampler.html#ae29183b307268cb54f4758177089b1e2">CfgType</a> &gt; &amp;_result, vector&lt; <a class="el" href="classObstacleBasedSampler.html#ae29183b307268cb54f4758177089b1e2">CfgType</a> &gt; &amp;_collision)</td></tr>
-<tr class="separator:a3a172dfad91d35c8a4d39f67a9f4f965"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8dd40c795409d1c917858b0ec0469d3e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classObstacleBasedSampler.html#a8dd40c795409d1c917858b0ec0469d3e">GenerateShells</a> (const <a class="el" href="classBoundary.html">Boundary</a> *const _boundary, <a class="el" href="classObstacleBasedSampler.html#acc9180d551cb314c543e4e5534862cf5">GroupCfgType</a> &amp;_cFree, <a class="el" href="classObstacleBasedSampler.html#acc9180d551cb314c543e4e5534862cf5">GroupCfgType</a> &amp;_cColl, <a class="el" href="classObstacleBasedSampler.html#acc9180d551cb314c543e4e5534862cf5">GroupCfgType</a> &amp;_incr, vector&lt; <a class="el" href="classObstacleBasedSampler.html#acc9180d551cb314c543e4e5534862cf5">GroupCfgType</a> &gt; &amp;_result, vector&lt; <a class="el" href="classObstacleBasedSampler.html#acc9180d551cb314c543e4e5534862cf5">GroupCfgType</a> &gt; &amp;_collision)</td></tr>
-<tr class="separator:a8dd40c795409d1c917858b0ec0469d3e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1774ba653414e73f03f91871edf767fa"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classObstacleBasedSampler.html#a1774ba653414e73f03f91871edf767fa">GenerateShells</a> (const <a class="el" href="classObstacleBasedSampler.html#aba589fdb421ec8578751dc8b95b3dd30">BoundaryMap</a> &amp;_boundaryMap, <a class="el" href="classObstacleBasedSampler.html#acc9180d551cb314c543e4e5534862cf5">GroupCfgType</a> &amp;_cFree, <a class="el" href="classObstacleBasedSampler.html#acc9180d551cb314c543e4e5534862cf5">GroupCfgType</a> &amp;_cColl, <a class="el" href="classObstacleBasedSampler.html#acc9180d551cb314c543e4e5534862cf5">GroupCfgType</a> &amp;_incr, vector&lt; <a class="el" href="classObstacleBasedSampler.html#acc9180d551cb314c543e4e5534862cf5">GroupCfgType</a> &gt; &amp;_result, vector&lt; <a class="el" href="classObstacleBasedSampler.html#acc9180d551cb314c543e4e5534862cf5">GroupCfgType</a> &gt; &amp;_collision)</td></tr>
-<tr class="separator:a1774ba653414e73f03f91871edf767fa"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0cd412f8fd005c5720c5c8ceb42f245a"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classObstacleBasedSampler.html#ae29183b307268cb54f4758177089b1e2">CfgType</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classObstacleBasedSampler.html#a0cd412f8fd005c5720c5c8ceb42f245a">ChooseCenterOfMass</a> (<a class="el" href="classMultiBody.html">MultiBody</a> *_mBody)</td></tr>
-<tr class="separator:a0cd412f8fd005c5720c5c8ceb42f245a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5718d8ea9367548e88e7c509b0a0e3e7"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classObstacleBasedSampler.html#ae29183b307268cb54f4758177089b1e2">CfgType</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classObstacleBasedSampler.html#a5718d8ea9367548e88e7c509b0a0e3e7">ChooseRandomVertex</a> (<a class="el" href="classMultiBody.html">MultiBody</a> *_mBody)</td></tr>
-<tr class="separator:a5718d8ea9367548e88e7c509b0a0e3e7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad6e720f112298a87f7210eebec5b708d"><td class="memItemLeft" align="right" valign="top">Vector3d&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classObstacleBasedSampler.html#ad6e720f112298a87f7210eebec5b708d">ChoosePointOnTriangle</a> (Vector3d _p, Vector3d _q, Vector3d _r)</td></tr>
-<tr class="separator:ad6e720f112298a87f7210eebec5b708d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a263ef202a7396c88d4aab77aa5b46413"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classObstacleBasedSampler.html#ae29183b307268cb54f4758177089b1e2">CfgType</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classObstacleBasedSampler.html#a263ef202a7396c88d4aab77aa5b46413">ChooseRandomWeightedTriangle</a> (<a class="el" href="classMultiBody.html">MultiBody</a> *_mBody)</td></tr>
-<tr class="separator:a263ef202a7396c88d4aab77aa5b46413"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a795cdab3e94bfbe5d6109d971b9225fd"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classObstacleBasedSampler.html#ae29183b307268cb54f4758177089b1e2">CfgType</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classObstacleBasedSampler.html#a795cdab3e94bfbe5d6109d971b9225fd">ChooseRandomTriangle</a> (<a class="el" href="classMultiBody.html">MultiBody</a> *_mBody)</td></tr>
-<tr class="separator:a795cdab3e94bfbe5d6109d971b9225fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a96c6aba6838d2fa8c16a52e43d541b4d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classObstacleBasedSampler.html#ae29183b307268cb54f4758177089b1e2">CfgType</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classObstacleBasedSampler.html#a96c6aba6838d2fa8c16a52e43d541b4d">ChooseExtremeVertex</a> (<a class="el" href="classMultiBody.html">MultiBody</a> *_mBody)</td></tr>
-<tr class="separator:a96c6aba6838d2fa8c16a52e43d541b4d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4e1dbee69aee02a1afb20ec16884479f"><td class="memItemLeft" align="right" valign="top">virtual <a class="el" href="classObstacleBasedSampler.html#ae29183b307268cb54f4758177089b1e2">CfgType</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classObstacleBasedSampler.html#a4e1dbee69aee02a1afb20ec16884479f">ChooseASample</a> (<a class="el" href="classObstacleBasedSampler.html#ae29183b307268cb54f4758177089b1e2">CfgType</a> &amp;_cfg)</td></tr>
-<tr class="separator:a4e1dbee69aee02a1afb20ec16884479f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8ab4330caa92aa4ebfaa3f4a99ccd549"><td class="memItemLeft" align="right" valign="top">virtual <a class="el" href="classObstacleBasedSampler.html#acc9180d551cb314c543e4e5534862cf5">GroupCfgType</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classObstacleBasedSampler.html#a8ab4330caa92aa4ebfaa3f4a99ccd549">ChooseASample</a> (<a class="el" href="classObstacleBasedSampler.html#acc9180d551cb314c543e4e5534862cf5">GroupCfgType</a> &amp;_cfg)</td></tr>
-<tr class="separator:a8ab4330caa92aa4ebfaa3f4a99ccd549"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac20d1acf0b6ca9e9e501e61a14c64798"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classObstacleBasedSampler.html#ae29183b307268cb54f4758177089b1e2">CfgType</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classObstacleBasedSampler.html#ac20d1acf0b6ca9e9e501e61a14c64798">ChooseASampleOtherMethods</a> ()</td></tr>
-<tr class="separator:ac20d1acf0b6ca9e9e501e61a14c64798"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2867e511c50d2009bfa78cff4de0722e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classObstacleBasedSampler.html#ae29183b307268cb54f4758177089b1e2">CfgType</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classObstacleBasedSampler.html#a2867e511c50d2009bfa78cff4de0722e">GetCfgWithParams</a> (const Vector3d &amp;_v)</td></tr>
-<tr class="separator:a2867e511c50d2009bfa78cff4de0722e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a89fd069815fb4e8733ab7c54259a0e92"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classObstacleBasedSampler.html#a89fd069815fb4e8733ab7c54259a0e92">GroupInBounds</a> (<a class="el" href="classObstacleBasedSampler.html#acc9180d551cb314c543e4e5534862cf5">GroupCfgType</a> &amp;_groupCfg, const <a class="el" href="classObstacleBasedSampler.html#aba589fdb421ec8578751dc8b95b3dd30">BoundaryMap</a> &amp;_boundaryMap)</td></tr>
-<tr class="separator:a89fd069815fb4e8733ab7c54259a0e92"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8cd44d2f645bd23f57159e710c756c05"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classObstacleBasedSampler.html#a8cd44d2f645bd23f57159e710c756c05">GroupInBounds</a> (<a class="el" href="classObstacleBasedSampler.html#acc9180d551cb314c543e4e5534862cf5">GroupCfgType</a> &amp;_groupCfg, const <a class="el" href="classBoundary.html">Boundary</a> *const _boundary)</td></tr>
-<tr class="separator:a8cd44d2f645bd23f57159e710c756c05"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="inherit_header pro_methods_classSamplerMethod"><td colspan="2" onclick="javascript:toggleInherit('pro_methods_classSamplerMethod')"><img src="closed.png" alt="-"/>&#160;Protected Member Functions inherited from <a class="el" href="classSamplerMethod.html">SamplerMethod&lt; MPTraits &gt;</a></td></tr>
-<tr class="memitem:a513d553fce6ead8a4d96bea7a781c82e inherit pro_methods_classSamplerMethod"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classSamplerMethod.html#a513d553fce6ead8a4d96bea7a781c82e">Sampler</a> (<a class="el" href="classSamplerMethod.html#a57fa988ca5258a4898fa3aade3333bf3">CfgType</a> &amp;_cfg, const <a class="el" href="classBoundary.html">Boundary</a> *const _robotBoundary, const <a class="el" href="classBoundary.html">Boundary</a> *const _eeBoundary, std::vector&lt; <a class="el" href="classSamplerMethod.html#a57fa988ca5258a4898fa3aade3333bf3">CfgType</a> &gt; &amp;_valid, std::vector&lt; <a class="el" href="classSamplerMethod.html#a57fa988ca5258a4898fa3aade3333bf3">CfgType</a> &gt; &amp;_invalid)</td></tr>
-<tr class="separator:a513d553fce6ead8a4d96bea7a781c82e inherit pro_methods_classSamplerMethod"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="inherit_header pro_methods_classMPBaseObject"><td colspan="2" onclick="javascript:toggleInherit('pro_methods_classMPBaseObject')"><img src="closed.png" alt="-"/>&#160;Protected Member Functions inherited from <a class="el" href="classMPBaseObject.html">MPBaseObject&lt; MPTraits &gt;</a></td></tr>
-<tr class="memitem:ab59d82cd734f77fdc17eddb8517461da inherit pro_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#ab59d82cd734f77fdc17eddb8517461da">SetName</a> (const std::string &amp;_s)</td></tr>
-<tr class="separator:ab59d82cd734f77fdc17eddb8517461da inherit pro_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acf158aa0efa6679a73995f429d768a0b inherit pro_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#acf158aa0efa6679a73995f429d768a0b">GetBaseFilename</a> () const</td></tr>
-<tr class="separator:acf158aa0efa6679a73995f429d768a0b inherit pro_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a045258976012b21f59471ae64ee9f2a2"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classObstacleBasedSampler.html#a045258976012b21f59471ae64ee9f2a2">Sampler</a> (<a class="el" href="classCfg.html">Cfg</a> &amp;_cfg, const <a class="el" href="classBoundary.html">Boundary</a> *const _boundary, std::vector&lt; <a class="el" href="classCfg.html">Cfg</a> &gt; &amp;_result, std::vector&lt; <a class="el" href="classCfg.html">Cfg</a> &gt; &amp;_collision)</td></tr>
+<tr class="separator:a045258976012b21f59471ae64ee9f2a2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3527d451aefed76964a253a206785021"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classObstacleBasedSampler.html#a3527d451aefed76964a253a206785021">Sampler</a> (<a class="el" href="classMPBaseObject.html#aad3c1d1dccb02cfd48da4438a2b2923b">GroupCfgType</a> &amp;_cfg, const <a class="el" href="classBoundary.html">Boundary</a> *const _boundary, std::vector&lt; <a class="el" href="classMPBaseObject.html#aad3c1d1dccb02cfd48da4438a2b2923b">GroupCfgType</a> &gt; &amp;_result, std::vector&lt; <a class="el" href="classMPBaseObject.html#aad3c1d1dccb02cfd48da4438a2b2923b">GroupCfgType</a> &gt; &amp;_invalid)</td></tr>
+<tr class="separator:a3527d451aefed76964a253a206785021"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae14b645b208c464ec8f3de3bca9b334f"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classObstacleBasedSampler.html#ae14b645b208c464ec8f3de3bca9b334f">Sampler</a> (<a class="el" href="classMPBaseObject.html#aad3c1d1dccb02cfd48da4438a2b2923b">GroupCfgType</a> &amp;_cfg, const <a class="el" href="classObstacleBasedSampler.html#a03f8d39dcf9c90ff3db2250e31a088c4">BoundaryMap</a> &amp;_boundaryMap, std::vector&lt; <a class="el" href="classMPBaseObject.html#aad3c1d1dccb02cfd48da4438a2b2923b">GroupCfgType</a> &gt; &amp;_result, std::vector&lt; <a class="el" href="classMPBaseObject.html#aad3c1d1dccb02cfd48da4438a2b2923b">GroupCfgType</a> &gt; &amp;_collision)</td></tr>
+<tr class="separator:ae14b645b208c464ec8f3de3bca9b334f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a179d7b8c69b87b37c6a1d916ad6e0f58"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classObstacleBasedSampler.html#a179d7b8c69b87b37c6a1d916ad6e0f58">GenerateShells</a> (const <a class="el" href="classBoundary.html">Boundary</a> *const _boundary, <a class="el" href="classCfg.html">Cfg</a> &amp;_cFree, <a class="el" href="classCfg.html">Cfg</a> &amp;_cColl, <a class="el" href="classCfg.html">Cfg</a> &amp;_incr, std::vector&lt; <a class="el" href="classCfg.html">Cfg</a> &gt; &amp;_result, std::vector&lt; <a class="el" href="classCfg.html">Cfg</a> &gt; &amp;_collision)</td></tr>
+<tr class="separator:a179d7b8c69b87b37c6a1d916ad6e0f58"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae24db1fca140dc98fa9357e926fb0262"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classObstacleBasedSampler.html#ae24db1fca140dc98fa9357e926fb0262">GenerateShells</a> (const <a class="el" href="classBoundary.html">Boundary</a> *const _boundary, <a class="el" href="classMPBaseObject.html#aad3c1d1dccb02cfd48da4438a2b2923b">GroupCfgType</a> &amp;_cFree, <a class="el" href="classMPBaseObject.html#aad3c1d1dccb02cfd48da4438a2b2923b">GroupCfgType</a> &amp;_cColl, <a class="el" href="classMPBaseObject.html#aad3c1d1dccb02cfd48da4438a2b2923b">GroupCfgType</a> &amp;_incr, std::vector&lt; <a class="el" href="classMPBaseObject.html#aad3c1d1dccb02cfd48da4438a2b2923b">GroupCfgType</a> &gt; &amp;_result, std::vector&lt; <a class="el" href="classMPBaseObject.html#aad3c1d1dccb02cfd48da4438a2b2923b">GroupCfgType</a> &gt; &amp;_collision)</td></tr>
+<tr class="separator:ae24db1fca140dc98fa9357e926fb0262"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7544ddea5e726395070cdbda58ca69a8"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classObstacleBasedSampler.html#a7544ddea5e726395070cdbda58ca69a8">GenerateShells</a> (const <a class="el" href="classObstacleBasedSampler.html#a03f8d39dcf9c90ff3db2250e31a088c4">BoundaryMap</a> &amp;_boundaryMap, <a class="el" href="classMPBaseObject.html#aad3c1d1dccb02cfd48da4438a2b2923b">GroupCfgType</a> &amp;_cFree, <a class="el" href="classMPBaseObject.html#aad3c1d1dccb02cfd48da4438a2b2923b">GroupCfgType</a> &amp;_cColl, <a class="el" href="classMPBaseObject.html#aad3c1d1dccb02cfd48da4438a2b2923b">GroupCfgType</a> &amp;_incr, std::vector&lt; <a class="el" href="classMPBaseObject.html#aad3c1d1dccb02cfd48da4438a2b2923b">GroupCfgType</a> &gt; &amp;_result, std::vector&lt; <a class="el" href="classMPBaseObject.html#aad3c1d1dccb02cfd48da4438a2b2923b">GroupCfgType</a> &gt; &amp;_collision)</td></tr>
+<tr class="separator:a7544ddea5e726395070cdbda58ca69a8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4b4fcb4b730c416224986d7075de798d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classCfg.html">Cfg</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classObstacleBasedSampler.html#a4b4fcb4b730c416224986d7075de798d">ChooseCenterOfMass</a> (<a class="el" href="classMultiBody.html">MultiBody</a> *_mBody)</td></tr>
+<tr class="separator:a4b4fcb4b730c416224986d7075de798d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4e6021eea446e1ad501d584f44db739f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classCfg.html">Cfg</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classObstacleBasedSampler.html#a4e6021eea446e1ad501d584f44db739f">ChooseRandomVertex</a> (<a class="el" href="classMultiBody.html">MultiBody</a> *_mBody)</td></tr>
+<tr class="separator:a4e6021eea446e1ad501d584f44db739f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6ca9a2832b7aa0f5293bce5843b7b5a9"><td class="memItemLeft" align="right" valign="top">Vector3d&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classObstacleBasedSampler.html#a6ca9a2832b7aa0f5293bce5843b7b5a9">ChoosePointOnTriangle</a> (Vector3d _p, Vector3d _q, Vector3d _r)</td></tr>
+<tr class="separator:a6ca9a2832b7aa0f5293bce5843b7b5a9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a839e5b2529aba3a1cdd463d87fb8a3f5"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classCfg.html">Cfg</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classObstacleBasedSampler.html#a839e5b2529aba3a1cdd463d87fb8a3f5">ChooseRandomWeightedTriangle</a> (<a class="el" href="classMultiBody.html">MultiBody</a> *_mBody)</td></tr>
+<tr class="separator:a839e5b2529aba3a1cdd463d87fb8a3f5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5d32d75157aee1c01de620b1732855e4"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classCfg.html">Cfg</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classObstacleBasedSampler.html#a5d32d75157aee1c01de620b1732855e4">ChooseRandomTriangle</a> (<a class="el" href="classMultiBody.html">MultiBody</a> *_mBody)</td></tr>
+<tr class="separator:a5d32d75157aee1c01de620b1732855e4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7ba26047c9d3ee80338808e404853e5b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classCfg.html">Cfg</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classObstacleBasedSampler.html#a7ba26047c9d3ee80338808e404853e5b">ChooseExtremeVertex</a> (<a class="el" href="classMultiBody.html">MultiBody</a> *_mBody)</td></tr>
+<tr class="separator:a7ba26047c9d3ee80338808e404853e5b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a23a1c25817d716f5762146bed414c8d5"><td class="memItemLeft" align="right" valign="top">virtual <a class="el" href="classCfg.html">Cfg</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classObstacleBasedSampler.html#a23a1c25817d716f5762146bed414c8d5">ChooseASample</a> (<a class="el" href="classCfg.html">Cfg</a> &amp;_cfg)</td></tr>
+<tr class="separator:a23a1c25817d716f5762146bed414c8d5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a106b0d697de4a1510d26793bddc232fd"><td class="memItemLeft" align="right" valign="top">virtual <a class="el" href="classMPBaseObject.html#aad3c1d1dccb02cfd48da4438a2b2923b">GroupCfgType</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classObstacleBasedSampler.html#a106b0d697de4a1510d26793bddc232fd">ChooseASample</a> (<a class="el" href="classMPBaseObject.html#aad3c1d1dccb02cfd48da4438a2b2923b">GroupCfgType</a> &amp;_cfg)</td></tr>
+<tr class="separator:a106b0d697de4a1510d26793bddc232fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3908596d308c516a9f783d36cf33d9ba"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classCfg.html">Cfg</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classObstacleBasedSampler.html#a3908596d308c516a9f783d36cf33d9ba">ChooseASampleOtherMethods</a> ()</td></tr>
+<tr class="separator:a3908596d308c516a9f783d36cf33d9ba"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9a513f261b6185196d223ef2d52c1e1f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classCfg.html">Cfg</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classObstacleBasedSampler.html#a9a513f261b6185196d223ef2d52c1e1f">GetCfgWithParams</a> (const Vector3d &amp;_v)</td></tr>
+<tr class="separator:a9a513f261b6185196d223ef2d52c1e1f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8e72c322d3090fd6e67abf2262486122"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classObstacleBasedSampler.html#a8e72c322d3090fd6e67abf2262486122">GroupInBounds</a> (<a class="el" href="classMPBaseObject.html#aad3c1d1dccb02cfd48da4438a2b2923b">GroupCfgType</a> &amp;_groupCfg, const <a class="el" href="classObstacleBasedSampler.html#a03f8d39dcf9c90ff3db2250e31a088c4">BoundaryMap</a> &amp;_boundaryMap)</td></tr>
+<tr class="separator:a8e72c322d3090fd6e67abf2262486122"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af31ded3d4f538320985a98efdc1bdc0d"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classObstacleBasedSampler.html#af31ded3d4f538320985a98efdc1bdc0d">GroupInBounds</a> (<a class="el" href="classMPBaseObject.html#aad3c1d1dccb02cfd48da4438a2b2923b">GroupCfgType</a> &amp;_groupCfg, const <a class="el" href="classBoundary.html">Boundary</a> *const _boundary)</td></tr>
+<tr class="separator:af31ded3d4f538320985a98efdc1bdc0d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="inherit_header pro_methods_classSamplerMethod"><td colspan="2" onclick="javascript:toggleInherit('pro_methods_classSamplerMethod')"><img src="closed.png" alt="-"/>&#160;Protected Member Functions inherited from <a class="el" href="classSamplerMethod.html">SamplerMethod</a></td></tr>
+<tr class="memitem:a53c0e0ff3607ffe1bfe3c61f1d16ed6e inherit pro_methods_classSamplerMethod"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classSamplerMethod.html#a53c0e0ff3607ffe1bfe3c61f1d16ed6e">Sampler</a> (<a class="el" href="classCfg.html">Cfg</a> &amp;_cfg, const <a class="el" href="classBoundary.html">Boundary</a> *const _robotBoundary, const <a class="el" href="classBoundary.html">Boundary</a> *const _eeBoundary, std::vector&lt; <a class="el" href="classCfg.html">Cfg</a> &gt; &amp;_valid, std::vector&lt; <a class="el" href="classCfg.html">Cfg</a> &gt; &amp;_invalid)</td></tr>
+<tr class="separator:a53c0e0ff3607ffe1bfe3c61f1d16ed6e inherit pro_methods_classSamplerMethod"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="inherit_header pro_methods_classMPBaseObject"><td colspan="2" onclick="javascript:toggleInherit('pro_methods_classMPBaseObject')"><img src="closed.png" alt="-"/>&#160;Protected Member Functions inherited from <a class="el" href="classMPBaseObject.html">MPBaseObject</a></td></tr>
+<tr class="memitem:af6aea751544b43f86b371ce432a05724 inherit pro_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#af6aea751544b43f86b371ce432a05724">SetName</a> (const std::string &amp;_s)</td></tr>
+<tr class="separator:af6aea751544b43f86b371ce432a05724 inherit pro_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5c656603839bf545bd53e7567c1fc59e inherit pro_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a5c656603839bf545bd53e7567c1fc59e">GetBaseFilename</a> () const</td></tr>
+<tr class="separator:a5c656603839bf545bd53e7567c1fc59e inherit pro_methods_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="inherited"></a>
 Additional Inherited Members</h2></td></tr>
-<tr class="inherit_header pro_attribs_classMPBaseObject"><td colspan="2" onclick="javascript:toggleInherit('pro_attribs_classMPBaseObject')"><img src="closed.png" alt="-"/>&#160;Protected Attributes inherited from <a class="el" href="classMPBaseObject.html">MPBaseObject&lt; MPTraits &gt;</a></td></tr>
-<tr class="memitem:a4dce0c7792a2e35db03e46fbdc0038d3 inherit pro_attribs_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a4dce0c7792a2e35db03e46fbdc0038d3">m_debug</a></td></tr>
-<tr class="memdesc:a4dce0c7792a2e35db03e46fbdc0038d3 inherit pro_attribs_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Print debug info?  <a href="classMPBaseObject.html#a4dce0c7792a2e35db03e46fbdc0038d3">More...</a><br /></td></tr>
-<tr class="separator:a4dce0c7792a2e35db03e46fbdc0038d3 inherit pro_attribs_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="inherit_header pro_attribs_classMPBaseObject"><td colspan="2" onclick="javascript:toggleInherit('pro_attribs_classMPBaseObject')"><img src="closed.png" alt="-"/>&#160;Protected Attributes inherited from <a class="el" href="classMPBaseObject.html">MPBaseObject</a></td></tr>
+<tr class="memitem:a69f05ccf2fb3c91a2747dfd0afb385a2 inherit pro_attribs_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#a69f05ccf2fb3c91a2747dfd0afb385a2">m_debug</a></td></tr>
+<tr class="memdesc:a69f05ccf2fb3c91a2747dfd0afb385a2 inherit pro_attribs_classMPBaseObject"><td class="mdescLeft">&#160;</td><td class="mdescRight">Print debug info?  <a href="classMPBaseObject.html#a69f05ccf2fb3c91a2747dfd0afb385a2">More...</a><br /></td></tr>
+<tr class="separator:a69f05ccf2fb3c91a2747dfd0afb385a2 inherit pro_attribs_classMPBaseObject"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><h3>template&lt;class MPTraits&gt;<br />
-class ObstacleBasedSampler&lt; MPTraits &gt;</h3>
-
-<p>Obstacle-based sampling. </p>
+<div class="textblock"><p>Obstacle-based sampling. </p>
 <p>OBPRM samples by pushing random configurations along a random ray until they change validity, keeping the best free configuration.</p>
-<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000061">Todo:</a></b></dt><dd>Implement GetCenterOfMass function in the ChooseCenterOfMass class</dd></dl>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000063">Todo:</a></b></dt><dd>Implement GetCenterOfMass function in the ChooseCenterOfMass class</dd></dl>
 </div><h2 class="groupheader">Member Typedef Documentation</h2>
-<a id="aba589fdb421ec8578751dc8b95b3dd30"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aba589fdb421ec8578751dc8b95b3dd30">&#9670;&nbsp;</a></span>BoundaryMap</h2>
+<a id="a03f8d39dcf9c90ff3db2250e31a088c4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a03f8d39dcf9c90ff3db2250e31a088c4">&#9670;&nbsp;</a></span>BoundaryMap</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;class MPTraits &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">typedef std::map&lt;<a class="el" href="classRobot.html">Robot</a>*, const <a class="el" href="classBoundary.html">Boundary</a>*&gt; <a class="el" href="classObstacleBasedSampler.html">ObstacleBasedSampler</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::<a class="el" href="classObstacleBasedSampler.html#aba589fdb421ec8578751dc8b95b3dd30">BoundaryMap</a></td>
+          <td class="memname">typedef std::map&lt;<a class="el" href="classRobot.html">Robot</a>*, const <a class="el" href="classBoundary.html">Boundary</a>*&gt; <a class="el" href="classObstacleBasedSampler.html#a03f8d39dcf9c90ff3db2250e31a088c4">ObstacleBasedSampler::BoundaryMap</a></td>
         </tr>
       </table>
 </div><div class="memdoc">
 
 </div>
 </div>
-<a id="ae29183b307268cb54f4758177089b1e2"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae29183b307268cb54f4758177089b1e2">&#9670;&nbsp;</a></span>CfgType</h2>
+<a id="ae57e73e0cb30f2765384db8ba3f74715"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae57e73e0cb30f2765384db8ba3f74715">&#9670;&nbsp;</a></span>GroupCfgType</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;class MPTraits &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">typedef <a class="el" href="classMPTraits.html#a1a5aab50ac12baaf6b22ff345c5ae138">MPTraits::CfgType</a> <a class="el" href="classObstacleBasedSampler.html">ObstacleBasedSampler</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::<a class="el" href="classObstacleBasedSampler.html#ae29183b307268cb54f4758177089b1e2">CfgType</a></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="acc9180d551cb314c543e4e5534862cf5"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#acc9180d551cb314c543e4e5534862cf5">&#9670;&nbsp;</a></span>GroupCfgType</h2>
-
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;class MPTraits &gt; </div>
-      <table class="memname">
-        <tr>
-          <td class="memname">typedef <a class="el" href="classMPTraits.html#a42d63ac6993b02dda2ca15d6c2d5c69e">MPTraits::GroupCfgType</a> <a class="el" href="classObstacleBasedSampler.html">ObstacleBasedSampler</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::<a class="el" href="classObstacleBasedSampler.html#acc9180d551cb314c543e4e5534862cf5">GroupCfgType</a></td>
+          <td class="memname">typedef <a class="el" href="classMPBaseObject.html#aad3c1d1dccb02cfd48da4438a2b2923b">MPBaseObject::GroupCfgType</a> <a class="el" href="classObstacleBasedSampler.html#ae57e73e0cb30f2765384db8ba3f74715">ObstacleBasedSampler::GroupCfgType</a></td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -424,16 +324,14 @@ template&lt;class MPTraits &gt; </div>
 </div>
 </div>
 <h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="a51c8b50a2c5f1dc62c4f2aa293cc39b0"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a51c8b50a2c5f1dc62c4f2aa293cc39b0">&#9670;&nbsp;</a></span>ObstacleBasedSampler() <span class="overload">[1/2]</span></h2>
+<a id="ab9a5be98c25b4f7d5b521e0e4a0c3295"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab9a5be98c25b4f7d5b521e0e4a0c3295">&#9670;&nbsp;</a></span>ObstacleBasedSampler() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classObstacleBasedSampler.html">ObstacleBasedSampler</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::<a class="el" href="classObstacleBasedSampler.html">ObstacleBasedSampler</a> </td>
+          <td class="memname">ObstacleBasedSampler::ObstacleBasedSampler </td>
           <td>(</td>
           <td class="paramtype">string&#160;</td>
           <td class="paramname"><em>_vcLabel</em> = <code>&quot;&quot;</code>, </td>
@@ -484,16 +382,14 @@ template&lt;typename MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="aef417266683af31192faa863091ab4bc"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aef417266683af31192faa863091ab4bc">&#9670;&nbsp;</a></span>ObstacleBasedSampler() <span class="overload">[2/2]</span></h2>
+<a id="ae666d3097f3da80295fd49a30b13517f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae666d3097f3da80295fd49a30b13517f">&#9670;&nbsp;</a></span>ObstacleBasedSampler() <span class="overload">[2/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classObstacleBasedSampler.html">ObstacleBasedSampler</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::<a class="el" href="classObstacleBasedSampler.html">ObstacleBasedSampler</a> </td>
+          <td class="memname">ObstacleBasedSampler::ObstacleBasedSampler </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="classXMLNode.html">XMLNode</a> &amp;&#160;</td>
           <td class="paramname"><em>_node</em></td><td>)</td>
@@ -504,19 +400,17 @@ template&lt;typename MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="a75aa1c7d4521178f3ad587ba5eeba3e8"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a75aa1c7d4521178f3ad587ba5eeba3e8">&#9670;&nbsp;</a></span>~ObstacleBasedSampler()</h2>
+<a id="ad0a180639ccc2e9622e94600021e20e8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad0a180639ccc2e9622e94600021e20e8">&#9670;&nbsp;</a></span>~ObstacleBasedSampler()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;class MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">virtual <a class="el" href="classObstacleBasedSampler.html">ObstacleBasedSampler</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::~<a class="el" href="classObstacleBasedSampler.html">ObstacleBasedSampler</a> </td>
+          <td class="memname">virtual ObstacleBasedSampler::~ObstacleBasedSampler </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td></td>
@@ -532,21 +426,19 @@ template&lt;class MPTraits &gt; </div>
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
-<a id="a4e1dbee69aee02a1afb20ec16884479f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a4e1dbee69aee02a1afb20ec16884479f">&#9670;&nbsp;</a></span>ChooseASample() <span class="overload">[1/2]</span></h2>
+<a id="a23a1c25817d716f5762146bed414c8d5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a23a1c25817d716f5762146bed414c8d5">&#9670;&nbsp;</a></span>ChooseASample() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classObstacleBasedSampler.html">ObstacleBasedSampler</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::<a class="el" href="classObstacleBasedSampler.html#ae29183b307268cb54f4758177089b1e2">CfgType</a> <a class="el" href="classObstacleBasedSampler.html">ObstacleBasedSampler</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::ChooseASample </td>
+          <td class="memname"><a class="el" href="classCfg.html">Cfg</a> ObstacleBasedSampler::ChooseASample </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="classObstacleBasedSampler.html#ae29183b307268cb54f4758177089b1e2">CfgType</a> &amp;&#160;</td>
+          <td class="paramtype"><a class="el" href="classCfg.html">Cfg</a> &amp;&#160;</td>
           <td class="paramname"><em>_cfg</em></td><td>)</td>
           <td></td>
         </tr>
@@ -557,7 +449,7 @@ template&lt;typename MPTraits &gt; </div>
   </tr>
 </table>
 </div><div class="memdoc">
-<p>Checks m_pointSelection and returns an appropriate CfgType </p><dl class="params"><dt>Parameters</dt><dd>
+<p>Checks m_pointSelection and returns an appropriate <a class="el" href="classCfg.html">Cfg</a> </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">_cfg</td><td>Configuration of the sample </td></tr>
   </table>
@@ -567,21 +459,19 @@ template&lt;typename MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="a8ab4330caa92aa4ebfaa3f4a99ccd549"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8ab4330caa92aa4ebfaa3f4a99ccd549">&#9670;&nbsp;</a></span>ChooseASample() <span class="overload">[2/2]</span></h2>
+<a id="a106b0d697de4a1510d26793bddc232fd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a106b0d697de4a1510d26793bddc232fd">&#9670;&nbsp;</a></span>ChooseASample() <span class="overload">[2/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classObstacleBasedSampler.html">ObstacleBasedSampler</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::<a class="el" href="classObstacleBasedSampler.html#acc9180d551cb314c543e4e5534862cf5">GroupCfgType</a> <a class="el" href="classObstacleBasedSampler.html">ObstacleBasedSampler</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::ChooseASample </td>
+          <td class="memname"><a class="el" href="classObstacleBasedSampler.html#ae57e73e0cb30f2765384db8ba3f74715">ObstacleBasedSampler::GroupCfgType</a> ObstacleBasedSampler::ChooseASample </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="classObstacleBasedSampler.html#acc9180d551cb314c543e4e5534862cf5">GroupCfgType</a> &amp;&#160;</td>
+          <td class="paramtype"><a class="el" href="classMPBaseObject.html#aad3c1d1dccb02cfd48da4438a2b2923b">GroupCfgType</a> &amp;&#160;</td>
           <td class="paramname"><em>_cfg</em></td><td>)</td>
           <td></td>
         </tr>
@@ -602,19 +492,20 @@ template&lt;typename MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="ac20d1acf0b6ca9e9e501e61a14c64798"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac20d1acf0b6ca9e9e501e61a14c64798">&#9670;&nbsp;</a></span>ChooseASampleOtherMethods()</h2>
+<a id="a3908596d308c516a9f783d36cf33d9ba"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3908596d308c516a9f783d36cf33d9ba">&#9670;&nbsp;</a></span>ChooseASampleOtherMethods()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classObstacleBasedSampler.html">ObstacleBasedSampler</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::<a class="el" href="classObstacleBasedSampler.html#ae29183b307268cb54f4758177089b1e2">CfgType</a> <a class="el" href="classObstacleBasedSampler.html">ObstacleBasedSampler</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::ChooseASampleOtherMethods</td>
+          <td class="memname"><a class="el" href="classCfg.html">Cfg</a> ObstacleBasedSampler::ChooseASampleOtherMethods </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
         </tr>
       </table>
   </td>
@@ -627,19 +518,17 @@ template&lt;typename MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="a0cd412f8fd005c5720c5c8ceb42f245a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a0cd412f8fd005c5720c5c8ceb42f245a">&#9670;&nbsp;</a></span>ChooseCenterOfMass()</h2>
+<a id="a4b4fcb4b730c416224986d7075de798d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4b4fcb4b730c416224986d7075de798d">&#9670;&nbsp;</a></span>ChooseCenterOfMass()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classObstacleBasedSampler.html">ObstacleBasedSampler</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::<a class="el" href="classObstacleBasedSampler.html#ae29183b307268cb54f4758177089b1e2">CfgType</a> <a class="el" href="classObstacleBasedSampler.html">ObstacleBasedSampler</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::ChooseCenterOfMass </td>
+          <td class="memname"><a class="el" href="classCfg.html">Cfg</a> ObstacleBasedSampler::ChooseCenterOfMass </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="classMultiBody.html">MultiBody</a> *&#160;</td>
           <td class="paramname"><em>_mBody</em></td><td>)</td>
@@ -652,7 +541,7 @@ template&lt;typename MPTraits &gt; </div>
   </tr>
 </table>
 </div><div class="memdoc">
-<p>Returns a CfgType at the center of mass of the <a class="el" href="classMultiBody.html">MultiBody</a> </p><dl class="params"><dt>Parameters</dt><dd>
+<p>Returns a <a class="el" href="classCfg.html">Cfg</a> at the center of mass of the <a class="el" href="classMultiBody.html">MultiBody</a> </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">_mBody</td><td>Multibody of the obstacle </td></tr>
   </table>
@@ -662,19 +551,17 @@ template&lt;typename MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="a96c6aba6838d2fa8c16a52e43d541b4d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a96c6aba6838d2fa8c16a52e43d541b4d">&#9670;&nbsp;</a></span>ChooseExtremeVertex()</h2>
+<a id="a7ba26047c9d3ee80338808e404853e5b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7ba26047c9d3ee80338808e404853e5b">&#9670;&nbsp;</a></span>ChooseExtremeVertex()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classObstacleBasedSampler.html">ObstacleBasedSampler</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::<a class="el" href="classObstacleBasedSampler.html#ae29183b307268cb54f4758177089b1e2">CfgType</a> <a class="el" href="classObstacleBasedSampler.html">ObstacleBasedSampler</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::ChooseExtremeVertex </td>
+          <td class="memname"><a class="el" href="classCfg.html">Cfg</a> ObstacleBasedSampler::ChooseExtremeVertex </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="classMultiBody.html">MultiBody</a> *&#160;</td>
           <td class="paramname"><em>_mBody</em></td><td>)</td>
@@ -697,19 +584,17 @@ template&lt;typename MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="ad6e720f112298a87f7210eebec5b708d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad6e720f112298a87f7210eebec5b708d">&#9670;&nbsp;</a></span>ChoosePointOnTriangle()</h2>
+<a id="a6ca9a2832b7aa0f5293bce5843b7b5a9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6ca9a2832b7aa0f5293bce5843b7b5a9">&#9670;&nbsp;</a></span>ChoosePointOnTriangle()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">Vector3d <a class="el" href="classObstacleBasedSampler.html">ObstacleBasedSampler</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::ChoosePointOnTriangle </td>
+          <td class="memname">Vector3d ObstacleBasedSampler::ChoosePointOnTriangle </td>
           <td>(</td>
           <td class="paramtype">Vector3d&#160;</td>
           <td class="paramname"><em>_p</em>, </td>
@@ -750,19 +635,17 @@ template&lt;typename MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="a795cdab3e94bfbe5d6109d971b9225fd"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a795cdab3e94bfbe5d6109d971b9225fd">&#9670;&nbsp;</a></span>ChooseRandomTriangle()</h2>
+<a id="a5d32d75157aee1c01de620b1732855e4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5d32d75157aee1c01de620b1732855e4">&#9670;&nbsp;</a></span>ChooseRandomTriangle()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classObstacleBasedSampler.html">ObstacleBasedSampler</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::<a class="el" href="classObstacleBasedSampler.html#ae29183b307268cb54f4758177089b1e2">CfgType</a> <a class="el" href="classObstacleBasedSampler.html">ObstacleBasedSampler</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::ChooseRandomTriangle </td>
+          <td class="memname"><a class="el" href="classCfg.html">Cfg</a> ObstacleBasedSampler::ChooseRandomTriangle </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="classMultiBody.html">MultiBody</a> *&#160;</td>
           <td class="paramname"><em>_mBody</em></td><td>)</td>
@@ -785,19 +668,17 @@ template&lt;typename MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="a5718d8ea9367548e88e7c509b0a0e3e7"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5718d8ea9367548e88e7c509b0a0e3e7">&#9670;&nbsp;</a></span>ChooseRandomVertex()</h2>
+<a id="a4e6021eea446e1ad501d584f44db739f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4e6021eea446e1ad501d584f44db739f">&#9670;&nbsp;</a></span>ChooseRandomVertex()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classObstacleBasedSampler.html">ObstacleBasedSampler</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::<a class="el" href="classObstacleBasedSampler.html#ae29183b307268cb54f4758177089b1e2">CfgType</a> <a class="el" href="classObstacleBasedSampler.html">ObstacleBasedSampler</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::ChooseRandomVertex </td>
+          <td class="memname"><a class="el" href="classCfg.html">Cfg</a> ObstacleBasedSampler::ChooseRandomVertex </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="classMultiBody.html">MultiBody</a> *&#160;</td>
           <td class="paramname"><em>_mBody</em></td><td>)</td>
@@ -820,19 +701,17 @@ template&lt;typename MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="a263ef202a7396c88d4aab77aa5b46413"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a263ef202a7396c88d4aab77aa5b46413">&#9670;&nbsp;</a></span>ChooseRandomWeightedTriangle()</h2>
+<a id="a839e5b2529aba3a1cdd463d87fb8a3f5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a839e5b2529aba3a1cdd463d87fb8a3f5">&#9670;&nbsp;</a></span>ChooseRandomWeightedTriangle()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classObstacleBasedSampler.html">ObstacleBasedSampler</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::<a class="el" href="classObstacleBasedSampler.html#ae29183b307268cb54f4758177089b1e2">CfgType</a> <a class="el" href="classObstacleBasedSampler.html">ObstacleBasedSampler</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::ChooseRandomWeightedTriangle </td>
+          <td class="memname"><a class="el" href="classCfg.html">Cfg</a> ObstacleBasedSampler::ChooseRandomWeightedTriangle </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="classMultiBody.html">MultiBody</a> *&#160;</td>
           <td class="paramname"><em>_mBody</em></td><td>)</td>
@@ -855,19 +734,17 @@ template&lt;typename MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="a3a172dfad91d35c8a4d39f67a9f4f965"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a3a172dfad91d35c8a4d39f67a9f4f965">&#9670;&nbsp;</a></span>GenerateShells() <span class="overload">[1/3]</span></h2>
+<a id="a179d7b8c69b87b37c6a1d916ad6e0f58"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a179d7b8c69b87b37c6a1d916ad6e0f58">&#9670;&nbsp;</a></span>GenerateShells() <span class="overload">[1/3]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="classObstacleBasedSampler.html">ObstacleBasedSampler</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::GenerateShells </td>
+          <td class="memname">void ObstacleBasedSampler::GenerateShells </td>
           <td>(</td>
           <td class="paramtype">const <a class="el" href="classBoundary.html">Boundary</a> *const&#160;</td>
           <td class="paramname"><em>_boundary</em>, </td>
@@ -875,31 +752,31 @@ template&lt;typename MPTraits &gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="classObstacleBasedSampler.html#ae29183b307268cb54f4758177089b1e2">CfgType</a> &amp;&#160;</td>
+          <td class="paramtype"><a class="el" href="classCfg.html">Cfg</a> &amp;&#160;</td>
           <td class="paramname"><em>_cFree</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="classObstacleBasedSampler.html#ae29183b307268cb54f4758177089b1e2">CfgType</a> &amp;&#160;</td>
+          <td class="paramtype"><a class="el" href="classCfg.html">Cfg</a> &amp;&#160;</td>
           <td class="paramname"><em>_cColl</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="classObstacleBasedSampler.html#ae29183b307268cb54f4758177089b1e2">CfgType</a> &amp;&#160;</td>
+          <td class="paramtype"><a class="el" href="classCfg.html">Cfg</a> &amp;&#160;</td>
           <td class="paramname"><em>_incr</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">vector&lt; <a class="el" href="classObstacleBasedSampler.html#ae29183b307268cb54f4758177089b1e2">CfgType</a> &gt; &amp;&#160;</td>
+          <td class="paramtype">std::vector&lt; <a class="el" href="classCfg.html">Cfg</a> &gt; &amp;&#160;</td>
           <td class="paramname"><em>_result</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">vector&lt; <a class="el" href="classObstacleBasedSampler.html#ae29183b307268cb54f4758177089b1e2">CfgType</a> &gt; &amp;&#160;</td>
+          <td class="paramtype">std::vector&lt; <a class="el" href="classCfg.html">Cfg</a> &gt; &amp;&#160;</td>
           <td class="paramname"><em>_collision</em>&#160;</td>
         </tr>
         <tr>
@@ -928,19 +805,17 @@ template&lt;typename MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="a8dd40c795409d1c917858b0ec0469d3e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8dd40c795409d1c917858b0ec0469d3e">&#9670;&nbsp;</a></span>GenerateShells() <span class="overload">[2/3]</span></h2>
+<a id="ae24db1fca140dc98fa9357e926fb0262"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae24db1fca140dc98fa9357e926fb0262">&#9670;&nbsp;</a></span>GenerateShells() <span class="overload">[2/3]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="classObstacleBasedSampler.html">ObstacleBasedSampler</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::GenerateShells </td>
+          <td class="memname">void ObstacleBasedSampler::GenerateShells </td>
           <td>(</td>
           <td class="paramtype">const <a class="el" href="classBoundary.html">Boundary</a> *const&#160;</td>
           <td class="paramname"><em>_boundary</em>, </td>
@@ -948,31 +823,31 @@ template&lt;typename MPTraits &gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="classObstacleBasedSampler.html#acc9180d551cb314c543e4e5534862cf5">GroupCfgType</a> &amp;&#160;</td>
+          <td class="paramtype"><a class="el" href="classMPBaseObject.html#aad3c1d1dccb02cfd48da4438a2b2923b">GroupCfgType</a> &amp;&#160;</td>
           <td class="paramname"><em>_cFree</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="classObstacleBasedSampler.html#acc9180d551cb314c543e4e5534862cf5">GroupCfgType</a> &amp;&#160;</td>
+          <td class="paramtype"><a class="el" href="classMPBaseObject.html#aad3c1d1dccb02cfd48da4438a2b2923b">GroupCfgType</a> &amp;&#160;</td>
           <td class="paramname"><em>_cColl</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="classObstacleBasedSampler.html#acc9180d551cb314c543e4e5534862cf5">GroupCfgType</a> &amp;&#160;</td>
+          <td class="paramtype"><a class="el" href="classMPBaseObject.html#aad3c1d1dccb02cfd48da4438a2b2923b">GroupCfgType</a> &amp;&#160;</td>
           <td class="paramname"><em>_incr</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">vector&lt; <a class="el" href="classObstacleBasedSampler.html#acc9180d551cb314c543e4e5534862cf5">GroupCfgType</a> &gt; &amp;&#160;</td>
+          <td class="paramtype">std::vector&lt; <a class="el" href="classMPBaseObject.html#aad3c1d1dccb02cfd48da4438a2b2923b">GroupCfgType</a> &gt; &amp;&#160;</td>
           <td class="paramname"><em>_result</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">vector&lt; <a class="el" href="classObstacleBasedSampler.html#acc9180d551cb314c543e4e5534862cf5">GroupCfgType</a> &gt; &amp;&#160;</td>
+          <td class="paramtype">std::vector&lt; <a class="el" href="classMPBaseObject.html#aad3c1d1dccb02cfd48da4438a2b2923b">GroupCfgType</a> &gt; &amp;&#160;</td>
           <td class="paramname"><em>_collision</em>&#160;</td>
         </tr>
         <tr>
@@ -1001,51 +876,49 @@ template&lt;typename MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="a1774ba653414e73f03f91871edf767fa"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a1774ba653414e73f03f91871edf767fa">&#9670;&nbsp;</a></span>GenerateShells() <span class="overload">[3/3]</span></h2>
+<a id="a7544ddea5e726395070cdbda58ca69a8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7544ddea5e726395070cdbda58ca69a8">&#9670;&nbsp;</a></span>GenerateShells() <span class="overload">[3/3]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="classObstacleBasedSampler.html">ObstacleBasedSampler</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::GenerateShells </td>
+          <td class="memname">void ObstacleBasedSampler::GenerateShells </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="classObstacleBasedSampler.html#aba589fdb421ec8578751dc8b95b3dd30">BoundaryMap</a> &amp;&#160;</td>
+          <td class="paramtype">const <a class="el" href="classObstacleBasedSampler.html#a03f8d39dcf9c90ff3db2250e31a088c4">BoundaryMap</a> &amp;&#160;</td>
           <td class="paramname"><em>_boundaryMap</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="classObstacleBasedSampler.html#acc9180d551cb314c543e4e5534862cf5">GroupCfgType</a> &amp;&#160;</td>
+          <td class="paramtype"><a class="el" href="classMPBaseObject.html#aad3c1d1dccb02cfd48da4438a2b2923b">GroupCfgType</a> &amp;&#160;</td>
           <td class="paramname"><em>_cFree</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="classObstacleBasedSampler.html#acc9180d551cb314c543e4e5534862cf5">GroupCfgType</a> &amp;&#160;</td>
+          <td class="paramtype"><a class="el" href="classMPBaseObject.html#aad3c1d1dccb02cfd48da4438a2b2923b">GroupCfgType</a> &amp;&#160;</td>
           <td class="paramname"><em>_cColl</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="classObstacleBasedSampler.html#acc9180d551cb314c543e4e5534862cf5">GroupCfgType</a> &amp;&#160;</td>
+          <td class="paramtype"><a class="el" href="classMPBaseObject.html#aad3c1d1dccb02cfd48da4438a2b2923b">GroupCfgType</a> &amp;&#160;</td>
           <td class="paramname"><em>_incr</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">vector&lt; <a class="el" href="classObstacleBasedSampler.html#acc9180d551cb314c543e4e5534862cf5">GroupCfgType</a> &gt; &amp;&#160;</td>
+          <td class="paramtype">std::vector&lt; <a class="el" href="classMPBaseObject.html#aad3c1d1dccb02cfd48da4438a2b2923b">GroupCfgType</a> &gt; &amp;&#160;</td>
           <td class="paramname"><em>_result</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">vector&lt; <a class="el" href="classObstacleBasedSampler.html#acc9180d551cb314c543e4e5534862cf5">GroupCfgType</a> &gt; &amp;&#160;</td>
+          <td class="paramtype">std::vector&lt; <a class="el" href="classMPBaseObject.html#aad3c1d1dccb02cfd48da4438a2b2923b">GroupCfgType</a> &gt; &amp;&#160;</td>
           <td class="paramname"><em>_collision</em>&#160;</td>
         </tr>
         <tr>
@@ -1074,19 +947,17 @@ template&lt;typename MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="a2867e511c50d2009bfa78cff4de0722e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a2867e511c50d2009bfa78cff4de0722e">&#9670;&nbsp;</a></span>GetCfgWithParams()</h2>
+<a id="a9a513f261b6185196d223ef2d52c1e1f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9a513f261b6185196d223ef2d52c1e1f">&#9670;&nbsp;</a></span>GetCfgWithParams()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classObstacleBasedSampler.html">ObstacleBasedSampler</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::<a class="el" href="classObstacleBasedSampler.html#ae29183b307268cb54f4758177089b1e2">CfgType</a> <a class="el" href="classObstacleBasedSampler.html">ObstacleBasedSampler</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::GetCfgWithParams </td>
+          <td class="memname"><a class="el" href="classCfg.html">Cfg</a> ObstacleBasedSampler::GetCfgWithParams </td>
           <td>(</td>
           <td class="paramtype">const Vector3d &amp;&#160;</td>
           <td class="paramname"><em>_v</em></td><td>)</td>
@@ -1099,7 +970,7 @@ template&lt;typename MPTraits &gt; </div>
   </tr>
 </table>
 </div><div class="memdoc">
-<p>Returns a CfgType with the coordinates specified in the vector and no rotation </p><dl class="params"><dt>Parameters</dt><dd>
+<p>Returns a <a class="el" href="classCfg.html">Cfg</a> with the coordinates specified in the vector and no rotation </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">_v</td><td>Multibody of the obstacle </td></tr>
   </table>
@@ -1109,21 +980,19 @@ template&lt;typename MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="a8cd44d2f645bd23f57159e710c756c05"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8cd44d2f645bd23f57159e710c756c05">&#9670;&nbsp;</a></span>GroupInBounds() <span class="overload">[1/2]</span></h2>
+<a id="af31ded3d4f538320985a98efdc1bdc0d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af31ded3d4f538320985a98efdc1bdc0d">&#9670;&nbsp;</a></span>GroupInBounds() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">bool <a class="el" href="classObstacleBasedSampler.html">ObstacleBasedSampler</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::GroupInBounds </td>
+          <td class="memname">bool ObstacleBasedSampler::GroupInBounds </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="classObstacleBasedSampler.html#acc9180d551cb314c543e4e5534862cf5">GroupCfgType</a> &amp;&#160;</td>
+          <td class="paramtype"><a class="el" href="classMPBaseObject.html#aad3c1d1dccb02cfd48da4438a2b2923b">GroupCfgType</a> &amp;&#160;</td>
           <td class="paramname"><em>_groupCfg</em>, </td>
         </tr>
         <tr>
@@ -1155,27 +1024,25 @@ template&lt;typename MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="a89fd069815fb4e8733ab7c54259a0e92"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a89fd069815fb4e8733ab7c54259a0e92">&#9670;&nbsp;</a></span>GroupInBounds() <span class="overload">[2/2]</span></h2>
+<a id="a8e72c322d3090fd6e67abf2262486122"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8e72c322d3090fd6e67abf2262486122">&#9670;&nbsp;</a></span>GroupInBounds() <span class="overload">[2/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">bool <a class="el" href="classObstacleBasedSampler.html">ObstacleBasedSampler</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::GroupInBounds </td>
+          <td class="memname">bool ObstacleBasedSampler::GroupInBounds </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="classObstacleBasedSampler.html#acc9180d551cb314c543e4e5534862cf5">GroupCfgType</a> &amp;&#160;</td>
+          <td class="paramtype"><a class="el" href="classMPBaseObject.html#aad3c1d1dccb02cfd48da4438a2b2923b">GroupCfgType</a> &amp;&#160;</td>
           <td class="paramname"><em>_groupCfg</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="classObstacleBasedSampler.html#aba589fdb421ec8578751dc8b95b3dd30">BoundaryMap</a> &amp;&#160;</td>
+          <td class="paramtype">const <a class="el" href="classObstacleBasedSampler.html#a03f8d39dcf9c90ff3db2250e31a088c4">BoundaryMap</a> &amp;&#160;</td>
           <td class="paramname"><em>_boundaryMap</em>&#160;</td>
         </tr>
         <tr>
@@ -1201,19 +1068,17 @@ template&lt;typename MPTraits &gt; </div>
 
 </div>
 </div>
-<a id="a5622a13e0e3a4950d4e7dc990a98fec1"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5622a13e0e3a4950d4e7dc990a98fec1">&#9670;&nbsp;</a></span>Print()</h2>
+<a id="a8e1c72416040ffaa4f2473b0bff17d9e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8e1c72416040ffaa4f2473b0bff17d9e">&#9670;&nbsp;</a></span>Print()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="classObstacleBasedSampler.html">ObstacleBasedSampler</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::Print </td>
+          <td class="memname">void ObstacleBasedSampler::Print </td>
           <td>(</td>
           <td class="paramtype">ostream &amp;&#160;</td>
           <td class="paramname"><em>_os</em></td><td>)</td>
@@ -1233,25 +1098,23 @@ template&lt;typename MPTraits &gt; </div>
   </dd>
 </dl>
 
-<p>Reimplemented from <a class="el" href="classMPBaseObject.html#a4d111a2d7d53d243cdd4cd89ffa65212">MPBaseObject&lt; MPTraits &gt;</a>.</p>
+<p>Reimplemented from <a class="el" href="classMPBaseObject.html#a2c77bcfd6bee0270a1fa769325be7c20">MPBaseObject</a>.</p>
 
 </div>
 </div>
-<a id="a3d3e69603680d9e98a6c503dab8af1f8"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a3d3e69603680d9e98a6c503dab8af1f8">&#9670;&nbsp;</a></span>Sampler() <span class="overload">[1/3]</span></h2>
+<a id="a045258976012b21f59471ae64ee9f2a2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a045258976012b21f59471ae64ee9f2a2">&#9670;&nbsp;</a></span>Sampler() <span class="overload">[1/3]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">bool <a class="el" href="classObstacleBasedSampler.html">ObstacleBasedSampler</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::Sampler </td>
+          <td class="memname">bool ObstacleBasedSampler::Sampler </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="classObstacleBasedSampler.html#ae29183b307268cb54f4758177089b1e2">CfgType</a> &amp;&#160;</td>
+          <td class="paramtype"><a class="el" href="classCfg.html">Cfg</a> &amp;&#160;</td>
           <td class="paramname"><em>_cfg</em>, </td>
         </tr>
         <tr>
@@ -1263,13 +1126,13 @@ template&lt;typename MPTraits &gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">vector&lt; <a class="el" href="classObstacleBasedSampler.html#ae29183b307268cb54f4758177089b1e2">CfgType</a> &gt; &amp;&#160;</td>
+          <td class="paramtype">std::vector&lt; <a class="el" href="classCfg.html">Cfg</a> &gt; &amp;&#160;</td>
           <td class="paramname"><em>_result</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">vector&lt; <a class="el" href="classObstacleBasedSampler.html#ae29183b307268cb54f4758177089b1e2">CfgType</a> &gt; &amp;&#160;</td>
+          <td class="paramtype">std::vector&lt; <a class="el" href="classCfg.html">Cfg</a> &gt; &amp;&#160;</td>
           <td class="paramname"><em>_collision</em>&#160;</td>
         </tr>
         <tr>
@@ -1295,25 +1158,23 @@ template&lt;typename MPTraits &gt; </div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>Success or Failure of sampling </dd></dl>
 
-<p>Reimplemented from <a class="el" href="classSamplerMethod.html#a236055d29dc7a704200e39df16bb5a77">SamplerMethod&lt; MPTraits &gt;</a>.</p>
+<p>Reimplemented from <a class="el" href="classSamplerMethod.html#a99391d525a01e8cb69ae3ce7fe4ac2a6">SamplerMethod</a>.</p>
 
 </div>
 </div>
-<a id="a41a524265b43ad0ed6e9392d488e4196"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a41a524265b43ad0ed6e9392d488e4196">&#9670;&nbsp;</a></span>Sampler() <span class="overload">[2/3]</span></h2>
+<a id="a3527d451aefed76964a253a206785021"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3527d451aefed76964a253a206785021">&#9670;&nbsp;</a></span>Sampler() <span class="overload">[2/3]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">bool <a class="el" href="classObstacleBasedSampler.html">ObstacleBasedSampler</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::Sampler </td>
+          <td class="memname">bool ObstacleBasedSampler::Sampler </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="classObstacleBasedSampler.html#acc9180d551cb314c543e4e5534862cf5">GroupCfgType</a> &amp;&#160;</td>
+          <td class="paramtype"><a class="el" href="classMPBaseObject.html#aad3c1d1dccb02cfd48da4438a2b2923b">GroupCfgType</a> &amp;&#160;</td>
           <td class="paramname"><em>_cfg</em>, </td>
         </tr>
         <tr>
@@ -1325,13 +1186,13 @@ template&lt;typename MPTraits &gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">vector&lt; <a class="el" href="classObstacleBasedSampler.html#acc9180d551cb314c543e4e5534862cf5">GroupCfgType</a> &gt; &amp;&#160;</td>
+          <td class="paramtype">std::vector&lt; <a class="el" href="classMPBaseObject.html#aad3c1d1dccb02cfd48da4438a2b2923b">GroupCfgType</a> &gt; &amp;&#160;</td>
           <td class="paramname"><em>_result</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">vector&lt; <a class="el" href="classObstacleBasedSampler.html#acc9180d551cb314c543e4e5534862cf5">GroupCfgType</a> &gt; &amp;&#160;</td>
+          <td class="paramtype">std::vector&lt; <a class="el" href="classMPBaseObject.html#aad3c1d1dccb02cfd48da4438a2b2923b">GroupCfgType</a> &gt; &amp;&#160;</td>
           <td class="paramname"><em>_invalid</em>&#160;</td>
         </tr>
         <tr>
@@ -1357,43 +1218,41 @@ template&lt;typename MPTraits &gt; </div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>Success or Failure of sampling </dd></dl>
 
-<p>Reimplemented from <a class="el" href="classSamplerMethod.html#ace2bf75640e93b9987e6a9aa6de697fc">SamplerMethod&lt; MPTraits &gt;</a>.</p>
+<p>Reimplemented from <a class="el" href="classSamplerMethod.html#ad5a546ad33b419913e2202c8da4c8e48">SamplerMethod</a>.</p>
 
 </div>
 </div>
-<a id="ac989f5b7c76e435bc77a90397babf76e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac989f5b7c76e435bc77a90397babf76e">&#9670;&nbsp;</a></span>Sampler() <span class="overload">[3/3]</span></h2>
+<a id="ae14b645b208c464ec8f3de3bca9b334f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae14b645b208c464ec8f3de3bca9b334f">&#9670;&nbsp;</a></span>Sampler() <span class="overload">[3/3]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
-<div class="memtemplate">
-template&lt;typename MPTraits &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">bool <a class="el" href="classObstacleBasedSampler.html">ObstacleBasedSampler</a>&lt; <a class="el" href="classMPTraits.html">MPTraits</a> &gt;::Sampler </td>
+          <td class="memname">bool ObstacleBasedSampler::Sampler </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="classObstacleBasedSampler.html#acc9180d551cb314c543e4e5534862cf5">GroupCfgType</a> &amp;&#160;</td>
+          <td class="paramtype"><a class="el" href="classMPBaseObject.html#aad3c1d1dccb02cfd48da4438a2b2923b">GroupCfgType</a> &amp;&#160;</td>
           <td class="paramname"><em>_cfg</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="classObstacleBasedSampler.html#aba589fdb421ec8578751dc8b95b3dd30">BoundaryMap</a> &amp;&#160;</td>
+          <td class="paramtype">const <a class="el" href="classObstacleBasedSampler.html#a03f8d39dcf9c90ff3db2250e31a088c4">BoundaryMap</a> &amp;&#160;</td>
           <td class="paramname"><em>_boundaryMap</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">vector&lt; <a class="el" href="classObstacleBasedSampler.html#acc9180d551cb314c543e4e5534862cf5">GroupCfgType</a> &gt; &amp;&#160;</td>
+          <td class="paramtype">std::vector&lt; <a class="el" href="classMPBaseObject.html#aad3c1d1dccb02cfd48da4438a2b2923b">GroupCfgType</a> &gt; &amp;&#160;</td>
           <td class="paramname"><em>_result</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">vector&lt; <a class="el" href="classObstacleBasedSampler.html#acc9180d551cb314c543e4e5534862cf5">GroupCfgType</a> &gt; &amp;&#160;</td>
+          <td class="paramtype">std::vector&lt; <a class="el" href="classMPBaseObject.html#aad3c1d1dccb02cfd48da4438a2b2923b">GroupCfgType</a> &gt; &amp;&#160;</td>
           <td class="paramname"><em>_collision</em>&#160;</td>
         </tr>
         <tr>
@@ -1419,12 +1278,13 @@ template&lt;typename MPTraits &gt; </div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>Success or Failure of sampling </dd></dl>
 
-<p>Reimplemented from <a class="el" href="classSamplerMethod.html#a724653eb28d90eb3b2198605bf3b27c6">SamplerMethod&lt; MPTraits &gt;</a>.</p>
+<p>Reimplemented from <a class="el" href="classSamplerMethod.html#a02474f069a08d32d512d25e9a60cf683">SamplerMethod</a>.</p>
 
 </div>
 </div>
-<hr/>The documentation for this class was generated from the following file:<ul>
+<hr/>The documentation for this class was generated from the following files:<ul>
 <li>/opt/actions-runner/_work/open-ppl/open-ppl/src/MPLibrary/Samplers/<a class="el" href="ObstacleBasedSampler_8h_source.html">ObstacleBasedSampler.h</a></li>
+<li>/opt/actions-runner/_work/open-ppl/open-ppl/src/MPLibrary/Samplers/<a class="el" href="ObstacleBasedSampler_8cpp.html">ObstacleBasedSampler.cpp</a></li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->

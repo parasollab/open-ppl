@@ -87,7 +87,7 @@ $(function() {
 <div class="line"> </div>
 <div class="line">  <span class="comment">// The sample method samples new points within the specified boundaries. It</span></div>
 <div class="line">  <span class="comment">// then inserts the valid configurations into the provided vector.</span></div>
-<div class="line">  sampler-&gt;<a name="a2"></a><a class="code" href="classSamplerMethod.html#af3e00ddf21d407d950d3bd577ef9bf5e">Sample</a>(numNodes, maxAttempts, boundary,</div>
+<div class="line">  sampler-&gt;<a name="a2"></a><a class="code" href="classSamplerMethod.html#a93f731d73ed5f838737e450b07031e2c">Sample</a>(numNodes, maxAttempts, boundary,</div>
 <div class="line">      std::back_inserter(validSamples));</div>
 <div class="line"> </div>
 <div class="line"> </div>
@@ -100,13 +100,13 @@ $(function() {
 <div class="line">  <span class="comment">// Use the Filter method to apply the Sampler method to a list of input</span></div>
 <div class="line">  <span class="comment">// configurations. The returned valid list will be a subset of the inputs</span></div>
 <div class="line">  <span class="comment">// containing the resulting valid configurations.</span></div>
-<div class="line">  sampler-&gt;<a name="a3"></a><a class="code" href="classSamplerMethod.html#ad96d5ca883ae4f3926556c356b9e8aea">Filter</a>(inputCfgs.begin(), inputCfgs.end(), maxAttempts, boundary,</div>
+<div class="line">  sampler-&gt;<a name="a3"></a><a class="code" href="classSamplerMethod.html#a8a2494b15fd4815d8d0aed9c2f1e21e0">Filter</a>(inputCfgs.begin(), inputCfgs.end(), maxAttempts, boundary,</div>
 <div class="line">      validFilteredSamples);</div>
 <div class="line">}</div>
 <div class="ttc" id="aclassBoundary_html"><div class="ttname"><a href="classBoundary.html">Boundary</a></div><div class="ttdef"><b>Definition:</b> Boundary.h:30</div></div>
-<div class="ttc" id="aclassSamplerMethod_html"><div class="ttname"><a href="classSamplerMethod.html">SamplerMethod</a></div><div class="ttdef"><b>Definition:</b> SamplerMethod.h:72</div></div>
-<div class="ttc" id="aclassSamplerMethod_html_ad96d5ca883ae4f3926556c356b9e8aea"><div class="ttname"><a href="classSamplerMethod.html#ad96d5ca883ae4f3926556c356b9e8aea">SamplerMethod::Filter</a></div><div class="ttdeci">virtual void Filter(InputIterator _first, InputIterator _last, size_t _maxAttempts, const Boundary *const _boundary, OutputIterator _valid, OutputIterator _invalid)</div><div class="ttdef"><b>Definition:</b> SamplerMethod.h:372</div></div>
-<div class="ttc" id="aclassSamplerMethod_html_af3e00ddf21d407d950d3bd577ef9bf5e"><div class="ttname"><a href="classSamplerMethod.html#af3e00ddf21d407d950d3bd577ef9bf5e">SamplerMethod::Sample</a></div><div class="ttdeci">virtual void Sample(size_t _numNodes, size_t _maxAttempts, const Boundary *const _boundary, OutputIterator _valid, OutputIterator _invalid)</div><div class="ttdef"><b>Definition:</b> SamplerMethod.h:284</div></div>
+<div class="ttc" id="aclassSamplerMethod_html"><div class="ttname"><a href="classSamplerMethod.html">SamplerMethod</a></div><div class="ttdef"><b>Definition:</b> SamplerMethod.h:70</div></div>
+<div class="ttc" id="aclassSamplerMethod_html_a8a2494b15fd4815d8d0aed9c2f1e21e0"><div class="ttname"><a href="classSamplerMethod.html#a8a2494b15fd4815d8d0aed9c2f1e21e0">SamplerMethod::Filter</a></div><div class="ttdeci">virtual void Filter(InputIterator _first, InputIterator _last, size_t _maxAttempts, const Boundary *const _boundary, OutputIterator _valid, OutputIterator _invalid)</div><div class="ttdef"><b>Definition:</b> SamplerMethod.cpp:103</div></div>
+<div class="ttc" id="aclassSamplerMethod_html_a93f731d73ed5f838737e450b07031e2c"><div class="ttname"><a href="classSamplerMethod.html#a93f731d73ed5f838737e450b07031e2c">SamplerMethod::Sample</a></div><div class="ttdeci">virtual void Sample(size_t _numNodes, size_t _maxAttempts, const Boundary *const _boundary, OutputIterator _valid, OutputIterator _invalid)</div><div class="ttdef"><b>Definition:</b> SamplerMethod.cpp:19</div></div>
 </div><!-- fragment --> </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

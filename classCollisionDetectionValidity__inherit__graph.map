@@ -1,6 +1,6 @@
-<map id="CollisionDetectionValidity&lt; MPTraits &gt;" name="CollisionDetectionValidity&lt; MPTraits &gt;">
-<area shape="rect" id="node1" title=" " alt="" coords="11,259,201,300"/>
-<area shape="rect" id="node2" href="$classCollisionDetectionValidityMethod.html" title=" " alt="" coords="11,169,201,211"/>
-<area shape="rect" id="node3" href="$classValidityCheckerMethod.html" title=" " alt="" coords="20,80,192,121"/>
-<area shape="rect" id="node4" href="$classMPBaseObject.html" title=" " alt="" coords="5,5,207,32"/>
+<map id="CollisionDetectionValidity" name="CollisionDetectionValidity">
+<area shape="rect" id="node1" title=" " alt="" coords="5,244,196,271"/>
+<area shape="rect" id="node2" href="$classCollisionDetectionValidityMethod.html" title=" " alt="" coords="5,155,196,196"/>
+<area shape="rect" id="node3" href="$classValidityCheckerMethod.html" title=" " alt="" coords="15,80,187,107"/>
+<area shape="rect" id="node4" href="$classMPBaseObject.html" title=" " alt="" coords="43,5,159,32"/>
 </map>
