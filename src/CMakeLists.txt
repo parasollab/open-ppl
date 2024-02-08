@@ -313,6 +313,7 @@ set(PMPL_SRCS
     ${CMAKE_CURRENT_SOURCE_DIR}/Workspace/WorkspaceRegion.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Workspace/WorkspaceSkeleton.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/PMPL.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ObstacleSubset/obst_subset.cpp
 )
 
 # Connectors

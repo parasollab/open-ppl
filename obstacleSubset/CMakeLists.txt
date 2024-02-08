@@ -1,2 +1,0 @@
-add_executable(obst_subset.cpp)
-target_link_libraries(ppl_mp_library)
