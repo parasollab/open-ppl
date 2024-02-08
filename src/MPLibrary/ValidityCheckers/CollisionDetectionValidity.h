@@ -175,6 +175,14 @@ class CollisionDetectionValidity
     virtual bool IsInInterRobotCollision(CDInfo& _cdInfo, Robot* const _robot,
         const std::vector<Robot*>& _robots, const std::string& _caller);
 
+    /// Sets member variable m_obstacleSubset
+    /// Once this is set, isInObstacleCollision will only check the obstacles
+    /// in this array for collision with the robot.
+    /// If it is not set or empty it will check for collision with all 
+    /// obstacles in the environment
+    /// @param _obstacleSubset A subset of obstacle multibodies in the environment
+    virtual bool setObstacleSubset(const std::vector<MultiBody*>& _obstacleSubset); 
+
     ///@}
     ///@name Internal State
     ///@{
@@ -186,6 +194,7 @@ class CollisionDetectionValidity
     bool m_interRobotCollision{false};    ///< Check inter-robot collisions
     bool m_ignoreAdjacentLinks{false};    ///< Ignore adj links in self collisions
     bool m_ignoreSiblingCollisions{false}; ///< Ignore sibling links in self collisions
+    std::vector<MultiBody*> m_obstacleSubset; ///< Subset of obstacles to check for
 
     ///@}
 
