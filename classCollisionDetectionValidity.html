@@ -84,11 +84,13 @@ Collaboration diagram for CollisionDetectionValidity:</div>
 <div class="dyncontent">
 <div class="center"><img src="classCollisionDetectionValidity__coll__graph.png" border="0" usemap="#aCollisionDetectionValidity_coll__map" alt="Collaboration graph"/></div>
 <map name="aCollisionDetectionValidity_coll__map" id="aCollisionDetectionValidity_coll__map">
-<area shape="rect" title=" " alt="" coords="165,261,356,288"/>
-<area shape="rect" href="classCollisionDetectionValidityMethod.html" title=" " alt="" coords="5,157,196,199"/>
-<area shape="rect" href="classValidityCheckerMethod.html" title=" " alt="" coords="15,81,187,108"/>
-<area shape="rect" href="classMPBaseObject.html" title=" " alt="" coords="43,5,159,32"/>
-<area shape="rect" title=" " alt="" coords="220,157,411,199"/>
+<area shape="rect" title=" " alt="" coords="827,78,1017,105"/>
+<area shape="rect" href="classCollisionDetectionValidityMethod.html" title=" " alt="" coords="460,5,651,47"/>
+<area shape="rect" href="classValidityCheckerMethod.html" title=" " alt="" coords="171,13,343,39"/>
+<area shape="rect" href="classMPBaseObject.html" title=" " alt="" coords="5,13,121,39"/>
+<area shape="rect" title=" " alt="" coords="460,71,651,112"/>
+<area shape="rect" title=" " alt="" coords="456,137,655,163"/>
+<area shape="rect" href="classMultiBody.html" title=" " alt="" coords="213,137,301,163"/>
 </map>
 <center><span class="legend">[<a href="graph_legend.html">legend</a>]</span></center></div>
 <table class="memberdecls">
@@ -254,6 +256,8 @@ Protected Member Functions</h2></td></tr>
 <tr class="separator:ada03d609ec2fb71d59d7c3f44dc3a385"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1d8b1840fa98a31ad58aa544cda56cf6"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classCollisionDetectionValidity.html#a1d8b1840fa98a31ad58aa544cda56cf6">IsInInterRobotCollision</a> (<a class="el" href="structCDInfo.html">CDInfo</a> &amp;_cdInfo, <a class="el" href="classRobot.html">Robot</a> *const _robot, const std::vector&lt; <a class="el" href="classRobot.html">Robot</a> * &gt; &amp;_robots, const std::string &amp;_caller)</td></tr>
 <tr class="separator:a1d8b1840fa98a31ad58aa544cda56cf6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af1d7d92d97574c20b495a16cb264c876"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classCollisionDetectionValidity.html#af1d7d92d97574c20b495a16cb264c876">setObstacleSubset</a> (const std::vector&lt; <a class="el" href="classMultiBody.html">MultiBody</a> * &gt; &amp;_obstacleSubset)</td></tr>
+<tr class="separator:af1d7d92d97574c20b495a16cb264c876"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr><td colspan="2"><div class="groupHeader">Helpers</div></td></tr>
 <tr class="inherit_header pro_methods_classMPBaseObject"><td colspan="2" onclick="javascript:toggleInherit('pro_methods_classMPBaseObject')"><img src="closed.png" alt="-"/>&#160;Protected Member Functions inherited from <a class="el" href="classMPBaseObject.html">MPBaseObject</a></td></tr>
 <tr class="memitem:af6aea751544b43f86b371ce432a05724 inherit pro_methods_classMPBaseObject"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classMPBaseObject.html#af6aea751544b43f86b371ce432a05724">SetName</a> (const std::string &amp;_s)</td></tr>
@@ -279,6 +283,9 @@ Protected Attributes</h2></td></tr>
 <tr class="memitem:aa1ec69072a8cbd567ac1837377efcc61"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classCollisionDetectionValidity.html#aa1ec69072a8cbd567ac1837377efcc61">m_ignoreSiblingCollisions</a> {false}</td></tr>
 <tr class="memdesc:aa1ec69072a8cbd567ac1837377efcc61"><td class="mdescLeft">&#160;</td><td class="mdescRight">Ignore sibling links in self collisions.  <a href="classCollisionDetectionValidity.html#aa1ec69072a8cbd567ac1837377efcc61">More...</a><br /></td></tr>
 <tr class="separator:aa1ec69072a8cbd567ac1837377efcc61"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac624367b5d9e822db16bb46b76bf5659"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="classMultiBody.html">MultiBody</a> * &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classCollisionDetectionValidity.html#ac624367b5d9e822db16bb46b76bf5659">m_obstacleSubset</a></td></tr>
+<tr class="memdesc:ac624367b5d9e822db16bb46b76bf5659"><td class="mdescLeft">&#160;</td><td class="mdescRight">Subset of obstacles to check for.  <a href="classCollisionDetectionValidity.html#ac624367b5d9e822db16bb46b76bf5659">More...</a><br /></td></tr>
+<tr class="separator:ac624367b5d9e822db16bb46b76bf5659"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pro_attribs_classValidityCheckerMethod"><td colspan="2" onclick="javascript:toggleInherit('pro_attribs_classValidityCheckerMethod')"><img src="closed.png" alt="-"/>&#160;Protected Attributes inherited from <a class="el" href="classValidityCheckerMethod.html">ValidityCheckerMethod</a></td></tr>
 <tr class="memitem:a2af549934a1a17c6cc62c1fa7ae98c96 inherit pro_attribs_classValidityCheckerMethod"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classValidityCheckerMethod.html#a2af549934a1a17c6cc62c1fa7ae98c96">m_validity</a> {true}</td></tr>
 <tr class="memdesc:a2af549934a1a17c6cc62c1fa7ae98c96 inherit pro_attribs_classValidityCheckerMethod"><td class="mdescLeft">&#160;</td><td class="mdescRight">Use standard validity? False indicates negation.  <a href="classValidityCheckerMethod.html#a2af549934a1a17c6cc62c1fa7ae98c96">More...</a><br /></td></tr>
@@ -973,6 +980,38 @@ Protected Attributes</h2></td></tr>
 
 </div>
 </div>
+<a id="af1d7d92d97574c20b495a16cb264c876"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af1d7d92d97574c20b495a16cb264c876">&#9670;&nbsp;</a></span>setObstacleSubset()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool CollisionDetectionValidity::setObstacleSubset </td>
+          <td>(</td>
+          <td class="paramtype">const std::vector&lt; <a class="el" href="classMultiBody.html">MultiBody</a> * &gt; &amp;&#160;</td>
+          <td class="paramname"><em>_obstacleSubset</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>Sets member variable m_obstacleSubset Once this is set, isInObstacleCollision will only check the obstacles in this array for collision with the robot. If it is not set or empty it will check for collision with all obstacles in the environment </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">_obstacleSubset</td><td>A subset of obstacle multibodies in the environment </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <a id="a8c59e8210ccb31eadacc226ff4d010c1"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a8c59e8210ccb31eadacc226ff4d010c1">&#9670;&nbsp;</a></span>WorkspaceVisibility()</h2>
 
@@ -1137,6 +1176,30 @@ Protected Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Check inter-robot collisions. </p>
+
+</div>
+</div>
+<a id="ac624367b5d9e822db16bb46b76bf5659"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac624367b5d9e822db16bb46b76bf5659">&#9670;&nbsp;</a></span>m_obstacleSubset</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::vector&lt;<a class="el" href="classMultiBody.html">MultiBody</a>*&gt; CollisionDetectionValidity::m_obstacleSubset</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Subset of obstacles to check for. </p>
 
 </div>
 </div>

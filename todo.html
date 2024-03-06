@@ -138,8 +138,8 @@ $(function() {
 <dt>Class <a class="el" href="classGridOverlay.html">GridOverlay</a>  </dt>
 <dd><a class="anchor" id="_todo000115"></a>Generalize to support 2d grids as well as 3d. </dd>
 <dt>Global <a class="el" href="classGridOverlay.html#a5b009d33707877f4e4e716819d9f8ffe">GridOverlay::LocateCells</a>  (const <a class="el" href="classGMSPolyhedron.html">GMSPolyhedron</a> &amp;_polyhedron, const mathtool::Transformation &amp;_transformation={}, const CellSet _type=<a class="el" href="classGridOverlay.html#afcf6fc05b418b5123c9bc28012505400aaf4bb376939e77df0e7c2332b837a866">CellSet::Closure</a>) const</dt>
-<dd><p class="startdd"><a class="anchor" id="_todo000113"></a>Can make the !_interior version more efficient by computing bbx cells for each facet. </p>
-<p class="enddd"><a class="anchor" id="_todo000114"></a>Can make both versions more efficient by avoiding re-building the _polyhedron's BBX each time. Add min/max pts and transform them with the poly, use here.  </p>
+<dd><p class="startdd"><a class="anchor" id="_todo000114"></a>Can make both versions more efficient by avoiding re-building the _polyhedron's BBX each time. Add min/max pts and transform them with the poly, use here. </p>
+<p class="enddd"><a class="anchor" id="_todo000113"></a>Can make the !_interior version more efficient by computing bbx cells for each facet.  </p>
 </dd>
 <dt>Global <a class="el" href="classGroupCfg.html#a16e8ee7a24aeb96b50b96c275a1202b1">GroupCfg&lt; GraphType &gt;::ApplyTransformationForRobots</a>  (const Formation &amp;_robotList, const mathtool::Transformation &amp;_transform, const mathtool::Transformation &amp;_relativeTransform=mathtool::Transformation())</dt>
 <dd><a class="anchor" id="_todo000004"></a>Generalize this to handle robots with more than one body.  </dd>
@@ -182,15 +182,15 @@ $(function() {
 <dt>Global <a class="el" href="classICreateInterface.html#ae97af3499a13d1e4fb54725dfd2f07df">ICreateInterface::FullStop</a>  () override</dt>
 <dd><a class="anchor" id="_todo000094"></a>We may need a short wait here for the SetSpeed control to reach the robot - as is we may see non-zero velocities.  </dd>
 <dt>Global <a class="el" href="classICreateInterface.html#a4c890a2ed6bb7a295730ba75bc883080">ICreateInterface::ICreateInterface</a>  (const std::string &amp;_ip, const unsigned short _port=6665)</dt>
-<dd><p class="startdd"><a class="anchor" id="_todo000092"></a>Magic 0 is the proxy index, it should be removable. </p>
-<p class="enddd"><a class="anchor" id="_todo000093"></a>Check player interface for how to gracefully recover from a failed conection attempt.  </p>
+<dd><p class="startdd"><a class="anchor" id="_todo000093"></a>Check player interface for how to gracefully recover from a failed conection attempt. </p>
+<p class="enddd"><a class="anchor" id="_todo000092"></a>Magic 0 is the proxy index, it should be removable.  </p>
 </dd>
+<dt>Module <a class="el" href="classStateEstimator.html#amgrpa0fd7182f4d2491c8c75f511addc3e01">Internal State</a>  </dt>
+<dd><a class="anchor" id="_todo000098"></a>Figure out how to represent this.  </dd>
 <dt>Module <a class="el" href="classNeighborhoodFinderMethod.html#amgrpa0fd7182f4d2491c8c75f511addc3e01">Internal State</a>  </dt>
 <dd><a class="anchor" id="_todo000062"></a>Remove m_k and m_radius - these don't apply to all NFs so it doesn't make sense to have them here. Fix design errors in SRT method which require this.  </dd>
 <dt>Module <a class="el" href="classSensorInterface.html#amgrpa0fd7182f4d2491c8c75f511addc3e01">Internal State</a>  </dt>
 <dd><a class="anchor" id="_todo000096"></a>We need a dynamically sizable matrix for this, either dlib or eigen will probably be the choice.  </dd>
-<dt>Module <a class="el" href="classStateEstimator.html#amgrpa0fd7182f4d2491c8c75f511addc3e01">Internal State</a>  </dt>
-<dd><a class="anchor" id="_todo000098"></a>Figure out how to represent this.  </dd>
 <dt>Class <a class="el" href="classKdTreeNF.html">KdTreeNF</a>  </dt>
 <dd><p class="startdd"><a class="anchor" id="_todo000060"></a>We should be able to use a Search_traits_adaptor to avoid recopying the points and instead put VIDs into the kd tree. However my attempt to do that resulted in bogus runtime behavior within CGAL's Kd_tree::build (dimension is computed incorrectly resulting in a bad array size). Figure out how to finagle this so that we can avoid recopying Cfgs.</p>
 <p class="enddd"><a class="anchor" id="_todo000061"></a>This is limited to euclidean distance at present, but it should be possible to use any minkowski or mahalonobis distance with the appropriate distance adapter. It can <em>not</em> support arbitrary distances despite the claims in CGAL's documentation because the implementation requires finding the nearest and furthest point to an AABB; this is not tractible unless the geometrically nearest/farthest points (i.e. measured with euclidean) are also the nearest points for our metric. </p>
@@ -206,15 +206,15 @@ $(function() {
 <dt>Global <a class="el" href="classMapEvaluatorMethod.html#a5cb6c6d857c17c7054234a88b510fc4d">MapEvaluatorMethod::m_activeRobots</a>  </dt>
 <dd><a class="anchor" id="_todo000038"></a>This is an artifact of developing robot groups. It should be replaced by using a proper subgroup where each robot within is active.  </dd>
 <dt>Class <a class="el" href="classMinkowskiDistance.html">MinkowskiDistance</a>  </dt>
-<dd><p class="startdd"><a class="anchor" id="_todo000016"></a>Remove m_r2, which isn't part of the Minkowski difference and doesn't have any valid use.</p>
+<dd><p class="startdd"><a class="anchor" id="_todo000017"></a>Move the normalization option up to the base class.</p>
 <p class="interdd"><a class="anchor" id="_todo000018"></a>Separate the computation of orientation and joint distances.</p>
-<p class="enddd"><a class="anchor" id="_todo000017"></a>Move the normalization option up to the base class. </p>
+<p class="enddd"><a class="anchor" id="_todo000016"></a>Remove m_r2, which isn't part of the Minkowski difference and doesn't have any valid use. </p>
 </dd>
 <dt>Global <a class="el" href="classMinkowskiDistance.html#ac2e200d5de370a45d0f65501ec452284">MinkowskiDistance::ScaleCfg</a>  (double _length, <a class="el" href="classCfg.html">Cfg</a> &amp;_c, const <a class="el" href="classCfg.html">Cfg</a> &amp;_o) override</dt>
 <dd><a class="anchor" id="_todo000015"></a>This implementation is very poor. Scaling should be a constant-time operation - complexity should not depend on the length of the input vector.  </dd>
 <dt>Global <a class="el" href="classMPProblem.html#a1be220913145bd64ca65caba4d559ee3">MPProblem::ParseChild</a>  (<a class="el" href="classXMLNode.html">XMLNode</a> &amp;_node)</dt>
-<dd><p class="startdd"><a class="anchor" id="_todo000086"></a>We currently assume that the environment is parsed first. Need to make sure this always happens regardless of the XML file ordering. </p>
-<p class="enddd"><a class="anchor" id="_todo000087"></a>Add check that tasks have unique labels  </p>
+<dd><p class="startdd"><a class="anchor" id="_todo000087"></a>Add check that tasks have unique labels </p>
+<p class="enddd"><a class="anchor" id="_todo000086"></a>We currently assume that the environment is parsed first. Need to make sure this always happens regardless of the XML file ordering.  </p>
 </dd>
 <dt>Global <a class="el" href="classMPProblem.html#a6c4b78d6682e889c9608b9c57597b9fa">MPProblem::Print</a>  (std::ostream &amp;_os) const</dt>
 <dd><a class="anchor" id="_todo000085"></a>Print robot and task information.  </dd>
@@ -225,8 +225,8 @@ $(function() {
 <dt>Global <a class="el" href="classMPStrategyMethod.html#a81d856b963f876938d08385bd3217e79">MPStrategyMethod::ClearRoadmap</a>  ()</dt>
 <dd><a class="anchor" id="_todo000050"></a>This uses the STAPL graph 'clear' function, which doesn't activate any roadmap hooks. Methods which use hooks may have stale data after clearing the map. To fix we'll need to replace with our own function in RoadmapGraph.  </dd>
 <dt>Class <a class="el" href="classMPTask.html">MPTask</a>  </dt>
-<dd><p class="startdd"><a class="anchor" id="_todo000089"></a>Support the use of path constraints in the library code, which currently doesn't care about this.</p>
-<p class="enddd"><a class="anchor" id="_todo000088"></a>We should remove the capability here and redefine it as a constraint (since the constraints should fully define the task). The fact that a capability is or is not required should generally be discerned from the problem, while a capability constraint would more likely represent a deliberate restriction that is not strictly required (perhaps to express an operational preference). We will also eventually encounter cases where multiple capabilities are required to satsify a task. </p>
+<dd><p class="startdd"><a class="anchor" id="_todo000088"></a>We should remove the capability here and redefine it as a constraint (since the constraints should fully define the task). The fact that a capability is or is not required should generally be discerned from the problem, while a capability constraint would more likely represent a deliberate restriction that is not strictly required (perhaps to express an operational preference). We will also eventually encounter cases where multiple capabilities are required to satsify a task.</p>
+<p class="enddd"><a class="anchor" id="_todo000089"></a>Support the use of path constraints in the library code, which currently doesn't care about this. </p>
 </dd>
 <dt>Global <a class="el" href="classNSphericalShell.html#a2f24f61884a226eb9d5b45bd73790dd2">NSphericalShell::Sample</a>  () const</dt>
 <dd><a class="anchor" id="_todo000011"></a>This is likely close but not correct, need to verify.  </dd>
@@ -251,8 +251,8 @@ $(function() {
 <dt>Global <a class="el" href="classRobot.html#a30265be650855e49ad729b91161873fa">Robot::InitializePlanningSpaces</a>  ()</dt>
 <dd><a class="anchor" id="_todo000099"></a>Set up a way to specify velocity limits for each joint.  </dd>
 <dt>Class <a class="el" href="classSamplerMethod.html">SamplerMethod</a>  </dt>
-<dd><p class="startdd"><a class="anchor" id="_todo000064"></a>The present implementation of Sample temporarily saves invalid configurations whether we will use them or not. Avoiding this extraneous retention will likely have good performance benefits in sampling-intensive applications such as proteins and manipulators where the success rate is very low.</p>
-<p class="enddd"><a class="anchor" id="_todo000065"></a>The present layout of this class is confusing since the base method is actually generating uniform random samples which are filtered by the derived class. This does not work for many derived classes as evidenced by their overriding of Sample rather than Sampler: we should rework the design so that derived classes generate and filter their own samples. The base class can then implement its functions in terms of the generate and filter helpers. </p>
+<dd><p class="startdd"><a class="anchor" id="_todo000065"></a>The present layout of this class is confusing since the base method is actually generating uniform random samples which are filtered by the derived class. This does not work for many derived classes as evidenced by their overriding of Sample rather than Sampler: we should rework the design so that derived classes generate and filter their own samples. The base class can then implement its functions in terms of the generate and filter helpers.</p>
+<p class="enddd"><a class="anchor" id="_todo000064"></a>The present implementation of Sample temporarily saves invalid configurations whether we will use them or not. Avoiding this extraneous retention will likely have good performance benefits in sampling-intensive applications such as proteins and manipulators where the success rate is very low. </p>
 </dd>
 <dt>Class <a class="el" href="classScaledEuclideanDistance.html">ScaledEuclideanDistance</a>  </dt>
 <dd><p class="startdd"><a class="anchor" id="_todo000020"></a>Separate the computation of orientation and joint distances.</p>
@@ -279,8 +279,8 @@ $(function() {
 <dt>Global <a class="el" href="classTopologicalMap.html#ab391bedab79fc9a3a53e2768bcf3d2e6">TopologicalMap::ComputeApproximateMinimumInnerDistances</a>  (const <a class="el" href="classWorkspaceRegion.html">WorkspaceRegion</a> *const _source, const double _radius)</dt>
 <dd><a class="anchor" id="_todo000058"></a>Refactor this and SSSP code to unify implementations. I think it should be feasible to make an adaptor class to give our grid (which represents an implicit graph) an API that is compatible with the STAPL (explicit) graph.  </dd>
 <dt>Global <a class="el" href="classTopologicalMap.html#a20b5b8b27c116087e51332f3fde3fbf3">TopologicalMap::Initialize</a>  () override</dt>
-<dd><p class="startdd"><a class="anchor" id="_todo000056"></a>Move this to the decomposition class, which currently cannot do this job because it does not know its own label. </p>
-<p class="enddd"><a class="anchor" id="_todo000057"></a>We could probably do this lazily if we use something like a segment tree to find the regions which intersect a cell.  </p>
+<dd><p class="startdd"><a class="anchor" id="_todo000057"></a>We could probably do this lazily if we use something like a segment tree to find the regions which intersect a cell. </p>
+<p class="enddd"><a class="anchor" id="_todo000056"></a>Move this to the decomposition class, which currently cannot do this job because it does not know its own label.  </p>
 </dd>
 <dt>Global <a class="el" href="SSSP_8h.html#aabf6880e3d339fd68b493c212846299b">TwoVariableDijkstraSSSP</a>  (GraphType *const _g, const std::vector&lt; typename GraphType::vertex_descriptor &gt; &amp;_starts, std::unordered_set&lt; size_t &gt; _goals, const double _startTime, const double _minEndTime, const double _lastConstraint, const double _lastGoalConstraint, SSSPPathWeightFunction&lt; GraphType &gt; &amp;_weight)</dt>
 <dd><a class="anchor" id="_todo000108"></a>If we want to add waiting, it should be added as a self edge here  </dd>
