@@ -3,7 +3,7 @@ name: Documentation and Tests
 on:
   push:
     branches:
-      - release-stage-one
+      - release-stage-two
       - github_updates
       - main
 
