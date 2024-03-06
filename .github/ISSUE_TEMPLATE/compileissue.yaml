@@ -9,7 +9,8 @@ body:
       description: Please search through the issues to see if an issue already exists. 
       options:
         - label: I have searched for existing issues on the ppl issues page.
-          required: true
+    validations:
+      required: true
   - type: input
     attributes:
       label: OS used
