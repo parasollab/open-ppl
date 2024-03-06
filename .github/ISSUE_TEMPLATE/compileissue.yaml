@@ -9,34 +9,41 @@ body:
       description: Please search through the issues to see if an issue already exists. 
       options:
         - label: I have searched for existing issues on the ppl issues page.
-          required: True
+          required: true
   - type: input
     attributes:
       label: OS used
       description: What OS are you using?
       placeholder: Ubuntu 22.04 (WSL), Mac Sierra, etc.
     validations:
-      required: True
+      required: true
   - type: input
     attributes:
       label: Branch
       description: What branch are you on?
       placeholder: release-stage-two
     validations:
-      required: True
+      required: true
   - type: textarea
     attributes:
       label: Commands run
       description: What commands did you run? Please list ALL commands. 
       placeholder: For better legibility, please use code blocks when pasting. 
     validations:
-      required: True
+      required: true
   - type: textarea
     attributes:
       label: Errors
       description: Please paste the error you got. 
       placeholder: For better legibility, please use code blocks when pasting. 
     validations:
-      required: True
+      required: true
+  - type: textarea
+    attributes:
+      label: More details (optional)
+      description: Add any additional details here. 
+      placeholder: For better legibility, please use code blocks when pasting. 
+    validations:
+      required: false
       
       
