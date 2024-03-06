@@ -1,7 +1,7 @@
 name: Compile Issue
 description: Issues related to compiling clean versions of ppl. 
 title: "[Compile Issue] DESCRIPTIVE SUMMARY"
-labels: [Compile]
+labels: ["compile"]
 body:
   - type: checkboxes
     attributes:
