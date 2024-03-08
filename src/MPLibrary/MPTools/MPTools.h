@@ -11,7 +11,7 @@
 #define TET_GEN_DECOMP_AVAILABLE 1
 #define REEB_GRAPH_AVAILABLE 1
 #define MEAN_CURVE_SKEL_AVAILABLE 1
-#define WRENCH_ACCESS_TOOL_AVAILABLE 1
+#define WRENCH_ACCESS_TOOL_AVAILABLE 0
 
 #include <string>
 #include <unordered_map>

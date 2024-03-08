@@ -260,14 +260,14 @@ class MPLibrary
     }
 
     /// For cases where we need to reset all instances of TimeEvaluator.
-/*    void ResetTimeEvaluators() {
+    void ResetTimeEvaluators() {
       for(auto& labelPtr : *m_mapEvaluators) {
         auto t = dynamic_cast<TimeEvaluator*>(labelPtr.second.get());
         if(t)
           t->Initialize();
       }
     }
-*/
+
     ///@}
     ///@name MPStrategy Accessors
     ///@{

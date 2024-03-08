@@ -68,6 +68,7 @@
 #cmakedefine01 SYCLOP_AVAILABLE
 #cmakedefine01 TOGGLE_PRM_AVAILABLE
 #cmakedefine01 WRENCH_ACCESS_STRAT_AVAILABLE
+#cmakedefine01 STRATEGY_SEQ_AVAILABLE
 
 // NeighborhoodFinders
 #cmakedefine01 BRUTE_FORCE_NF_AVAILABLE
@@ -307,6 +308,9 @@
 #if WRENCH_ACCESS_STRAT_AVAILABLE
 #include "MPLibrary/MPStrategies/WrenchAccessibilityStrategy.h"
 #endif
+#if STRATEGY_SEQ_AVAILABLE
+#include "MPLibrary/MPStrategies/StrategySequence.h"
+#endif
 
 #define MPSTRATEGY_CLASSES                                                     \
   ((AdaptiveRRT, ADAPTIVE_RRT_AVAILABLE))((BasicPRM, BASIC_PRM_AVAILABLE))(    \
@@ -318,7 +322,8 @@
       (GroupPRM, GROUP_PRM_AVAILABLE))((ModifyPath, MODIFY_PATH_AVAILABLE))(   \
       (PathStrategy, PATH_STRATEGY_AVAILABLE))((Syclop, SYCLOP_AVAILABLE))(    \
       (TogglePRMStrategy, TOGGLE_PRM_AVAILABLE))(                              \
-      (WrenchAccessibilityStrategy, WRENCH_ACCESS_STRAT_AVAILABLE))
+      (WrenchAccessibilityStrategy, WRENCH_ACCESS_STRAT_AVAILABLE))(           \
+      (StrategySequence, STRATEGY_SEQ_AVAILABLE))
 
 /************************** NeighborhoodFinders *******************************/
 #if BRUTE_FORCE_NF_AVAILABLE

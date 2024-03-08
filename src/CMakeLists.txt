@@ -50,20 +50,21 @@ option(COMPILE_NUM_EDGES_METRIC "Compile NumEdgesMetric" ON)
 option(COMPILE_TIME_METRIC "Compile TimeMetric" ON)
 
 # MPStrategies
-option(COMPILE_ADAPTIVE_RRT "Compile AdaptiveRRT" ON)
+option(COMPILE_ADAPTIVE_RRT "Compile AdaptiveRRT" OFF)
 option(COMPILE_BASIC_PRM "Compile BasicPRM" ON)
 option(COMPILE_BASIC_RRT "Compile BasicRRTStrategy" ON)
-option(COMPILE_DYANMIC_DOMAIN_RRT "Compile DynamicDomainRRT" ON)
+option(COMPILE_DYANMIC_DOMAIN_RRT "Compile DynamicDomainRRT" OFF)
 option(COMPILE_DYNAMIC_REGION_RRT "Compile DynamicRegionRRT" ON)
 option(COMPILE_DYNAMIC_REGION_PRM "Compile DynamicRegionsPRM" ON)
 option(COMPILE_EET "Compile EET" ON)
-option(COMPILE_GROUP_DECOUPLED_STRATEGY "Compile GroupDecoupledStrategy" ON)
-option(COMPILE_GROUP_PRM "Compile GroupPRM" ON)
-option(COMPILE_MODIFY_PATH "Compile ModifyPath" ON)
-option(COMPILE_PATH_STRATEGY "Compile PathStrategy" ON)
+option(COMPILE_GROUP_DECOUPLED_STRATEGY "Compile GroupDecoupledStrategy" OFF)
+option(COMPILE_GROUP_PRM "Compile GroupPRM" OFF)
+option(COMPILE_MODIFY_PATH "Compile ModifyPath" OFF)
+option(COMPILE_PATH_STRATEGY "Compile PathStrategy" OFF)
 option(COMPILE_SYCLOP "Compile Syclop" ON)
-option(COMPILE_TOGGLE_PRM " Compile TogglePRM " ON)
-option(COMPILE_WRENCH_ACCESS_STRAT " Compile WrenchAccessibilityStrategy " ON)
+option(COMPILE_TOGGLE_PRM " Compile TogglePRM " OFF)
+option(COMPILE_WRENCH_ACCESS_STRAT " Compile WrenchAccessibilityStrategy " OFF)
+option(COMPILE_STRATEGY_SEQUENCE " Compile StrategySequence " ON)
 
 # MPTools
 option(COMPILE_CLEARANCE_UTILS " Compile ClearanceUtilities " ON)
@@ -76,7 +77,7 @@ option(COMPILE_TOPOLOGICAL_MAP " Compile TopologicalMap " ON)
 option(COMPILE_TET_GEN_DECOMP " Compile TetGenDecomposition " ON)
 option(COMPILE_REEB_GRAPH " Compile ReebGraphConstruction " ON)
 option(COMPILE_MEAN_CURVATURE_SKEL " Compile MeanCurvatureSkeleton3D " ON)
-option(COMPILE_WRENCH_ACCESS_TOOL " Compile WrenchAccessibilityTool " ON)
+option(COMPILE_WRENCH_ACCESS_TOOL " Compile WrenchAccessibilityTool " OFF)
 
 # NeighborhoodFinders
 option(COMPILE_BRUTE_FORCE_NF " Compile BruteForceNF " ON)
@@ -85,7 +86,7 @@ option(COMPILE_RADIUS_NF " Compile RadiusNF " ON)
 option(COMPILE_RANDOM_NF " Compile RandomNF " ON)
 
 # PathModifiers
-option(COMPILE_SHORTCUTTING " Compile ShortcuttingPathModifier " ON)
+option(COMPILE_SHORTCUTTING " Compile ShortcuttingPathModifier " OFF)
 
 # Samplers
 option(COMPILE_BRIDGE_TEST_SAMPLER " Compile BridgeTestSampler " ON)
@@ -666,6 +667,13 @@ if(COMPILE_WRENCH_ACCESS_STRAT)
     list(APPEND PMPL_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/MPStrategies/WrenchAccessibilityStrategy.cpp)
 else()
     set(WRENCH_ACCESS_STRAT_AVAILABLE 0)
+endif()
+
+if(COMPILE_STRATEGY_SEQUENCE)
+    set(STRATEGY_SEQ_AVAILABLE 1)
+    list(APPEND PMPL_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/MPStrategies/StrategySequence.cpp)
+else()
+    set(STRATEGY_SEQ_AVAILABLE 0)
 endif()
 
 # MPTools

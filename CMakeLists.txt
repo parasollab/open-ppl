@@ -6,6 +6,7 @@ project(ppl VERSION 1.1.0)
 
 set(ROBOT_DEF "PMPCfg" CACHE STRING "Robot Type")
 add_definitions(-D${ROBOT_DEF})
+# add_definitions(-w)
 
 option(BUILD_ICREATE "Build Support for iCreate Hardware" OFF)
 option(BUILD_ARUCO "Build support for aruco detector hardware" OFF)

@@ -54,20 +54,21 @@
 #define TIME_METRIC_AVAILABLE 1
 
 // MPStrategies
-#define ADAPTIVE_RRT_AVAILABLE 1
+#define ADAPTIVE_RRT_AVAILABLE 0
 #define BASIC_PRM_AVAILABLE 1
 #define BASIC_RRT_AVAILABLE 1
-#define DYNAMIC_DOMAIN_RRT_AVAILABLE 1
+#define DYNAMIC_DOMAIN_RRT_AVAILABLE 0
 #define DYNAMIC_REGION_RRT_AVAILABLE 1
 #define DYNAMIC_REGION_PRM_AVAILABLE 1
 #define EET_AVAILABLE 1
-#define GROUP_DECOUPLED_STRAT_AVAILABLE 1
-#define GROUP_PRM_AVAILABLE 1
-#define MODIFY_PATH_AVAILABLE 1
+#define GROUP_DECOUPLED_STRAT_AVAILABLE 0
+#define GROUP_PRM_AVAILABLE 0
+#define MODIFY_PATH_AVAILABLE 0
 #define PATH_STRATEGY_AVAILABLE 0
 #define SYCLOP_AVAILABLE 1
-#define TOGGLE_PRM_AVAILABLE 1
-#define WRENCH_ACCESS_STRAT_AVAILABLE 1
+#define TOGGLE_PRM_AVAILABLE 0
+#define WRENCH_ACCESS_STRAT_AVAILABLE 0
+#define STRATEGY_SEQ_AVAILABLE 1
 
 // NeighborhoodFinders
 #define BRUTE_FORCE_NF_AVAILABLE 1
@@ -76,7 +77,7 @@
 #define RANDOM_NF_AVAILABLE 1
 
 // PathModifiers
-#define SHORTCUTTING_AVAILABLE 1
+#define SHORTCUTTING_AVAILABLE 0
 
 // Samplers
 #define BRIDGE_TEST_AVAILABLE 1
@@ -307,6 +308,9 @@
 #if WRENCH_ACCESS_STRAT_AVAILABLE
 #include "MPLibrary/MPStrategies/WrenchAccessibilityStrategy.h"
 #endif
+#if STRATEGY_SEQ_AVAILABLE
+#include "MPLibrary/MPStrategies/StrategySequence.h"
+#endif
 
 #define MPSTRATEGY_CLASSES                                                     \
   ((AdaptiveRRT, ADAPTIVE_RRT_AVAILABLE))((BasicPRM, BASIC_PRM_AVAILABLE))(    \
@@ -318,7 +322,8 @@
       (GroupPRM, GROUP_PRM_AVAILABLE))((ModifyPath, MODIFY_PATH_AVAILABLE))(   \
       (PathStrategy, PATH_STRATEGY_AVAILABLE))((Syclop, SYCLOP_AVAILABLE))(    \
       (TogglePRMStrategy, TOGGLE_PRM_AVAILABLE))(                              \
-      (WrenchAccessibilityStrategy, WRENCH_ACCESS_STRAT_AVAILABLE))
+      (WrenchAccessibilityStrategy, WRENCH_ACCESS_STRAT_AVAILABLE))(           \
+      (StrategySequence, STRATEGY_SEQ_AVAILABLE))
 
 /************************** NeighborhoodFinders *******************************/
 #if BRUTE_FORCE_NF_AVAILABLE
