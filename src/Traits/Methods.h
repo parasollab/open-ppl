@@ -69,6 +69,7 @@
 #define TOGGLE_PRM_AVAILABLE 0
 #define WRENCH_ACCESS_STRAT_AVAILABLE 0
 #define STRATEGY_SEQ_AVAILABLE 1
+#define HASRRT_AVAILABLE 0
 
 // NeighborhoodFinders
 #define BRUTE_FORCE_NF_AVAILABLE 1
@@ -311,6 +312,9 @@
 #if STRATEGY_SEQ_AVAILABLE
 #include "MPLibrary/MPStrategies/StrategySequence.h"
 #endif
+#if HASRRT_AVAILABLE
+#include "MPLibrary/MPStrategies/HASRRT.h"
+#endif
 
 #define MPSTRATEGY_CLASSES                                                     \
   ((AdaptiveRRT, ADAPTIVE_RRT_AVAILABLE))((BasicPRM, BASIC_PRM_AVAILABLE))(    \
@@ -323,7 +327,8 @@
       (PathStrategy, PATH_STRATEGY_AVAILABLE))((Syclop, SYCLOP_AVAILABLE))(    \
       (TogglePRMStrategy, TOGGLE_PRM_AVAILABLE))(                              \
       (WrenchAccessibilityStrategy, WRENCH_ACCESS_STRAT_AVAILABLE))(           \
-      (StrategySequence, STRATEGY_SEQ_AVAILABLE))
+      (StrategySequence, STRATEGY_SEQ_AVAILABLE))(                             \
+      (HASRRT, HASRRT_AVAILABLE))
 
 /************************** NeighborhoodFinders *******************************/
 #if BRUTE_FORCE_NF_AVAILABLE
