@@ -2,6 +2,8 @@
 #define PPL_HIERARCHICAL_AS_RRT_H_
 
 #include "BasicRRTStrategy.h"
+#include "Workspace/WorkspaceSkeleton.h"
+#include "Geometry/Boundaries/CSpaceBoundingSphere.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -21,7 +23,7 @@ class HASRRT : public BasicRRTStrategy {
     ///@name Motion Planning Types
     ///@{
 
-    typedef typename MPBaseObject::CfgType      CfgType;
+    typedef typename MPBaseObject::GroupCfgType      GroupCfgType;
     typedef typename MPBaseObject::WeightType   WeightType;
     typedef typename MPBaseObject::RoadmapType  RoadmapType;
     typedef typename RoadmapType::VID       VID;
@@ -145,13 +147,13 @@ class HASRRT : public BasicRRTStrategy {
     ///@{
 
     /// Get a random configuration to grow towards.
-    virtual CfgType SelectTarget() override;
+    virtual Cfg SelectTarget() override;
 
     /// Add a new configuration to the roadmap and current tree.
     /// @param _newCfg The new configuration to add.
     /// @return A pair with the added VID and a bool indicating whether the new
     ///         node was already in the map.
-    virtual std::pair<VID, bool> AddNode(const CfgType& _newCfg) override;
+    virtual std::pair<VID, bool> AddNode(const Cfg& _newCfg) override;
 
     ///@}
     ///@name Helpers
@@ -161,13 +163,13 @@ class HASRRT : public BasicRRTStrategy {
     /// given in m_samplerLabel.
     /// @param _region The region to sample from.
     /// @return A configuration with the sampling region.
-    CfgType Sample(SamplingRegion* _region);
+    Cfg Sample(SamplingRegion* _region);
 
     /// Sample a configuration from within a given boundary using the sampler
     /// given in _samplerLabel.
     /// @param _region The region to sample from.
     /// @return A configuration with the boundary.
-    CfgType Sample(const Boundary* const _boundary, const std::string* _samplerLabel);
+    Cfg Sample(const Boundary* const _boundary, const std::string* _samplerLabel);
 
     /// Calculate the velocity bias along a region's skeleton edge.
     /// @param _region The region whose skeleton edge to bias the velocity along.
@@ -209,13 +211,13 @@ class HASRRT : public BasicRRTStrategy {
     /// the region.
     /// @param _cfg The sample to bias.
     /// @param _region The region from which _cfg was sampled.
-    void BiasVelocity(CfgType& _cfg, SamplingRegion* _region);
+    void BiasVelocity(Cfg& _cfg, SamplingRegion* _region);
 
     /// Check if q_new is close enough to an unvisited skeleton vertex to create
     /// new regions on the outgoing edges of that vertex. If so, create those
     /// new regions.
     /// @param _p The new configuration added to the roadmap.
-    // void CheckRegionProximity(const Point3d& _p);
+    void CheckRegionProximity(const Point3d& _p);
 
     /// Create new regions on the outgoing edges of the skeleton vertex.
     /// @param _iter The skeleton vertex iterator.

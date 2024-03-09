@@ -1,12 +1,13 @@
-#include HASRRT.h
+#include "HASRRT.h"
 
-#include "Geometry/Boundaries/CSpaceBoundingSphere.h"
+#include "MPLibrary/MPLibrary.h"
+#include "MPProblem/Constraints/Constraint.h"
+
 #include "MPLibrary/MPTools/MeanCurvatureSkeleton3D.h"
 #include "MPLibrary/MPTools/ReebGraphConstruction.h"
 #include "Utilities/MedialAxis2D.h"
 #include "Utilities/XMLNode.h"
 #include "Utilities/MPUtils.h"
-#include "Workspace/WorkspaceSkeleton.h"
 
 
 /*------------------------------ Construction --------------------------------*/
@@ -151,7 +152,7 @@ Iterate() {
 
   //this->Finalize();
   // Find growth target.
-  const CfgType target = this->SelectTarget();
+  const Cfg target = this->SelectTarget();
 
   auto stats = this->GetStatClass();
   const std::string id = this->GetNameAndLabel() + "::SelectTargetCount";
@@ -232,7 +233,7 @@ Iterate() {
 
 /*------------------------ BasicRRTStrategy Overrides ------------------------*/
 
-typename MPTraits::CfgType
+Cfg
 HASRRT::
 SelectTarget() {
   MethodTimer mt(this->GetStatClass(),
@@ -242,7 +243,7 @@ SelectTarget() {
   const std::string* samplerLabel = &this->m_samplerLabel;
 
   // Select goal growth with probability m_growthFocus.
-  auto goalTracker = this->GetGoalTracker();
+  auto goalTracker = this->GetMPLibrary()->GetGoalTracker();
   const std::vector<size_t> unreachedGoals = goalTracker->UnreachedGoalIndexes();
 
   if(unreachedGoals.size() and DRand() < this->m_growthFocus) {
@@ -290,7 +291,7 @@ SelectTarget() {
 
 std::pair<typename HASRRT::VID, bool>
 HASRRT::
-AddNode(const CfgType& _newCfg) {
+AddNode(const Cfg& _newCfg) {
   MethodTimer mt(this->GetStatClass(), this->GetNameAndLabel() + "::AddNode");
 
   auto g = this->GetRoadmap();
@@ -303,12 +304,12 @@ AddNode(const CfgType& _newCfg) {
     if(this->m_debug)
       std::cout << "\tAdding VID " << newVID << "."
                 << std::endl;
-
+    
 
     // On each new sample, check if we need to advance our regions and generate
     // new ones. Add a roadmap hook to achieve this.
     auto vi = g->find_vertex(newVID);
-    //CheckRegionProximity(vi->property().GetPoint());
+    CheckRegionProximity(vi->property().GetPoint());
     AdvanceRegions(vi->property());
   }
 
@@ -317,7 +318,7 @@ AddNode(const CfgType& _newCfg) {
 
 /*---------------------------------- Helpers ---------------------------------*/
 
-typename MPTraits::CfgType
+Cfg
 HASRRT::
 Sample(SamplingRegion* _region) {
   MethodTimer mt(this->GetStatClass(),
@@ -335,9 +336,9 @@ Sample(SamplingRegion* _region) {
   auto samplingBoundary = MakeBoundary(center);
 
   // Get the sampler.
-  auto s = this->GetSampler(this->m_samplerLabel);
+  auto s = this->GetMPLibrary()->GetSampler(this->m_samplerLabel);
 
-  std::vector<CfgType> samples, collision;
+  std::vector<Cfg> samples, collision;
   while(samples.empty()) {
     s->Sample(1, 5, &samplingBoundary, std::back_inserter(samples),
       std::back_inserter(collision));
@@ -357,15 +358,15 @@ Sample(SamplingRegion* _region) {
 }
 
 
-typename MPTraits::CfgType
+Cfg
 HASRRT::
 Sample(const Boundary* const _boundary, const std::string* _samplerLabel) {
   MethodTimer mt(this->GetStatClass(),
       this->GetNameAndLabel() + "::SampleWholeEnv");
   // Get the sampler.
-  auto s = this->GetSampler(*_samplerLabel);
+  auto s = this->GetMPLibrary()->GetSampler(*_samplerLabel);
 
-  std::vector<CfgType> samples, collision;
+  std::vector<Cfg> samples, collision;
   while(samples.empty())
     s->Sample(1, 5, _boundary, std::back_inserter(samples),
       std::back_inserter(collision));
@@ -532,7 +533,7 @@ BuildSkeleton() {
         // Create a workspace skeleton using a reeb graph.
         if(this->m_debug)
           std::cout << "Building a Reeb Graph skeleton." << std::endl;
-        auto decomposition = this->GetMPTools()->GetDecomposition(
+        auto decomposition = this->GetMPLibrary()->GetMPTools()->GetDecomposition(
             m_decompositionLabel);
         ReebGraphConstruction reeb;
         reeb.Construct(decomposition);
@@ -590,7 +591,7 @@ void
 HASRRT::
 MakeQuery() {
   MethodTimer mt(this->GetStatClass(),
-      this->GetNameAndLabel() + "::DirectSkeleton");
+      this->GetNameAndLabel() + "::MakeQuery");
   // Only support single-goal tasks; this is inherent to the method. The problem"
   // is solvable but hasn't been solved yet.
   const auto& goalConstraints = this->GetTask()->GetGoalConstraints();
@@ -601,7 +602,7 @@ MakeQuery() {
 
   // Find the workspace points which are nearest to the start and goal."
   auto g = this->GetRoadmap();
-  auto goalTracker = this->GetGoalTracker();
+  auto goalTracker = this->GetMPLibrary()->GetGoalTracker();
   const auto& startVIDs = goalTracker->GetStartVIDs();
   const auto& goalVIDs  = goalTracker->GetGoalVIDs(0);
   Point3d start, goal;
@@ -630,10 +631,10 @@ MakeQuery() {
                                     << "constraint boundary was available.";
 
     // Try to sample a configuration in the boundary.
-    auto sampler = this->GetSampler(this->m_samplerLabel);
+    auto sampler = this->GetMPLibrary()->GetSampler(this->m_samplerLabel);
     const size_t count    = 1,
                  attempts = 100;
-    std::vector<CfgType> samples;
+    std::vector<Cfg> samples;
     sampler->Sample(count, attempts, boundary, std::back_inserter(samples));
 
     // If we couldn't generate a configuration here, the goal boundary isn't
@@ -750,7 +751,7 @@ ComputeProbabilities() {
 
 void
 HASRRT::
-BiasVelocity(CfgType& _cfg, SamplingRegion* _region) {
+BiasVelocity(Cfg& _cfg, SamplingRegion* _region) {
   MethodTimer mt(this->GetStatClass(), this->GetNameAndLabel() + "::BiasVelocity");
 
   // Get the bias from the region kit.
@@ -774,23 +775,22 @@ BiasVelocity(CfgType& _cfg, SamplingRegion* _region) {
 }
 
 
-// template <typename MPTraits>
-// void
-// HASRRT::
-// CheckRegionProximity(const Point3d& _p) {
-//   MethodTimer mt(this->GetStatClass(),
-//       this->GetNameAndLabel() + "::CheckRegionProximity");
+void
+HASRRT::
+CheckRegionProximity(const Point3d& _p) {
+  MethodTimer mt(this->GetStatClass(),
+      this->GetNameAndLabel() + "::CheckRegionProximity");
 
-//   // Check each skeleton node to see if a new region should be created.
-//   for(auto iter = m_skeleton.begin(); iter != m_skeleton.end(); ++iter) {
-//     // Skip skeleton nodes that are too far away.
-//     const double dist = (iter->property() - _p).norm();
-//     if(dist >= m_regionRadius)
-//       continue;
+  // Check each skeleton node to see if a new region should be created.
+  for(auto iter = m_skeleton.begin(); iter != m_skeleton.end(); ++iter) {
+    // Skip skeleton nodes that are too far away.
+    const double dist = (iter->property() - _p).norm();
+    if(dist >= m_regionRadius)
+      continue;
 
-//     CreateRegions(iter);
-//   }
-// }
+    CreateRegions(iter);
+  }
+}
 
 
 std::vector<typename HASRRT::SamplingRegion*>
@@ -1050,7 +1050,7 @@ RefineEdges() {
   vector<vector<Point3d> > toAdd;
 
   //auto boundary = this->GetEnvironment()->GetBoundary();
-  auto vc = this->GetValidityChecker("pqp_solid");
+  auto vc = this->GetMPLibrary()->GetValidityChecker("pqp_solid");
 
   auto pointRobot = this->GetMPProblem()->GetRobot("point");
 
@@ -1059,7 +1059,7 @@ RefineEdges() {
   // Function to compute clearance for input point _p.
   auto getClearance = [&](const Point3d& _p) -> double {
     // Check against obstacles using a point robot.
-    CfgType cfg(_p, pointRobot);
+    Cfg cfg(_p, pointRobot);
     CDInfo cdInfo(true);
     vc->IsValid(cfg, cdInfo, "Skeleton ray Clearance");
 
