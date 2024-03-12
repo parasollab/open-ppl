@@ -27,6 +27,7 @@
 // Extenders
 #cmakedefine01 BASIC_EXTENDER_AVAILABLE
 #cmakedefine01 ROTATION_THEN_TRANSLATION_AVAILABLE
+#cmakedefine01 MEDIALAXIS_EXTENDER_AVAILABLE
 
 // LocalPlanners
 #cmakedefine01 STRAIGHT_LINE_AVAILABLE
@@ -87,6 +88,7 @@
 #cmakedefine01 OBSTACLE_BASED_SAMPLER_AVAILABLE
 #cmakedefine01 UNIFORM_RANDOM_AVAILABLE
 #cmakedefine01 UNIFORM_OBSTACLE_AVAILABLE
+#cmakedefine01 MEDIALAXIS_SAMPLER_AVAILABLE
 
 // ValidityCheckers
 #cmakedefine01 ALWAYS_TRUE_AVAILABLE
@@ -172,10 +174,14 @@
 #if ROTATION_THEN_TRANSLATION_AVAILABLE
 #include "MPLibrary/Extenders/RotationThenTranslation.h"
 #endif
+#if MEDIALAXIS_EXTENDER_AVAILABLE
+#include "MPLibrary/Extenders/MedialAxisExtender.h"
+#endif
 
 #define EXT_CLASSES                            \
   ((BasicExtender, BASIC_EXTENDER_AVAILABLE))( \
-      (RotationThenTranslation, ROTATION_THEN_TRANSLATION_AVAILABLE))
+      (RotationThenTranslation, ROTATION_THEN_TRANSLATION_AVAILABLE))( \
+      (MedialAxisExtender, MEDIALAXIS_EXTENDER_AVAILABLE))
 // ... and so on ...
 
 /***************************** LocalPlanners **********************************/
@@ -374,6 +380,9 @@
 #if UNIFORM_OBSTACLE_AVAILABLE
 #include "MPLibrary/Samplers/UniformObstacleBasedSampler.h"
 #endif
+#if MEDIALAXIS_SAMPLER_AVAILABLE
+#include "MPLibrary/Samplers/MedialAxisSampler.h"
+#endif
 
 #define SAMPLER_CLASSES                                          \
   ((BridgeTestSampler, BRIDGE_TEST_AVAILABLE))(                  \
@@ -381,7 +390,8 @@
       (MixSampler, MIX_SAMPLER_AVAILABLE))(                      \
       (ObstacleBasedSampler, OBSTACLE_BASED_SAMPLER_AVAILABLE))( \
       (UniformRandomSampler, UNIFORM_RANDOM_AVAILABLE))(         \
-      (UniformObstacleBasedSampler, UNIFORM_OBSTACLE_AVAILABLE))
+      (UniformObstacleBasedSampler, UNIFORM_OBSTACLE_AVAILABLE))(\
+      (MedialAxisSampler, MEDIALAXIS_SAMPLER_AVAILABLE))
 
 /**************************** ValidityCheckers ********************************/
 #include "MPLibrary/ValidityCheckers/CollisionDetectionValidity.h"

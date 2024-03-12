@@ -9,7 +9,7 @@ option(COMPILE_REWIRE_CONNECTOR "Compile RewireConnector" ON)
 option(COMPILE_BINARY_LP_SWEPT_DISTANCE "Compile BinaryLPSweptDistance" ON)
 option(COMPILE_LP_SWEPT_DISTANCE "Compile LPSweptDistance" ON)
 option(COMPILE_MANHATTAN_DISTANCE "Compile ManhattanDistance" ON)
-option(COMPILE_MINKOWSKI_DISTANCE "Compile MinkowskiDistance" OFF)
+option(COMPILE_MINKOWSKI_DISTANCE "Compile MinkowskiDistance" ON)
 option(COMPILE_EUCLIDEAN_DISTANCE "Compile EuclideanDistance" ON)
 option(COMPILED_SCALED_EUCLIDEAN_DISTANCE "Compile ScaledEuclideanDistance" OFF)
 option(COMPILE_RMSD_DISTANCE "Compile RMSDDistance" ON)
@@ -23,6 +23,7 @@ option(COMPILE_INTERMEDIATES_EVC "Compile IntermediatesEdgeValidityChecker" OFF)
 # Extenders
 option(COMPILE_BASIC_EXTENDER "Compile BasicExtender" ON)
 option(COMPILE_ROTATE_TRANSLATE_EXTENDER "Compile RotateThenTranslateExtender" OFF)
+option(COMPILE_MEDIALAXIS_EXTENDER "Compile MedialAxisExtender" ON)
 
 # LocalPlanners
 option(COMPILE_STRAIGHT_LINE_LP "Compile StraightLineLP" ON)
@@ -90,12 +91,13 @@ option(COMPILE_RANDOM_NF " Compile RandomNF " ON)
 option(COMPILE_SHORTCUTTING " Compile ShortcuttingPathModifier " OFF)
 
 # Samplers
-option(COMPILE_BRIDGE_TEST_SAMPLER " Compile BridgeTestSampler " ON)
-option(COMPILE_GAUSSIAN_SAMPLER " Compile GaussianSampler " ON)
-option(COMPILE_MIX_SAMPLER " Compile MixSampler " ON)
-option(COMPILE_OBSTACLE_BASED_SAMPLER " Compile ObstacleBasedSampler " ON)
+option(COMPILE_BRIDGE_TEST_SAMPLER " Compile BridgeTestSampler " OFF)
+option(COMPILE_GAUSSIAN_SAMPLER " Compile GaussianSampler " OFF)
+option(COMPILE_MIX_SAMPLER " Compile MixSampler " OFF)
+option(COMPILE_OBSTACLE_BASED_SAMPLER " Compile ObstacleBasedSampler " OFF)
 option(COMPILE_UNIFORM_RANDOM_SAMPLER " Compile UniformRandomSampler " ON)
-option(COMPILE_UNIFORM_OBSTACLE_SAMPLER " Compile UniformObstacleBasedSampler " ON)
+option(COMPILE_UNIFORM_OBSTACLE_SAMPLER " Compile UniformObstacleBasedSampler " OFF)
+option(COMPILE_MEDIALAXIS_SAMPLER " Compile MedialaxisSampler " ON)
 
 # ValidityCheckers
 option(COMPILE_ALWAYS_TRUE_VC " Compile AlwaysTrueValidity " ON)
@@ -433,6 +435,13 @@ if(COMPILE_ROTATE_TRANSLATE_EXTENDER)
     list(APPEND PMPL_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/Extenders/RotationThenTranslation.cpp)
 else()
     set(ROTATION_THEN_TRANSLATION_AVAILABLE 0)
+endif()
+
+if(COMPILE_MEDIALAXIS_EXTENDER)
+    set(MEDIALAXIS_EXTENDER_AVAILABLE 1)
+    list(APPEND PMPL_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/Extenders/MedialAxisExtender.cpp)
+else()
+    set(MEDIALAXIS_EXTENDER_AVAILABLE 0)
 endif()
 
 # LocalPlanners
@@ -840,6 +849,13 @@ if(COMPILE_UNIFORM_OBSTACLE_SAMPLER)
     list(APPEND PMPL_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/Samplers/UniformObstacleBasedSampler.cpp)
 else()
     set(UNIFORM_OBSTACLE_AVAILABLE 0)
+endif()
+
+if(COMPILE_MEDIALAXIS_SAMPLER)
+    set(MEDIALAXIS_SAMPLER_AVAILABLE 1)
+    list(APPEND PMPL_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/MPLibrary/Samplers/MedialAxisSampler.cpp)
+else()
+    set(MEDIALAXIS_SAMPLER_AVAILABLE 0)
 endif()
 
 # ValidityCheckers

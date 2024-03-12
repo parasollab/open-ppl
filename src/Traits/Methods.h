@@ -14,38 +14,39 @@
 #define LP_SWEPT_AVAILABLE 1
 #define EUCLIDEAN_AVAILABLE 1
 #define SCALED_EUCLIDEAN_AVAILABLE 0
-#define WEIGHTED_EUCLIDEAN_AVAILABLE 1
+#define WEIGHTED_EUCLIDEAN_AVAILABLE 0
 #define MINKOWSKI_AVAILABLE 1
 #define MANHATTAN_AVAILABLE 1
 #define RMSD_AVAILABLE 1
-#define TOPOLOGICAL_DISTANCE_AVAILABLE 1
-#define WORKSPACE_TRANSLATION_AVAILABLE 1
+#define TOPOLOGICAL_DISTANCE_AVAILABLE 0
+#define WORKSPACE_TRANSLATION_AVAILABLE 0
 
 // EdgeValidityCheckers
-#define INTERMEDIATES_EVC_AVAILABLE 1
+#define INTERMEDIATES_EVC_AVAILABLE 0
 
 // Extenders
 #define BASIC_EXTENDER_AVAILABLE 1
-#define ROTATION_THEN_TRANSLATION_AVAILABLE 1
+#define ROTATION_THEN_TRANSLATION_AVAILABLE 0
+#define MEDIALAXIS_EXTENDER_AVAILABLE 1
 
 // LocalPlanners
 #define STRAIGHT_LINE_AVAILABLE 1
-#define HIERARCHICAL_LP_AVAILABLE 1
+#define HIERARCHICAL_LP_AVAILABLE 0
 
 // MapEvaluators
-#define CBS_QUERY_AVAILABLE 1
-#define CLEARANCE_QUERY_AVAILABLE 1
-#define COLLISION_EVAL_AVAILABLE 1
+#define CBS_QUERY_AVAILABLE 0
+#define CLEARANCE_QUERY_AVAILABLE 0
+#define COLLISION_EVAL_AVAILABLE 0
 #define COMPOSE_EVAL_AVAILABLE 1
 #define CONDITIONAL_EVAL_AVAILABLE 1
-#define GROUP_QUERY_AVAILABLE 1
+#define GROUP_QUERY_AVAILABLE 0
 #define LAZY_QUERY_AVAILABLE 1
-#define MIN_DIST_EVAL_AVAILABLE 1
+#define MIN_DIST_EVAL_AVAILABLE 0
 #define NEGATE_EVAL_AVAILABLE 1
 #define PATH_EVAL_AVAILABLE 1
-#define PRINT_MAP_AVAILABLE 1
+#define PRINT_MAP_AVAILABLE 0
 #define QUERY_METHOD_AVAILABLE 1
-#define SIPP_METHOD_AVAILABLE 1
+#define SIPP_METHOD_AVAILABLE 0
 #define TIME_EVAL_AVAILABLE 1
 
 // Metrics
@@ -73,7 +74,7 @@
 
 // NeighborhoodFinders
 #define BRUTE_FORCE_NF_AVAILABLE 1
-#define KDTREE_NF_AVAILABLE 1
+#define KDTREE_NF_AVAILABLE 0
 #define RADIUS_NF_AVAILABLE 1
 #define RANDOM_NF_AVAILABLE 1
 
@@ -81,21 +82,22 @@
 #define SHORTCUTTING_AVAILABLE 0
 
 // Samplers
-#define BRIDGE_TEST_AVAILABLE 1
-#define GAUSSIAN_AVAILABLE 1
-#define MIX_SAMPLER_AVAILABLE 1
-#define OBSTACLE_BASED_SAMPLER_AVAILABLE 1
+#define BRIDGE_TEST_AVAILABLE 0
+#define GAUSSIAN_AVAILABLE 0
+#define MIX_SAMPLER_AVAILABLE 0
+#define OBSTACLE_BASED_SAMPLER_AVAILABLE 0
 #define UNIFORM_RANDOM_AVAILABLE 1
 #define UNIFORM_OBSTACLE_AVAILABLE 0
+#define MEDIALAXIS_SAMPLER_AVAILABLE 1
 
 // ValidityCheckers
 #define ALWAYS_TRUE_AVAILABLE 1
-#define COMPOSE_CD_AVAILABLE 1
+#define COMPOSE_CD_AVAILABLE 0
 #define COMPOSE_VC_AVAILABLE 1
 #define NODE_CLEARANCE_VC_AVAILABLE 1
 #define OBSTACLE_CLEARANCE_VC_AVAILABLE 1
-#define TERRAIN_VC_AVAILABLE 1
-#define TOPOLOGICAL_MAP_VC_AVAILABLE 1
+#define TERRAIN_VC_AVAILABLE 0
+#define TOPOLOGICAL_MAP_VC_AVAILABLE 0
 
 /******************************* Connectors ***********************************/
 #if CCS_CONNECTOR_AVAILABLE
@@ -172,10 +174,14 @@
 #if ROTATION_THEN_TRANSLATION_AVAILABLE
 #include "MPLibrary/Extenders/RotationThenTranslation.h"
 #endif
+#if MEDIALAXIS_EXTENDER_AVAILABLE
+#include "MPLibrary/Extenders/MedialAxisExtender.h"
+#endif
 
 #define EXT_CLASSES                            \
   ((BasicExtender, BASIC_EXTENDER_AVAILABLE))( \
-      (RotationThenTranslation, ROTATION_THEN_TRANSLATION_AVAILABLE))
+      (RotationThenTranslation, ROTATION_THEN_TRANSLATION_AVAILABLE))( \
+      (MedialAxisExtender, MEDIALAXIS_EXTENDER_AVAILABLE))
 // ... and so on ...
 
 /***************************** LocalPlanners **********************************/
@@ -374,6 +380,9 @@
 #if UNIFORM_OBSTACLE_AVAILABLE
 #include "MPLibrary/Samplers/UniformObstacleBasedSampler.h"
 #endif
+#if MEDIALAXIS_SAMPLER_AVAILABLE
+#include "MPLibrary/Samplers/MedialAxisSampler.h"
+#endif
 
 #define SAMPLER_CLASSES                                          \
   ((BridgeTestSampler, BRIDGE_TEST_AVAILABLE))(                  \
@@ -381,7 +390,8 @@
       (MixSampler, MIX_SAMPLER_AVAILABLE))(                      \
       (ObstacleBasedSampler, OBSTACLE_BASED_SAMPLER_AVAILABLE))( \
       (UniformRandomSampler, UNIFORM_RANDOM_AVAILABLE))(         \
-      (UniformObstacleBasedSampler, UNIFORM_OBSTACLE_AVAILABLE))
+      (UniformObstacleBasedSampler, UNIFORM_OBSTACLE_AVAILABLE))(\
+      (MedialAxisSampler, MEDIALAXIS_SAMPLER_AVAILABLE))
 
 /**************************** ValidityCheckers ********************************/
 #include "MPLibrary/ValidityCheckers/CollisionDetectionValidity.h"
