@@ -206,8 +206,8 @@ $(function() {
 <dt>Global <a class="el" href="classMapEvaluatorMethod.html#a5cb6c6d857c17c7054234a88b510fc4d">MapEvaluatorMethod::m_activeRobots</a>  </dt>
 <dd><a class="anchor" id="_todo000038"></a>This is an artifact of developing robot groups. It should be replaced by using a proper subgroup where each robot within is active.  </dd>
 <dt>Class <a class="el" href="classMinkowskiDistance.html">MinkowskiDistance</a>  </dt>
-<dd><p class="startdd"><a class="anchor" id="_todo000017"></a>Move the normalization option up to the base class.</p>
-<p class="interdd"><a class="anchor" id="_todo000018"></a>Separate the computation of orientation and joint distances.</p>
+<dd><p class="startdd"><a class="anchor" id="_todo000018"></a>Separate the computation of orientation and joint distances.</p>
+<p class="interdd"><a class="anchor" id="_todo000017"></a>Move the normalization option up to the base class.</p>
 <p class="enddd"><a class="anchor" id="_todo000016"></a>Remove m_r2, which isn't part of the Minkowski difference and doesn't have any valid use. </p>
 </dd>
 <dt>Global <a class="el" href="classMinkowskiDistance.html#ac2e200d5de370a45d0f65501ec452284">MinkowskiDistance::ScaleCfg</a>  (double _length, <a class="el" href="classCfg.html">Cfg</a> &amp;_c, const <a class="el" href="classCfg.html">Cfg</a> &amp;_o) override</dt>
@@ -251,12 +251,12 @@ $(function() {
 <dt>Global <a class="el" href="classRobot.html#a30265be650855e49ad729b91161873fa">Robot::InitializePlanningSpaces</a>  ()</dt>
 <dd><a class="anchor" id="_todo000099"></a>Set up a way to specify velocity limits for each joint.  </dd>
 <dt>Class <a class="el" href="classSamplerMethod.html">SamplerMethod</a>  </dt>
-<dd><p class="startdd"><a class="anchor" id="_todo000065"></a>The present layout of this class is confusing since the base method is actually generating uniform random samples which are filtered by the derived class. This does not work for many derived classes as evidenced by their overriding of Sample rather than Sampler: we should rework the design so that derived classes generate and filter their own samples. The base class can then implement its functions in terms of the generate and filter helpers.</p>
-<p class="enddd"><a class="anchor" id="_todo000064"></a>The present implementation of Sample temporarily saves invalid configurations whether we will use them or not. Avoiding this extraneous retention will likely have good performance benefits in sampling-intensive applications such as proteins and manipulators where the success rate is very low. </p>
+<dd><p class="startdd"><a class="anchor" id="_todo000064"></a>The present implementation of Sample temporarily saves invalid configurations whether we will use them or not. Avoiding this extraneous retention will likely have good performance benefits in sampling-intensive applications such as proteins and manipulators where the success rate is very low.</p>
+<p class="enddd"><a class="anchor" id="_todo000065"></a>The present layout of this class is confusing since the base method is actually generating uniform random samples which are filtered by the derived class. This does not work for many derived classes as evidenced by their overriding of Sample rather than Sampler: we should rework the design so that derived classes generate and filter their own samples. The base class can then implement its functions in terms of the generate and filter helpers. </p>
 </dd>
 <dt>Class <a class="el" href="classScaledEuclideanDistance.html">ScaledEuclideanDistance</a>  </dt>
-<dd><p class="startdd"><a class="anchor" id="_todo000020"></a>Separate the computation of orientation and joint distances.</p>
-<p class="enddd"><a class="anchor" id="_todo000021"></a>Replace with WeightedEuclidean, which full encompases this class and offers more functionality. </p>
+<dd><p class="startdd"><a class="anchor" id="_todo000021"></a>Replace with WeightedEuclidean, which full encompases this class and offers more functionality.</p>
+<p class="enddd"><a class="anchor" id="_todo000020"></a>Separate the computation of orientation and joint distances. </p>
 </dd>
 <dt>Global <a class="el" href="classSensorInterface.html#a17df8eb7dbc9b10b6606297b277c5c09">SensorInterface::GetUncertainty</a>  ()=0</dt>
 <dd><a class="anchor" id="_todo000095"></a>This should maybe be a covariance matrix instead of an uncertainty in each measured dimension.  </dd>
@@ -279,8 +279,8 @@ $(function() {
 <dt>Global <a class="el" href="classTopologicalMap.html#ab391bedab79fc9a3a53e2768bcf3d2e6">TopologicalMap::ComputeApproximateMinimumInnerDistances</a>  (const <a class="el" href="classWorkspaceRegion.html">WorkspaceRegion</a> *const _source, const double _radius)</dt>
 <dd><a class="anchor" id="_todo000058"></a>Refactor this and SSSP code to unify implementations. I think it should be feasible to make an adaptor class to give our grid (which represents an implicit graph) an API that is compatible with the STAPL (explicit) graph.  </dd>
 <dt>Global <a class="el" href="classTopologicalMap.html#a20b5b8b27c116087e51332f3fde3fbf3">TopologicalMap::Initialize</a>  () override</dt>
-<dd><p class="startdd"><a class="anchor" id="_todo000057"></a>We could probably do this lazily if we use something like a segment tree to find the regions which intersect a cell. </p>
-<p class="enddd"><a class="anchor" id="_todo000056"></a>Move this to the decomposition class, which currently cannot do this job because it does not know its own label.  </p>
+<dd><p class="startdd"><a class="anchor" id="_todo000056"></a>Move this to the decomposition class, which currently cannot do this job because it does not know its own label. </p>
+<p class="enddd"><a class="anchor" id="_todo000057"></a>We could probably do this lazily if we use something like a segment tree to find the regions which intersect a cell.  </p>
 </dd>
 <dt>Global <a class="el" href="SSSP_8h.html#aabf6880e3d339fd68b493c212846299b">TwoVariableDijkstraSSSP</a>  (GraphType *const _g, const std::vector&lt; typename GraphType::vertex_descriptor &gt; &amp;_starts, std::unordered_set&lt; size_t &gt; _goals, const double _startTime, const double _minEndTime, const double _lastConstraint, const double _lastGoalConstraint, SSSPPathWeightFunction&lt; GraphType &gt; &amp;_weight)</dt>
 <dd><a class="anchor" id="_todo000108"></a>If we want to add waiting, it should be added as a self edge here  </dd>
