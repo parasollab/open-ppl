@@ -27,7 +27,7 @@ class PPLRecipe(ConanFile):
         check_min_cppstd(self, "17")
 
     def requirements(self):
-        self.requires("cgal/5.5.2")
+        self.requires("cgal/5.6.1")
         self.requires("boost/1.83.0")
         self.requires("eigen/3.4.0")
         self.requires("bullet3/3.25")
