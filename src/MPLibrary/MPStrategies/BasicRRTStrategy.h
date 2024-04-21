@@ -157,14 +157,14 @@ class BasicRRTStrategy : public MPStrategyMethod {
     /// the extender's range.
     /// @param _newVID The VID of a newly extended configuration.
     /// @note This only applies when not growing goals.
-    void TryGoalExtension(const VID _newVID);
+    virtual void TryGoalExtension(const VID _newVID);
 
     /// Try to extend a new configuration toward a specific goal region. No-op
     /// if the goal is outside the extender's range.
     /// @param _newVID The VID of a newly extended configuration.
     /// @param _boundary The goal boundary.
     /// @note This only applies when not growing goals.
-    void TryGoalExtension(const VID _newVID, const Boundary* const _boundary);
+    virtual void TryGoalExtension(const VID _newVID, const Boundary* const _boundary);
 
     ///@}
     ///@name Tree Helpers

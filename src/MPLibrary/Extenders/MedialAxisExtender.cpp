@@ -86,7 +86,7 @@ Extend(const Cfg& _start, const Cfg& _end, Cfg& _new, LPOutput& _lp) {
     //Push tick to the MA
     if(!m_medialAxisUtility.PushToMedialAxis(tick, env->GetBoundary())) {
       if(this->m_debug)
-        cout << "PushToMedialAxis failed...MARRTExpand failed" << endl;
+        cout << "PushToMedialAxis failed...MedialAxisRRTExpand failed" << endl;
       break;
     }
 
@@ -94,6 +94,7 @@ Extend(const Cfg& _start, const Cfg& _end, Cfg& _new, LPOutput& _lp) {
     VDAddTempEdge(curr, tick);
     VDAddTempEdge(curr, tick);
     dist = dm->Distance(curr, tick);
+    std::cout << "DISTANCE " << dist << std::endl;
 
     /*cout << "tick pushed: " << tick << endl;
     cout << "distance stepped: " << dist << endl;
@@ -109,6 +110,7 @@ Extend(const Cfg& _start, const Cfg& _end, Cfg& _new, LPOutput& _lp) {
       && length + dist <= this->m_maxDist
       );
 
+  
   _lp.m_intermediates.erase(_lp.m_intermediates.begin());
   if(_lp.m_intermediates.empty())
     return false;
