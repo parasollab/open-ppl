@@ -69,10 +69,14 @@ $(function() {
 <div class="textblock"><dl class="reflist">
 <dt>Module <a class="el" href="classMapEvaluatorMethod.html#amgrp97b2d5b2eeac0e45920bcb515a011c8a">Active Robots</a>  </dt>
 <dd><a class="anchor" id="_todo000037"></a>This is an artifact of developing robot groups. It should be replaced by using a proper subgroup where each robot within is active.  </dd>
-<dt>Global <a class="el" href="classActuator.html#a88e1e1d1b06f436d16b16da4b47be3e2">Actuator::ComputeOutput</a>  (const <a class="el" href="structControl.html#ae41582bcc718e53fb154bef2e65e4d13">Control::Signal</a> &amp;_s) const</dt>
-<dd><a class="anchor" id="_todo000090"></a>Generalize this so that the robot's starting point can be taken into account. Currently we assume that the generated force is independent of starting state.  </dd>
 <dt>Global <a class="el" href="TetGenDecomposition_8cpp.html#a1075e70c59d01354cd32019c0a7a63a6">AddHoles</a>  (tetgenio *const _freeModel, const NefPolyhedron &amp;_freespace, const <a class="el" href="classEnvironment.html">Environment</a> *const _env, const bool _debug)</dt>
 <dd><a class="anchor" id="_todo000055"></a>There seems to be an intermittent problem with adding holes for obstacles that touch the environment boundary. Sometimes it causes bad decompositions where the free space gets eaten away, and sometimes not. Not adding the hole sometimes causes tetgen to not remove the tetras within the obstacle. We need to characterize the cases where it fails and where it works.  </dd>
+<dt>Class <a class="el" href="structCDInfo.html">CDInfo</a>  </dt>
+<dd><a class="anchor" id="_todo000066"></a>Generalize this object to store collisions with obstacles, boundaries, and other robots in a uniform way. It should contain a vector of 'Collision' structures which describe the object type, indexes, and distance for each detected collision. </dd>
+<dt>Global <a class="el" href="classCfg.html#aa890f415f3e4fb58aa62986677bbd511">Cfg::operator&lt;</a>  (const <a class="el" href="classCfg.html">Cfg</a> &amp;_cfg) const</dt>
+<dd><a class="anchor" id="_todo000001"></a>The function currently seems to check each dof in order, returning T/F immediately unless exactly equal; is this intended?  </dd>
+<dt>Global <a class="el" href="classActuator.html#a88e1e1d1b06f436d16b16da4b47be3e2">Actuator::ComputeOutput</a>  (const <a class="el" href="structControl.html#ae41582bcc718e53fb154bef2e65e4d13">Control::Signal</a> &amp;_s) const</dt>
+<dd><a class="anchor" id="_todo000090"></a>Generalize this so that the robot's starting point can be taken into account. Currently we assume that the generated force is independent of starting state.  </dd>
 <dt>Global <a class="el" href="classBasicExtender.html#a7ffbb121e5436253ece67508b30a39a1">BasicExtender::Expand</a>  (const <a class="el" href="classCfg.html">Cfg</a> &amp;_start, const <a class="el" href="classCfg.html">Cfg</a> &amp;_end, <a class="el" href="classCfg.html">Cfg</a> &amp;_newCfg, double _delta, <a class="el" href="structLPOutput.html">LPOutput</a> &amp;_lp, <a class="el" href="structCDInfo.html">CDInfo</a> &amp;_cdInfo, double _posRes, double _oriRes)</dt>
 <dd><a class="anchor" id="_todo000025"></a>No, we don't <em>have</em> to set _newCfg to _end, and it would be better if we didn't use this assumption. We are doing this so that we can use extenders as local planners in multi-tree RRT methods. To fix and remove the assumption, we need to homogenize our extenders and local planners into a single class with methods for both uses (i.e. 'Extend' and 'LocalPlan').  </dd>
 <dt>Global <a class="el" href="classBasicPRM.html#a770e91bb07b8bbed5ec736ac44acb1f6">BasicPRM::Initialize</a>  () override</dt>
@@ -83,10 +87,6 @@ $(function() {
 <dd><p class="startdd"><a class="anchor" id="_todo000094"></a>Add support for non-tree directed graphs. We need to use predecessor information to do this, which we now have in the roadmap graph. </p>
 <p class="enddd">The stat class tracking adds a lot of complication. Remove it once we're sure the performance is fast enough to forgo tracking. </p>
 </dd>
-<dt>Class <a class="el" href="structCDInfo.html">CDInfo</a>  </dt>
-<dd><a class="anchor" id="_todo000066"></a>Generalize this object to store collisions with obstacles, boundaries, and other robots in a uniform way. It should contain a vector of 'Collision' structures which describe the object type, indexes, and distance for each detected collision. </dd>
-<dt>Global <a class="el" href="classCfg.html#aa890f415f3e4fb58aa62986677bbd511">Cfg::operator&lt;</a>  (const <a class="el" href="classCfg.html">Cfg</a> &amp;_cfg) const</dt>
-<dd><a class="anchor" id="_todo000001"></a>The function currently seems to check each dof in order, returning T/F immediately unless exactly equal; is this intended?  </dd>
 <dt>Global <a class="el" href="classChain.html#a5fe241c0868b96b0bd7f9bbc27b7a8f3">Chain::Decompose</a>  (const <a class="el" href="classMultiBody.html">MultiBody</a> *const _mb)</dt>
 <dd><a class="anchor" id="_todo000009"></a>Expand to support joints with more than one forward or backward connection. For now we only support chain robots.  </dd>
 <dt>Class <a class="el" href="classCollisionDetectionValidity.html">CollisionDetectionValidity</a>  </dt>
@@ -124,8 +124,8 @@ $(function() {
 <dt>Class <a class="el" href="classGridOverlay.html">GridOverlay</a>  </dt>
 <dd><a class="anchor" id="_todo000099"></a>Generalize to support 2d grids as well as 3d. </dd>
 <dt>Global <a class="el" href="classGridOverlay.html#a5b009d33707877f4e4e716819d9f8ffe">GridOverlay::LocateCells</a>  (const <a class="el" href="classGMSPolyhedron.html">GMSPolyhedron</a> &amp;_polyhedron, const mathtool::Transformation &amp;_transformation={}, const CellSet _type=<a class="el" href="classGridOverlay.html#afcf6fc05b418b5123c9bc28012505400aaf4bb376939e77df0e7c2332b837a866">CellSet::Closure</a>) const</dt>
-<dd><p class="startdd"><a class="anchor" id="_todo000097"></a>Can make the !_interior version more efficient by computing bbx cells for each facet. </p>
-<p class="enddd"><a class="anchor" id="_todo000098"></a>Can make both versions more efficient by avoiding re-building the _polyhedron's BBX each time. Add min/max pts and transform them with the poly, use here.  </p>
+<dd><p class="startdd"><a class="anchor" id="_todo000098"></a>Can make both versions more efficient by avoiding re-building the _polyhedron's BBX each time. Add min/max pts and transform them with the poly, use here. </p>
+<p class="enddd"><a class="anchor" id="_todo000097"></a>Can make the !_interior version more efficient by computing bbx cells for each facet.  </p>
 </dd>
 <dt>Global <a class="el" href="classGroupCfg.html#a16e8ee7a24aeb96b50b96c275a1202b1">GroupCfg&lt; GraphType &gt;::ApplyTransformationForRobots</a>  (const Formation &amp;_robotList, const mathtool::Transformation &amp;_transform, const mathtool::Transformation &amp;_relativeTransform=mathtool::Transformation())</dt>
 <dd><a class="anchor" id="_todo000004"></a>Generalize this to handle robots with more than one body.  </dd>
@@ -134,8 +134,8 @@ $(function() {
 <dt>Class <a class="el" href="structGroupLPOutput.html">GroupLPOutput</a>  </dt>
 <dd><a class="anchor" id="_todo000029"></a>Destroy this object and have LPs/Extenders work directly with a <a class="el" href="classGroupLocalPlan.html">GroupLocalPlan</a>. </dd>
 <dt>Global <a class="el" href="structGroupLPOutput.html#a23bc8c8657bd2fbd0be26f40af8e1dcf">GroupLPOutput::SetIndividualEdges</a>  (const std::vector&lt; size_t &gt; &amp;_formation)</dt>
-<dd><p class="startdd"><a class="anchor" id="_todo000027"></a>We need to preserve the intermediates. </p>
-<p class="enddd"><a class="anchor" id="_todo000028"></a>This is not a correct edge for each individual robot - they will not all have the same weight. This needs to be tracked separately.  </p>
+<dd><p class="startdd"><a class="anchor" id="_todo000028"></a>This is not a correct edge for each individual robot - they will not all have the same weight. This needs to be tracked separately. </p>
+<p class="enddd"><a class="anchor" id="_todo000027"></a>We need to preserve the intermediates.  </p>
 </dd>
 <dt>Global <a class="el" href="classGroupPath.html#af4672f7a6f1636b786ded3df9d4571a7">GroupPath::Length</a>  () const</dt>
 <dd><a class="anchor" id="_todo000005"></a>This will be an error if we allow self-edges.  </dd>
@@ -182,8 +182,8 @@ $(function() {
 <dt>Global <a class="el" href="classMapEvaluatorMethod.html#a5cb6c6d857c17c7054234a88b510fc4d">MapEvaluatorMethod::m_activeRobots</a>  </dt>
 <dd><a class="anchor" id="_todo000038"></a>This is an artifact of developing robot groups. It should be replaced by using a proper subgroup where each robot within is active.  </dd>
 <dt>Class <a class="el" href="classMinkowskiDistance.html">MinkowskiDistance</a>  </dt>
-<dd><p class="startdd"><a class="anchor" id="_todo000016"></a>Remove m_r2, which isn't part of the Minkowski difference and doesn't have any valid use.</p>
-<p class="interdd"><a class="anchor" id="_todo000017"></a>Move the normalization option up to the base class.</p>
+<dd><p class="startdd"><a class="anchor" id="_todo000017"></a>Move the normalization option up to the base class.</p>
+<p class="interdd"><a class="anchor" id="_todo000016"></a>Remove m_r2, which isn't part of the Minkowski difference and doesn't have any valid use.</p>
 <p class="enddd"><a class="anchor" id="_todo000018"></a>Separate the computation of orientation and joint distances. </p>
 </dd>
 <dt>Global <a class="el" href="classMinkowskiDistance.html#ac2e200d5de370a45d0f65501ec452284">MinkowskiDistance::ScaleCfg</a>  (double _length, <a class="el" href="classCfg.html">Cfg</a> &amp;_c, const <a class="el" href="classCfg.html">Cfg</a> &amp;_o) override</dt>
@@ -201,8 +201,8 @@ $(function() {
 <dt>Global <a class="el" href="classMPStrategyMethod.html#a81d856b963f876938d08385bd3217e79">MPStrategyMethod::ClearRoadmap</a>  ()</dt>
 <dd><a class="anchor" id="_todo000050"></a>This uses the STAPL graph 'clear' function, which doesn't activate any roadmap hooks. Methods which use hooks may have stale data after clearing the map. To fix we'll need to replace with our own function in RoadmapGraph.  </dd>
 <dt>Class <a class="el" href="classMPTask.html">MPTask</a>  </dt>
-<dd><p class="startdd"><a class="anchor" id="_todo000089"></a>Support the use of path constraints in the library code, which currently doesn't care about this.</p>
-<p class="enddd"><a class="anchor" id="_todo000088"></a>We should remove the capability here and redefine it as a constraint (since the constraints should fully define the task). The fact that a capability is or is not required should generally be discerned from the problem, while a capability constraint would more likely represent a deliberate restriction that is not strictly required (perhaps to express an operational preference). We will also eventually encounter cases where multiple capabilities are required to satsify a task. </p>
+<dd><p class="startdd"><a class="anchor" id="_todo000088"></a>We should remove the capability here and redefine it as a constraint (since the constraints should fully define the task). The fact that a capability is or is not required should generally be discerned from the problem, while a capability constraint would more likely represent a deliberate restriction that is not strictly required (perhaps to express an operational preference). We will also eventually encounter cases where multiple capabilities are required to satsify a task.</p>
+<p class="enddd"><a class="anchor" id="_todo000089"></a>Support the use of path constraints in the library code, which currently doesn't care about this. </p>
 </dd>
 <dt>Global <a class="el" href="classNSphericalShell.html#a2f24f61884a226eb9d5b45bd73790dd2">NSphericalShell::Sample</a>  () const</dt>
 <dd><a class="anchor" id="_todo000011"></a>This is likely close but not correct, need to verify.  </dd>
@@ -225,8 +225,8 @@ $(function() {
 <dt>Global <a class="el" href="classRobot.html#a30265be650855e49ad729b91161873fa">Robot::InitializePlanningSpaces</a>  ()</dt>
 <dd><a class="anchor" id="_todo000091"></a>Set up a way to specify velocity limits for each joint.  </dd>
 <dt>Class <a class="el" href="classSamplerMethod.html">SamplerMethod</a>  </dt>
-<dd><p class="startdd"><a class="anchor" id="_todo000065"></a>The present layout of this class is confusing since the base method is actually generating uniform random samples which are filtered by the derived class. This does not work for many derived classes as evidenced by their overriding of Sample rather than Sampler: we should rework the design so that derived classes generate and filter their own samples. The base class can then implement its functions in terms of the generate and filter helpers.</p>
-<p class="enddd"><a class="anchor" id="_todo000064"></a>The present implementation of Sample temporarily saves invalid configurations whether we will use them or not. Avoiding this extraneous retention will likely have good performance benefits in sampling-intensive applications such as proteins and manipulators where the success rate is very low. </p>
+<dd><p class="startdd"><a class="anchor" id="_todo000064"></a>The present implementation of Sample temporarily saves invalid configurations whether we will use them or not. Avoiding this extraneous retention will likely have good performance benefits in sampling-intensive applications such as proteins and manipulators where the success rate is very low.</p>
+<p class="enddd"><a class="anchor" id="_todo000065"></a>The present layout of this class is confusing since the base method is actually generating uniform random samples which are filtered by the derived class. This does not work for many derived classes as evidenced by their overriding of Sample rather than Sampler: we should rework the design so that derived classes generate and filter their own samples. The base class can then implement its functions in terms of the generate and filter helpers. </p>
 </dd>
 <dt>Class <a class="el" href="classScaledEuclideanDistance.html">ScaledEuclideanDistance</a>  </dt>
 <dd><p class="startdd"><a class="anchor" id="_todo000021"></a>Replace with WeightedEuclidean, which full encompases this class and offers more functionality.</p>
