@@ -69,14 +69,10 @@ $(function() {
 <div class="textblock"><dl class="reflist">
 <dt>Module <a class="el" href="classMapEvaluatorMethod.html#amgrp97b2d5b2eeac0e45920bcb515a011c8a">Active Robots</a>  </dt>
 <dd><a class="anchor" id="_todo000037"></a>This is an artifact of developing robot groups. It should be replaced by using a proper subgroup where each robot within is active.  </dd>
-<dt>Global <a class="el" href="TetGenDecomposition_8cpp.html#a1075e70c59d01354cd32019c0a7a63a6">AddHoles</a>  (tetgenio *const _freeModel, const NefPolyhedron &amp;_freespace, const <a class="el" href="classEnvironment.html">Environment</a> *const _env, const bool _debug)</dt>
-<dd><a class="anchor" id="_todo000055"></a>There seems to be an intermittent problem with adding holes for obstacles that touch the environment boundary. Sometimes it causes bad decompositions where the free space gets eaten away, and sometimes not. Not adding the hole sometimes causes tetgen to not remove the tetras within the obstacle. We need to characterize the cases where it fails and where it works.  </dd>
-<dt>Class <a class="el" href="structCDInfo.html">CDInfo</a>  </dt>
-<dd><a class="anchor" id="_todo000066"></a>Generalize this object to store collisions with obstacles, boundaries, and other robots in a uniform way. It should contain a vector of 'Collision' structures which describe the object type, indexes, and distance for each detected collision. </dd>
-<dt>Global <a class="el" href="classCfg.html#aa890f415f3e4fb58aa62986677bbd511">Cfg::operator&lt;</a>  (const <a class="el" href="classCfg.html">Cfg</a> &amp;_cfg) const</dt>
-<dd><a class="anchor" id="_todo000001"></a>The function currently seems to check each dof in order, returning T/F immediately unless exactly equal; is this intended?  </dd>
 <dt>Global <a class="el" href="classActuator.html#a88e1e1d1b06f436d16b16da4b47be3e2">Actuator::ComputeOutput</a>  (const <a class="el" href="structControl.html#ae41582bcc718e53fb154bef2e65e4d13">Control::Signal</a> &amp;_s) const</dt>
 <dd><a class="anchor" id="_todo000090"></a>Generalize this so that the robot's starting point can be taken into account. Currently we assume that the generated force is independent of starting state.  </dd>
+<dt>Global <a class="el" href="TetGenDecomposition_8cpp.html#a1075e70c59d01354cd32019c0a7a63a6">AddHoles</a>  (tetgenio *const _freeModel, const NefPolyhedron &amp;_freespace, const <a class="el" href="classEnvironment.html">Environment</a> *const _env, const bool _debug)</dt>
+<dd><a class="anchor" id="_todo000055"></a>There seems to be an intermittent problem with adding holes for obstacles that touch the environment boundary. Sometimes it causes bad decompositions where the free space gets eaten away, and sometimes not. Not adding the hole sometimes causes tetgen to not remove the tetras within the obstacle. We need to characterize the cases where it fails and where it works.  </dd>
 <dt>Global <a class="el" href="classBasicExtender.html#a7ffbb121e5436253ece67508b30a39a1">BasicExtender::Expand</a>  (const <a class="el" href="classCfg.html">Cfg</a> &amp;_start, const <a class="el" href="classCfg.html">Cfg</a> &amp;_end, <a class="el" href="classCfg.html">Cfg</a> &amp;_newCfg, double _delta, <a class="el" href="structLPOutput.html">LPOutput</a> &amp;_lp, <a class="el" href="structCDInfo.html">CDInfo</a> &amp;_cdInfo, double _posRes, double _oriRes)</dt>
 <dd><a class="anchor" id="_todo000025"></a>No, we don't <em>have</em> to set _newCfg to _end, and it would be better if we didn't use this assumption. We are doing this so that we can use extenders as local planners in multi-tree RRT methods. To fix and remove the assumption, we need to homogenize our extenders and local planners into a single class with methods for both uses (i.e. 'Extend' and 'LocalPlan').  </dd>
 <dt>Global <a class="el" href="classBasicPRM.html#a770e91bb07b8bbed5ec736ac44acb1f6">BasicPRM::Initialize</a>  () override</dt>
@@ -87,6 +83,10 @@ $(function() {
 <dd><p class="startdd"><a class="anchor" id="_todo000094"></a>Add support for non-tree directed graphs. We need to use predecessor information to do this, which we now have in the roadmap graph. </p>
 <p class="enddd">The stat class tracking adds a lot of complication. Remove it once we're sure the performance is fast enough to forgo tracking. </p>
 </dd>
+<dt>Class <a class="el" href="structCDInfo.html">CDInfo</a>  </dt>
+<dd><a class="anchor" id="_todo000066"></a>Generalize this object to store collisions with obstacles, boundaries, and other robots in a uniform way. It should contain a vector of 'Collision' structures which describe the object type, indexes, and distance for each detected collision. </dd>
+<dt>Global <a class="el" href="classCfg.html#aa890f415f3e4fb58aa62986677bbd511">Cfg::operator&lt;</a>  (const <a class="el" href="classCfg.html">Cfg</a> &amp;_cfg) const</dt>
+<dd><a class="anchor" id="_todo000001"></a>The function currently seems to check each dof in order, returning T/F immediately unless exactly equal; is this intended?  </dd>
 <dt>Global <a class="el" href="classChain.html#a5fe241c0868b96b0bd7f9bbc27b7a8f3">Chain::Decompose</a>  (const <a class="el" href="classMultiBody.html">MultiBody</a> *const _mb)</dt>
 <dd><a class="anchor" id="_todo000009"></a>Expand to support joints with more than one forward or backward connection. For now we only support chain robots.  </dd>
 <dt>Class <a class="el" href="classCollisionDetectionValidity.html">CollisionDetectionValidity</a>  </dt>
@@ -97,10 +97,10 @@ $(function() {
 <dd><a class="anchor" id="_todo000073"></a>Arg, more ambiguous data. See above.  </dd>
 <dt>Global <a class="el" href="classCollisionDetectionValidity.html#aae8a2dd6c70b0460208b66ef8bfdb043">CollisionDetectionValidity::IsInSelfCollision</a>  (<a class="el" href="structCDInfo.html">CDInfo</a> &amp;_cdInfo, const <a class="el" href="classMultiBody.html">MultiBody</a> *const _multibody, const std::string &amp;_caller)</dt>
 <dd><a class="anchor" id="_todo000071"></a>-1 is the default value here, so this doesn't really work. We need to expand our <a class="el" href="structCDInfo.html">CDInfo</a> object to handle this properly.  </dd>
-<dt>Global <a class="el" href="classCollisionDetectionValidity.html#ab51c4fe24f9ef19cfcc058e09ccdb77e">CollisionDetectionValidity::IsInsideObstacle</a>  (const Point3d &amp;_p, std::vector&lt; size_t &gt; *_obstIdxs)</dt>
-<dd><a class="anchor" id="_todo000070"></a>Implement a bounding box check (per multibody and body) before calling m_cdMethod.  </dd>
 <dt>Global <a class="el" href="classCollisionDetectionValidity.html#a40bbca5b1335fdd9e37751990805ea1e">CollisionDetectionValidity::IsInsideObstacle</a>  (const Point3d &amp;_p) override</dt>
 <dd><a class="anchor" id="_todo000069"></a>Implement a bounding box check (per multibody and body) before calling m_cdMethod.  </dd>
+<dt>Global <a class="el" href="classCollisionDetectionValidity.html#ab51c4fe24f9ef19cfcc058e09ccdb77e">CollisionDetectionValidity::IsInsideObstacle</a>  (const Point3d &amp;_p, std::vector&lt; size_t &gt; *_obstIdxs)</dt>
+<dd><a class="anchor" id="_todo000070"></a>Implement a bounding box check (per multibody and body) before calling m_cdMethod.  </dd>
 <dt>Global <a class="el" href="classCompositeState.html#a3926e337e53d3115866d43a8ec98f16c">CompositeState&lt; GraphType &gt;::GetRobot</a>  (const size_t _index) const</dt>
 <dd><a class="anchor" id="_todo000002"></a>Remove this after we are very sure things are working.  </dd>
 <dt>Global <a class="el" href="ReachableVolumes_8cpp.html#ae896ff26687bd0f7887e40075eb908bd">ComputeReachableDistanceOfSingleLink</a>  (const size_t _dimension, const <a class="el" href="classConnection.html">Connection</a> *_joint, const <a class="el" href="classConnection.html">Connection</a> *_parent, const <a class="el" href="classChain.html">Chain</a> *_chain)</dt>
