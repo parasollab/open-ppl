@@ -300,7 +300,7 @@ find_package(modelloader CONFIG REQUIRED)
 find_package(RAPID CONFIG REQUIRED)
 find_package(Tetgen CONFIG REQUIRED)
 find_package(PQP CONFIG REQUIRED)
-find_package(gl_visualizer CONFIG COMPONENTS nonstd glutils sandbox REQUIRED)
+find_package(gl_visualizer CONFIG COMPONENTS nonstd glutils REQUIRED)
 find_package(PPL CONFIG REQUIRED)
 ```
 

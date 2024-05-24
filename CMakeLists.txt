@@ -124,7 +124,7 @@ target_compile_options(objlib PRIVATE
 # bullet order is very specific, do not modify
 target_link_libraries(objlib
         PUBLIC ${BULLET_LIBRARIES} tinyxml2::tinyxml2)
-target_link_libraries(objlib PUBLIC modelloader RAPID tetgen PQP glutils nonstd sandbox)
+target_link_libraries(objlib PUBLIC modelloader RAPID tetgen PQP glutils nonstd)
 
 # build [ppl_mp library]
 add_library(${PPL_MP_LIBRARY} STATIC)
@@ -152,7 +152,7 @@ target_include_directories(${PPL_MP_LIBRARY}
 # [ppl_mp library] - Link external packages
 target_link_libraries(${PPL_MP_LIBRARY} PUBLIC objlib ${BULLET_LIBRARIES} CGAL::CGAL Eigen3::Eigen
         nlohmann_json::nlohmann_json tinyxml2::tinyxml2)
-target_link_libraries(${PPL_MP_LIBRARY} PUBLIC PQP glutils nonstd sandbox modelloader RAPID tetgen)
+target_link_libraries(${PPL_MP_LIBRARY} PUBLIC PQP glutils nonstd modelloader RAPID tetgen)
 set_target_properties(${PPL_MP_LIBRARY} PROPERTIES OUTPUT_NAME ppl_mp)
 
 # build [ppl_mp executable]
