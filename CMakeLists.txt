@@ -7,10 +7,6 @@ project(ppl VERSION 1.1.0)
 set(ROBOT_DEF "PMPCfg" CACHE STRING "Robot Type")
 add_definitions(-D${ROBOT_DEF})
 
-option(BUILD_ICREATE "Build Support for iCreate Hardware" OFF)
-option(BUILD_ARUCO "Build support for aruco detector hardware" OFF)
-option(BUILD_MATLAB "Build with MatLab support" OFF)
-
 # Compile the parallel version of PMPL? This is very old and has not been
 # maintained during the simulator refactoring (too many things to manage at
 # once). At this point it likely needs to be rebuilt entirely using the latest
@@ -27,28 +23,16 @@ add_compile_definitions(CGAL_NO_PRECONDITIONS)
 add_compile_definitions(CGAL_NO_POSTCONDITIONS)
 add_compile_definitions(CGAL_NO_WARNINGS)
 
-# used by CMake to scan the header and source files at build time and invoke moc accordingly.
-set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTORCC ON)
-set(CMAKE_AUTOUIC ON)  #https://github.com/CGAL/cgal/issues/5899
+# Disable CMake autogen properties as Qt is no longer a dependency
+set(CMAKE_AUTOMOC OFF)
+set(CMAKE_AUTORCC OFF)
+set(CMAKE_AUTOUIC OFF)  #https://github.com/CGAL/cgal/issues/5899
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 
 # ------------- add ppl dependencies --------------
-
-# Add Packages (needs to be installed)
-#find_package(OpenGL REQUIRED)
-#find_package(GLUT REQUIRED)
-find_package(Qt6 CONFIG COMPONENTS Core Gui Widgets OpenGL OpenGLWidgets REQUIRED)
-
-# set(CMAKE_PREFIX_PATH ${QT_ROOT})
-
-# support for pthreads (if needed in future)
-#set(THREADS_PREFER_PTHREAD_FLAG ON)
-#find_package(Threads REQUIRED)
-#target_link_libraries(my_app PRIVATE Threads::Threads)
 
 # build libraries
 add_subdirectory(lib/tetgen)
@@ -72,13 +56,6 @@ find_package(Bullet CONFIG REQUIRED
 find_package(nlohmann_json CONFIG REQUIRED)
 
 add_subdirectory(src)
-
-# TOOD Parallel Build (inclde libstapl.a)
-# include_directories(lib/stapl)
-# include_directories(lib/stapl/stapl)
-
-# include_directories(${Qt6Widgets_INCLUDE_DIRS})
-# include_directories(${Qt6OpenGLWidgets_INCLUDE_DIRS})
 
 # -------------  build ppl targets  --------------
 
@@ -109,12 +86,8 @@ if(MSVC)
 endif()
 
 # define target name variables
-#set(PPL_EXECUTABLE ppl_executable)
-#set(PPL_LIBRARY ppl_library)
 set(PPL_MP_LIBRARY ppl_mp_library)
 set(PPL_MP_EXECUTABLE ppl_mp_executable)
-#set(SIMULATOR simulator)
-#set(PPL_XML_EXECUTABLE ppl_xml_executable)
 
 # build [base object library]
 add_library(objlib OBJECT ${PMPL_SRCS})
@@ -131,12 +104,6 @@ target_include_directories(objlib
         $<INSTALL_INTERFACE:include/ppl>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
 )
-
-# target_include_directories(objlib 
-#         PUBLIC 
-#         $<INSTALL_INTERFACE:include/LKH/SRC/INCLUDE>
-#         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/LKH/SRC/INCLUDE>
-# )
 
 target_include_directories(objlib 
         PUBLIC 
@@ -159,35 +126,17 @@ target_link_libraries(objlib
         PUBLIC ${BULLET_LIBRARIES} tinyxml2::tinyxml2)
 target_link_libraries(objlib PUBLIC modelloader RAPID tetgen PQP glutils nonstd sandbox)
 
-# build [ppl library]
-#add_library(${PPL_LIBRARY} STATIC ${HARDWARE_SRCS} ${TASK_SRCS})
-
-#target_compile_options(${PPL_LIBRARY} PRIVATE
-#  -Wno-terminate
-#)
-
 # build [ppl_mp library]
-add_library(${PPL_MP_LIBRARY} STATIC ${HARDWARE_SRCS})
+add_library(${PPL_MP_LIBRARY} STATIC)
+
+# Disable Qt autogen tools for this target
+set_target_properties(${PPL_MP_LIBRARY} PROPERTIES AUTOMOC OFF)
+set_target_properties(${PPL_MP_LIBRARY} PROPERTIES AUTORCC OFF)
+set_target_properties(${PPL_MP_LIBRARY} PROPERTIES AUTOUIC OFF)
 
 target_compile_options(${PPL_MP_LIBRARY} PRIVATE
   -Wno-terminate
 )
-
-#target_include_directories(${PPL_LIBRARY}
-#        PUBLIC 
-#        $<INSTALL_INTERFACE:include/ppl>
-#        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
-#)
-#target_include_directories(${PPL_LIBRARY}
-#        PUBLIC
-#        $<INSTALL_INTERFACE:include/mathtool>
-#        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/mathtool>
-#)
-#target_include_directories(${PPL_LIBRARY} 
-#        PUBLIC 
-#        $<INSTALL_INTERFACE:include/LKH/SRC/INCLUDE>
-#        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/LKH/SRC/INCLUDE>
-#)
 
 target_include_directories(${PPL_MP_LIBRARY} 
         PUBLIC 
@@ -199,45 +148,17 @@ target_include_directories(${PPL_MP_LIBRARY}
         $<INSTALL_INTERFACE:include/mathtool>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/mathtool>
 )
-# target_include_directories(${PPL_MP_LIBRARY} 
-#         PUBLIC
-#         $<INSTALL_INTERFACE:include/LKH/SRC/INCLUDE>
-#         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/LKH/SRC/INCLUDE>
-# )
-
-# [ppl library] - Link external packages
-# bullet order is very specific, do not modify
-#target_link_libraries(${PPL_LIBRARY} PUBLIC objlib ${BULLET_LIBRARIES} CGAL::CGAL Eigen3::Eigen
-#        nlohmann_json::nlohmann_json Qt6::Core Qt6::Gui Qt6::OpenGL Qt6::Widgets
-#        Qt6::OpenGLWidgets tinyxml2::tinyxml2)
-##target_link_libraries(${PPL_LIBRARY} PUBLIC ${OPENGL_LIBRARIES} ${GLUT_LIBRARY})
-# [ppl library] - Link internal built packages
-#target_link_libraries(${PPL_LIBRARY} PUBLIC modelloader RAPID tetgen PQP glutils nonstd sandbox)
-#set_target_properties(${PPL_LIBRARY} PROPERTIES OUTPUT_NAME ppl)
 
 # [ppl_mp library] - Link external packages
 target_link_libraries(${PPL_MP_LIBRARY} PUBLIC objlib ${BULLET_LIBRARIES} CGAL::CGAL Eigen3::Eigen
-        nlohmann_json::nlohmann_json Qt6::Core Qt6::Gui Qt6::OpenGL Qt6::Widgets
-        Qt6::OpenGLWidgets tinyxml2::tinyxml2)
-#target_link_libraries(${PPL_MP_LIBRARY} PUBLIC ${OPENGL_LIBRARIES} ${GLUT_LIBRARY})
-# [ppl_mp library] - Link internal built packages
+        nlohmann_json::nlohmann_json tinyxml2::tinyxml2)
 target_link_libraries(${PPL_MP_LIBRARY} PUBLIC PQP glutils nonstd sandbox modelloader RAPID tetgen)
 set_target_properties(${PPL_MP_LIBRARY} PROPERTIES OUTPUT_NAME ppl_mp)
-
-# build [ppl executable]
-#add_executable(${PPL_EXECUTABLE} src/tmp_main.cpp)
-#target_link_libraries(${PPL_EXECUTABLE} PRIVATE ${PPL_LIBRARY} RAPID tetgen)
-#set_target_properties(${PPL_EXECUTABLE} PROPERTIES OUTPUT_NAME ppl)
 
 # build [ppl_mp executable]
 add_executable(${PPL_MP_EXECUTABLE} src/main.cpp)
 target_link_libraries(${PPL_MP_EXECUTABLE} PRIVATE ${PPL_MP_LIBRARY})
 set_target_properties(${PPL_MP_EXECUTABLE} PROPERTIES OUTPUT_NAME ppl_mp)
-
-# build [sim executable]
-#add_executable(${SIMULATOR} src/sim_main.cpp)
-#target_link_libraries(${SIMULATOR} PRIVATE ${PPL_LIBRARY})
-#set_target_properties(${SIMULATOR} PROPERTIES OUTPUT_NAME sim)
 
 # build [tests]
 if(BUILD_TESTS)
@@ -250,13 +171,7 @@ if(BUILD_TESTS)
     add_executable(${TESTS_UNIT} tests/tests_main.cpp
         tests/TestBaseObject.cpp
         tests/MPProblem/MPProblemTests.cpp
-        tests/TMPLibrary/TMPLibraryTests.cpp
-        tests/TMPLibrary/TaskAllocators/TaskAllocatorMethodTest.cpp
-        tests/TMPLibrary/TaskDecomposers/TaskDecomposerMethodTest.cpp
-        tests/TMPLibrary/TaskEvaluators/SimpleMotionEvaluatorTest.cpp
-        tests/TMPLibrary/TaskEvaluators/TaskEvaluatorMethodTest.cpp
         tests/GeometryTests.cpp
-        tests/BehaviorTests.cpp
         tests/MPLibraryTests.cpp    
     )
 
@@ -274,10 +189,6 @@ if(BUILD_TESTS)
     set_target_properties(${TESTS_STRATEGY} PROPERTIES OUTPUT_NAME ppl_strategy_tests)
     catch_discover_tests(${TESTS_STRATEGY})
 endif()
-
-#add_executable(${PPL_XML_EXECUTABLE} src/xml_main.cpp)
-#target_link_libraries(${PPL_XML_EXECUTABLE} PRIVATE ${PPL_LIBRARY})
-
 
 # -------------  package ppl library for distribution --------------
 message("Generating targets for packaging")

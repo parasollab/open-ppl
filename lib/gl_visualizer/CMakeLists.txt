@@ -5,9 +5,8 @@ project(gl_visualizer)
 
 add_subdirectory(nonstd)
 add_subdirectory(glutils)
-add_subdirectory(sandbox)
 
-install(TARGETS nonstd glutils sandbox
+install(TARGETS nonstd glutils
         EXPORT GLVisTargets
         LIBRARY DESTINATION lib
         ARCHIVE DESTINATION lib
