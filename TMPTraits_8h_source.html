@@ -73,17 +73,17 @@ $(function() {
 <a href="TMPTraits_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="preprocessor">#ifndef PPL_TMP_TRAITS_H_</span></div>
 <div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="preprocessor">#define PPL_TMP_TRAITS_H_</span></div>
 <div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160; </div>
-<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="TMPLibrary_8h.html">TMPLibrary/TMPLibrary.h</a>&quot;</span></div>
+<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#include &quot;TMPLibrary/TMPLibrary.h&quot;</span></div>
 <div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160; </div>
 <div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="comment">// TMPStrategyMethods to include</span></div>
 <div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160; </div>
-<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="SimpleMotionMethod_8h.html">TMPLibrary/TMPStrategies/SimpleMotionMethod.h</a>&quot;</span></div>
+<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="preprocessor">#include &quot;TMPLibrary/TMPStrategies/SimpleMotionMethod.h&quot;</span></div>
 <div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160; </div>
 <div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="comment">// PoIPlacementMethods to include</span></div>
 <div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160; </div>
 <div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="comment">// TaskEvaluators to include</span></div>
 <div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160; </div>
-<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="preprocessor">#include &quot;<a class="code" href="SimpleMotionEvaluator_8h.html">TMPLibrary/TaskEvaluators/SimpleMotionEvaluator.h</a>&quot;</span></div>
+<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="preprocessor">#include &quot;TMPLibrary/TaskEvaluators/SimpleMotionEvaluator.h&quot;</span></div>
 <div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160; </div>
 <div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;<span class="comment">// TaskDecomposers to include</span></div>
 <div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160; </div>
@@ -95,7 +95,7 @@ $(function() {
 <div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160; </div>
 <div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;  <span class="comment">//types of tmp strategy methods available in our world</span></div>
 <div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;  <span class="keyword">typedef</span> boost::mpl::list&lt;</div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;        <a class="code" href="classSimpleMotionMethod.html">SimpleMotionMethod</a></div>
+<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;        SimpleMotionMethod</div>
 <div class="line"><a name="l00036"></a><span class="lineno"><a class="line" href="structTMPTraits.html#a84bcbecb23d4cbc60cc2f7f03386ca0b">   36</a></span>&#160;      &gt; <a class="code" href="structTMPTraits.html#a84bcbecb23d4cbc60cc2f7f03386ca0b">TMPStrategyMethodList</a>;</div>
 <div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160; </div>
 <div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;  <span class="comment">//types of points of interest placement methods available in our world</span></div>
@@ -104,7 +104,7 @@ $(function() {
 <div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160; </div>
 <div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;  <span class="comment">//types of task evaluators available in our world</span></div>
 <div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;  <span class="keyword">typedef</span> boost::mpl::list&lt;</div>
-<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;        <a class="code" href="classSimpleMotionEvaluator.html">SimpleMotionEvaluator</a></div>
+<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;        SimpleMotionEvaluator</div>
 <div class="line"><a name="l00045"></a><span class="lineno"><a class="line" href="structTMPTraits.html#ac1935c59bb61d897b3ca4d985e98283e">   45</a></span>&#160;      &gt; <a class="code" href="structTMPTraits.html#ac1935c59bb61d897b3ca4d985e98283e">TaskEvaluatorMethodList</a>;</div>
 <div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160; </div>
 <div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;  <span class="comment">//types of task decomposers available in our world</span></div>
@@ -120,11 +120,6 @@ $(function() {
 <div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;};</div>
 <div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160; </div>
 <div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="ttc" id="aSimpleMotionEvaluator_8h_html"><div class="ttname"><a href="SimpleMotionEvaluator_8h.html">SimpleMotionEvaluator.h</a></div></div>
-<div class="ttc" id="aSimpleMotionMethod_8h_html"><div class="ttname"><a href="SimpleMotionMethod_8h.html">SimpleMotionMethod.h</a></div></div>
-<div class="ttc" id="aTMPLibrary_8h_html"><div class="ttname"><a href="TMPLibrary_8h.html">TMPLibrary.h</a></div></div>
-<div class="ttc" id="aclassSimpleMotionEvaluator_html"><div class="ttname"><a href="classSimpleMotionEvaluator.html">SimpleMotionEvaluator</a></div><div class="ttdef"><b>Definition:</b> SimpleMotionEvaluator.h:8</div></div>
-<div class="ttc" id="aclassSimpleMotionMethod_html"><div class="ttname"><a href="classSimpleMotionMethod.html">SimpleMotionMethod</a></div><div class="ttdef"><b>Definition:</b> SimpleMotionMethod.h:6</div></div>
 <div class="ttc" id="astructTMPTraits_html"><div class="ttname"><a href="structTMPTraits.html">TMPTraits</a></div><div class="ttdoc">Defines available methods in the Task and Motion Planning Universe.</div><div class="ttdef"><b>Definition:</b> TMPTraits.h:31</div></div>
 <div class="ttc" id="astructTMPTraits_html_a0bb4cd23dc0f414c6aa0a43eeed81273"><div class="ttname"><a href="structTMPTraits.html#a0bb4cd23dc0f414c6aa0a43eeed81273">TMPTraits::PoIPlacementMethodList</a></div><div class="ttdeci">boost::mpl::list&lt; &gt; PoIPlacementMethodList</div><div class="ttdef"><b>Definition:</b> TMPTraits.h:40</div></div>
 <div class="ttc" id="astructTMPTraits_html_a174a3fa1777f9992c3fc8239e963a4d8"><div class="ttname"><a href="structTMPTraits.html#a174a3fa1777f9992c3fc8239e963a4d8">TMPTraits::StateGraphList</a></div><div class="ttdeci">boost::mpl::list&lt; &gt; StateGraphList</div><div class="ttdef"><b>Definition:</b> TMPTraits.h:56</div></div>

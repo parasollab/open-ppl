@@ -89,7 +89,7 @@ Public Types</h2></td></tr>
 Public Member Functions</h2></td></tr>
 <tr><td colspan="2"><div class="groupHeader">Construction</div></td></tr>
 <tr class="memitem:aa9b40272478b43ce566ba352fdfaa54b"><td class="memTemplParams" colspan="2">template&lt;typename TMPMethodTypeList &gt; </td></tr>
-<tr class="memitem:aa9b40272478b43ce566ba352fdfaa54b"><td class="memTemplItemLeft" align="right" valign="top">&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classTMPMethodSet.html#aa9b40272478b43ce566ba352fdfaa54b">TMPMethodSet</a> (<a class="el" href="classTMPLibrary.html">TMPLibrary</a> *const _p, const TMPMethodTypeList &amp;_mtl, const std::string &amp;_name)</td></tr>
+<tr class="memitem:aa9b40272478b43ce566ba352fdfaa54b"><td class="memTemplItemLeft" align="right" valign="top">&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classTMPMethodSet.html#aa9b40272478b43ce566ba352fdfaa54b">TMPMethodSet</a> (TMPLibrary *const _p, const TMPMethodTypeList &amp;_mtl, const std::string &amp;_name)</td></tr>
 <tr class="separator:aa9b40272478b43ce566ba352fdfaa54b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr><td colspan="2"><div class="groupHeader">TMPMethod Accessors</div></td></tr>
 <tr class="memitem:a369884c11c0e843b34316ae9135aced3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classTMPMethodSet.html#a369884c11c0e843b34316ae9135aced3">ParseXML</a> (<a class="el" href="classXMLNode.html">XMLNode</a> &amp;_node)</td></tr>
@@ -125,7 +125,7 @@ Public Member Functions</h2></td></tr>
 class TMPMethodSet&lt; TMPMethod &gt;</h3>
 
 <p>Defines basic TMPMethod container class to hold TMPMethods (for classes like DistanceMetricTMPMethod, LocalPlannerTMPMethod, etc).</p>
-<p>TMPMethodTypeList must be defined within templated class of <a class="el" href="classMPTraits.html" title="Defines available methods in the Motion Planning Universe for Cfg under parallel compile.">MPTraits</a> e.g., TMPMethod = NeighborhoodFinderTMPMethod TMPMethodTypeList = boost::mpl::list&lt;BruteForceNF, BandsNF, ...&gt; e.g., TMPMethod = LocalPlannerTMPMethod TMPMethodTypeList = boost::mpl::list&lt;Straightline, RotateAtS, ...&gt;</p>
+<p>TMPMethodTypeList must be defined within templated class of <a class="el" href="structMPTraits.html" title="Defines available methods in the Motion Planning Universe for Cfg under parallel compile.">MPTraits</a> e.g., TMPMethod = NeighborhoodFinderTMPMethod TMPMethodTypeList = boost::mpl::list&lt;BruteForceNF, BandsNF, ...&gt; e.g., TMPMethod = LocalPlannerTMPMethod TMPMethodTypeList = boost::mpl::list&lt;Straightline, RotateAtS, ...&gt;</p>
 <p><a class="el" href="classTMPMethodSet.html">TMPMethodSet</a> first parses the TMPMethodTypeList and adds all enumerated TMPMethods to its universe of TMPMethod types. Then, specific instantiations of those types can be added to its map of available TMPMethods by calling 'AddTMPMethod'. </p>
 </div><h2 class="groupheader">Member Typedef Documentation</h2>
 <a id="a527711ff2581032cce53c2f99058f2c7"></a>
@@ -238,7 +238,7 @@ template&lt;typename TMPMethodTypeList &gt; </div>
         <tr>
           <td class="memname"><a class="el" href="classTMPMethodSet.html">TMPMethodSet</a>&lt; TMPMethod &gt;::<a class="el" href="classTMPMethodSet.html">TMPMethodSet</a> </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="classTMPLibrary.html">TMPLibrary</a> *const&#160;</td>
+          <td class="paramtype">TMPLibrary *const&#160;</td>
           <td class="paramname"><em>_p</em>, </td>
         </tr>
         <tr>
@@ -260,7 +260,7 @@ template&lt;typename TMPMethodTypeList &gt; </div>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Construct a <a class="el" href="classTMPMethodSet.html">TMPMethodSet</a> from a TMPMethodTypeList defined in the <a class="el" href="classMPTraits.html" title="Defines available methods in the Motion Planning Universe for Cfg under parallel compile.">MPTraits</a> class. </p><dl class="params"><dt>Parameters</dt><dd>
+<p>Construct a <a class="el" href="classTMPMethodSet.html">TMPMethodSet</a> from a TMPMethodTypeList defined in the <a class="el" href="structMPTraits.html" title="Defines available methods in the Motion Planning Universe for Cfg under parallel compile.">MPTraits</a> class. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">_mtl</td><td>An instance of the TMPMethod type list. </td></tr>
     <tr><td class="paramname">_name</td><td>The name of this TMPMethod set. </td></tr>
@@ -532,8 +532,7 @@ template&lt;typename TMPMethod &gt; </div>
 
 </div>
 </div>
-<hr/>The documentation for this class was generated from the following files:<ul>
-<li>/opt/actions-runner/_work/open-ppl/open-ppl/src/TMPLibrary/<a class="el" href="TMPBaseObject_8h_source.html">TMPBaseObject.h</a></li>
+<hr/>The documentation for this class was generated from the following file:<ul>
 <li>/opt/actions-runner/_work/open-ppl/open-ppl/src/Utilities/<a class="el" href="TMPMethodSet_8h_source.html">TMPMethodSet.h</a></li>
 </ul>
 </div><!-- contents -->

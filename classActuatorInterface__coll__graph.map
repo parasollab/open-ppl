@@ -1,6 +1,0 @@
-<map id="ActuatorInterface" name="ActuatorInterface">
-<area shape="rect" id="node1" title="An abstract interface for a physical robot&#39;s actuators." alt="" coords="9,276,144,303"/>
-<area shape="rect" id="node2" href="$classHardwareInterface.html" title=" " alt="" coords="5,200,148,227"/>
-<area shape="rect" id="node3" title=" " alt="" coords="33,96,120,123"/>
-<area shape="rect" id="node4" title=" " alt="" coords="7,5,146,47"/>
-</map>

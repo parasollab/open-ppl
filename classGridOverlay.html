@@ -134,7 +134,7 @@ Public Member Functions</h2></td></tr>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>A 3d grid overlay of a given boundary.</p>
 <p>The cells are implicitly represented as either a tuple (x,y,z) or a single 'cell index', which enumerates all cells with a single number. The grid is defined over the minimum and maximum ranges of the boundary, so there may be grid cells partially or completely outside of the boundary (depending its shape and size).</p>
-<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000115">Todo:</a></b></dt><dd>Generalize to support 2d grids as well as 3d.</dd></dl>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000099">Todo:</a></b></dt><dd>Generalize to support 2d grids as well as 3d.</dd></dl>
 </div><h2 class="groupheader">Member Typedef Documentation</h2>
 <a id="a73518b6b39a5c8869cf56beec31ad906"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a73518b6b39a5c8869cf56beec31ad906">&#9670;&nbsp;</a></span>DecompositionMap</h2>
@@ -568,8 +568,8 @@ Public Member Functions</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>A set of cell indexes that touch _polyhedron as described by _type. </dd></dl>
-<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000113">Todo:</a></b></dt><dd>Can make the !_interior version more efficient by computing bbx cells for each facet. </dd></dl>
-<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000114">Todo:</a></b></dt><dd>Can make both versions more efficient by avoiding re-building the _polyhedron's BBX each time. Add min/max pts and transform them with the poly, use here. </dd></dl>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000097">Todo:</a></b></dt><dd>Can make the !_interior version more efficient by computing bbx cells for each facet. </dd></dl>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000098">Todo:</a></b></dt><dd>Can make both versions more efficient by avoiding re-building the _polyhedron's BBX each time. Add min/max pts and transform them with the poly, use here. </dd></dl>
 
 </div>
 </div>

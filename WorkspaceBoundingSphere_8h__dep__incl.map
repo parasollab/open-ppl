@@ -1,7 +1,6 @@
 <map id="/opt/actions&#45;runner/_work/open&#45;ppl/open&#45;ppl/src/Geometry/Boundaries/WorkspaceBoundingSphere.h" name="/opt/actions&#45;runner/_work/open&#45;ppl/open&#45;ppl/src/Geometry/Boundaries/WorkspaceBoundingSphere.h">
-<area shape="rect" id="node1" title=" " alt="" coords="342,5,558,76"/>
-<area shape="rect" id="node2" href="$PlanningAgent_8cpp.html" title=" " alt="" coords="5,124,193,195"/>
-<area shape="rect" id="node3" href="$Boundary_8cpp.html" title=" " alt="" coords="218,124,434,195"/>
-<area shape="rect" id="node4" href="$WorkspaceBoundingSphere_8cpp.html" title=" " alt="" coords="459,124,689,195"/>
-<area shape="rect" id="node5" href="$Environment_8cpp.html" title=" " alt="" coords="714,124,949,195"/>
+<area shape="rect" id="node1" title=" " alt="" coords="253,5,469,76"/>
+<area shape="rect" id="node2" href="$Boundary_8cpp.html" title=" " alt="" coords="5,124,221,195"/>
+<area shape="rect" id="node3" href="$WorkspaceBoundingSphere_8cpp.html" title=" " alt="" coords="246,124,477,195"/>
+<area shape="rect" id="node4" href="$Environment_8cpp.html" title=" " alt="" coords="501,124,736,195"/>
 </map>

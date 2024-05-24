@@ -1,4 +1,0 @@
-<map id="PIDFeedback" name="PIDFeedback">
-<area shape="rect" id="node1" title="A controller that implements a simple PID control loop." alt="" coords="19,80,126,107"/>
-<area shape="rect" id="node2" href="$classControllerMethod.html" title=" " alt="" coords="5,5,140,32"/>
-</map>

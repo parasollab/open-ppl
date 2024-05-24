@@ -106,16 +106,6 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:ac99326393f120b018db3cb7e4e17fa86"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classMPProblem.html">MPProblem</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classRobot.html#ac99326393f120b018db3cb7e4e17fa86">GetMPProblem</a> () const noexcept</td></tr>
 <tr class="memdesc:ac99326393f120b018db3cb7e4e17fa86"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the owning <a class="el" href="classMPProblem.html">MPProblem</a>.  <a href="classRobot.html#ac99326393f120b018db3cb7e4e17fa86">More...</a><br /></td></tr>
 <tr class="separator:ac99326393f120b018db3cb7e4e17fa86"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr><td colspan="2"><div class="groupHeader">Simulation Interface</div></td></tr>
-<tr class="memitem:a8798c3ffbc59e0159f74e4bbe1731ae2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classRobot.html#a8798c3ffbc59e0159f74e4bbe1731ae2">Step</a> (const double _dt)</td></tr>
-<tr class="separator:a8798c3ffbc59e0159f74e4bbe1731ae2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2dd62326efc0da796ff10a026a8eb1d9"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classRobot.html#a2dd62326efc0da796ff10a026a8eb1d9">SynchronizeModels</a> () noexcept</td></tr>
-<tr class="memdesc:a2dd62326efc0da796ff10a026a8eb1d9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Align the multibody model to the robot's current simulated state.  <a href="classRobot.html#a2dd62326efc0da796ff10a026a8eb1d9">More...</a><br /></td></tr>
-<tr class="separator:a2dd62326efc0da796ff10a026a8eb1d9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6ecc6f6d79792e226123b8e760d32694"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classBulletModel.html">BulletModel</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classRobot.html#a6ecc6f6d79792e226123b8e760d32694">GetSimulationModel</a> () noexcept</td></tr>
-<tr class="separator:a6ecc6f6d79792e226123b8e760d32694"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4dc638e03250635a621a033aeeb36f33"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classRobot.html#a4dc638e03250635a621a033aeeb36f33">SetSimulationModel</a> (<a class="el" href="classBulletModel.html">BulletModel</a> *const _m)</td></tr>
-<tr class="separator:a4dc638e03250635a621a033aeeb36f33"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr><td colspan="2"><div class="groupHeader">Geometry Accessors</div></td></tr>
 <tr><td colspan="2"><div class="groupText"><p>Access the robot's geometric representation. The robot will take ownership of its <a class="el" href="classMultiBody.html">MultiBody</a> and delete it when necessary. </p>
 </div></td></tr>
@@ -126,20 +116,6 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a5bd10c52ae63372a570b81405621fae6"><td class="memItemLeft" align="right" valign="top">const EndEffector &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classRobot.html#a5bd10c52ae63372a570b81405621fae6">GetEndEffector</a> () const noexcept</td></tr>
 <tr class="memdesc:a5bd10c52ae63372a570b81405621fae6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Access the robot manipulator's end effector, if it exists.  <a href="classRobot.html#a5bd10c52ae63372a570b81405621fae6">More...</a><br /></td></tr>
 <tr class="separator:a5bd10c52ae63372a570b81405621fae6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr><td colspan="2"><div class="groupHeader">Agent Accessors</div></td></tr>
-<tr><td colspan="2"><div class="groupText"><p>Access the robot's agent. The robot will take ownership of its agent and delete it when necessary. </p>
-</div></td></tr>
-<tr class="memitem:aa3835da0ae5d069ea1f908721a566eed"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classAgent.html">Agent</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classRobot.html#aa3835da0ae5d069ea1f908721a566eed">GetAgent</a> () noexcept</td></tr>
-<tr class="separator:aa3835da0ae5d069ea1f908721a566eed"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6af83b2eb2d0ad6f78581bb85223e458"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classRobot.html#a6af83b2eb2d0ad6f78581bb85223e458">SetAgent</a> (std::unique_ptr&lt; <a class="el" href="classAgent.html">Agent</a> &gt; &amp;&amp;_a) noexcept</td></tr>
-<tr class="separator:a6af83b2eb2d0ad6f78581bb85223e458"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr><td colspan="2"><div class="groupHeader">Control Accessors</div></td></tr>
-<tr><td colspan="2"><div class="groupText"><p>Access the robot's control structures. The robot will take ownership of these and delete them when necessary. </p>
-</div></td></tr>
-<tr class="memitem:a68e807089dce669cb2b86b276133bcf8"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classControllerMethod.html">ControllerMethod</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classRobot.html#a68e807089dce669cb2b86b276133bcf8">GetController</a> () noexcept</td></tr>
-<tr class="separator:a68e807089dce669cb2b86b276133bcf8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a92d7bf6e20cd7482f5282a9bb1a608f2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classRobot.html#a92d7bf6e20cd7482f5282a9bb1a608f2">SetController</a> (std::unique_ptr&lt; <a class="el" href="classControllerMethod.html">ControllerMethod</a> &gt; &amp;&amp;_c) noexcept</td></tr>
-<tr class="separator:a92d7bf6e20cd7482f5282a9bb1a608f2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr><td colspan="2"><div class="groupHeader">Actuator Accessors</div></td></tr>
 <tr><td colspan="2"><div class="groupText"><p>Access the robot's actuators. These are set during input file parsing and cannot be changed otherwise. </p>
 </div></td></tr>
@@ -148,25 +124,6 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a69b53817ac261d8f7c06f409e82b047e"><td class="memItemLeft" align="right" valign="top">const std::unordered_map&lt; std::string, std::unique_ptr&lt; <a class="el" href="classActuator.html">Actuator</a> &gt; &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classRobot.html#a69b53817ac261d8f7c06f409e82b047e">GetActuators</a> () const noexcept</td></tr>
 <tr class="memdesc:a69b53817ac261d8f7c06f409e82b047e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get set of all actuators mapped by label.  <a href="classRobot.html#a69b53817ac261d8f7c06f409e82b047e">More...</a><br /></td></tr>
 <tr class="separator:a69b53817ac261d8f7c06f409e82b047e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr><td colspan="2"><div class="groupHeader">Dynamics Accessors</div></td></tr>
-<tr class="memitem:a5d51a23f426be1c4eb856ddc77de9da5"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classMicroSimulator.html">MicroSimulator</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classRobot.html#a5d51a23f426be1c4eb856ddc77de9da5">GetMicroSimulator</a> () noexcept</td></tr>
-<tr class="memdesc:a5d51a23f426be1c4eb856ddc77de9da5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the robot's micro-simulator to test out controls.  <a href="classRobot.html#a5d51a23f426be1c4eb856ddc77de9da5">More...</a><br /></td></tr>
-<tr class="separator:a5d51a23f426be1c4eb856ddc77de9da5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr><td colspan="2"><div class="groupHeader">Hardware Interface</div></td></tr>
-<tr><td colspan="2"><div class="groupText"><p>Access the interface to the hardware robot (if any). </p>
-</div></td></tr>
-<tr class="memitem:a7d79a62e131d160724fc67d6926729b1"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classRobotCommandQueue.html">RobotCommandQueue</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classRobot.html#a7d79a62e131d160724fc67d6926729b1">GetHardwareQueue</a> () const noexcept</td></tr>
-<tr class="memdesc:a7d79a62e131d160724fc67d6926729b1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get hardware command queue.  <a href="classRobot.html#a7d79a62e131d160724fc67d6926729b1">More...</a><br /></td></tr>
-<tr class="separator:a7d79a62e131d160724fc67d6926729b1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9d87ddd512938a3715b57fb215249164"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classBattery.html">Battery</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classRobot.html#a9d87ddd512938a3715b57fb215249164">GetBattery</a> () const noexcept</td></tr>
-<tr class="memdesc:a9d87ddd512938a3715b57fb215249164"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the emualted battery.  <a href="classRobot.html#a9d87ddd512938a3715b57fb215249164">More...</a><br /></td></tr>
-<tr class="separator:a9d87ddd512938a3715b57fb215249164"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a90b958a6470c79865b735fc3246ddb40"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classStateEstimator.html">StateEstimator</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classRobot.html#a90b958a6470c79865b735fc3246ddb40">GetStateEstimator</a> () const noexcept</td></tr>
-<tr class="memdesc:a90b958a6470c79865b735fc3246ddb40"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the state estimator.  <a href="classRobot.html#a90b958a6470c79865b735fc3246ddb40">More...</a><br /></td></tr>
-<tr class="separator:a90b958a6470c79865b735fc3246ddb40"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a44adb8f5446130d84e1de5bea1a3d241"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classRobot.html#a44adb8f5446130d84e1de5bea1a3d241">SetStateEstimator</a> (std::unique_ptr&lt; <a class="el" href="classStateEstimator.html">StateEstimator</a> &gt; &amp;&amp;_stateEstimator) noexcept</td></tr>
-<tr class="memdesc:a44adb8f5446130d84e1de5bea1a3d241"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the state estimator.  <a href="classRobot.html#a44adb8f5446130d84e1de5bea1a3d241">More...</a><br /></td></tr>
-<tr class="separator:a44adb8f5446130d84e1de5bea1a3d241"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr><td colspan="2"><div class="groupHeader">Other Properties</div></td></tr>
 <tr class="memitem:a6176012a49eee99e2c4f9b7ca5465ba9"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classRobot.html#a6176012a49eee99e2c4f9b7ca5465ba9">IsVirtual</a> () const noexcept</td></tr>
 <tr class="separator:a6176012a49eee99e2c4f9b7ca5465ba9"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -225,15 +182,9 @@ Protected Member Functions</h2></td></tr>
 <div class="textblock"><p>Complete representation of a robot.</p>
 <p>A robot has many components, including: </p><ul>
 <li><a class="el" href="classMultiBody.html">MultiBody</a>: The robot's physical geometry. </li>
-<li><a class="el" href="classAgent.html">Agent</a>: The robot's high-level decision-making algorithm. Determines what actions the robot should take to complete its task. Used only in simulations. </li>
-<li>Actuators: The robot's motors/effectors. Translates control commands into generalized forces. </li>
-<li>Controller: The robot's low-level controller, which determines what control should be applied to move from point to point. </li>
-<li><a class="el" href="classBulletModel.html">BulletModel</a>: <a class="el" href="classSimulation.html">Simulation</a> model of the robot. Represents the robot in the bullet world. </li>
-<li><a class="el" href="classMicroSimulator.html">MicroSimulator</a>: Isolated simulation of this robot for testing control applications. </li>
-<li>CommandQueue: Controls a set of hardware for this robot. </li>
-<li><a class="el" href="classStateEstimator.html">StateEstimator</a>: Object for integrating sensor data with commands to localize a hardware robot.</li>
+<li>Actuators: The robot's motors/effectors. Translates control commands</li>
 </ul>
-<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000100">Todo:</a></b></dt><dd>Come up with a nice way to support both real and emulated hardware.</dd></dl>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000092">Todo:</a></b></dt><dd>Come up with a nice way to support both real and emulated hardware.</dd></dl>
 <dl class="section examples"><dt>Examples</dt><dd><a class="el" href="MPLibrary_UseCase_8cpp-example.html#_a2">MPLibrary_UseCase.cpp</a>, and <a class="el" href="PathModifiers_UseCase_8cpp-example.html#_a1">PathModifiers_UseCase.cpp</a>.</dd>
 </dl>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
@@ -485,58 +436,6 @@ Protected Member Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="aa3835da0ae5d069ea1f908721a566eed"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa3835da0ae5d069ea1f908721a566eed">&#9670;&nbsp;</a></span>GetAgent()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="classAgent.html">Agent</a> * Robot::GetAgent </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">noexcept</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a9d87ddd512938a3715b57fb215249164"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a9d87ddd512938a3715b57fb215249164">&#9670;&nbsp;</a></span>GetBattery()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="classBattery.html">Battery</a> * Robot::GetBattery </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td> const</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">noexcept</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Get the emualted battery. </p>
-
-</div>
-</div>
 <a id="a0e6c732ad778ad17c28b52aadc469915"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a0e6c732ad778ad17c28b52aadc469915">&#9670;&nbsp;</a></span>GetCapability()</h2>
 
@@ -561,31 +460,6 @@ Protected Member Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Get the capability for this robot. </p>
-
-</div>
-</div>
-<a id="a68e807089dce669cb2b86b276133bcf8"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a68e807089dce669cb2b86b276133bcf8">&#9670;&nbsp;</a></span>GetController()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="classControllerMethod.html">ControllerMethod</a> * Robot::GetController </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">noexcept</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
 
 </div>
 </div>
@@ -667,33 +541,6 @@ Protected Member Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Access the robot manipulator's end effector, if it exists. </p>
-
-</div>
-</div>
-<a id="a7d79a62e131d160724fc67d6926729b1"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a7d79a62e131d160724fc67d6926729b1">&#9670;&nbsp;</a></span>GetHardwareQueue()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="classRobotCommandQueue.html">RobotCommandQueue</a> * Robot::GetHardwareQueue </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td> const</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">noexcept</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Get hardware command queue. </p>
 
 </div>
 </div>
@@ -797,33 +644,6 @@ Protected Member Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a5d51a23f426be1c4eb856ddc77de9da5"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5d51a23f426be1c4eb856ddc77de9da5">&#9670;&nbsp;</a></span>GetMicroSimulator()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="classMicroSimulator.html">MicroSimulator</a> * Robot::GetMicroSimulator </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">noexcept</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Get the robot's micro-simulator to test out controls. </p>
-
-</div>
-</div>
 <a id="ac99326393f120b018db3cb7e4e17fa86"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ac99326393f120b018db3cb7e4e17fa86">&#9670;&nbsp;</a></span>GetMPProblem()</h2>
 
@@ -901,59 +721,6 @@ Protected Member Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a6ecc6f6d79792e226123b8e760d32694"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6ecc6f6d79792e226123b8e760d32694">&#9670;&nbsp;</a></span>GetSimulationModel()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="classBulletModel.html">BulletModel</a> * Robot::GetSimulationModel </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">noexcept</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-<p>Access the robot's simulation model. This is owned by the simulation engine. </p>
-
-</div>
-</div>
-<a id="a90b958a6470c79865b735fc3246ddb40"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a90b958a6470c79865b735fc3246ddb40">&#9670;&nbsp;</a></span>GetStateEstimator()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="classStateEstimator.html">StateEstimator</a> * Robot::GetStateEstimator </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td> const</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">noexcept</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Get the state estimator. </p>
-
-</div>
-</div>
 <a id="a843d5a2d2d0d354ade67a897c57bd39d"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a843d5a2d2d0d354ade67a897c57bd39d">&#9670;&nbsp;</a></span>GetVSpace()</h2>
 
@@ -997,7 +764,7 @@ Protected Member Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Compute the configuration and velocity spaces for this robot. </p>
-<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000099">Todo:</a></b></dt><dd>Set up a way to specify velocity limits for each joint. </dd></dl>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000091">Todo:</a></b></dt><dd>Set up a way to specify velocity limits for each joint. </dd></dl>
 
 </div>
 </div>
@@ -1315,32 +1082,6 @@ Protected Member Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a6af83b2eb2d0ad6f78581bb85223e458"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6af83b2eb2d0ad6f78581bb85223e458">&#9670;&nbsp;</a></span>SetAgent()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">void Robot::SetAgent </td>
-          <td>(</td>
-          <td class="paramtype">std::unique_ptr&lt; <a class="el" href="classAgent.html">Agent</a> &gt; &amp;&amp;&#160;</td>
-          <td class="paramname"><em>_a</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">noexcept</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-</div>
-</div>
 <a id="a84a8371a33bbddcd34445db632633705"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a84a8371a33bbddcd34445db632633705">&#9670;&nbsp;</a></span>SetCapability()</h2>
 
@@ -1361,32 +1102,6 @@ Protected Member Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a92d7bf6e20cd7482f5282a9bb1a608f2"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a92d7bf6e20cd7482f5282a9bb1a608f2">&#9670;&nbsp;</a></span>SetController()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">void Robot::SetController </td>
-          <td>(</td>
-          <td class="paramtype">std::unique_ptr&lt; <a class="el" href="classControllerMethod.html">ControllerMethod</a> &gt; &amp;&amp;&#160;</td>
-          <td class="paramname"><em>_c</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">noexcept</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-</div>
-</div>
 <a id="a0ec3466415780b7d6e3b14d7b3eac839"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a0ec3466415780b7d6e3b14d7b3eac839">&#9670;&nbsp;</a></span>SetInitialCfg()</h2>
 
@@ -1404,53 +1119,6 @@ Protected Member Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Set initial configuration for the robot (not implemented) </p>
-
-</div>
-</div>
-<a id="a4dc638e03250635a621a033aeeb36f33"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a4dc638e03250635a621a033aeeb36f33">&#9670;&nbsp;</a></span>SetSimulationModel()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void Robot::SetSimulationModel </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="classBulletModel.html">BulletModel</a> *const&#160;</td>
-          <td class="paramname"><em>_m</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Set the robot's simulation model (should only happen in the main bullet engine). </p>
-
-</div>
-</div>
-<a id="a44adb8f5446130d84e1de5bea1a3d241"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a44adb8f5446130d84e1de5bea1a3d241">&#9670;&nbsp;</a></span>SetStateEstimator()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">void Robot::SetStateEstimator </td>
-          <td>(</td>
-          <td class="paramtype">std::unique_ptr&lt; <a class="el" href="classStateEstimator.html">StateEstimator</a> &gt; &amp;&amp;&#160;</td>
-          <td class="paramname"><em>_stateEstimator</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">noexcept</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Set the state estimator. </p>
 
 </div>
 </div>
@@ -1483,57 +1151,6 @@ Protected Member Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
-
-</div>
-</div>
-<a id="a8798c3ffbc59e0159f74e4bbe1731ae2"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8798c3ffbc59e0159f74e4bbe1731ae2">&#9670;&nbsp;</a></span>Step()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void Robot::Step </td>
-          <td>(</td>
-          <td class="paramtype">const double&#160;</td>
-          <td class="paramname"><em>_dt</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Execute a simulation step: update the percept model, have the agent make a decision, and send the resulting controls to the actuators. </p><dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">_dt</td><td>The timestep length. </td></tr>
-  </table>
-  </dd>
-</dl>
-
-</div>
-</div>
-<a id="a2dd62326efc0da796ff10a026a8eb1d9"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a2dd62326efc0da796ff10a026a8eb1d9">&#9670;&nbsp;</a></span>SynchronizeModels()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">void Robot::SynchronizeModels </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">noexcept</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Align the multibody model to the robot's current simulated state. </p>
 
 </div>
 </div>
