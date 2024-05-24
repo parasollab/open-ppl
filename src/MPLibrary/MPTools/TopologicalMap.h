@@ -2,7 +2,6 @@
 #define PMPL_TOPOLOGICAL_MAP_H_
 
 #include "MPLibrary/MPBaseObject.h"
-#include "Simulator/Conversions.h"
 #include "Utilities/Hash.h"
 #include "Utilities/SSSP.h"
 #include "Utilities/XMLNode.h"

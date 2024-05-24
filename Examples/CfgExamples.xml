@@ -8,13 +8,7 @@
     <Environment filename="3D/3d.env"
       frictionCoefficient="0" gravity="0 0 0"/>
 
-    <Robot label="boxy" filename="3D/boxy.robot">
-      <!--
-      <Agent type="planning"/>
-      -->
-      <Agent type="pathfollowing" waypointDm="euclideanPosition"
-        waypointThreshold=".05"/>
-    </Robot>
+    <Robot label="boxy" filename="3D/boxy.robot"/>
 
     <Task label="query" robot="boxy">
       <StartConstraints>
@@ -78,8 +72,8 @@
     </Samplers>
 
     <LocalPlanners>
-      <!-- <StraightLine label="sl" binaryEvaluation="true" vcLabel="rapid"/>
-      <StraightLine label="slAlwaysTrue" binaryEvaluation="true"
+      <StraightLine label="sl" binaryEvaluation="true" vcLabel="rapid"/>
+      <!-- <StraightLine label="slAlwaysTrue" binaryEvaluation="true"
         vcLabel="alwaysTrue"/> -->
     </LocalPlanners>
 
@@ -124,9 +118,10 @@
       <ConditionalEvaluator label="NodesEval" metric_method="NumNodes"
         value="5" operator=">="/>
 
-      <!-- <QueryMethod label="Query" debug="false"
+      <QueryMethod label="Query" debug="false"
         graphSearchAlg="dijkstras" safeIntervalToolLabel="SI"/>
 
+      <!--
       <LazyQuery label="LazyQuery" debug="true"
         vcLabel="pqp_solid" lpLabel="sl" enhanceDmLabel="euclidean"
         numEnhance="10" d="0.5" deleteInvalid="true">
@@ -214,7 +209,7 @@
         nfLabel="Nearest" extenderLabel="BERO"
         growGoals="false" growthFocus="0.01" m="1"
         goalDmLabel="euclidean" goalThreshold="5">
-        <Evaluator label="NodesEval"/>
+        <Evaluator label="Query"/>
       </BasicRRTStrategy>
 
       <!-- The connector needs to be Rewire for RRT* -->
@@ -271,7 +266,7 @@
 
       <!--SkeletonClearanceUtility label="scu" mauLabel="maUtil"/-->
 
-      <!-- <SafeIntervalTool label="SI" vcLabel="rapid"/> -->
+      <SafeIntervalTool label="SI" vcLabel="rapid"/>
 
     </MPTools>
 

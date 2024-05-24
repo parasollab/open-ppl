@@ -7,10 +7,10 @@
 #include "Geometry/Boundaries/WorkspaceBoundingSphere.h"
 #include "MPProblem/MPProblem.h"
 #include "MPProblem/Robot/Robot.h"
+#include "Utilities/Conversions.h"
 #include "Utilities/IOUtils.h"
 #include "Utilities/XMLNode.h"
 #include "Workspace/WorkspaceDecomposition.h"
-#include "Simulator/Conversions.h"
 
 using namespace mathtool;
 

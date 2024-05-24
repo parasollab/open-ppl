@@ -1,7 +1,7 @@
 #include "WorkspaceDecomposition.h"
 
 #include "Geometry/Boundaries/TetrahedralBoundary.h"
-#include "Simulator/Conversions.h"
+#include "Utilities/Conversions.h"
 #include "Utilities/SSSP.h"
 
 #include "containers/sequential/graph/algorithms/dijkstra.h"

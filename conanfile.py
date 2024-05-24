@@ -36,7 +36,6 @@ class PPLRecipe(ConanFile):
         self.requires("nlohmann_json/3.10.5")
         self.requires("tinyxml2/9.0.0")
         self.requires("catch2/3.3.2")
-        self.requires("qt/6.3.2")
 
         # dependencies for above packages (explicit multi-version conflict resolution)
         self.requires("libpng/1.6.40", override=True)

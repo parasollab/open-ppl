@@ -2,25 +2,15 @@
 
 #include "Actuator.h"
 
-#include "Behaviors/Agents/Agent.h"
-#include "Behaviors/Controllers/ControllerMethod.h"
 #include "ConfigurationSpace/Cfg.h"
 #include "Geometry/Bodies/MultiBody.h"
 #include "Geometry/Boundaries/Boundary.h"
 #include "Geometry/Boundaries/CSpaceBoundingBox.h"
-#include "HardwareInterfaces/Battery.h"
-#include "HardwareInterfaces/RobotCommandQueue.h"
-#include "HardwareInterfaces/StateEstimator.h"
 #include "MPProblem/MPProblem.h"
 #include "MPProblem/Environment/Environment.h"
-#include "Simulator/Conversions.h"
-#include "Simulator/BulletModel.h"
-#include "Simulator/MatlabMicroSimulator.h"
-#include "Simulator/MicroSimulator.h"
+#include "Utilities/Conversions.h"
 #include "Utilities/XMLNode.h"
 
-#include "Behaviors/Controllers/ControlSetGenerators.h"
-#include "Behaviors/Controllers/SimpleController.h"
 #include "nonstd/io.h"
 
 #include <algorithm>
@@ -79,44 +69,7 @@ Robot(MPProblem* const _p, XMLNode& _node) : m_problem(_p) {
     // like actuators and controls. Assume some defaults for these.
     ReadMultibodyFile(filename);
     ReadXMLNode(_node);
-
-    if(m_actuators.empty()) {
-      // Set up a single, velocity-based actuator for all DOF. As this robot is
-      // holonomic, we will only use the actuator in simulation.
-      std::vector<double> reverse(m_multibody->DOF(), -1),
-                          forward(m_multibody->DOF(),  1);
-      m_actuators["default"] = std::unique_ptr<Actuator>(
-          new Actuator(this, "default",
-            IsNonholonomic() ? Actuator::DynamicsType::Force
-                             : Actuator::DynamicsType::Velocity));
-      m_actuators["default"]->SetLimits(reverse, forward);
-      m_actuators["default"]->SetMaxForce(1);
-    }
-
-    // Use the simplest controller.
-    if(m_controller.get() == nullptr) {
-      m_controller = std::unique_ptr<SimpleController>(
-          new SimpleController(this, 1)
-      );
-    }
   }
-
-  // Parse hardware and agent child nodes.
-  for(auto& child : _node) {
-    if(child.Name() == "Hardware") {
-      m_hardware = std::unique_ptr<RobotCommandQueue>(
-          new RobotCommandQueue(child));
-    }
-    else if(child.Name() == "StateEstimator") {
-      SetStateEstimator(StateEstimator::Factory(this, child));
-    }
-    else if(child.Name() == "Agent") {
-      SetAgent(Agent::Factory(this, child));
-    }
-  }
-
-  // Initialize the emulated battery.
-  m_battery = std::unique_ptr<Battery>(new Battery());
 
   //Set color of the robot
   std::string color = _node.Read("color", false, "", "The color of the robot multibody");
@@ -147,8 +100,6 @@ Robot(MPProblem* const _p, std::unique_ptr<MultiBody>&& _mb,
 {
   InitializePlanningSpaces();
   m_multibody->Configure(std::vector<double>(m_multibody->DOF(), 0));
-
-  m_battery = std::unique_ptr<Battery>(new Battery());
 }
 
 
@@ -186,25 +137,6 @@ Robot(MPProblem* const _p, const Robot& _r)
     m_vspace = std::unique_ptr<CSpaceBoundingBox>(
         new CSpaceBoundingBox(*_r.m_vspace)
     );
-
-  // Copy controller.
-  if(_r.m_controller)
-    SetController(_r.m_controller->Clone(this));
-
-  // We can't copy the bullet model directly - it must be recreated by adding
-  // this robot to a simulation because some of the related data is stored in
-  // the Simulation object.
-
-  // We will not copy the agent because each one must be created for a specific
-  // robot object. We will only copy the agent label and require the Simulation
-  // to handle the rest.
-
-  // We will not copy the hardware interfaces because there should only be one
-  // such object for a given piece of hardware.
-
-  // The battery is emulated and may be copied safely.
-  if(_r.m_battery.get())
-    m_battery = std::unique_ptr<Battery>(new Battery(*_r.m_battery));
 }
 
 
@@ -281,10 +213,6 @@ ReadXMLNode(XMLNode& _node) {
       // Parse the actuator.
       std::unique_ptr<Actuator> actuator(new Actuator(this, child));
       m_actuators[actuator->GetLabel()] = std::move(actuator);
-    }
-    else if(name == "controller") {
-      auto controller = ControllerMethod::Factory(this, child);
-      SetController(std::move(controller));
     }
     else if(name == "effector") {
       // We need a multibody to parse the end-effector.
@@ -387,39 +315,6 @@ GetMPProblem() const noexcept {
   return m_problem;
 }
 
-/*------------------------- Simulation Interface -----------------------------*/
-
-void
-Robot::
-Step(const double _dt) {
-  // Run the agent's decision-making routine. The agent will apply controls as
-  // required to execute its decision.
-  if(m_agent and !m_agent->IsChild())
-    m_agent->Step(_dt);
-}
-
-
-void
-Robot::
-SynchronizeModels() noexcept {
-  if(m_bulletModel)
-    GetMultiBody()->Configure(m_bulletModel->GetState());
-}
-
-
-BulletModel*
-Robot::
-GetSimulationModel() noexcept {
-  return m_bulletModel;
-}
-
-
-void
-Robot::
-SetSimulationModel(BulletModel* const _m) {
-  m_bulletModel = _m;
-}
-
 /*--------------------------- Geometry Accessors -----------------------------*/
 
 MultiBody*
@@ -443,37 +338,6 @@ GetEndEffector() const noexcept {
   return m_endEffector;
 }
 
-
-/*------------------------------ Agent Accessors -----------------------------*/
-
-Agent*
-Robot::
-GetAgent() noexcept {
-  return m_agent.get();
-}
-
-
-void
-Robot::
-SetAgent(std::unique_ptr<Agent>&& _a) noexcept {
-  m_agent = std::move(_a);
-}
-
-/*---------------------------- Control Accessors -----------------------------*/
-
-ControllerMethod*
-Robot::
-GetController() noexcept {
-  return m_controller.get();
-}
-
-
-void
-Robot::
-SetController(std::unique_ptr<ControllerMethod>&& _c) noexcept {
-  m_controller = std::move(_c);
-}
-
 /*---------------------------- Actuator Accessors ----------------------------*/
 
 Actuator*
@@ -487,65 +351,6 @@ const std::unordered_map<std::string, std::unique_ptr<Actuator>>&
 Robot::
 GetActuators() const noexcept {
   return m_actuators;
-}
-
-/*---------------------------- Dynamics Accessors ----------------------------*/
-
-#ifdef PMPL_USE_MATLAB
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wignored-qualifiers"
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-#include "MatlabEngine.hpp"
-#include "MatlabDataArray.hpp"
-#pragma GCC diagnostic pop
-
-MatlabMicroSimulator*
-Robot::
-GetMatlabMicroSimulator() noexcept {
-  if(!m_matlabSimulator)
-    m_matlabSimulator.reset(new MatlabMicroSimulator(this));
-
-  return m_matlabSimulator.get();
-}
-#endif
-
-
-MicroSimulator*
-Robot::
-GetMicroSimulator() noexcept {
-  if(!m_simulator)
-    m_simulator.reset(new MicroSimulator(this));
-
-  return m_simulator.get();
-}
-
-/*---------------------------- Hardware Interface ----------------------------*/
-
-RobotCommandQueue*
-Robot::
-GetHardwareQueue() const noexcept {
-  return m_hardware.get();
-}
-
-
-Battery*
-Robot::
-GetBattery() const noexcept {
-  return m_battery.get();
-}
-
-
-StateEstimator*
-Robot::
-GetStateEstimator() const noexcept {
-  return m_stateEstimator.get();
-}
-
-
-void
-Robot::
-SetStateEstimator(std::unique_ptr<StateEstimator>&& _stateEstimator) noexcept {
-  m_stateEstimator = std::move(_stateEstimator);
 }
 
 /*------------------------------- Other --------------------------------------*/

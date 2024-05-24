@@ -1,7 +1,6 @@
 #include "TetrahedralBoundary.h"
 
 #include "Geometry/GMSPolyhedron.h"
-#include "Simulator/Conversions.h"
 #include "Utilities/MPUtils.h"
 #include "Utilities/PMPLExceptions.h"
 

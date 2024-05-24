@@ -10,21 +10,13 @@
 #include <unordered_map>
 
 class Actuator;
-class Agent;
-class Battery;
 class Body;
 class Boundary;
-class BulletModel;
 class Cfg;
-class ControllerMethod;
 class CSpaceBoundingBox;
-class MatlabMicroSimulator;
-class MicroSimulator;
 class MPProblem;
 class MultiBody;
-class RobotCommandQueue;
 class XMLNode;
-class StateEstimator;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -32,20 +24,7 @@ class StateEstimator;
 ///
 /// @details A robot has many components, including:
 ///   @arg MultiBody: The robot's physical geometry.
-///   @arg Agent: The robot's high-level decision-making algorithm. Determines
-///               what actions the robot should take to complete its task. Used
-///               only in simulations.
 ///   @arg Actuators: The robot's motors/effectors. Translates control commands
-///                   into generalized forces.
-///   @arg Controller: The robot's low-level controller, which determines what
-///                    control should be applied to move from point to point.
-///   @arg BulletModel: Simulation model of the robot. Represents the robot in
-///                     the bullet world.
-///   @arg MicroSimulator: Isolated simulation of this robot for testing control
-///                        applications.
-///   @arg CommandQueue: Controls a set of hardware for this robot.
-///   @arg StateEstimator: Object for integrating sensor data with commands to
-///                        localize a hardware robot.
 ///
 /// @todo Come up with a nice way to support both real and emulated hardware.
 ////////////////////////////////////////////////////////////////////////////////
@@ -62,17 +41,6 @@ class Robot final {
   std::unordered_map<std::string, std::unique_ptr<Actuator>> m_actuators;
   std::unique_ptr<CSpaceBoundingBox> m_cspace;    ///< The robot's c-space.
   std::unique_ptr<CSpaceBoundingBox> m_vspace;    ///< The robot's velocity space.
-  std::unique_ptr<Agent> m_agent;                 ///< High-level decision agent.
-  std::unique_ptr<ControllerMethod> m_controller; ///< Low-level controller.
-  std::unique_ptr<MicroSimulator> m_simulator;    ///< Internal simulator.
-#ifdef PMPL_USE_MATLAB
-  std::unique_ptr<MatlabMicroSimulator> m_matlabSimulator; ///< Matlab internal simulator.
-#endif
-  BulletModel* m_bulletModel{nullptr};            ///< The bullet simulation model.
-
-  std::unique_ptr<RobotCommandQueue> m_hardware;    ///< Hardware command queue.
-  std::unique_ptr<StateEstimator> m_stateEstimator; ///< The localization object.
-  std::unique_ptr<Battery> m_battery;               ///< An emulated battery.
 
   std::string m_label;             ///< The robot's unique label.
   bool m_virtual{false};           ///< Is this an imaginary robot?
@@ -194,26 +162,6 @@ class Robot final {
     MPProblem* GetMPProblem() const noexcept;
 
     ///@}
-    ///@name Simulation Interface
-    ///@{
-
-    /// Execute a simulation step: update the percept model, have the agent make
-    /// a decision, and send the resulting controls to the actuators.
-    /// @param _dt The timestep length.
-    void Step(const double _dt);
-
-    /// Align the multibody model to the robot's current simulated state.
-    void SynchronizeModels() noexcept;
-
-    /// Access the robot's simulation model. This is owned by the simulation
-    /// engine.
-    BulletModel* GetSimulationModel() noexcept;
-
-    /// Set the robot's simulation model (should only happen in the main bullet
-    /// engine).
-    void SetSimulationModel(BulletModel* const _m);
-
-    ///@}
     ///@name Geometry Accessors
     ///@{
     /// Access the robot's geometric representation. The robot will take
@@ -224,24 +172,6 @@ class Robot final {
 
     /// Access the robot manipulator's end effector, if it exists.
     const EndEffector& GetEndEffector() const noexcept;
-
-    ///@}
-    ///@name Agent Accessors
-    ///@{
-    /// Access the robot's agent. The robot will take ownership of its agent and
-    /// delete it when necessary.
-
-    Agent* GetAgent() noexcept;
-    void SetAgent(std::unique_ptr<Agent>&& _a) noexcept;
-
-    ///@}
-    ///@name Control Accessors
-    ///@{
-    /// Access the robot's control structures. The robot will take ownership of
-    /// these and delete them when necessary.
-
-    ControllerMethod* GetController() noexcept;
-    void SetController(std::unique_ptr<ControllerMethod>&& _c) noexcept;
 
     ///@}
     ///@name Actuator Accessors
@@ -255,38 +185,6 @@ class Robot final {
     /// Get set of all actuators mapped by label
     const std::unordered_map<std::string, std::unique_ptr<Actuator>>&
         GetActuators() const noexcept;
-
-    ///@}
-    ///@name Dynamics Accessors
-    ///@{
-
-    /// Get the robot's micro-simulator to test out controls.
-    MicroSimulator* GetMicroSimulator() noexcept;
-
-#ifdef PMPL_USE_MATLAB
-    /// Get the robot's matlab micro-simulator. Currently this is only for the
-    /// matlab-based steerable needle. Always returns null when compiled without
-    /// matlab support.
-    MatlabMicroSimulator* GetMatlabMicroSimulator() noexcept;
-#endif
-
-    ///@}
-    ///@name Hardware Interface
-    ///@{
-    /// Access the interface to the hardware robot (if any).
-
-    /// Get hardware command queue
-    RobotCommandQueue* GetHardwareQueue() const noexcept;
-
-    /// Get the emualted battery
-    Battery* GetBattery() const noexcept;
-
-    /// Get the state estimator
-    StateEstimator* GetStateEstimator() const noexcept;
-
-    /// Set the state estimator
-    void SetStateEstimator(std::unique_ptr<StateEstimator>&& _stateEstimator)
-        noexcept;
 
     ///@}
     ///@name Other Properties

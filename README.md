@@ -2,6 +2,7 @@
 
 The PMPL library is a general code base for studying motion planning algorithms.
 This file lists the package dependencies for PMPL and how to install them.
+
 > Tested on Ubuntu 20.04, Ubuntu 22.04, macOS Sonoma (Intel and Apple Silicon)
 
 ## Building on MacOS
@@ -100,8 +101,6 @@ version, such as a graphics driver and CUDA library.
 - bullet3
 - boost
 - nlohmann-json
-- qtbase
-- qttools
 - catch2
 - tinyxml2
 
@@ -141,7 +140,7 @@ sudo apt-add-repository -y 'deb https://apt.kitware.com/ubuntu/ jammy main'
 For Ubuntu Focal Fossa (20.04)
 
 ```bash
-sudo apt-add-repository -y 'deb https://apt.kitware.com/ubuntu/ focal main'   
+sudo apt-add-repository -y 'deb https://apt.kitware.com/ubuntu/ focal main'
 ```
 
 For Ubuntu Bionic Beaver (18.04)
@@ -159,7 +158,7 @@ sudo apt install cmake
 
 ### Install and build using Conan (Recommended)
 
-#### Install conan 
+#### Install conan
 
 Alternate installation instructions available at https://docs.conan.io/en/latest/installation.html
 
@@ -181,12 +180,6 @@ conan profile detect
 
 #### Install conan packages
 
-For Ubuntu 22.04, qt/6.3.2 requires this export for C3I until conan-io/conan-center-index#13472 is fixed
-
-```bash
-export NOT_ON_C3I=1
-```
-
 ```bash
 conan install . --output-folder=build --build=missing -c tools.system.package_manager:mode=install -c tools.system.package_manager:sudo=true -s build_type=Debug -s compiler.cppstd=gnu17
 ```
@@ -206,6 +199,7 @@ cmake --build build -j3
 ```
 
 ##### Common dependency issues with conan:
+
 Boost 1.82.0 vs 1.83.0 (CGAL vs PPL req.) => Change boost ver. in conanfile.py to 1.83.0
 mpfr 4.1.0 vs 4.2.1 => mpfr boost ver. in conanfile.py to 4.2.1
 
@@ -251,6 +245,7 @@ cmake --build build -j3
 ```
 
 ##### Common dependency issues with vcpkg:
+
 CGAL version 5.5.2 is incompatible => Change CGAL ver. in vcpkg.json to 5.4.2
 
 ## Docker
@@ -264,11 +259,11 @@ Follow the instructions on https://docs.docker.com/get-docker/ for your operatin
 
 ### Build Docker Container
 
-In order to build in a docker container, first clone this repository to your Docker host system.  In the top level directory of the cloned repository, execute the following commands
+In order to build in a docker container, first clone this repository to your Docker host system. In the top level directory of the cloned repository, execute the following commands
 
 ```bash
 docker build -t pmpl-build .
-docker run -it pmpl-build 
+docker run -it pmpl-build
 ```
 
 The executable built resides in /pmpl/build/pmpl_exec within the docker container
@@ -298,7 +293,6 @@ cmake --build build --target install
 In order to have access to the dependencies of PPL, for things like header files included in PPL's header files, you should include the following commands in the CMakeLists file for your ptroject.
 
 ```cmake
-find_package(Qt6 CONFIG COMPONENTS Core Gui Widgets OpenGL OpenGLWidgets REQUIRED)
 find_package(Eigen3 CONFIG REQUIRED)
 find_package(Bullet CONFIG REQUIRED
          LinearMath Bullet3Common BulletDynamics BulletSoftBody BulletCollision BulletInverseDynamics)
@@ -331,4 +325,3 @@ We provide `Examples/CfgExamples.xml` as an example of how to create an xml file
 ```bash
 ./build/ppl_mp -f Examples/CfgExamples.xml
 ```
-

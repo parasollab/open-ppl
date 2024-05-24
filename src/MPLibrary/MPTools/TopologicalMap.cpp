@@ -1,6 +1,7 @@
 #include "TopologicalMap.h"
 
 #include "MPLibrary/MPLibrary.h"
+#include "Utilities/Conversions.h"
 
 #include <algorithm>
 #include <map>
