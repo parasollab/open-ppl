@@ -14,8 +14,8 @@ add_definitions(-D${ROBOT_DEF})
 option(BUILD_PARALLEL "Build parallel version of PMPL" OFF)
 
 option(BUILD_TESTS "Build and Run Tests" OFF)
-option(CODE_COVERAGE "Enable code coverage reporting" OFF)
-option(BUILD_DOCS "Build Documentation" OFF)
+option(CODE_COVERAGE "Enable code coverage reporting" ON)
+option(BUILD_DOCS "Build Documentation" ON)
 
 add_compile_definitions(VIZMO_MAP)
 add_compile_definitions(CGAL_NO_ASSERTIONS)
