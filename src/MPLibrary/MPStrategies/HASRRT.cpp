@@ -679,7 +679,6 @@ DirectSkeleton() {
 }
 
 
-
 const size_t
 HASRRT::
 SelectSamplingRegion() {
@@ -1034,7 +1033,6 @@ GetClosestIntermediate(const Cfg& _cfg, SamplingRegion& _region) {
               << " at distance " << minDist << std::endl;
   return closestI;
 }
-
 
 
 void
