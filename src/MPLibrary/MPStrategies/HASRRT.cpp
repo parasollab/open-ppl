@@ -159,7 +159,7 @@ Iterate() {
   stats->IncStat(id);
 
   // Expand the tree from nearest neigbor to target.
-  if(!m_selectedWholeEnv) {
+  if(!m_selectedWholeEnv and m_regions.size() > 0) {
     const auto neighborCandidates = m_regions[m_selectedRegionIndex].samples;
 
     vector<VID> pnc;
@@ -184,13 +184,17 @@ Iterate() {
 
     if(nearestVID == INVALID_VID)
       return;
-
+  
     const VID newVID = this->ExpandTree(nearestVID, target);
+
 
     if(newVID != INVALID_VID)  {
 
-      m_regions[m_selectedRegionIndex].samples.push_back(newVID);
-
+    // If, in the expansion process, we have finished exploring the skeleton and have no more regions left, don't bother with regoin bookkeeping.
+      if(m_regions.size() != 0) {
+        m_regions[m_selectedRegionIndex].samples.push_back(newVID);
+      }
+      
 
       // If growing goals, try to connect other trees to the new node. Otherwise
       // check for a goal extension.
@@ -268,6 +272,7 @@ SelectTarget() {
                 << " (sampler '" << *samplerLabel << "'):"
                 << std::endl;
 
+    m_selectedWholeEnv = true;
     return Sample(b, samplerLabel);
   }
 
@@ -315,7 +320,6 @@ AddNode(const Cfg& _newCfg) {
 
   return {newVID, nodeIsNew};
 }
-
 /*---------------------------------- Helpers ---------------------------------*/
 
 Cfg
@@ -863,6 +867,9 @@ AdvanceRegions(const Cfg& _cfg) {
       m_parentRegions.push_back(*iter);
     }
     iter = m_regions.erase(iter);
+    if (m_selectedRegionIndex >= m_regions.size()){
+      m_selectedRegionIndex = m_regions.size() - 1;
+    }
   }
 
   // Create new regions for each newly reached vertex.
