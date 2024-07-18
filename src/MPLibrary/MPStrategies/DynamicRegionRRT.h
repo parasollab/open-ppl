@@ -230,13 +230,17 @@ class DynamicRegionRRT : virtual public BasicRRTStrategy {
     WorkspaceSkeleton m_originalSkeleton; ///< The original workspace skeleton.
     WorkspaceSkeleton m_skeleton;         ///< The directed/pruned workspace skeleton.
 
+
     std::string m_skeletonType{"reeb"}; ///< Type of skeleton to build.
     std::string m_decompositionLabel; ///< The workspace decomposition label.
+    std::string m_inputSkeleton;     ///< The input skeleton file if available
+    std::string m_outputSkeleton;     ///< The input skeleton file if available
     std::string m_scuLabel;           ///< The skeleton clearance utility label.
 
     bool m_velocityBiasing{false};    ///< Use velocity biasing?
     double m_velocityAlignment{.1};   ///< Strength of velocity biasing.
 
+    bool m_directSkeleton{false};
     bool m_initialized{false};    ///< Have auxiliary structures been initialized?
 
     /// Pair of points we use to direct the skeleton.

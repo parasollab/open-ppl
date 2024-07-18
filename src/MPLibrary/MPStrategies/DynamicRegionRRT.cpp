@@ -46,6 +46,14 @@ DynamicRegionRRT(XMLNode& _node) : BasicRRTStrategy(_node) {
   m_penetrationFactor = _node.Read("penetration", true,
       m_penetrationFactor, std::numeric_limits<double>::min(), 1.,
       "Fraction of bounding sphere penetration that is considered touching");
+
+  m_directSkeleton = _node.Read("directSkeleton", false, m_directSkeleton,
+      "Direct the skeleton from the start cfg");
+
+  m_inputSkeleton = _node.Read("inputSkeleton", false, "", "the input skeleton file "
+      "if already constructed");
+      
+  m_outputSkeleton = _node.Read("outputSkeleton", false, "", "the output skeleton file");
 }
 
 /*--------------------------- MPBaseObject Overrides -------------------------*/
@@ -373,63 +381,77 @@ BuildSkeleton() {
   auto stats = this->GetStatClass();
   MethodTimer mt(stats, this->GetNameAndLabel() + "::BuildSkeleton");
 
-  // Determine if we need a 2d or 3d skeleton.
-  auto env = this->GetEnvironment();
-  auto robot = this->GetTask()->GetRobot();
-  const bool threeD = robot->GetMultiBody()->GetBaseType() ==
-      Body::Type::Volumetric;
+  if(m_inputSkeleton != "")
+    m_originalSkeleton.Read(m_inputSkeleton);
 
-  if(threeD) {
-    if(m_skeletonType == "mcs") {
-      if(this->m_debug)
-        std::cout << "Building a Mean Curvature skeleton." << std::endl;
-      MeanCurvatureSkeleton3D mcs;
-      mcs.SetEnvironment(this->GetEnvironment());
-      mcs.BuildSkeleton();
-
-      // Create the workspace skeleton.
-      auto sk = mcs.GetSkeleton();
-      m_originalSkeleton = sk.first;
-      m_originalSkeleton.DoubleEdges();
-    }
-    else if(m_skeletonType == "reeb") {
-      // Create a workspace skeleton using a reeb graph.
-      if(this->m_debug)
-        std::cout << "Building a Reeb Graph skeleton." << std::endl;
-      auto decomposition = this->GetMPLibrary()->GetMPTools()->GetDecomposition(
-          m_decompositionLabel);
-      ReebGraphConstruction reeb;
-      reeb.Construct(decomposition);
-
-      // Create the workspace skeleton.
-      m_originalSkeleton = reeb.GetSkeleton();
-      m_originalSkeleton.DoubleEdges();
-    }
-    else
-      throw ParseException(WHERE) << "Unrecognized skeleton type '"
-                                  << m_skeletonType << "', options for 3d "
-                                  << "problems are {mcs, reeb}.";
-  }
   else {
-    // Collect the obstacles we want to consider (all in this case).
-    std::vector<GMSPolyhedron> polyhedra;
-    for(size_t i = 0; i < env->NumObstacles(); ++i) {
-      MultiBody* const obstacle = env->GetObstacle(i);
-      for(size_t j = 0; j < obstacle->GetNumBodies(); ++j)
-        polyhedra.emplace_back(obstacle->GetBody(j)->GetWorldPolyhedron());
-    }
 
-    // Build a skeleton from a 2D medial axis.
-    if(this->m_debug)
-      std::cout << "Build a skeleton from a 2D medial axis." << endl;
-    MedialAxis2D ma(polyhedra, env->GetBoundary());
-    ma.BuildMedialAxis();
-    m_originalSkeleton = get<0>(ma.GetSkeleton(1)); // 1 for free space.
+    // Determine if we need a 2d or 3d skeleton.
+    auto env = this->GetEnvironment();
+    auto robot = this->GetTask()->GetRobot();
+    const bool threeD = robot->GetMultiBody()->GetBaseType()
+      == Body::Type::Volumetric;
+
+    if(threeD) {
+      if(m_skeletonType == "mcs") {
+        if(this->m_debug)
+          std::cout << "Building a Mean Curvature skeleton." << std::endl;
+        MeanCurvatureSkeleton3D mcs;
+        mcs.SetEnvironment(this->GetEnvironment());
+        mcs.BuildSkeleton();
+
+        // Create the workspace skeleton.
+        auto sk = mcs.GetSkeleton();
+        m_originalSkeleton = sk.first;
+        m_originalSkeleton.DoubleEdges();
+      }
+      else if(m_skeletonType == "reeb") {
+        // Create a workspace skeleton using a reeb graph.
+        if(this->m_debug)
+          std::cout << "Building a Reeb Graph skeleton." << std::endl;
+        auto decomposition = this->GetMPLibrary()->GetMPTools()->GetDecomposition(
+            m_decompositionLabel);
+        ReebGraphConstruction reeb;
+        reeb.Construct(decomposition);
+
+        // Create the workspace skeleton.
+        m_originalSkeleton = reeb.GetSkeleton();
+        m_originalSkeleton.DoubleEdges();
+      }
+      else
+        throw ParseException(WHERE) << "Unrecognized skeleton type '"
+          << m_skeletonType << "', options for 3d "
+          << "problems are {mcs, reeb}.";
+    }
+    else {
+      // Collect the obstacles we want to consider (all in this case).
+      std::vector<GMSPolyhedron> polyhedra;
+      for(size_t i = 0; i < env->NumObstacles(); ++i) {
+        MultiBody* const obstacle = env->GetObstacle(i);
+        for(size_t j = 0; j < obstacle->GetNumBodies(); ++j)
+          polyhedra.emplace_back(obstacle->GetBody(j)->GetWorldPolyhedron());
+      }
+
+      // Build a skeleton from a 2D medial axis.
+      if(this->m_debug)
+        std::cout << "Build a skeleton from a 2D medial axis." << endl;
+      MedialAxis2D ma(polyhedra, env->GetBoundary());
+      ma.BuildMedialAxis();
+      m_originalSkeleton = get<0>(ma.GetSkeleton(1)); // 1 for free space.
+    }
   }
 
-  if(this->m_debug)
-    std::cout << "Direct skeleton" << endl;
-  DirectSkeleton();
+  if(m_directSkeleton) {
+    if(this->m_debug)
+      std::cout << "Direct input skeleton" << endl;
+    m_originalSkeleton.DoubleEdges();
+    DirectSkeleton();
+  }
+  else
+    m_skeleton = m_originalSkeleton;
+
+  if(m_outputSkeleton != "")
+    m_skeleton.Write(m_outputSkeleton);
 }
 
 
