@@ -293,7 +293,7 @@ SelectTarget() {
   }
 }
 
-
+//delete same as drrt
 std::pair<typename HASRRT::VID, bool>
 HASRRT::
 AddNode(const Cfg& _newCfg) {
@@ -322,6 +322,7 @@ AddNode(const Cfg& _newCfg) {
 }
 /*---------------------------------- Helpers ---------------------------------*/
 
+//delete same as drrt
 Cfg
 HASRRT::
 Sample(SamplingRegion* _region) {
@@ -361,7 +362,7 @@ Sample(SamplingRegion* _region) {
   return target;
 }
 
-
+//delete same as drrt
 Cfg
 HASRRT::
 Sample(const Boundary* const _boundary, const std::string* _samplerLabel) {
@@ -382,7 +383,7 @@ Sample(const Boundary* const _boundary, const std::string* _samplerLabel) {
   return target;
 }
 
-
+//delete same as drrt
 const Vector3d
 HASRRT::
 GetVelocityBias(SamplingRegion* _region) {
@@ -444,7 +445,7 @@ GetVelocityBias(SamplingRegion* _region) {
   return makeBias(path[index], eit->property()[1]);
 }
 
-
+//delete same as drrt
 bool
 HASRRT::
 IsTouching(const Cfg& _cfg, SamplingRegion& _region) {
@@ -823,6 +824,7 @@ CreateRegions(const WorkspaceSkeleton::vertex_iterator _iter) {
                 << eit->target() << ", " << eit->id() << ") "
                 << "at skeleton vertex " << _iter->descriptor()
                 << "(" << _iter->property() << ")."
+                << "It has center " << m_regions.back().GetCenter()
                 << std::endl;
   }
 
@@ -984,7 +986,8 @@ GetBinaryIntermediate(const Cfg& _cfg, SamplingRegion& _region, bool _isQnear) {
       this->GetNameAndLabel() + "::GetBinaryIntermediate");
 
   if(_isQnear) {
-    size_t index =  ( _region.frontLineIndex + (_region.edgeIndex -_region.frontLineIndex) / 2);
+    size_t index =  (_region.edgeIndex > _region.frontLineIndex) ? (_region.edgeIndex - (_region.edgeIndex - _region.frontLineIndex) / 2)
+                                                      : (_region.edgeIndex + (_region.frontLineIndex - _region.edgeIndex) / 2);
     if(this->m_debug) {
       std::cout << "current intermediate is at " << _region.edgeIndex << std::endl;
       std::cout << "frontline index: " << _region.frontLineIndex << std::endl;
