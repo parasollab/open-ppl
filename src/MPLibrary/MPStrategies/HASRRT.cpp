@@ -157,6 +157,16 @@ Iterate() {
   auto stats = this->GetStatClass();
   const std::string id = this->GetNameAndLabel() + "::SelectTargetCount";
   stats->IncStat(id);
+  
+	if (m_sampleFailed) {
+    if(this->m_debug)
+      std::cout << "Failed to find a valid cfg in chosen region." << std::endl;
+
+    auto stats = this->GetStatClass();
+    const std::string id = this->GetNameAndLabel() + "::nSampleFailedIterations";
+    stats->IncStat(id);
+    return;
+  } 
 
   // Expand the tree from nearest neigbor to target.
   if(!m_selectedWholeEnv and m_regions.size() > 0) {
@@ -191,7 +201,7 @@ Iterate() {
     if(newVID != INVALID_VID)  {
 
     // If, in the expansion process, we have finished exploring the skeleton and have no more regions left, don't bother with regoin bookkeeping.
-      if(m_regions.size() != 0) {
+      if(m_regions.size() > 0) {
         m_regions[m_selectedRegionIndex].samples.push_back(newVID);
       }
       
@@ -272,7 +282,7 @@ SelectTarget() {
                 << " (sampler '" << *samplerLabel << "'):"
                 << std::endl;
 
-    m_selectedWholeEnv = true;
+      m_selectedWholeEnv = true;
     return Sample(b, samplerLabel);
   }
 
@@ -288,6 +298,9 @@ SelectTarget() {
     return Sample(&m_regions[regionIdx]);
   }
   else {
+    if (this->m_debug) {
+      std::cout << "Sampling from whole environment." << std::endl;
+    } 
     m_selectedWholeEnv = true;
     return Sample(this->GetEnvironment()->GetBoundary(), samplerLabel);
   }
@@ -314,7 +327,7 @@ AddNode(const Cfg& _newCfg) {
     // On each new sample, check if we need to advance our regions and generate
     // new ones. Add a roadmap hook to achieve this.
     auto vi = g->find_vertex(newVID);
-    CheckRegionProximity(vi->property().GetPoint());
+    //CheckRegionProximity(vi->property().GetPoint());
     AdvanceRegions(vi->property());
   }
 
@@ -343,15 +356,27 @@ Sample(SamplingRegion* _region) {
   // Get the sampler.
   auto s = this->GetMPLibrary()->GetSampler(this->m_samplerLabel);
 
-  std::vector<Cfg> samples, collision;
-  while(samples.empty()) {
+  std::vector<CfgType> samples, collision;
+  int nattempts = 0; // give us an exit strategy to go try a new region if this one sucks
+  while(nattempts < 20 and samples.empty()) {
     s->Sample(1, 5, &samplingBoundary, std::back_inserter(samples),
       std::back_inserter(collision));
 
     // Increment successes as we sample.
     _region->TrackSuccess(samples.size(), samples.size() + collision.size());
+    nattempts += 1;
+  }
+  if (samples.empty()) {
+    if (this->m_debug)
+      std::cout << "\tFailed to sample from region." << std::endl;
+    m_sampleFailed = true;
+    // just return some garbage
+    CfgType randCfg(this->GetTask()->GetRobot());
+    randCfg.GetRandomCfg(this->GetEnvironment());
+    return randCfg;
   }
   auto target = samples.front();
+  m_sampleFailed = false;
 
   if(m_velocityBiasing)
     BiasVelocity(target, _region);
@@ -361,7 +386,6 @@ Sample(SamplingRegion* _region) {
 
   return target;
 }
-
 //delete same as drrt
 Cfg
 HASRRT::
@@ -376,6 +400,7 @@ Sample(const Boundary* const _boundary, const std::string* _samplerLabel) {
     s->Sample(1, 5, _boundary, std::back_inserter(samples),
       std::back_inserter(collision));
 
+  m_sampleFailed = false;
   auto target = samples.front();
   if(this->m_debug)
     std::cout << "\t" << target.PrettyPrint() << std::endl;
@@ -728,6 +753,18 @@ ComputeProbabilities() {
   MethodTimer mt(this->GetStatClass(),
       this->GetNameAndLabel() + "::ComputeProbabilities");
 
+
+  // If we only have one region, we select it based on its success. 
+  if (m_regions.size() == 1) {
+    auto weight = m_regions[0].GetWeight();
+    std::vector<double> probabilities = {weight, 1-weight};
+    return probabilities;
+  }
+
+  // >1 region? Do some real math. 
+
+
+
   // Sum all weights of all current regions.
   double totalWeight = 0.;
   for(auto r : m_regions) {
@@ -870,7 +907,11 @@ AdvanceRegions(const Cfg& _cfg) {
     }
     iter = m_regions.erase(iter);
     if (m_selectedRegionIndex >= m_regions.size()){
-      m_selectedRegionIndex = m_regions.size() - 1;
+      if (m_regions.size() != 0) {
+        m_selectedRegionIndex = m_regions.size() - 1;
+      } else {
+        m_selectedRegionIndex = 0;
+      }
     }
   }
 
@@ -986,9 +1027,10 @@ GetBinaryIntermediate(const Cfg& _cfg, SamplingRegion& _region, bool _isQnear) {
       this->GetNameAndLabel() + "::GetBinaryIntermediate");
 
   if(_isQnear) {
-    size_t index =  (_region.edgeIndex > _region.frontLineIndex) ? (_region.edgeIndex - (_region.edgeIndex - _region.frontLineIndex) / 2)
-                                                      : (_region.edgeIndex + (_region.frontLineIndex - _region.edgeIndex) / 2);
-    if(this->m_debug) {
+	 size_t index = (_region.edgeIndex > _region.frontLineIndex) ?
+		 (_region.frontLineIndex + (_region.edgeIndex - _region.frontLineIndex) / 2)
+		:(_region.frontLineIndex + (_region.frontLineIndex - _region.edgeIndex) / 2); // should this last + be -?
+  if(this->m_debug) {
       std::cout << "current intermediate is at " << _region.edgeIndex << std::endl;
       std::cout << "frontline index: " << _region.frontLineIndex << std::endl;
       std::cout << "new index: " << index << std::endl;

@@ -255,7 +255,8 @@ class HASRRT : public BasicRRTStrategy {
     bool m_directSkeleton{false};
     bool m_refineEdges{false};
     bool m_velocityBiasing{false};    ///< Use velocity biasing?
-    double m_velocityAlignment{.1};   ///< Strength of velocity biasing.
+    double m_velocityAlignment{.1};   ///< Strength of velocity biasing.	
+    bool m_sampleFailed{false};       ///< Whether or not the last Sample() call failed. 
 
 
     /// Pair of points we use to direct the skeleton.
