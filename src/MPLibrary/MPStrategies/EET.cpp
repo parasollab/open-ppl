@@ -59,16 +59,36 @@ Initialize() {
   BasicRRTStrategy::Initialize();
 
   //compute sphere tree
-  Wavefront();
-  currentSphere = wavefrontRoot;
-
-  wavefrontExpansion.Write("wavefront", this->GetMPProblem()->GetEnvironment());
+  //Wavefront();
+  WavefrontSetup();
 }
 
 
 void
 EET::
 Iterate() {
+  if (!m_wavefrontFinished) {
+    // Perform one step of the Wavefront Expansion
+    m_wavefrontFinished = WavefrontStep();
+    if (m_wavefrontFinished) {
+      currentSphere = wavefrontRoot;
+
+      auto stats = this->GetStatClass();
+      const std::string id = this->GetNameAndLabel() + "::WavefrontFinished";
+      stats->IncStat(id);
+
+      if (this->m_debug) {
+        wavefrontExpansion.Write("wavefront_final.map", this->GetMPProblem()->GetEnvironment());
+        std::cout << "Wavefront expansion has "
+                  << wavefrontExpansion.GetAllVIDs().size() 
+                  << " nodes." << std::endl;
+      }
+    }
+    return;
+  }
+  // Wavefront Expansion is finished.
+
+  // Actual iterations. 
   auto rdmp = this->GetRoadmap();
 
   // sample a sphere. 
@@ -140,7 +160,13 @@ Iterate() {
 
 void
 EET::
-Wavefront() {
+WavefrontSetup() {
+  auto stats = this->GetStatClass();
+  MethodTimer mt(stats, this->GetNameAndLabel() + "::WavefrontSetup");
+
+  if (this->m_debug) {
+    std::cout << "Beginning Wavefront Expansion setup..." << std::endl;
+  }
   auto rdmp = this->GetRoadmap();
 
   // Apparently, GenerateStart and GenerateGoals will not re-generate new S&G.
@@ -159,106 +185,116 @@ Wavefront() {
   }
 
   // Root the WE. 
-  std::priority_queue<Sphere> sphereQueue;
-  InsertSphereIntoPQ(pStart, INVALID_VID, sphereQueue);
-
-  // in-loop variables
-  std::set<int> goalsReached;
-
-  // Grow WE! 
-  while (!sphereQueue.empty()) {
-    Sphere s = sphereQueue.top();
-    sphereQueue.pop();
-    // add sphere to WE
-    VID sVID = wavefrontExpansion.AddVertex(s);
-    s.wavefrontVID = sVID;
-    wavefrontExpansionSpheres[sVID] = s;
-    if (this->m_debug) {
-      std::cout << "Investigating " << 
-                    "Sphere " << s.center[0] << " " 
-                              << s.center[1] << " " 
-                              << s.center[2] << " " 
-                        << "with radius " << s.radius
-                        << " priority: " << s.priority 
-                << " Added to WE." << std::endl 
-                << "   (There are " << sphereQueue.size() << " elments in the queue)."
-                << std::endl;
-    }
-    if (wavefrontRoot.isEmpty()){
-      wavefrontRoot = s;
-    }
-
-    // add edge to WE
-    VID parentVID = s.parentVID;
-    wavefrontExpansion.AddEdge(parentVID, sVID);
-    if (this->m_debug) {
-      std::cout << "   Adding edge from VID " << parentVID 
-                << " to VID " << sVID << std::endl;
-      std::cout << "   VID " << parentVID << " has children VIDs: ";
-      if (parentVID != INVALID_VID) {
-        for (auto v : wavefrontExpansion.GetChildren(parentVID)){
-          std::cout << " " << v;
-        }
-        std::cout << " " << std::endl;
-      } else {
-        std::cout << "parentVID invalid. This is likely the root node." << std::endl;
-      }
-    }
-
-    // If we are within a goal region, we are done.
-    if (Distance(pGoal, s.center) < s.radius) {
-      goalSphere = s;
-      if (this->m_debug) {
-        std::cout << "   Sphere " << s.wavefrontVID 
-                  << ". This sphere contains the goal region." << std::endl;
-      }
-      break;
-    }
-
-    // Sample n points on sphere surface. 
-    PointConstruction _p;
-    std::vector<Point> samples;
-    if (!threeD) {
-      mathtool::Vector3d radius({s.radius, s.radius, 0});
-      samples = _p.SampleSphereSurface(s.center, radius, m_nSphereSamples);
-    } else {
-      samples = _p.SampleSphereSurface(s.center, s.radius, m_nSphereSamples);
-    } 
-    if (this->m_debug){
-      std::cout << "   sampled " << samples.size() 
-                << " samples on the surface of sphere with VID " << sVID 
-                << std::endl;
-    }
-
-    // Calculate sphere diameter for all points
-    for (Point p_i : samples) {
-      // check which sphere in tree to attach this one to. 
-
-      // not in pseudocode, but we don't want to insert 
-      // the same sphere into queue so many times. Priority will be the same. 
-      bool sphereAddedToQueue = false; 
-      for (auto sphereVID : wavefrontExpansion.GetAllVIDs()) {
-        Sphere sphere = wavefrontExpansionSpheres[sphereVID];
-
-        // outside existing spheres
-        if (Distance(p_i, sphere.center) < sphere.radius) {
-          InsertSphereIntoPQ(p_i, sphereVID, sphereQueue);
-          sphereAddedToQueue = true;
-        }
-
-        if (sphereAddedToQueue) { break; }
-      }
-    } // calculate sphere diameter for all pts for loop
-
-  } // tree growth while loop
-
+  // std::priority_queue<Sphere> sphereQueue;
+  InsertSphereIntoPQ(pStart, INVALID_VID, m_sphereQueue);
   if (this->m_debug) {
-    std::cout << "Wavefront expansion has "
-              << wavefrontExpansion.GetAllVIDs().size() 
-              << " nodes." << std::endl;
+    std::cout << "Finished WE setup" << std::endl;
+  }
+}
+
+bool 
+EET::
+WavefrontStep() {
+  auto stats = this->GetStatClass();
+  MethodTimer mt(stats, this->GetNameAndLabel() + "::WavefrontStep");
+
+  Sphere s = m_sphereQueue.top();
+  m_sphereQueue.pop();
+  // add sphere to WE
+  VID sVID = wavefrontExpansion.AddVertex(s);
+  s.wavefrontVID = sVID;
+  wavefrontExpansionSpheres[sVID] = s;
+  if (this->m_debug) {
+    std::cout << "Investigating " << 
+                  "Sphere " << s.center[0] << " " 
+                            << s.center[1] << " " 
+                            << s.center[2] << " " 
+                      << "with radius " << s.radius
+                      << " priority: " << s.priority 
+              << " Added to WE." << std::endl 
+              << "   (There are " << m_sphereQueue.size() << " elments in the queue)."
+              << std::endl;
+  }
+  if (wavefrontRoot.isEmpty()){
+    wavefrontRoot = s;
   }
 
-  return;
+  // add edge to WE
+  VID parentVID = s.parentVID;
+  wavefrontExpansion.AddEdge(parentVID, sVID);
+  if (this->m_debug) {
+    std::cout << "   Adding edge from VID " << parentVID 
+              << " to VID " << sVID << std::endl;
+    std::cout << "   VID " << parentVID << " has children VIDs: ";
+    if (parentVID != INVALID_VID) {
+      for (auto v : wavefrontExpansion.GetChildren(parentVID)){
+        std::cout << " " << v;
+      }
+      std::cout << " " << std::endl;
+    } else {
+      std::cout << "parentVID invalid. This is likely the root node." << std::endl;
+    }
+  }
+
+  // If we are within a goal region, we are done.
+  if (Distance(pGoal, s.center) < s.radius) {
+    goalSphere = s;
+    if (this->m_debug) {
+      std::cout << "   Sphere " << s.wavefrontVID 
+                << ". This sphere contains the goal region." << std::endl;
+    }
+    return true;
+  }
+
+  // Sample n points on sphere surface. 
+  PointConstruction _p;
+  std::vector<Point> samples;
+  if (!threeD) {
+    mathtool::Vector3d radius({s.radius, s.radius, 0});
+    samples = _p.SampleSphereSurface(s.center, radius, m_nSphereSamples);
+  } else {
+    samples = _p.SampleSphereSurface(s.center, s.radius, m_nSphereSamples);
+  } 
+  if (this->m_debug){
+    std::cout << "   sampled " << samples.size() 
+              << " samples on the surface of sphere with VID " << sVID 
+              << std::endl;
+  }
+
+  // Calculate sphere diameter for all points
+  for (Point p_i : samples) {
+    // check which sphere in tree to attach this one to. 
+
+    // // not in pseudocode, but we don't want to insert 
+    // // the same sphere into queue so many times. Priority will be the same. 
+    // bool sphereAddedToQueue = false; 
+    // for (auto sphereVID : wavefrontExpansion.GetAllVIDs()) {
+    //   Sphere sphere = wavefrontExpansionSpheres[sphereVID];
+
+    //   // outside existing spheres
+    //   if (Distance(p_i, sphere.center) < sphere.radius) {
+    //     InsertSphereIntoPQ(p_i, sVID, m_sphereQueue);
+    //     sphereAddedToQueue = true;
+    //   }
+
+    //   if (sphereAddedToQueue) { break; }
+    // }
+
+    bool sphereInExistingSphere = false; 
+    for (auto sphereVID : wavefrontExpansion.GetAllVIDs()) {
+      Sphere sphere = wavefrontExpansionSpheres[sphereVID];
+
+      // outside existing spheres
+      if (Distance(p_i, sphere.center) < sphere.radius) {
+        sphereInExistingSphere = true;
+        break; 
+      }
+    }
+    if (!sphereInExistingSphere) {
+      InsertSphereIntoPQ(p_i, sVID, m_sphereQueue);
+    }
+  } // calculate sphere diameter for all pts for loop
+  return m_sphereQueue.empty();
 }
 
 

@@ -39,7 +39,8 @@ class EET : public BasicRRTStrategy {
 
 
     // WAVEFRONT expansion functions
-    void Wavefront();
+    void WavefrontSetup();
+    bool WavefrontStep();
     double DistanceToObstacles(Point _p);
     double Distance(Point _p1, Point _p2);
 
@@ -141,6 +142,8 @@ class EET : public BasicRRTStrategy {
 
     Sphere goalSphere; // The sphere that contains the goal. 
     Sphere currentSphere; // The sphere we are currently investigating. (In Iterate())
+    std::priority_queue<Sphere> m_sphereQueue; // For building the sphere tree. 
+    bool m_wavefrontFinished; // Are we done with Wavefront Expansion?
 
     // More (mutable) algorithm parameters. 
     double exploreExploitBias; // "sigma" 
