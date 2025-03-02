@@ -356,7 +356,7 @@ Sample(SamplingRegion* _region) {
   // Get the sampler.
   auto s = this->GetMPLibrary()->GetSampler(this->m_samplerLabel);
 
-  std::vector<CfgType> samples, collision;
+  std::vector<Cfg> samples, collision;
   int nattempts = 0; // give us an exit strategy to go try a new region if this one sucks
   while(nattempts < 20 and samples.empty()) {
     s->Sample(1, 5, &samplingBoundary, std::back_inserter(samples),
@@ -371,7 +371,7 @@ Sample(SamplingRegion* _region) {
       std::cout << "\tFailed to sample from region." << std::endl;
     m_sampleFailed = true;
     // just return some garbage
-    CfgType randCfg(this->GetTask()->GetRobot());
+    Cfg randCfg(this->GetTask()->GetRobot());
     randCfg.GetRandomCfg(this->GetEnvironment());
     return randCfg;
   }
