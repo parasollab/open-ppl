@@ -268,7 +268,7 @@ AddHoles(const NefPolyhedron& _freespace) {
   m_freeModel->holelist = new double[m_freeModel->numberofholes * 3];
 
   size_t num = 0;
-  for(const auto obst : holes) {
+  for(const auto &obst : holes) {
     const auto& body = obst->GetFixedBody(0);
     Vector3d com = body->GetCenterOfMass();
     Vector3d hole = com;
