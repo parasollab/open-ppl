@@ -155,7 +155,7 @@ Print(ostream& _os) const {
   QueryMethod<MPTraits>::Print(_os);
   _os << "\n\tDelete Nodes: " << m_deleteNodes
       << "\n\tConnectors:" << endl;
-  for(const auto label : m_ncLabels)
+  for(const auto &label : m_ncLabels)
     _os << "\t\t" << label << endl;
 }
 
